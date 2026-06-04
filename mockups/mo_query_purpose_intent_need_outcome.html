@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Query Purpose, Intent, Need, and Outcome</title>
+<style>
+:root {
+  --bg: #f5f9ff;
+  --surface: #ffffff;
+  --surface-2: #eef3fb;
+  --ink: #0d1733;
+  --muted: #526078;
+  --quiet: #7d879c;
+  --border: #d6deeb;
+  --border-strong: #b5c1d4;
+  --navy: #0d1733;
+  --blue: #2357ad;
+  --blue-bg: #e7f0ff;
+  --green: #147a4c;
+  --green-bg: #e6f7ef;
+  --amber: #8a5000;
+  --amber-bg: #fff5e6;
+  --red: #9b0e1c;
+  --red-bg: #feeaec;
+  --purple: #5a3ea1;
+  --purple-bg: #efeafd;
+  --shadow: 0 12px 36px rgba(13, 23, 51, 0.10);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.shell {
+  width: min(1480px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 44px;
+}
+
+.hero {
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0d1733 0%, #142347 66%, #1e315f 100%);
+  color: #f7fbff;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: #84b7ff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 40px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.hero p {
+  max-width: 980px;
+  margin: 8px 0 0;
+  color: #cbd8ee;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(13, 23, 51, 0.08);
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  overflow-x: auto;
+}
+
+.nav a {
+  flex: 0 0 auto;
+  border-radius: 6px;
+  padding: 7px 11px;
+  color: var(--muted);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nav a:hover { background: var(--surface-2); color: var(--ink); }
+
+.section {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.section-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.badge {
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  padding: 5px 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.summary-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px;
+  background: #fff;
+}
+
+.summary-card strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.summary-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.query-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+
+.query-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.query-card.prepare { border-top: 4px solid var(--blue); }
+.query-card.compare { border-top: 4px solid var(--green); }
+.query-card.score { border-top: 4px solid var(--purple); }
+.query-card.explain { border-top: 4px solid var(--amber); }
+.query-card.guard { border-top: 4px solid var(--red); }
+
+.query-title {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.qid {
+  min-width: 42px;
+  height: 30px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.query-title h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.output {
+  margin-top: 5px;
+  color: var(--quiet);
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.field {
+  min-height: 104px;
+  padding: 11px 12px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.field:nth-child(2n) { border-right: 0; }
+.field:nth-last-child(-n + 2) { border-bottom: 0; }
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  color: var(--quiet);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.field p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.flow-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+}
+
+.flow-card h3 {
+  margin: 0 0 5px;
+  font-size: 14px;
+}
+
+.flow-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.note {
+  margin-top: 14px;
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .section-head,
+  .summary,
+  .query-grid,
+  .fields,
+  .flow {
+    grid-template-columns: 1fr;
+  }
+
+  .field,
+  .field:nth-child(2n),
+  .field:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field:last-child { border-bottom: 0; }
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="hero">
+    <div class="eyebrow">Mo by BUILT / Query explainer</div>
+    <h1>Purpose, Intent, Need, and Outcome of Each Query</h1>
+    <p>This page explains what each query or pipeline action contributes to the Mo solution, from raw SPINS normalization through cannibalization scoring, event creation, and price elasticity recommendations.</p>
+  </section>
+
+  <nav class="nav" aria-label="Page sections">
+    <a href="#cannibalization">Cannibalization</a>
+    <a href="#pricing">Price Elasticity</a>
+    <a href="#pattern">Shared Pattern</a>
+  </nav>
+
+  <section class="section" id="cannibalization">
+    <div class="section-head">
+      <div>
+        <h2>Cannibalization Pipeline</h2>
+        <p>These steps turn SPINS weekly POS data into comparison pools, donor evidence, scored cannibalization records, and event recommendations.</p>
+      </div>
+      <span class="badge">C0-C17</span>
+    </div>
+    <div class="summary">
+      <div class="summary-card"><strong>Prepare</strong><span>Normalize source data and attach stable product, flavor, pack, account, and geography context.</span></div>
+      <div class="summary-card"><strong>Compare</strong><span>Build focal/donor/competitor pools so the product can inspect the right substitute set.</span></div>
+      <div class="summary-card"><strong>Score</strong><span>Convert pre/post movement into labels, ML features, confidence, and ranked donor outputs.</span></div>
+      <div class="summary-card"><strong>Explain</strong><span>Package recommendations, event queues, provenance, and ramp guardrails for the UI.</span></div>
+    </div>
+    <div class="query-grid">
+      <article class="query-card prepare">
+        <div class="query-title"><div class="qid">C0</div><div><h3>Category Extract Normalization</h3><div class="output">Output: built_filtered_weekly</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Normalize raw SPINS fields and narrow to BUILT plus relevant category context.</p></div><div class="field"><span class="label">Intent</span><p>Create a stable, reusable base from the raw extract.</p></div><div class="field"><span class="label">Need</span><p>Raw column names and mixed retail/geography fields are too brittle for downstream logic.</p></div><div class="field"><span class="label">Outcome</span><p>A cleaned weekly source table that preserves direct retail and geography fields.</p></div></div>
+      </article>
+      <article class="query-card prepare">
+        <div class="query-title"><div class="qid">C1</div><div><h3>Enriched Weekly Base Table</h3><div class="output">Output: built_enriched_weekly</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Attach product, flavor, pack, brand, and direct retail context.</p></div><div class="field"><span class="label">Intent</span><p>Make every weekly row business-readable and model-ready.</p></div><div class="field"><span class="label">Need</span><p>Cannibalization depends on accurate product hierarchy and account/geography scope.</p></div><div class="field"><span class="label">Outcome</span><p>An enriched weekly panel used by comparison, windowing, scoring, and UI queries.</p></div></div>
+      </article>
+      <article class="query-card compare">
+        <div class="query-title"><div class="qid">C2</div><div><h3>Universal Comparison Pool</h3><div class="output">Output: comparison_pool_weekly</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Build valid focal/candidate SKU pairs for relationship distances 1-5.</p></div><div class="field"><span class="label">Intent</span><p>Give UI and ML one governed comparison pool that can be filtered by mode.</p></div><div class="field"><span class="label">Need</span><p>Separate pair queries would be slower, inconsistent, and harder to audit.</p></div><div class="field"><span class="label">Outcome</span><p>Reusable same-flavor, same-brand, pack-ladder, and adjacent comparison pairs.</p></div></div>
+      </article>
+      <article class="query-card compare">
+        <div class="query-title"><div class="qid">C2b</div><div><h3>On-Demand Competitive Pool</h3><div class="output">Output: returned directly to UI</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Build cross-flavor competitive pairs when the user selects a competitor brand.</p></div><div class="field"><span class="label">Intent</span><p>Keep broad competitor analysis available without pre-materializing every pair.</p></div><div class="field"><span class="label">Need</span><p>Distance-6 comparisons can become too large if generated for all markets upfront.</p></div><div class="field"><span class="label">Outcome</span><p>Tier-sorted competitor comparisons for the selected focal item and market.</p></div></div>
+      </article>
+      <article class="query-card compare">
+        <div class="query-title"><div class="qid">C2c</div><div><h3>Cross-Flavor Heatmap Aggregation</h3><div class="output">Output: returned directly to UI</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Aggregate pre/post change by SKU and geography for cross-flavor diagnosis.</p></div><div class="field"><span class="label">Intent</span><p>Show where related flavors are falling, flat, or rising.</p></div><div class="field"><span class="label">Need</span><p>Users need to separate product-specific donor loss from broad category softness.</p></div><div class="field"><span class="label">Outcome</span><p>A SKU-by-geography heatmap with standardized change buckets.</p></div></div>
+      </article>
+      <article class="query-card explain">
+        <div class="query-title"><div class="qid">C2d</div><div><h3>Scope Bar Metadata</h3><div class="output">Output: returned directly to UI</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Summarize pool type, relationship distance, SKU count, and pair direction.</p></div><div class="field"><span class="label">Intent</span><p>Make every diagnosis screen clear about the active comparison set.</p></div><div class="field"><span class="label">Need</span><p>Users must know whether they are viewing pack ladder, flavor, brand, or competitor evidence.</p></div><div class="field"><span class="label">Outcome</span><p>A compact scope bar that anchors the interpretation of each screen.</p></div></div>
+      </article>
+      <article class="query-card compare">
+        <div class="query-title"><div class="qid">C3</div><div><h3>Focal Pre/Post Aggregation</h3><div class="output">Output: built_prepost_features</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Compute pre/post metrics for each focal SKU across multiple scoring windows.</p></div><div class="field"><span class="label">Intent</span><p>Establish whether the focal item gained demand, distribution, velocity, price, or promo support.</p></div><div class="field"><span class="label">Need</span><p>Cannibalization cannot be scored from post-period performance alone.</p></div><div class="field"><span class="label">Outcome</span><p>Windowed focal evidence for diagnostics, labels, and model features.</p></div></div>
+      </article>
+      <article class="query-card compare">
+        <div class="query-title"><div class="qid">C4</div><div><h3>Donor Pre/Post Aggregation</h3><div class="output">Output: donor_prepost_features</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Apply the same pre/post logic to likely donor SKUs.</p></div><div class="field"><span class="label">Intent</span><p>Measure what happened to candidates that may have lost demand.</p></div><div class="field"><span class="label">Need</span><p>A focal SKU lift is not cannibalization unless donor movement is visible.</p></div><div class="field"><span class="label">Outcome</span><p>Windowed donor evidence paired to focal launch timing.</p></div></div>
+      </article>
+      <article class="query-card score">
+        <div class="query-title"><div class="qid">C5</div><div><h3>Final ML Feature Assembly</h3><div class="output">Output: ml_training_features</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Join focal and donor features, then compute deltas, labels, confounds, and incremental share.</p></div><div class="field"><span class="label">Intent</span><p>Convert evidence into training-ready examples and useful signal columns.</p></div><div class="field"><span class="label">Need</span><p>Models need one coherent feature table with deterministic labels and guardrails.</p></div><div class="field"><span class="label">Outcome</span><p>Model-ready rows for cannibalization training and score support.</p></div></div>
+      </article>
+      <article class="query-card explain">
+        <div class="query-title"><div class="qid">C6</div><div><h3>Rolling Stats and Z-Scores</h3><div class="output">Output: event_detection_weekly</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Compute rolling averages, standard deviations, z-scores, and week-over-week deltas.</p></div><div class="field"><span class="label">Intent</span><p>Detect abnormal demand, velocity, or distribution movement.</p></div><div class="field"><span class="label">Need</span><p>Event detection needs trend context, not just static values.</p></div><div class="field"><span class="label">Outcome</span><p>Anomaly features for surfacing material events.</p></div></div>
+      </article>
+      <article class="query-card guard">
+        <div class="query-title"><div class="qid">C7</div><div><h3>New UPC Detection</h3><div class="output">Output: new_upc_candidates</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Find BUILT UPCs in the current period that have no prior history.</p></div><div class="field"><span class="label">Intent</span><p>Identify new launches automatically.</p></div><div class="field"><span class="label">Need</span><p>New products need ramp handling before normal scoring.</p></div><div class="field"><span class="label">Outcome</span><p>A candidate list of newly observed UPCs.</p></div></div>
+      </article>
+      <article class="query-card guard">
+        <div class="query-title"><div class="qid">C8</div><div><h3>New UPC Classification</h3><div class="output">Output: new_upc_classifications</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Classify new UPCs as new pack size, new flavor candidate, or relaunch/duplicate.</p></div><div class="field"><span class="label">Intent</span><p>Decide how the new item should enter comparison logic.</p></div><div class="field"><span class="label">Need</span><p>A new pack size behaves differently from a relaunch or new flavor.</p></div><div class="field"><span class="label">Outcome</span><p>Launch classification records for scoring and event routing.</p></div></div>
+      </article>
+      <article class="query-card guard">
+        <div class="query-title"><div class="qid">C9</div><div><h3>Ramp Monitoring</h3><div class="output">Output: new_product_ramp_monitor</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Track first 16 weeks, distribution trend, velocity trend, scoring status, and underperformance.</p></div><div class="field"><span class="label">Intent</span><p>Avoid false-positive cannibalization alerts during launch ramp.</p></div><div class="field"><span class="label">Need</span><p>Early weeks are dominated by TDP expansion and incomplete baseline history.</p></div><div class="field"><span class="label">Outcome</span><p>Ramp status, suppression status, and launch underperformance flags.</p></div></div>
+      </article>
+      <article class="query-card score">
+        <div class="query-title"><div class="qid">C10</div><div><h3>Train Cannibalization Classifier</h3><div class="output">Output: model_cannibal_v3.pkl</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Train a model to estimate cannibalization status from assembled features.</p></div><div class="field"><span class="label">Intent</span><p>Add probabilistic support to deterministic evidence.</p></div><div class="field"><span class="label">Need</span><p>Rules alone cannot rank nuanced cases at scale.</p></div><div class="field"><span class="label">Outcome</span><p>A classifier that produces cannibalization risk and status support.</p></div></div>
+      </article>
+      <article class="query-card score">
+        <div class="query-title"><div class="qid">C11</div><div><h3>Train Donor Ranker</h3><div class="output">Output: model_ranker_v3.pkl</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Train a model to rank likely donor SKUs.</p></div><div class="field"><span class="label">Intent</span><p>Help users see which SKU is probably losing demand first.</p></div><div class="field"><span class="label">Need</span><p>Donor lists need ordering, not just eligibility.</p></div><div class="field"><span class="label">Outcome</span><p>Ranked donor candidates for explanation and action screens.</p></div></div>
+      </article>
+      <article class="query-card score">
+        <div class="query-title"><div class="qid">C12</div><div><h3>Train Event Detector</h3><div class="output">Output: model_event_v3.pkl</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Train a model to identify material events worth surfacing.</p></div><div class="field"><span class="label">Intent</span><p>Reduce dashboard hunting by pushing important cases forward.</p></div><div class="field"><span class="label">Need</span><p>Users should not scan every SKU/geography combination manually.</p></div><div class="field"><span class="label">Outcome</span><p>Event significance support for Mo's priority queue.</p></div></div>
+      </article>
+      <article class="query-card score">
+        <div class="query-title"><div class="qid">C13</div><div><h3>Score Production Pairs</h3><div class="output">Output: scored_cannibalization</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Generate production scores for focal/account/geography/window pairs.</p></div><div class="field"><span class="label">Intent</span><p>Turn model outputs into queryable business records.</p></div><div class="field"><span class="label">Need</span><p>UI screens need scored records with confidence, action, and explanation support.</p></div><div class="field"><span class="label">Outcome</span><p>Scored cannibalization records with drivers and recommendation fields.</p></div></div>
+      </article>
+      <article class="query-card explain">
+        <div class="query-title"><div class="qid">C14</div><div><h3>Assemble Event Queue</h3><div class="output">Output: event_queue</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Combine scored outputs, suppression rules, and event typing.</p></div><div class="field"><span class="label">Intent</span><p>Create the prioritized work queue for Mo.</p></div><div class="field"><span class="label">Need</span><p>Recommendations need event-level packaging, not isolated model rows.</p></div><div class="field"><span class="label">Outcome</span><p>Business-ready cannibalization events with type, confidence, and suppression logic.</p></div></div>
+      </article>
+      <article class="query-card guard">
+        <div class="query-title"><div class="qid">C15</div><div><h3>Auto-Enroll New Pack Sizes</h3><div class="output">Output: pack_ladder_pairs_weekly update</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Add new pack-size candidates into pack ladder monitoring.</p></div><div class="field"><span class="label">Intent</span><p>Keep the system current as the portfolio changes.</p></div><div class="field"><span class="label">Need</span><p>New packs should not wait for manual setup before monitoring starts.</p></div><div class="field"><span class="label">Outcome</span><p>Updated pack ladder monitoring relationships.</p></div></div>
+      </article>
+      <article class="query-card explain">
+        <div class="query-title"><div class="qid">C16</div><div><h3>Write New-Pack Events</h3><div class="output">Output: event_queue</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Add NEW_PACK_SIZE events to the event queue.</p></div><div class="field"><span class="label">Intent</span><p>Surface new pack-size monitoring to users.</p></div><div class="field"><span class="label">Need</span><p>Launch events need visible onboarding and scoring status.</p></div><div class="field"><span class="label">Outcome</span><p>New-pack events available on the priority landing screen.</p></div></div>
+      </article>
+      <article class="query-card explain">
+        <div class="query-title"><div class="qid">C17</div><div><h3>Weekly Rescore Trigger</h3><div class="output">Output: incremental update</div></div></div>
+        <div class="fields"><div class="field"><span class="label">Purpose</span><p>Refresh incremental scores after each data load.</p></div><div class="field"><span class="label">Intent</span><p>Keep Mo current with the latest SPINS feed.</p></div><div class="field"><span class="label">Need</span><p>Stale scores can mislead launch, assortment, and pricing decisions.</p></div><div class="field"><span class="label">Outcome</span><p>Updated scoring and event records on the weekly cadence.</p></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="section-head">
+      <div>
+        <h2>Price Elasticity Extension</h2>
+        <p>These queries extend the Mo suite with price, promo, pack ladder, competitive gap, benchmark, forecast, and price-defense intelligence.</p>
+      </div>
+      <span class="badge">Q14-Q22</span>
+    </div>
+    <div class="query-grid">
+      <article class="query-card prepare"><div class="query-title"><div class="qid">Q14</div><div><h3>Price Elasticity Weekly Features</h3><div class="output">Output: price_elasticity_weekly_features</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Add price per bar, log price, log units, promo depth bucket, and seasonality controls.</p></div><div class="field"><span class="label">Intent</span><p>Build the core weekly feature layer for elasticity modeling.</p></div><div class="field"><span class="label">Need</span><p>Raw ARP and units are not enough to model price response cleanly.</p></div><div class="field"><span class="label">Outcome</span><p>Weekly price-response features ready for modeling and diagnosis.</p></div></div></article>
+      <article class="query-card compare"><div class="query-title"><div class="qid">Q15</div><div><h3>Price Pack Ladder Weekly</h3><div class="output">Output: price_pack_ladder_weekly</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Compare price levels between pack sizes of the same specific flavor.</p></div><div class="field"><span class="label">Intent</span><p>Show whether the pack ladder has healthy or risky price gaps.</p></div><div class="field"><span class="label">Need</span><p>Pack-size pricing can create internal switching or collapse a pack role.</p></div><div class="field"><span class="label">Outcome</span><p>Pack ladder price diagnostics by flavor, account, geography, and week.</p></div></div></article>
+      <article class="query-card compare"><div class="query-title"><div class="qid">Q16</div><div><h3>Price Competitive Weekly</h3><div class="output">Output: price_competitive_weekly</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Compare BUILT price per bar against Tier 1 competitors.</p></div><div class="field"><span class="label">Intent</span><p>Separate competitive price pressure from internal BUILT switching.</p></div><div class="field"><span class="label">Need</span><p>Users need to know whether softness is caused by competitors or BUILT's own pricing.</p></div><div class="field"><span class="label">Outcome</span><p>Competitive price gap diagnostics for selected markets and accounts.</p></div></div></article>
+      <article class="query-card score"><div class="query-title"><div class="qid">Q17</div><div><h3>Price Elasticity Training Features</h3><div class="output">Output: price_elasticity_training_features</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Build regression-ready windows for own-price, cross-price, and promo elasticity.</p></div><div class="field"><span class="label">Intent</span><p>Prepare clean model inputs with guardrail context.</p></div><div class="field"><span class="label">Need</span><p>Elasticity models need usable price movement, adequate weeks, and confound controls.</p></div><div class="field"><span class="label">Outcome</span><p>Training set for own-price, cross-price, promo, and forecast models.</p></div></div></article>
+      <article class="query-card score"><div class="query-title"><div class="qid">Q18</div><div><h3>Scored Price Elasticity</h3><div class="output">Output: scored_price_elasticity</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Store model outputs, confidence, drivers, and recommended actions.</p></div><div class="field"><span class="label">Intent</span><p>Make elasticity results queryable by the UI and Mo explanations.</p></div><div class="field"><span class="label">Need</span><p>Users need scored records, not notebook-only model results.</p></div><div class="field"><span class="label">Outcome</span><p>Elasticity summary, confidence, drivers, and action labels.</p></div></div></article>
+      <article class="query-card score"><div class="query-title"><div class="qid">Q19</div><div><h3>Price Elasticity Forecast Weekly</h3><div class="output">Output: price_elasticity_forecast_weekly</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Store scenario forecasts for price and promo decisions.</p></div><div class="field"><span class="label">Intent</span><p>Power the what-if calculator and low/base/high outcomes.</p></div><div class="field"><span class="label">Need</span><p>Pricing decisions need forecasted impact before action is taken.</p></div><div class="field"><span class="label">Outcome</span><p>Forecast records for planned ARP, promo, and competitor-gap scenarios.</p></div></div></article>
+      <article class="query-card compare"><div class="query-title"><div class="qid">Q20</div><div><h3>MULO FOOD Pack Size Norms</h3><div class="output">Output: mulo_food_pack_size_norms</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Create MULO FOOD protein bar norms for 1ct, 4pk, 8pk, and 12pk.</p></div><div class="field"><span class="label">Intent</span><p>Benchmark BUILT pack pricing and productivity against category norms.</p></div><div class="field"><span class="label">Need</span><p>A value pack may look strong internally but still be mispriced against category expectations.</p></div><div class="field"><span class="label">Outcome</span><p>Norms for ARP, price per bar, velocity, store selling, and distribution indexes.</p></div></div></article>
+      <article class="query-card compare"><div class="query-title"><div class="qid">Q21</div><div><h3>Flavor Protein Driver Features</h3><div class="output">Output: flavor_protein_driver_features</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Compare flavor and protein content against sales, velocity, and store penetration.</p></div><div class="field"><span class="label">Intent</span><p>Explain whether flavor, protein content, price, or distribution better explains demand.</p></div><div class="field"><span class="label">Need</span><p>Protein content can be a driver, but it should not be overclaimed without controls.</p></div><div class="field"><span class="label">Outcome</span><p>Driver features for MULO norms, explanation, and pricing context.</p></div></div></article>
+      <article class="query-card explain"><div class="query-title"><div class="qid">Q22</div><div><h3>Price Event Queue</h3><div class="output">Output: price_event_queue</div></div></div><div class="fields"><div class="field"><span class="label">Purpose</span><p>Store significant price, promo, new item, benchmark, confidence, and price-defense events.</p></div><div class="field"><span class="label">Intent</span><p>Push important pricing situations to the user proactively.</p></div><div class="field"><span class="label">Need</span><p>Analysts should not inspect every price chart to find meaningful movement.</p></div><div class="field"><span class="label">Outcome</span><p>Prioritized pricing events with trigger, confidence, provenance, drivers, and action.</p></div></div></article>
+    </div>
+  </section>
+
+  <section id="pattern" class="flow">
+    <div class="flow-card"><h3>Prepare</h3><p>Normalize, enrich, and structure raw source data so every downstream step uses the same definitions.</p></div>
+    <div class="flow-card"><h3>Compare</h3><p>Create focal, donor, competitor, geography, and pack-ladder context for business diagnosis.</p></div>
+    <div class="flow-card"><h3>Score</h3><p>Convert evidence into features, model outputs, confidence, and recommended actions.</p></div>
+    <div class="flow-card"><h3>Explain</h3><p>Surface events, provenance, guardrails, and plain-language reasoning in the UI.</p></div>
+  </section>
+  <div class="note">Numbering note: cannibalization is shown as C0-C17 to avoid confusion with the price elasticity extension, which uses Q14-Q22 in the field guide.</div>
+</main>
+</body>
+</html>
