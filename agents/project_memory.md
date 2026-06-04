@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-04 (session 2 — Druid query testing)
+Last synced: 2026-06-04 (session 2 — Druid query testing, end of day)
 
 ## Repository
 
@@ -69,7 +69,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `e3fe9e5` — Add durable project memory and commit-time memory sync instruction.
 - `c0a560f` — Add actual Druid query register and wire playbook query IDs to register anchors.
 - `20cdd21` — Add one-click SQL copy controls to the Druid query register mockup.
-- Pending — Druid query register corrections from live testing session.
+- Pending — Druid query register corrections + error register from live testing session (ready to push).
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -121,13 +121,32 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - The browser-friendly Druid query register should include a copy control on
   each query card so users can copy a single query body for Druid console testing.
 
+## Query Testing Status (as of 2026-06-04)
+
+- QS1 (flavor_mapping, 91 rows): SUCCESS. QS1v validation returned 0 rows — perfect match.
+- QS2 (flavor_canonical_overrides, 4 rows): queued — not yet confirmed.
+- QS3 (item_catalog, 30 brands): queued — not yet confirmed.
+- Q0 Batch 1 (2023): SUCCESS (succeeded silently despite 404 timeout error on status).
+- Q0 Batches 2 and 3: not yet run.
+- Q1: not yet run.
+- Q2: STALLED — sortMerge resolves BroadcastTablesTooLarge but stalls at ~800K rows remaining out of ~62M due to local disk saturation from shuffle intermediate files. Email sent to Rob outlining root cause and 4 recommended SET commands. Awaiting his response before updating the register.
+
+## Pending Cluster Settings (awaiting Rob's approval before adding to register)
+
+Four SET commands evaluated for Q2 (and Q4/Q5 proactively). All zero data risk:
+1. SET durableShuffleStorage = 'true' — routes shuffle files to S3 instead of local disk; PRIMARY FIX for the stall.
+2. SET sqlSortMergeDiskBuffered = 'true' — spills merge buffers to disk instead of memory; good complement to #1.
+3. SET maxNumTasks = 16 — increases parallel worker tasks; only effective if cluster has multiple task slots (verify with Rob — task JSON showed maxNumWorkers=1 on a "tiny-cluster" middlemanager).
+4. SET rowsPerSegment = 5000000 — increases segment size from 3M to 5M rows; safe general optimization, won't fix the stall.
+
 ## Open Follow-Ups
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
-- Confirm which Druid outputs will be materialized first for the pilot.
 - Decide whether the visual HTML pages should be linked from `README.md`.
-- Q0 still needs Batch 2 and Batch 3 (annual time-range runs) if not yet complete.
+- Q0 Batches 2 and 3 still needed (2024 and 2025 annual ranges).
+- QS2 and QS3 still need to be confirmed.
 - Q1 has not been tested yet — first query to use the lookup tables.
-- TIME_PARSE format for first_week_selling needs to be confirmed and fixed in Q3/Q4 before those are run.
+- Q2 stall: awaiting Rob's cluster capacity info and approval of SET commands.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
-- Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable without sorted results.
+- Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
+- Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
