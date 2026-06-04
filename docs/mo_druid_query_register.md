@@ -1433,6 +1433,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 **Context required:** Set `{"sqlJoinAlgorithm": "sortMerge"}` in the Druid SQL console context panel before running — Q2 self-joins `built_enriched_weekly` which exceeds the cluster's broadcast join memory limit (~311 MB). sortMerge streams both sides instead of broadcasting.
 
 ```sql
+SET sqlJoinAlgorithm = 'sortMerge';
+
 REPLACE INTO "comparison_pool_weekly"
 OVERWRITE ALL
 SELECT
@@ -1967,6 +1969,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 **Context required:** Set `{"sqlJoinAlgorithm": "sortMerge"}` in the query context panel — this query joins two large materialized tables and is likely to exceed the broadcast join memory limit.
 
 ```sql
+SET sqlJoinAlgorithm = 'sortMerge';
+
 REPLACE INTO "donor_prepost_features"
 OVERWRITE ALL
 WITH
@@ -2134,6 +2138,8 @@ CLUSTERED BY focal_upc, candidate_upc, channel_outlet, retail_account, geography
 **`Units/TDP` is never computed anywhere in this query.**
 
 ```sql
+SET sqlJoinAlgorithm = 'sortMerge';
+
 REPLACE INTO "ml_training_features"
 OVERWRITE ALL
 WITH joined AS (

@@ -1402,6 +1402,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 <p class="note"><strong>Purpose:</strong> Self-join to build every valid (focal_upc, candidate_upc) pair. <code>comparison_type</code> and <code>relationship_distance</code> are internal columns — UI maps them to plain-English labels at render time.</p>
 <p class="note"><strong>Context required:</strong> Set <code>{"sqlJoinAlgorithm": "sortMerge"}</code> in the Druid SQL console context panel before running — Q2 self-joins <code>built_enriched_weekly</code> which exceeds the cluster's broadcast join memory limit (~311 MB). sortMerge streams both sides instead of broadcasting.</p>
 <pre><code>
+SET sqlJoinAlgorithm = 'sortMerge';
+
 REPLACE INTO "comparison_pool_weekly"
 OVERWRITE ALL
 SELECT
@@ -1907,6 +1909,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 <p class="note"><strong>Purpose:</strong> Same window logic as Q3, applied to each donor candidate but keyed to the **focal SKU's** <code>first_week_selling</code>. Aligns the donor's pre/post window to the focal's launch event, not the donor's own history.</p>
 <p class="note"><strong>Context required:</strong> Set <code>{"sqlJoinAlgorithm": "sortMerge"}</code> in the query context panel — this query joins two large materialized tables and is likely to exceed the broadcast join memory limit.</p>
 <pre><code>
+SET sqlJoinAlgorithm = 'sortMerge';
+
 REPLACE INTO "donor_prepost_features"
 OVERWRITE ALL
 WITH
@@ -2068,6 +2072,8 @@ CLUSTERED BY focal_upc, candidate_upc, channel_outlet, retail_account, geography
 <p class="note"><strong>Purpose:</strong> Join focal and donor pre/post features. Compute all derived change signals, percentage deltas, promo confound flag, deterministic labels, <code>incremental_share</code>, and <code>cannibalization_rate</code>. One row = one (focal_upc, donor_upc, geography, window_type) training example.</p>
 <p class="note">**<code>Units/TDP</code> is never computed anywhere in this query.**</p>
 <pre><code>
+SET sqlJoinAlgorithm = 'sortMerge';
+
 REPLACE INTO "ml_training_features"
 OVERWRITE ALL
 WITH joined AS (
