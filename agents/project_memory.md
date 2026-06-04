@@ -64,8 +64,9 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `919431e` — Initial BUILT Mo preview project.
 - `77717ec` — Add query purpose explainer page.
 - `1a8c196` — Add Druid to UI ML playbook.
-- Pending — Add durable project memory and commit-time memory sync instruction.
-- Pending — Add actual Druid query register and wire playbook query IDs to register anchors.
+- `e3fe9e5` — Add durable project memory and commit-time memory sync instruction.
+- `c0a560f` — Add actual Druid query register and wire playbook query IDs to register anchors.
+- Pending — Add one-click SQL copy controls to the Druid query register mockup.
 
 ## Decisions and Conventions
 
@@ -88,6 +89,8 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - Supporting Druid query explanations should live inside the relevant playbook
   stage, under the Executive View / Technical Work area, while query IDs link to
   the register for actual SQL testing.
+- The browser-friendly Druid query register should include a copy control on
+  each query card so users can copy a single query body for Druid console testing.
 
 ## Open Follow-Ups
 

@@ -7,6 +7,7 @@
 <style>
 :root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.query{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a:hover{text-decoration:underline}.query{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.query h2{margin:0 0 10px;font-size:22px}.query p{color:var(--muted)}.query strong{color:var(--ink)}pre{margin:12px 0 0;overflow:auto;background:#0d1733;color:#eef6ff;border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.45}code{font-family:var(--mono)}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}}
+.query-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.query-title-row h2{margin:0}.copy-query{appearance:none;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--blue);cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:900;line-height:1;padding:9px 11px;white-space:nowrap}.copy-query:hover{border-color:var(--blue);background:#e5eefc}.copy-query:focus-visible{outline:3px solid rgba(35,87,173,.22);outline-offset:2px}.copy-query.is-copied{background:#e8f7ef;border-color:#83c99a;color:#1f7a45}.copy-query.is-error{background:#fff2f2;border-color:#d88989;color:#9a2f2f}@media(max-width:640px){.query-title-row{align-items:stretch;flex-direction:column}.copy-query{width:max-content}}
 </style>
 </head><body><main class="shell" id="top">
 <section class="hero"><h1>Mo Druid Query Register</h1><p>Actual Druid SQL blocks behind the Mo ML playbook. The current raw SPINS datasource is <code>spins_full</code>; if that datasource name changes, update Q0 before materializing the pipeline.</p></section>
@@ -2093,4 +2094,69 @@ PARTITIONED BY DAY
 <p class="note">**Note:** The Python script <code>MO_14.7_price_events.py</code> appends the remaining event types to this table using <code>INSERT INTO</code> after ML scoring completes. Do not overwrite the table after the Python job has run — use INSERT, not REPLACE.</p>
 <p class="note">---</p>
 <div class="top"><a href="#top">Back to top</a></div></section>
+<script>
+(() => {
+  const copyWithFallback = async (text) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      if (!document.execCommand("copy")) {
+        throw new Error("copy command failed");
+      }
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  };
+
+  document.querySelectorAll(".query").forEach((query) => {
+    const heading = query.querySelector("h2");
+    const code = query.querySelector("pre code");
+    if (!heading || !code) return;
+
+    const titleRow = document.createElement("div");
+    titleRow.className = "query-title-row";
+    query.insertBefore(titleRow, heading);
+    titleRow.appendChild(heading);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "copy-query";
+    button.textContent = "Copy SQL";
+    button.setAttribute("aria-label", `Copy ${heading.textContent} SQL`);
+    titleRow.appendChild(button);
+
+    let resetTimer;
+    button.addEventListener("click", async () => {
+      const sql = code.textContent.replace(/^\n/, "").replace(/\n$/, "");
+      clearTimeout(resetTimer);
+      button.classList.remove("is-copied", "is-error");
+
+      try {
+        await copyWithFallback(sql);
+        button.textContent = "Copied";
+        button.classList.add("is-copied");
+      } catch (error) {
+        button.textContent = "Copy failed";
+        button.classList.add("is-error");
+      }
+
+      resetTimer = window.setTimeout(() => {
+        button.textContent = "Copy SQL";
+        button.classList.remove("is-copied", "is-error");
+      }, 1600);
+    });
+  });
+})();
+</script>
 </section></div></main></body></html>
