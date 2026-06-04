@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-04
+Last synced: 2026-06-04 (session 2 — Druid query testing)
 
 ## Repository
 
@@ -66,7 +66,34 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `1a8c196` — Add Druid to UI ML playbook.
 - `e3fe9e5` — Add durable project memory and commit-time memory sync instruction.
 - `c0a560f` — Add actual Druid query register and wire playbook query IDs to register anchors.
-- Pending — Add one-click SQL copy controls to the Druid query register mockup.
+- `20cdd21` — Add one-click SQL copy controls to the Druid query register mockup.
+- Pending — Druid query register corrections from live testing session.
+
+## Druid Cluster Constraints (discovered during live testing)
+
+- Druid Lookup tab returns 403 — Lookup API is not accessible with current role.
+- EXTERN function (inline or HTTP) returns FORBIDDEN — external data source reads are blocked.
+- UNION ALL with literal SELECT rows (no FROM) returns INVALID_INPUT — only supported between real datasources.
+- ORDER BY on non-time columns at the top level of a query is not supported, even ORDER BY __time, other_col. Only bare ORDER BY __time is allowed at the top level.
+- Workaround for lookup table ingestion: read from spins_full using DISTINCT UPC/Brand subquery and embed all curated values as CASE expressions. No extra permissions needed.
+- Q0 times out if run as OVERWRITE ALL on the full 62.9M-row WELLNESS & NUTRITION BARS dataset (~1.5h cluster limit). Use OVERWRITE WHERE with annual time-range batches.
+
+## Druid Schema Facts (confirmed from spins_full)
+
+- Raw datasource: `spins_full` (~97M rows).
+- BUILT brand rows: ~914K total; 99.8% in subcategory WELLNESS & NUTRITION BARS; 0.2% (BUILT BAR only) in GRANOLA & SNACK BARS.
+- WELLNESS & NUTRITION BARS total rows: ~62.9M (BUILT + all competitors in that subcategory).
+- GRANOLA & SNACK BARS total rows: ~34.9M.
+- Column naming: SPINS columns use spaces not commas — e.g., "Units Yago" not "Units, Yago", "TDP Any Promo" not "TDP, Any Promo", "Units % Lift TPR" not "Units ,% Lift, TPR".
+- __time in spins_full already holds the correct week-end date (ISO timestamp). Use __time directly; do not re-parse "Time Period End Date".
+- "First Week Selling" in spins_full is ISO format (yyyy-MM-dd), not MM/dd/yyyy. Queries that TIME_PARSE this field must use 'yyyy-MM-dd' format.
+
+## Lookup Table Design Decisions
+
+- flavor_mapping: 91 BUILT SKUs from built_specific_flavor_mapping.csv. Ingested via QS1 using spins_full DISTINCT UPC subquery + CASE expressions.
+- flavor_canonical_overrides: 4 rows fixing CSV errors: UPC 08-40229-30034 (CARAMEL), 08-40229-30115 (PEANUT BUTTER), 08-40229-30394 (BROWNIE), 08-40229-30395 (BROWNIE). Ingested via QS2.
+- item_catalog: Changed from UPC-keyed to brand-keyed design. 30 competitor brands with tiers 1/2/3. Q2 and Q2b join on c.source_brand = ic.brand (not c.upc = ic.upc). Ingested via QS3.
+- QS1v: validation query — runs after QS1, returns 0 rows if all 91 flavor_mapping rows match the CSV exactly. Confirmed clean.
 
 ## Decisions and Conventions
 
@@ -95,6 +122,10 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 ## Open Follow-Ups
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
-- Confirm production field names and whether they match the expanded SPINS extract.
 - Confirm which Druid outputs will be materialized first for the pilot.
 - Decide whether the visual HTML pages should be linked from `README.md`.
+- Q0 still needs Batch 2 and Batch 3 (annual time-range runs) if not yet complete.
+- Q1 has not been tested yet — first query to use the lookup tables.
+- TIME_PARSE format for first_week_selling needs to be confirmed and fixed in Q3/Q4 before those are run.
+- Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
+- Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable without sorted results.
