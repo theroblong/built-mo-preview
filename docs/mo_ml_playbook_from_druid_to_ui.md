@@ -26,6 +26,12 @@ source data.
 - Avoid filtering to BUILT-only at ingestion; competitor and category history are required.
 - Register ownership, refresh cadence, source lineage, and access rules.
 
+**Supporting Druid queries:**
+
+| Query | Purpose | Data it operates on | Output generated | How Mo uses it to accomplish the objective |
+|---|---|---|---|---|
+| [Q0](mo_druid_query_register.md#q0) - Category extract normalization | Normalize the raw SPINS extract and narrow it to BUILT plus relevant nutrition-bar category competitors. | Raw SPINS weekly POS datasource, including demand, dollars, price, promo, distribution, product, geography, and retail fields. | `built_filtered_weekly` | Creates the governed base layer so downstream logic does not repeatedly scan raw rows and does not lose competitor/category context. |
+
 **Exit criteria:** Druid datasource is queryable, complete, permissioned, and
 ready for normalization.
 
@@ -65,6 +71,12 @@ Mo explain *why* something happened, not just that it happened.
 - Load event history when available: launches, discontinuations, assortment changes,
   promo events, pricing actions, and known supply/availability issues.
 
+**Supporting Druid queries:**
+
+| Query | Purpose | Data it operates on | Output generated | How Mo uses it to accomplish the objective |
+|---|---|---|---|---|
+| [Q1](mo_druid_query_register.md#q1) - Enriched weekly base table | Attach business-readable product, flavor, pack, brand, and exclusion metadata. | `built_filtered_weekly`, `flavor_mapping`, and `flavor_canonical_overrides`. | `built_enriched_weekly` | Gives every weekly row the normalized product and market context needed for comparison pools, features, explanations, and UI labels. |
+
 **Exit criteria:** Enriched weekly panel can support stable joins, comparison
 pool generation, seasonality controls, and explanation metadata.
 
@@ -91,6 +103,23 @@ represent the business questions Mo needs to answer.
   - `new_upc_classifications`
   - `new_product_ramp_monitor`
 
+**Supporting Druid queries:**
+
+| Query | Purpose | Data it operates on | Output generated | How Mo uses it to accomplish the objective |
+|---|---|---|---|---|
+| [Q2](mo_druid_query_register.md#q2) - Universal comparison pool | Build valid focal/candidate SKU pairs for relationship distances 1-5. | `built_enriched_weekly` self-join plus `item_catalog` competitor tier metadata. | `comparison_pool_weekly` | Powers pack-ladder, same-flavor, cross-flavor, same-brand, and cross-brand comparison scopes for ML and UI filtering. |
+| [Q3](mo_druid_query_register.md#q3) - Focal pre/post window aggregation | Compute focal SKU before/after metrics across 4-week, 13-week, 26-week, and YTD windows. | BUILT rows in `built_enriched_weekly`, keyed to `first_week_selling`. | `built_prepost_features` | Establishes whether the focal item gained demand, distribution, velocity, price support, or promo support after launch. |
+| [Q4](mo_druid_query_register.md#q4) - Donor pre/post aggregation | Apply the same window logic to candidate donor SKUs, aligned to the focal SKU launch date. | `comparison_pool_weekly` joined to `built_enriched_weekly`. | `donor_prepost_features` | Measures whether likely donor SKUs declined during the focal item window, which is required evidence for cannibalization. |
+| [Q6](mo_druid_query_register.md#q6) - Rolling stats and z-scores | Compute rolling 4-week, 8-week, and 13-week statistics plus z-scores for demand, velocity, and distribution. | BUILT rows in `built_enriched_weekly`. | `event_detection_weekly` | Creates the statistical event-detection layer so Mo can prioritize unusual movement instead of asking users to scan every SKU. |
+| [Q7](mo_druid_query_register.md#q7) - New UPC detection | Find BUILT UPCs in the current week that have no prior history. | Current and historical BUILT rows in `built_enriched_weekly`. | `new_upc_candidates` | Automatically identifies launches that need ramp handling, taxonomy review, or pack-ladder enrollment. |
+| [Q8](mo_druid_query_register.md#q8) - New UPC classification | Classify new UPCs as new pack size, new flavor candidate, or duplicate/relaunch. | `new_upc_candidates` compared with the existing BUILT catalog in `built_enriched_weekly`. | `new_upc_classifications` | Determines whether a new item can auto-enter pack-ladder monitoring or must be reviewed before scoring. |
+| [Q9](mo_druid_query_register.md#q9) - Ramp monitoring | Track the first 16 weeks of launch behavior, scoring status, distribution trend, velocity trend, and underperformance flags. | Recent launch rows in `built_enriched_weekly`. | `new_product_ramp_monitor` | Suppresses or downgrades cannibalization scoring while distribution is still ramping and surfaces launch-underperformance events. |
+| [Q14](mo_druid_query_register.md#q14) - Price elasticity weekly features | Add price-per-bar, log price/volume, promo depth buckets, promo confound flags, and seasonality controls. | BUILT rows in `built_enriched_weekly`. | `price_elasticity_weekly_features` | Builds the clean weekly feature layer used for price elasticity modeling and pricing diagnostics. |
+| [Q15](mo_druid_query_register.md#q15) - Pack price ladder weekly | Compare price-per-bar across pack sizes of the same specific flavor. | `price_elasticity_weekly_features` self-join. | `price_pack_ladder_weekly` | Shows whether pack roles are healthy or compressed and flags trade-up/trade-down pricing risk. |
+| [Q16](mo_druid_query_register.md#q16) - Competitive price weekly | Compare BUILT price-per-bar against same-flavor Tier 1 competitors in the same account, geography, and week. | `price_elasticity_weekly_features`, `built_filtered_weekly`, and `item_catalog`. | `price_competitive_weekly` | Separates competitive price pressure from internal BUILT switching and feeds competitive price-gap alerts. |
+| [Q20](mo_druid_query_register.md#q20) - MULO FOOD pack size norms | Calculate category benchmark price, velocity, store penetration, and distribution norms by pack size. | Non-BUILT nutrition-bar rows in `built_filtered_weekly`. | `mulo_food_pack_size_norms` | Benchmarks BUILT pack pricing and productivity against competitive category norms. |
+| [Q21](mo_druid_query_register.md#q21) - Flavor vs protein driver features | Compare flavor-group and protein-content behavior against velocity and penetration. | Nutrition-bar rows in `built_filtered_weekly` with protein and flavor fields. | `flavor_protein_driver_features` | Helps explain whether demand is better explained by flavor, protein tier, price, distribution, or store penetration. |
+
 **Exit criteria:** Feature tables exist at the correct grain, are reproducible,
 and can be queried without scanning the full raw datasource for every workflow.
 
@@ -114,6 +143,13 @@ learning foundation.
 - Suppress or downgrade training rows with insufficient weeks, promo confounds,
   heavy TDP movement, missing competitor context, or ramp-period instability.
 - Use relationship distance and pack distance as structural substitution features.
+
+**Supporting Druid queries:**
+
+| Query | Purpose | Data it operates on | Output generated | How Mo uses it to accomplish the objective |
+|---|---|---|---|---|
+| [Q5](mo_druid_query_register.md#q5) - Final ML feature table assembly | Join focal and donor windows, compute deltas, confound flags, deterministic labels, `incremental_share`, and `cannibalization_rate`. | `built_prepost_features` and `donor_prepost_features`. | `ml_training_features` | Produces the supervised learning table and the deterministic evidence Mo shows beside model scores. |
+| [Q17](mo_druid_query_register.md#q17) - Price elasticity training features | Build regression-ready 13-week windows for own-price, cross-price, and promo elasticity estimation. | `price_elasticity_weekly_features`. | `price_elasticity_training_features` | Supplies the modeling table for elasticity, promo response, and forecast models with guardrail context. |
 
 **Exit criteria:** Training dataset has labels, features, guardrail flags,
 data-quality fields, and lineage to the source Druid records.
@@ -207,6 +243,12 @@ than experimental.
 - Store provenance: source datasource, scoring window, feature table version,
   model version, score timestamp, and source columns.
 
+**Supporting Druid queries:**
+
+| Query | Purpose | Data it operates on | Output generated | How Mo uses it to accomplish the objective |
+|---|---|---|---|---|
+| [Q22](mo_druid_query_register.md#q22) - Price event queue | Pre-populate deterministic pricing events such as competitive price gaps and pack-ladder compression. | `price_competitive_weekly` and `price_pack_ladder_weekly`. | `price_event_queue` | Creates prioritized pricing events for the Mo workflow, with later ML-scored price events appended after model scoring. |
+
 **Exit criteria:** Scored output tables are available in Druid and match the UI
 contracts for Mo screens.
 
@@ -234,6 +276,15 @@ matters, and decide what to do.
 - Keep deterministic evidence visible beside ML scoring.
 - Link pricing signals back to cannibalization when a price move may source demand
   from another BUILT pack size.
+
+**Supporting Druid queries:**
+
+| Query | Purpose | Data it operates on | Output generated | How Mo uses it to accomplish the objective |
+|---|---|---|---|---|
+| [Q2b](mo_druid_query_register.md#q2b) - On-demand competitive pool | Return broad distance-6 competitor comparisons only when a user asks for a specific competitor brand. | Parameterized query over `built_enriched_weekly`, `built_filtered_weekly`, and `item_catalog`. | Direct UI result set. | Keeps full competitive analysis available without materializing an expensive all-SKU cross-flavor competitor table. |
+| [Q2c](mo_druid_query_register.md#q2c) - Cross-flavor heatmap aggregation | Aggregate pre/post movement by SKU and geography for a selected flavor group. | `built_prepost_features` joined to `built_enriched_weekly`. | Direct UI result with `base_units_pct_chg` and `heatmap_bucket`. | Lets users diagnose whether softness is localized to certain markets/SKUs or part of a broader cross-flavor pattern. |
+| [Q2d](mo_druid_query_register.md#q2d) - Scope bar metadata | Summarize the active comparison pool and translate internal comparison types into user-facing scope text. | `comparison_pool_weekly`. | Direct UI result with pool count, SKU names, relationship distance, and display label. | Keeps every diagnosis screen transparent about what comparison set is being evaluated. |
+| [Q2e](mo_druid_query_register.md#q2e) - Cannibalization rate trend retrieval | Combine trailing actual cannibalization rates with future forecast weeks. | `cannibalization_rate_weekly` and `cannibalization_rate_forecast_weekly`. | UI-ready actual/forecast time series. | Powers the forecast view so users can compare scenario curves, confidence bands, donor loss, focal gain, and incremental share. |
 
 **Exit criteria:** Users can move from alert to diagnosis to action without
 needing to understand the full ML pipeline.

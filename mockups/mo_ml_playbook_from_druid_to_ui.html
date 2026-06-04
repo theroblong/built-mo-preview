@@ -330,6 +330,66 @@ h1 {
   font-size: 12px;
 }
 
+.stage-queries {
+  border-top: 1px solid var(--border);
+  background: #fff;
+  padding: 16px 18px 18px;
+}
+
+.stage-queries .block-label {
+  margin-bottom: 10px;
+}
+
+.query-table-wrap {
+  overflow-x: auto;
+}
+
+.query-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1040px;
+  font-size: 12px;
+}
+
+.query-table th,
+.query-table td {
+  vertical-align: top;
+  padding: 10px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.query-table th {
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.query-table td {
+  color: var(--muted);
+  background: #fff;
+}
+
+.query-table td:first-child {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.query-table a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.query-table a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 1120px) {
   .layout,
   .stage-body,
@@ -396,7 +456,18 @@ h1 {
     <section>
       <article class="stage" id="stage-1">
         <div class="stage-head"><div class="stage-num">1</div><h2>Data Intake and Governance</h2><span class="stage-tag tag-govern">Govern</span></div>
-        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Confirm that the 97M-record SPINS datasource is complete, stable, and fit to become an enterprise analytics asset. This stage protects the organization from building models on malformed, incomplete, or poorly governed source data.</p><div class="exit"><strong>Exit criteria</strong><span>Druid datasource is queryable, complete, permissioned, and ready for normalization.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Confirm datasource name, grain, time column, row count, retention, and segment health.</li><li>Verify the source grain is UPC x geography/account/channel x week.</li><li>Preserve all raw demand, price, promo, distribution, product, and retail fields.</li><li>Avoid filtering to BUILT-only at ingestion; competitor and category history are required.</li><li>Register ownership, refresh cadence, source lineage, and access rules.</li></ul><div class="artifact-row"><span class="chip">spins_weekly_pos</span><span class="chip">segment health</span><span class="chip">lineage</span></div></div></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Confirm that the 97M-record SPINS datasource is complete, stable, and fit to become an enterprise analytics asset. This stage protects the organization from building models on malformed, incomplete, or poorly governed source data.</p><div class="exit"><strong>Exit criteria</strong><span>Druid datasource is queryable, complete, permissioned, and ready for normalization.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Confirm datasource name, grain, time column, row count, retention, and segment health.</li><li>Verify the source grain is UPC x geography/account/channel x week.</li><li>Preserve all raw demand, price, promo, distribution, product, and retail fields.</li><li>Avoid filtering to BUILT-only at ingestion; competitor and category history are required.</li><li>Register ownership, refresh cadence, source lineage, and access rules.</li></ul><div class="artifact-row"><span class="chip">spins_full</span><span class="chip">segment health</span><span class="chip">lineage</span></div></div></div>
+        <div class="stage-queries">
+          <span class="block-label">Supporting Druid queries</span>
+          <div class="query-table-wrap">
+            <table class="query-table">
+              <thead><tr><th>Query</th><th>Purpose</th><th>Data It Operates On</th><th>Output Generated</th><th>How Mo Uses It</th></tr></thead>
+              <tbody>
+                <tr><td><a href="mo_druid_query_register.html#q0">Q0</a></td><td>Normalize the raw SPINS extract and narrow it to BUILT plus relevant nutrition-bar category competitors.</td><td>Raw SPINS weekly POS datasource with demand, dollars, price, promo, distribution, product, geography, and retail fields.</td><td>built_filtered_weekly</td><td>Creates the governed base layer so downstream logic does not repeatedly scan raw rows and does not lose competitor/category context.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
       <article class="stage" id="stage-2">
@@ -407,16 +478,61 @@ h1 {
       <article class="stage" id="stage-3">
         <div class="stage-head"><div class="stage-num">3</div><h2>Product, Market, Calendar, and Event Enrichment</h2><span class="stage-tag tag-prepare">Prepare</span></div>
         <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The raw SPINS feed is converted into business language: product families, pack ladders, specific flavors, retail accounts, market hierarchies, calendar seasonality, and known product events. This lets Mo explain why something happened, not just that it happened.</p><div class="exit"><strong>Exit criteria</strong><span>Enriched weekly panel can support stable joins, comparison pool generation, seasonality controls, and explanation metadata.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Load product master and similarity mappings for BUILT and eligible competitors.</li><li>Attach normalized flavor, flavor family, brand line, pack count, pack-size band, protein attributes, competitor tier, and substitute group.</li><li>Load market hierarchy: account, banner, channel, region, geography type.</li><li>Load calendar dimensions: fiscal period, week of year, season, holiday flags.</li><li>Load event history for launches, discontinuations, assortment changes, promos, price actions, and availability issues.</li></ul><div class="artifact-row"><span class="chip">dim_product</span><span class="chip">dim_market</span><span class="chip">dim_calendar_week</span><span class="chip">fact_product_events</span></div></div></div>
+        <div class="stage-queries">
+          <span class="block-label">Supporting Druid queries</span>
+          <div class="query-table-wrap">
+            <table class="query-table">
+              <thead><tr><th>Query</th><th>Purpose</th><th>Data It Operates On</th><th>Output Generated</th><th>How Mo Uses It</th></tr></thead>
+              <tbody>
+                <tr><td><a href="mo_druid_query_register.html#q1">Q1</a></td><td>Attach business-readable product, flavor, pack, brand, and exclusion metadata.</td><td>built_filtered_weekly, flavor_mapping, and flavor_canonical_overrides.</td><td>built_enriched_weekly</td><td>Gives every weekly row the normalized product and market context needed for comparison pools, features, explanations, and UI labels.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
       <article class="stage" id="stage-4">
         <div class="stage-head"><div class="stage-num">4</div><h2>Druid Feature Preparation</h2><span class="stage-tag tag-prepare">Feature tables</span></div>
         <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The 97M raw rows are not sent directly to machine learning. Druid first compresses them into governed, explainable feature tables that represent the business questions Mo needs to answer.</p><div class="exit"><strong>Exit criteria</strong><span>Feature tables exist at the correct grain, are reproducible, and can be queried without scanning the full raw datasource for every workflow.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Build normalized and enriched weekly tables.</li><li>Build comparison pools for pack ladder, same-flavor, same-family, same-brand, and competitor scopes.</li><li>Build focal and donor pre/post feature tables.</li><li>Build event detection, new UPC, classification, and ramp monitoring tables.</li></ul><div class="artifact-row"><span class="chip">built_filtered_weekly</span><span class="chip">built_enriched_weekly</span><span class="chip">comparison_pool_weekly</span><span class="chip">ml_training_features</span></div></div></div>
+        <div class="stage-queries">
+          <span class="block-label">Supporting Druid queries</span>
+          <div class="query-table-wrap">
+            <table class="query-table">
+              <thead><tr><th>Query</th><th>Purpose</th><th>Data It Operates On</th><th>Output Generated</th><th>How Mo Uses It</th></tr></thead>
+              <tbody>
+                <tr><td><a href="mo_druid_query_register.html#q2">Q2</a></td><td>Build valid focal/candidate SKU pairs for relationship distances 1-5.</td><td>built_enriched_weekly self-join plus item_catalog competitor tier metadata.</td><td>comparison_pool_weekly</td><td>Powers pack-ladder, same-flavor, cross-flavor, same-brand, and cross-brand comparison scopes for ML and UI filtering.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q3">Q3</a></td><td>Compute focal SKU before/after metrics across 4-week, 13-week, 26-week, and YTD windows.</td><td>BUILT rows in built_enriched_weekly, keyed to first_week_selling.</td><td>built_prepost_features</td><td>Establishes whether the focal item gained demand, distribution, velocity, price support, or promo support after launch.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q4">Q4</a></td><td>Apply the same window logic to candidate donor SKUs, aligned to the focal SKU launch date.</td><td>comparison_pool_weekly joined to built_enriched_weekly.</td><td>donor_prepost_features</td><td>Measures whether likely donor SKUs declined during the focal item window, which is required evidence for cannibalization.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q6">Q6</a></td><td>Compute rolling 4-week, 8-week, and 13-week statistics plus z-scores for demand, velocity, and distribution.</td><td>BUILT rows in built_enriched_weekly.</td><td>event_detection_weekly</td><td>Creates the statistical event-detection layer so Mo can prioritize unusual movement instead of asking users to scan every SKU.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q7">Q7</a></td><td>Find BUILT UPCs in the current week that have no prior history.</td><td>Current and historical BUILT rows in built_enriched_weekly.</td><td>new_upc_candidates</td><td>Automatically identifies launches that need ramp handling, taxonomy review, or pack-ladder enrollment.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q8">Q8</a></td><td>Classify new UPCs as new pack size, new flavor candidate, or duplicate/relaunch.</td><td>new_upc_candidates compared with the existing BUILT catalog in built_enriched_weekly.</td><td>new_upc_classifications</td><td>Determines whether a new item can auto-enter pack-ladder monitoring or must be reviewed before scoring.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q9">Q9</a></td><td>Track the first 16 weeks of launch behavior, scoring status, distribution trend, velocity trend, and underperformance flags.</td><td>Recent launch rows in built_enriched_weekly.</td><td>new_product_ramp_monitor</td><td>Suppresses or downgrades cannibalization scoring while distribution is still ramping and surfaces launch-underperformance events.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q14">Q14</a></td><td>Add price-per-bar, log price/volume, promo depth buckets, promo confound flags, and seasonality controls.</td><td>BUILT rows in built_enriched_weekly.</td><td>price_elasticity_weekly_features</td><td>Builds the clean weekly feature layer used for price elasticity modeling and pricing diagnostics.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q15">Q15</a></td><td>Compare price-per-bar across pack sizes of the same specific flavor.</td><td>price_elasticity_weekly_features self-join.</td><td>price_pack_ladder_weekly</td><td>Shows whether pack roles are healthy or compressed and flags trade-up/trade-down pricing risk.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q16">Q16</a></td><td>Compare BUILT price-per-bar against same-flavor Tier 1 competitors in the same account, geography, and week.</td><td>price_elasticity_weekly_features, built_filtered_weekly, and item_catalog.</td><td>price_competitive_weekly</td><td>Separates competitive price pressure from internal BUILT switching and feeds competitive price-gap alerts.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q20">Q20</a></td><td>Calculate category benchmark price, velocity, store penetration, and distribution norms by pack size.</td><td>Non-BUILT nutrition-bar rows in built_filtered_weekly.</td><td>mulo_food_pack_size_norms</td><td>Benchmarks BUILT pack pricing and productivity against competitive category norms.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q21">Q21</a></td><td>Compare flavor-group and protein-content behavior against velocity and penetration.</td><td>Nutrition-bar rows in built_filtered_weekly with protein and flavor fields.</td><td>flavor_protein_driver_features</td><td>Helps explain whether demand is better explained by flavor, protein tier, price, distribution, or store penetration.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
       <article class="stage" id="stage-5">
         <div class="stage-head"><div class="stage-num">5</div><h2>Label Strategy and Training Dataset Assembly</h2><span class="stage-tag tag-model">Training data</span></div>
         <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Because SPINS does not include a pre-labeled cannibalization field, the team creates transparent deterministic labels from observable business evidence. These labels become the supervised learning foundation.</p><div class="exit"><strong>Exit criteria</strong><span>Training dataset has labels, features, guardrail flags, data-quality fields, and lineage to source Druid records.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Create labels: CANNIBALIZING, WATCH, INCREMENTAL, and NEUTRAL.</li><li>Create secondary labels for distribution-led versus demand-led growth.</li><li>Compute incremental_share for UI interpretation.</li><li>Suppress or downgrade rows with insufficient weeks, promo confounds, heavy TDP movement, missing competitor context, or launch-ramp instability.</li><li>Use relationship distance and pack distance as structural substitution features.</li></ul><div class="artifact-row"><span class="chip">labels</span><span class="chip">incremental_share</span><span class="chip">guardrails</span></div></div></div>
+        <div class="stage-queries">
+          <span class="block-label">Supporting Druid queries</span>
+          <div class="query-table-wrap">
+            <table class="query-table">
+              <thead><tr><th>Query</th><th>Purpose</th><th>Data It Operates On</th><th>Output Generated</th><th>How Mo Uses It</th></tr></thead>
+              <tbody>
+                <tr><td><a href="mo_druid_query_register.html#q5">Q5</a></td><td>Join focal and donor windows, compute deltas, confound flags, deterministic labels, incremental_share, and cannibalization_rate.</td><td>built_prepost_features and donor_prepost_features.</td><td>ml_training_features</td><td>Produces the supervised learning table and the deterministic evidence Mo shows beside model scores.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q17">Q17</a></td><td>Build regression-ready 13-week windows for own-price, cross-price, and promo elasticity estimation.</td><td>price_elasticity_weekly_features.</td><td>price_elasticity_training_features</td><td>Supplies the modeling table for elasticity, promo response, and forecast models with guardrail context.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
       <article class="stage" id="stage-6">
@@ -437,11 +553,36 @@ h1 {
       <article class="stage" id="stage-9">
         <div class="stage-head"><div class="stage-num">9</div><h2>Scoring, Event Packaging, and Druid Publishing</h2><span class="stage-tag tag-operate">Publish</span></div>
         <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Validated model outputs are converted into governed Druid tables that the product can query reliably. This makes Mo operational rather than experimental.</p><div class="exit"><strong>Exit criteria</strong><span>Scored output tables are available in Druid and match the UI contracts for Mo screens.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Score focal x donor x account x geography x window pairs.</li><li>Write scored_cannibalization with status, risk score, incremental share, donor rankings, confidence, top drivers, model version, and lineage.</li><li>Write scored_price_elasticity, price_elasticity_forecast_weekly, and price_event_queue.</li><li>Assemble unified event queues with suppression rules and severity.</li><li>Store source datasource, scoring window, feature version, model version, score timestamp, and source columns.</li></ul><div class="artifact-row"><span class="chip">scored_cannibalization</span><span class="chip">scored_price_elasticity</span><span class="chip">event_queue</span></div></div></div>
+        <div class="stage-queries">
+          <span class="block-label">Supporting Druid queries</span>
+          <div class="query-table-wrap">
+            <table class="query-table">
+              <thead><tr><th>Query</th><th>Purpose</th><th>Data It Operates On</th><th>Output Generated</th><th>How Mo Uses It</th></tr></thead>
+              <tbody>
+                <tr><td><a href="mo_druid_query_register.html#q22">Q22</a></td><td>Pre-populate deterministic pricing events such as competitive price gaps and pack-ladder compression.</td><td>price_competitive_weekly and price_pack_ladder_weekly.</td><td>price_event_queue</td><td>Creates prioritized pricing events for the Mo workflow, with later ML-scored price events appended after model scoring.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
       <article class="stage" id="stage-10">
         <div class="stage-head"><div class="stage-num">10</div><h2>UI Presentation and User Workflow</h2><span class="stage-tag tag-operate">Mo UI</span></div>
         <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The UI does not expose raw model complexity. It turns the pipeline into a clear decision workflow: determine what matters, diagnose why it matters, and decide what to do.</p><div class="exit"><strong>Exit criteria</strong><span>Users can move from alert to diagnosis to action without needing to understand the full ML pipeline.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Present priority event landing pages for cannibalization and price elasticity.</li><li>Provide drill-down screens for SKU summary, geography heatmap, pack ladder, pre/post diagnostics, elasticity summary, promo response, competitive price gap, MULO norms, and what-if forecasting.</li><li>Show confidence, action labels, top drivers, provenance, and suppression status.</li><li>Keep deterministic evidence visible beside ML scoring.</li><li>Link pricing signals back to cannibalization when a price move may source demand from another BUILT pack size.</li></ul><div class="artifact-row"><span class="chip">Determine</span><span class="chip">Diagnose</span><span class="chip">Decide</span></div></div></div>
+        <div class="stage-queries">
+          <span class="block-label">Supporting Druid queries</span>
+          <div class="query-table-wrap">
+            <table class="query-table">
+              <thead><tr><th>Query</th><th>Purpose</th><th>Data It Operates On</th><th>Output Generated</th><th>How Mo Uses It</th></tr></thead>
+              <tbody>
+                <tr><td><a href="mo_druid_query_register.html#q2b">Q2b</a></td><td>Return broad distance-6 competitor comparisons only when a user asks for a specific competitor brand.</td><td>Parameterized query over built_enriched_weekly, built_filtered_weekly, and item_catalog.</td><td>Direct UI result set.</td><td>Keeps full competitive analysis available without materializing an expensive all-SKU cross-flavor competitor table.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q2c">Q2c</a></td><td>Aggregate pre/post movement by SKU and geography for a selected flavor group.</td><td>built_prepost_features joined to built_enriched_weekly.</td><td>Direct UI result with base_units_pct_chg and heatmap_bucket.</td><td>Lets users diagnose whether softness is localized to certain markets/SKUs or part of a broader cross-flavor pattern.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q2d">Q2d</a></td><td>Summarize the active comparison pool and translate internal comparison types into user-facing scope text.</td><td>comparison_pool_weekly.</td><td>Direct UI result with pool count, SKU names, relationship distance, and display label.</td><td>Keeps every diagnosis screen transparent about what comparison set is being evaluated.</td></tr>
+                <tr><td><a href="mo_druid_query_register.html#q2e">Q2e</a></td><td>Combine trailing actual cannibalization rates with future forecast weeks.</td><td>cannibalization_rate_weekly and cannibalization_rate_forecast_weekly.</td><td>UI-ready actual/forecast time series.</td><td>Powers the forecast view so users can compare scenario curves, confidence bands, donor loss, focal gain, and incremental share.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
       <article class="stage" id="stage-11">

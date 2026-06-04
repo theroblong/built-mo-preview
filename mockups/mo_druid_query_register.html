@@ -1,0 +1,2096 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Druid Query Register</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.query{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a:hover{text-decoration:underline}.query{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.query h2{margin:0 0 10px;font-size:22px}.query p{color:var(--muted)}.query strong{color:var(--ink)}pre{margin:12px 0 0;overflow:auto;background:#0d1733;color:#eef6ff;border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.45}code{font-family:var(--mono)}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}}
+</style>
+</head><body><main class="shell" id="top">
+<section class="hero"><h1>Mo Druid Query Register</h1><p>Actual Druid SQL blocks behind the Mo ML playbook. The current raw SPINS datasource is <code>spins_full</code>; if that datasource name changes, update Q0 before materializing the pipeline.</p></section>
+<div class="layout"><aside class="toc"><div class="toc-title">Queries</div>
+<a href="#q0">Q0</a>
+<a href="#q1">Q1</a>
+<a href="#q2">Q2</a>
+<a href="#q2b">Q2b</a>
+<a href="#q2c">Q2c</a>
+<a href="#q2d">Q2d</a>
+<a href="#q2e">Q2e</a>
+<a href="#q3">Q3</a>
+<a href="#q4">Q4</a>
+<a href="#q5">Q5</a>
+<a href="#q6">Q6</a>
+<a href="#q7">Q7</a>
+<a href="#q8">Q8</a>
+<a href="#q9">Q9</a>
+<a href="#q14">Q14</a>
+<a href="#q15">Q15</a>
+<a href="#q16">Q16</a>
+<a href="#q17">Q17</a>
+<a href="#q20">Q20</a>
+<a href="#q21">Q21</a>
+<a href="#q22">Q22</a>
+</aside><section>
+<p class="note">Query IDs in the playbook link here so an engineer or analyst can jump directly from a play stage to the SQL to review, copy, parameterize, or test in Druid.</p>
+<p class="note"><strong>Datasource note:</strong> Q0 is the only query that reads <code>spins_full</code> directly. Later queries read governed intermediate tables such as <code>built_filtered_weekly</code>, <code>built_enriched_weekly</code>, and feature tables.</p>
+<p class="note"><strong>Parameter note:</strong> UI queries use placeholders such as <code>:focal_upc</code>; replace those with test values in the Druid SQL console or bind them from the application layer.</p>
+<section class="query" id="q0">
+<h2>Q0 Category extract normalization</h2>
+<p class="note"><strong>Purpose:</strong> Normalize the raw SPINS extract to snake_case. Filter to BUILT brand + same-subcategory competitor rows. The only query that reads <code>spins_full</code> directly.</p>
+<p class="note"><strong>Run time:</strong> 10–30 minutes on ~95M rows.</p>
+<pre><code>
+REPLACE INTO "built_filtered_weekly"
+OVERWRITE ALL
+SELECT
+  TIME_PARSE("Time Period End Date", 'MM/dd/yyyy')      AS __time,
+  "Channel/Outlet"                                       AS channel_outlet,
+  "Geography Level"                                      AS geography_level,
+  "Retail Account"                                       AS retail_account,
+  "Retail Account Level"                                 AS retail_account_level,
+  "Geography"                                            AS geography_raw,
+  "Department"                                           AS department,
+  "Category"                                             AS category,
+  "Subcategory"                                          AS subcategory,
+  "UPC"                                                  AS upc,
+  "Description"                                          AS description,
+  "Brand"                                                AS source_brand,
+  CAST("PACK COUNT" AS BIGINT)                           AS source_pack_count,
+  "FLAVOR"                                               AS spins_flavor_raw,
+  "NFP - PROTEIN"                                        AS nfp_protein,
+  "NFP RANGES - PROTEIN VALUE"                           AS nfp_protein_range,
+  "NFP - SUGARS"                                         AS nfp_sugars,
+  "NFP - CALORIES"                                       AS nfp_calories,
+  "STORAGE"                                              AS storage,
+  "UNIT OF MEASURE"                                      AS unit_of_measure,
+  CAST("Units" AS DOUBLE)                                AS units,
+  CAST("Units, Yago" AS DOUBLE)                          AS units_yago,
+  CAST("Base Units" AS DOUBLE)                           AS base_units,
+  CAST("Base Units, Yago" AS DOUBLE)                     AS base_units_yago,
+  CAST("Dollars" AS DOUBLE)                              AS dollars,
+  CAST("Base Dollars" AS DOUBLE)                         AS base_dollars,
+  CAST("TDP" AS DOUBLE)                                  AS tdp,
+  CAST("TDP, Yago" AS DOUBLE)                            AS tdp_yago,
+  CAST("Average Weekly TDP" AS DOUBLE)                   AS avg_weekly_tdp,
+  CAST("Max % ACV" AS DOUBLE)                            AS max_acv,
+  CAST("Avg % ACV" AS DOUBLE)                            AS avg_acv,
+  CAST("# of Stores" AS BIGINT)                          AS store_count,
+  CAST("# of Stores Selling" AS BIGINT)                  AS stores_selling,
+  CAST("% of Stores Selling" AS DOUBLE)                  AS pct_stores_selling,
+  CAST("Average Weekly Units SPM" AS DOUBLE)             AS avg_weekly_units_spm,
+  CAST("Average Weekly Units Per Store Selling Per Item" AS DOUBLE)
+                                                         AS avg_weekly_units_per_store_selling_per_item,
+  CAST("Units SPM Per Item" AS DOUBLE)                   AS units_spm_per_item,
+  CAST("Average Weekly Units per Store Selling" AS DOUBLE)
+                                                         AS avg_weekly_units_per_store_selling,
+  CAST("ARP" AS DOUBLE)                                  AS arp,
+  CAST("ARP, Yago" AS DOUBLE)                            AS arp_yago,
+  CAST("Base ARP" AS DOUBLE)                             AS base_arp,
+  CAST("ARP % Discount, Any Promo" AS DOUBLE)            AS arp_pct_discount_any_promo,
+  CAST("Units, Promo" AS DOUBLE)                         AS units_promo,
+  CAST("Units, Non-Promo" AS DOUBLE)                     AS units_non_promo,
+  CAST("Units, % Promo" AS DOUBLE)                       AS units_pct_promo,
+  CAST("TDP, Any Promo" AS DOUBLE)                       AS tdp_any_promo,
+  CAST("TDP, Non-Promo" AS DOUBLE)                       AS tdp_non_promo,
+  CAST("Promo Weeks" AS BIGINT)                          AS promo_weeks,
+  CAST("Incr Units" AS DOUBLE)                           AS incr_units,
+  CAST("Incr Dollars" AS DOUBLE)                         AS incr_dollars,
+  CAST("Units ,% Lift, TPR" AS DOUBLE)                   AS units_lift_tpr,
+  CAST("Units ,% Lift, Any Display" AS DOUBLE)           AS units_lift_any_display,
+  CAST("Units ,% Lift, Any Feature" AS DOUBLE)           AS units_lift_any_feature,
+  "First Week Selling"                                   AS first_week_selling,
+  CAST("Number of Weeks Selling" AS BIGINT)              AS number_of_weeks_selling
+FROM "spins_full"
+WHERE
+  "Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
+  OR "Subcategory" = 'WELLNESS &amp; NUTRITION BARS'
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT COUNT(*) FROM built_filtered_weekly</code> — expect 500K–2M rows.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q1">
+<h2>Q1 Enriched weekly base table</h2>
+<p class="note"><strong>Purpose:</strong> Join filtered weekly data against flavor mapping. Attach <code>parent_brand</code>, <code>brand_line</code>, <code>spins_flavor_canonical</code>, <code>specific_flavor_normalized</code>, <code>pack_count</code>. Apply military exclusion flag. No geography parser required — all retail context columns come directly from SPINS.</p>
+<pre><code>
+REPLACE INTO "built_enriched_weekly"
+OVERWRITE ALL
+SELECT
+  f.__time,
+  f.channel_outlet,
+  f.geography_level,
+  f.retail_account,
+  f.retail_account_level,
+  f.geography_raw,
+  f.geography_raw                                        AS geography_display,
+  f.geography_raw                                        AS geography,
+  f.channel_outlet                                       AS channel,
+  f.department,
+  f.category,
+  f.subcategory,
+  f.upc,
+  f.description,
+  f.source_brand,
+  f.spins_flavor_raw,
+  f.nfp_protein,
+  f.nfp_protein_range,
+  f.nfp_sugars,
+  f.nfp_calories,
+  f.storage,
+  f.unit_of_measure,
+
+  -- parent_brand: BUILT for all BUILT brand lines; competitor brand name otherwise
+  CASE
+    WHEN f.source_brand IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
+      THEN 'BUILT'
+    ELSE f.source_brand
+  END AS parent_brand,
+
+  -- brand_line from flavor mapping if available, else source_brand
+  COALESCE(m.brand, f.source_brand)                      AS brand_line,
+
+  -- Flavor mapping columns (BUILT rows only; NULL for competitors)
+  m.flavor_family                                        AS spins_flavor_mapped,
+  m.specific_flavor_normalized,
+  m.specific_flavor_raw,
+
+  -- Canonical flavor: override lookup &gt; mapping &gt; raw SPINS FLAVOR
+  COALESCE(o.spins_flavor_canonical,
+           m.flavor_family,
+           f.spins_flavor_raw)                           AS spins_flavor_canonical,
+  COALESCE(o.spins_flavor_canonical,
+           m.flavor_family,
+           f.spins_flavor_raw)                           AS spins_flavor,
+
+  -- pack_count: mapping CSV takes precedence for BUILT rows
+  COALESCE(CAST(m.pack_count AS BIGINT),
+           f.source_pack_count)                          AS pack_count,
+  CAST(m.size AS DOUBLE)                                 AS size_oz,
+
+  -- Military exclusion flag (applied as filter in all downstream scoring queries)
+  CASE
+    WHEN f.channel_outlet = 'CONVENTIONAL|MILITARY'
+      OR f.retail_account = 'DECA'
+      THEN 1
+    ELSE 0
+  END AS military_excluded_flag,
+
+  -- All metrics pass through unchanged
+  f.units, f.units_yago, f.base_units, f.base_units_yago,
+  f.dollars, f.base_dollars,
+  f.tdp, f.tdp_yago, f.avg_weekly_tdp,
+  f.max_acv, f.avg_acv,
+  f.store_count, f.stores_selling, f.pct_stores_selling,
+  f.avg_weekly_units_spm,
+  f.avg_weekly_units_per_store_selling_per_item,
+  f.units_spm_per_item,
+  f.avg_weekly_units_per_store_selling,
+  f.arp, f.arp_yago, f.base_arp, f.arp_pct_discount_any_promo,
+  f.units_promo, f.units_non_promo, f.units_pct_promo,
+  f.tdp_any_promo, f.tdp_non_promo,
+  f.promo_weeks, f.incr_units, f.incr_dollars,
+  f.units_lift_tpr, f.units_lift_any_display, f.units_lift_any_feature,
+  f.first_week_selling, f.number_of_weeks_selling
+
+FROM "built_filtered_weekly" f
+LEFT JOIN "flavor_mapping" m        ON f.upc = m.upc
+LEFT JOIN "flavor_canonical_overrides" o ON f.upc = o.upc
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT COUNT(DISTINCT upc) FROM built_enriched_weekly WHERE parent_brand = 'BUILT'</code> — expect ~91, matching built_specific_flavor_mapping.csv.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q2">
+<h2>Q2 Universal comparison pool</h2>
+<p class="note"><strong>Purpose:</strong> Self-join to build every valid (focal_upc, candidate_upc) pair. <code>comparison_type</code> and <code>relationship_distance</code> are internal columns — UI maps them to plain-English labels at render time.</p>
+<pre><code>
+REPLACE INTO "comparison_pool_weekly"
+OVERWRITE ALL
+SELECT
+  f.__time,
+  f.geography_raw, f.geography_display, f.geography_level,
+  f.channel_outlet, f.channel,
+  f.retail_account, f.retail_account_level,
+
+  -- Focal item
+  f.upc                                                  AS focal_upc,
+  f.parent_brand                                         AS focal_brand,
+  f.brand_line                                           AS focal_brand_line,
+  f.description                                          AS focal_description,
+  f.specific_flavor_normalized                           AS focal_flavor,
+  f.spins_flavor                                         AS focal_spins_flavor,
+  f.pack_count                                           AS focal_pack_count,
+  f.size_oz                                              AS focal_size_oz,
+  f.arp                                                  AS focal_arp,
+  f.base_arp                                             AS focal_base_arp,
+  f.units_pct_promo                                      AS focal_units_pct_promo,
+  f.promo_weeks                                          AS focal_promo_weeks,
+  f.first_week_selling                                   AS focal_first_week_selling,
+
+  -- Candidate item
+  c.upc                                                  AS candidate_upc,
+  c.parent_brand                                         AS candidate_brand,
+  c.brand_line                                           AS candidate_brand_line,
+  c.description                                          AS candidate_description,
+  c.specific_flavor_normalized                           AS candidate_flavor,
+  c.spins_flavor                                         AS candidate_spins_flavor,
+  c.pack_count                                           AS candidate_pack_count,
+  c.size_oz                                              AS candidate_size_oz,
+
+  -- Internal comparison type (backend/ML only)
+  CASE
+    WHEN f.specific_flavor_normalized = c.specific_flavor_normalized
+     AND f.parent_brand = c.parent_brand
+     AND f.pack_count  != c.pack_count
+      THEN 'SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER'
+    WHEN f.specific_flavor_normalized = c.specific_flavor_normalized
+     AND f.parent_brand != c.parent_brand
+      THEN 'SAME_SPECIFIC_FLAVOR_CROSS_BRAND'
+    WHEN f.spins_flavor = c.spins_flavor
+     AND f.parent_brand = c.parent_brand
+     AND f.specific_flavor_normalized != c.specific_flavor_normalized
+      THEN 'SAME_FLAVOR_SAME_BRAND'
+    WHEN f.spins_flavor = c.spins_flavor
+     AND f.parent_brand != c.parent_brand
+      THEN 'SAME_FLAVOR_CROSS_BRAND'
+    WHEN f.spins_flavor != c.spins_flavor
+     AND f.parent_brand = c.parent_brand
+      THEN 'CROSS_FLAVOR_SAME_BRAND'
+    ELSE 'CROSS_FLAVOR_CROSS_BRAND'
+  END AS comparison_type,
+
+  -- Internal relationship distance (ML feature; never shown as a number in UI)
+  CASE
+    WHEN f.specific_flavor_normalized = c.specific_flavor_normalized
+     AND f.parent_brand = c.parent_brand
+     AND f.pack_count  != c.pack_count                   THEN 1
+    WHEN f.specific_flavor_normalized = c.specific_flavor_normalized
+     AND f.parent_brand != c.parent_brand                THEN 2
+    WHEN f.spins_flavor = c.spins_flavor
+     AND f.parent_brand = c.parent_brand
+     AND f.specific_flavor_normalized != c.specific_flavor_normalized
+                                                         THEN 3
+    WHEN f.spins_flavor = c.spins_flavor
+     AND f.parent_brand != c.parent_brand                THEN 4
+    WHEN f.spins_flavor != c.spins_flavor
+     AND f.parent_brand = c.parent_brand                 THEN 5
+    ELSE 6
+  END AS relationship_distance,
+
+  -- Pack size gap (ML feature; UI shows as "Pack size gap (Xct → Ypk)")
+  CASE
+    WHEN f.parent_brand = c.parent_brand
+     AND f.specific_flavor_normalized = c.specific_flavor_normalized
+      THEN ABS(f.pack_count - c.pack_count)
+    ELSE NULL
+  END AS pack_distance,
+
+  -- Price-per-unit ratio
+  CASE
+    WHEN c.pack_count &gt; 0 AND f.pack_count &gt; 0
+      THEN (f.arp / NULLIF(f.pack_count, 0))
+         / NULLIF((c.arp / NULLIF(c.pack_count, 0)), 0)
+    ELSE NULL
+  END AS price_per_unit_ratio,
+
+  -- Candidate metrics
+  c.base_units                                           AS candidate_base_units,
+  c.base_units_yago                                      AS candidate_base_units_yago,
+  c.units                                                AS candidate_units,
+  c.tdp                                                  AS candidate_tdp,
+  c.avg_weekly_units_spm                                 AS candidate_velocity_spm,
+  c.avg_weekly_units_per_store_selling_per_item          AS candidate_velocity_store_selling,
+  c.arp                                                  AS candidate_arp,
+  c.store_count                                          AS candidate_store_count,
+  c.stores_selling                                       AS candidate_stores_selling,
+  c.pct_stores_selling                                   AS candidate_pct_stores_selling,
+  c.tdp_any_promo                                        AS candidate_tdp_any_promo,
+  c.tdp_non_promo                                        AS candidate_tdp_non_promo,
+  c.promo_weeks                                          AS candidate_promo_weeks,
+  c.units_pct_promo                                      AS candidate_units_pct_promo,
+  c.arp_pct_discount_any_promo                           AS candidate_arp_discount_any_promo,
+  c.units_lift_tpr                                       AS candidate_units_lift_tpr,
+  c.units_lift_any_display                               AS candidate_units_lift_any_display,
+  c.units_lift_any_feature                               AS candidate_units_lift_any_feature,
+  c.first_week_selling                                   AS candidate_first_week_selling,
+  c.incr_units                                           AS candidate_incr_units,
+  ic.competitor_tier                                     AS candidate_competitor_tier
+
+FROM "built_enriched_weekly" f
+JOIN "built_enriched_weekly" c
+  ON  f.__time        = c.__time
+  AND f.geography_raw  = c.geography_raw
+  AND f.retail_account = c.retail_account
+  AND f.channel_outlet = c.channel_outlet
+  AND f.upc           != c.upc
+  AND (
+    f.specific_flavor_normalized = c.specific_flavor_normalized
+    OR f.spins_flavor = c.spins_flavor
+    OR (f.parent_brand = c.parent_brand AND f.parent_brand = 'BUILT')
+  )
+LEFT JOIN "item_catalog" ic ON c.upc = ic.upc
+WHERE
+  (f.parent_brand = 'BUILT' OR c.parent_brand = 'BUILT')
+  AND f.military_excluded_flag = 0
+  AND c.military_excluded_flag = 0
+PARTITIONED BY DAY
+</code></pre>
+<p class="note">**Note:** Distance 6 pairs are on-demand via Query 2b only.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q2b">
+<h2>Q2b On-demand competitive pool</h2>
+<p class="note"><strong>Purpose:</strong> Parameterized query run on-demand when a user selects "Specific competitor brand(s)" in the comparison scope modal. Results sorted by <code>competitor_tier</code> ASC (Tier 1 first). Not pre-materialized — called directly from the UI fetch layer against <code>built_enriched_weekly</code>.</p>
+<pre><code>
+-- Parameters: :focal_upc, :competitor_brand, :retail_account,
+--             :channel_outlet, :geography_raw, :window_weeks
+SELECT
+  f.__time,
+  f.geography_raw, f.geography_display, f.geography_level,
+  f.channel_outlet, f.retail_account,
+  f.upc                                              AS focal_upc,
+  f.description                                      AS focal_description,
+  f.specific_flavor_normalized                       AS focal_flavor,
+  f.spins_flavor                                     AS focal_spins_flavor,
+  f.pack_count                                       AS focal_pack_count,
+  f.arp                                              AS focal_arp,
+  f.base_units                                       AS focal_base_units,
+  f.avg_weekly_units_spm                             AS focal_velocity_spm,
+  c.upc                                              AS competitor_upc,
+  c.description                                      AS competitor_description,
+  c.source_brand                                     AS competitor_brand,
+  ic.competitor_tier,
+  c.spins_flavor_raw                                 AS competitor_spins_flavor,
+  c.source_pack_count                                AS competitor_pack_count,
+  c.arp                                              AS competitor_arp,
+  c.arp / NULLIF(c.source_pack_count, 0)            AS competitor_price_per_bar,
+  c.base_units                                       AS competitor_base_units,
+  c.avg_weekly_units_spm                             AS competitor_velocity_spm,
+  'CROSS_FLAVOR_CROSS_BRAND'                         AS comparison_type,
+  6                                                  AS relationship_distance,
+  NULL                                               AS pack_distance
+FROM "built_enriched_weekly" f
+JOIN "built_filtered_weekly" c
+  ON  f.__time          = c.__time
+  AND f.channel_outlet  = c.channel_outlet
+  AND f.retail_account  = c.retail_account
+  AND f.geography_raw   = c.geography_raw
+  AND c.source_brand    = :competitor_brand
+LEFT JOIN "item_catalog" ic ON c.upc = ic.upc
+WHERE
+  f.upc          = :focal_upc
+  AND f.retail_account  = :retail_account
+  AND f.channel_outlet  = :channel_outlet
+  AND f.geography_raw   = :geography_raw
+  AND f.military_excluded_flag = 0
+  AND c.channel_outlet != 'CONVENTIONAL|MILITARY'
+  AND c.retail_account != 'DECA'
+  AND f.__time &gt;= TIMESTAMPADD(WEEK, -:window_weeks, CURRENT_TIMESTAMP)
+ORDER BY ic.competitor_tier ASC, c.arp DESC
+</code></pre>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q2c">
+<h2>Q2c Cross-flavor heatmap aggregation</h2>
+<p class="note"><strong>Purpose:</strong> Powers the geography × SKU heatmap on the Cross-flavor screen. Returns <code>base_units_pct_chg</code> and a <code>heatmap_bucket</code> for each (SKU, geography) cell. Run at render time against <code>built_prepost_features</code> — not pre-materialized.</p>
+<p class="note">Five heatmap buckets match CSS class names: <code>hm-strong-neg</code> (&lt; −10%), <code>hm-mild-neg</code> (−10% to −3%), <code>hm-neutral</code> (−3% to +3%), <code>hm-mild-pos</code> (+3% to +10%), <code>hm-strong-pos</code> (&gt; +10%).</p>
+<pre><code>
+-- Parameters: :spins_flavor, :channel_outlet, :retail_account
+SELECT
+  f.upc,
+  f.description,
+  f.pack_count,
+  f.geography_raw,
+  f.geography_display,
+  f.retail_account,
+  f.channel_outlet,
+  f.pre_13w_base_units,
+  f.post_13w_base_units,
+  -- Percentage change (13w default)
+  (f.post_13w_base_units - f.pre_13w_base_units)
+    / NULLIF(f.pre_13w_base_units, 0)              AS base_units_pct_chg,
+  -- Heatmap bucket matching CSS class names in the UI
+  CASE
+    WHEN (f.post_13w_base_units - f.pre_13w_base_units)
+           / NULLIF(f.pre_13w_base_units, 0) &lt; -0.10  THEN 'hm-strong-neg'
+    WHEN (f.post_13w_base_units - f.pre_13w_base_units)
+           / NULLIF(f.pre_13w_base_units, 0) &lt; -0.03  THEN 'hm-mild-neg'
+    WHEN (f.post_13w_base_units - f.pre_13w_base_units)
+           / NULLIF(f.pre_13w_base_units, 0) &lt;= 0.03  THEN 'hm-neutral'
+    WHEN (f.post_13w_base_units - f.pre_13w_base_units)
+           / NULLIF(f.pre_13w_base_units, 0) &lt;= 0.10  THEN 'hm-mild-pos'
+    ELSE 'hm-strong-pos'
+  END AS heatmap_bucket
+FROM "built_prepost_features" f
+JOIN "built_enriched_weekly" e
+  ON  f.upc          = e.upc
+  AND f.channel_outlet = e.channel_outlet
+  AND f.retail_account = e.retail_account
+  AND f.geography_raw  = e.geography_raw
+WHERE
+  e.spins_flavor      = :spins_flavor
+  AND f.channel_outlet  = :channel_outlet
+  AND f.retail_account  = :retail_account
+  AND e.parent_brand    = 'BUILT'
+  AND e.military_excluded_flag = 0
+GROUP BY
+  f.upc, f.description, f.pack_count,
+  f.geography_raw, f.geography_display,
+  f.retail_account, f.channel_outlet,
+  f.pre_13w_base_units, f.post_13w_base_units
+ORDER BY f.description, f.geography_raw
+</code></pre>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q2d">
+<h2>Q2d Scope bar metadata</h2>
+<p class="note"><strong>Purpose:</strong> Lightweight aggregate against <code>comparison_pool_weekly</code>. Returns <code>comparison_type</code>, <code>relationship_distance</code>, <code>pool_sku_count</code>, and <code>pool_sku_names</code> for the active focal × geography × comparison type selection. The UI uses <code>pool_sku_count</code> and <code>pool_sku_names</code> to populate the <code>scope-bar-dist</code> slot; the <code>scope-bar-value</code> slot reads the plain-English label from the CASE expression below.</p>
+<pre><code>
+-- Parameters: :focal_upc, :channel_outlet, :retail_account,
+--             :geography_raw, :comparison_type
+SELECT
+  comparison_type,
+  relationship_distance,
+  COUNT(DISTINCT candidate_upc)                     AS pool_sku_count,
+  STRING_AGG(DISTINCT candidate_description, ', '
+    ORDER BY candidate_description)                 AS pool_sku_names,
+  -- Plain-English scope label (maps comparison_type to UI string at render time)
+  CASE comparison_type
+    WHEN 'SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER'
+      THEN 'Pack size comparison'
+    WHEN 'SAME_SPECIFIC_FLAVOR_CROSS_BRAND'
+      THEN 'Same flavor · any brand'
+    WHEN 'SAME_FLAVOR_SAME_BRAND'
+      THEN 'Cross-flavor · BUILT only'
+    WHEN 'SAME_FLAVOR_CROSS_BRAND'
+      THEN 'Cross-flavor · all brands'
+    WHEN 'CROSS_FLAVOR_SAME_BRAND'
+      THEN 'Other BUILT FLAVOR groups'
+    ELSE 'Full competitive · on-demand'
+  END AS comparison_scope_label
+FROM "comparison_pool_weekly"
+WHERE
+  focal_upc      = :focal_upc
+  AND channel_outlet = :channel_outlet
+  AND retail_account = :retail_account
+  AND geography_raw  = :geography_raw
+  AND comparison_type = :comparison_type
+GROUP BY comparison_type, relationship_distance
+</code></pre>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q2e">
+<h2>Q2e Cannibalization rate trend retrieval</h2>
+<p class="note"><strong>Purpose:</strong> Returns trailing actuals from <code>cannibalization_rate_weekly</code> plus future weeks from <code>cannibalization_rate_forecast_weekly</code> in one UI-ready result set. Powers the Forecast screen trend chart — actual weeks render as solid bars; forecast weeks render in the scenario color with a confidence band.</p>
+<pre><code>
+-- Parameters: :focal_upc, :candidate_pool_id, :scenario_id,
+--             :channel_outlet, :retail_account, :geography_display,
+--             :forecast_origin_week
+SELECT
+  __time,
+  'ACTUAL'                                           AS series_type,
+  cannibalization_rate,
+  cannibalization_rate_low,
+  cannibalization_rate_high,
+  focal_units_gained,
+  estimated_donor_units_lost,
+  incremental_share
+FROM "cannibalization_rate_weekly"
+WHERE focal_upc         = :focal_upc
+  AND candidate_pool_id = :candidate_pool_id
+  AND channel_outlet    = :channel_outlet
+  AND retail_account    = :retail_account
+  AND geography_display = :geography_display
+  AND __time &gt;= TIMESTAMPADD(WEEK, -8, :forecast_origin_week)
+
+UNION ALL
+
+SELECT
+  __time,
+  'FORECAST'                                         AS series_type,
+  cannibalization_rate_forecast                      AS cannibalization_rate,
+  cannibalization_rate_forecast_low                  AS cannibalization_rate_low,
+  cannibalization_rate_forecast_high                 AS cannibalization_rate_high,
+  forecast_focal_units_gained                        AS focal_units_gained,
+  forecast_donor_units_lost                          AS estimated_donor_units_lost,
+  incremental_share_forecast                         AS incremental_share
+FROM "cannibalization_rate_forecast_weekly"
+WHERE focal_upc         = :focal_upc
+  AND candidate_pool_id = :candidate_pool_id
+  AND scenario_id       = :scenario_id
+  AND channel_outlet    = :channel_outlet
+  AND retail_account    = :retail_account
+  AND geography_display = :geography_display
+  AND forecast_origin_week = :forecast_origin_week
+ORDER BY __time
+</code></pre>
+<p class="note">**Default horizon:** 13 weeks. Trailing 8 actual weeks + next 13 forecast weeks under the selected scenario. When the user switches scenario buttons, the UI re-queries using the selected <code>scenario_id</code> and replaces the assumption labels, forecast cards, rate curve, and market/action table together. If the table has not been precomputed for a scenario, the UI calls the Python scoring service on-demand, then reads the freshly written rows.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q3">
+<h2>Q3 Focal pre/post window aggregation</h2>
+<p class="note"><strong>Purpose:</strong> For each focal BUILT SKU, compute before/after metrics across all four window sizes (4w, 13w, 26w, YTD) in a single pass. Pre window = strictly before launch week. Post window = launch week and after. Keyed to <code>first_week_selling</code>.</p>
+<pre><code>
+REPLACE INTO "built_prepost_features"
+OVERWRITE ALL
+WITH weekly_tagged AS (
+  SELECT
+    w.__time,
+    w.upc, w.description, w.channel_outlet, w.retail_account,
+    w.geography_raw, w.geography_display, w.geography_level,
+    w.parent_brand, w.brand_line,
+    w.specific_flavor_normalized, w.spins_flavor, w.pack_count,
+    w.base_units, w.base_units_yago,
+    w.units, w.units_yago,
+    w.tdp, w.tdp_yago,
+    w.avg_weekly_units_spm,
+    w.avg_weekly_units_per_store_selling_per_item,
+    w.pct_stores_selling, w.stores_selling,
+    w.arp, w.arp_yago, w.base_arp,
+    w.promo_weeks, w.units_pct_promo, w.arp_pct_discount_any_promo,
+    w.first_week_selling,
+    TIME_PARSE(w.first_week_selling, 'MM/dd/yyyy')       AS launch_date,
+    TIMESTAMPDIFF(WEEK,
+      TIME_PARSE(w.first_week_selling, 'MM/dd/yyyy'),
+      w.__time)                                          AS weeks_from_launch,
+    EXTRACT(YEAR FROM TIME_PARSE(w.first_week_selling, 'MM/dd/yyyy'))
+                                                         AS launch_year
+  FROM "built_enriched_weekly" w
+  WHERE
+    w.parent_brand = 'BUILT'
+    AND w.military_excluded_flag = 0
+    AND w.first_week_selling IS NOT NULL
+)
+
+SELECT
+  launch_date                                            AS __time,
+  upc, description, channel_outlet, retail_account,
+  geography_raw, geography_display, geography_level,
+  parent_brand, brand_line,
+  specific_flavor_normalized, spins_flavor, pack_count,
+  first_week_selling,
+
+  -- ── 4-WEEK WINDOW ─────────────────────────────────────────────
+  SUM(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN base_units ELSE 0 END)
+                                                         AS pre_4w_base_units,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN base_units ELSE 0 END)
+                                                         AS post_4w_base_units,
+  SUM(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN tdp        ELSE 0 END)
+                                                         AS pre_4w_tdp,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN tdp        ELSE 0 END)
+                                                         AS post_4w_tdp,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN avg_weekly_units_spm END)
+                                                         AS pre_4w_velocity_spm,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN avg_weekly_units_spm END)
+                                                         AS post_4w_velocity_spm,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN avg_weekly_units_per_store_selling_per_item END)
+                                                         AS pre_4w_velocity_store_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN avg_weekly_units_per_store_selling_per_item END)
+                                                         AS post_4w_velocity_store_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN pct_stores_selling END)
+                                                         AS pre_4w_pct_stores_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN pct_stores_selling END)
+                                                         AS post_4w_pct_stores_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN arp END)
+                                                         AS pre_4w_arp,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN arp END)
+                                                         AS post_4w_arp,
+  SUM(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN promo_weeks ELSE 0 END)
+                                                         AS pre_4w_promo_weeks,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN promo_weeks ELSE 0 END)
+                                                         AS post_4w_promo_weeks,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN units_pct_promo END)
+                                                         AS pre_4w_units_pct_promo,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN units_pct_promo END)
+                                                         AS post_4w_units_pct_promo,
+  COUNT(CASE WHEN weeks_from_launch BETWEEN -4 AND -1 THEN 1 END)
+                                                         AS pre_4w_weeks_count,
+  COUNT(CASE WHEN weeks_from_launch BETWEEN  0 AND  3 THEN 1 END)
+                                                         AS post_4w_weeks_count,
+
+  -- ── 13-WEEK WINDOW ────────────────────────────────────────────
+  SUM(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN base_units ELSE 0 END)
+                                                         AS pre_13w_base_units,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN base_units ELSE 0 END)
+                                                         AS post_13w_base_units,
+  -- Sequential baseline: 13 weeks before the pre window
+  SUM(CASE WHEN weeks_from_launch BETWEEN -26 AND -14 THEN base_units ELSE 0 END)
+                                                         AS prior_13w_base_units,
+  -- Year-ago: pull from Yago columns over the same post window dates
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN base_units_yago ELSE 0 END)
+                                                         AS yago_13w_base_units,
+  SUM(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN tdp ELSE 0 END)
+                                                         AS pre_13w_tdp,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN tdp ELSE 0 END)
+                                                         AS post_13w_tdp,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN avg_weekly_units_spm END)
+                                                         AS pre_13w_velocity_spm,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN avg_weekly_units_spm END)
+                                                         AS post_13w_velocity_spm,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -26 AND -14 THEN avg_weekly_units_spm END)
+                                                         AS prior_13w_velocity_spm,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN avg_weekly_units_per_store_selling_per_item END)
+                                                         AS post_13w_velocity_store_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN avg_weekly_units_per_store_selling_per_item END)
+                                                         AS pre_13w_velocity_store_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN pct_stores_selling END)
+                                                         AS pre_13w_pct_stores_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN pct_stores_selling END)
+                                                         AS post_13w_pct_stores_selling,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN arp END)
+                                                         AS pre_13w_arp,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN arp END)
+                                                         AS post_13w_arp,
+  SUM(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN promo_weeks ELSE 0 END)
+                                                         AS pre_13w_promo_weeks,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN promo_weeks ELSE 0 END)
+                                                         AS post_13w_promo_weeks,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN units_pct_promo END)
+                                                         AS pre_13w_units_pct_promo,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN units_pct_promo END)
+                                                         AS post_13w_units_pct_promo,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN arp_pct_discount_any_promo END)
+                                                         AS pre_13w_arp_discount,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN arp_pct_discount_any_promo END)
+                                                         AS post_13w_arp_discount,
+  COUNT(CASE WHEN weeks_from_launch BETWEEN -13 AND -1  THEN 1 END)
+                                                         AS pre_13w_weeks_count,
+  COUNT(CASE WHEN weeks_from_launch BETWEEN  0  AND 12  THEN 1 END)
+                                                         AS post_13w_weeks_count,
+
+  -- ── 26-WEEK WINDOW ────────────────────────────────────────────
+  SUM(CASE WHEN weeks_from_launch BETWEEN -26 AND -1  THEN base_units ELSE 0 END)
+                                                         AS pre_26w_base_units,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0  AND 25  THEN base_units ELSE 0 END)
+                                                         AS post_26w_base_units,
+  AVG(CASE WHEN weeks_from_launch BETWEEN -26 AND -1  THEN avg_weekly_units_spm END)
+                                                         AS pre_26w_velocity_spm,
+  AVG(CASE WHEN weeks_from_launch BETWEEN  0  AND 25  THEN avg_weekly_units_spm END)
+                                                         AS post_26w_velocity_spm,
+  SUM(CASE WHEN weeks_from_launch BETWEEN -26 AND -1  THEN tdp ELSE 0 END)
+                                                         AS pre_26w_tdp,
+  SUM(CASE WHEN weeks_from_launch BETWEEN  0  AND 25  THEN tdp ELSE 0 END)
+                                                         AS post_26w_tdp,
+  COUNT(CASE WHEN weeks_from_launch BETWEEN -26 AND -1  THEN 1 END)
+                                                         AS pre_26w_weeks_count,
+  COUNT(CASE WHEN weeks_from_launch BETWEEN  0  AND 25  THEN 1 END)
+                                                         AS post_26w_weeks_count,
+
+  -- ── YTD WINDOW (calendar year of launch) ──────────────────────
+  SUM(CASE
+    WHEN EXTRACT(YEAR FROM __time) = launch_year
+     AND weeks_from_launch &lt; 0
+      THEN base_units ELSE 0 END)                        AS pre_ytd_base_units,
+  SUM(CASE
+    WHEN EXTRACT(YEAR FROM __time) = launch_year
+     AND weeks_from_launch &gt;= 0
+      THEN base_units ELSE 0 END)                        AS post_ytd_base_units,
+  COUNT(CASE
+    WHEN EXTRACT(YEAR FROM __time) = launch_year
+     AND weeks_from_launch &lt; 0 THEN 1 END)               AS pre_ytd_weeks_count,
+  COUNT(CASE
+    WHEN EXTRACT(YEAR FROM __time) = launch_year
+     AND weeks_from_launch &gt;= 0 THEN 1 END)              AS post_ytd_weeks_count
+
+FROM weekly_tagged
+GROUP BY
+  upc, description, channel_outlet, retail_account,
+  geography_raw, geography_display, geography_level,
+  parent_brand, brand_line,
+  specific_flavor_normalized, spins_flavor, pack_count,
+  first_week_selling, launch_date
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT COUNT(DISTINCT upc) FROM built_prepost_features</code> should match BUILT SKU count. Check <code>pre_13w_weeks_count</code> is non-zero for established SKUs.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q4">
+<h2>Q4 Donor pre/post aggregation</h2>
+<p class="note"><strong>Purpose:</strong> Same window logic as Q3, applied to each donor candidate but keyed to the **focal SKU's** <code>first_week_selling</code>. Aligns the donor's pre/post window to the focal's launch event, not the donor's own history.</p>
+<pre><code>
+REPLACE INTO "donor_prepost_features"
+OVERWRITE ALL
+WITH
+
+focal_launches AS (
+  SELECT DISTINCT
+    focal_upc,
+    candidate_upc,
+    channel_outlet,
+    retail_account,
+    geography_raw,
+    geography_level,
+    focal_first_week_selling,
+    relationship_distance,
+    comparison_type,
+    pack_distance
+  FROM "comparison_pool_weekly"
+  WHERE relationship_distance &lt;= 5
+),
+
+donor_tagged AS (
+  SELECT
+    fl.focal_upc,
+    fl.candidate_upc,
+    fl.channel_outlet,
+    fl.retail_account,
+    fl.geography_raw,
+    fl.geography_level,
+    fl.relationship_distance,
+    fl.comparison_type,
+    fl.pack_distance,
+    fl.focal_first_week_selling,
+    d.description                                        AS candidate_description,
+    d.specific_flavor_normalized                         AS candidate_flavor,
+    d.spins_flavor                                       AS candidate_spins_flavor,
+    d.pack_count                                         AS candidate_pack_count,
+    d.parent_brand                                       AS candidate_brand,
+    d.brand_line                                         AS candidate_brand_line,
+    d.__time,
+    d.base_units, d.base_units_yago,
+    d.units, d.tdp,
+    d.avg_weekly_units_spm,
+    d.avg_weekly_units_per_store_selling_per_item,
+    d.pct_stores_selling, d.stores_selling,
+    d.arp, d.base_arp,
+    d.promo_weeks, d.units_pct_promo,
+    d.arp_pct_discount_any_promo,
+    d.incr_units,
+    -- Weeks relative to focal launch (not donor's own launch)
+    TIMESTAMPDIFF(WEEK,
+      TIME_PARSE(fl.focal_first_week_selling, 'MM/dd/yyyy'),
+      d.__time)                                          AS weeks_from_focal_launch
+  FROM focal_launches fl
+  JOIN "built_enriched_weekly" d
+    ON  fl.candidate_upc   = d.upc
+    AND fl.channel_outlet  = d.channel_outlet
+    AND fl.retail_account  = d.retail_account
+    AND fl.geography_raw   = d.geography_raw
+  WHERE d.military_excluded_flag = 0
+)
+
+SELECT
+  TIME_PARSE(focal_first_week_selling, 'MM/dd/yyyy')     AS __time,
+  focal_upc, candidate_upc, candidate_description,
+  candidate_flavor, candidate_spins_flavor,
+  candidate_pack_count, candidate_brand, candidate_brand_line,
+  channel_outlet, retail_account, geography_raw, geography_level,
+  relationship_distance, comparison_type, pack_distance,
+  focal_first_week_selling,
+
+  -- ── 4-WEEK WINDOW ─────────────────────────────────────────────
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN -4 AND -1 THEN base_units ELSE 0 END)
+                                                         AS donor_pre_4w_base_units,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN  0 AND  3 THEN base_units ELSE 0 END)
+                                                         AS donor_post_4w_base_units,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -4 AND -1 THEN avg_weekly_units_spm END)
+                                                         AS donor_pre_4w_velocity_spm,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0 AND  3 THEN avg_weekly_units_spm END)
+                                                         AS donor_post_4w_velocity_spm,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN -4 AND -1 THEN promo_weeks ELSE 0 END)
+                                                         AS donor_pre_4w_promo_weeks,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN  0 AND  3 THEN promo_weeks ELSE 0 END)
+                                                         AS donor_post_4w_promo_weeks,
+  COUNT(CASE WHEN weeks_from_focal_launch BETWEEN -4 AND -1 THEN 1 END)
+                                                         AS donor_pre_4w_weeks_count,
+  COUNT(CASE WHEN weeks_from_focal_launch BETWEEN  0 AND  3 THEN 1 END)
+                                                         AS donor_post_4w_weeks_count,
+
+  -- ── 13-WEEK WINDOW ────────────────────────────────────────────
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN base_units ELSE 0 END)
+                                                         AS donor_pre_13w_base_units,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN base_units ELSE 0 END)
+                                                         AS donor_post_13w_base_units,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN base_units_yago ELSE 0 END)
+                                                         AS donor_yago_13w_base_units,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN avg_weekly_units_spm END)
+                                                         AS donor_pre_13w_velocity_spm,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN avg_weekly_units_spm END)
+                                                         AS donor_post_13w_velocity_spm,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN avg_weekly_units_per_store_selling_per_item END)
+                                                         AS donor_pre_13w_velocity_store_selling,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN avg_weekly_units_per_store_selling_per_item END)
+                                                         AS donor_post_13w_velocity_store_selling,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN pct_stores_selling END)
+                                                         AS donor_pre_13w_pct_stores_selling,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN pct_stores_selling END)
+                                                         AS donor_post_13w_pct_stores_selling,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN arp END)
+                                                         AS donor_pre_13w_arp,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN arp END)
+                                                         AS donor_post_13w_arp,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN promo_weeks ELSE 0 END)
+                                                         AS donor_pre_13w_promo_weeks,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN promo_weeks ELSE 0 END)
+                                                         AS donor_post_13w_promo_weeks,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN units_pct_promo END)
+                                                         AS donor_pre_13w_units_pct_promo,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN units_pct_promo END)
+                                                         AS donor_post_13w_units_pct_promo,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN arp_pct_discount_any_promo END)
+                                                         AS donor_pre_13w_arp_discount,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN arp_pct_discount_any_promo END)
+                                                         AS donor_post_13w_arp_discount,
+  COUNT(CASE WHEN weeks_from_focal_launch BETWEEN -13 AND -1  THEN 1 END)
+                                                         AS donor_pre_13w_weeks_count,
+  COUNT(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 12  THEN 1 END)
+                                                         AS donor_post_13w_weeks_count,
+
+  -- ── 26-WEEK WINDOW ────────────────────────────────────────────
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN -26 AND -1  THEN base_units ELSE 0 END)
+                                                         AS donor_pre_26w_base_units,
+  SUM(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 25  THEN base_units ELSE 0 END)
+                                                         AS donor_post_26w_base_units,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN -26 AND -1  THEN avg_weekly_units_spm END)
+                                                         AS donor_pre_26w_velocity_spm,
+  AVG(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 25  THEN avg_weekly_units_spm END)
+                                                         AS donor_post_26w_velocity_spm,
+  COUNT(CASE WHEN weeks_from_focal_launch BETWEEN -26 AND -1  THEN 1 END)
+                                                         AS donor_pre_26w_weeks_count,
+  COUNT(CASE WHEN weeks_from_focal_launch BETWEEN  0  AND 25  THEN 1 END)
+                                                         AS donor_post_26w_weeks_count
+
+FROM donor_tagged
+GROUP BY
+  focal_upc, candidate_upc, candidate_description,
+  candidate_flavor, candidate_spins_flavor,
+  candidate_pack_count, candidate_brand, candidate_brand_line,
+  channel_outlet, retail_account, geography_raw, geography_level,
+  relationship_distance, comparison_type, pack_distance,
+  focal_first_week_selling
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> Every focal UPC in <code>built_prepost_features</code> should have at least one donor row. Run: <code>SELECT focal_upc, COUNT(*) AS donor_pairs FROM donor_prepost_features GROUP BY focal_upc ORDER BY donor_pairs DESC LIMIT 10</code>.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q5">
+<h2>Q5 Final ML feature table assembly</h2>
+<p class="note"><strong>Purpose:</strong> Join focal and donor pre/post features. Compute all derived change signals, percentage deltas, promo confound flag, deterministic labels, <code>incremental_share</code>, and <code>cannibalization_rate</code>. One row = one (focal_upc, donor_upc, geography, window_type) training example.</p>
+<p class="note">**<code>Units/TDP</code> is never computed anywhere in this query.**</p>
+<pre><code>
+REPLACE INTO "ml_training_features"
+OVERWRITE ALL
+WITH joined AS (
+  SELECT
+    f.upc                                                AS focal_upc,
+    f.description                                        AS focal_description,
+    f.channel_outlet, f.retail_account,
+    f.geography_raw, f.geography_display, f.geography_level,
+    f.parent_brand                                       AS focal_parent_brand,
+    f.brand_line                                         AS focal_brand_line,
+    f.specific_flavor_normalized                         AS focal_flavor,
+    f.spins_flavor                                       AS focal_spins_flavor,
+    f.pack_count                                         AS focal_pack_count,
+    f.first_week_selling,
+    '13w'                                                AS window_type,
+
+    -- Focal pre/post metrics (13w default training window)
+    f.pre_13w_base_units, f.post_13w_base_units,
+    f.prior_13w_base_units, f.yago_13w_base_units,
+    f.pre_13w_tdp, f.post_13w_tdp,
+    f.pre_13w_velocity_spm, f.post_13w_velocity_spm,
+    f.pre_13w_velocity_store_selling, f.post_13w_velocity_store_selling,
+    f.pre_13w_pct_stores_selling, f.post_13w_pct_stores_selling,
+    f.pre_13w_arp, f.post_13w_arp,
+    f.pre_13w_promo_weeks, f.post_13w_promo_weeks,
+    f.pre_13w_units_pct_promo, f.post_13w_units_pct_promo,
+    f.pre_13w_arp_discount, f.post_13w_arp_discount,
+    f.pre_13w_weeks_count                                AS focal_pre_weeks_count,
+    f.post_13w_weeks_count                               AS focal_post_weeks_count,
+
+    -- Donor metrics
+    d.candidate_upc                                      AS donor_upc,
+    d.candidate_description                              AS donor_description,
+    d.candidate_flavor                                   AS donor_flavor,
+    d.candidate_spins_flavor                             AS donor_spins_flavor,
+    d.candidate_pack_count                               AS donor_pack_count,
+    d.candidate_brand                                    AS donor_brand,
+    d.candidate_brand_line                               AS donor_brand_line,
+    d.relationship_distance, d.comparison_type, d.pack_distance,
+    d.donor_pre_13w_base_units, d.donor_post_13w_base_units,
+    d.donor_yago_13w_base_units,
+    d.donor_pre_13w_velocity_spm, d.donor_post_13w_velocity_spm,
+    d.donor_pre_13w_velocity_store_selling, d.donor_post_13w_velocity_store_selling,
+    d.donor_pre_13w_pct_stores_selling, d.donor_post_13w_pct_stores_selling,
+    d.donor_pre_13w_arp, d.donor_post_13w_arp,
+    d.donor_pre_13w_promo_weeks, d.donor_post_13w_promo_weeks,
+    d.donor_pre_13w_units_pct_promo, d.donor_post_13w_units_pct_promo,
+    d.donor_pre_13w_arp_discount, d.donor_post_13w_arp_discount,
+    d.donor_pre_13w_weeks_count, d.donor_post_13w_weeks_count
+
+  FROM "built_prepost_features" f
+  JOIN "donor_prepost_features" d
+    ON  f.upc              = d.focal_upc
+    AND f.channel_outlet   = d.channel_outlet
+    AND f.retail_account   = d.retail_account
+    AND f.geography_raw    = d.geography_raw
+    AND f.first_week_selling = d.focal_first_week_selling
+)
+
+SELECT
+  TIME_PARSE(first_week_selling, 'MM/dd/yyyy')           AS __time,
+  focal_upc, focal_description,
+  channel_outlet, retail_account,
+  geography_raw, geography_display, geography_level,
+  focal_parent_brand, focal_brand_line,
+  focal_flavor, focal_spins_flavor, focal_pack_count,
+  donor_upc, donor_description,
+  donor_flavor, donor_spins_flavor, donor_pack_count,
+  donor_brand, donor_brand_line,
+  relationship_distance, comparison_type, pack_distance,
+  window_type, first_week_selling,
+  focal_pre_weeks_count, focal_post_weeks_count,
+  donor_pre_13w_weeks_count, donor_post_13w_weeks_count,
+
+  -- ── DERIVED CHANGE SIGNALS ────────────────────────────────────
+  (post_13w_base_units - pre_13w_base_units)
+    / NULLIF(pre_13w_base_units, 0)                      AS focal_base_units_pct_chg,
+
+  (donor_post_13w_base_units - donor_pre_13w_base_units)
+    / NULLIF(donor_pre_13w_base_units, 0)                AS donor_base_units_pct_chg,
+
+  -- Net transfer: focal gain + donor loss (negative donor = net positive transfer)
+  (post_13w_base_units - pre_13w_base_units)
+  + (donor_post_13w_base_units - donor_pre_13w_base_units)
+                                                         AS base_units_delta_diff,
+
+  (post_13w_tdp - pre_13w_tdp)
+    / NULLIF(pre_13w_tdp, 0)                             AS focal_tdp_pct_chg,
+
+  (post_13w_velocity_spm - pre_13w_velocity_spm)
+    / NULLIF(pre_13w_velocity_spm, 0)                    AS focal_velocity_spm_pct_chg,
+
+  (donor_post_13w_velocity_spm - donor_pre_13w_velocity_spm)
+    / NULLIF(donor_pre_13w_velocity_spm, 0)              AS donor_velocity_spm_pct_chg,
+
+  (post_13w_velocity_spm - pre_13w_velocity_spm)
+  + (donor_post_13w_velocity_spm - donor_pre_13w_velocity_spm)
+                                                         AS velocity_spm_delta_diff,
+
+  (post_13w_velocity_store_selling - pre_13w_velocity_store_selling)
+    / NULLIF(pre_13w_velocity_store_selling, 0)          AS focal_velocity_store_selling_pct_chg,
+
+  (donor_post_13w_velocity_store_selling - donor_pre_13w_velocity_store_selling)
+    / NULLIF(donor_pre_13w_velocity_store_selling, 0)    AS donor_velocity_store_selling_pct_chg,
+
+  (post_13w_pct_stores_selling - pre_13w_pct_stores_selling)
+    / NULLIF(pre_13w_pct_stores_selling, 0)              AS focal_pct_stores_selling_pct_chg,
+
+  (donor_post_13w_pct_stores_selling - donor_pre_13w_pct_stores_selling)
+    / NULLIF(donor_pre_13w_pct_stores_selling, 0)        AS donor_pct_stores_selling_pct_chg,
+
+  (post_13w_arp - pre_13w_arp)
+    / NULLIF(pre_13w_arp, 0)                             AS focal_arp_pct_chg,
+
+  post_13w_promo_weeks - pre_13w_promo_weeks             AS focal_promo_week_delta,
+  donor_post_13w_promo_weeks - donor_pre_13w_promo_weeks AS donor_promo_week_delta,
+
+  -- Promo confounded flag
+  CASE
+    WHEN ABS(post_13w_promo_weeks - pre_13w_promo_weeks) &gt; 2
+      OR ABS(post_13w_arp_discount - pre_13w_arp_discount) &gt; 0.05
+      OR ABS(donor_post_13w_promo_weeks - donor_pre_13w_promo_weeks) &gt; 2
+      THEN 1
+    ELSE 0
+  END AS promo_confounded,
+
+  -- Price per unit (controls for pack format value differences)
+  post_13w_arp / NULLIF(focal_pack_count, 0)             AS focal_price_per_unit,
+  donor_post_13w_arp / NULLIF(donor_pack_count, 0)       AS donor_price_per_unit,
+
+  -- Year-ago seasonality controls
+  (post_13w_base_units - yago_13w_base_units)
+    / NULLIF(yago_13w_base_units, 0)                     AS focal_base_units_yago_pct_chg,
+
+  (donor_post_13w_base_units - donor_yago_13w_base_units)
+    / NULLIF(donor_yago_13w_base_units, 0)               AS donor_base_units_yago_pct_chg,
+
+  -- Raw metric pass-throughs for Python scoring
+  post_13w_base_units                                    AS focal_post_base_units,
+  pre_13w_base_units                                     AS focal_pre_base_units,
+  post_13w_tdp                                           AS focal_post_tdp,
+  pre_13w_tdp                                            AS focal_pre_tdp,
+  post_13w_velocity_spm                                  AS focal_post_velocity_spm,
+  pre_13w_velocity_spm                                   AS focal_pre_velocity_spm,
+  post_13w_promo_weeks                                   AS focal_post_promo_weeks,
+  pre_13w_promo_weeks                                    AS focal_pre_promo_weeks,
+  post_13w_units_pct_promo                               AS focal_post_units_pct_promo,
+  pre_13w_units_pct_promo                                AS focal_pre_units_pct_promo,
+  post_13w_arp_discount                                  AS focal_post_arp_discount,
+  pre_13w_arp_discount                                   AS focal_pre_arp_discount,
+  donor_post_13w_base_units, donor_pre_13w_base_units,
+  donor_post_13w_velocity_spm, donor_pre_13w_velocity_spm,
+  donor_post_13w_promo_weeks, donor_pre_13w_promo_weeks,
+  donor_post_13w_units_pct_promo, donor_pre_13w_units_pct_promo,
+  donor_post_13w_arp_discount, donor_pre_13w_arp_discount,
+
+  -- ── DETERMINISTIC LABELS ─────────────────────────────────────
+  CASE
+    WHEN (donor_post_13w_base_units - donor_pre_13w_base_units)
+           / NULLIF(donor_pre_13w_base_units, 0) &lt; -0.10
+     AND  (post_13w_base_units - pre_13w_base_units)
+           / NULLIF(pre_13w_base_units, 0) &gt; 0.03
+      THEN 'CANNIBALIZING'
+    WHEN (donor_post_13w_base_units - donor_pre_13w_base_units)
+           / NULLIF(donor_pre_13w_base_units, 0) &lt; -0.03
+     AND  (post_13w_base_units - pre_13w_base_units)
+           / NULLIF(pre_13w_base_units, 0) &gt; 0
+      THEN 'WATCH'
+    WHEN (donor_post_13w_base_units - donor_pre_13w_base_units)
+           / NULLIF(donor_pre_13w_base_units, 0) &gt;= -0.03
+      THEN 'INCREMENTAL'
+    ELSE 'NEUTRAL'
+  END AS label_deterministic,
+
+  CASE
+    WHEN (post_13w_velocity_spm - pre_13w_velocity_spm)
+           / NULLIF(pre_13w_velocity_spm, 0) &gt; 0
+     AND  (post_13w_base_units - pre_13w_base_units)
+           / NULLIF(pre_13w_base_units, 0) &gt; 0
+      THEN 'DEMAND_LED'
+    WHEN (post_13w_tdp - pre_13w_tdp)
+           / NULLIF(pre_13w_tdp, 0) &gt; 0.15
+     AND  (post_13w_velocity_spm - pre_13w_velocity_spm)
+           / NULLIF(pre_13w_velocity_spm, 0) &lt;= 0
+      THEN 'DISTRIBUTION_LED'
+    ELSE 'MIXED'
+  END AS demand_vs_dist,
+
+  -- Incremental share: focal gain / (focal gain + ABS donor loss)
+  CASE
+    WHEN (post_13w_base_units - pre_13w_base_units) &gt; 0
+      THEN GREATEST(0.0, LEAST(1.0,
+        (post_13w_base_units - pre_13w_base_units) /
+        NULLIF(
+          (post_13w_base_units - pre_13w_base_units)
+          + ABS(LEAST(0.0, donor_post_13w_base_units - donor_pre_13w_base_units)),
+          0)
+      ))
+    ELSE NULL
+  END AS incremental_share,
+
+  -- Cannibalization rate: donor units lost / focal units gained, bounded 0-1
+  CASE
+    WHEN (post_13w_base_units - pre_13w_base_units) &gt; 0
+      THEN GREATEST(0.0, LEAST(1.0,
+        ABS(LEAST(0.0, donor_post_13w_base_units - donor_pre_13w_base_units))
+        / NULLIF(post_13w_base_units - pre_13w_base_units, 0)
+      ))
+    ELSE NULL
+  END AS cannibalization_rate
+
+FROM joined
+WHERE
+  focal_pre_weeks_count  &gt;= 8
+  AND focal_post_weeks_count &gt;= 8
+  AND donor_pre_13w_weeks_count &gt;= 8
+  AND donor_post_13w_weeks_count &gt;= 8
+  AND pre_13w_base_units &gt; 0
+  AND post_13w_tdp &gt; 0
+  AND donor_pre_13w_base_units &gt; 0
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT label_deterministic, COUNT(*) FROM ml_training_features GROUP BY 1</code> — INCREMENTAL should dominate; some WATCH and CANNIBALIZING; NEUTRAL excluded.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q6">
+<h2>Q6 Rolling stats + z-scores</h2>
+<p class="note"><strong>Purpose:</strong> Compute rolling 4w, 8w, and 13w averages, standard deviations, and z-scores for <code>base_units</code>, <code>avg_weekly_units_spm</code>, and <code>tdp</code>. Powers Layer 1 of the two-layer event detector. Window functions require Druid 0.22+ with SQL windowing enabled.</p>
+<pre><code>
+REPLACE INTO "event_detection_weekly"
+OVERWRITE ALL
+WITH base AS (
+  SELECT
+    __time,
+    upc, description,
+    channel_outlet, retail_account,
+    geography_raw, geography_display, geography_level,
+    parent_brand, specific_flavor_normalized, spins_flavor, pack_count,
+    base_units, avg_weekly_units_spm, tdp,
+    pct_stores_selling, stores_selling,
+
+    -- Rolling 4w base_units
+    AVG(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS base_units_roll4_avg,
+    STDDEV(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS base_units_roll4_std,
+
+    -- Rolling 8w base_units (primary z-score baseline)
+    AVG(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS base_units_roll8_avg,
+    STDDEV(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS base_units_roll8_std,
+
+    -- Rolling 13w base_units
+    AVG(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS base_units_roll13_avg,
+    STDDEV(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS base_units_roll13_std,
+
+    -- Rolling 8w velocity (avg_weekly_units_spm)
+    AVG(avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS velocity_spm_roll8_avg,
+    STDDEV(avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS velocity_spm_roll8_std,
+
+    -- Rolling 8w TDP
+    AVG(tdp) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS tdp_roll8_avg,
+    STDDEV(tdp) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS tdp_roll8_std,
+
+    -- Week-over-week deltas
+    base_units - LAG(base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+    ) AS base_units_wow_delta,
+    avg_weekly_units_spm - LAG(avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+    ) AS velocity_spm_wow_delta
+
+  FROM "built_enriched_weekly"
+  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
+)
+
+SELECT
+  __time,
+  upc, description,
+  channel_outlet, retail_account,
+  geography_raw, geography_display, geography_level,
+  parent_brand, specific_flavor_normalized, spins_flavor, pack_count,
+  base_units, avg_weekly_units_spm, tdp,
+  pct_stores_selling, stores_selling,
+
+  -- Rolling stats (passed to Python Welch t-test)
+  base_units_roll4_avg, base_units_roll4_std,
+  base_units_roll8_avg, base_units_roll8_std,
+  base_units_roll13_avg, base_units_roll13_std,
+  velocity_spm_roll8_avg, velocity_spm_roll8_std,
+  tdp_roll8_avg, tdp_roll8_std,
+  base_units_wow_delta, velocity_spm_wow_delta,
+
+  -- Z-scores vs 8-week rolling baseline
+  CASE
+    WHEN base_units_roll8_std &gt; 0
+      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
+    ELSE 0
+  END AS base_units_z8,
+
+  CASE
+    WHEN velocity_spm_roll8_std &gt; 0
+      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
+    ELSE 0
+  END AS velocity_spm_z8,
+
+  CASE
+    WHEN tdp_roll8_std &gt; 0
+      THEN (tdp - tdp_roll8_avg) / tdp_roll8_std
+    ELSE 0
+  END AS tdp_z8,
+
+  -- Outlier classification (Layer 1 gate — both base_units and velocity)
+  CASE
+    WHEN ABS(CASE WHEN base_units_roll8_std &gt; 0
+      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
+      ELSE 0 END) &gt;= 3.0 THEN 'EXTREME_OUTLIER'
+    WHEN ABS(CASE WHEN base_units_roll8_std &gt; 0
+      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
+      ELSE 0 END) &gt;= 2.0 THEN 'OUTLIER'
+    WHEN ABS(CASE WHEN base_units_roll8_std &gt; 0
+      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
+      ELSE 0 END) &gt;= 1.5 THEN 'WATCH'
+    ELSE 'NORMAL'
+  END AS base_units_outlier_class,
+
+  CASE
+    WHEN ABS(CASE WHEN velocity_spm_roll8_std &gt; 0
+      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
+      ELSE 0 END) &gt;= 3.0 THEN 'EXTREME_OUTLIER'
+    WHEN ABS(CASE WHEN velocity_spm_roll8_std &gt; 0
+      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
+      ELSE 0 END) &gt;= 2.0 THEN 'OUTLIER'
+    WHEN ABS(CASE WHEN velocity_spm_roll8_std &gt; 0
+      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
+      ELSE 0 END) &gt;= 1.5 THEN 'WATCH'
+    ELSE 'NORMAL'
+  END AS velocity_outlier_class
+
+FROM base
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT upc, MAX(ABS(base_units_z8)) AS max_z FROM event_detection_weekly GROUP BY upc ORDER BY max_z DESC LIMIT 10</code>. Rows with |z| &gt; 2.0 are Layer 1 event candidates.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q7">
+<h2>Q7 New UPC detection</h2>
+<p class="note"><strong>Purpose:</strong> Anti-join of current-week BUILT UPCs against all prior weeks. Outputs net-new UPCs that did not exist in any earlier week of the data.</p>
+<pre><code>
+REPLACE INTO "new_upc_candidates"
+OVERWRITE ALL
+WITH
+
+latest_week AS (
+  SELECT MAX(__time) AS max_week
+  FROM "built_enriched_weekly"
+  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
+),
+
+current_week_upcs AS (
+  SELECT DISTINCT
+    w.upc, w.description, w.source_brand,
+    w.spins_flavor_raw, w.spins_flavor_mapped,
+    w.spins_flavor_canonical, w.spins_flavor,
+    w.specific_flavor_normalized,
+    w.pack_count, w.size_oz,
+    w.__time                                             AS first_seen_week,
+    w.channel_outlet, w.retail_account, w.geography_raw,
+    w.units, w.base_units, w.tdp
+  FROM "built_enriched_weekly" w
+  CROSS JOIN latest_week lw
+  WHERE
+    w.parent_brand = 'BUILT'
+    AND w.military_excluded_flag = 0
+    AND w.__time = lw.max_week
+),
+
+historical_upcs AS (
+  SELECT DISTINCT upc
+  FROM "built_enriched_weekly"
+  WHERE parent_brand = 'BUILT'
+    AND military_excluded_flag = 0
+    AND __time &lt; (SELECT MAX(__time) FROM "built_enriched_weekly"
+                  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0)
+)
+
+SELECT
+  c.upc, c.description, c.source_brand,
+  c.spins_flavor_raw, c.spins_flavor_mapped,
+  c.spins_flavor_canonical, c.spins_flavor,
+  c.specific_flavor_normalized,
+  c.pack_count, c.size_oz,
+  c.first_seen_week,
+  c.channel_outlet, c.retail_account, c.geography_raw,
+  c.units                                                AS units_first_week,
+  c.base_units                                           AS base_units_first_week,
+  c.tdp                                                  AS tdp_first_week,
+  'Y'                                                    AS manual_review_needed,
+  CURRENT_TIMESTAMP                                      AS detected_at
+FROM current_week_upcs c
+LEFT JOIN historical_upcs h ON c.upc = h.upc
+WHERE h.upc IS NULL
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT COUNT(*) FROM new_upc_candidates</code>. Expect 0–5 rows per week. More than 10 in a single week warrants investigation before proceeding to Q8.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q8">
+<h2>Q8 New UPC classification</h2>
+<p class="note"><strong>Purpose:</strong> Classify each new UPC as <code>NEW_PACK_SIZE</code>, <code>NEW_FLAVOR_CANDIDATE</code>, or <code>DUPLICATE_OR_RELAUNCH</code>. Only <code>NEW_PACK_SIZE</code> rows with no flavor taxonomy conflict auto-enroll in pack ladder scoring.</p>
+<pre><code>
+REPLACE INTO "new_upc_classifications"
+OVERWRITE ALL
+WITH existing_catalog AS (
+  SELECT DISTINCT
+    upc, specific_flavor_normalized,
+    spins_flavor_canonical, spins_flavor,
+    pack_count, description
+  FROM "built_enriched_weekly"
+  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
+    AND upc NOT IN (SELECT upc FROM "new_upc_candidates")
+)
+
+SELECT
+  n.upc, n.description, n.source_brand,
+  n.spins_flavor_raw, n.spins_flavor_mapped,
+  n.spins_flavor_canonical, n.spins_flavor,
+  n.specific_flavor_normalized,
+  n.pack_count, n.size_oz,
+  n.first_seen_week, n.manual_review_needed, n.detected_at,
+
+  -- Classification
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM existing_catalog e
+      WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
+        AND e.spins_flavor_canonical     = n.spins_flavor_canonical
+        AND e.pack_count                != n.pack_count
+        AND n.spins_flavor_mapped        = n.spins_flavor_canonical
+    )
+    AND n.pack_count IN (1,2,3,4,5,6,8,10,12,15,16,18,20,24)
+      THEN 'NEW_PACK_SIZE'
+    WHEN EXISTS (
+      SELECT 1 FROM existing_catalog e
+      WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
+        AND e.pack_count                 = n.pack_count
+    )
+      THEN 'DUPLICATE_OR_RELAUNCH'
+    ELSE 'NEW_FLAVOR_CANDIDATE'
+  END AS upc_classification,
+
+  -- Closest pack-ladder partner (populated for NEW_PACK_SIZE rows only)
+  (
+    SELECT e.upc FROM existing_catalog e
+    WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
+      AND e.spins_flavor_canonical     = n.spins_flavor_canonical
+      AND e.pack_count                != n.pack_count
+    ORDER BY ABS(e.pack_count - n.pack_count)
+    LIMIT 1
+  ) AS closest_pack_partner_upc,
+
+  (
+    SELECT e.description FROM existing_catalog e
+    WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
+      AND e.spins_flavor_canonical     = n.spins_flavor_canonical
+      AND e.pack_count                != n.pack_count
+    ORDER BY ABS(e.pack_count - n.pack_count)
+    LIMIT 1
+  ) AS closest_pack_partner_description,
+
+  -- Taxonomy conflict: mapped FLAVOR != canonical FLAVOR
+  CASE
+    WHEN n.spins_flavor_mapped != n.spins_flavor_canonical THEN 'Y'
+    ELSE 'N'
+  END AS flavor_taxonomy_conflict
+
+FROM "new_upc_candidates" n
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> Any <code>NEW_PACK_SIZE</code> row with <code>flavor_taxonomy_conflict = 'Y'</code> must be reviewed before pack-ladder enrollment. These rows go to <code>taxonomy_review_queue</code> and are not scored until canonical FLAVOR placement is approved.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q9">
+<h2>Q9 Ramp monitoring</h2>
+<p class="note"><strong>Purpose:</strong> For all BUILT SKUs in their first 16 weeks post-launch, compute <code>weeks_since_launch</code>, <code>scoring_status</code>, <code>distribution_trend</code>, <code>underperforming_flag</code>, and the UI ramp ribbon text. This is the single source of truth for ramp state — the Python scoring job reads <code>scoring_status</code> directly from this table.</p>
+<pre><code>
+REPLACE INTO "new_product_ramp_monitor"
+OVERWRITE ALL
+WITH ramp_base AS (
+  SELECT
+    w.__time,
+    w.upc, w.description,
+    w.channel_outlet, w.retail_account,
+    w.geography_raw, w.geography_display, w.geography_level,
+    w.parent_brand, w.brand_line,
+    w.specific_flavor_normalized, w.spins_flavor, w.pack_count,
+    w.first_week_selling,
+    TIME_PARSE(w.first_week_selling, 'MM/dd/yyyy')       AS launch_date,
+    TIMESTAMPDIFF(WEEK,
+      TIME_PARSE(w.first_week_selling, 'MM/dd/yyyy'),
+      w.__time)                                          AS weeks_since_launch,
+    w.tdp, w.avg_weekly_units_spm,
+    w.avg_weekly_units_per_store_selling_per_item,
+    w.base_units, w.units, w.pct_stores_selling, w.stores_selling, w.arp,
+
+    -- Peak TDP so far (running max)
+    MAX(w.tdp) OVER (
+      PARTITION BY w.upc, w.channel_outlet, w.retail_account, w.geography_raw
+      ORDER BY w.__time
+      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS peak_tdp,
+
+    -- Rolling 4-week average velocity
+    AVG(w.avg_weekly_units_spm) OVER (
+      PARTITION BY w.upc, w.channel_outlet, w.retail_account, w.geography_raw
+      ORDER BY w.__time
+      ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS rolling_4w_avg_velocity_spm,
+
+    -- TDP trend: 4-week change (positive = RAMPING, zero = STABLE, negative = DECLINING)
+    w.tdp - LAG(w.tdp, 4) OVER (
+      PARTITION BY w.upc, w.channel_outlet, w.retail_account, w.geography_raw
+      ORDER BY w.__time
+    ) AS tdp_4w_change,
+
+    -- Velocity ratio vs rolling average (for underperforming detection)
+    w.avg_weekly_units_spm / NULLIF(
+      AVG(w.avg_weekly_units_spm) OVER (
+        PARTITION BY w.upc, w.channel_outlet, w.retail_account, w.geography_raw
+        ORDER BY w.__time
+        ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+      ), 0)                                              AS velocity_vs_4w_avg_ratio
+
+  FROM "built_enriched_weekly" w
+  WHERE
+    w.parent_brand = 'BUILT'
+    AND w.military_excluded_flag = 0
+    AND w.first_week_selling IS NOT NULL
+    AND TIMESTAMPDIFF(WEEK,
+          TIME_PARSE(w.first_week_selling, 'MM/dd/yyyy'),
+          w.__time) BETWEEN 0 AND 15
+)
+
+SELECT
+  __time,
+  upc, description,
+  channel_outlet, retail_account,
+  geography_raw, geography_display, geography_level,
+  parent_brand, brand_line,
+  specific_flavor_normalized, spins_flavor, pack_count,
+  first_week_selling, launch_date,
+  weeks_since_launch,
+  tdp, avg_weekly_units_spm,
+  avg_weekly_units_per_store_selling_per_item,
+  base_units, pct_stores_selling, stores_selling, arp,
+  peak_tdp, rolling_4w_avg_velocity_spm,
+  tdp_4w_change, velocity_vs_4w_avg_ratio,
+
+  -- Distribution trend
+  CASE
+    WHEN tdp_4w_change IS NULL OR weeks_since_launch &lt; 4 THEN 'RAMPING'
+    WHEN tdp_4w_change &gt; 0                              THEN 'RAMPING'
+    WHEN tdp_4w_change = 0                              THEN 'STABLE'
+    WHEN tdp_4w_change &lt; 0                              THEN 'DECLINING'
+    ELSE 'RAMPING'
+  END AS distribution_trend,
+
+  -- Scoring status — single source of truth; Python reads this column directly
+  CASE
+    WHEN weeks_since_launch BETWEEN 0 AND 5  THEN 'SUPPRESSED'
+    WHEN weeks_since_launch BETWEEN 6 AND 7  THEN 'LOW_CONFIDENCE'
+    ELSE 'ACTIVE'
+  END AS scoring_status,
+
+  -- Ramp confidence level for scored rows
+  CASE
+    WHEN weeks_since_launch BETWEEN 0 AND 5  THEN NULL
+    WHEN weeks_since_launch BETWEEN 6 AND 7  THEN 'Low'
+    WHEN weeks_since_launch BETWEEN 8 AND 11 THEN 'Medium'
+    ELSE 'Medium'
+  END AS ramp_confidence,
+
+  -- UI ramp ribbon text (displayed on Ramp Monitor screen)
+  CASE
+    WHEN weeks_since_launch BETWEEN 0 AND 5
+      THEN 'RAMP WEEK ' || CAST(weeks_since_launch + 1 AS VARCHAR)
+           || ' of 13 · Cannibalization scoring suppressed'
+    WHEN weeks_since_launch BETWEEN 6 AND 7
+      THEN 'RAMP WEEK ' || CAST(weeks_since_launch + 1 AS VARCHAR)
+           || ' of 13 · Early signal · Low confidence'
+    WHEN weeks_since_launch BETWEEN 8 AND 11
+      THEN 'RAMP WEEK ' || CAST(weeks_since_launch + 1 AS VARCHAR)
+           || ' of 13 · Signal maturing'
+    ELSE 'RAMP WEEK ' || CAST(weeks_since_launch + 1 AS VARCHAR)
+           || ' of 13 · Scoring fully active'
+  END AS ui_ramp_ribbon,
+
+  -- Underperforming flag: fires "Launch underperforming" event
+  -- Requires: past suppression window (week 6+), velocity weak, TDP not ramping
+  CASE
+    WHEN weeks_since_launch &gt;= 6
+     AND velocity_vs_4w_avg_ratio &lt; 0.85
+     AND (tdp_4w_change IS NOT NULL AND tdp_4w_change &lt;= 0)
+      THEN 1
+    WHEN weeks_since_launch &gt;= 8
+     AND velocity_vs_4w_avg_ratio &lt; 0.85
+      THEN 1
+    ELSE 0
+  END AS underperforming_flag,
+
+  -- TDP ratio current/peak for Ramp Monitor "TDP now / peak" column
+  CAST(tdp AS DOUBLE) / NULLIF(CAST(peak_tdp AS DOUBLE), 0)
+                                                         AS tdp_ratio_to_peak,
+
+  CAST(CAST(tdp AS BIGINT) AS VARCHAR)
+  || ' / '
+  || CAST(CAST(peak_tdp AS BIGINT) AS VARCHAR)           AS tdp_now_slash_peak
+
+FROM ramp_base
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT scoring_status, COUNT(*) FROM new_product_ramp_monitor GROUP BY 1</code>. All rows with <code>weeks_since_launch</code> 0–5 must show <code>SUPPRESSED</code>. Run <code>SELECT upc, MAX(weeks_since_launch) FROM new_product_ramp_monitor GROUP BY upc</code> to confirm the full 16-week window is populated.</p>
+<p class="note">---</p>
+<p class="note">## Section 4. Price Elasticity Query Plan — Full SQL (Q14–Q22)</p>
+<p class="note">Run after Q0–Q13 are complete. **Q14, Q15, Q16 can run in parallel with Q3, Q4, Q5** since they share <code>built_enriched_weekly</code> as their only input. Do not run Q17 until Q14, Q15, and Q16 are all complete.</p>
+<p class="note">The military exclusion <code>channel_outlet != 'CONVENTIONAL|MILITARY' AND retail_account != 'DECA'</code> is enforced in every query below via <code>military_excluded_flag = 0</code> or an explicit WHERE clause on <code>built_filtered_weekly</code>.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q14">
+<h2>Q14 Price elasticity weekly features</h2>
+<p class="note"><strong>Purpose:</strong> Add <code>price_per_bar</code>, log-transformed price and volume, <code>promo_depth_bucket</code>, and <code>promo_confounded</code> flag to each BUILT weekly row. Foundation for all downstream elasticity regression.</p>
+<pre><code>
+REPLACE INTO "price_elasticity_weekly_features"
+OVERWRITE ALL
+SELECT
+  w.__time,
+  w.upc, w.description,
+  w.channel_outlet, w.retail_account,
+  w.geography_raw, w.geography_display, w.geography_level,
+  w.parent_brand, w.brand_line,
+  w.specific_flavor_normalized, w.spins_flavor, w.pack_count,
+  w.first_week_selling,
+
+  -- Price per bar (primary elasticity unit)
+  w.arp / NULLIF(w.pack_count, 0)                        AS price_per_bar,
+  w.base_arp / NULLIF(w.pack_count, 0)                   AS base_price_per_bar,
+
+  -- Log-transformed price and volume for log-log OLS regression
+  LN(GREATEST(w.arp / NULLIF(w.pack_count, 0), 0.01))   AS ln_price_per_bar,
+  LN(GREATEST(w.base_units, 1))                          AS ln_base_units,
+  LN(GREATEST(w.avg_weekly_units_spm, 0.01))             AS ln_velocity_spm,
+
+  -- Promo depth bucket
+  CASE
+    WHEN w.arp_pct_discount_any_promo &gt;= 0.30 THEN '30pct_plus'
+    WHEN w.arp_pct_discount_any_promo &gt;= 0.20 THEN '20_30pct'
+    WHEN w.arp_pct_discount_any_promo &gt;= 0.10 THEN '10_20pct'
+    WHEN w.arp_pct_discount_any_promo &gt;  0    THEN '0_10pct'
+    ELSE 'no_promo'
+  END AS promo_depth_bucket,
+
+  -- Promo confounded: exclude from own-price training; include in promo training
+  CASE
+    WHEN w.promo_weeks &gt; 2 OR w.arp_pct_discount_any_promo &gt; 0.05 THEN 1
+    ELSE 0
+  END AS promo_confounded,
+
+  -- Seasonality controls
+  EXTRACT(WEEK FROM w.__time)                            AS week_of_year,
+  w.base_units_yago,
+  (w.base_units - w.base_units_yago)
+    / NULLIF(w.base_units_yago, 0)                       AS base_units_yago_pct_chg,
+
+  -- Metric pass-throughs
+  w.base_units, w.units,
+  w.tdp, w.avg_weekly_tdp,
+  w.avg_weekly_units_spm,
+  w.avg_weekly_units_per_store_selling_per_item,
+  w.pct_stores_selling, w.stores_selling,
+  w.arp, w.base_arp, w.arp_yago,
+  w.arp_pct_discount_any_promo,
+  w.promo_weeks, w.units_pct_promo,
+  w.units_lift_tpr, w.units_lift_any_display, w.units_lift_any_feature,
+  w.tdp_any_promo, w.tdp_non_promo, w.incr_units
+
+FROM "built_enriched_weekly" w
+WHERE
+  w.parent_brand = 'BUILT'
+  AND w.military_excluded_flag = 0
+  AND w.pack_count &gt; 0
+  AND w.arp &gt; 0
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT MIN(price_per_bar), MAX(price_per_bar), AVG(price_per_bar) FROM price_elasticity_weekly_features</code>. BUILT 1ct ~$2.10–$2.60; 4pk ~$2.00–$2.20/bar; 12pk ~$1.70–$2.00/bar. Any value above $5.00/bar indicates a pack_count error — stop and fix before proceeding.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q15">
+<h2>Q15 Pack price ladder weekly</h2>
+<p class="note"><strong>Purpose:</strong> Self-join to compare price-per-bar across all pack sizes of the same specific flavor. Produces one row per (focal_upc, partner_upc, week, geography) for all distance-1 pack pairs.</p>
+<pre><code>
+REPLACE INTO "price_pack_ladder_weekly"
+OVERWRITE ALL
+SELECT
+  f.__time,
+  f.channel_outlet, f.retail_account,
+  f.geography_raw, f.geography_display, f.geography_level,
+
+  -- Focal item
+  f.upc                                                  AS focal_upc,
+  f.description                                          AS focal_description,
+  f.specific_flavor_normalized                           AS specific_flavor,
+  f.spins_flavor,
+  f.pack_count                                           AS focal_pack_count,
+  f.price_per_bar                                        AS focal_price_per_bar,
+  f.base_price_per_bar                                   AS focal_base_price_per_bar,
+  f.arp                                                  AS focal_arp,
+  f.base_units                                           AS focal_base_units,
+  f.avg_weekly_units_spm                                 AS focal_velocity_spm,
+  f.pct_stores_selling                                   AS focal_pct_stores_selling,
+
+  -- Partner item (same specific flavor, different pack count)
+  p.upc                                                  AS partner_upc,
+  p.description                                          AS partner_description,
+  p.pack_count                                           AS partner_pack_count,
+  p.price_per_bar                                        AS partner_price_per_bar,
+  p.arp                                                  AS partner_arp,
+  p.base_units                                           AS partner_base_units,
+  p.avg_weekly_units_spm                                 AS partner_velocity_spm,
+
+  -- Per-bar price gap: positive = focal costs more per bar than partner
+  (f.price_per_bar - p.price_per_bar)
+    / NULLIF(p.price_per_bar, 0)                         AS price_per_bar_gap_pct,
+
+  ABS(f.pack_count - p.pack_count)                       AS pack_distance,
+
+  CASE
+    WHEN f.pack_count &lt; p.pack_count THEN 'TRADE_UP_AVAILABLE'
+    WHEN f.pack_count &gt; p.pack_count THEN 'TRADE_DOWN_AVAILABLE'
+    ELSE 'SAME_PACK'
+  END AS pack_direction,
+
+  -- Trade-up savings: how much cheaper per bar is the larger pack?
+  CASE
+    WHEN p.pack_count &gt; f.pack_count
+      THEN (f.price_per_bar - p.price_per_bar) / NULLIF(f.price_per_bar, 0)
+    ELSE NULL
+  END AS trade_up_savings_pct,
+
+  -- Ladder compression flag: &lt; 10% per-bar gap = PACK_LADDER_COMPRESSION event
+  CASE
+    WHEN p.pack_count &gt; f.pack_count
+     AND (f.price_per_bar - p.price_per_bar)
+           / NULLIF(f.price_per_bar, 0) &lt; 0.10
+      THEN 1
+    ELSE 0
+  END AS ladder_compression_flag
+
+FROM "price_elasticity_weekly_features" f
+JOIN "price_elasticity_weekly_features" p
+  ON  f.__time                     = p.__time
+  AND f.channel_outlet             = p.channel_outlet
+  AND f.retail_account             = p.retail_account
+  AND f.geography_raw              = p.geography_raw
+  AND f.specific_flavor_normalized = p.specific_flavor_normalized
+  AND f.spins_flavor               = p.spins_flavor
+  AND f.parent_brand               = p.parent_brand
+  AND f.upc                       != p.upc
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT focal_description, partner_description, AVG(price_per_bar_gap_pct) FROM price_pack_ladder_weekly GROUP BY 1,2 ORDER BY 1,2</code>. Mint Chip 4pk vs 1ct should show roughly −15% (4pk cheaper per bar).</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q16">
+<h2>Q16 Competitive price weekly</h2>
+<p class="note"><strong>Purpose:</strong> Compare BUILT price-per-bar against Tier 1 same-FLAVOR competitors in the same account, geography, and week.</p>
+<pre><code>
+REPLACE INTO "price_competitive_weekly"
+OVERWRITE ALL
+SELECT
+  b.__time,
+  b.channel_outlet, b.retail_account,
+  b.geography_raw, b.geography_display, b.geography_level,
+
+  -- BUILT focal
+  b.upc                                                  AS built_upc,
+  b.description                                          AS built_description,
+  b.spins_flavor                                         AS built_spins_flavor,
+  b.specific_flavor_normalized                           AS built_specific_flavor,
+  b.pack_count                                           AS built_pack_count,
+  b.price_per_bar                                        AS built_price_per_bar,
+  b.arp                                                  AS built_arp,
+  b.base_units                                           AS built_base_units,
+  b.avg_weekly_units_spm                                 AS built_velocity_spm,
+
+  -- Competitor
+  c.upc                                                  AS competitor_upc,
+  c.description                                          AS competitor_description,
+  c.source_brand                                         AS competitor_brand,
+  ic.competitor_tier,
+  c.spins_flavor_raw                                     AS competitor_spins_flavor_raw,
+  c.source_pack_count                                    AS competitor_pack_count,
+  c.arp / NULLIF(c.source_pack_count, 0)                AS competitor_price_per_bar,
+  c.arp                                                  AS competitor_arp,
+  c.base_units                                           AS competitor_base_units,
+  c.avg_weekly_units_spm                                 AS competitor_velocity_spm,
+
+  -- Price gap: positive = BUILT costs more per bar
+  (b.price_per_bar - c.arp / NULLIF(c.source_pack_count, 0))
+    / NULLIF(c.arp / NULLIF(c.source_pack_count, 0), 0) AS price_gap_pct_vs_competitor,
+
+  -- Watch flag: gap &gt;= 9% on Tier 1 same-FLAVOR competitor
+  CASE
+    WHEN ic.competitor_tier = 'TIER_1_DIRECT'
+     AND b.spins_flavor_raw = c.spins_flavor_raw
+     AND (b.price_per_bar - c.arp / NULLIF(c.source_pack_count, 0))
+           / NULLIF(c.arp / NULLIF(c.source_pack_count, 0), 0) &gt;= 0.09
+      THEN 1
+    ELSE 0
+  END AS competitive_gap_watch_flag,
+
+  CASE
+    WHEN b.spins_flavor_raw = c.spins_flavor_raw        THEN 'SAME_SPINS_FLAVOR'
+    WHEN b.spins_flavor     = c.spins_flavor_raw         THEN 'SAME_CANONICAL_FLAVOR'
+    ELSE 'DIFFERENT_FLAVOR'
+  END AS competitive_flavor_relationship
+
+FROM "price_elasticity_weekly_features" b
+JOIN "built_filtered_weekly" c
+  ON  b.__time          = c.__time
+  AND b.channel_outlet  = c.channel_outlet
+  AND b.retail_account  = c.retail_account
+  AND b.geography_raw   = c.geography_raw
+  AND c.source_brand NOT IN ('BUILT','BUILT BAR','BUILT PUFF','BUILT SOUR PUFF')
+  AND c.arp &gt; 0
+  AND c.source_pack_count &gt; 0
+LEFT JOIN "item_catalog" ic ON c.upc = ic.upc
+WHERE
+  c.channel_outlet != 'CONVENTIONAL|MILITARY'
+  AND c.retail_account != 'DECA'
+PARTITIONED BY DAY
+</code></pre>
+<p class="note"><strong>Verify:</strong> <code>SELECT competitor_brand, COUNT(*) FROM price_competitive_weekly GROUP BY 1 ORDER BY 2 DESC</code>. THINK!, RXBAR, QUEST, PERFECT BAR, NUGO NUTRITION should be present. Missing Tier 1 brands = absent from extract or brand name mismatch in <code>item_catalog</code>.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q17">
+<h2>Q17 Price elasticity training features</h2>
+<p class="note"><strong>Purpose:</strong> Build regression-ready 13-week pre/post windows for own-price, cross-price, and promo elasticity estimation. One row per (focal_upc, window_end_date, geography). Python LightGBM reads this table to train the elasticity model.</p>
+<pre><code>
+REPLACE INTO "price_elasticity_training_features"
+OVERWRITE ALL
+WITH windows AS (
+  SELECT
+    w.__time                                             AS window_end_date,
+    w.upc, w.description,
+    w.channel_outlet, w.retail_account,
+    w.geography_raw, w.geography_level,
+    w.parent_brand, w.specific_flavor_normalized,
+    w.spins_flavor, w.pack_count,
+
+    -- Post 13w: 13 weeks ending at the current row's date
+    AVG(p.price_per_bar) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_avg_price_per_bar,
+    STDDEV(p.price_per_bar) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_std_price_per_bar,
+    SUM(p.base_units) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_base_units,
+    AVG(p.avg_weekly_units_spm) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_velocity_spm,
+    SUM(p.promo_weeks) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_promo_weeks,
+    AVG(p.arp_pct_discount_any_promo) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_arp_discount,
+    AVG(p.tdp) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_tdp,
+    COUNT(*) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_weeks_count,
+
+    -- Pre 13w: 13 weeks immediately before the post window
+    AVG(p.price_per_bar) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_avg_price_per_bar,
+    SUM(p.base_units) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_base_units,
+    AVG(p.avg_weekly_units_spm) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_velocity_spm,
+    SUM(p.promo_weeks) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_promo_weeks,
+    AVG(p.arp_pct_discount_any_promo) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_arp_discount,
+    AVG(p.tdp) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_tdp,
+    COUNT(*) FILTER (
+      WHERE p.__time BETWEEN
+        TIMESTAMPADD(WEEK,-25,w.__time) AND TIMESTAMPADD(WEEK,-13,w.__time)
+    ) AS pre_13w_weeks_count
+
+  FROM "price_elasticity_weekly_features" w
+  JOIN "price_elasticity_weekly_features" p
+    ON  p.upc           = w.upc
+    AND p.channel_outlet = w.channel_outlet
+    AND p.retail_account = w.retail_account
+    AND p.geography_raw  = w.geography_raw
+    AND p.__time BETWEEN TIMESTAMPADD(WEEK,-25,w.__time) AND w.__time
+  WHERE w.parent_brand = 'BUILT'
+  GROUP BY
+    w.__time, w.upc, w.description, w.channel_outlet,
+    w.retail_account, w.geography_raw, w.geography_level,
+    w.parent_brand, w.specific_flavor_normalized,
+    w.spins_flavor, w.pack_count
+)
+
+SELECT
+  window_end_date                                        AS __time,
+  upc, description,
+  channel_outlet, retail_account,
+  geography_raw, geography_level,
+  parent_brand, specific_flavor_normalized,
+  spins_flavor, pack_count,
+  '13w'                                                  AS window_type,
+
+  pre_13w_avg_price_per_bar, post_13w_avg_price_per_bar,
+  post_13w_std_price_per_bar,
+  pre_13w_base_units, post_13w_base_units,
+  pre_13w_velocity_spm, post_13w_velocity_spm,
+  pre_13w_promo_weeks, post_13w_promo_weeks,
+  pre_13w_arp_discount, post_13w_arp_discount,
+  pre_13w_tdp, post_13w_tdp,
+  pre_13w_weeks_count, post_13w_weeks_count,
+
+  -- Derived signals
+  (post_13w_avg_price_per_bar - pre_13w_avg_price_per_bar)
+    / NULLIF(pre_13w_avg_price_per_bar, 0)               AS price_per_bar_pct_chg,
+  (post_13w_base_units - pre_13w_base_units)
+    / NULLIF(pre_13w_base_units, 0)                      AS base_units_pct_chg,
+  (post_13w_velocity_spm - pre_13w_velocity_spm)
+    / NULLIF(pre_13w_velocity_spm, 0)                    AS velocity_spm_pct_chg,
+  (post_13w_tdp - pre_13w_tdp)
+    / NULLIF(pre_13w_tdp, 0)                             AS tdp_pct_chg,
+
+  -- Promo confounded flag
+  CASE
+    WHEN ABS(post_13w_promo_weeks - pre_13w_promo_weeks) &gt; 2
+      OR ABS(post_13w_arp_discount - pre_13w_arp_discount) &gt; 0.05
+      THEN 1
+    ELSE 0
+  END AS promo_confounded,
+
+  -- Naive elasticity estimate (Python LightGBM replaces this with a controlled value)
+  CASE
+    WHEN ABS((post_13w_avg_price_per_bar - pre_13w_avg_price_per_bar)
+              / NULLIF(pre_13w_avg_price_per_bar, 0)) &gt; 0.01
+      THEN ((post_13w_base_units - pre_13w_base_units)
+              / NULLIF(pre_13w_base_units, 0))
+           / ((post_13w_avg_price_per_bar - pre_13w_avg_price_per_bar)
+               / NULLIF(pre_13w_avg_price_per_bar, 0))
+    ELSE NULL
+  END AS naive_price_elasticity
+
+FROM windows
+WHERE
+  pre_13w_weeks_count  &gt;= 8
+  AND post_13w_weeks_count &gt;= 8
+  AND pre_13w_base_units &gt; 0
+PARTITIONED BY DAY
+</code></pre>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q20">
+<h2>Q20 MULO FOOD pack size norms</h2>
+<p class="note"><strong>Purpose:</strong> Category-average price, velocity, and store penetration norms by pack size. BUILT is excluded so norms represent the competitive benchmark. Re-run only when Q7 detected new non-BUILT competitor rows in the nutrition bar subcategory.</p>
+<pre><code>
+REPLACE INTO "mulo_food_pack_size_norms"
+OVERWRITE ALL
+SELECT
+  __time,
+  channel_outlet, retail_account,
+  geography_raw, geography_level,
+
+  CASE
+    WHEN source_pack_count = 1  THEN '1ct'
+    WHEN source_pack_count = 4  THEN '4pk'
+    WHEN source_pack_count = 8  THEN '8pk'
+    WHEN source_pack_count = 12 THEN '12pk'
+    WHEN source_pack_count = 16 THEN '16pk'
+    WHEN source_pack_count = 18 THEN '18pk'
+    WHEN source_pack_count = 24 THEN '24pk'
+    ELSE 'other'
+  END AS pack_size_bucket,
+
+  source_pack_count                                      AS pack_count,
+  COUNT(DISTINCT upc)                                    AS norm_sku_count,
+  AVG(arp / NULLIF(source_pack_count, 0))               AS norm_avg_price_per_bar,
+  APPROX_QUANTILE(arp / NULLIF(source_pack_count, 0), 0.50)
+                                                         AS norm_median_price_per_bar,
+  AVG(avg_weekly_units_spm)                              AS norm_avg_velocity_spm,
+  AVG(avg_weekly_units_per_store_selling_per_item)       AS norm_avg_velocity_store_selling,
+  AVG(pct_stores_selling)                                AS norm_avg_pct_stores_selling,
+  AVG(tdp)                                               AS norm_avg_tdp
+
+FROM "built_filtered_weekly"
+WHERE
+  subcategory = 'WELLNESS &amp; NUTRITION BARS'
+  AND source_brand NOT IN ('BUILT','BUILT BAR','BUILT PUFF','BUILT SOUR PUFF')
+  AND channel_outlet != 'CONVENTIONAL|MILITARY'
+  AND retail_account != 'DECA'
+  AND arp &gt; 0
+  AND source_pack_count &gt; 0
+GROUP BY
+  __time, channel_outlet, retail_account, geography_raw, geography_level,
+  CASE
+    WHEN source_pack_count = 1  THEN '1ct'
+    WHEN source_pack_count = 4  THEN '4pk'
+    WHEN source_pack_count = 8  THEN '8pk'
+    WHEN source_pack_count = 12 THEN '12pk'
+    WHEN source_pack_count = 16 THEN '16pk'
+    WHEN source_pack_count = 18 THEN '18pk'
+    WHEN source_pack_count = 24 THEN '24pk'
+    ELSE 'other'
+  END,
+  source_pack_count
+PARTITIONED BY DAY
+</code></pre>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q21">
+<h2>Q21 Flavor vs. protein driver features</h2>
+<p class="note"><strong>Purpose:</strong> Compare flavor-group and protein-content contributions to velocity and store penetration vs. the within-flavor-group average. Run conditionally (same trigger as Q20).</p>
+<pre><code>
+REPLACE INTO "flavor_protein_driver_features"
+OVERWRITE ALL
+SELECT
+  __time, upc, description, source_brand,
+  spins_flavor_raw, source_pack_count,
+  channel_outlet, retail_account, geography_raw, geography_level,
+  nfp_protein, nfp_protein_range,
+  avg_weekly_units_spm,
+  avg_weekly_units_per_store_selling_per_item,
+  pct_stores_selling, base_units, tdp,
+  arp,
+  arp / NULLIF(source_pack_count, 0)                    AS price_per_bar,
+
+  -- Velocity index vs same-FLAVOR-group average (in same account/geo/week)
+  avg_weekly_units_spm / NULLIF(
+    AVG(avg_weekly_units_spm) OVER (
+      PARTITION BY spins_flavor_raw,
+                   channel_outlet, retail_account, geography_raw, __time
+    ), 0)                                               AS velocity_flavor_index,
+
+  -- Protein tier
+  CASE
+    WHEN CAST(REGEXP_EXTRACT(nfp_protein_range, '([0-9]+)', 1) AS BIGINT) &gt;= 20
+      THEN 'HIGH_PROTEIN_20g_plus'
+    WHEN CAST(REGEXP_EXTRACT(nfp_protein_range, '([0-9]+)', 1) AS BIGINT) &gt;= 15
+      THEN 'MID_PROTEIN_15_19g'
+    WHEN CAST(REGEXP_EXTRACT(nfp_protein_range, '([0-9]+)', 1) AS BIGINT) &gt;= 10
+      THEN 'LOW_PROTEIN_10_14g'
+    ELSE 'UNKNOWN'
+  END AS protein_tier,
+
+  -- Store penetration index vs same-FLAVOR-group average
+  pct_stores_selling / NULLIF(
+    AVG(pct_stores_selling) OVER (
+      PARTITION BY spins_flavor_raw,
+                   channel_outlet, retail_account, geography_raw, __time
+    ), 0)                                               AS penetration_flavor_index
+
+FROM "built_filtered_weekly"
+WHERE
+  subcategory = 'WELLNESS &amp; NUTRITION BARS'
+  AND channel_outlet != 'CONVENTIONAL|MILITARY'
+  AND retail_account != 'DECA'
+  AND arp &gt; 0
+  AND source_pack_count &gt; 0
+  AND nfp_protein IS NOT NULL
+PARTITIONED BY DAY
+</code></pre>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q22">
+<h2>Q22 Price event queue</h2>
+<p class="note"><strong>Purpose:</strong> Create the <code>price_event_queue</code> table and pre-populate the two event types that are fully deterministic from Druid data. The remaining eight event types (<code>DRASTIC_PRICE_CHANGE</code>, <code>PROMO_RESPONSE_BREAKPOINT</code>, <code>NEW_ITEM_PRICE_BASELINE</code>, <code>PACK_NORM_GAP</code>, <code>ELASTICITY_CONFIDENCE_DOWNGRADE</code>, <code>PRICE_DEFENSE_OPPORTUNITY</code>, <code>PRICE_DONOR_OVERLAP</code>, and scored variants) are written by <code>MO_14.7_price_events.py</code> after ML scoring completes.</p>
+<pre><code>
+REPLACE INTO "price_event_queue"
+OVERWRITE ALL
+WITH
+
+-- COMPETITIVE_PRICE_GAP: BUILT &gt;= 9% above Tier 1 same-FLAVOR competitor
+competitive_gap_events AS (
+  SELECT
+    MAX(pcw.__time)                                      AS __time,
+    pcw.built_upc                                        AS focal_upc,
+    pcw.built_description                                AS focal_description,
+    pcw.channel_outlet, pcw.retail_account,
+    pcw.geography_raw                                    AS geography_display,
+    pcw.geography_level,
+    'COMPETITIVE_PRICE_GAP'                              AS event_type,
+    'Price gap: BUILT '
+      || pcw.built_description
+      || ' vs '
+      || MIN(pcw.competitor_brand)
+      || ' — gap '
+      || CAST(ROUND(AVG(pcw.price_gap_pct_vs_competitor) * 100, 1) AS VARCHAR)
+      || '%'                                             AS event_label,
+    'red'                                                AS event_color,
+    'High'                                               AS confidence,
+    AVG(pcw.price_gap_pct_vs_competitor)                 AS trigger_value,
+    'price_gap_pct_vs_competitor'                        AS trigger_column,
+    'price_competitive_weekly'                           AS source_table,
+    '13w'                                                AS scoring_window,
+    0                                                    AS cross_tool_flag,
+    NULL                                                 AS cross_tool_event_id,
+    CURRENT_TIMESTAMP                                    AS scored_at
+  FROM "price_competitive_weekly" pcw
+  WHERE
+    pcw.competitive_gap_watch_flag = 1
+    AND pcw.competitive_flavor_relationship IN
+          ('SAME_SPINS_FLAVOR', 'SAME_CANONICAL_FLAVOR')
+  GROUP BY
+    pcw.built_upc, pcw.built_description,
+    pcw.channel_outlet, pcw.retail_account,
+    pcw.geography_raw, pcw.geography_level
+  HAVING AVG(pcw.price_gap_pct_vs_competitor) &gt;= 0.09
+),
+
+-- PACK_LADDER_COMPRESSION: 4pk→12pk per-bar gap &lt; 10%
+ladder_compression_events AS (
+  SELECT
+    MAX(ppl.__time)                                      AS __time,
+    ppl.focal_upc,
+    ppl.focal_description,
+    ppl.channel_outlet, ppl.retail_account,
+    ppl.geography_raw                                    AS geography_display,
+    ppl.geography_level,
+    'PACK_LADDER_COMPRESSION'                            AS event_type,
+    'Pack ladder compression: '
+      || ppl.focal_description
+      || ' → '
+      || MIN(ppl.partner_description)
+      || ' per-bar gap below 10%'                        AS event_label,
+    'blue'                                               AS event_color,
+    'Medium'                                             AS confidence,
+    AVG(ppl.trade_up_savings_pct)                        AS trigger_value,
+    'trade_up_savings_pct'                               AS trigger_column,
+    'price_pack_ladder_weekly'                           AS source_table,
+    '13w'                                                AS scoring_window,
+    0                                                    AS cross_tool_flag,
+    NULL                                                 AS cross_tool_event_id,
+    CURRENT_TIMESTAMP                                    AS scored_at
+  FROM "price_pack_ladder_weekly" ppl
+  WHERE
+    ppl.ladder_compression_flag = 1
+    AND ppl.pack_direction = 'TRADE_UP_AVAILABLE'
+  GROUP BY
+    ppl.focal_upc, ppl.focal_description,
+    ppl.channel_outlet, ppl.retail_account,
+    ppl.geography_raw, ppl.geography_level
+)
+
+SELECT * FROM competitive_gap_events
+UNION ALL
+SELECT * FROM ladder_compression_events
+PARTITIONED BY DAY
+</code></pre>
+<p class="note">**Note:** The Python script <code>MO_14.7_price_events.py</code> appends the remaining event types to this table using <code>INSERT INTO</code> after ML scoring completes. Do not overwrite the table after the Python job has run — use INSERT, not REPLACE.</p>
+<p class="note">---</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+</section></div></main></body></html>

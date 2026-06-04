@@ -53,6 +53,8 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `mockups/mo_query_purpose_intent_need_outcome.html`: visual query explainer.
 - `docs/mo_ml_playbook_from_druid_to_ui.md`: Druid-to-UI ML playbook.
 - `mockups/mo_ml_playbook_from_druid_to_ui.html`: visual stage-by-stage ML playbook.
+- `docs/mo_druid_query_register.md`: actual Druid SQL register linked from playbook query IDs.
+- `mockups/mo_druid_query_register.html`: browser-friendly query register for testing query-anchor navigation from the playbook.
 - `docs/Mo_Build_Field_Guide_price_elasticity_addendum.md`: price elasticity module guide.
 - `docs/built_cannibalization_druid_ml_plan_3.md`: current detailed Druid/ML query plan.
 - `mockups/mo_intelligence_suite_v12.html`: latest Mo intelligence suite mockup.
@@ -63,6 +65,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `77717ec` — Add query purpose explainer page.
 - `1a8c196` — Add Druid to UI ML playbook.
 - Pending — Add durable project memory and commit-time memory sync instruction.
+- Pending — Add actual Druid query register and wire playbook query IDs to register anchors.
 
 ## Decisions and Conventions
 
@@ -80,10 +83,15 @@ Druid in a single datasource using SPINS table format. The operating flow is:
   selected in the UX-safe metric shortlist.
 - Use explicit confidence, provenance, model version, scoring window, and source
   fields for every scored recommendation.
+- Current raw Druid datasource name is `spins_full`; Q0 in the query register is
+  the single place to update when that source name changes.
+- Supporting Druid query explanations should live inside the relevant playbook
+  stage, under the Executive View / Technical Work area, while query IDs link to
+  the register for actual SQL testing.
 
 ## Open Follow-Ups
 
-- Confirm the actual Druid datasource name for the uploaded 97M-record SPINS table.
+- Reconfirm the raw Druid datasource name if it changes from `spins_full`.
 - Confirm production field names and whether they match the expanded SPINS extract.
 - Confirm which Druid outputs will be materialized first for the pilot.
 - Decide whether the visual HTML pages should be linked from `README.md`.
