@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Feature Hierarchy Chart</title>
+<style>
+:root {
+  --bg: #f5f9ff;
+  --surface: #ffffff;
+  --surface-2: #eef3fb;
+  --ink: #0d1733;
+  --muted: #526078;
+  --quiet: #7a8497;
+  --border: #d6deeb;
+  --navy: #0d1733;
+  --blue: #2357ad;
+  --blue-bg: #e7f0ff;
+  --green: #147a4c;
+  --green-bg: #e6f7ef;
+  --amber: #8a5000;
+  --amber-bg: #fff5e6;
+  --red: #9b0e1c;
+  --red-bg: #feeaec;
+  --purple: #5a3ea1;
+  --purple-bg: #efeafd;
+  --shadow: 0 14px 42px rgba(13, 23, 51, 0.12);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.shell {
+  width: min(1560px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 36px;
+}
+
+.topbar {
+  background: linear-gradient(135deg, #0d1733 0%, #142347 68%, #1e315f 100%);
+  color: #f7fbff;
+  border-radius: 8px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #84b7ff;
+  margin-bottom: 5px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  margin-top: 7px;
+  color: #cbd8ee;
+  max-width: 920px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #eef5ff;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tag::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.chart {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.root {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.root-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.root-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.root-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.objective-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.objective {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfdff;
+  overflow: hidden;
+}
+
+.objective-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 4px;
+}
+
+.objective-header h2 {
+  margin: 0;
+  font-size: 21px;
+  letter-spacing: 0;
+}
+
+.objective-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.objective.price .objective-header { background: var(--blue-bg); border-color: #bfd5fb; }
+.objective.cannibal .objective-header { background: var(--green-bg); border-color: #b6e5cc; }
+
+.phase-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.phase {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.phase-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 11px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 800;
+}
+
+.num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.nodes {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.node {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 9px;
+}
+
+.node-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.node-title .pill {
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ui .pill { background: var(--blue); }
+.query .pill { background: var(--purple); }
+.table .pill { background: var(--amber); }
+.action .pill { background: var(--green); }
+.guardrail .pill { background: var(--red); }
+
+.node ul {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.node li + li { margin-top: 3px; }
+
+.connector {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.shared {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.shared h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.shared-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shared-card {
+  background: #fbfdff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.shared-card strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.shared-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bridge {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 6px;
+}
+
+.action-map {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.action-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 11px;
+  min-height: 112px;
+}
+
+.action-card h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.action-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.action-card.price { border-top: 4px solid var(--blue); }
+.action-card.cannibal { border-top: 4px solid var(--green); }
+.action-card.watch { border-top: 4px solid #f5a524; }
+.action-card.risk { border-top: 4px solid var(--red); }
+.action-card.shared-action { border-top: 4px solid var(--purple); }
+
+.footer-note {
+  margin-top: 14px;
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .objective-grid,
+  .connector,
+  .shared-grid,
+  .action-map { grid-template-columns: 1fr; }
+  .phase-row { grid-template-columns: 1fr; }
+  .bridge { writing-mode: horizontal-tb; transform: none; }
+  .topbar { grid-template-columns: 1fr; }
+  .legend { justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="topbar">
+    <div>
+      <div class="eyebrow">Mo by BUILT / Feature hierarchy</div>
+      <h1>Price Elasticity + Product Cannibalization Solution Map</h1>
+      <div class="subtitle">A visual hierarchy that groups user objectives, UI surfaces, queries, output tables, guardrails, and recommended actions under the business jobs they support.</div>
+    </div>
+    <div class="legend" aria-label="Legend">
+      <span class="tag">UI</span>
+      <span class="tag">Query</span>
+      <span class="tag">Table</span>
+      <span class="tag">Action</span>
+      <span class="tag">Guardrail</span>
+    </div>
+  </section>
+
+  <section class="chart">
+    <div class="root">
+      <div class="root-head">
+        <div>
+          <div class="root-title">Top-level user objective</div>
+          <div class="root-note">Help commercial, category, and brand teams decide what to price, promote, expand, monitor, reduce, or defend.</div>
+        </div>
+      </div>
+
+      <div class="objective-grid">
+        <article class="objective price">
+          <header class="objective-header">
+            <h2>Price Elasticity</h2>
+            <p>How do price, promo depth, pack ladder gaps, and competitor price gaps affect demand?</p>
+          </header>
+          <div class="phase-row">
+            <section class="phase">
+              <div class="phase-title"><span class="num">1</span>Determine</div>
+              <div class="nodes">
+                <div class="node ui">
+                  <div class="node-title"><span class="pill">UI</span> Pricing event landing</div>
+                  <ul>
+                    <li>Significant price events</li>
+                    <li>Focal SKU and geography selector</li>
+                    <li>Confidence and alert severity</li>
+                  </ul>
+                </div>
+                <div class="node query">
+                  <div class="node-title"><span class="pill">Query</span> Q14, Q17, Q18, Q22</div>
+                  <ul>
+                    <li>Weekly price features</li>
+                    <li>Training windows</li>
+                    <li>Scored elasticity output</li>
+                    <li>Price event queue</li>
+                  </ul>
+                </div>
+                <div class="node table">
+                  <div class="node-title"><span class="pill">Table</span> Event + score tables</div>
+                  <ul>
+                    <li>scored_price_elasticity</li>
+                    <li>price_event_queue</li>
+                    <li>price_elasticity_weekly_features</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section class="phase">
+              <div class="phase-title"><span class="num">2</span>Diagnose</div>
+              <div class="nodes">
+                <div class="node ui">
+                  <div class="node-title"><span class="pill">UI</span> Elasticity workbench</div>
+                  <ul>
+                    <li>Own-price elasticity summary</li>
+                    <li>Promo response by discount bucket</li>
+                    <li>Pack price ladder view</li>
+                    <li>Competitive price gap view</li>
+                    <li>MULO FOOD pack norms</li>
+                  </ul>
+                </div>
+                <div class="node query">
+                  <div class="node-title"><span class="pill">Query</span> Q15, Q16, Q19, Q20, Q21</div>
+                  <ul>
+                    <li>Pack ladder weekly comparison</li>
+                    <li>Competitive weekly price gaps</li>
+                    <li>Scenario forecast output</li>
+                    <li>Category norms and protein/flavor drivers</li>
+                  </ul>
+                </div>
+                <div class="node guardrail">
+                  <div class="node-title"><span class="pill">Guard</span> Trust checks</div>
+                  <ul>
+                    <li>8+ usable weeks</li>
+                    <li>Real price movement</li>
+                    <li>TDP/promo confound review</li>
+                    <li>Competitor price completeness</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section class="phase">
+              <div class="phase-title"><span class="num">3</span>Decide</div>
+              <div class="nodes">
+                <div class="node action">
+                  <div class="node-title"><span class="pill">Action</span> Pricing recommendation</div>
+                  <ul>
+                    <li>Defend price</li>
+                    <li>Test value correction</li>
+                    <li>Use temporary promo response</li>
+                    <li>Avoid permanent ARP cut</li>
+                  </ul>
+                </div>
+                <div class="node ui">
+                  <div class="node-title"><span class="pill">UI</span> What-if calculator</div>
+                  <ul>
+                    <li>User-entered ARP or discount change</li>
+                    <li>Low/base/high unit forecast</li>
+                    <li>Pack ladder cannibalization warning</li>
+                  </ul>
+                </div>
+                <div class="node table">
+                  <div class="node-title"><span class="pill">Table</span> Forecast + provenance</div>
+                  <ul>
+                    <li>price_elasticity_forecast_weekly</li>
+                    <li>Model version and driver fields</li>
+                    <li>Scenario inputs and scoring window</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="objective cannibal">
+          <header class="objective-header">
+            <h2>Product Cannibalization</h2>
+            <p>Is a SKU, flavor, or pack size adding demand or stealing it from another BUILT item?</p>
+          </header>
+          <div class="phase-row">
+            <section class="phase">
+              <div class="phase-title"><span class="num">1</span>Determine</div>
+              <div class="nodes">
+                <div class="node ui">
+                  <div class="node-title"><span class="pill">UI</span> Priority event landing</div>
+                  <ul>
+                    <li>Significant demand transfer detected</li>
+                    <li>Launch underperforming by market</li>
+                    <li>Same-flavor pack overlap risk</li>
+                  </ul>
+                </div>
+                <div class="node query">
+                  <div class="node-title"><span class="pill">Query</span> Q0-Q13 baseline flow</div>
+                  <ul>
+                    <li>Curated weekly panel</li>
+                    <li>Donor candidate generation</li>
+                    <li>Pre/post launch deltas</li>
+                    <li>Event detection and scoring</li>
+                  </ul>
+                </div>
+                <div class="node table">
+                  <div class="node-title"><span class="pill">Table</span> Product evidence tables</div>
+                  <ul>
+                    <li>All_items_extract fields</li>
+                    <li>built_specific_flavor_mapping</li>
+                    <li>recommended SPINS measures</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section class="phase">
+              <div class="phase-title"><span class="num">2</span>Diagnose</div>
+              <div class="nodes">
+                <div class="node ui">
+                  <div class="node-title"><span class="pill">UI</span> Cannibalization views</div>
+                  <ul>
+                    <li>New SKU / new pack summary</li>
+                    <li>Geography heatmap</li>
+                    <li>Same specific flavor pack ladder</li>
+                    <li>Pre/post launch diagnostic</li>
+                    <li>Likely donor SKU list</li>
+                  </ul>
+                </div>
+                <div class="node table">
+                  <div class="node-title"><span class="pill">Table</span> Core measures</div>
+                  <ul>
+                    <li>Base Units, Units, Dollars</li>
+                    <li>TDP and Units/TDP</li>
+                    <li>ARP and promo/non-promo split</li>
+                    <li>First Week Selling</li>
+                  </ul>
+                </div>
+                <div class="node guardrail">
+                  <div class="node-title"><span class="pill">Guard</span> Interpretation checks</div>
+                  <ul>
+                    <li>Distribution-led gain vs productivity gain</li>
+                    <li>Same flavor before same family</li>
+                    <li>Geography-specific status</li>
+                    <li>Launch ramp window review</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section class="phase">
+              <div class="phase-title"><span class="num">3</span>Decide</div>
+              <div class="nodes">
+                <div class="node action">
+                  <div class="node-title"><span class="pill">Action</span> Assortment recommendation</div>
+                  <ul>
+                    <li>Keep multiple sizes</li>
+                    <li>Expand winner selectively</li>
+                    <li>Monitor before wider rollout</li>
+                    <li>Reduce overlap or replace donor</li>
+                  </ul>
+                </div>
+                <div class="node ui">
+                  <div class="node-title"><span class="pill">UI</span> Explanation drawer</div>
+                  <ul>
+                    <li>Plain-language reason</li>
+                    <li>Top deterministic signals</li>
+                    <li>Top ML drivers</li>
+                  </ul>
+                </div>
+                <div class="node table">
+                  <div class="node-title"><span class="pill">Table</span> Lineage metadata</div>
+                  <ul>
+                    <li>Source data and scoring window</li>
+                    <li>Donor pool definition</li>
+                    <li>Model version and confidence</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+      </div>
+
+      <div class="connector">
+        <section class="shared">
+          <h3>Shared foundation</h3>
+          <div class="shared-grid">
+            <div class="shared-card">
+              <strong>Product enrichment</strong>
+              <span>Specific flavor, pack count, flavor family, UPC, description, brand, protein attributes.</span>
+            </div>
+            <div class="shared-card">
+              <strong>Weekly panel</strong>
+              <span>UPC x geography x week measures for demand, price, promo, and distribution.</span>
+            </div>
+            <div class="shared-card">
+              <strong>Evidence metrics</strong>
+              <span>Base Units, Units, TDP, Units/TDP, ARP, promo and non-promo splits.</span>
+            </div>
+            <div class="shared-card">
+              <strong>Trust layer</strong>
+              <span>Confidence, thresholds, model version, source columns, and plain-language provenance.</span>
+            </div>
+          </div>
+        </section>
+        <div class="bridge">Linkage</div>
+        <section class="shared">
+          <h3>Cross-objective handoffs</h3>
+          <div class="shared-grid">
+            <div class="shared-card">
+              <strong>Promo lift source</strong>
+              <span>Price lift may be incremental or sourced from another BUILT pack size.</span>
+            </div>
+            <div class="shared-card">
+              <strong>Pack ladder compression</strong>
+              <span>12-pack price moves can collapse the role of the 4-pack or 1ct.</span>
+            </div>
+            <div class="shared-card">
+              <strong>Competitor gap context</strong>
+              <span>External price pressure is separated from internal donor pressure.</span>
+            </div>
+            <div class="shared-card">
+              <strong>Unified action queue</strong>
+              <span>One recommended next step, with the supporting price and cannibalization evidence attached.</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="action-map">
+        <article class="action-card price">
+          <h3>Defend Price</h3>
+          <p>Use when BUILT is priced above a competitor but velocity, distribution, and pack role remain healthy.</p>
+        </article>
+        <article class="action-card price">
+          <h3>Test Value Correction</h3>
+          <p>Use when the 12-pack or value pack is above category norm and store penetration is weak.</p>
+        </article>
+        <article class="action-card watch">
+          <h3>Monitor</h3>
+          <p>Use when launch or price evidence is mixed, early, or confounded by TDP and promo changes.</p>
+        </article>
+        <article class="action-card cannibal">
+          <h3>Expand Winner</h3>
+          <p>Use when base demand and productivity rise without meaningful donor decline in the same market.</p>
+        </article>
+        <article class="action-card risk">
+          <h3>Reduce Overlap</h3>
+          <p>Use when the focal SKU rises while same-flavor donor SKUs fall and net productivity weakens.</p>
+        </article>
+      </div>
+
+      <div class="footer-note">Read left to right within each objective: Determine finds the event, Diagnose proves or rejects the mechanism, Decide converts evidence into a commercial action.</div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

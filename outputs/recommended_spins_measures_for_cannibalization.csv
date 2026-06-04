@@ -1,0 +1,37 @@
+measure_name,category,why_it_matters,recommended_role,pilot_priority
+Units,Demand Outcomes,Observed real-world unit sales outcome used to measure actual market impact.,Observed demand target and comparison baseline.,Primary
+Dollars,Demand Outcomes,Observed dollar sales outcome used to evaluate revenue effects.,Observed revenue outcome.,Primary
+Base Units,Demand Outcomes,Approximates non-promo unit demand and is often cleaner for cannibalization analysis.,Primary underlying demand target.,Primary
+Base Dollars,Demand Outcomes,Approximates non-promo dollar demand for cleaner revenue comparisons.,Underlying revenue demand signal.,Primary
+Incr Units,Promo Decomposition,Separates promo-attributed unit lift from underlying demand.,"Promo control, not a generic week-over-week change measure.",Primary
+Incr Dollars,Promo Decomposition,Separates promo-attributed dollar lift from underlying demand.,Promo control for revenue.,Secondary
+"Units, Promo",Promo Decomposition,Shows unit volume sold while on promotion.,Promo exposure context.,Secondary
+"Units, Non-Promo",Promo Decomposition,Shows unit volume outside promotion windows.,Clean non-promo comparison signal.,Secondary
+"Dollars, Promo",Promo Decomposition,Shows dollar sales while on promotion.,Promo revenue context.,Secondary
+"Dollars, Non-Promo",Promo Decomposition,Shows dollar sales outside promotion windows.,Clean non-promo revenue comparison.,Secondary
+# Stores Selling,Distribution and Reach,Shows how many stores are actually selling the product.,Primary distribution control.,Primary
+% of Stores Selling,Distribution and Reach,Shows unweighted store distribution.,Primary reach indicator.,Primary
+TDP,Distribution and Reach,Captures total distribution while accounting for active UPCs.,Primary distribution-adjusted availability signal.,Primary
+"TDP, Any Promo",Distribution and Reach,Shows promoted distribution footprint.,Promo reach control.,Secondary
+"TDP, Non-Promo",Distribution and Reach,Shows non-promo distribution footprint.,Baseline reach control.,Secondary
+Average Weekly Units Per Store Selling Per Item,Per-Store Productivity,Closest SPINS measure to units per store selling per item.,Primary store-productivity signal.,Primary
+Average Weekly Dollars Per Store Selling Per Item,Per-Store Productivity,Closest SPINS measure to dollars per store selling per item.,Primary store-productivity revenue signal.,Secondary
+Units SPM,Distribution-Normalized Productivity,Measures unit productivity normalized by ACV of selling stores.,Secondary productivity control.,Secondary
+Dollars SPM,Distribution-Normalized Productivity,Measures dollar productivity normalized by ACV of selling stores.,Secondary revenue productivity control.,Secondary
+Units SPP,Distribution-Normalized Productivity,Measures unit productivity per ACV point.,Optional distribution-normalized productivity view.,Optional
+Dollars SPP,Distribution-Normalized Productivity,Measures dollar productivity per ACV point.,Optional distribution-normalized revenue view.,Optional
+Units/TDP,Distribution-Normalized Productivity,Measures unit productivity per total distribution point.,Secondary control for reach-adjusted productivity.,Secondary
+Dollars/TDP,Distribution-Normalized Productivity,Measures dollar productivity per total distribution point.,Secondary revenue control for reach-adjusted productivity.,Secondary
+ARP,Price and Discount,Tracks observed average product price.,Primary price signal.,Primary
+Base ARP,Price and Discount,Approximates regular price absent promotion.,Primary baseline price signal.,Primary
+"ARP, Promo",Price and Discount,Tracks price during promoted selling periods.,Promo price context.,Secondary
+"ARP, Non-Promo",Price and Discount,Tracks price during non-promoted selling periods.,Baseline price context.,Secondary
+"ARP % Discount, Any Promo",Price and Discount,Measures average discount depth under promotion.,Primary promo depth control.,Primary
+"Units, Promo Effect Index",Promo Response,Measures unit response to merchandising support.,Primary promo sensitivity signal.,Primary
+"Dollars, Promo Effect Index",Promo Response,Measures dollar response to merchandising support.,Secondary promo sensitivity signal.,Secondary
+"Unit Shr, Category",Share and Position,Shows unit share within the category.,Secondary market-position signal.,Secondary
+"Unit Shr, Sub-Cat",Share and Position,Shows unit share within the subcategory.,Primary market-position signal for closer substitutes.,Primary
+"Dol Shr, Category",Share and Position,Shows dollar share within the category.,Secondary revenue position signal.,Secondary
+"Dol Shr, Sub-Cat",Share and Position,Shows dollar share within the subcategory.,Secondary revenue position signal for close substitutes.,Secondary
+First Week Selling,Launch and Lifecycle,Identifies when a product first entered the market.,Primary launch timing marker.,Primary
+Number of Weeks Selling,Launch and Lifecycle,Shows how long a product has been selling in the time frame.,Secondary maturity and ramp indicator.,Secondary

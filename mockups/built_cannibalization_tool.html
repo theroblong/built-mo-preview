@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUILT Cannibalization Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EFE9;
+    --border: #E2E0D8;
+    --border-med: #C8C6BC;
+    --text-primary: #1A1916;
+    --text-secondary: #6B6960;
+    --text-tertiary: #9E9D97;
+    --blue-bg: #EBF3FC;
+    --blue-border: #B5D4F4;
+    --blue-text: #0C447C;
+    --blue-mid: #378ADD;
+    --green-bg: #EAF3DE;
+    --green-text: #2E5A0E;
+    --amber-bg: #FDF3E0;
+    --amber-text: #7A4A08;
+    --amber-mid: #D4860F;
+    --red-bg: #FCEAEA;
+    --red-text: #8C2020;
+    --red-mid: #D63B3B;
+    --gray-bg: #F0EFE9;
+    --gray-text: #5A5955;
+    --accent: #1A1916;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  .topbar {
+    background: var(--accent);
+    color: #F7F6F2;
+    padding: 0 28px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #333;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 20px; }
+  .brand { font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.12em; color: #F7F6F2; }
+  .brand span { color: #9E9D97; }
+  .topbar-meta { font-size: 11px; color: #9E9D97; letter-spacing: 0.04em; }
+
+  .focal-pill {
+    font-size: 11px;
+    background: #2D2D2A;
+    border: 1px solid #444;
+    color: #F7F6F2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    letter-spacing: 0.03em;
+  }
+
+  .layout { display: flex; flex: 1; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px);
+    overflow-y: auto;
+  }
+
+  .sidebar-section { margin-bottom: 6px; }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    padding: 0 18px 6px;
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    border-left: 2px solid transparent;
+    transition: all 0.1s;
+    font-family: var(--font);
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text-primary); }
+
+  .nav-item.active {
+    background: var(--blue-bg);
+    color: var(--blue-text);
+    border-left-color: var(--blue-mid);
+    font-weight: 500;
+  }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-danger { background: var(--red-mid); }
+  .dot-warn { background: var(--amber-mid); }
+  .dot-info { background: var(--blue-mid); }
+  .dot-success { background: #4A8C1A; }
+  .dot-neutral { background: var(--border-med); }
+
+  /* MAIN */
+  .main { flex: 1; padding: 28px 32px; max-width: 900px; overflow-x: hidden; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* TYPOGRAPHY */
+  .page-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    font-family: var(--mono);
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+
+  .card-tight { padding: 0; overflow: hidden; }
+
+  /* METRIC GRID */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  @media (max-width: 700px) {
+    .metric-grid { grid-template-columns: repeat(3, 1fr); }
+    .sidebar { display: none; }
+    .main { padding: 18px; }
+  }
+
+  .metric-tile {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .metric-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 5px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .metric-val { font-size: 22px; font-weight: 500; color: var(--text-primary); font-family: var(--mono); letter-spacing: -0.02em; }
+  .metric-delta { font-size: 12px; margin-top: 3px; font-family: var(--mono); }
+
+  /* STATUS BADGES */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+  .badge-watch { background: var(--amber-bg); color: var(--amber-text); border: 1px solid #EDD99A; }
+  .badge-cannibal { background: var(--red-bg); color: var(--red-text); border: 1px solid #F0BBBB; }
+  .badge-incremental { background: var(--green-bg); color: var(--green-text); border: 1px solid #B8D98A; }
+  .badge-neutral { background: var(--gray-bg); color: var(--gray-text); border: 1px solid var(--border); }
+
+  /* COLOR TEXT */
+  .up { color: #2E5A0E; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .down { color: var(--red-text); font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .neutral-val { color: var(--text-tertiary); font-family: var(--mono); font-size: 12px; }
+
+  /* EVENT CARDS */
+  .event-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .event-item.danger { border-left-color: var(--red-mid); }
+  .event-item.warn { border-left-color: var(--amber-mid); }
+  .event-item.info { border-left-color: var(--blue-mid); }
+  .event-item.success { border-left-color: #4A8C1A; }
+
+  .event-title { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; }
+  .event-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .event-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  .conf-chip {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+  }
+  .conf-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  .drill-btn {
+    font-size: 11px;
+    color: var(--blue-text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    padding: 0;
+    letter-spacing: 0.03em;
+  }
+  .drill-btn:hover { text-decoration: underline; }
+
+  /* TABLES */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface2); }
+
+  .sku-name { font-weight: 500; font-size: 13px; color: var(--text-primary); }
+  .sku-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+
+  .role-chip {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border-med);
+    color: var(--text-secondary);
+    font-family: var(--mono);
+  }
+
+  /* FOCAL ROW */
+  tr.focal-row td { background: var(--blue-bg) !important; }
+  tr.focal-row:hover td { background: #deedf8 !important; }
+  tr.focal-row .sku-name { color: var(--blue-text); }
+  tr.focal-row .sku-sub { color: #5A8FC0; }
+
+  /* BAR */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .bar-label { font-size: 13px; font-weight: 500; min-width: 160px; }
+  .bar-tag { font-size: 11px; color: var(--text-tertiary); min-width: 120px; }
+  .bar-bg { flex: 1; background: var(--surface2); border-radius: 3px; height: 5px; overflow: hidden; }
+  .bar-fill { height: 5px; border-radius: 3px; transition: width 0.4s ease; }
+  .bar-pct { font-size: 12px; color: var(--text-secondary); min-width: 30px; text-align: right; font-family: var(--mono); }
+
+  /* INSIGHT BOX */
+  .insight-box {
+    background: var(--blue-bg);
+    border: 1px solid var(--blue-border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--blue-text);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+
+  /* PROV GRID */
+  .prov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .prov-key { font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+  .prov-val { font-size: 12px; color: var(--text-primary); font-family: var(--mono); }
+
+  /* ACTION ITEMS */
+  .action-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .action-left .sku-sub { margin-top: 3px; }
+
+  .action-pill {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    white-space: nowrap;
+  }
+  .pill-keep { background: var(--green-bg); color: var(--green-text); }
+  .pill-monitor { background: var(--amber-bg); color: var(--amber-text); }
+  .pill-reduce { background: var(--red-bg); color: var(--red-text); }
+  .pill-expand { background: var(--blue-bg); color: var(--blue-text); }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .prov-grid { grid-template-columns: 1fr; } }
+
+  /* ML SCORE */
+  .ml-score-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+  }
+  .ml-score-label { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+  .ml-score-val { font-size: 15px; font-weight: 500; font-family: var(--mono); min-width: 36px; }
+
+  /* EXPLORE BTN */
+  .explore-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-med);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: var(--font);
+    margin-top: 6px;
+    transition: all 0.15s;
+  }
+  .explore-btn:hover { background: var(--surface2); border-color: var(--accent); }
+
+  /* EXPLANATION NARRATIVE */
+  .narrative {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    border-left: 3px solid var(--border-med);
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    background: var(--surface2);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* HIGHLIGHTED FOCAL */
+  .focal-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .focal-name { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+  .focal-meta { font-size: 12px; color: var(--text-secondary); font-family: var(--mono); margin-top: 3px; }
+
+  /* DONOR CHIPS */
+  .donor-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .donor-chip {
+    font-size: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 12px;
+    color: var(--text-primary);
+    font-family: var(--mono);
+  }
+
+  /* HEATMAP COLOR CELLS */
+  td.heat-green { color: var(--green-text); font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  td.heat-amber { color: var(--amber-text); font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  td.heat-red { color: var(--red-text); font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  td.heat-neutral { color: var(--text-tertiary); font-family: var(--mono); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand">BUILT<span> / cannibalization</span></div>
+      <div class="topbar-meta">SPINS POS · All_items_extract · Grocery · W16 2024</div>
+    </div>
+    <div class="focal-pill">Focal: Mint Brownie 4pk</div>
+  </div>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Overview</div>
+        <button class="nav-item active" onclick="show('events')">
+          <span class="nav-dot dot-danger"></span>Priority events
+        </button>
+        <button class="nav-item" onclick="show('sku')">
+          <span class="nav-dot dot-warn"></span>SKU summary
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Diagnostics</div>
+        <button class="nav-item" onclick="show('geo')">
+          <span class="nav-dot dot-neutral"></span>Geography view
+        </button>
+        <button class="nav-item" onclick="show('pack')">
+          <span class="nav-dot dot-warn"></span>Pack ladder
+        </button>
+        <button class="nav-item" onclick="show('prepost')">
+          <span class="nav-dot dot-neutral"></span>Pre / post launch
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Intelligence</div>
+        <button class="nav-item" onclick="show('explain')">
+          <span class="nav-dot dot-info"></span>Explanation
+        </button>
+        <button class="nav-item" onclick="show('action')">
+          <span class="nav-dot dot-success"></span>Assortment action
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- SCREEN 1: PRIORITY EVENTS -->
+      <div id="events" class="screen active">
+        <div class="page-title">Priority events</div>
+        <div class="page-sub">BUILT bar · all geographies · model v1.8 · scored W16 2024</div>
+
+        <div class="event-item danger">
+          <div class="event-title">Significant demand transfer detected</div>
+          <div class="event-sub">Mint Brownie 4pk · Mountain West · Grocery — donor 1ct declining concurrently with focal rise</div>
+          <div class="event-meta">
+            <span class="conf-chip"><span class="conf-dot" style="background:var(--red-mid);"></span>High confidence</span>
+            <span class="badge badge-cannibal">Cannibalizing</span>
+            <button class="drill-btn" onclick="show('geo')">Geography view →</button>
+          </div>
+        </div>
+
+        <div class="event-item warn">
+          <div class="event-title">Launch underperforming in Texas</div>
+          <div class="event-sub">Mint Brownie 4pk · Texas · Grocery — distribution-led gain, per-store productivity weak</div>
+          <div class="event-meta">
+            <span class="conf-chip"><span class="conf-dot" style="background:var(--amber-mid);"></span>Medium confidence</span>
+            <span class="badge badge-watch">Watch</span>
+            <button class="drill-btn" onclick="show('prepost')">Pre / post →</button>
+          </div>
+        </div>
+
+        <div class="event-item warn">
+          <div class="event-title">Same-flavor pack overlap risk elevated</div>
+          <div class="event-sub">Mint Brownie 4pk vs 1ct · Grocery · 1ct donor decline exceeds expected range</div>
+          <div class="event-meta">
+            <span class="conf-chip"><span class="conf-dot" style="background:var(--amber-mid);"></span>Medium confidence</span>
+            <span class="badge badge-watch">Watch</span>
+            <button class="drill-btn" onclick="show('pack')">Pack ladder →</button>
+          </div>
+        </div>
+
+        <div class="event-item success">
+          <div class="event-title">Distribution-led gain detected — Total US</div>
+          <div class="event-sub">Mint Brownie 4pk · Total US · units up, TDP expanding, net positive across all geographies combined</div>
+          <div class="event-meta">
+            <span class="conf-chip"><span class="conf-dot" style="background:#4A8C1A;"></span>High confidence</span>
+            <span class="badge badge-incremental">Incremental</span>
+            <button class="drill-btn" onclick="show('sku')">SKU summary →</button>
+          </div>
+        </div>
+
+        <div class="event-item info">
+          <div class="event-title">Northeast: early ramp, no clear cannibalization</div>
+          <div class="event-sub">Mint Brownie 4pk · Northeast · Base Units flat, TDP growing, still in ramp window</div>
+          <div class="event-meta">
+            <span class="conf-chip"><span class="conf-dot" style="background:var(--blue-mid);"></span>Low confidence</span>
+            <span class="badge badge-neutral">Neutral</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: SKU SUMMARY -->
+      <div id="sku" class="screen">
+        <div class="page-title">SKU summary</div>
+        <div class="page-sub">BUILT Mint Brownie 4pk · Grocery · all geographies · last 13 wks vs prior 13 wks</div>
+
+        <div class="card">
+          <div class="focal-summary">
+            <div>
+              <div class="focal-name">BUILT Mint Brownie 4pk</div>
+              <div class="focal-meta">Specific flavor: Mint Brownie · Pack count: 4 · First week selling: W04 2024</div>
+            </div>
+            <span class="badge badge-watch" style="font-size:13px;padding:5px 16px;">Watch</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-tile">
+              <div class="metric-label">Base units</div>
+              <div class="metric-val">910</div>
+              <div class="metric-delta up">↑ +11%</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">Units</div>
+              <div class="metric-val">980</div>
+              <div class="metric-delta up">↑ +14%</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">TDP</div>
+              <div class="metric-val">63</div>
+              <div class="metric-delta up">↑ +26%</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">Units / TDP</div>
+              <div class="metric-val">15.6</div>
+              <div class="metric-delta down">↓ −9%</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-label">ARP</div>
+              <div class="metric-val">$8.49</div>
+              <div class="metric-delta neutral-val">— stable</div>
+            </div>
+          </div>
+
+          <div class="ml-score-bar">
+            <div class="ml-score-label">ML cannibalization score</div>
+            <div class="bar-bg" style="flex:1; height:6px;"><div class="bar-fill" style="width:52%;background:var(--amber-mid);"></div></div>
+            <div class="ml-score-val" style="color:var(--amber-text);">52%</div>
+            <span class="badge badge-watch">Moderate risk</span>
+          </div>
+
+          <div class="section-label">Likely donor SKUs (ML-ranked)</div>
+          <div class="donor-chips">
+            <div class="donor-chip">1 · Mint Brownie 1ct</div>
+            <div class="donor-chip">2 · Mint Brownie 12pk</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: GEOGRAPHY VIEW -->
+      <div id="geo" class="screen">
+        <div class="page-title">Geography view</div>
+        <div class="page-sub">BUILT Mint Brownie 4pk · Grocery · vs prior 13-week baseline</div>
+
+        <div class="card card-tight">
+          <table>
+            <thead>
+              <tr>
+                <th>Geography</th>
+                <th>Base units Δ</th>
+                <th>Units Δ</th>
+                <th>TDP Δ</th>
+                <th>Units/TDP Δ</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="sku-name">Total US</div></td>
+                <td class="heat-green">+8%</td>
+                <td class="heat-green">+12%</td>
+                <td class="heat-green">+10%</td>
+                <td class="heat-green">+2%</td>
+                <td><span class="badge badge-incremental">Incremental</span></td>
+              </tr>
+              <tr>
+                <td><div class="sku-name">Texas</div></td>
+                <td class="heat-red">−3%</td>
+                <td class="heat-amber">+2%</td>
+                <td class="heat-green">+12%</td>
+                <td class="heat-red">−9%</td>
+                <td><span class="badge badge-watch">Watch</span></td>
+              </tr>
+              <tr>
+                <td><div class="sku-name">Mountain West</div></td>
+                <td class="heat-red">−12%</td>
+                <td class="heat-red">−6%</td>
+                <td class="heat-amber">+1%</td>
+                <td class="heat-red">−7%</td>
+                <td><span class="badge badge-cannibal">Cannibalizing</span></td>
+              </tr>
+              <tr>
+                <td><div class="sku-name">Southeast</div></td>
+                <td class="heat-red">−5%</td>
+                <td class="heat-neutral">flat</td>
+                <td class="heat-green">+8%</td>
+                <td class="heat-red">−5%</td>
+                <td><span class="badge badge-watch">Watch</span></td>
+              </tr>
+              <tr>
+                <td><div class="sku-name">Northeast</div></td>
+                <td class="heat-neutral">flat</td>
+                <td class="heat-amber">+6%</td>
+                <td class="heat-green">+9%</td>
+                <td class="heat-neutral">flat</td>
+                <td><span class="badge badge-neutral">Neutral</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="font-size:11px;color:var(--text-tertiary);font-family:var(--mono);">
+          Key: base units ↑ + units/TDP ↑ → incremental &nbsp;·&nbsp; reach only → watch &nbsp;·&nbsp; donor decline + weak productivity → cannibalizing
+        </div>
+      </div>
+
+      <!-- SCREEN 4: PACK LADDER -->
+      <div id="pack" class="screen">
+        <div class="page-title">Pack ladder</div>
+        <div class="page-sub">Mint Brownie — all pack sizes · Texas · Grocery</div>
+
+        <div class="insight-box">
+          ML insight: 4pk appears to pull more from 1ct than from 12pk. Pack-mix share shift shows 1ct losing ~18% of prior base share since 4pk launch in this geography. 12pk decline within expected variance.
+        </div>
+
+        <div class="card card-tight">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU / pack</th>
+                <th>Pack ct</th>
+                <th>Base units</th>
+                <th>Units</th>
+                <th>TDP</th>
+                <th>Units / TDP</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="sku-name">Mint Brownie 1ct</div>
+                  <div class="sku-sub">Incumbent · broad reach</div>
+                </td>
+                <td style="font-family:var(--mono);">1</td>
+                <td style="font-family:var(--mono);">1,240</td>
+                <td style="font-family:var(--mono);">1,320</td>
+                <td style="font-family:var(--mono);">80</td>
+                <td style="font-family:var(--mono);">16.5</td>
+                <td><span class="role-chip">Donor</span></td>
+              </tr>
+              <tr class="focal-row">
+                <td>
+                  <div class="sku-name">Mint Brownie 4pk</div>
+                  <div class="sku-sub">Focal — new launch</div>
+                </td>
+                <td style="font-family:var(--mono);">4</td>
+                <td style="font-family:var(--mono);">840</td>
+                <td style="font-family:var(--mono);">910</td>
+                <td style="font-family:var(--mono);">62</td>
+                <td style="font-family:var(--mono);">14.7</td>
+                <td><span class="role-chip" style="border-color:var(--blue-border);color:var(--blue-text);">Focal</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sku-name">Mint Brownie 12pk</div>
+                  <div class="sku-sub">Incumbent · narrow reach</div>
+                </td>
+                <td style="font-family:var(--mono);">12</td>
+                <td style="font-family:var(--mono);">410</td>
+                <td style="font-family:var(--mono);">455</td>
+                <td style="font-family:var(--mono);">28</td>
+                <td style="font-family:var(--mono);">16.3</td>
+                <td><span class="role-chip">Minor donor</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SCREEN 5: PRE/POST LAUNCH -->
+      <div id="prepost" class="screen">
+        <div class="page-title">Pre / post launch diagnostic</div>
+        <div class="page-sub">Mint Brownie 4pk · Texas · Grocery · W04 2024 launch</div>
+
+        <div class="card card-tight" style="margin-bottom:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Pre-launch</th>
+                <th>Post-launch</th>
+                <th>Change</th>
+                <th>Interpretation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;">Base units</td>
+                <td style="font-family:var(--mono);">820</td>
+                <td style="font-family:var(--mono);">910</td>
+                <td class="up">+11%</td>
+                <td style="font-size:12px;color:var(--text-secondary);">Underlying demand up</td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Units</td>
+                <td style="font-family:var(--mono);">860</td>
+                <td style="font-family:var(--mono);">980</td>
+                <td class="up">+14%</td>
+                <td style="font-size:12px;color:var(--text-secondary);">Observed sales up</td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">TDP</td>
+                <td style="font-family:var(--mono);">50</td>
+                <td style="font-family:var(--mono);">63</td>
+                <td class="up">+26%</td>
+                <td style="font-size:12px;color:var(--text-secondary);">Distribution expanded</td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Units / TDP</td>
+                <td style="font-family:var(--mono);">17.2</td>
+                <td style="font-family:var(--mono);">15.6</td>
+                <td class="down">−9%</td>
+                <td style="font-size:12px;color:var(--text-secondary);">Per-store productivity down</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div class="section-label">Donor · Mint Brownie 1ct · same period</div>
+            <div class="card">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Base units change</div>
+              <div style="font-size:24px;font-weight:500;font-family:var(--mono);" class="down">−14%</div>
+              <div style="font-size:12px;color:var(--text-tertiary);margin-top:6px;">Concurrent decline with 4pk launch — primary donor signal</div>
+            </div>
+          </div>
+          <div>
+            <div class="section-label">Donor · Mint Brownie 12pk · same period</div>
+            <div class="card">
+              <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Base units change</div>
+              <div style="font-size:24px;font-weight:500;font-family:var(--mono);" class="neutral-val">−3%</div>
+              <div style="font-size:12px;color:var(--text-tertiary);margin-top:6px;">Within expected variance — minor donor role</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 6: EXPLANATION -->
+      <div id="explain" class="screen">
+        <div class="page-title">Explanation</div>
+        <div class="page-sub">Mint Brownie 4pk · Texas · Grocery · model v1.8 · W16 2024</div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <div class="section-label">ML narrative</div>
+          <div class="narrative">
+            Mint Brownie 4pk is flagged as <strong>Watch</strong> in Texas because observed units rose, but most of the gain appears tied to distribution expansion while per-store productivity weakened and the 1ct Mint Brownie donor item declined over the same period. The evidence does not yet support a strong cannibalization conclusion, but the pattern warrants monitoring before wider expansion.
+          </div>
+
+          <div class="section-label">Top drivers</div>
+
+          <div class="bar-row">
+            <div class="bar-label">TDP expansion</div>
+            <div class="bar-tag" style="color:var(--amber-text);">Primary driver</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:82%;background:var(--amber-mid);"></div></div>
+            <div class="bar-pct">82%</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">1ct donor decline</div>
+            <div class="bar-tag" style="color:var(--red-text);">Cannibalization signal</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:65%;background:var(--red-mid);"></div></div>
+            <div class="bar-pct">65%</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Units/TDP decline</div>
+            <div class="bar-tag" style="color:var(--amber-text);">Productivity weak</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:48%;background:var(--amber-mid);"></div></div>
+            <div class="bar-pct">48%</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Early ramp window</div>
+            <div class="bar-tag" style="color:var(--text-tertiary);">Still stabilizing</div>
+            <div class="bar-bg"><div class="bar-fill" style="width:30%;background:var(--border-med);"></div></div>
+            <div class="bar-pct">30%</div>
+          </div>
+        </div>
+
+        <div class="section-label">Provenance &amp; lineage</div>
+        <div class="card">
+          <div class="prov-grid">
+            <div class="prov-item">
+              <div class="prov-key">Source data</div>
+              <div class="prov-val">SPINS POS · All_items_extract</div>
+            </div>
+            <div class="prov-item">
+              <div class="prov-key">Scoring window</div>
+              <div class="prov-val">Last 13 wks vs prior 13 wks</div>
+            </div>
+            <div class="prov-item">
+              <div class="prov-key">Geography scope</div>
+              <div class="prov-val">Texas · Grocery</div>
+            </div>
+            <div class="prov-item">
+              <div class="prov-key">Donor pool definition</div>
+              <div class="prov-val">Same specific flavor · BUILT brand</div>
+            </div>
+            <div class="prov-item">
+              <div class="prov-key">Model version</div>
+              <div class="prov-val">v1.8</div>
+            </div>
+            <div class="prov-item">
+              <div class="prov-key">Score timestamp</div>
+              <div class="prov-val">W16 2024 · Medium confidence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 7: ASSORTMENT ACTION -->
+      <div id="action" class="screen">
+        <div class="page-title">Assortment action</div>
+        <div class="page-sub">Mint Brownie — all packs · Grocery · recommended actions by SKU and channel</div>
+
+        <div class="section-label">SKU-level recommendations</div>
+        <div class="action-item">
+          <div class="action-left">
+            <div class="sku-name">Mint Brownie 1ct</div>
+            <div class="sku-sub">Stable donor · broad reach · strong productivity</div>
+          </div>
+          <button class="action-pill pill-keep">Keep core</button>
+        </div>
+        <div class="action-item" style="border-color:var(--blue-border);">
+          <div class="action-left">
+            <div class="sku-name" style="color:var(--blue-text);">Mint Brownie 4pk</div>
+            <div class="sku-sub">Watch · Texas underperforming · Mountain West cannibalizing</div>
+          </div>
+          <button class="action-pill pill-monitor">Monitor before expanding</button>
+        </div>
+        <div class="action-item">
+          <div class="action-left">
+            <div class="sku-name">Mint Brownie 12pk</div>
+            <div class="sku-sub">Low velocity · narrow reach · minor donor role</div>
+          </div>
+          <button class="action-pill pill-reduce">Reduce / monitor</button>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section-label">Channel breakdown · Mint Brownie 4pk</div>
+        <div class="card card-tight">
+          <table>
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>4pk status</th>
+                <th>Recommendation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;">Grocery</td>
+                <td><span class="badge badge-watch">Watch</span></td>
+                <td style="font-size:12px;color:var(--text-secondary);">Monitor before wider expansion</td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Club</td>
+                <td><span class="badge badge-incremental">Incremental</span></td>
+                <td style="font-size:12px;color:var(--text-secondary);">Expand selectively</td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Convenience</td>
+                <td><span class="badge badge-neutral">Neutral</span></td>
+                <td style="font-size:12px;color:var(--text-secondary);">Hold — insufficient data</td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Natural / specialty</td>
+                <td><span class="badge badge-cannibal">Cannibalizing</span></td>
+                <td style="font-size:12px;color:var(--text-secondary);">Reduce — overlap with 1ct elevated</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button class="explore-btn" onclick="alert('In a live tool, this would deepen the analysis with competitor SKUs added to the donor pool.')">
+          Explore with competitor context &nbsp;↗
+        </button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const map = { events: 0, sku: 1, geo: 2, pack: 3, prepost: 4, explain: 5, action: 6 };
+    document.querySelectorAll('.nav-item')[map[id]].classList.add('active');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+measure_name,category,pilot_priority,coverage_status,derivable_proxy,derivation_notes,limitation_notes
+Units,Demand Outcomes,Primary,Present,No,,
+Dollars,Demand Outcomes,Primary,Present,No,,
+Base Units,Demand Outcomes,Primary,Present,No,,
+Base Dollars,Demand Outcomes,Primary,Present,No,,
+Incr Units,Promo Decomposition,Primary,Present,No,,"Present, but should be interpreted as promo-attributed lift rather than generic week-over-week change."
+Incr Dollars,Promo Decomposition,Secondary,Present,No,,"Present, but should be interpreted as promo-attributed lift rather than generic demand change."
+"Units, Promo",Promo Decomposition,Secondary,Present,No,,
+"Units, Non-Promo",Promo Decomposition,Secondary,Present,No,,
+"Dollars, Promo",Promo Decomposition,Secondary,Present,No,,
+"Dollars, Non-Promo",Promo Decomposition,Secondary,Present,No,,
+# Stores Selling,Distribution and Reach,Primary,Missing,No,,"Store-count-based distribution measures are not available in the extract, so Units / # Stores Selling cannot be computed directly."
+% of Stores Selling,Distribution and Reach,Primary,Missing,No,,Store-count-based distribution percentage is not available in the extract and cannot be reconstructed exactly from TDP or SPP fields.
+TDP,Distribution and Reach,Primary,Present,No,,
+"TDP, Any Promo",Distribution and Reach,Secondary,Present,No,,
+"TDP, Non-Promo",Distribution and Reach,Secondary,Present,No,,
+Average Weekly Units Per Store Selling Per Item,Per-Store Productivity,Primary,Missing,No,,"True per-store-selling-item productivity cannot be calculated without store-selling counts or the SPINS-native measure. Units/TDP or Units SPP may be used only as fallback productivity proxies, not as true units-per-store substitutes."
+Average Weekly Dollars Per Store Selling Per Item,Per-Store Productivity,Secondary,Missing,No,,"True per-store-selling-item productivity cannot be calculated without store-selling counts or the SPINS-native measure. Dollars/TDP or Dollars SPP may be used only as fallback productivity proxies, not as true dollars-per-store substitutes."
+Units SPM,Distribution-Normalized Productivity,Secondary,Present,No,,
+Dollars SPM,Distribution-Normalized Productivity,Secondary,Present,No,,
+Units SPP,Distribution-Normalized Productivity,Optional,Present,No,,
+Dollars SPP,Distribution-Normalized Productivity,Optional,Present,No,,
+Units/TDP,Distribution-Normalized Productivity,Secondary,Present,No,,
+Dollars/TDP,Distribution-Normalized Productivity,Secondary,Present,No,,
+ARP,Price and Discount,Primary,Present,No,,
+Base ARP,Price and Discount,Primary,Derivable Proxy,Yes,Approximate as Base Dollars / Base Units when Base Units is non-zero.,Not the exact SPINS-native Base ARP field from this extract.
+"ARP, Promo",Price and Discount,Secondary,Derivable Proxy,Yes,"Approximate as Dollars, Promo / Units, Promo when Units, Promo is non-zero.","Not the exact SPINS-native ARP, Promo field from this extract."
+"ARP, Non-Promo",Price and Discount,Secondary,Derivable Proxy,Yes,"Approximate as Dollars, Non-Promo / Units, Non-Promo when Units, Non-Promo is non-zero.","Not the exact SPINS-native ARP, Non-Promo field from this extract."
+"ARP % Discount, Any Promo",Price and Discount,Primary,Missing,No,,"Only promo-mechanic-specific discount fields are present, not a clean Any Promo field."
+"Units, Promo Effect Index",Promo Response,Primary,Missing,No,,"Lift fields by promo mechanic are present, but Promo Effect Index is a different SPINS metric."
+"Dollars, Promo Effect Index",Promo Response,Secondary,Missing,No,,"Lift fields by promo mechanic are present, but Promo Effect Index is a different SPINS metric."
+"Unit Shr, Category",Share and Position,Secondary,Missing,No,,Share requires category or subcategory denominator totals not included in this extract.
+"Unit Shr, Sub-Cat",Share and Position,Primary,Missing,No,,Share requires category or subcategory denominator totals not included in this extract.
+"Dol Shr, Category",Share and Position,Secondary,Missing,No,,Share requires category or subcategory denominator totals not included in this extract.
+"Dol Shr, Sub-Cat",Share and Position,Secondary,Missing,No,,Share requires category or subcategory denominator totals not included in this extract.
+First Week Selling,Launch and Lifecycle,Primary,Present,No,,
+Number of Weeks Selling,Launch and Lifecycle,Secondary,Present,No,,

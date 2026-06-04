@@ -1,0 +1,48 @@
+brand:
+  primary:        "#EB2134"
+  primaryHover:   "#C61A2B"
+  primaryLight:   "#FF5B6B"
+
+  navy:           "#0D1733"
+  navySecondary:  "#142347"
+  navyElevated:   "#1E315F"
+
+  blue:           "#2D7FF9"
+  deepBlue:       "#214E9D"
+  lightBlue:      "#6BA8FF"
+
+  background:     "#F5F9FF"
+  surface:        "#FFFFFF"
+  surfaceAlt:     "#F7F7F7"
+
+  border:         "#D5DBE8"
+
+  textPrimary:    "#0D1733"
+  textSecondary:  "#4B556B"
+  textMuted:      "#7D879C"
+
+  success:        "#1FA971"
+  warning:        "#F5A524"
+  danger:         "#EB2134"
+
+gradients:
+  hero:
+    "linear-gradient(135deg, #0D1733 0%, #214E9D 45%, #2D7FF9 100%)"
+
+  primary:
+    "linear-gradient(135deg, #EB2134 0%, #FF5B6B 100%)"
+
+  dark:
+    "linear-gradient(145deg, #08101F 0%, #0D1733 50%, #1E315F 100%)"
+
+ui:
+  borderRadius: "16px"
+  cardRadius: "20px"
+  shadow:
+    "0 10px 30px rgba(13, 23, 51, 0.08)"
+
+  fontPrimary:
+    "Inter, ui-sans-serif, system-ui"
+
+  transition:
+    "all 180ms ease"

@@ -1,0 +1,2718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo by BUILT — Cannibalization Intelligence v10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── BUILT Brand Palette ──────────────────────────────── */
+  /* Core surfaces */
+  --bg: #F5F9FF;
+  --surface: #FFFFFF;
+  --surface-2: #EEF3FB;
+  --border: #D5DBE8;
+  --border-strong: #B0BCCE;
+  --ink: #0D1733;
+  --muted: #4B556B;
+  --quiet: #7D879C;
+
+  /* Topbar / chrome */
+  --black: #0D1733;
+  --cream: #EFF4FF;
+
+  /* Blue — interactive / info */
+  --blue-bg: #EAF1FE;
+  --blue-line: #A8C8FD;
+  --blue: #214E9D;
+  --blue-mid: #2D7FF9;
+
+  /* Green — incremental / positive */
+  --green-bg: #E6F7EF;
+  --green-line: #8BDDB8;
+  --green: #147A4C;
+
+  /* Amber — watch / warning (repurposed from old teal) */
+  --amber-bg: #FFF5E6;
+  --amber-line: #FECB80;
+  --amber: #8A5000;
+  --amber-mid: #F5A524;
+
+  /* Red — cannibalization / danger */
+  --red-bg: #FEEAEC;
+  --red-line: #F9A8B0;
+  --red: #9B0E1C;
+  --red-mid: #EB2134;
+
+  /* Typography */
+  --font: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Layout */
+  --radius: 10px;
+  --topbar-h: 52px;
+  --rail-h: 40px;
+  --subnav-h: 38px;
+  --chrome-h: 130px; /* topbar + rail + subnav */
+
+  /* Shadows & transitions */
+  --shadow: 0 10px 30px rgba(13, 23, 51, 0.08);
+  --transition: all 180ms ease;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+button, select, input { font: inherit; }
+
+/* ── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  height: var(--topbar-h);
+  background: linear-gradient(135deg, #0D1733 0%, #142347 60%, #1E315F 100%);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 16px;
+  border-bottom: 1px solid rgba(45,127,249,0.2);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.mo-badge {
+  width: 32px; height: 32px;
+  border: 1px solid rgba(45,127,249,0.35);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  background: rgba(45,127,249,0.15);
+  flex: 0 0 auto;
+}
+.mo-badge svg { width: 30px; height: 30px; }
+.mo-svg .body { fill: #f8fbff; stroke: #d6dde4; stroke-width: 2; }
+.mo-svg .shadow { fill: rgba(13,23,51,.2); }
+.mo-svg .goggle-strap { fill: #5a6fa8; }
+.mo-svg .goggle-frame { fill: #3a507a; }
+.mo-svg .goggle-lens { fill: #1a2540; opacity: .92; }
+.mo-svg .highlight { fill: #ffffff; opacity: .82; }
+
+.brand-title {
+  font-family: var(--mono);
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  white-space: nowrap; color: var(--cream);
+}
+.brand-title span { color: #6BA8FF; opacity: 0.7; }
+
+/* Focal pill */
+.focal-pill {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid rgba(45,127,249,0.3);
+  background: rgba(45,127,249,0.12);
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 0;
+}
+.focal-pill:hover { background: rgba(45,127,249,0.22); border-color: rgba(45,127,249,0.5); }
+.focal-sku-label { font-family: var(--mono); font-size: 11px; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.focal-tag { font-size: 10px; background: #EB2134; color: #fff; border-radius: 3px; padding: 1px 5px; font-family: var(--mono); font-weight: 700; letter-spacing: .04em; flex: 0 0 auto; }
+.focal-caret { color: #6BA8FF; font-size: 9px; flex: 0 0 auto; opacity: 0.7; }
+
+
+
+/* ── PHASE RAIL ─────────────────────────────────────────── */
+.phase-rail {
+  height: var(--rail-h);
+  background: #0D1733;
+  border-bottom: 1px solid rgba(45,127,249,0.15);
+  display: flex;
+  align-items: stretch;
+  padding: 0 20px;
+  gap: 0;
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 99;
+}
+
+.phase-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 16px;
+  background: transparent; border: 0;
+  color: #6BA8FF;
+  opacity: 0.55;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .09em;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.phase-btn:hover { opacity: 0.85; color: #EFF4FF; }
+.phase-btn.active { color: #EFF4FF; opacity: 1; border-bottom-color: #EB2134; }
+.phase-num {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(45,127,249,0.15); color: #6BA8FF;
+  font-size: 9px; display: grid; place-items: center;
+  flex: 0 0 auto; font-weight: 800;
+  transition: var(--transition);
+}
+.phase-btn.active .phase-num { background: #EB2134; color: #fff; }
+.phase-btn.done .phase-num { background: #1FA971; color: #fff; }
+.phase-btn.done { color: #8BDDB8; opacity: 0.8; }
+.phase-spacer { flex: 1; }
+
+/* ── SUB-NAV ────────────────────────────────────────────── */
+.subnav {
+  height: var(--subnav-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  padding: 0 20px;
+  gap: 0;
+  position: sticky;
+  top: calc(var(--topbar-h) + var(--rail-h));
+  z-index: 98;
+}
+
+.subnav-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 14px;
+  background: transparent; border: 0;
+  color: var(--muted);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .1s, border-color .1s;
+  white-space: nowrap;
+}
+.subnav-btn:hover { color: var(--ink); }
+.subnav-btn.active { color: var(--blue); border-bottom-color: var(--blue-mid); font-weight: 700; }
+.subnav-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+.dot-red { background: var(--red-mid); }
+.dot-amber { background: var(--amber-mid); }
+.dot-blue { background: var(--blue-mid); }
+.dot-green { background: #1FA971; }
+.dot-gray { background: var(--border-strong); }
+
+/* Event count badge in subnav */
+.subnav-count {
+  background: var(--red-mid); color: #fff;
+  border-radius: 999px; padding: 1px 5px;
+  font-size: 10px; font-weight: 800;
+  font-family: var(--mono);
+}
+
+/* ── MAIN CONTENT ───────────────────────────────────────── */
+.main {
+  max-width: 1060px;
+  padding: 22px 24px 48px;
+  margin: 0 auto;
+}
+
+/* ── SCREENS ────────────────────────────────────────────── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── POOL CONTEXT STRIP ─────────────────────────────────── */
+/* Replaces the old full context bar — lives at top of each screen */
+.pool-strip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  margin-bottom: 16px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.pool-strip-value { font-weight: 700; color: var(--ink); }
+.pool-strip-sep { color: var(--border-strong); }
+.pool-strip-tag {
+  margin-left: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 10px;
+  color: var(--quiet);
+}
+
+/* ── CARDS ──────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.card.flush { padding: 0; overflow: hidden; }
+.card.tight { padding: 12px 14px; }
+
+.section-label {
+  color: var(--quiet); font-size: 10px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; margin-bottom: 9px;
+  display: flex; align-items: center; gap: 6px;
+}
+.info-tip {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  color: var(--quiet); font-size: 9px; font-weight: 800;
+  display: grid; place-items: center; cursor: help;
+  flex: 0 0 auto;
+}
+
+/* ── BADGES ─────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; padding: 3px 9px;
+  font-size: 11px; font-weight: 750; white-space: nowrap;
+}
+.badge.red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-line); }
+.badge.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-line); }
+.badge.green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-line); }
+.badge.blue { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-line); }
+.badge.gray { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+
+/* ── EVENT CARDS ────────────────────────────────────────── */
+.event-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  margin-bottom: 8px;
+  transition: box-shadow .1s;
+}
+.event-card:hover { box-shadow: var(--shadow); }
+.event-card.red { border-left-color: var(--red-mid); }
+.event-card.amber { border-left-color: var(--amber-mid); }
+.event-card.green { border-left-color: #1FA971; }
+.event-card.blue { border-left-color: var(--blue-mid); }
+
+.event-row-1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+.event-title { font-size: 13px; font-weight: 700; }
+.event-sub { color: var(--muted); font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+.event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.confidence {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 11px; color: var(--quiet);
+}
+.drill {
+  border: 0; background: transparent; color: var(--blue-mid);
+  cursor: pointer; font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 0; margin-left: auto;
+}
+.drill:hover { text-decoration: underline; }
+
+/* ── NEW UPC BANNER ─────────────────────────────────────── */
+.new-upc-banner {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px;
+}
+.new-upc-icon { font-size: 16px; flex: 0 0 auto; }
+.new-upc-text strong { font-size: 12px; font-weight: 700; display: block; color: var(--amber); }
+.new-upc-text span { color: var(--muted); font-size: 11px; font-family: var(--mono); }
+
+/* ── METRICS ────────────────────────────────────────────── */
+.metric-row {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px; margin-bottom: 14px;
+}
+.metric {
+  background: var(--surface-2); border-radius: 6px;
+  padding: 10px 12px;
+}
+.metric-label { color: var(--quiet); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.metric-value { font-family: var(--mono); font-size: 20px; font-weight: 700; line-height: 1; }
+.metric-delta { font-family: var(--mono); font-size: 11px; margin-top: 5px; }
+.up { color: var(--green); }
+.down { color: var(--red); }
+.flat { color: var(--quiet); }
+.warn { color: var(--amber); }
+
+/* ── SCORE BARS ─────────────────────────────────────────── */
+.score-bars { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.score-bar-row {
+  display: grid; grid-template-columns: 140px 1fr 48px 100px;
+  gap: 8px; align-items: center;
+  background: var(--surface-2); border-radius: 6px; padding: 9px 12px;
+}
+.score-bar-label { color: var(--quiet); font-size: 11px; }
+.track { height: 5px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.fill { height: 100%; border-radius: 999px; }
+.fill-amber { background: var(--amber-mid); }
+.fill-green { background: #1FA971; }
+.score-val { font-family: var(--mono); font-weight: 750; font-size: 13px; }
+
+/* ── TABLES ─────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--surface-2); color: var(--quiet);
+  text-align: left; font-size: 10px; font-weight: 800;
+  letter-spacing: .07em; text-transform: uppercase;
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: #EEF3FB; }
+.focal-row td { background: var(--blue-bg); }
+.mono { font-family: var(--mono); }
+.sku-name { font-weight: 700; }
+.sku-sub { color: var(--quiet); font-size: 11px; margin-top: 2px; }
+
+/* ── INSIGHT BOX ────────────────────────────────────────── */
+.insight {
+  background: var(--blue-bg); border: 1px solid var(--blue-line);
+  color: var(--blue); border-radius: var(--radius);
+  padding: 11px 14px; margin-bottom: 12px;
+  font-size: 12px; line-height: 1.6;
+}
+.insight.amber { background: var(--amber-bg); border-color: var(--amber-line); color: var(--amber); }
+.insight.red { background: var(--red-bg); border-color: var(--red-line); color: var(--red); }
+.insight.green { background: var(--green-bg); border-color: var(--green-line); color: var(--green); }
+
+/* ── TWO / THREE COL ────────────────────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── DIST STRIP ─────────────────────────────────────────── */
+.dist-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.dist-btn {
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+  padding: 4px 11px; font-size: 11px; cursor: pointer;
+  font-family: var(--mono); font-weight: 650;
+}
+.dist-btn.active { background: var(--blue-bg); border-color: var(--blue-line); color: var(--blue); }
+
+/* ── HEATMAP CELLS ──────────────────────────────────────── */
+.hm-cell { padding: 7px 5px; text-align: center; font-family: var(--mono); font-size: 11px; border-radius: 4px; font-weight: 700; }
+.hm-strong-neg { background: #FEEAEC; color: #9B0E1C; }
+.hm-mild-neg { background: #FFF5E6; color: #8A5000; }
+.hm-neutral { background: var(--surface-2); color: var(--quiet); }
+.hm-mild-pos { background: #E6F7EF; color: #147A4C; }
+.hm-strong-pos { background: #C8EEE0; color: #0D5235; }
+
+/* ── WIN/LOSS MATRIX ────────────────────────────────────── */
+.wl-wrap { overflow-x: auto; }
+.wl-row {
+  display: grid;
+  grid-template-columns: 170px repeat(13, 28px) 58px;
+  gap: 5px; align-items: center; margin-bottom: 6px;
+  min-width: 720px;
+}
+.wl-cell {
+  width: 28px; height: 26px; border-radius: 5px;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 800;
+}
+.wl-win { background: var(--green-bg); color: var(--green); }
+.wl-loss { background: var(--red-bg); color: var(--red); }
+.wl-zero { background: var(--surface-2); color: var(--quiet); }
+
+/* ── RAMP BAR ───────────────────────────────────────────── */
+.ramp-bar-wrap { display: flex; align-items: center; gap: 7px; }
+.ramp-bar { flex: 1; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.ramp-fill { height: 100%; border-radius: 999px; }
+.ramp-fill.ramping { background: var(--blue-mid); }
+.ramp-fill.stable { background: #1FA971; }
+.ramp-fill.declining { background: var(--red-mid); }
+
+/* ── EXPANDABLE ROW ─────────────────────────────────────── */
+.expand-trigger { cursor: pointer; }
+.expand-trigger:hover td { background: #EEF3FB; }
+.expand-row td { background: var(--amber-bg); padding: 10px 12px 12px 32px; border-bottom: 1px solid var(--amber-line); }
+.expand-row { display: none; }
+.expand-row.open { display: table-row; }
+
+/* ── DRIVER ROWS ────────────────────────────────────────── */
+.driver-row {
+  display: grid; grid-template-columns: 160px 125px 1fr 40px;
+  gap: 8px; align-items: center; margin-bottom: 10px;
+}
+.driver-name { font-weight: 700; font-size: 12px; }
+.driver-tag { color: var(--quiet); font-size: 11px; }
+.driver-pct { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; }
+
+/* ── NARRATIVE ──────────────────────────────────────────── */
+.narrative {
+  background: var(--surface-2);
+  border-left: 3px solid var(--blue-mid);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 11px 14px; margin-bottom: 14px; line-height: 1.7; font-size: 13px;
+}
+
+/* ── PROVENANCE ─────────────────────────────────────────── */
+.prov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.prov-key { color: var(--quiet); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
+.prov-val { font-family: var(--mono); font-size: 12px; }
+
+/* ── FORECAST SCENARIOS ─────────────────────────────────── */
+.scenario-rail { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.scenario-btn {
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--muted);
+  padding: 6px 14px; font-size: 12px; font-weight: 650;
+  cursor: pointer; white-space: nowrap;
+}
+.scenario-btn.active {
+  background: var(--blue-bg); border-color: var(--blue-line);
+  color: var(--blue); font-weight: 750;
+}
+.scenario-hint { color: var(--muted); font-size: 12px; margin-bottom: 12px; line-height: 1.5; }
+
+.assumption-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin-bottom: 12px;
+}
+.assumption { background: var(--surface-2); border-radius: 6px; padding: 9px 11px; }
+.assumption-label { color: var(--quiet); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.assumption-val { font-family: var(--mono); font-size: 12px; }
+
+.forecast-strip {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px; margin-bottom: 12px;
+}
+.forecast-tile {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 13px;
+}
+.forecast-tile strong { display: block; font-family: var(--mono); font-size: 17px; margin-bottom: 4px; }
+.forecast-tile span { color: var(--muted); font-size: 11px; }
+
+/* Cannibalization rate chart */
+.rate-chart {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0,1fr));
+  gap: 6px;
+  align-items: end;
+  height: 160px;
+  padding: 18px 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin: 10px 0 8px;
+  position: relative;
+}
+.rate-bar-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+.rate-col {
+  width: 100%; max-width: 28px; border-radius: 4px 4px 0 0;
+  position: relative;
+}
+.rate-col::after {
+  content: attr(data-rate);
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 9px; color: var(--muted); white-space: nowrap;
+}
+.rate-col.actual { background: var(--red-mid); opacity: .7; }
+.rate-col.forecast { background: var(--amber-mid); }
+.rate-lbl { color: var(--quiet); font-family: var(--mono); font-size: 9px; white-space: nowrap; }
+.rate-legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px; }
+
+/* ── ACTION CARDS ───────────────────────────────────────── */
+.action-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+}
+.action-pill {
+  border: 0; border-radius: 999px; padding: 6px 13px;
+  font-weight: 750; cursor: pointer; white-space: nowrap; font-size: 12px;
+}
+.keep { background: var(--green-bg); color: var(--green); }
+.monitor { background: var(--amber-bg); color: var(--amber); }
+.reduce { background: var(--red-bg); color: var(--red); }
+.expand { background: var(--blue-bg); color: var(--blue); }
+.review { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+
+/* ── CHIPS ──────────────────────────────────────────────── */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px;
+  font-family: var(--mono); font-size: 11px;
+}
+
+/* ── TIER LABEL ─────────────────────────────────────────── */
+.tier-label {
+  font-family: var(--mono); font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--quiet); margin: 12px 0 6px;
+}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,23,51,.6);
+  z-index: 200; display: none;
+  align-items: flex-start; justify-content: center;
+  padding-top: 70px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; width: min(660px, 96vw);
+  max-height: 82vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+.modal-hd {
+  background: linear-gradient(135deg, #0D1733 0%, #142347 60%, #1E315F 100%);
+  color: var(--cream);
+  padding: 16px 22px; border-radius: 12px 12px 0 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(45,127,249,0.2);
+}
+.modal-title { font-family: var(--mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.modal-close {
+  background: transparent; border: 1px solid rgba(45,127,249,0.3);
+  color: var(--cream); width: 26px; height: 26px;
+  border-radius: 6px; cursor: pointer; font-size: 13px;
+  display: grid; place-items: center;
+}
+.modal-close:hover { background: rgba(255,255,255,0.1); }
+.modal-steps {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.modal-step {
+  flex: 1; padding: 10px 14px; font-size: 11px; font-family: var(--mono);
+  color: var(--quiet); border-bottom: 3px solid transparent;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+}
+.modal-step.active { color: var(--blue); border-bottom-color: var(--blue-mid); }
+.modal-step.done { color: #147A4C; }
+.modal-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
+.modal-search {
+  width: 100%; border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 11px; font-size: 13px; margin-bottom: 14px;
+  background: var(--surface-2); color: var(--ink); outline: none;
+}
+.modal-search:focus { border-color: var(--blue-mid); background: var(--surface); box-shadow: 0 0 0 3px rgba(45,127,249,0.12); }
+.modal-ft {
+  border-top: 1px solid var(--border); padding: 12px 22px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-back {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 14px; cursor: pointer;
+  color: var(--muted); font-weight: 650; font-size: 12px;
+}
+.modal-back:hover { background: var(--surface-2); }
+.modal-next {
+  background: var(--blue-mid); border: 0; border-radius: 6px;
+  color: #fff; padding: 7px 16px; cursor: pointer; font-weight: 700; font-size: 12px;
+}
+.modal-next:hover { background: var(--blue); }
+.modal-apply {
+  background: #1FA971; border: 0; border-radius: 6px;
+  color: #fff; padding: 7px 16px; cursor: pointer; font-weight: 700; font-size: 12px;
+}
+.modal-apply:hover { background: #147A4C; }
+
+/* Flavor accordion */
+.flavor-family { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 7px; overflow: hidden; }
+.family-hd {
+  padding: 9px 13px; display: flex; align-items: center;
+  justify-content: space-between; cursor: pointer; font-weight: 650; font-size: 12px;
+  background: var(--surface);
+}
+.family-hd:hover { background: var(--surface-2); }
+.family-count { color: var(--quiet); font-family: var(--mono); font-size: 11px; }
+.family-chev { color: var(--quiet); font-size: 9px; transition: transform .15s; }
+.family-chev.open { transform: rotate(90deg); }
+.family-items { display: none; border-top: 1px solid var(--border); }
+.family-items.open { display: block; }
+.sku-row {
+  padding: 8px 13px 8px 22px; display: flex; align-items: center;
+  gap: 9px; cursor: pointer; border-bottom: 1px solid var(--border);
+}
+.sku-row:last-child { border-bottom: 0; }
+.sku-row:hover { background: var(--surface-2); }
+.sku-row.selected { background: var(--blue-bg); }
+.sku-check {
+  width: 15px; height: 15px; border-radius: 4px;
+  border: 1.5px solid var(--border-strong); display: grid; place-items: center;
+  font-size: 8px; color: transparent; flex: 0 0 auto;
+}
+.sku-row.selected .sku-check { background: var(--blue-mid); border-color: var(--blue-mid); color: #fff; }
+.sku-info { flex: 1; min-width: 0; }
+.sku-nm { font-weight: 650; font-size: 12px; }
+.sku-mt { color: var(--quiet); font-size: 10px; font-family: var(--mono); }
+
+/* Scope options */
+.scope-opt {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 11px 13px; margin-bottom: 7px; cursor: pointer;
+  display: flex; align-items: flex-start; gap: 11px;
+}
+.scope-opt:hover { background: var(--surface-2); }
+.scope-opt.selected { background: var(--blue-bg); border-color: var(--blue-line); }
+.scope-radio {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid var(--border-strong); flex: 0 0 auto; margin-top: 2px;
+  display: grid; place-items: center;
+}
+.scope-opt.selected .scope-radio { border-color: var(--blue-mid); }
+.scope-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-mid); opacity: 0; }
+.scope-opt.selected .scope-dot { opacity: 1; }
+.scope-label { font-weight: 650; margin-bottom: 2px; font-size: 13px; }
+.scope-desc { color: var(--muted); font-size: 12px; }
+
+/* Filter grid in modal step 3 */
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.filter-group label { display: block; font-size: 11px; font-weight: 700; color: var(--quiet); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+.filter-select {
+  width: 100%; border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 9px; background: var(--surface-2); color: var(--ink); font-size: 12px;
+}
+
+/* ── PAGE HEADER ────────────────────────────────────────── */
+.page-hd { margin-bottom: 16px; }
+.page-title { font-size: 20px; font-weight: 750; line-height: 1.15; margin-bottom: 3px; }
+.page-sub { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .metric-row, .assumption-row, .forecast-strip { grid-template-columns: 1fr 1fr; }
+  .prov-grid { grid-template-columns: 1fr 1fr; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .driver-row, .score-bar-row { grid-template-columns: 1fr; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .wl-row { grid-template-columns: 140px repeat(13, 24px) 52px; }
+  table { min-width: 600px; }
+  .card.flush { overflow-x: auto; }
+}
+@media (max-width: 560px) {
+  .topbar { padding: 0 12px; }
+  .main { padding: 14px 14px 40px; }
+  .phase-btn { padding: 0 10px; font-size: 10px; }
+  .subnav-btn { padding: 0 10px; font-size: 11px; }
+  .focal-sku-label { max-width: 140px; }
+  .metric-row, .assumption-row, .forecast-strip, .prov-grid { grid-template-columns: 1fr; }
+}
+
+/* ── MO AVATAR BUTTON ───────────────────────────────────── */
+.mo-avatar-btn {
+  position: fixed;
+  top: calc(var(--topbar-h) + var(--rail-h) + 1px);
+  right: 16px;
+  width: 36px;
+  height: var(--subnav-h);
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+
+.mo-avatar-btn .mo-face {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(235,33,52,0.5);
+  transition: border-color 0.2s, transform 0.2s;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.mo-avatar-btn:hover .mo-face {
+  border-color: #EB2134;
+  transform: scale(1.08);
+}
+.mo-avatar-btn.mo-open .mo-face {
+  border-color: #EB2134;
+  box-shadow: 0 0 0 3px rgba(235,33,52,0.2);
+}
+
+/* Pulse ring when Mo has something to say */
+.mo-avatar-btn .mo-pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(235,33,52,0.6);
+  opacity: 0;
+  transform: scale(0.9);
+  animation: none;
+  pointer-events: none;
+}
+.mo-avatar-btn.mo-has-message .mo-pulse-ring {
+  animation: moPulse 1.8s ease-out 1;
+}
+@keyframes moPulse {
+  0%   { opacity: 0.8; transform: scale(0.9); }
+  60%  { opacity: 0.2; transform: scale(1.35); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* Unread dot */
+.mo-unread-dot {
+  position: absolute;
+  top: 0; right: 0;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #EB2134;
+  border: 2px solid var(--surface);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.mo-avatar-btn.mo-has-message .mo-unread-dot {
+  opacity: 1;
+}
+.mo-avatar-btn.mo-open .mo-unread-dot {
+  opacity: 0;
+}
+
+/* ── MO PANEL ───────────────────────────────────────────── */
+.mo-panel {
+  position: fixed;
+  top: calc(var(--topbar-h) + var(--rail-h) + var(--subnav-h) + 10px);
+  right: 20px;
+  width: 308px;
+  max-height: calc(100vh - var(--topbar-h) - var(--rail-h) - var(--subnav-h) - 30px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(13,23,51,0.18), 0 2px 8px rgba(13,23,51,0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 150;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.mo-panel.mo-panel-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+/* Panel header */
+.mo-panel-hd {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 13px 10px;
+  background: linear-gradient(135deg, #0D1733 0%, #1E315F 100%);
+  border-radius: 14px 14px 0 0;
+  flex: 0 0 auto;
+}
+.mo-panel-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(235,33,52,0.6);
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.mo-panel-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #EFF4FF;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex: 1;
+}
+.mo-panel-sub {
+  font-size: 10px;
+  color: #6BA8FF;
+  font-family: var(--mono);
+  opacity: 0.8;
+}
+.mo-panel-close {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #EFF4FF;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+  transition: background 0.15s;
+}
+.mo-panel-close:hover { background: rgba(255,255,255,0.1); }
+
+/* Screen context badge */
+.mo-context-badge {
+  padding: 5px 13px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--quiet);
+  display: flex; align-items: center; gap: 6px;
+  flex: 0 0 auto;
+}
+.mo-context-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #EB2134;
+  flex: 0 0 auto;
+}
+.mo-context-screen {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Messages area */
+.mo-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+.mo-messages::-webkit-scrollbar { width: 4px; }
+.mo-messages::-webkit-scrollbar-track { background: transparent; }
+.mo-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Mo's proactive message bubble */
+.mo-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.mo-msg-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+.mo-msg-bubble {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px 12px 12px 12px;
+  padding: 9px 11px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
+  flex: 1;
+}
+.mo-msg-bubble strong {
+  display: block;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--red);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.mo-msg-bubble .mo-msg-footer {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--quiet);
+}
+
+/* User message bubble */
+.mo-user-msg {
+  display: flex;
+  justify-content: flex-end;
+}
+.mo-user-bubble {
+  background: var(--blue);
+  color: #EFF4FF;
+  border-radius: 12px 4px 12px 12px;
+  padding: 8px 11px;
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 85%;
+}
+
+/* Typing indicator */
+.mo-typing {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mo-typing-dots {
+  display: flex; gap: 3px; align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px 12px 12px 12px;
+  padding: 10px 14px;
+}
+.mo-typing-dots span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--quiet);
+  animation: moTyping 1.2s ease-in-out infinite;
+}
+.mo-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.mo-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes moTyping {
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+  40% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Input area */
+.mo-input-area {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex: 0 0 auto;
+}
+.mo-input-row {
+  display: flex;
+  gap: 7px;
+  align-items: flex-end;
+}
+.mo-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--surface-2);
+  resize: none;
+  outline: none;
+  line-height: 1.4;
+  min-height: 36px;
+  max-height: 90px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mo-input:focus {
+  border-color: var(--blue-mid);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(45,127,249,0.1);
+}
+.mo-input::placeholder { color: var(--quiet); }
+.mo-send-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: #EB2134;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+  transition: background 0.15s, transform 0.1s;
+}
+.mo-send-btn:hover { background: #C61A2B; }
+.mo-send-btn:active { transform: scale(0.94); }
+.mo-send-btn svg { width: 15px; height: 15px; }
+
+/* Suggested prompts */
+.mo-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.mo-suggestion-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 10px;
+  font-family: var(--mono);
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  white-space: nowrap;
+}
+.mo-suggestion-chip:hover {
+  border-color: #EB2134;
+  color: var(--red);
+  background: var(--red-bg);
+}
+
+/* Mo SVG face used in avatar and panel */
+.mo-puff-face .puff-body { fill: #FFFFFF; }
+.mo-puff-face .puff-shadow { fill: rgba(13,23,51,0.08); }
+.mo-puff-face .goggle-strap { fill: #6B4423; }
+.mo-puff-face .goggle-frame { fill: #4A2E18; }
+.mo-puff-face .goggle-lens-l { fill: #1a2032; }
+.mo-puff-face .goggle-lens-r { fill: #1a2032; }
+.mo-puff-face .goggle-shine { fill: #fff; opacity: 0.45; }
+.mo-puff-face .sparkle { fill: #F5A524; }
+.mo-puff-face .cheek { fill: #FFB3BA; opacity: 0.5; }
+
+/* Hide Mo panel on very small screens */
+@media (max-width: 700px) {
+  .mo-panel { width: calc(100vw - 32px); right: 16px; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- ═══════════════════════════ TOPBAR ═══════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="mo-badge">
+      <svg class="mo-svg" viewBox="0 0 80 80" aria-hidden="true">
+        <ellipse class="shadow" cx="40" cy="70" rx="22" ry="5"/>
+        <path class="body" d="M27 66c-5 0-9-4-9-9V33c0-10 6-18 15-21 1-5 4-9 7-9s6 4 7 9c9 3 15 11 15 21v24c0 5-4 9-9 9H27z"/>
+        <path class="body" d="M18 40H7c-3 0-5 2-5 5v7c0 3 2 5 5 5h11V40z"/>
+        <path class="body" d="M62 40h11c3 0 5 2 5 5v7c0 3-2 5-5 5H62V40z"/>
+        <rect class="body" x="27" y="61" width="10" height="14" rx="4"/>
+        <rect class="body" x="43" y="61" width="10" height="14" rx="4"/>
+        <path class="goggle-strap" d="M15 31h50v8H15z"/>
+        <path class="goggle-frame" d="M18 28h44c5 0 8 4 7 9l-3 14c-1 5-5 8-10 8H24c-5 0-9-3-10-8l-3-14c-1-5 2-9 7-9z"/>
+        <path class="goggle-lens" d="M20 35h18c3 0 5 2 5 5v4c0 5-4 9-9 9h-7c-4 0-7-3-8-7l-2-7c-1-2 1-4 3-4z"/>
+        <path class="goggle-lens" d="M60 35H42c-3 0-5 2-5 5v4c0 5 4 9 9 9h7c4 0 7-3 8-7l2-7c1-2-1-4-3-4z"/>
+        <path class="highlight" d="M29 14c-5 3-8 8-9 15 6-5 13-8 21-8 7 0 13 2 18 6-2-6-6-11-12-14-2 3-5 5-8 5-4 0-7-1-10-4z"/>
+      </svg>
+    </div>
+    <div class="brand-title">Mo <span>/ cannibalization</span></div>
+
+    <button class="focal-pill" id="focal-pill-btn" title="Change focal SKU or comparison scope">
+      <span class="focal-tag">FOCAL</span>
+      <span class="focal-sku-label" id="focal-pill-label">Mint Chip PUFF 4pk</span>
+      <span class="focal-caret">▾</span>
+    </button>
+  </div>
+
+</header>
+
+<!-- ═══════════════════════════ PHASE RAIL ═══════════════════════ -->
+<div class="phase-rail">
+  <button class="phase-btn done" data-phase="determine">
+    <span class="phase-num">1</span> Determine
+  </button>
+  <button class="phase-btn active" data-phase="diagnose">
+    <span class="phase-num">2</span> Diagnose
+  </button>
+  <button class="phase-btn" data-phase="decide">
+    <span class="phase-num">3</span> Decide
+  </button>
+  <div class="phase-spacer"></div>
+</div>
+
+<!-- ═══════════════════════════ SUB-NAV ═════════════════════════ -->
+<div class="subnav" id="subnav">
+  <!-- Nav buttons injected by buildSubnav() -->
+</div>
+
+<!-- ═══════════════════════════ MAIN ════════════════════════════ -->
+<main class="main">
+
+  <!-- ───────────── DETERMINE SCREENS ───────────── -->
+
+  <section id="events" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Priority events</h1>
+      <p class="page-sub">Southeastern Grocers · CONVENTIONAL|FOOD · 13 vs 13 weeks · Med + High confidence</p>
+    </div>
+
+    <div class="new-upc-banner">
+      <div class="new-upc-icon">🆕</div>
+      <div class="new-upc-text">
+        <strong>New pack size auto-detected: Mint Chip PUFF 8pk</strong>
+        <span>First seen W14 2024 · enrolled in pack size monitoring · pending taxonomy review · scoring active at week 8</span>
+      </div>
+    </div>
+
+    <div class="event-card red">
+      <div class="event-row-1">
+        <div class="event-title">Significant demand transfer detected</div>
+        <span class="badge red">Cannibalizing</span>
+      </div>
+      <div class="event-sub">Mint Chip PUFF 4pk — Mountain West — CONVENTIONAL|FOOD. 1ct donor declined concurrently with focal rise; group productivity is weak. p=0.04 · z=−2.6 on donor base units.</div>
+      <div class="event-meta">
+        <span class="confidence"><span class="subnav-dot dot-red"></span> High confidence</span>
+        <span class="badge gray">Pack size comparison</span>
+        <button class="drill" data-screen="pack">Open pack ladder →</button>
+      </div>
+    </div>
+
+    <div class="event-card amber">
+      <div class="event-row-1">
+        <div class="event-title">Launch underperforming — Texas</div>
+        <span class="badge amber">Watch</span>
+      </div>
+      <div class="event-sub">TDP grew faster than demand pull; Units SPM declined −9%. Distribution-led gain, not demand-led.</div>
+      <div class="event-meta">
+        <span class="confidence"><span class="subnav-dot dot-amber"></span> Medium confidence</span>
+        <button class="drill" data-screen="prepost">Open pre / post →</button>
+      </div>
+    </div>
+
+    <div class="event-card amber">
+      <div class="event-row-1">
+        <div class="event-title">Pack overlap risk elevated — Mint Chip 4pk vs 1ct</div>
+        <span class="badge amber">Watch</span>
+      </div>
+      <div class="event-sub">1ct losing more share than expected after 4pk launch. Same specific flavor, same brand — tightest substitution pair.</div>
+      <div class="event-meta">
+        <span class="confidence"><span class="subnav-dot dot-amber"></span> Medium confidence</span>
+        <span class="badge gray">Pack size comparison</span>
+        <button class="drill" data-screen="pack">Open pack ladder →</button>
+      </div>
+    </div>
+
+    <div class="event-card amber">
+      <div class="event-row-1">
+        <div class="event-title">Cross-flavor signal: Grasshopper Cookie 1ct declining — Texas</div>
+        <span class="badge amber">Watch</span>
+      </div>
+      <div class="event-sub">Within SPINS FLAVOR: CHOCOLATE MINT, Grasshopper Cookie 1ct base units fell −8% concurrent with Mint Chip PUFF 4pk launch.</div>
+      <div class="event-meta">
+        <span class="confidence"><span class="subnav-dot dot-amber"></span> Medium confidence</span>
+        <span class="badge gray">Cross-flavor (BUILT portfolio)</span>
+        <button class="drill" data-screen="crossflavor">Open cross-flavor →</button>
+      </div>
+    </div>
+
+    <div class="event-card green">
+      <div class="event-row-1">
+        <div class="event-title">CONVENTIONAL|MULTI OUTLET is behaving incrementally</div>
+        <span class="badge green">Incremental</span>
+      </div>
+      <div class="event-sub">4pk wins while the pack ladder also expands in Club. Use as positive analog before scaling food channel.</div>
+      <div class="event-meta">
+        <span class="confidence"><span class="subnav-dot dot-green"></span> High confidence</span>
+        <button class="drill" data-screen="action">Open actions →</button>
+      </div>
+    </div>
+
+    <div class="event-card blue">
+      <div class="event-row-1">
+        <div class="event-title">Forecasted risk if food channel expands broadly</div>
+        <span class="badge blue">Forecast</span>
+      </div>
+      <div class="event-sub">Next 13 weeks: broad expansion expected to add volume, but donor exposure remains elevated in Texas and Mountain West.</div>
+      <div class="event-meta">
+        <span class="confidence"><span class="subnav-dot dot-blue"></span> Medium confidence</span>
+        <button class="drill" data-screen="forecast">Forecast next move →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="summary" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">SKU summary</h1>
+      <p class="page-sub">BUILT Mint Chip PUFF 4pk · all geographies · last 13 weeks vs prior 13 weeks</p>
+    </div>
+
+    <div class="pool-strip">
+      <span style="color:var(--quiet)">Pool</span>
+      <span class="pool-strip-value">Pack size comparison</span>
+      <span class="pool-strip-sep">·</span>
+      <span style="color:var(--quiet)">Donors</span>
+      <span class="pool-strip-value">1ct · 12pk</span>
+      <span class="pool-strip-sep">·</span>
+      <span style="color:var(--quiet)">Ramp</span>
+      <span class="pool-strip-value">Week 12 of 13</span>
+      <span class="pool-strip-tag">Scoring fully active</span>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:14px">
+        <div>
+          <div style="font-size:17px;font-weight:750">BUILT Mint Chip PUFF 4pk</div>
+          <div style="color:var(--muted);font-family:var(--mono);font-size:11px;margin-top:3px">Specific flavor: Mint Chip · BUILT PUFF · 4ct · First week: W04 2024</div>
+        </div>
+        <span class="badge amber">Watch</span>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric"><div class="metric-label">Base units</div><div class="metric-value">910</div><div class="metric-delta up">+11%</div></div>
+        <div class="metric"><div class="metric-label">Units</div><div class="metric-value">980</div><div class="metric-delta up">+14%</div></div>
+        <div class="metric"><div class="metric-label">TDP</div><div class="metric-value">63</div><div class="metric-delta up">+26%</div></div>
+        <div class="metric"><div class="metric-label">Units SPM</div><div class="metric-value">15.6</div><div class="metric-delta down">−9%</div></div>
+        <div class="metric"><div class="metric-label">ARP</div><div class="metric-value">$8.49</div><div class="metric-delta flat">stable</div></div>
+      </div>
+
+      <div class="score-bars">
+        <div class="score-bar-row">
+          <div class="score-bar-label">Cannibalization risk</div>
+          <div class="track"><div class="fill fill-amber" style="width:52%"></div></div>
+          <div class="score-val warn">52%</div>
+          <span class="badge amber">Moderate</span>
+        </div>
+        <div class="score-bar-row">
+          <div class="score-bar-label">Incremental share</div>
+          <div class="track"><div class="fill fill-green" style="width:63%"></div></div>
+          <div class="score-val up">63%</div>
+          <span class="badge amber">Mixed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card tight">
+        <div class="section-label">Likely donor SKUs</div>
+        <div class="chips">
+          <div class="chip">1st — Mint Chip PUFF 1ct</div>
+          <div class="chip">2nd — Mint Chip PUFF 12pk</div>
+        </div>
+        <div style="margin-top:8px;color:var(--muted);font-size:11px">Primary: 1ct (−14% base units post-launch) · LambdaRank</div>
+      </div>
+      <div class="card tight">
+        <div class="section-label">Forecast (13w, expand selectively)</div>
+        <div style="display:flex;gap:14px">
+          <div><div style="font-family:var(--mono);font-size:16px;font-weight:700" class="up">+180–420</div><div style="font-size:11px;color:var(--muted)">net incr. units</div></div>
+          <div><div style="font-family:var(--mono);font-size:16px;font-weight:700" class="warn">Medium</div><div style="font-size:11px;color:var(--muted)">expansion risk</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── DIAGNOSE SCREENS ───────────── -->
+
+  <section id="geo" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Geography</h1>
+      <p class="page-sub">Same focal SKU — different local behavior. Total US aggregate can hide market-level risk.</p>
+    </div>
+    <div class="card flush">
+      <table>
+        <thead><tr><th>Geography</th><th>Channel / Outlet</th><th>Base units</th><th>Units SPM</th><th>TDP</th><th>Status</th><th>Next step</th></tr></thead>
+        <tbody>
+          <tr><td><div class="sku-name">Total US</div></td><td class="mono" style="font-size:11px">All outlets</td><td class="up mono">+8%</td><td class="up mono">+2%</td><td class="up mono">+10%</td><td><span class="badge green">Incremental</span></td><td>Monitor</td></tr>
+          <tr><td><div class="sku-name">Texas</div><div class="sku-sub">SEG Grocers · RMA</div></td><td class="mono" style="font-size:11px">CONVENTIONAL|FOOD</td><td class="down mono">−3%</td><td class="down mono">−9%</td><td class="up mono">+12%</td><td><span class="badge amber">Watch</span></td><td>Hold expansion</td></tr>
+          <tr><td><div class="sku-name">Mountain West</div></td><td class="mono" style="font-size:11px">CONVENTIONAL|FOOD</td><td class="down mono">−12%</td><td class="down mono">−7%</td><td class="warn mono">+1%</td><td><span class="badge red">Cannibalizing</span></td><td>Reduce overlap</td></tr>
+          <tr><td><div class="sku-name">Southeast</div></td><td class="mono" style="font-size:11px">CONVENTIONAL|FOOD</td><td class="down mono">−5%</td><td class="down mono">−5%</td><td class="up mono">+8%</td><td><span class="badge amber">Watch</span></td><td>Review 1ct role</td></tr>
+          <tr><td><div class="sku-name">Northeast</div></td><td class="mono" style="font-size:11px">CONVENTIONAL|FOOD</td><td class="flat mono">flat</td><td class="flat mono">flat</td><td class="up mono">+9%</td><td><span class="badge gray">Neutral</span></td><td>Ramp window</td></tr>
+          <tr><td><div class="sku-name">Club — Total US</div><div class="sku-sub">BJs · Sam's</div></td><td class="mono" style="font-size:11px">CONVENTIONAL|MULTI OUTLET</td><td class="up mono">+18%</td><td class="up mono">+11%</td><td class="up mono">+14%</td><td><span class="badge green">Incremental</span></td><td>Expand</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="color:var(--quiet);font-size:11px;font-family:var(--mono);margin-top:10px">Military commissaries (DECA CONUS) excluded from all scoring.</p>
+  </section>
+
+  <section id="pack" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Pack ladder</h1>
+      <p class="page-sub">Mint Chip · all pack sizes · Texas · CONVENTIONAL|FOOD</p>
+    </div>
+    <div class="pool-strip">
+      <span style="color:var(--quiet)">Pool</span>
+      <span class="pool-strip-value">Pack size comparison — same flavor, same brand</span>
+      <span class="pool-strip-sep">·</span>
+      <span class="pool-strip-value">3 SKUs</span>
+      <span class="pool-strip-sep">·</span>
+      <span style="color:var(--quiet)">scored both directions</span>
+    </div>
+    <div class="insight">4pk appears to pull more from 1ct than from 12pk. The 1ct lost ~18% of prior base share after 4pk launch in this geography. Pack size gap 1→4 is 3 units (high substitution likelihood); 1→12 is 8 units (low).</div>
+    <div class="card flush">
+      <table>
+        <thead><tr><th>SKU / pack</th><th>Pack ct</th><th>Size gap</th><th>Base units</th><th>TDP</th><th>Units SPM</th><th>Status</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><div class="sku-name">Mint Chip PUFF 1ct</div><div class="sku-sub">Incumbent · broad reach</div></td><td class="mono">1</td><td class="mono warn">3</td><td class="mono">1,240</td><td class="mono">80</td><td class="mono">16.5</td><td><span class="badge amber">Likely donor</span></td><td>Protect core</td></tr>
+          <tr class="focal-row"><td><div class="sku-name">Mint Chip PUFF 4pk</div><div class="sku-sub">Focal · new launch</div></td><td class="mono">4</td><td class="mono flat">—</td><td class="mono">840</td><td class="mono">62</td><td class="mono">14.7</td><td><span class="badge blue">Focal</span></td><td>Growth pack</td></tr>
+          <tr><td><div class="sku-name">Mint Chip PUFF 12pk</div><div class="sku-sub">Incumbent · narrower reach</div></td><td class="mono">12</td><td class="mono flat">8</td><td class="mono">410</td><td class="mono">28</td><td class="mono">16.3</td><td><span class="badge gray">Minor donor</span></td><td>Monitor</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="crossflavor" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Cross-flavor</h1>
+      <p class="page-sub">BUILT portfolio · SPINS FLAVOR: CHOCOLATE MINT · same parent brand</p>
+    </div>
+    <div class="pool-strip">
+      <span style="color:var(--quiet)">Pool</span>
+      <span class="pool-strip-value">Cross-flavor (BUILT only)</span>
+      <span class="pool-strip-sep">·</span>
+      <span class="pool-strip-value">3 specific flavors</span>
+      <span class="pool-strip-sep">·</span>
+      <span style="color:var(--quiet)">CONVENTIONAL|FOOD · W16 2024</span>
+    </div>
+    <div class="dist-strip">
+      <button class="dist-btn" data-dist="1">Pack sizes (same flavor)</button>
+      <button class="dist-btn active" data-dist="3">Cross-flavor · BUILT only</button>
+      <button class="dist-btn" data-dist="4">Cross-flavor · any brand</button>
+      <button class="dist-btn" data-dist="5">Other BUILT FLAVOR groups</button>
+    </div>
+    <div class="insight amber">Within SPINS FLAVOR: CHOCOLATE MINT, Grasshopper Cookie BAR 1ct base units declined −8% concurrent with the Mint Chip PUFF 4pk launch. Confidence is Medium — same-FLAVOR overlap is a weaker signal than a direct pack size comparison. Brownie Batter (BROWNIE) and Double Chocolate (CHOCOLATE) are not CHOCOLATE MINT candidates.</div>
+    <div class="card flush">
+      <table>
+        <thead><tr><th>Specific flavor</th><th>Brand line</th><th>Pack</th><th>Pre base units</th><th>Post base units</th><th>Δ%</th><th>Units SPM Δ</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr class="focal-row"><td><div class="sku-name">Mint Chip PUFF 4pk</div><div class="sku-sub">Focal</div></td><td class="mono">BUILT PUFF</td><td class="mono">4</td><td class="mono">720</td><td class="mono">840</td><td class="up mono">+17%</td><td class="down mono">−9%</td><td><span class="badge blue">Focal</span></td></tr>
+          <tr><td><div class="sku-name">Mint Brownie BAR 1ct</div><div class="sku-sub">Cross-flavor</div></td><td class="mono">BUILT BAR</td><td class="mono">1</td><td class="mono">1,180</td><td class="mono">1,015</td><td class="down mono">−14%</td><td class="down mono">−11%</td><td><span class="badge amber">Watch</span></td></tr>
+          <tr><td><div class="sku-name">Grasshopper Cookie BAR 1ct</div><div class="sku-sub">Cross-flavor</div></td><td class="mono">BUILT BAR</td><td class="mono">1</td><td class="mono">890</td><td class="mono">820</td><td class="down mono">−8%</td><td class="down mono">−6%</td><td><span class="badge amber">Watch</span></td></tr>
+          <tr><td><div class="sku-name">Mint Chip PUFF 1ct</div></td><td class="mono">BUILT PUFF</td><td class="mono">1</td><td class="mono">540</td><td class="mono">530</td><td class="flat mono">−2%</td><td class="flat mono">flat</td><td><span class="badge gray">Neutral</span></td></tr>
+          <tr><td><div class="sku-name">Mint Chip PUFF 12pk</div></td><td class="mono">BUILT PUFF</td><td class="mono">12</td><td class="mono">180</td><td class="mono">174</td><td class="flat mono">−3%</td><td class="flat mono">flat</td><td><span class="badge gray">Neutral</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="section-label">Base units delta heatmap — CHOCOLATE MINT vs. geography</div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>SKU</th><th>Total US</th><th>Texas</th><th>Mtn West</th><th>Southeast</th><th>Northeast</th><th>Club</th></tr></thead>
+          <tbody>
+            <tr><td class="sku-name">Mint Chip PUFF 4pk (focal)</td><td><div class="hm-cell hm-mild-pos">+8%</div></td><td><div class="hm-cell hm-mild-neg">−3%</div></td><td><div class="hm-cell hm-strong-neg">−12%</div></td><td><div class="hm-cell hm-mild-neg">−5%</div></td><td><div class="hm-cell hm-neutral">flat</div></td><td><div class="hm-cell hm-strong-pos">+18%</div></td></tr>
+            <tr><td class="sku-name">Mint Brownie BAR 1ct</td><td><div class="hm-cell hm-mild-neg">−10%</div></td><td><div class="hm-cell hm-strong-neg">−14%</div></td><td><div class="hm-cell hm-strong-neg">−18%</div></td><td><div class="hm-cell hm-mild-neg">−8%</div></td><td><div class="hm-cell hm-mild-neg">−3%</div></td><td><div class="hm-cell hm-mild-neg">−4%</div></td></tr>
+            <tr><td class="sku-name">Grasshopper Cookie BAR 1ct</td><td><div class="hm-cell hm-mild-neg">−4%</div></td><td><div class="hm-cell hm-mild-neg">−8%</div></td><td><div class="hm-cell hm-mild-neg">−6%</div></td><td><div class="hm-cell hm-neutral">+1%</div></td><td><div class="hm-cell hm-mild-pos">+3%</div></td><td><div class="hm-cell hm-mild-pos">+5%</div></td></tr>
+            <tr><td class="sku-name">Mint Chip PUFF 1ct</td><td><div class="hm-cell hm-neutral">−1%</div></td><td><div class="hm-cell hm-neutral">−2%</div></td><td><div class="hm-cell hm-neutral">+1%</div></td><td><div class="hm-cell hm-neutral">flat</div></td><td><div class="hm-cell hm-mild-pos">+4%</div></td><td><div class="hm-cell hm-mild-pos">+7%</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="competitive" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Competitive</h1>
+      <p class="page-sub">BUILT Mint Chip PUFF 4pk vs. Tier 1 protein bar competitors · on-demand</p>
+    </div>
+    <div class="pool-strip">
+      <span style="color:var(--quiet)">Pool</span>
+      <span class="pool-strip-value">Full competitive — all brands, all FLAVOR groups</span>
+      <span class="pool-strip-sep">·</span>
+      <span style="color:var(--quiet)">63 brands available</span>
+      <span class="pool-strip-tag">On-demand · not pre-materialized</span>
+    </div>
+    <div class="insight">RXBAR and BAREBELLS held flat or grew while BUILT's pack ladder showed internal churn. Mountain West decline appears primarily internal — not competitive share loss.</div>
+    <div class="tier-label">Tier 1 — Direct protein bar competitors</div>
+    <div class="card flush">
+      <table>
+        <thead><tr><th>Brand</th><th>SPINS FLAVOR</th><th>Base units Δ</th><th>Units SPM Δ</th><th>TDP Δ</th><th>Status</th><th>Substitution prior</th></tr></thead>
+        <tbody>
+          <tr class="focal-row"><td><div class="sku-name">BUILT Mint Chip PUFF 4pk</div><div class="sku-sub">Focal</div></td><td>CHOCOLATE MINT</td><td class="up mono">+8% (US)</td><td class="down mono">−9%</td><td class="up mono">+26%</td><td><span class="badge amber">Watch</span></td><td>—</td></tr>
+          <tr><td><div class="sku-name">THINK!</div><div class="sku-sub">Chocolate Mint varieties</div></td><td>CHOCOLATE MINT</td><td class="flat mono">flat</td><td class="flat mono">flat</td><td class="flat mono">flat</td><td><span class="badge gray">Neutral</span></td><td><span class="badge amber">Same flavor · med</span></td></tr>
+          <tr><td><div class="sku-name">PERFECT BAR</div><div class="sku-sub">Chocolate Mint PB</div></td><td>CHOCOLATE MINT</td><td class="up mono">+5%</td><td class="up mono">+3%</td><td class="up mono">+4%</td><td><span class="badge green">Growing</span></td><td><span class="badge amber">Same flavor · med</span></td></tr>
+          <tr><td><div class="sku-name">RXBAR</div></td><td>CHOCOLATE</td><td class="up mono">+3%</td><td class="up mono">+1%</td><td class="flat mono">flat</td><td><span class="badge green">Holding</span></td><td><span class="badge gray">Diff. flavor · low</span></td></tr>
+          <tr><td><div class="sku-name">BAREBELLS</div></td><td>VARIED</td><td class="up mono">+12%</td><td class="up mono">+8%</td><td class="up mono">+9%</td><td><span class="badge green">Growing</span></td><td><span class="badge gray">Diff. flavor · low</span></td></tr>
+          <tr><td><div class="sku-name">QUEST</div><div class="sku-sub">Chocolate Brownie</div></td><td>CHOCOLATE</td><td class="down mono">−4%</td><td class="flat mono">−1%</td><td class="flat mono">−3%</td><td><span class="badge amber">Watch</span></td><td><span class="badge gray">Same group · low–med</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="prepost" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Pre / post launch</h1>
+      <p class="page-sub">Mint Chip PUFF 4pk · Texas · CONVENTIONAL|FOOD · W04 2024 launch</p>
+    </div>
+    <div class="card flush">
+      <table>
+        <thead><tr><th>Metric</th><th>Pre (13w)</th><th>Post (13w)</th><th>Change</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Base units</strong></td><td class="mono">820</td><td class="mono">910</td><td class="up mono">+11%</td><td>Underlying demand up</td></tr>
+          <tr><td><strong>TDP</strong></td><td class="mono">50</td><td class="mono">63</td><td class="up mono">+26%</td><td>Distribution expanded</td></tr>
+          <tr><td><strong>Units SPM</strong></td><td class="mono">17.2</td><td class="mono">15.6</td><td class="down mono">−9%</td><td>Per-store velocity down — distribution-led gain</td></tr>
+          <tr><td><strong>ARP</strong></td><td class="mono">$8.52</td><td class="mono">$8.49</td><td class="flat mono">−0.4%</td><td>Price stable</td></tr>
+          <tr><td><strong>Promo weeks</strong></td><td class="mono">2 of 13</td><td class="mono">3 of 13</td><td class="flat mono">+1 wk</td><td>Not confounded</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="two-col">
+      <div class="card tight"><div class="section-label">Primary donor — Mint Chip PUFF 1ct</div><div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--red)">−14%</div><div style="color:var(--muted);font-size:11px;margin-top:5px">Concurrent base-unit decline · p=0.04 · Pack size gap: 3 (high substitution)</div></div>
+      <div class="card tight"><div class="section-label">Minor donor — Mint Chip PUFF 12pk</div><div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--quiet)">−3%</div><div style="color:var(--muted);font-size:11px;margin-top:5px">Within expected variance · p=0.38 · Pack size gap: 8 (low substitution)</div></div>
+    </div>
+    <div class="insight amber">Distribution-led gain: TDP +26% while Units SPM fell −9%. The observed unit gain is primarily a reach story, not a demand-pull story.</div>
+  </section>
+
+  <section id="pool" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Pool health</h1>
+      <p class="page-sub">Mint Chip pack size comparison · 13-week pool · prior quarter + year-ago checks</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      <div class="card tight" style="margin:0"><div style="font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:4px">62%</div><div style="color:var(--muted);font-size:11px">13w pool win rate</div></div>
+      <div class="card tight" style="margin:0"><div style="font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:4px">+4%</div><div style="color:var(--muted);font-size:11px">vs prior 13w</div></div>
+      <div class="card tight" style="margin:0"><div class="down" style="font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:4px">−6%</div><div style="color:var(--muted);font-size:11px">vs same 13w YA</div></div>
+      <div class="card tight" style="margin:0"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Pack size comparison</div><div style="color:var(--muted);font-size:11px">same specific flavor</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">
+        13-week win pattern (base units vs. expected quarterly baseline)
+        <span class="info-tip" title="Win = base units above expected baseline for that SKU × geography. 0 = fewer than 10 prior comparable weeks available. Each column is one week of the 13-week comparison window.">i</span>
+      </div>
+      <div class="wl-wrap">
+        <div class="wl-row">
+          <strong style="font-size:11px">SKU / Week</strong>
+          <span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W1</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W2</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W3</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W4</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W5</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W6</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W7</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W8</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W9</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W10</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W11</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W12</span><span style="font-size:9px;color:var(--quiet);font-family:var(--mono)">W13</span>
+          <strong style="font-size:10px;font-family:var(--mono)">Win%</strong>
+        </div>
+        <div class="wl-row">
+          <span style="font-size:12px">Mint Chip PUFF 1ct</span>
+          <span class="wl-cell wl-win">+</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span>
+          <strong style="font-size:11px;font-family:var(--mono)">38%</strong>
+        </div>
+        <div class="wl-row">
+          <span style="font-size:12px">Mint Chip PUFF 4pk</span>
+          <span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-win">+</span>
+          <strong style="font-size:11px;font-family:var(--mono)">100%</strong>
+        </div>
+        <div class="wl-row">
+          <span style="font-size:12px">Mint Chip PUFF 12pk</span>
+          <span class="wl-cell wl-win">+</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-zero">0</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-win">+</span><span class="wl-cell wl-zero">0</span><span class="wl-cell wl-loss">−</span><span class="wl-cell wl-loss">−</span>
+          <strong style="font-size:11px;font-family:var(--mono)">23%</strong>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--quiet);font-family:var(--mono)">
+        13-week window matches one business quarter. Win% is proportion of weeks above the expected baseline for that SKU × geography. 0 = insufficient comparable baseline (fewer than 10 matched weeks).
+      </div>
+    </div>
+
+    <div class="card flush" style="margin-top:0">
+      <table>
+        <thead><tr><th>Pool read</th><th>Current 13w</th><th>Previous 13w</th><th>Same 13w YA</th><th>Interpretation</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Total Mint Chip pool</strong></td><td class="mono">2,685</td><td class="mono">2,580</td><td class="mono">2,860</td><td style="font-size:12px">Sequentially up, but below last year. Check seasonality before over-calling cannibalization.</td></tr>
+          <tr><td><strong>4pk focal share</strong></td><td class="mono">34%</td><td class="mono">0%</td><td class="mono">0%</td><td style="font-size:12px">New pack is creating pool mix shift. Compare donor decline against total pool movement.</td></tr>
+          <tr><td><strong>1ct donor share</strong></td><td class="mono warn">49%</td><td class="mono">61%</td><td class="mono">64%</td><td style="font-size:12px">Share loss exceeds pool softness. Likely donor pressure remains plausible.</td></tr>
+          <tr><td><strong>12pk donor share</strong></td><td class="mono">17%</td><td class="mono">18%</td><td class="mono">19%</td><td style="font-size:12px">Mostly stable. Lower cannibalization concern than 1ct.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="ramp" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Ramp monitor</h1>
+      <p class="page-sub">New and recently launched BUILT SKUs · first 16 weeks post-launch</p>
+    </div>
+    <div class="insight">Cannibalization scoring suppressed weeks 1–6 post-launch. TDP expansion dominates metric movement during ramp — early scoring produces false-positive alerts. Scoring activates at week 8 with whatever baseline history is available.</div>
+    <div class="card flush">
+      <table>
+        <thead><tr><th>SKU</th><th>Pack</th><th>Launch</th><th>Ramp wk</th><th>TDP trend</th><th>TDP now / peak</th><th>Units SPM</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr class="expand-trigger" data-row="r1">
+            <td><div class="sku-name">Mint Chip PUFF 4pk</div><div class="sku-sub">Focal ↗ expand to see alert</div></td>
+            <td class="mono">4</td><td class="mono">W04 2024</td><td class="mono"><strong>12 of 13</strong></td>
+            <td><div class="ramp-bar-wrap"><div class="ramp-bar"><div class="ramp-fill stable" style="width:92%"></div></div><span class="mono" style="font-size:10px;color:var(--muted)">Stable</span></div></td>
+            <td class="mono">63 / 65</td><td class="down mono">Declining</td><td><span class="badge green">Active</span></td>
+          </tr>
+          <tr class="expand-row" id="r1">
+            <td colspan="8"><strong style="font-size:12px">Distribution stabilizing.</strong> Base units signal maturing. Velocity still declining — watch for Units SPM recovery before expanding further. Scoring fully active.</td>
+          </tr>
+          <tr class="expand-trigger" data-row="r2">
+            <td><div class="sku-name">Mint Chip PUFF 8pk</div><div class="sku-sub">Auto-detected W14 2024 ↗</div></td>
+            <td class="mono">8</td><td class="mono">W14 2024</td><td class="mono warn"><strong>3 of 13</strong></td>
+            <td><div class="ramp-bar-wrap"><div class="ramp-bar"><div class="ramp-fill ramping" style="width:23%"></div></div><span class="mono" style="font-size:10px;color:var(--muted)">Ramping</span></div></td>
+            <td class="mono">12 / 12</td><td class="flat mono">—</td><td><span class="badge amber">Suppressed · wk 3</span></td>
+          </tr>
+          <tr class="expand-row" id="r2">
+            <td colspan="8"><strong style="font-size:12px">Pending taxonomy review.</strong> Pack size enrolled provisionally. Scoring suppressed until week 8. Auto-detected as new pack size of Mint Chip PUFF — manual_review_needed = Y.</td>
+          </tr>
+          <tr class="expand-trigger" data-row="r3">
+            <td><div class="sku-name">Salted Caramel PUFF 4pk</div><div class="sku-sub">Underperforming ↗ expand</div></td>
+            <td class="mono">4</td><td class="mono">W02 2024</td><td class="mono down"><strong>14 of 13</strong></td>
+            <td><div class="ramp-bar-wrap"><div class="ramp-bar"><div class="ramp-fill declining" style="width:55%"></div></div><span class="mono" style="font-size:10px;color:var(--muted)">Declining</span></div></td>
+            <td class="mono">34 / 52</td><td class="down mono">Declining</td><td><span class="badge red">Underperforming</span></td>
+          </tr>
+          <tr class="expand-row" id="r3" style="background:var(--red-bg)">
+            <td colspan="8" style="background:var(--red-bg);border-top:1px solid var(--red-line)"><strong style="font-size:12px;color:var(--red)">TDP peaked W08, now declining (52 → 34, −35%).</strong> <span style="color:var(--red)">Velocity also declining. Pattern: STABLE+DECLINING — genuine demand weakness, not ramp artifact. Firing "Launch underperforming" event.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────────── DECIDE SCREENS ───────────── -->
+
+  <section id="explain" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Explanation</h1>
+      <p class="page-sub">Mint Chip PUFF 4pk · Texas · CONVENTIONAL|FOOD · model v1.8 · W16 2024</p>
+    </div>
+    <div class="card">
+      <div class="section-label">Mo narrative</div>
+      <div class="narrative">Mint Chip PUFF 4pk is flagged as <strong>Watch</strong> in Texas because observed units rose, but most of the gain appears tied to distribution expansion while per-store velocity weakened and the 1ct donor item declined over the same period. The evidence does not yet support a strong cannibalization conclusion, but the pattern warrants monitoring before wider expansion.</div>
+      <div class="section-label">Top SHAP drivers</div>
+      <div class="driver-row"><div class="driver-name">TDP expansion</div><div class="driver-tag warn">Primary driver</div><div class="track"><div class="fill fill-amber" style="width:82%"></div></div><div class="driver-pct">82%</div></div>
+      <div class="driver-row"><div class="driver-name">1ct donor base unit decline</div><div class="driver-tag down">Cannibalization signal</div><div class="track"><div class="fill" style="width:65%;background:var(--red-mid)"></div></div><div class="driver-pct">65%</div></div>
+      <div class="driver-row"><div class="driver-name">Units SPM decline</div><div class="driver-tag warn">Productivity weak</div><div class="track"><div class="fill fill-amber" style="width:48%"></div></div><div class="driver-pct">48%</div></div>
+      <div class="driver-row"><div class="driver-name">Pack size gap (1ct → 4pk)</div><div class="driver-tag" style="color:var(--blue)">Structural prior</div><div class="track"><div class="fill" style="width:38%;background:var(--blue-mid)"></div></div><div class="driver-pct">38%</div></div>
+      <div class="driver-row"><div class="driver-name">Promo weeks delta</div><div class="driver-tag flat">Not confounded</div><div class="track"><div class="fill" style="width:9%;background:var(--border-strong)"></div></div><div class="driver-pct">9%</div></div>
+    </div>
+    <div class="card">
+      <div class="section-label">Provenance</div>
+      <div class="prov-grid">
+        <div><div class="prov-key">Source</div><div class="prov-val">SPINS POS</div></div>
+        <div><div class="prov-key">Window</div><div class="prov-val">13 vs prior 13</div></div>
+        <div><div class="prov-key">Geography</div><div class="prov-val">Texas · CONV|FOOD</div></div>
+        <div><div class="prov-key">Comparison pool</div><div class="prov-val">Pack size — Mint Chip (all pack sizes)</div></div>
+        <div><div class="prov-key">Model</div><div class="prov-val">v1.8 LightGBM</div></div>
+        <div><div class="prov-key">Confidence</div><div class="prov-val">Medium</div></div>
+        <div><div class="prov-key">p-value (donor)</div><div class="prov-val">0.04</div></div>
+        <div><div class="prov-key">z-score (donor)</div><div class="prov-val">−2.6</div></div>
+        <div><div class="prov-key">Promo confounded</div><div class="prov-val">No (+1 promo week)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="forecast" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Forecast next move</h1>
+      <p class="page-sub">Mint Chip PUFF 4pk · pack size comparison · next 13 weeks</p>
+    </div>
+
+    <div class="scenario-rail">
+      <button class="scenario-btn" data-sc="hold">Hold current</button>
+      <button class="scenario-btn active" data-sc="selective">Expand selectively</button>
+      <button class="scenario-btn" data-sc="broad">Expand broadly</button>
+      <button class="scenario-btn" data-sc="reduce">Reduce overlap</button>
+      <button class="scenario-btn" data-sc="test">Test markets</button>
+    </div>
+    <div class="scenario-hint" id="scenario-hint">Expand only in lower-risk accounts where donor pressure is weak. Club and Northeast are strong candidates; hold Texas and Mountain West.</div>
+
+    <div class="assumption-row">
+      <div class="assumption"><div class="assumption-label">TDP</div><div class="assumption-val" id="sc-tdp">63 → 80</div></div>
+      <div class="assumption"><div class="assumption-label">Price</div><div class="assumption-val" id="sc-price">Stable at $8.49</div></div>
+      <div class="assumption"><div class="assumption-label">Promo</div><div class="assumption-val" id="sc-promo">No change</div></div>
+      <div class="assumption"><div class="assumption-label">Overlap</div><div class="assumption-val" id="sc-overlap">Low-risk accounts</div></div>
+    </div>
+
+    <div class="forecast-strip">
+      <div class="forecast-tile"><strong class="up" id="sc-net">+180 to +420</strong><span>net incr. units</span></div>
+      <div class="forecast-tile"><strong class="down" id="sc-donor">−90 to −240</strong><span>est. donor unit loss</span></div>
+      <div class="forecast-tile"><strong class="warn" id="sc-rate">28%–45%</strong><span>forecast cannib. rate</span></div>
+    </div>
+
+    <div class="card tight">
+      <div class="section-label">Cannibalization rate — trailing 8 weeks + 13-week forecast</div>
+      <div class="rate-chart" id="rate-chart">
+        <!-- actuals -->
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:32%" data-rate="32%"></div><div class="rate-lbl">W-8</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:35%" data-rate="35%"></div><div class="rate-lbl">W-7</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:38%" data-rate="38%"></div><div class="rate-lbl">W-6</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:44%" data-rate="44%"></div><div class="rate-lbl">W-5</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:47%" data-rate="47%"></div><div class="rate-lbl">W-4</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:45%" data-rate="45%"></div><div class="rate-lbl">W-3</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:43%" data-rate="43%"></div><div class="rate-lbl">W-2</div></div>
+        <div class="rate-bar-wrap"><div class="rate-col actual" style="height:41%" data-rate="41%"></div><div class="rate-lbl">Now</div></div>
+        <!-- forecasts — updated by JS -->
+        <div class="rate-bar-wrap" id="fb0"><div class="rate-col forecast" style="height:39%" data-rate="39%"></div><div class="rate-lbl">+2</div></div>
+        <div class="rate-bar-wrap" id="fb1"><div class="rate-col forecast" style="height:37%" data-rate="37%"></div><div class="rate-lbl">+4</div></div>
+        <div class="rate-bar-wrap" id="fb2"><div class="rate-col forecast" style="height:36%" data-rate="36%"></div><div class="rate-lbl">+6</div></div>
+        <div class="rate-bar-wrap" id="fb3"><div class="rate-col forecast" style="height:35%" data-rate="35%"></div><div class="rate-lbl">+10</div></div>
+        <div class="rate-bar-wrap" id="fb4"><div class="rate-col forecast" style="height:34%" data-rate="34%"></div><div class="rate-lbl">+13</div></div>
+      </div>
+      <div class="rate-legend">
+        <span><span class="legend-dot" style="background:var(--red-mid);opacity:.7"></span>Actual rate</span>
+        <span><span class="legend-dot" style="background:var(--amber-mid)"></span>Forecast under selected scenario</span>
+        <span style="font-family:var(--mono);font-size:10px">Rate = estimated donor units lost / focal units gained</span>
+      </div>
+    </div>
+
+    <div class="card flush" style="margin-top:10px">
+      <table>
+        <thead><tr><th>Market / channel</th><th>Forecast risk</th><th>Cannib. rate W13</th><th>Net impact</th><th>Mo action</th></tr></thead>
+        <tbody id="sc-rows">
+          <tr><td><strong>CONVENTIONAL|MULTI OUTLET</strong><div class="sku-sub">Club</div></td><td><span class="badge green">Low</span></td><td class="up mono">18%–27%</td><td class="up mono">+140 to +260</td><td>Expand</td></tr>
+          <tr><td><strong>Northeast Grocery</strong></td><td><span class="badge green">Low</span></td><td class="up mono">22%–31%</td><td class="up mono">+70 to +150</td><td>Test expansion</td></tr>
+          <tr><td><strong>Texas · CONVENTIONAL|FOOD</strong></td><td><span class="badge amber">Medium</span></td><td class="warn mono">34%–45%</td><td class="warn mono">−20 to +80</td><td>Hold</td></tr>
+          <tr><td><strong>Mountain West · CONVENTIONAL|FOOD</strong></td><td><span class="badge red">High</span></td><td class="down mono">48%–62%</td><td class="down mono">−90 to +10</td><td>Reduce overlap</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="action" class="screen">
+    <div class="page-hd">
+      <h1 class="page-title">Assortment action</h1>
+      <p class="page-sub">Concrete recommendation by SKU and channel. This is the point of the tool.</p>
+    </div>
+    <div class="section-label">SKU-level</div>
+    <div class="action-card"><div><div class="sku-name">Mint Chip PUFF 1ct</div><div class="sku-sub">Stable donor · broad reach · strong productivity · protect in high-risk accounts</div></div><button class="action-pill keep">Keep core</button></div>
+    <div class="action-card"><div><div class="sku-name">Mint Chip PUFF 4pk</div><div class="sku-sub">+180 to +420 net incr. units if expanded selectively</div></div><button class="action-pill expand">Expand selectively</button></div>
+    <div class="action-card"><div><div class="sku-name">Mint Chip PUFF 12pk</div><div class="sku-sub">Forecasted low velocity · minor donor role in food channel</div></div><button class="action-pill reduce">Reduce / monitor</button></div>
+    <div class="action-card"><div><div class="sku-name">Mint Chip PUFF 8pk</div><div class="sku-sub">Auto-detected · ramp week 3 · scoring suppressed until week 8</div></div><button class="action-pill monitor">Monitor</button></div>
+    <div class="action-card" style="border-color:var(--amber-line);background:var(--amber-bg)"><div><div class="sku-name">Salted Caramel PUFF 4pk</div><div class="sku-sub">TDP peaked W08, now declining. Genuine demand weakness — not a ramp artifact.</div></div><button class="action-pill reduce">Review / reduce</button></div>
+
+    <div style="margin-top:16px">
+      <div class="section-label">By channel / outlet</div>
+      <div class="card flush">
+        <table>
+          <thead><tr><th>Channel / Outlet</th><th>4pk status</th><th>Forecast impact</th><th>Recommendation</th></tr></thead>
+          <tbody>
+            <tr><td><strong>CONVENTIONAL|FOOD</strong></td><td><span class="badge amber">Watch</span></td><td class="warn mono">−20 to +180</td><td>Monitor before wider expansion</td></tr>
+            <tr><td><strong>CONVENTIONAL|MULTI OUTLET</strong></td><td><span class="badge green">Incremental</span></td><td class="up mono">+140 to +260</td><td>Expand selectively</td></tr>
+            <tr><td><strong>CONVENTIONAL|CONVENIENCE</strong></td><td><span class="badge gray">Neutral</span></td><td class="flat mono">Low confidence</td><td>Hold · insufficient data</td></tr>
+            <tr><td><strong>CONVENTIONAL|MASS MERCH</strong></td><td><span class="badge red">Cannibalizing</span></td><td class="down mono">−70 to +20</td><td>Reduce 4pk / 1ct overlap</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════ FOCAL SKU MODAL ══════════════════ -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">Change focal SKU &amp; comparison scope</span>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-steps">
+      <div class="modal-step active" id="step-tab-1">1 · Focal SKU</div>
+      <div class="modal-step" id="step-tab-2">2 · Comparison set</div>
+      <div class="modal-step" id="step-tab-3">3 · Scope &amp; filters</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="modal-body" id="modal-s1">
+      <input class="modal-search" id="sku-search" type="text" placeholder="Search flavors, pack sizes, brand lines…" autocomplete="off">
+
+      <!-- CHOCOLATE MINT -->
+      <div class="flavor-family" data-fam-wrap="chocmint">
+        <div class="family-hd" data-fam="chocmint"><span>FLAVOR: CHOCOLATE MINT</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">5 SKUs</span><span class="family-chev open" id="chev-chocmint">▶</span></div></div>
+        <div class="family-items open" id="fi-chocmint">
+          <div class="sku-row selected" data-sku="mint-chip-4pk"><div class="sku-check">✓</div><div class="sku-info"><div class="sku-nm">Mint Chip PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · CHOCOLATE MINT · W04 2024</div></div><span class="badge amber">Watch</span></div>
+          <div class="sku-row" data-sku="mint-chip-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Mint Chip PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · CHOCOLATE MINT</div></div><span class="badge gray">Donor</span></div>
+          <div class="sku-row" data-sku="mint-chip-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Mint Chip PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · CHOCOLATE MINT</div></div><span class="badge gray">Neutral</span></div>
+          <div class="sku-row" data-sku="mint-brownie-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Mint Brownie BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · CHOCOLATE MINT</div></div><span class="badge gray">Neutral</span></div>
+          <div class="sku-row" data-sku="grasshopper-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Grasshopper Cookie BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · CHOCOLATE MINT</div></div><span class="badge green">Incremental</span></div>
+        </div>
+      </div>
+
+      <!-- CARAMEL -->
+      <div class="flavor-family" data-fam-wrap="caramel">
+        <div class="family-hd" data-fam="caramel"><span>FLAVOR: CARAMEL</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">5 SKUs</span><span class="family-chev" id="chev-caramel">▶</span></div></div>
+        <div class="family-items" id="fi-caramel">
+          <div class="sku-row" data-sku="sc-puff-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Salted Caramel PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · CARAMEL · underperforming</div></div><span class="badge red">Underperf.</span></div>
+          <div class="sku-row" data-sku="sc-puff-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Salted Caramel PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · CARAMEL</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sc-bar-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Salted Caramel BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · CARAMEL</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sc-bar-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Salted Caramel BAR 12pk</div><div class="sku-mt">BUILT BAR · 12ct · CARAMEL</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sc-choc-18pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Salted Caramel Chocolate BAR 18pk</div><div class="sku-mt">BUILT BAR · 18ct · CARAMEL</div></div><span class="badge green">Incremental</span></div>
+        </div>
+      </div>
+
+      <!-- BROWNIE -->
+      <div class="flavor-family" data-fam-wrap="brownie">
+        <div class="family-hd" data-fam="brownie"><span>FLAVOR: BROWNIE</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">5 SKUs</span><span class="family-chev" id="chev-brownie">▶</span></div></div>
+        <div class="family-items" id="fi-brownie">
+          <div class="sku-row" data-sku="bb-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Brownie Batter PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · BROWNIE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="bb-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Brownie Batter PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · BROWNIE</div></div><span class="badge green">Incremental</span></div>
+          <div class="sku-row" data-sku="bb-8pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Brownie Batter PUFF 8pk</div><div class="sku-mt">BUILT PUFF · 8ct · BROWNIE</div></div><span class="badge gray">Neutral</span></div>
+          <div class="sku-row" data-sku="bb-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Brownie Batter PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · BROWNIE</div></div><span class="badge gray">Neutral</span></div>
+          <div class="sku-row" data-sku="ccb-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Candy Cane Brownie BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · BROWNIE · seasonal</div></div><span class="badge gray">Seasonal</span></div>
+        </div>
+      </div>
+
+      <!-- COCONUT -->
+      <div class="flavor-family" data-fam-wrap="coconut">
+        <div class="family-hd" data-fam="coconut"><span>FLAVOR: COCONUT</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">10 SKUs</span><span class="family-chev" id="chev-coconut">▶</span></div></div>
+        <div class="family-items" id="fi-coconut">
+          <div class="sku-row" data-sku="coc-puff-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-puff-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · COCONUT</div></div><span class="badge blue">New launch</span></div>
+          <div class="sku-row" data-sku="coc-puff-8pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut PUFF 8pk</div><div class="sku-mt">BUILT PUFF · 8ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-puff-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-bar-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-bar-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut BAR 12pk</div><div class="sku-mt">BUILT BAR · 12ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-alm-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut Almond BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-alm-18pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut Almond BAR 18pk</div><div class="sku-mt">BUILT BAR · 18ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-brn-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut Brownie PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="coc-choc-18pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Coconut Chocolate BAR 18pk</div><div class="sku-mt">BUILT BAR · 18ct · COCONUT</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- COOKIE DOUGH -->
+      <div class="flavor-family" data-fam-wrap="cookiedough">
+        <div class="family-hd" data-fam="cookiedough"><span>FLAVOR: COOKIE DOUGH</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">4 SKUs</span><span class="family-chev" id="chev-cookiedough">▶</span></div></div>
+        <div class="family-items" id="fi-cookiedough">
+          <div class="sku-row" data-sku="cd-puff-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookie Dough PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · COOKIE DOUGH</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="cd-puff-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookie Dough PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · COOKIE DOUGH</div></div><span class="badge green">Incremental</span></div>
+          <div class="sku-row" data-sku="cd-puff-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookie Dough PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · COOKIE DOUGH</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="cd-bar-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookie Dough BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · COOKIE DOUGH</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- COOKIES AND CREAM -->
+      <div class="flavor-family" data-fam-wrap="cnc">
+        <div class="family-hd" data-fam="cnc"><span>FLAVOR: COOKIES AND CREAM</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">6 SKUs</span><span class="family-chev" id="chev-cnc">▶</span></div></div>
+        <div class="family-items" id="fi-cnc">
+          <div class="sku-row" data-sku="cnc-puff-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookies N Cream PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · COOKIES AND CREAM</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="cnc-puff-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookies N Cream PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · COOKIES AND CREAM</div></div><span class="badge green">Incremental</span></div>
+          <div class="sku-row" data-sku="cnc-puff-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookies N Cream PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · COOKIES AND CREAM</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="cnc-bar-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookies and Cream BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · COOKIES AND CREAM</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="cnc-bar-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookies and Cream BAR 4pk</div><div class="sku-mt">BUILT BAR · 4ct · COOKIES AND CREAM</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="cnc-bar-16pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Cookies N Cream BAR 16pk</div><div class="sku-mt">BUILT BAR · 16ct · COOKIES AND CREAM · club</div></div><span class="badge gray">Club</span></div>
+        </div>
+      </div>
+
+      <!-- STRAWBERRY -->
+      <div class="flavor-family" data-fam-wrap="strawberry">
+        <div class="family-hd" data-fam="strawberry"><span>FLAVOR: STRAWBERRY</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">3 SKUs</span><span class="family-chev" id="chev-strawberry">▶</span></div></div>
+        <div class="family-items" id="fi-strawberry">
+          <div class="sku-row" data-sku="snc-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Strawberries N Cream PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · STRAWBERRY</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="snc-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Strawberries N Cream PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · STRAWBERRY</div></div><span class="badge green">Incremental</span></div>
+          <div class="sku-row" data-sku="snc-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Strawberries N Cream PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · STRAWBERRY</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- PEANUT BUTTER -->
+      <div class="flavor-family" data-fam-wrap="pb">
+        <div class="family-hd" data-fam="pb"><span>FLAVOR: PEANUT BUTTER</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">5 SKUs</span><span class="family-chev" id="chev-pb">▶</span></div></div>
+        <div class="family-items" id="fi-pb">
+          <div class="sku-row" data-sku="pb-puff-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · PEANUT BUTTER</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="pb-puff-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter PUFF 12pk</div><div class="sku-mt">BUILT / BUILT PUFF · 12ct · PEANUT BUTTER</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="pb-cookie-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter Cookie PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · PEANUT BUTTER</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="pb-cup-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter Cup PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · PEANUT BUTTER</div></div><span class="badge green">Incremental</span></div>
+          <div class="sku-row" data-sku="pb-bar-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · PEANUT BUTTER</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- CHOCOLATE PEANUT -->
+      <div class="flavor-family" data-fam-wrap="chocpnut">
+        <div class="family-hd" data-fam="chocpnut"><span>FLAVOR: CHOCOLATE PEANUT</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">2 SKUs</span><span class="family-chev" id="chev-chocpnut">▶</span></div></div>
+        <div class="family-items" id="fi-chocpnut">
+          <div class="sku-row" data-sku="cpb-brn-16pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter Brownie BAR 16pk</div><div class="sku-mt">BUILT BAR · 16ct · CHOCOLATE PEANUT</div></div><span class="badge gray">Club</span></div>
+          <div class="sku-row" data-sku="cpb-brn-18pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peanut Butter Brown BAR 18pk</div><div class="sku-mt">BUILT BAR · 18ct · CHOCOLATE PEANUT</div></div><span class="badge gray">Club</span></div>
+        </div>
+      </div>
+
+      <!-- CHOCOLATE -->
+      <div class="flavor-family" data-fam-wrap="choc">
+        <div class="family-hd" data-fam="choc"><span>FLAVOR: CHOCOLATE</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">7 SKUs</span><span class="family-chev" id="chev-choc">▶</span></div></div>
+        <div class="family-items" id="fi-choc">
+          <div class="sku-row" data-sku="dbl-choc-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Double Chocolate BAR 4pk</div><div class="sku-mt">BUILT BAR · 4ct · CHOCOLATE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="dbl-choc-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Double Chocolate BAR 12pk</div><div class="sku-mt">BUILT BAR · 12ct · CHOCOLATE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="dbl-choc-16pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Double Chocolate BAR 16pk</div><div class="sku-mt">BUILT BAR · 16ct · CHOCOLATE · club</div></div><span class="badge gray">Club</span></div>
+          <div class="sku-row" data-sku="dbl-choc-fudge"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Double Chocolate Fudge BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · CHOCOLATE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="mud-pie-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Mud Pie BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · CHOCOLATE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="choc-milk-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Chocolate Milkshake PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · CHOCOLATE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="rocky-road-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Rocky Road PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · CHOCOLATE</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- BANANA -->
+      <div class="flavor-family" data-fam-wrap="banana">
+        <div class="family-hd" data-fam="banana"><span>FLAVOR: BANANA</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">2 SKUs</span><span class="family-chev" id="chev-banana">▶</span></div></div>
+        <div class="family-items" id="fi-banana">
+          <div class="sku-row" data-sku="bcp-puff-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Banana Cream Pie PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · BANANA</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="bcp-puff-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Banana Cream Pie PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · BANANA</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- LEMON -->
+      <div class="flavor-family" data-fam-wrap="lemon">
+        <div class="family-hd" data-fam="lemon"><span>FLAVOR: LEMON</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">2 SKUs</span><span class="family-chev" id="chev-lemon">▶</span></div></div>
+        <div class="family-items" id="fi-lemon">
+          <div class="sku-row" data-sku="lmp-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Lemon Meringue Pie PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · LEMON</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="lmp-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Lemon Meringue Pie PUFF 4pk</div><div class="sku-mt">BUILT PUFF · 4ct · LEMON</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- OTHER / SEASONAL -->
+      <div class="flavor-family" data-fam-wrap="other">
+        <div class="family-hd" data-fam="other"><span>FLAVOR: OTHER / SEASONAL</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">6 SKUs</span><span class="family-chev" id="chev-other">▶</span></div></div>
+        <div class="family-items" id="fi-other">
+          <div class="sku-row" data-sku="churro-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Churro PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · OTHER</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="churro-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Churro PUFF 12pk</div><div class="sku-mt">BUILT PUFF · 12ct · OTHER</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="bday-cake-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Birthday Cake PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · COOKIE / PASTRY / CAKE</div></div><span class="badge gray">Seasonal</span></div>
+          <div class="sku-row" data-sku="pumpkin-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Pumpkin Cookie PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · OTHER · seasonal</div></div><span class="badge gray">Seasonal</span></div>
+          <div class="sku-row" data-sku="animal-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Animal Cookie BAR 1ct</div><div class="sku-mt">BUILT BAR · 1ct · COOKIE / PASTRY / CAKE</div></div><span class="badge gray">Seasonal</span></div>
+          <div class="sku-row" data-sku="smores-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">S'mores PUFF 1ct</div><div class="sku-mt">BUILT PUFF · 1ct · SMORES</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- SOUR PUFF — APPLE -->
+      <div class="flavor-family" data-fam-wrap="sour-apple">
+        <div class="family-hd" data-fam="sour-apple"><span>SOUR PUFF: APPLE</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">2 SKUs</span><span class="family-chev" id="chev-sour-apple">▶</span></div></div>
+        <div class="family-items" id="fi-sour-apple">
+          <div class="sku-row" data-sku="sour-ga-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Sour Green Apple Crush 1ct</div><div class="sku-mt">BUILT SOUR PUFF · 1ct · APPLE</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sour-ga-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Green Apple Crush Sour 4pk</div><div class="sku-mt">BUILT SOUR PUFF · 4ct · APPLE</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- SOUR PUFF — BLUE RASPBERRY -->
+      <div class="flavor-family" data-fam-wrap="sour-razz">
+        <div class="family-hd" data-fam="sour-razz"><span>SOUR PUFF: BLUE RASPBERRY</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">3 SKUs</span><span class="family-chev" id="chev-sour-razz">▶</span></div></div>
+        <div class="family-items" id="fi-sour-razz">
+          <div class="sku-row" data-sku="sour-razz-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Sour Blu Razz Blast 1ct</div><div class="sku-mt">BUILT SOUR PUFF · 1ct · BLUE RASPBERRY</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sour-razz-12pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Sour Blue Razz Blast 12pk</div><div class="sku-mt">BUILT SOUR PUFF · 12ct · BLUE RASPBERRY</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sour-razz-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Sweet Sour Blue Raz Blast 4pk</div><div class="sku-mt">BUILT SOUR PUFF · 4ct · BLUE RASPBERRY</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- SOUR PUFF — PEACH -->
+      <div class="flavor-family" data-fam-wrap="sour-peach">
+        <div class="family-hd" data-fam="sour-peach"><span>SOUR PUFF: PEACH</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">2 SKUs</span><span class="family-chev" id="chev-sour-peach">▶</span></div></div>
+        <div class="family-items" id="fi-sour-peach">
+          <div class="sku-row" data-sku="sour-peach-1ct"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Peach Sour 1ct</div><div class="sku-mt">BUILT SOUR PUFF · 1ct · PEACH</div></div><span class="badge gray">Incumbent</span></div>
+          <div class="sku-row" data-sku="sour-peach-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Sweet Peach Punch Sour 4pk</div><div class="sku-mt">BUILT SOUR PUFF · 4ct · PEACH</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+
+      <!-- SOUR PUFF — LEMON -->
+      <div class="flavor-family" data-fam-wrap="sour-lemon">
+        <div class="family-hd" data-fam="sour-lemon"><span>SOUR PUFF: LEMON</span><div style="display:flex;gap:8px;align-items:center"><span class="family-count">1 SKU</span><span class="family-chev" id="chev-sour-lemon">▶</span></div></div>
+        <div class="family-items" id="fi-sour-lemon">
+          <div class="sku-row" data-sku="sour-lemon-4pk"><div class="sku-check"></div><div class="sku-info"><div class="sku-nm">Pink Lemonade Squeeze 4pk</div><div class="sku-mt">BUILT SOUR PUFF · 4ct · LEMON</div></div><span class="badge gray">Incumbent</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="modal-body" id="modal-s2" style="display:none">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:14px">Start narrow and widen explicitly. The default is pack size comparison within the same specific flavor.</p>
+      <div class="scope-opt selected" data-scope="1"><div class="scope-radio"><div class="scope-dot"></div></div><div><div class="scope-label">Pack sizes of this flavor only</div><div class="scope-desc">Compare Mint Chip PUFF 4pk against all other Mint Chip pack sizes. Tightest substitution prior.</div></div></div>
+      <div class="scope-opt" data-scope="2"><div class="scope-radio"><div class="scope-dot"></div></div><div><div class="scope-label">Same flavor, any brand</div><div class="scope-desc">Adds competitors with the same specific flavor. Cross-brand substitution.</div></div></div>
+      <div class="scope-opt" data-scope="3"><div class="scope-radio"><div class="scope-dot"></div></div><div><div class="scope-label">Same SPINS FLAVOR, BUILT only</div><div class="scope-desc">Adds Mint Brownie and Grasshopper Cookie — other specific flavors under CHOCOLATE MINT.</div></div></div>
+      <div class="scope-opt" data-scope="4"><div class="scope-radio"><div class="scope-dot"></div></div><div><div class="scope-label">Same SPINS FLAVOR, all brands</div><div class="scope-desc">Adds competitor brands under CHOCOLATE MINT (THINK!, PERFECT BAR). Full FLAVOR-group competitive view.</div></div></div>
+      <div class="scope-opt" data-scope="6"><div class="scope-radio"><div class="scope-dot"></div></div><div><div class="scope-label">Specific competitor brand(s)</div><div class="scope-desc">On-demand, cross-FLAVOR. Any of 63 brands. Not pre-materialized.</div></div></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="modal-body" id="modal-s3" style="display:none">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:14px">Filters apply across all screens. Values sourced directly from SPINS — no parsing required.</p>
+      <div class="filter-grid">
+        <div class="filter-group"><label>Channel / Outlet</label><select class="filter-select"><option>All</option><option selected>CONVENTIONAL|FOOD</option><option>CONVENTIONAL|MULTI OUTLET</option><option>CONVENTIONAL|CONVENIENCE</option><option>CONVENTIONAL|MASS MERCH</option></select></div>
+        <div class="filter-group"><label>Retail Account</label><select class="filter-select"><option>All accounts</option><option selected>SOUTHEASTERN GROCERS</option><option>KROGER</option><option>ALBERTSONS COMPANIES</option><option>PUBLIX</option><option>WALMART</option><option>TARGET</option></select></div>
+        <div class="filter-group"><label>Geography Level</label><select class="filter-select"><option>All levels</option><option selected>RMA</option><option>CRMA</option></select></div>
+      </div>
+      <div class="card tight" style="background:var(--surface-2)">
+        <div class="section-label">Selection preview</div>
+        <div id="preview" style="font-size:12px;line-height:1.8;color:var(--ink)">
+          <strong>Focal:</strong> Mint Chip PUFF 4pk · BUILT PUFF<br>
+          <strong>Pool:</strong> Pack size comparison · 1ct + 12pk<br>
+          <strong>Channel/Outlet:</strong> CONVENTIONAL|FOOD<br>
+          <strong>Account:</strong> SOUTHEASTERN GROCERS · TOTAL CORPORATE<br>
+          <strong>Geography Level:</strong> RMA<br>
+          <strong>Window:</strong> 13 weeks vs prior 13 · anchor W04 2024
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-ft">
+      <button class="modal-back" id="modal-prev" style="visibility:hidden">← Back</button>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--quiet)" id="step-ind">Step 1 of 3</span>
+      <button class="modal-next" id="modal-next">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MO AVATAR (fixed) ════════════════ -->
+<button class="mo-avatar-btn" id="mo-avatar-btn" title="Ask Mo" aria-label="Open Mo assistant">
+  <div class="mo-pulse-ring"></div>
+  <div class="mo-unread-dot"></div>
+  <div class="mo-face">
+    <svg class="mo-puff-face" viewBox="0 0 80 80" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+      <ellipse class="puff-shadow" cx="40" cy="72" rx="20" ry="4"/>
+      <path class="puff-body" stroke="#D5DBE8" stroke-width="1.5" d="M18 52 C18 66 28 74 40 74 C52 74 62 66 62 52 L62 34 C62 20 52 12 40 12 C28 12 18 20 18 34 Z"/>
+      <path class="puff-body" stroke="#D5DBE8" stroke-width="1.2" d="M18 38 C10 38 6 43 6 48 C6 53 10 57 18 57 Z"/>
+      <path class="puff-body" stroke="#D5DBE8" stroke-width="1.2" d="M62 38 C70 38 74 43 74 48 C74 53 70 57 62 57 Z"/>
+      <ellipse class="cheek" cx="26" cy="52" rx="6" ry="4"/>
+      <ellipse class="cheek" cx="54" cy="52" rx="6" ry="4"/>
+      <rect class="goggle-strap" x="14" y="30" width="52" height="7" rx="3.5"/>
+      <path class="goggle-frame" d="M16 27 C16 22 20 18 26 18 L36 18 C40 18 42 20 42 24 L42 34 C42 38 39 40 35 40 L26 40 C20 40 16 36 16 32 Z"/>
+      <path class="goggle-frame" d="M64 27 C64 22 60 18 54 18 L44 18 C40 18 38 20 38 24 L38 34 C38 38 41 40 45 40 L54 40 C60 40 64 36 64 32 Z"/>
+      <path class="goggle-lens-l" d="M18 27 C18 23 21 20 26 20 L35 20 C38 20 40 22 40 25 L40 33 C40 37 38 38 35 38 L26 38 C21 38 18 35 18 32 Z"/>
+      <path class="goggle-lens-r" d="M62 27 C62 23 59 20 54 20 L45 20 C42 20 40 22 40 25 L40 33 C40 37 42 38 45 38 L54 38 C59 38 62 35 62 32 Z"/>
+      <ellipse class="goggle-shine" cx="27" cy="25" rx="4" ry="2.5"/>
+      <ellipse class="goggle-shine" cx="53" cy="25" rx="4" ry="2.5"/>
+      <text class="sparkle" x="8" y="18" font-size="8" font-family="sans-serif">&#10022;</text>
+      <text class="sparkle" x="63" y="14" font-size="6" font-family="sans-serif">&#10022;</text>
+    </svg>
+  </div>
+</button>
+
+<!-- ═══════════════════════════ MO PANEL ════════════════════ -->
+<div class="mo-panel" id="mo-panel" role="complementary" aria-label="Mo assistant">
+
+  <!-- Panel header -->
+  <div class="mo-panel-hd">
+    <div class="mo-panel-avatar">
+      <svg class="mo-puff-face" viewBox="0 0 80 80" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+        <ellipse class="puff-shadow" cx="40" cy="72" rx="20" ry="4"/>
+        <path class="puff-body" stroke="#D5DBE8" stroke-width="1.5" d="M18 52 C18 66 28 74 40 74 C52 74 62 66 62 52 L62 34 C62 20 52 12 40 12 C28 12 18 20 18 34 Z"/>
+        <path class="puff-body" stroke="#D5DBE8" stroke-width="1.2" d="M18 38 C10 38 6 43 6 48 C6 53 10 57 18 57 Z"/>
+        <path class="puff-body" stroke="#D5DBE8" stroke-width="1.2" d="M62 38 C70 38 74 43 74 48 C74 53 70 57 62 57 Z"/>
+        <ellipse class="cheek" cx="26" cy="52" rx="6" ry="4"/>
+        <ellipse class="cheek" cx="54" cy="52" rx="6" ry="4"/>
+        <rect class="goggle-strap" x="14" y="30" width="52" height="7" rx="3.5"/>
+        <path class="goggle-frame" d="M16 27 C16 22 20 18 26 18 L36 18 C40 18 42 20 42 24 L42 34 C42 38 39 40 35 40 L26 40 C20 40 16 36 16 32 Z"/>
+        <path class="goggle-frame" d="M64 27 C64 22 60 18 54 18 L44 18 C40 18 38 20 38 24 L38 34 C38 38 41 40 45 40 L54 40 C60 40 64 36 64 32 Z"/>
+        <path class="goggle-lens-l" d="M18 27 C18 23 21 20 26 20 L35 20 C38 20 40 22 40 25 L40 33 C40 37 38 38 35 38 L26 38 C21 38 18 35 18 32 Z"/>
+        <path class="goggle-lens-r" d="M62 27 C62 23 59 20 54 20 L45 20 C42 20 40 22 40 25 L40 33 C40 37 42 38 45 38 L54 38 C59 38 62 35 62 32 Z"/>
+        <ellipse class="goggle-shine" cx="27" cy="25" rx="4" ry="2.5"/>
+        <ellipse class="goggle-shine" cx="53" cy="25" rx="4" ry="2.5"/>
+        <text class="sparkle" x="8" y="18" font-size="8" font-family="sans-serif">✦</text>
+        <text class="sparkle" x="63" y="14" font-size="6" font-family="sans-serif">✦</text>
+      </svg>
+    </div>
+    <div>
+      <div class="mo-panel-name">Mo</div>
+      <div class="mo-panel-sub">BUILT intelligence · always on</div>
+    </div>
+    <button class="mo-panel-close" id="mo-panel-close" title="Close Mo">✕</button>
+  </div>
+
+  <!-- Current screen context badge -->
+  <div class="mo-context-badge">
+    <div class="mo-context-dot"></div>
+    Watching: <span class="mo-context-screen" id="mo-context-screen">Pack ladder</span>
+    &nbsp;·&nbsp; <span id="mo-context-focal">Mint Chip PUFF 4pk</span>
+  </div>
+
+  <!-- Messages thread -->
+  <div class="mo-messages" id="mo-messages">
+    <!-- Mo's proactive message injected here by JS -->
+  </div>
+
+  <!-- Input area -->
+  <div class="mo-input-area">
+    <div class="mo-suggestions" id="mo-suggestions">
+      <!-- Contextual suggestion chips injected by JS -->
+    </div>
+    <div class="mo-input-row">
+      <textarea
+        class="mo-input"
+        id="mo-input"
+        placeholder="Ask Mo anything…"
+        rows="1"
+        aria-label="Message Mo"
+      ></textarea>
+      <button class="mo-send-btn" id="mo-send-btn" title="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Phase & subnav config ─────────────────────────────────────
+const phases = {
+  determine: {
+    screens: [
+      { id: 'events', label: 'Priority events', dot: 'dot-red', count: 4 },
+      { id: 'summary', label: 'SKU summary', dot: 'dot-amber' }
+    ]
+  },
+  diagnose: {
+    screens: [
+      { id: 'geo', label: 'Geography', dot: 'dot-gray' },
+      { id: 'pack', label: 'Pack ladder', dot: 'dot-amber' },
+      { id: 'crossflavor', label: 'Cross-flavor', dot: 'dot-gray' },
+      { id: 'competitive', label: 'Competitive', dot: 'dot-gray' },
+      { id: 'prepost', label: 'Pre / post', dot: 'dot-gray' },
+      { id: 'pool', label: 'Pool health', dot: 'dot-blue' },
+      { id: 'ramp', label: 'Ramp monitor', dot: 'dot-amber' }
+    ]
+  },
+  decide: {
+    screens: [
+      { id: 'explain', label: 'Explanation', dot: 'dot-blue' },
+      { id: 'forecast', label: 'Forecast', dot: 'dot-blue' },
+      { id: 'action', label: 'Action', dot: 'dot-green' }
+    ]
+  }
+};
+
+let activePhase = 'diagnose';
+let activeScreen = 'pack';
+
+function buildSubnav(phase) {
+  const subnav = document.getElementById('subnav');
+  subnav.innerHTML = '';
+  phases[phase].screens.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'subnav-btn' + (s.id === activeScreen ? ' active' : '');
+    btn.dataset.screen = s.id;
+    let inner = `<span class="subnav-dot ${s.dot}"></span>${s.label}`;
+    if (s.count) inner += ` <span class="subnav-count">${s.count}</span>`;
+    btn.innerHTML = inner;
+    btn.addEventListener('click', () => showScreen(s.id));
+    subnav.appendChild(btn);
+  });
+}
+
+function showPhase(phase) {
+  activePhase = phase;
+  document.querySelectorAll('.phase-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.phase === phase);
+    b.classList.remove('done');
+  });
+  // Mark prior phases as done
+  const order = ['determine', 'diagnose', 'decide'];
+  const idx = order.indexOf(phase);
+  order.slice(0, idx).forEach(p => {
+    document.querySelector(`[data-phase="${p}"]`).classList.add('done');
+  });
+
+  // Default to first screen of phase
+  const first = phases[phase].screens[0].id;
+  activeScreen = first;
+  buildSubnav(phase);
+  showScreenContent(first);
+}
+
+function showScreen(id) {
+  activeScreen = id;
+  // Update subnav active
+  document.querySelectorAll('.subnav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.screen === id);
+  });
+  showScreenContent(id);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showScreenContent(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+}
+
+// Phase buttons
+document.querySelectorAll('.phase-btn').forEach(btn => {
+  btn.addEventListener('click', () => showPhase(btn.dataset.phase));
+});
+
+// Drill links inside event cards
+document.querySelectorAll('.drill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.screen;
+    // Find which phase owns this screen
+    for (const [phase, cfg] of Object.entries(phases)) {
+      if (cfg.screens.find(s => s.id === target)) {
+        showPhase(phase);
+        showScreen(target);
+        return;
+      }
+    }
+  });
+});
+
+// Init
+showPhase('diagnose');
+showScreen('pack');
+
+// ── Dist strip ────────────────────────────────────────────────
+document.querySelectorAll('.dist-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.closest('.dist-strip').querySelectorAll('.dist-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ── Expandable ramp rows ──────────────────────────────────────
+document.querySelectorAll('.expand-trigger').forEach(row => {
+  row.addEventListener('click', () => {
+    const target = document.getElementById(row.dataset.row);
+    if (target) target.classList.toggle('open');
+  });
+});
+
+// ── Forecast scenarios ────────────────────────────────────────
+const scenarios = {
+  hold:      { hint:'Keep current door count and shelf overlap. Cannibalization stays near today\'s 41% rate.', tdp:'63 -> 63', price:'Stable at $8.49', promo:'No change', overlap:'Current overlap', net:'+40 to +150', donor:'−70 to −150', rate:'36%–52%', bars:[42,43,43,42,41] },
+  selective: { hint:'Expand only in lower-risk accounts where donor pressure is weak. Club and Northeast are strong candidates; hold Texas and Mountain West.', tdp:'63 -> 80', price:'Stable at $8.49', promo:'No change', overlap:'Low-risk accounts', net:'+180 to +420', donor:'−90 to −240', rate:'28%–45%', bars:[39,37,36,35,34] },
+  broad:     { hint:'Push into all eligible accounts. Largest focal lift but cannibalization rate expected to exceed 50% by week 6 without assortment changes.', tdp:'63 -> 112', price:'Stable at $8.49', promo:'+2 weeks', overlap:'All eligible accounts', net:'−40 to +260', donor:'−260 to −520', rate:'46%–68%', bars:[45,49,52,55,57] },
+  reduce:    { hint:'Remove 4pk / 1ct overlap in high-risk accounts. Trims focal upside but protects the 1ct donor item.', tdp:'63 -> 56', price:'Stable at $8.49', promo:'No change', overlap:'Remove worst overlap', net:'+90 to +230', donor:'−30 to −110', rate:'16%–32%', bars:[35,31,28,25,23] },
+  test:      { hint:'Run controlled pilots before chain-wide expansion. Cleaner learning on true demand vs. donor transfer.', tdp:'63 -> 72', price:'Stable at $8.49', promo:'Matched control', overlap:'Pilot cells only', net:'+80 to +260', donor:'−50 to −160', rate:'24%–40%', bars:[38,36,35,34,33] }
+};
+
+document.querySelectorAll('.scenario-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const sc = scenarios[btn.dataset.sc];
+    document.getElementById('scenario-hint').textContent = sc.hint;
+    document.getElementById('sc-tdp').textContent = sc.tdp;
+    document.getElementById('sc-price').textContent = sc.price;
+    document.getElementById('sc-promo').textContent = sc.promo;
+    document.getElementById('sc-overlap').textContent = sc.overlap;
+    document.getElementById('sc-net').textContent = sc.net;
+    document.getElementById('sc-donor').textContent = sc.donor;
+    document.getElementById('sc-rate').textContent = sc.rate;
+    sc.bars.forEach((h, i) => {
+      const wrap = document.getElementById(`fb${i}`);
+      if (wrap) {
+        const col = wrap.querySelector('.rate-col');
+        col.style.height = `${h}%`;
+        col.dataset.rate = `${h}%`;
+      }
+    });
+  });
+});
+
+// ── Accordion ─────────────────────────────────────────────────
+document.querySelectorAll('.family-hd').forEach(hd => {
+  hd.addEventListener('click', () => {
+    const key = hd.dataset.fam;
+    const items = document.getElementById(`fi-${key}`);
+    const chev  = document.getElementById(`chev-${key}`);
+    const open = items.classList.toggle('open');
+    if (chev) chev.classList.toggle('open', open);
+  });
+});
+
+// ── SKU row selection ─────────────────────────────────────────
+let selectedSku = 'mint-chip-4pk';
+document.querySelectorAll('.sku-row').forEach(row => {
+  row.addEventListener('click', () => {
+    document.querySelectorAll('.sku-row').forEach(r => {
+      r.classList.remove('selected');
+      r.querySelector('.sku-check').textContent = '';
+    });
+    row.classList.add('selected');
+    row.querySelector('.sku-check').textContent = 'v';
+    selectedSku = row.dataset.sku;
+  });
+});
+
+// ── Scope options ─────────────────────────────────────────────
+document.querySelectorAll('.scope-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.scope-opt').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+
+// ── SKU search — accordion-aware ─────────────────────────────
+document.getElementById('sku-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+
+  document.querySelectorAll('.flavor-family').forEach(family => {
+    const items   = family.querySelector('.family-items');
+    const chev    = family.querySelector('.family-chev');
+    const rows    = family.querySelectorAll('.sku-row');
+    let anyVisible = false;
+
+    rows.forEach(row => {
+      const match = !q || row.textContent.toLowerCase().includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+    });
+
+    if (!q) {
+      // Restore default state: only first accordion open
+      const famId = family.querySelector('.family-hd').dataset.fam;
+      const isFirst = famId === 'chocmint';
+      items.classList.toggle('open', isFirst);
+      if (chev) chev.classList.toggle('open', isFirst);
+      family.style.display = '';
+    } else {
+      // Show/hide whole family based on matches; auto-open if has matches
+      family.style.display = anyVisible ? '' : 'none';
+      if (anyVisible) {
+        items.classList.add('open');
+        if (chev) chev.classList.add('open');
+      }
+    }
+  });
+});
+
+// ── Modal ─────────────────────────────────────────────────────
+const overlay = document.getElementById('modal-overlay');
+const mSteps  = [document.getElementById('modal-s1'), document.getElementById('modal-s2'), document.getElementById('modal-s3')];
+const mTabs   = [document.getElementById('step-tab-1'), document.getElementById('step-tab-2'), document.getElementById('step-tab-3')];
+const prevBtn = document.getElementById('modal-prev');
+const nextBtn = document.getElementById('modal-next');
+const stepInd = document.getElementById('step-ind');
+let mStep = 0;
+
+function goToStep(n) {
+  mSteps.forEach((s, i) => s.style.display = i === n ? '' : 'none');
+  mTabs.forEach((t, i) => {
+    t.classList.toggle('active', i === n);
+    i < n ? t.classList.add('done') : t.classList.remove('done');
+  });
+  prevBtn.style.visibility = n === 0 ? 'hidden' : 'visible';
+  nextBtn.textContent = n === 2 ? 'Apply' : 'Next';
+  nextBtn.className   = n === 2 ? 'modal-apply' : 'modal-next';
+  stepInd.textContent = 'Step ' + (n + 1) + ' of 3';
+  mStep = n;
+}
+
+document.getElementById('focal-pill-btn').addEventListener('click', () => {
+  overlay.classList.add('open');
+  goToStep(0);
+  document.getElementById('sku-search').focus();
+});
+document.getElementById('modal-close').addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('open'); });
+
+prevBtn.addEventListener('click', () => { if (mStep > 0) goToStep(mStep - 1); });
+nextBtn.addEventListener('click', () => {
+  if (mStep < 2) { goToStep(mStep + 1); return; }
+  // Apply
+  const skuNames = {
+    // CHOCOLATE MINT
+    'mint-chip-4pk':'Mint Chip PUFF 4pk','mint-chip-1ct':'Mint Chip PUFF 1ct',
+    'mint-chip-12pk':'Mint Chip PUFF 12pk','mint-brownie-1ct':'Mint Brownie BAR 1ct',
+    'grasshopper-1ct':'Grasshopper Cookie BAR 1ct',
+    // CARAMEL
+    'sc-puff-4pk':'Salted Caramel PUFF 4pk','sc-puff-12pk':'Salted Caramel PUFF 12pk',
+    'sc-bar-1ct':'Salted Caramel BAR 1ct','sc-bar-12pk':'Salted Caramel BAR 12pk',
+    'sc-choc-18pk':'Salted Caramel Chocolate BAR 18pk',
+    // BROWNIE
+    'bb-1ct':'Brownie Batter PUFF 1ct','bb-4pk':'Brownie Batter PUFF 4pk',
+    'bb-8pk':'Brownie Batter PUFF 8pk','bb-12pk':'Brownie Batter PUFF 12pk',
+    'ccb-1ct':'Candy Cane Brownie BAR 1ct',
+    // COCONUT
+    'coc-puff-1ct':'Coconut PUFF 1ct','coc-puff-4pk':'Coconut PUFF 4pk',
+    'coc-puff-8pk':'Coconut PUFF 8pk','coc-puff-12pk':'Coconut PUFF 12pk',
+    'coc-bar-1ct':'Coconut BAR 1ct','coc-bar-12pk':'Coconut BAR 12pk',
+    'coc-alm-1ct':'Coconut Almond BAR 1ct','coc-alm-18pk':'Coconut Almond BAR 18pk',
+    'coc-brn-1ct':'Coconut Brownie PUFF 1ct','coc-choc-18pk':'Coconut Chocolate BAR 18pk',
+    // COOKIE DOUGH
+    'cd-puff-1ct':'Cookie Dough PUFF 1ct','cd-puff-4pk':'Cookie Dough PUFF 4pk',
+    'cd-puff-12pk':'Cookie Dough PUFF 12pk','cd-bar-1ct':'Cookie Dough BAR 1ct',
+    // COOKIES AND CREAM
+    'cnc-puff-1ct':'Cookies N Cream PUFF 1ct','cnc-puff-4pk':'Cookies N Cream PUFF 4pk',
+    'cnc-puff-12pk':'Cookies N Cream PUFF 12pk','cnc-bar-1ct':'Cookies and Cream BAR 1ct',
+    'cnc-bar-4pk':'Cookies and Cream BAR 4pk','cnc-bar-16pk':'Cookies N Cream BAR 16pk',
+    // STRAWBERRY
+    'snc-1ct':'Strawberries N Cream PUFF 1ct','snc-4pk':'Strawberries N Cream PUFF 4pk',
+    'snc-12pk':'Strawberries N Cream PUFF 12pk',
+    // PEANUT BUTTER
+    'pb-puff-1ct':'Peanut Butter PUFF 1ct','pb-puff-12pk':'Peanut Butter PUFF 12pk',
+    'pb-cookie-1ct':'Peanut Butter Cookie PUFF 1ct','pb-cup-4pk':'Peanut Butter Cup PUFF 4pk',
+    'pb-bar-1ct':'Peanut Butter BAR 1ct',
+    // CHOCOLATE PEANUT
+    'cpb-brn-16pk':'Peanut Butter Brownie BAR 16pk','cpb-brn-18pk':'Peanut Butter Brown BAR 18pk',
+    // CHOCOLATE
+    'dbl-choc-4pk':'Double Chocolate BAR 4pk','dbl-choc-12pk':'Double Chocolate BAR 12pk',
+    'dbl-choc-16pk':'Double Chocolate BAR 16pk','dbl-choc-fudge':'Double Chocolate Fudge BAR 1ct',
+    'mud-pie-1ct':'Mud Pie BAR 1ct','choc-milk-1ct':'Chocolate Milkshake PUFF 1ct',
+    'rocky-road-1ct':'Rocky Road PUFF 1ct',
+    // BANANA
+    'bcp-puff-1ct':'Banana Cream Pie PUFF 1ct','bcp-puff-12pk':'Banana Cream Pie PUFF 12pk',
+    // LEMON
+    'lmp-1ct':'Lemon Meringue Pie PUFF 1ct','lmp-4pk':'Lemon Meringue Pie PUFF 4pk',
+    // OTHER / SEASONAL
+    'churro-1ct':'Churro PUFF 1ct','churro-12pk':'Churro PUFF 12pk',
+    'bday-cake-1ct':'Birthday Cake PUFF 1ct','pumpkin-1ct':'Pumpkin Cookie PUFF 1ct',
+    'animal-1ct':'Animal Cookie BAR 1ct','smores-1ct':'S\'mores PUFF 1ct',
+    // SOUR PUFF
+    'sour-ga-1ct':'Sour Green Apple Crush 1ct','sour-ga-4pk':'Green Apple Crush Sour 4pk',
+    'sour-razz-1ct':'Sour Blu Razz Blast 1ct','sour-razz-12pk':'Sour Blue Razz Blast 12pk',
+    'sour-razz-4pk':'Sweet Sour Blue Raz Blast 4pk',
+    'sour-peach-1ct':'Peach Sour 1ct','sour-peach-4pk':'Sweet Peach Punch Sour 4pk',
+    'sour-lemon-4pk':'Pink Lemonade Squeeze 4pk'
+  };
+  document.getElementById('focal-pill-label').textContent = skuNames[selectedSku] || selectedSku;
+  overlay.classList.remove('open');
+  showPhase('diagnose');
+  showScreen('pack');
+});
+
+// ── MO ASSISTANT SYSTEM ──────────────────────────────────────
+
+// Screen-aware proactive messages + suggested prompts
+// When Aevah is ready, replace moGetProactiveMessage() with
+// a fetch() to window.AEVAH_ENDPOINT passing screenContext payload.
+
+const moScreenContent = {
+  events: {
+    label: 'Priority events',
+    proactive: {
+      tag: 'What the Puff?!',
+      body: "Four events flagged this cycle — one red, three amber. The Mountain West demand transfer is the one to act on first. 1ct donor is bleeding while 4pk climbs, and the pack ladder math doesn't lie. Club is the bright spot. Let's talk about what you want to do in Food channel before you expand further."
+    },
+    suggestions: ['Why is Mountain West red?', 'What should I do in Club?', 'Is the 1ct at real risk?']
+  },
+  summary: {
+    label: 'SKU summary',
+    proactive: {
+      tag: 'Mo\'s Read',
+      body: "52% cannibalization risk with 63% incremental share — that's a mixed signal, not a clean win. The unit gain is real but it's mostly distribution-led. TDP is up 26% while Units SPM fell 9%. That means you bought shelf, not demand. Good news: 4pk has room to prove itself if you expand into the right accounts."
+    },
+    suggestions: ['Is this distribution-led or demand-led?', 'What does 63% incremental share mean?', 'Which accounts should I expand into?']
+  },
+  geo: {
+    label: 'Geography',
+    proactive: {
+      tag: 'Geography Check',
+      body: "Total US looks green but that's masking a real split. Mountain West is cannibalizing — 12% base unit decline isn't noise. Texas is Watch territory: TDP up, velocity down. Club is the cleanest story you have right now. Mo's suggestion: don't paint this with a broad brush. Market-by-market decisions are the move here."
+    },
+    suggestions: ['What\'s driving Mountain West?', 'Should I pull back in Texas?', 'How do I replicate Club performance?']
+  },
+  pack: {
+    label: 'Pack ladder',
+    proactive: {
+      tag: 'Pack Ladder Alert',
+      body: "The 4pk is taking from the 1ct — pack size gap of 3 units puts these two in direct substitution territory. The 1ct lost ~18% base share in Mountain West since the 4pk launched. That's not coincidence. The 12pk is mostly insulated — gap of 8 puts it in low-substitution range. Protect the 1ct in high-risk accounts before you push 4pk harder."
+    },
+    suggestions: ['How bad is the 1ct exposure?', 'Should I delist 12pk?', 'What\'s the pack size gap threshold for high substitution?']
+  },
+  crossflavor: {
+    label: 'Cross-flavor',
+    proactive: {
+      tag: 'Cross-Flavor Signal',
+      body: "Grasshopper Cookie BAR 1ct is down 8% concurrent with the Mint Chip PUFF 4pk launch. That's a Medium-confidence cross-flavor signal — same CHOCOLATE MINT family. Worth watching but not worth panicking yet. Mint Brownie 1ct took a bigger hit at −14%. Mo's take: CHOCOLATE MINT as a group is under some pressure. Make sure both BAR flavors have enough shelf to hold their own."
+    },
+    suggestions: ['Is Grasshopper Cookie at risk?', 'Should I treat these as one pool?', 'What about Brownie Batter — is it affected?']
+  },
+  competitive: {
+    label: 'Competitive',
+    proactive: {
+      tag: 'Competitive Intel',
+      body: "Good news first: the Mountain West decline is internal, not competitive. RXBAR and BAREBELLS are holding or growing but they're not eating BUILT's lunch here. PERFECT BAR is growing in CHOCOLATE MINT — that's one to watch longer term. Your pack ladder churn is a BUILT-vs-BUILT story right now. Fix the internal dynamic first."
+    },
+    suggestions: ['Is BAREBELLS a threat?', 'What\'s PERFECT BAR doing in Chocolate Mint?', 'How does BUILT\'s velocity compare to RXBAR?']
+  },
+  prepost: {
+    label: 'Pre / post launch',
+    proactive: {
+      tag: 'Launch Diagnosis',
+      body: "TDP up 26%, Units SPM down 9%. Mo's translation: you distributed your way to a unit gain but the per-store pull isn't there yet. Base units are up 11% which is the real signal — the underlying demand is moving. The 1ct donor took a 14% hit in Texas. One promo week delta — not confounded. This looks like a distribution story waiting to become a demand story. Give it more time before cutting."
+    },
+    suggestions: ['When should I expect velocity to recover?', 'Is the 1ct loss permanent?', 'What does not confounded mean here?']
+  },
+  pool: {
+    label: 'Pool health',
+    proactive: {
+      tag: 'Pool Health Check',
+      body: "The Mint Chip pool is sequentially up but below last year — that's a yellow flag, not red. 4pk now holds 34% of pool share, mostly taken from 1ct which dropped from 61% to 49%. Total pool size is 2,685 vs 2,860 year ago. Some of that gap is seasonal. Mo's read: the pool isn't shrinking from competition — it's reshuffling internally. Watch the 1ct share floor carefully."
+    },
+    suggestions: ['Is the pool shrinking or just reshuffling?', 'What\'s the 1ct floor before I should worry?', 'How does this compare to other BUILT flavor pools?']
+  },
+  ramp: {
+    label: 'Ramp monitor',
+    proactive: {
+      tag: 'Ramp Status',
+      body: "Mint Chip 4pk is at week 12 — scoring fully active and signal is maturing. The 8pk auto-detected at week 3 — suppressed until week 8, pending taxonomy review. Salted Caramel PUFF 4pk is the one to flag: TDP peaked W08 and is declining. That's genuine demand weakness, not a ramp artifact. Mo is already firing the underperforming event on that one."
+    },
+    suggestions: ['What happens at week 8 for the 8pk?', 'Should I be worried about Salted Caramel?', 'When does scoring go from Low to Medium confidence?']
+  },
+  explain: {
+    label: 'Explanation',
+    proactive: {
+      tag: 'Why This Flag',
+      body: "TDP expansion is the dominant driver at 82% SHAP weight — that's the engine behind the unit gain. But the 1ct donor base unit decline is pulling the cannibalization risk up to 52%. The pack size gap of 1ct->4pk sits at structural prior: high substitution likelihood. Promo delta is 1 week — not confounded. Bottom line: this is a real signal, Medium confidence, worth acting on in high-pressure geos."
+    },
+    suggestions: ['What would push this to High confidence?', 'Explain the SHAP drivers in plain English', 'What does promo confounded mean?']
+  },
+  forecast: {
+    label: 'Forecast',
+    proactive: {
+      tag: 'Next Move',
+      body: "Selective expansion is Mo's recommendation: +180 to +420 net incremental units, cannibalization rate dropping from 41% toward 28–45% by week 13. Broad expansion gets you more volume but pushes the rate above 50% by week 6. Mountain West needs overlap reduction now — the rate there is already 48–62%. Club and Northeast are your cleanest expansion targets."
+    },
+    suggestions: ['Which accounts should I expand into first?', 'What happens if I do nothing?', 'How confident is the forecast?']
+  },
+  action: {
+    label: 'Action',
+    proactive: {
+      tag: 'Bottom Line',
+      body: "Here's Mo's one-page read: keep the 1ct protected in Food, expand 4pk selectively into Club and Northeast, monitor 12pk, and put Salted Caramel 4pk on the review list. CONVENTIONAL|MASS MERCH needs overlap reduction now — cannibalization rate is too high to ignore. The 8pk is in timeout until week 8. That's the playbook."
+    },
+    suggestions: ['Draft a buyer deck summary', 'What\'s the risk if I do nothing in Mass Merch?', 'Write the action plan for my team']
+  }
+};
+
+// Mock Aevah responses — replace fetch() with real endpoint when ready
+const moMockResponses = [
+  "Great question. Based on the current scoring, {context}. When Aevah is fully connected, I'll pull live Druid data to give you a sharper answer.",
+  "Mo's take: {context}. The SHAP drivers are pointing in one direction here — this isn't noise.",
+  "What the Puff — good catch. {context}. That's exactly the kind of signal you want to act on before the next buyer meeting.",
+  "Looking at the pack ladder data: {context}. The math is pretty clear on this one.",
+  "Honestly? {context}. Mo would flag this for the category team before the next reset window closes."
+];
+
+const moContextFills = {
+  pack: "the 1ct is absorbing most of the pressure from the 4pk launch in Mountain West",
+  geo: "Club is the cleanest channel and Food is the highest-risk expansion target right now",
+  events: "the Mountain West demand transfer is the priority event — everything else is Watch",
+  forecast: "selective expansion into Club and Northeast gives you the best risk-adjusted upside",
+  action: "the immediate priority is protecting 1ct in Mass Merch and holding expansion in Texas"
+};
+
+// State
+let moIsOpen = false;
+let moCurrentScreen = 'pack';
+let moHasUnread = false;
+let moConversationHistory = {};
+let moTypingTimeout = null;
+
+// Elements
+const moAvatarBtn = document.getElementById('mo-avatar-btn');
+const moPanel = document.getElementById('mo-panel');
+const moPanelClose = document.getElementById('mo-panel-close');
+const moMessages = document.getElementById('mo-messages');
+const moInput = document.getElementById('mo-input');
+const moSendBtn = document.getElementById('mo-send-btn');
+const moSuggestions = document.getElementById('mo-suggestions');
+const moContextScreen = document.getElementById('mo-context-screen');
+const moContextFocal = document.getElementById('mo-context-focal');
+
+function moAvatarSVG(size) {
+  size = size || 22;
+  return '<svg class="mo-puff-face" viewBox="0 0 80 80" width="' + size + '" height="' + size + '" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse class="puff-shadow" cx="40" cy="72" rx="20" ry="4"/>'
+    + '<path class="puff-body" stroke="#D5DBE8" stroke-width="1.5" d="M18 52 C18 66 28 74 40 74 C52 74 62 66 62 52 L62 34 C62 20 52 12 40 12 C28 12 18 20 18 34 Z"/>'
+    + '<path class="puff-body" stroke="#D5DBE8" stroke-width="1.2" d="M18 38 C10 38 6 43 6 48 C6 53 10 57 18 57 Z"/>'
+    + '<path class="puff-body" stroke="#D5DBE8" stroke-width="1.2" d="M62 38 C70 38 74 43 74 48 C74 53 70 57 62 57 Z"/>'
+    + '<ellipse class="cheek" cx="26" cy="52" rx="6" ry="4"/>'
+    + '<ellipse class="cheek" cx="54" cy="52" rx="6" ry="4"/>'
+    + '<rect class="goggle-strap" x="14" y="30" width="52" height="7" rx="3.5"/>'
+    + '<path class="goggle-frame" d="M16 27 C16 22 20 18 26 18 L36 18 C40 18 42 20 42 24 L42 34 C42 38 39 40 35 40 L26 40 C20 40 16 36 16 32 Z"/>'
+    + '<path class="goggle-frame" d="M64 27 C64 22 60 18 54 18 L44 18 C40 18 38 20 38 24 L38 34 C38 38 41 40 45 40 L54 40 C60 40 64 36 64 32 Z"/>'
+    + '<path class="goggle-lens-l" d="M18 27 C18 23 21 20 26 20 L35 20 C38 20 40 22 40 25 L40 33 C40 37 38 38 35 38 L26 38 C21 38 18 35 18 32 Z"/>'
+    + '<path class="goggle-lens-r" d="M62 27 C62 23 59 20 54 20 L45 20 C42 20 40 22 40 25 L40 33 C40 37 42 38 45 38 L54 38 C59 38 62 35 62 32 Z"/>'
+    + '<ellipse class="goggle-shine" cx="27" cy="25" rx="4" ry="2.5"/>'
+    + '<ellipse class="goggle-shine" cx="53" cy="25" rx="4" ry="2.5"/>'
+    + '<text class="sparkle" x="8" y="18" font-size="8" font-family="sans-serif">\u2736</text>'
+    + '</svg>';
+}
+
+function moOpen() {
+  moIsOpen = true;
+  moPanel.classList.add('mo-panel-open');
+  moAvatarBtn.classList.add('mo-open');
+  moAvatarBtn.classList.remove('mo-has-message');
+  moHasUnread = false;
+  moInput.focus();
+}
+
+function moClose() {
+  moIsOpen = false;
+  moPanel.classList.remove('mo-panel-open');
+  moAvatarBtn.classList.remove('mo-open');
+}
+
+function moToggle() {
+  moIsOpen ? moClose() : moOpen();
+}
+
+function moSetContext(screenId, focalLabel) {
+  const screenData = moScreenContent[screenId];
+  if (!screenData) return;
+  moContextScreen.textContent = screenData.label;
+  if (focalLabel) moContextFocal.textContent = focalLabel;
+}
+
+function moAddMessage(role, content, tag) {
+  var msg = document.createElement('div');
+  var timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  if (role === 'mo') {
+    msg.className = 'mo-msg';
+    var tagHtml = tag ? '<strong>' + tag + '</strong>' : '';
+    msg.innerHTML = '<div class="mo-msg-avatar">' + moAvatarSVG(22) + '</div>'
+      + '<div class="mo-msg-bubble">'
+      + tagHtml
+      + content
+      + '<div class="mo-msg-footer">Mo &middot; ' + timeStr + '</div>'
+      + '</div>';
+  } else {
+    msg.className = 'mo-user-msg';
+    msg.innerHTML = '<div class="mo-user-bubble">' + content + '</div>';
+  }
+  moMessages.appendChild(msg);
+  moMessages.scrollTop = moMessages.scrollHeight;
+}
+
+function moShowTyping() {
+  var typing = document.createElement('div');
+  typing.className = 'mo-typing';
+  typing.id = 'mo-typing-indicator';
+  typing.innerHTML = '<div class="mo-msg-avatar">' + moAvatarSVG(22) + '</div>'
+    + '<div class="mo-typing-dots"><span></span><span></span><span></span></div>';
+  moMessages.appendChild(typing);
+  moMessages.scrollTop = moMessages.scrollHeight;
+}
+
+function moRemoveTyping() {
+  const el = document.getElementById('mo-typing-indicator');
+  if (el) el.remove();
+}
+
+function moSetSuggestions(screenId) {
+  const data = moScreenContent[screenId];
+  moSuggestions.innerHTML = '';
+  if (!data || !data.suggestions) return;
+  data.suggestions.forEach(s => {
+    const chip = document.createElement('button');
+    chip.className = 'mo-suggestion-chip';
+    chip.textContent = s;
+    chip.addEventListener('click', () => moSubmitMessage(s));
+    moSuggestions.appendChild(chip);
+  });
+}
+
+// Called when user navigates to a new screen
+// Replace this function's fetch() mock with real Aevah call when ready
+async function moOnScreenChange(screenId, focalLabel) {
+  moCurrentScreen = screenId;
+  moSetContext(screenId, focalLabel);
+  moSetSuggestions(screenId);
+
+  const data = moScreenContent[screenId];
+  if (!data) return;
+
+  // Clear old proactive message but keep conversation history
+  // (In production: persist history per session in moConversationHistory[screenId])
+  if (!moConversationHistory[screenId]) {
+    moConversationHistory[screenId] = [];
+
+    // Simulate Aevah generating a proactive message
+    if (moIsOpen) {
+      moShowTyping();
+      await new Promise(r => setTimeout(r, 1100 + Math.random() * 600));
+      moRemoveTyping();
+      moAddMessage('mo', data.proactive.body, data.proactive.tag);
+      moConversationHistory[screenId].push({ role: 'mo', content: data.proactive.body });
+    } else {
+      // Not open — queue an unread notification
+      moHasUnread = true;
+      moAvatarBtn.classList.add('mo-has-message');
+      // Store proactive message so it shows when user opens panel
+      moConversationHistory[screenId].push({ role: 'mo', content: data.proactive.body, tag: data.proactive.tag, pending: true });
+    }
+  } else {
+    // Screen revisited — replay existing thread
+    if (moIsOpen) {
+      moMessages.innerHTML = '';
+      moConversationHistory[screenId].forEach(m => {
+        moAddMessage(m.role, m.content, m.tag);
+      });
+    }
+  }
+}
+
+// Show pending proactive message when user opens panel
+function moFlushPending(screenId) {
+  const history = moConversationHistory[screenId];
+  if (!history) return;
+  moMessages.innerHTML = '';
+  history.forEach(m => {
+    moAddMessage(m.role, m.content, m.tag);
+    if (m.pending) m.pending = false;
+  });
+}
+
+// Submit a message (user typed or tapped a chip)
+async function moSubmitMessage(text) {
+  if (!text.trim()) return;
+  moInput.value = '';
+  moInput.style.height = 'auto';
+  moSuggestions.innerHTML = ''; // hide chips after first question
+
+  moAddMessage('user', text);
+
+  if (!moConversationHistory[moCurrentScreen]) {
+    moConversationHistory[moCurrentScreen] = [];
+  }
+  moConversationHistory[moCurrentScreen].push({ role: 'user', content: text });
+
+  moShowTyping();
+
+  // ── AEVAH HOOK ────────────────────────────────────────────
+  // When Aevah is ready, replace the mock below with:
+  //
+  // const response = await fetch(window.AEVAH_ENDPOINT, {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     session_id: moSessionId,
+  //     focal_upc: window.moFocalUpc,
+  //     active_screen: moCurrentScreen,
+  //     screen_context: moGetScreenContext(moCurrentScreen),
+  //     messages: moConversationHistory[moCurrentScreen]
+  //   })
+  // });
+  // const data = await response.json();
+  // const reply = data.message;
+  // ─────────────────────────────────────────────────────────
+
+  await new Promise(r => setTimeout(r, 900 + Math.random() * 800));
+  moRemoveTyping();
+
+  // Mock reply — Aevah replaces this
+  const contextFill = moContextFills[moCurrentScreen] || "the data is pointing in a clear direction here";
+  const template = moMockResponses[Math.floor(Math.random() * moMockResponses.length)];
+  const reply = template.replace('{context}', contextFill);
+
+  moAddMessage('mo', reply);
+  moConversationHistory[moCurrentScreen].push({ role: 'mo', content: reply });
+}
+
+// Wire up avatar button
+moAvatarBtn.addEventListener('click', () => {
+  moToggle();
+  if (moIsOpen) {
+    moFlushPending(moCurrentScreen);
+    moSetSuggestions(moCurrentScreen);
+    // Trigger proactive message if first open on this screen
+    moOnScreenChange(moCurrentScreen, document.getElementById('focal-pill-label').textContent);
+  }
+});
+
+moPanelClose.addEventListener('click', moClose);
+
+// Send on button click
+moSendBtn.addEventListener('click', () => moSubmitMessage(moInput.value));
+
+// Send on Enter (Shift+Enter for newline)
+moInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    moSubmitMessage(moInput.value);
+  }
+});
+
+// Auto-resize textarea
+moInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 90) + 'px';
+});
+
+// Hook into existing showScreen to notify Mo
+const _originalShowScreenContent = showScreenContent;
+window.showScreenContent = function(id) {
+  _originalShowScreenContent(id);
+  const focal = document.getElementById('focal-pill-label').textContent;
+  moOnScreenChange(id, focal);
+};
+
+// Init Mo on load
+window.addEventListener('load', () => {
+  moSetContext('pack', 'Mint Chip PUFF 4pk');
+  moSetSuggestions('pack');
+  // Trigger first proactive message after short delay
+  setTimeout(() => {
+    if (!moIsOpen) {
+      moHasUnread = true;
+      moAvatarBtn.classList.add('mo-has-message');
+      const data = moScreenContent['pack'];
+      if (!moConversationHistory['pack']) {
+        moConversationHistory['pack'] = [{
+          role: 'mo',
+          content: data.proactive.body,
+          tag: data.proactive.tag,
+          pending: true
+        }];
+      }
+    }
+  }, 1800);
+});
+
+// Expose endpoint config for Aevah integration
+window.AEVAH_ENDPOINT = null; // Set to your Aevah endpoint URL when ready
+window.moFocalUpc = null;     // Set to current focal UPC from your data layer
+</script>
+</body>
+</html>

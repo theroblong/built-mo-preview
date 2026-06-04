@@ -1,0 +1,1369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mo Cannibalization Workbench</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #5b6470;
+      --line: #d8dee7;
+      --panel: #ffffff;
+      --page: #f5f7fa;
+      --nav: #20252b;
+      --nav-soft: #2f3740;
+      --teal: #007a78;
+      --teal-soft: #dff4f2;
+      --blue: #315fbe;
+      --blue-soft: #e6eefc;
+      --coral: #bf4c42;
+      --coral-soft: #fae8e5;
+      --gold: #9b711c;
+      --gold-soft: #fff0c4;
+      --green: #287a45;
+      --green-soft: #e5f4e9;
+      --purple: #6e4aa3;
+      --shadow: 0 18px 45px rgba(22, 31, 42, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--page);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: var(--nav);
+      color: #f8fafc;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .mo-mark {
+      width: 60px;
+      height: 60px;
+      display: block;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.05;
+      font-weight: 780;
+    }
+
+    .brand-subtitle {
+      margin-top: 5px;
+      color: #b9c4d0;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .nav-section-label {
+      color: #97a6b5;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 760;
+      margin: 8px 8px 0;
+    }
+
+    .nav-button {
+      width: 100%;
+      border: 0;
+      color: #dce5ef;
+      background: transparent;
+      border-radius: 7px;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 10px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 140ms ease, color 140ms ease;
+    }
+
+    .nav-button:hover,
+    .nav-button.active {
+      background: var(--nav-soft);
+      color: #ffffff;
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: inline-grid;
+      place-items: center;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-note {
+      margin-top: auto;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .sidebar-note strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-note p {
+      margin: 0;
+      color: #c7d1dc;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .headline {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin: 0 0 4px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.08;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 9px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      min-height: 38px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #ffffff;
+    }
+
+    .button:focus-visible,
+    .nav-button:focus-visible,
+    .chip:focus-visible,
+    .tab:focus-visible {
+      outline: 3px solid rgba(49, 95, 190, 0.35);
+      outline-offset: 2px;
+    }
+
+    .hero-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 290px;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .hero-copy,
+    .mo-panel,
+    .card,
+    .builder,
+    .drawer {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 0 rgba(17, 24, 39, 0.03);
+    }
+
+    .hero-copy {
+      padding: 20px;
+      display: grid;
+      align-content: center;
+      gap: 10px;
+    }
+
+    .hero-copy h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      max-width: 820px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .mo-panel {
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      min-height: 190px;
+    }
+
+    .mo-panel svg {
+      width: 100%;
+      height: 150px;
+      display: block;
+    }
+
+    .mo-caption {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .slogan {
+      color: var(--purple);
+      font-weight: 850;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .builder {
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section-title h2,
+    .section-title h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      min-height: 38px;
+      padding: 8px 10px;
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .segmented button {
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: #ffffff;
+      padding: 8px;
+      min-height: 36px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .segmented button:last-child {
+      border-right: 0;
+    }
+
+    .segmented button.active {
+      color: var(--teal);
+      background: var(--teal-soft);
+    }
+
+    .chips {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 999px;
+      color: var(--muted);
+      min-height: 30px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .chip.selected {
+      color: var(--teal);
+      background: var(--teal-soft);
+      border-color: #a2d9d4;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 2px 0 12px;
+      margin-bottom: 4px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--muted);
+      border-radius: 999px;
+      min-height: 34px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--ink);
+      color: #ffffff;
+      border-color: var(--ink);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      min-height: 112px;
+      display: grid;
+      align-content: space-between;
+      gap: 8px;
+    }
+
+    .metric-card .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .metric-card .value {
+      font-size: 26px;
+      font-weight: 860;
+      line-height: 1;
+    }
+
+    .metric-card .delta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .positive {
+      color: var(--green);
+    }
+
+    .warning {
+      color: var(--gold);
+    }
+
+    .risk {
+      color: var(--coral);
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+      gap: 16px;
+    }
+
+    .card {
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .chart {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 48px;
+      gap: 10px;
+      align-items: center;
+      min-height: 30px;
+      font-size: 12px;
+    }
+
+    .bar-track {
+      height: 12px;
+      background: #eef2f6;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--teal);
+    }
+
+    .bar.gold {
+      background: #d6a62c;
+    }
+
+    .bar.coral {
+      background: var(--coral);
+    }
+
+    .trend {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 6px;
+      align-items: end;
+      min-height: 140px;
+      padding: 14px 4px 0;
+    }
+
+    .trend-bar {
+      min-width: 12px;
+      border-radius: 5px 5px 0 0;
+      background: var(--blue);
+      position: relative;
+    }
+
+    .trend-bar.low {
+      background: var(--coral);
+    }
+
+    .trend-bar.mid {
+      background: #d6a62c;
+    }
+
+    .trend-bar::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -18px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #ffffff;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 11px;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-weight: 850;
+      font-size: 12px;
+      min-width: 64px;
+    }
+
+    .status.good {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .status.watch {
+      color: var(--gold);
+      background: var(--gold-soft);
+    }
+
+    .status.bad {
+      color: var(--coral);
+      background: var(--coral-soft);
+    }
+
+    .status.info {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .win-cell {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 6px;
+      font-weight: 850;
+      font-size: 12px;
+    }
+
+    .win {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .loss {
+      color: var(--coral);
+      background: var(--coral-soft);
+    }
+
+    .flat {
+      color: var(--muted);
+      background: #eef2f6;
+    }
+
+    .flag {
+      color: var(--gold);
+      background: var(--gold-soft);
+    }
+
+    .map-grid {
+      display: grid;
+      grid-template-columns: 120px repeat(5, minmax(100px, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: auto;
+      min-width: 760px;
+    }
+
+    .map-cell {
+      min-height: 54px;
+      padding: 9px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      font-size: 12px;
+      background: #ffffff;
+    }
+
+    .map-cell.header {
+      background: #f8fafc;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .map-cell.pressure {
+      background: var(--coral-soft);
+      color: var(--coral);
+      font-weight: 850;
+    }
+
+    .map-cell.cowin {
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 850;
+    }
+
+    .map-cell.watch {
+      background: var(--gold-soft);
+      color: var(--gold);
+      font-weight: 850;
+    }
+
+    .drawer {
+      margin-top: 16px;
+      padding: 16px;
+      border-left: 4px solid var(--teal);
+    }
+
+    .drawer-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .drawer p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .provenance-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .prov-item {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px;
+      font-size: 12px;
+    }
+
+    .prov-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .scenario-box {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .sidebar nav {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .sidebar-note {
+        display: none;
+      }
+
+      .workspace-grid,
+      .hero-panel,
+      .content-grid,
+      .drawer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .builder {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .main {
+        padding: 14px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .metrics,
+      .scenario-box,
+      .provenance-list {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar nav {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .nav-button {
+        grid-template-columns: 24px 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg class="mo-mark" viewBox="0 0 120 120" role="img" aria-label="Mo mascot mark">
+          <defs>
+            <linearGradient id="puffGrad" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#fff7ef"/>
+              <stop offset="0.55" stop-color="#f7d9bc"/>
+              <stop offset="1" stop-color="#dca46e"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="54" fill="#ffffff" opacity="0.14"/>
+          <path d="M35 78c-12-4-18-15-15-27 3-12 13-20 25-19 7-13 25-17 38-8 10 7 14 18 11 29 8 6 10 18 4 27-6 10-20 14-31 8-10 5-23 3-32-10z" fill="url(#puffGrad)" stroke="#ffffff" stroke-width="4"/>
+          <circle cx="48" cy="58" r="5" fill="#17202a"/>
+          <circle cx="72" cy="58" r="5" fill="#17202a"/>
+          <path d="M51 73c7 7 20 7 27 0" fill="none" stroke="#17202a" stroke-width="5" stroke-linecap="round"/>
+          <path d="M28 40c-7-5-12-10-14-17" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+          <path d="M93 37c6-7 10-13 12-22" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <p class="brand-title">Mo Workbench</p>
+          <div class="brand-subtitle">BUILT cannibalization intelligence</div>
+        </div>
+      </div>
+
+      <nav aria-label="Workbench sections">
+        <div class="nav-section-label">Views</div>
+        <button class="nav-button active" data-tab="overview">
+          <span class="nav-icon">O</span><span>Overview</span>
+        </button>
+        <button class="nav-button" data-tab="matrix">
+          <span class="nav-icon">W</span><span>Win Matrix</span>
+        </button>
+        <button class="nav-button" data-tab="pressure">
+          <span class="nav-icon">P</span><span>Pair Pressure</span>
+        </button>
+        <button class="nav-button" data-tab="map">
+          <span class="nav-icon">M</span><span>SKU Map</span>
+        </button>
+        <button class="nav-button" data-tab="geo">
+          <span class="nav-icon">G</span><span>Geography</span>
+        </button>
+        <button class="nav-button" data-tab="scenario">
+          <span class="nav-icon">S</span><span>Scenario</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-note">
+        <strong>Mo says: what the puff?</strong>
+        <p>When one soft, airy puff wins, Mo checks whether the whole pool lifted or whether demand shifted from nearby SKUs.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="headline">
+          <p class="eyebrow">BUILT Puff texture meets portfolio science</p>
+          <h1>Mo Cannibalization Workbench</h1>
+        </div>
+        <div class="top-actions">
+          <button class="button" type="button">Export PDF</button>
+          <button class="button" type="button">Share View</button>
+          <button class="button primary" type="button">Run Pool</button>
+        </div>
+      </header>
+
+      <section class="hero-panel" aria-label="Product framing">
+        <div class="hero-copy">
+          <h2>Compare any focal SKU set against any comparison pool.</h2>
+          <p>Mo tracks whether pack ladders, flavors, brand lines, competitor SKUs, and custom baskets are winning together or shifting demand internally. The mock data below uses Brownie Batter 4pk as the focal SKU and same-flavor pack sizes as the default pool.</p>
+        </div>
+        <div class="mo-panel">
+          <svg viewBox="0 0 360 190" role="img" aria-label="Mo Built Puff mascot illustration">
+            <defs>
+              <linearGradient id="moBody" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#fff6ee"/>
+                <stop offset="0.55" stop-color="#f0c89e"/>
+                <stop offset="1" stop-color="#d9955d"/>
+              </linearGradient>
+            </defs>
+            <rect x="14" y="20" width="332" height="128" rx="8" fill="#f8fafc" stroke="#d8dee7"/>
+            <path d="M108 124c-33-9-52-37-44-71 8-34 37-55 71-50 19-31 68-37 100-13 25 19 35 50 25 80 20 16 25 45 10 67-18 26-55 34-83 18-24 12-55 8-79-31z" transform="translate(24 17) scale(.78)" fill="url(#moBody)" stroke="#ffffff" stroke-width="7"/>
+            <circle cx="151" cy="80" r="7" fill="#17202a"/>
+            <circle cx="202" cy="80" r="7" fill="#17202a"/>
+            <path d="M159 102c17 14 40 14 57 0" fill="none" stroke="#17202a" stroke-width="7" stroke-linecap="round"/>
+            <path d="M105 64c-11-9-19-20-22-34" fill="none" stroke="#315fbe" stroke-width="6" stroke-linecap="round"/>
+            <path d="M246 61c10-12 17-25 20-41" fill="none" stroke="#007a78" stroke-width="6" stroke-linecap="round"/>
+            <text x="178" y="170" text-anchor="middle" font-size="20" font-weight="800" fill="#6e4aa3">what the puff?</text>
+          </svg>
+          <div class="mo-caption">
+            <span>Soft, airy, marshmallow-like signal layer</span>
+            <span class="slogan">Mo mode</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="workspace-grid">
+        <aside class="builder" aria-label="Comparison pool builder">
+          <div class="section-title">
+            <h2>Pool Builder</h2>
+            <span class="mini-label">Request 0427</span>
+          </div>
+
+          <div class="field">
+            <label for="focal">Focal set</label>
+            <select id="focal">
+              <option>BUILT Brownie Batter 4pk</option>
+              <option>All Brownie Batter SKUs</option>
+              <option>All BUILT Puff SKUs</option>
+              <option>Custom basket</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Focal grain</label>
+            <div class="segmented" role="group" aria-label="Focal grain">
+              <button class="active" type="button">UPC</button>
+              <button type="button">Flavor</button>
+              <button type="button">Basket</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Comparison pool</label>
+            <div class="chips" id="poolChips">
+              <button class="chip selected" type="button" data-pool="Pack ladder">Pack ladder</button>
+              <button class="chip" type="button" data-pool="Same flavor all brands">Same flavor</button>
+              <button class="chip" type="button" data-pool="Same family BUILT">Same family</button>
+              <button class="chip" type="button" data-pool="All BUILT flavors">All BUILT</button>
+              <button class="chip" type="button" data-pool="QUEST BAREBELLS RXBAR">Competitors</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="geo">Geography</label>
+            <select id="geo">
+              <option>Total US</option>
+              <option>Grocery</option>
+              <option>Club</option>
+              <option>Northeast</option>
+              <option>Southeast</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="window">Window</label>
+            <select id="window">
+              <option>Last 13 weeks</option>
+              <option>Last 26 weeks</option>
+              <option>Custom range</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="baseline">Win baseline</label>
+            <select id="baseline">
+              <option>Trailing 4-week productivity</option>
+              <option>Prior week</option>
+              <option>Same week last year</option>
+              <option>Pre-launch baseline</option>
+            </select>
+          </div>
+
+          <button class="button primary" type="button" style="width:100%; justify-content:center;">Refresh Mockup</button>
+        </aside>
+
+        <section class="workbench" aria-label="Cannibalization workbench">
+          <div class="tabs" role="tablist" aria-label="Workbench tabs">
+            <button class="tab active" data-tab="overview" type="button">Overview</button>
+            <button class="tab" data-tab="matrix" type="button">Win Matrix</button>
+            <button class="tab" data-tab="pressure" type="button">Pair Pressure</button>
+            <button class="tab" data-tab="map" type="button">SKU Map</button>
+            <button class="tab" data-tab="geo" type="button">Geography</button>
+            <button class="tab" data-tab="scenario" type="button">Scenario</button>
+          </div>
+
+          <section class="view active" id="overview">
+            <div class="metrics">
+              <div class="metric-card">
+                <div class="label">Group Units/TDP</div>
+                <div class="value positive">+6.4%</div>
+                <div class="delta">Reach-adjusted productivity</div>
+              </div>
+              <div class="metric-card">
+                <div class="label">Weekly Win Rate</div>
+                <div class="value">71%</div>
+                <div class="delta">5 of 7 SKUs winning on average</div>
+              </div>
+              <div class="metric-card">
+                <div class="label">Related Loss Rate</div>
+                <div class="value warning">29%</div>
+                <div class="delta">When focal SKU wins</div>
+              </div>
+              <div class="metric-card">
+                <div class="label">Pattern</div>
+                <div class="value" style="font-size:22px;">Healthy Mix</div>
+                <div class="delta">Some concentrated growth weeks</div>
+              </div>
+            </div>
+
+            <div class="content-grid">
+              <article class="card">
+                <div class="section-title">
+                  <h3>Win Percent Over Time</h3>
+                  <span class="mini-label">Last 13 weeks</span>
+                </div>
+                <div class="trend" aria-label="Weekly win percent bar chart">
+                  <div class="trend-bar" data-label="86" style="height:86%;"></div>
+                  <div class="trend-bar" data-label="71" style="height:71%;"></div>
+                  <div class="trend-bar mid" data-label="57" style="height:57%;"></div>
+                  <div class="trend-bar low" data-label="29" style="height:29%;"></div>
+                  <div class="trend-bar low" data-label="43" style="height:43%;"></div>
+                  <div class="trend-bar" data-label="71" style="height:71%;"></div>
+                  <div class="trend-bar" data-label="86" style="height:86%;"></div>
+                  <div class="trend-bar" data-label="86" style="height:86%;"></div>
+                  <div class="trend-bar mid" data-label="57" style="height:57%;"></div>
+                  <div class="trend-bar low" data-label="43" style="height:43%;"></div>
+                  <div class="trend-bar" data-label="71" style="height:71%;"></div>
+                  <div class="trend-bar" data-label="86" style="height:86%;"></div>
+                  <div class="trend-bar" data-label="71" style="height:71%;"></div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="section-title">
+                  <h3>Pool Composition</h3>
+                  <span class="mini-label" id="poolLabel">Pack ladder</span>
+                </div>
+                <div class="chart">
+                  <div class="chart-row">
+                    <span>4pk focal</span>
+                    <div class="bar-track"><div class="bar" style="width: 34%;"></div></div>
+                    <strong>34%</strong>
+                  </div>
+                  <div class="chart-row">
+                    <span>1ct</span>
+                    <div class="bar-track"><div class="bar gold" style="width: 28%;"></div></div>
+                    <strong>28%</strong>
+                  </div>
+                  <div class="chart-row">
+                    <span>8pk</span>
+                    <div class="bar-track"><div class="bar" style="width: 21%;"></div></div>
+                    <strong>21%</strong>
+                  </div>
+                  <div class="chart-row">
+                    <span>12pk</span>
+                    <div class="bar-track"><div class="bar coral" style="width: 17%;"></div></div>
+                    <strong>17%</strong>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="view" id="matrix">
+            <article class="card">
+              <div class="section-title">
+                <h3>SKU Win Matrix</h3>
+                <span class="mini-label">Baseline: trailing 4-week productivity</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>SKU / Week</th>
+                      <th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th><th>W6</th><th>W7</th><th>W8</th>
+                      <th>Win %</th><th>Role</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Brownie Batter 1ct</strong></td>
+                      <td><span class="win-cell win">+</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell loss">-</span></td>
+                      <td>50%</td><td><span class="status watch">Donor?</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Brownie Batter 4pk</strong></td>
+                      <td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td>
+                      <td>100%</td><td><span class="status info">Focal</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Brownie Batter 8pk</strong></td>
+                      <td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell flat">0</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell win">+</span></td>
+                      <td>63%</td><td><span class="status good">Co-win</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Brownie Batter 12pk</strong></td>
+                      <td><span class="win-cell win">+</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell loss">-</span></td><td><span class="win-cell win">+</span></td><td><span class="win-cell flag">D</span></td><td><span class="win-cell loss">-</span></td>
+                      <td>25%</td><td><span class="status bad">Pressure</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Group weekly win count</strong></td>
+                      <td>4</td><td>2</td><td>1</td><td>2</td><td>2</td><td>4</td><td>2</td><td>2</td>
+                      <td></td><td></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+
+          <section class="view" id="pressure">
+            <article class="card">
+              <div class="section-title">
+                <h3>Pairwise Pressure Ranking</h3>
+                <span class="mini-label">Focal: Brownie Batter 4pk</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Comparison SKU</th>
+                      <th>Relationship</th>
+                      <th>Opp. Rate</th>
+                      <th>P(Loses | Focal Wins)</th>
+                      <th>Co-Win</th>
+                      <th>Risk</th>
+                      <th>Top Driver</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Brownie Batter 12pk</strong></td>
+                      <td>Pack ladder</td>
+                      <td>62%</td>
+                      <td>74%</td>
+                      <td>18%</td>
+                      <td><span class="status bad">High</span></td>
+                      <td>Base units down</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Brownie Batter 1ct</strong></td>
+                      <td>Pack ladder</td>
+                      <td>45%</td>
+                      <td>59%</td>
+                      <td>31%</td>
+                      <td><span class="status watch">Med</span></td>
+                      <td>Velocity down</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Brownie Batter 8pk</strong></td>
+                      <td>Pack ladder</td>
+                      <td>21%</td>
+                      <td>28%</td>
+                      <td>64%</td>
+                      <td><span class="status good">Low</span></td>
+                      <td>Wins together</td>
+                    </tr>
+                    <tr>
+                      <td><strong>QUEST Chocolate Brownie</strong></td>
+                      <td>Same flavor cross-brand</td>
+                      <td>34%</td>
+                      <td>42%</td>
+                      <td>29%</td>
+                      <td><span class="status watch">Watch</span></td>
+                      <td>Retailer overlap</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+
+          <section class="view" id="map">
+            <article class="card">
+              <div class="section-title">
+                <h3>All-SKU Comparison Map</h3>
+                <span class="mini-label">Cell = relationship pattern</span>
+              </div>
+              <div style="overflow-x:auto;">
+                <div class="map-grid">
+                  <div class="map-cell header">Focal / Compare</div>
+                  <div class="map-cell header">1ct Brownie</div>
+                  <div class="map-cell header">4pk Brownie</div>
+                  <div class="map-cell header">8pk Brownie</div>
+                  <div class="map-cell header">12pk Brownie</div>
+                  <div class="map-cell header">QUEST</div>
+                  <div class="map-cell header">1ct Brownie</div>
+                  <div class="map-cell">Self</div>
+                  <div class="map-cell watch">Donates?</div>
+                  <div class="map-cell cowin">Co-wins</div>
+                  <div class="map-cell">Neutral</div>
+                  <div class="map-cell watch">Watch</div>
+                  <div class="map-cell header">4pk Brownie</div>
+                  <div class="map-cell pressure">Pressure</div>
+                  <div class="map-cell">Self</div>
+                  <div class="map-cell cowin">Co-wins</div>
+                  <div class="map-cell pressure">Pressure</div>
+                  <div class="map-cell">Low</div>
+                  <div class="map-cell header">8pk Brownie</div>
+                  <div class="map-cell cowin">Co-wins</div>
+                  <div class="map-cell cowin">Co-wins</div>
+                  <div class="map-cell">Self</div>
+                  <div class="map-cell watch">Mixed</div>
+                  <div class="map-cell">Low</div>
+                  <div class="map-cell header">12pk Brownie</div>
+                  <div class="map-cell">Neutral</div>
+                  <div class="map-cell pressure">Donates?</div>
+                  <div class="map-cell watch">Mixed</div>
+                  <div class="map-cell">Self</div>
+                  <div class="map-cell">Low</div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="view" id="geo">
+            <article class="card">
+              <div class="section-title">
+                <h3>Geography and Channel Split</h3>
+                <span class="mini-label">Pair: 4pk vs 12pk</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Scope</th>
+                      <th>Risk</th>
+                      <th>Win %</th>
+                      <th>Opp. Rate</th>
+                      <th>Base Units Chg</th>
+                      <th>TDP Chg</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Total US</td><td><span class="status bad">High</span></td><td>71%</td><td>62%</td><td>+4.9%</td><td>+8.2%</td><td>Watch</td></tr>
+                    <tr><td>Grocery</td><td><span class="status bad">High</span></td><td>64%</td><td>70%</td><td>+1.1%</td><td>+10.4%</td><td>Reach-led</td></tr>
+                    <tr><td>Club</td><td><span class="status good">Low</span></td><td>83%</td><td>18%</td><td>+9.8%</td><td>+2.3%</td><td>Healthy</td></tr>
+                    <tr><td>Northeast</td><td><span class="status watch">Med</span></td><td>57%</td><td>45%</td><td>+3.0%</td><td>+4.7%</td><td>Mixed</td></tr>
+                    <tr><td>Southeast</td><td><span class="status bad">High</span></td><td>43%</td><td>68%</td><td>-1.9%</td><td>+6.5%</td><td>Overlapping</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+
+          <section class="view" id="scenario">
+            <article class="card">
+              <div class="section-title">
+                <h3>Scenario Lens</h3>
+                <span class="mini-label">Directional planning</span>
+              </div>
+              <div class="scenario-box">
+                <div class="metric-card">
+                  <div class="label">Proposed change</div>
+                  <div class="value" style="font-size:20px;">Expand 4pk</div>
+                  <div class="delta">Grocery, Northeast + Southeast</div>
+                </div>
+                <div class="metric-card">
+                  <div class="label">Incrementality</div>
+                  <div class="value warning">Medium</div>
+                  <div class="delta">Historical analogs mixed</div>
+                </div>
+                <div class="metric-card">
+                  <div class="label">Donor exposure</div>
+                  <div class="value risk">Elevated</div>
+                  <div class="delta">12pk and 1ct most exposed</div>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Expected pattern</th>
+                      <th>Evidence</th>
+                      <th>Confidence</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Distribution-led growth risk</td>
+                      <td>Prior expansions lifted TDP faster than productivity</td>
+                      <td>Medium</td>
+                      <td>Expand selectively</td>
+                    </tr>
+                    <tr>
+                      <td>12pk pressure</td>
+                      <td>High opposition rate when 4pk wins</td>
+                      <td>High</td>
+                      <td>Protect core retailers</td>
+                    </tr>
+                    <tr>
+                      <td>Club channel healthy</td>
+                      <td>High co-win pattern and low opposition</td>
+                      <td>Medium</td>
+                      <td>Use as positive analog</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+
+          <aside class="drawer" aria-label="Explanation and provenance">
+            <div class="drawer-grid">
+              <div>
+                <div class="section-title">
+                  <h3>Mo's Read</h3>
+                  <span class="status watch">Evidence-based</span>
+                </div>
+                <p>Brownie Batter 4pk shows elevated pressure against Brownie Batter 12pk in Grocery. The 4pk wins consistently, but the broader pack ladder does not always expand with it. Mo would call this a possible demand-shift pattern, not a final causal claim.</p>
+              </div>
+              <div>
+                <div class="section-title">
+                  <h3>Provenance</h3>
+                </div>
+                <div class="provenance-list">
+                  <div class="prov-item"><strong>Focal</strong>Brownie Batter 4pk</div>
+                  <div class="prov-item"><strong>Pool</strong>Same flavor pack ladder</div>
+                  <div class="prov-item"><strong>Window</strong>Last 13 weeks</div>
+                  <div class="prov-item"><strong>Baseline</strong>Trailing 4-week productivity</div>
+                  <div class="prov-item"><strong>Model</strong>Risk ranker v1 mock</div>
+                  <div class="prov-item"><strong>Win rule</strong>Units/TDP above baseline</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const tabButtons = document.querySelectorAll("[data-tab]");
+    const viewButtons = Array.from(tabButtons).filter((button) => button.classList.contains("tab") || button.classList.contains("nav-button"));
+    const views = document.querySelectorAll(".view");
+
+    function activateTab(tabId) {
+      views.forEach((view) => view.classList.toggle("active", view.id === tabId));
+      viewButtons.forEach((button) => button.classList.toggle("active", button.dataset.tab === tabId));
+    }
+
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", () => activateTab(button.dataset.tab));
+    });
+
+    document.querySelectorAll(".segmented button").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.parentElement.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+
+    document.querySelectorAll("#poolChips .chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll("#poolChips .chip").forEach((item) => item.classList.remove("selected"));
+        chip.classList.add("selected");
+        document.getElementById("poolLabel").textContent = chip.dataset.pool;
+      });
+    });
+  </script>
+</body>
+</html>

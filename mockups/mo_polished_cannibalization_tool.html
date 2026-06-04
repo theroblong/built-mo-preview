@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo by BUILT - Cannibalization Tool</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface-2: #f0efe9;
+    --border: #e1ded5;
+    --border-strong: #c6c2b8;
+    --ink: #1b1a17;
+    --muted: #69675f;
+    --quiet: #9a978e;
+    --black: #1b1a17;
+    --cream: #fff8ef;
+    --blue-bg: #eaf3fc;
+    --blue-line: #b8d8f5;
+    --blue: #0d4c84;
+    --blue-mid: #327fc9;
+    --green-bg: #eaf3df;
+    --green-line: #bfdc99;
+    --green: #2f5f14;
+    --amber-bg: #fdf2dc;
+    --amber-line: #efd28e;
+    --amber: #7a4c0a;
+    --amber-mid: #d28a11;
+    --red-bg: #fbe9e9;
+    --red-line: #eebbbb;
+    --red: #8a2020;
+    --red-mid: #d43c3c;
+    --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.45;
+    letter-spacing: 0;
+  }
+
+  button, select { font: inherit; }
+
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    height: 58px;
+    background: var(--black);
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+
+  .brand-lockup { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+  .mo-badge {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #2c2925;
+    flex: 0 0 auto;
+  }
+
+  .mo-badge svg { width: 34px; height: 34px; display: block; }
+  .mo-svg .body { fill: #f8fbff; stroke: #d6dde4; stroke-width: 2; }
+  .mo-svg .shadow { fill: rgba(28, 31, 35, .14); }
+  .mo-svg .goggle-strap { fill: #6f4a32; }
+  .mo-svg .goggle-frame { fill: #5a3d2d; }
+  .mo-svg .goggle-lens { fill: #2a3137; opacity: .92; }
+  .mo-svg .highlight { fill: #ffffff; opacity: .82; }
+
+  .brand-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .11em;
+    white-space: nowrap;
+  }
+
+  .brand-title span { color: #aaa69c; }
+
+  .topbar-meta {
+    font-family: var(--mono);
+    color: #aaa69c;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .focal-pill {
+    border: 1px solid #47433d;
+    background: #2b2925;
+    color: var(--cream);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .layout { display: flex; min-height: calc(100vh - 58px); }
+
+  .sidebar {
+    width: 232px;
+    flex: 0 0 232px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+  }
+
+  .sidebar-label {
+    padding: 0 18px 7px;
+    margin-top: 4px;
+    color: var(--quiet);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    width: 100%;
+    border: 0;
+    border-left: 3px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 18px 8px 15px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .nav-item:hover { background: var(--surface-2); color: var(--ink); }
+
+  .nav-item.active {
+    background: var(--blue-bg);
+    border-left-color: var(--blue-mid);
+    color: var(--blue);
+    font-weight: 650;
+  }
+
+  .nav-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+  .dot-red { background: var(--red-mid); }
+  .dot-amber { background: var(--amber-mid); }
+  .dot-blue { background: var(--blue-mid); }
+  .dot-green { background: #4f8a20; }
+  .dot-gray { background: var(--border-strong); }
+
+  .main {
+    width: min(100%, 1040px);
+    padding: 26px 32px 44px;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 23px;
+    font-weight: 680;
+    line-height: 1.15;
+    margin: 0 0 5px;
+  }
+
+  .page-sub {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .mo-callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 260px;
+    max-width: 340px;
+  }
+
+  .mo-face {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+  }
+
+  .mo-callout strong {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .mo-callout span {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+  }
+
+  .card, .event-card, .action-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .card { padding: 18px 20px; margin-bottom: 14px; }
+  .card.flush { padding: 0; overflow: hidden; }
+
+  .section-label {
+    color: var(--quiet);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+
+  .event-card {
+    border-left: 4px solid var(--border-strong);
+    padding: 15px 18px;
+    margin-bottom: 10px;
+  }
+
+  .event-card.red { border-left-color: var(--red-mid); }
+  .event-card.amber { border-left-color: var(--amber-mid); }
+  .event-card.green { border-left-color: #4f8a20; }
+  .event-card.blue { border-left-color: var(--blue-mid); }
+
+  .event-title {
+    font-size: 14px;
+    font-weight: 680;
+    margin-bottom: 4px;
+  }
+
+  .event-sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .event-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  .badge.red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-line); }
+  .badge.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-line); }
+  .badge.green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-line); }
+  .badge.blue { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-line); }
+  .badge.gray { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+
+  .confidence {
+    color: var(--quiet);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .drill {
+    border: 0;
+    background: transparent;
+    color: var(--blue);
+    cursor: pointer;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .drill:hover { text-decoration: underline; }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .metric {
+    background: var(--surface-2);
+    border-radius: 7px;
+    padding: 12px 13px;
+    min-height: 92px;
+  }
+
+  .metric-label {
+    color: var(--quiet);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 23px;
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  .metric-delta {
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 7px;
+  }
+
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .flat { color: var(--quiet); }
+  .warn { color: var(--amber); }
+
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .summary-name { font-size: 18px; font-weight: 680; }
+  .summary-meta { color: var(--muted); font-family: var(--mono); font-size: 12px; margin-top: 3px; }
+
+  .score-row {
+    display: grid;
+    grid-template-columns: 150px 1fr 46px 110px;
+    gap: 10px;
+    align-items: center;
+    background: var(--surface-2);
+    border-radius: 7px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .score-label { color: var(--quiet); font-size: 11px; }
+  .track { height: 6px; border-radius: 999px; background: #dedbd2; overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; background: var(--amber-mid); }
+  .score-value { font-family: var(--mono); color: var(--amber); font-weight: 750; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 5px 11px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--surface-2);
+    color: var(--quiet);
+    text-align: left;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #faf9f5; }
+  .focal-row td { background: var(--blue-bg); }
+
+  .sku-name { font-weight: 680; }
+  .sku-sub { color: var(--quiet); font-size: 11px; margin-top: 2px; }
+  .mono { font-family: var(--mono); }
+
+  .insight {
+    background: var(--blue-bg);
+    border: 1px solid var(--blue-line);
+    color: var(--blue);
+    border-radius: var(--radius);
+    padding: 13px 16px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .driver-row {
+    display: grid;
+    grid-template-columns: 160px 135px 1fr 42px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .driver-name { font-weight: 650; }
+  .driver-tag { color: var(--quiet); font-size: 11px; }
+  .driver-pct { font-family: var(--mono); color: var(--muted); text-align: right; font-size: 12px; }
+
+  .narrative {
+    background: var(--surface-2);
+    border-left: 4px solid var(--border-strong);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 13px 16px;
+    margin-bottom: 18px;
+    line-height: 1.75;
+  }
+
+  .prov-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .prov-key { color: var(--quiet); text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: .08em; margin-bottom: 4px; }
+  .prov-val { font-family: var(--mono); font-size: 12px; }
+
+  .action-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    padding: 15px 16px;
+    margin-bottom: 9px;
+  }
+
+  .action-pill {
+    border: 0;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-weight: 750;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .keep { background: var(--green-bg); color: var(--green); }
+  .monitor { background: var(--amber-bg); color: var(--amber); }
+  .reduce { background: var(--red-bg); color: var(--red); }
+  .expand { background: var(--blue-bg); color: var(--blue); }
+
+  .pool-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .pool-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+  }
+
+  .pool-tile strong { display: block; font-family: var(--mono); font-size: 20px; margin-bottom: 5px; }
+  .pool-tile span { color: var(--muted); font-size: 12px; }
+
+  .forecast-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .forecast-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px;
+  }
+
+  .forecast-card strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+
+  .forecast-card span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .scenario-actions {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .scenario-btn {
+    min-height: 58px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    padding: 9px;
+    text-align: left;
+    font-weight: 650;
+  }
+
+  .scenario-btn.active {
+    background: var(--blue-bg);
+    border-color: var(--blue-line);
+    color: var(--blue);
+  }
+
+  .assumption-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .assumption {
+    background: var(--surface-2);
+    border-radius: 7px;
+    padding: 11px 12px;
+  }
+
+  .assumption span {
+    display: block;
+    color: var(--quiet);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .assumption strong {
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .win-row {
+    display: grid;
+    grid-template-columns: 180px repeat(8, 32px) 65px;
+    gap: 7px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .win-cell {
+    width: 30px;
+    height: 28px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .win { background: var(--green-bg); color: var(--green); }
+  .loss { background: var(--red-bg); color: var(--red); }
+  .zero { background: var(--surface-2); color: var(--quiet); }
+
+  .footer-note {
+    margin-top: 18px;
+    color: var(--quiet);
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 900px) {
+    .layout { display: block; }
+    .sidebar { position: static; width: auto; height: auto; display: grid; grid-template-columns: repeat(2, 1fr); padding: 10px; }
+    .sidebar-label { grid-column: 1 / -1; padding-left: 8px; }
+    .main { padding: 20px; width: 100%; }
+    .metric-grid, .pool-strip, .prov-grid, .forecast-strip, .assumption-grid { grid-template-columns: 1fr 1fr; }
+    .page-head, .summary-line, .action-card { flex-direction: column; align-items: stretch; }
+    .score-row, .driver-row { grid-template-columns: 1fr; }
+    .scenario-actions { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .topbar { height: auto; min-height: 58px; align-items: flex-start; flex-direction: column; padding: 12px 16px; }
+    .topbar-left { flex-direction: column; align-items: flex-start; gap: 5px; }
+    .sidebar, .metric-grid, .pool-strip, .prov-grid, .two-col, .forecast-strip, .assumption-grid, .scenario-actions { grid-template-columns: 1fr; }
+    .card.flush { overflow-x: auto; }
+    table { min-width: 700px; }
+    .win-row { grid-template-columns: 150px repeat(8, 30px) 58px; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="brand-lockup">
+        <div class="mo-badge" aria-hidden="true">
+          <svg class="mo-svg" viewBox="0 0 80 80">
+            <ellipse class="shadow" cx="40" cy="70" rx="22" ry="5"/>
+            <path class="body" d="M27 66c-5 0-9-4-9-9V33c0-10 6-18 15-21 1-5 4-9 7-9s6 4 7 9c9 3 15 11 15 21v24c0 5-4 9-9 9H27z"/>
+            <path class="body" d="M18 40H7c-3 0-5 2-5 5v7c0 3 2 5 5 5h11V40z"/>
+            <path class="body" d="M62 40h11c3 0 5 2 5 5v7c0 3-2 5-5 5H62V40z"/>
+            <rect class="body" x="27" y="61" width="10" height="14" rx="4"/>
+            <rect class="body" x="43" y="61" width="10" height="14" rx="4"/>
+            <path class="goggle-strap" d="M15 31h50v8H15z"/>
+            <path class="goggle-frame" d="M18 28h44c5 0 8 4 7 9l-3 14c-1 5-5 8-10 8H24c-5 0-9-3-10-8l-3-14c-1-5 2-9 7-9z"/>
+            <path class="goggle-lens" d="M20 35h18c3 0 5 2 5 5v4c0 5-4 9-9 9h-7c-4 0-7-3-8-7l-2-7c-1-2 1-4 3-4z"/>
+            <path class="goggle-lens" d="M60 35H42c-3 0-5 2-5 5v4c0 5 4 9 9 9h7c4 0 7-3 8-7l2-7c1-2-1-4-3-4z"/>
+            <path class="highlight" d="M29 14c-5 3-8 8-9 15 6-5 13-8 21-8 7 0 13 2 18 6-2-6-6-11-12-14-2 3-5 5-8 5-4 0-7-1-10-4z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Mo <span>/ cannibalization</span></div>
+      </div>
+      <div class="topbar-meta">SPINS POS - Grocery - W16 2024 - guided decision tool</div>
+    </div>
+    <div class="focal-pill">Focal: Mint Brownie 4pk</div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="Tool views">
+      <div class="sidebar-label">Start Here</div>
+      <button class="nav-item active" data-screen="events"><span class="nav-dot dot-red"></span>Priority events</button>
+      <button class="nav-item" data-screen="summary"><span class="nav-dot dot-amber"></span>SKU summary</button>
+      <div class="sidebar-label">Diagnose</div>
+      <button class="nav-item" data-screen="geo"><span class="nav-dot dot-gray"></span>Geography</button>
+      <button class="nav-item" data-screen="pack"><span class="nav-dot dot-amber"></span>Pack ladder</button>
+      <button class="nav-item" data-screen="prepost"><span class="nav-dot dot-gray"></span>Pre / post</button>
+      <button class="nav-item" data-screen="pool"><span class="nav-dot dot-blue"></span>Pool health</button>
+      <div class="sidebar-label">Decide</div>
+      <button class="nav-item" data-screen="explain"><span class="nav-dot dot-blue"></span>Explanation</button>
+      <button class="nav-item" data-screen="forecast"><span class="nav-dot dot-blue"></span>Forecast next move</button>
+      <button class="nav-item" data-screen="action"><span class="nav-dot dot-green"></span>Assortment action</button>
+    </nav>
+
+    <main class="main">
+      <section id="events" class="screen active">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Priority events</h1>
+            <p class="page-sub">Mo surfaces only events with actionable evidence. Advanced pools stay behind drilldowns.</p>
+          </div>
+          <div class="mo-callout">
+            <svg class="mo-face" viewBox="0 0 80 80" aria-hidden="true">
+              <ellipse class="shadow" cx="40" cy="70" rx="22" ry="5"/>
+              <path class="body" d="M27 66c-5 0-9-4-9-9V33c0-10 6-18 15-21 1-5 4-9 7-9s6 4 7 9c9 3 15 11 15 21v24c0 5-4 9-9 9H27z"/>
+              <path class="body" d="M18 40H7c-3 0-5 2-5 5v7c0 3 2 5 5 5h11V40z"/>
+              <path class="body" d="M62 40h11c3 0 5 2 5 5v7c0 3-2 5-5 5H62V40z"/>
+              <rect class="body" x="27" y="61" width="10" height="14" rx="4"/>
+              <rect class="body" x="43" y="61" width="10" height="14" rx="4"/>
+              <path class="goggle-strap" d="M15 31h50v8H15z"/>
+              <path class="goggle-frame" d="M18 28h44c5 0 8 4 7 9l-3 14c-1 5-5 8-10 8H24c-5 0-9-3-10-8l-3-14c-1-5 2-9 7-9z"/>
+              <path class="goggle-lens" d="M20 35h18c3 0 5 2 5 5v4c0 5-4 9-9 9h-7c-4 0-7-3-8-7l-2-7c-1-2 1-4 3-4z"/>
+              <path class="goggle-lens" d="M60 35H42c-3 0-5 2-5 5v4c0 5 4 9 9 9h7c4 0 7-3 8-7l2-7c1-2-1-4-3-4z"/>
+              <path class="highlight" d="M29 14c-5 3-8 8-9 15 6-5 13-8 21-8 7 0 13 2 18 6-2-6-6-11-12-14-2 3-5 5-8 5-4 0-7-1-10-4z"/>
+            </svg>
+            <div><strong>Mo says: what the puff?</strong><span>Focus on the few signals that change the assortment decision.</span></div>
+          </div>
+        </div>
+
+        <article class="event-card red">
+          <div class="event-title">Significant demand transfer detected</div>
+          <div class="event-sub">Mint Brownie 4pk - Mountain West - Grocery. 1ct donor decline is concurrent with focal rise and group productivity is weak.</div>
+          <div class="event-meta">
+            <span class="confidence"><span class="nav-dot dot-red"></span>High confidence</span>
+            <span class="badge red">Cannibalizing</span>
+            <button class="drill" data-screen="geo">Open geography view</button>
+          </div>
+        </article>
+
+        <article class="event-card amber">
+          <div class="event-title">Launch underperforming in Texas</div>
+          <div class="event-sub">Units are up, but TDP grew faster than demand and Units/TDP declined. Monitor before wider expansion.</div>
+          <div class="event-meta">
+            <span class="confidence"><span class="nav-dot dot-amber"></span>Medium confidence</span>
+            <span class="badge amber">Watch</span>
+            <button class="drill" data-screen="prepost">Open pre / post</button>
+          </div>
+        </article>
+
+        <article class="event-card amber">
+          <div class="event-title">Same-flavor pack overlap risk elevated</div>
+          <div class="event-sub">Mint Brownie 4pk vs 1ct. Same-specific-flavor pool shows the 1ct losing more share than expected after 4pk launch.</div>
+          <div class="event-meta">
+            <span class="confidence"><span class="nav-dot dot-amber"></span>Medium confidence</span>
+            <span class="badge amber">Watch</span>
+            <button class="drill" data-screen="pack">Open pack ladder</button>
+          </div>
+        </article>
+
+        <article class="event-card green">
+          <div class="event-title">Club channel is behaving incrementally</div>
+          <div class="event-sub">4pk wins while the pack ladder also expands. Use Club as the positive analog before scaling Grocery.</div>
+          <div class="event-meta">
+            <span class="confidence"><span class="nav-dot dot-green"></span>High confidence</span>
+            <span class="badge green">Incremental</span>
+            <button class="drill" data-screen="action">Open actions</button>
+          </div>
+        </article>
+
+        <article class="event-card blue">
+          <div class="event-title">Forecasted risk if Grocery expands broadly</div>
+          <div class="event-sub">Next 13 weeks: broad expansion is expected to add volume, but donor exposure remains elevated in Texas and Mountain West.</div>
+          <div class="event-meta">
+            <span class="confidence"><span class="nav-dot dot-blue"></span>Medium confidence</span>
+            <span class="badge blue">Forecast</span>
+            <button class="drill" data-screen="forecast">Forecast next move</button>
+          </div>
+        </article>
+      </section>
+
+      <section id="summary" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">SKU summary</h1>
+            <p class="page-sub">BUILT Mint Brownie 4pk - Grocery - all geographies - last 13 weeks vs prior 13 weeks</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="summary-line">
+            <div>
+              <div class="summary-name">BUILT Mint Brownie 4pk</div>
+              <div class="summary-meta">Specific flavor: Mint Brownie - pack count: 4 - first week selling: W04 2024</div>
+            </div>
+            <span class="badge amber">Watch</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric"><div class="metric-label">Base units</div><div class="metric-value">910</div><div class="metric-delta up">+11%</div></div>
+            <div class="metric"><div class="metric-label">Units</div><div class="metric-value">980</div><div class="metric-delta up">+14%</div></div>
+            <div class="metric"><div class="metric-label">TDP</div><div class="metric-value">63</div><div class="metric-delta up">+26%</div></div>
+            <div class="metric"><div class="metric-label">Units / TDP</div><div class="metric-value">15.6</div><div class="metric-delta down">-9%</div></div>
+            <div class="metric"><div class="metric-label">ARP</div><div class="metric-value">$8.49</div><div class="metric-delta flat">stable</div></div>
+          </div>
+
+          <div class="score-row">
+            <div class="score-label">Cannibalization risk</div>
+            <div class="track"><div class="fill" style="width:52%"></div></div>
+            <div class="score-value">52%</div>
+            <span class="badge amber">Moderate</span>
+          </div>
+
+          <div class="section-label">Likely donor SKUs</div>
+          <div class="chips">
+            <div class="chip">1 - Mint Brownie 1ct</div>
+            <div class="chip">2 - Mint Brownie 12pk</div>
+          </div>
+        </div>
+
+        <div class="forecast-strip">
+          <div class="forecast-card"><strong class="up">+180 to +420</strong><span>forecast net incremental units, next 13 weeks</span></div>
+          <div class="forecast-card"><strong class="warn">Medium</strong><span>forecast cannibalization risk if expanded</span></div>
+          <div class="forecast-card"><strong>Expand selectively</strong><span>best next action based on current evidence</span></div>
+        </div>
+      </section>
+
+      <section id="geo" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Geography diagnosis</h1>
+            <p class="page-sub">Same focal SKU, different local behavior. Total US does not hide market-specific risk.</p>
+          </div>
+        </div>
+        <div class="card flush">
+          <table>
+            <thead><tr><th>Geography</th><th>Base Units</th><th>Units</th><th>TDP</th><th>Units/TDP</th><th>Status</th><th>Forecast if expanded</th><th>Next step</th></tr></thead>
+            <tbody>
+              <tr><td><div class="sku-name">Total US</div></td><td class="up mono">+8%</td><td class="up mono">+12%</td><td class="up mono">+10%</td><td class="up mono">+2%</td><td><span class="badge green">Incremental</span></td><td><span class="badge amber">Medium risk</span></td><td>Keep monitoring</td></tr>
+              <tr><td><div class="sku-name">Texas</div></td><td class="down mono">-3%</td><td class="warn mono">+2%</td><td class="up mono">+12%</td><td class="down mono">-9%</td><td><span class="badge amber">Watch</span></td><td><span class="badge amber">Medium risk</span></td><td>Hold expansion</td></tr>
+              <tr><td><div class="sku-name">Mountain West</div></td><td class="down mono">-12%</td><td class="down mono">-6%</td><td class="warn mono">+1%</td><td class="down mono">-7%</td><td><span class="badge red">Cannibalizing</span></td><td><span class="badge red">High risk</span></td><td>Reduce overlap</td></tr>
+              <tr><td><div class="sku-name">Southeast</div></td><td class="down mono">-5%</td><td class="flat mono">flat</td><td class="up mono">+8%</td><td class="down mono">-5%</td><td><span class="badge amber">Watch</span></td><td><span class="badge amber">Medium risk</span></td><td>Review 1ct role</td></tr>
+              <tr><td><div class="sku-name">Northeast</div></td><td class="flat mono">flat</td><td class="warn mono">+6%</td><td class="up mono">+9%</td><td class="flat mono">flat</td><td><span class="badge gray">Neutral</span></td><td><span class="badge green">Low risk</span></td><td>Ramp window</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="pack" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Pack ladder</h1>
+            <p class="page-sub">Mint Brownie - all pack sizes - Texas - Grocery</p>
+          </div>
+        </div>
+        <div class="insight">Mo's read: 4pk appears to pull more from 1ct than from 12pk. The 1ct lost about 18% of prior base share after 4pk launch in this geography. The 12pk decline is within expected variance.</div>
+        <div class="card flush">
+          <table>
+            <thead><tr><th>SKU / pack</th><th>Pack count</th><th>Base units</th><th>Units</th><th>TDP</th><th>Units/TDP</th><th>Current role</th><th>Forecasted role</th></tr></thead>
+            <tbody>
+              <tr><td><div class="sku-name">Mint Brownie 1ct</div><div class="sku-sub">Incumbent - broad reach</div></td><td class="mono">1</td><td class="mono">1,240</td><td class="mono">1,320</td><td class="mono">80</td><td class="mono">16.5</td><td><span class="badge amber">Likely donor</span></td><td>Protect core</td></tr>
+              <tr class="focal-row"><td><div class="sku-name">Mint Brownie 4pk</div><div class="sku-sub">Focal - new launch</div></td><td class="mono">4</td><td class="mono">840</td><td class="mono">910</td><td class="mono">62</td><td class="mono">14.7</td><td><span class="badge blue">Focal</span></td><td>Growth pack</td></tr>
+              <tr><td><div class="sku-name">Mint Brownie 12pk</div><div class="sku-sub">Incumbent - narrower reach</div></td><td class="mono">12</td><td class="mono">410</td><td class="mono">455</td><td class="mono">28</td><td class="mono">16.3</td><td><span class="badge gray">Minor donor</span></td><td>Monitor / reduce</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="prepost" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Pre / post launch</h1>
+            <p class="page-sub">Mint Brownie 4pk - Texas - Grocery - W04 2024 launch</p>
+          </div>
+        </div>
+        <div class="card flush">
+          <table>
+            <thead><tr><th>Metric</th><th>Pre-launch</th><th>Post-launch</th><th>Change</th><th>Interpretation</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Base units</strong></td><td class="mono">820</td><td class="mono">910</td><td class="up mono">+11%</td><td>Underlying demand up</td></tr>
+              <tr><td><strong>Units</strong></td><td class="mono">860</td><td class="mono">980</td><td class="up mono">+14%</td><td>Observed sales up</td></tr>
+              <tr><td><strong>TDP</strong></td><td class="mono">50</td><td class="mono">63</td><td class="up mono">+26%</td><td>Distribution expanded</td></tr>
+              <tr><td><strong>Units / TDP</strong></td><td class="mono">17.2</td><td class="mono">15.6</td><td class="down mono">-9%</td><td>Per-store productivity down</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="two-col">
+          <div class="card"><div class="section-label">Donor - Mint Brownie 1ct</div><div class="metric-value down">-14%</div><div class="sku-sub">Concurrent base-unit decline. Primary donor signal.</div></div>
+          <div class="card"><div class="section-label">Donor - Mint Brownie 12pk</div><div class="metric-value flat">-3%</div><div class="sku-sub">Within expected variance. Minor donor role.</div></div>
+        </div>
+      </section>
+
+      <section id="pool" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Pool health drilldown</h1>
+            <p class="page-sub">A narrow comparison pool, used to support the pack-ladder decision. Not a wide exploratory dashboard.</p>
+          </div>
+        </div>
+        <div class="pool-strip">
+          <div class="pool-tile"><strong>71%</strong><span>weekly win rate</span></div>
+          <div class="pool-tile"><strong>5 / 7</strong><span>avg SKUs winning</span></div>
+          <div class="pool-tile"><strong>29%</strong><span>related loss rate</span></div>
+          <div class="pool-tile"><strong>Pack ladder</strong><span>same specific flavor</span></div>
+        </div>
+        <div class="card">
+          <div class="section-label">Win pattern over recent weeks</div>
+          <div class="win-row"><strong>SKU / Week</strong><span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span><span>W8</span><strong>Win %</strong></div>
+          <div class="win-row"><span>Mint Brownie 1ct</span><span class="win-cell win">+</span><span class="win-cell loss">-</span><span class="win-cell loss">-</span><span class="win-cell win">+</span><span class="win-cell loss">-</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell loss">-</span><strong>50%</strong></div>
+          <div class="win-row"><span>Mint Brownie 4pk</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell win">+</span><span class="win-cell win">+</span><strong>100%</strong></div>
+          <div class="win-row"><span>Mint Brownie 12pk</span><span class="win-cell win">+</span><span class="win-cell loss">-</span><span class="win-cell loss">-</span><span class="win-cell loss">-</span><span class="win-cell loss">-</span><span class="win-cell win">+</span><span class="win-cell zero">0</span><span class="win-cell loss">-</span><strong>25%</strong></div>
+        </div>
+      </section>
+
+      <section id="explain" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Explanation</h1>
+            <p class="page-sub">Mint Brownie 4pk - Texas - Grocery - model v1.8 - W16 2024</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Mo narrative</div>
+          <div class="narrative">Mint Brownie 4pk is flagged as <strong>Watch</strong> in Texas because observed units rose, but most of the gain appears tied to distribution expansion while per-store productivity weakened and the 1ct Mint Brownie donor item declined over the same period. The evidence does not yet support a strong cannibalization conclusion, but the pattern warrants monitoring before wider expansion.</div>
+          <div class="section-label">Top drivers</div>
+          <div class="driver-row"><div class="driver-name">TDP expansion</div><div class="driver-tag warn">Primary driver</div><div class="track"><div class="fill" style="width:82%"></div></div><div class="driver-pct">82%</div></div>
+          <div class="driver-row"><div class="driver-name">1ct donor decline</div><div class="driver-tag down">Cannibalization signal</div><div class="track"><div class="fill" style="width:65%;background:var(--red-mid)"></div></div><div class="driver-pct">65%</div></div>
+          <div class="driver-row"><div class="driver-name">Units/TDP decline</div><div class="driver-tag warn">Productivity weak</div><div class="track"><div class="fill" style="width:48%"></div></div><div class="driver-pct">48%</div></div>
+        </div>
+        <div class="card">
+          <div class="section-label">Provenance</div>
+          <div class="prov-grid">
+            <div><div class="prov-key">Source</div><div class="prov-val">SPINS POS</div></div>
+            <div><div class="prov-key">Window</div><div class="prov-val">Last 13 vs prior 13</div></div>
+            <div><div class="prov-key">Geography</div><div class="prov-val">Texas - Grocery</div></div>
+            <div><div class="prov-key">Comparison pool</div><div class="prov-val">Same flavor BUILT packs</div></div>
+            <div><div class="prov-key">Model</div><div class="prov-val">v1.8</div></div>
+            <div><div class="prov-key">Confidence</div><div class="prov-val">Medium</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="forecast" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Forecast next move</h1>
+            <p class="page-sub">Mint Brownie 4pk - same flavor pack ladder - Grocery - next 13 weeks</p>
+          </div>
+          <div class="mo-callout">
+            <svg class="mo-face" viewBox="0 0 80 80" aria-hidden="true">
+              <ellipse class="shadow" cx="40" cy="70" rx="22" ry="5"/>
+              <path class="body" d="M27 66c-5 0-9-4-9-9V33c0-10 6-18 15-21 1-5 4-9 7-9s6 4 7 9c9 3 15 11 15 21v24c0 5-4 9-9 9H27z"/>
+              <path class="body" d="M18 40H7c-3 0-5 2-5 5v7c0 3 2 5 5 5h11V40z"/>
+              <path class="body" d="M62 40h11c3 0 5 2 5 5v7c0 3-2 5-5 5H62V40z"/>
+              <rect class="body" x="27" y="61" width="10" height="14" rx="4"/>
+              <rect class="body" x="43" y="61" width="10" height="14" rx="4"/>
+              <path class="goggle-strap" d="M15 31h50v8H15z"/>
+              <path class="goggle-frame" d="M18 28h44c5 0 8 4 7 9l-3 14c-1 5-5 8-10 8H24c-5 0-9-3-10-8l-3-14c-1-5 2-9 7-9z"/>
+              <path class="goggle-lens" d="M20 35h18c3 0 5 2 5 5v4c0 5-4 9-9 9h-7c-4 0-7-3-8-7l-2-7c-1-2 1-4 3-4z"/>
+              <path class="goggle-lens" d="M60 35H42c-3 0-5 2-5 5v4c0 5 4 9 9 9h7c4 0 7-3 8-7l2-7c1-2-1-4-3-4z"/>
+              <path class="highlight" d="M29 14c-5 3-8 8-9 15 6-5 13-8 21-8 7 0 13 2 18 6-2-6-6-11-12-14-2 3-5 5-8 5-4 0-7-1-10-4z"/>
+            </svg>
+            <div><strong>Mo forecast</strong><span>Ranges are directional and tied to stated assumptions.</span></div>
+          </div>
+        </div>
+
+        <div class="section-label">Choose action</div>
+        <div class="scenario-actions">
+          <button class="scenario-btn">Hold current distribution</button>
+          <button class="scenario-btn active">Expand selectively</button>
+          <button class="scenario-btn">Expand broadly</button>
+          <button class="scenario-btn">Reduce overlap</button>
+          <button class="scenario-btn">Test markets</button>
+        </div>
+
+        <div class="card">
+          <div class="section-label">Scenario assumptions</div>
+          <div class="assumption-grid">
+            <div class="assumption"><span>TDP</span><strong>63 -> 80</strong></div>
+            <div class="assumption"><span>Price</span><strong>Stable at $8.49</strong></div>
+            <div class="assumption"><span>Promo</span><strong>No change</strong></div>
+            <div class="assumption"><span>Horizon</span><strong>Next 13 weeks</strong></div>
+          </div>
+
+          <div class="forecast-strip">
+            <div class="forecast-card"><strong class="up">+180 to +420</strong><span>net incremental units</span></div>
+            <div class="forecast-card"><strong class="down">-90 to -240</strong><span>likely donor unit loss</span></div>
+            <div class="forecast-card"><strong>55% to 72%</strong><span>incremental share range</span></div>
+          </div>
+
+          <div class="insight">Recommended move: expand selectively in Club and Northeast. Hold Texas and Mountain West until productivity improves and 1ct donor pressure softens.</div>
+
+          <div class="card flush" style="margin-bottom:0;">
+            <table>
+              <thead><tr><th>Market / channel</th><th>Forecast risk</th><th>Expected net impact</th><th>Mo action</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Club</strong></td><td><span class="badge green">Low</span></td><td class="up mono">+140 to +260</td><td>Expand</td></tr>
+                <tr><td><strong>Northeast Grocery</strong></td><td><span class="badge green">Low</span></td><td class="up mono">+70 to +150</td><td>Test expansion</td></tr>
+                <tr><td><strong>Texas Grocery</strong></td><td><span class="badge amber">Medium</span></td><td class="warn mono">-20 to +80</td><td>Hold</td></tr>
+                <tr><td><strong>Mountain West Grocery</strong></td><td><span class="badge red">High</span></td><td class="down mono">-90 to +10</td><td>Reduce overlap</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="footer-note">Forecast uses current trailing demand, TDP, Units/TDP, price, promo history, same-flavor pack relationship, geography behavior, and historical analog outcomes. Post-event outcome features are excluded.</div>
+      </section>
+
+      <section id="action" class="screen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Assortment action</h1>
+            <p class="page-sub">Concrete recommendation by SKU and channel. This is the point of the tool.</p>
+          </div>
+        </div>
+        <div class="section-label">SKU-level recommendations</div>
+        <div class="action-card"><div><div class="sku-name">Mint Brownie 1ct</div><div class="sku-sub">Stable donor - broad reach - strong productivity - protect in high-risk Grocery markets</div></div><button class="action-pill keep">Keep core</button></div>
+        <div class="action-card"><div><div class="sku-name">Mint Brownie 4pk</div><div class="sku-sub">Forecast: +180 to +420 net incremental units if expanded selectively</div></div><button class="action-pill expand">Expand selectively</button></div>
+        <div class="action-card"><div><div class="sku-name">Mint Brownie 12pk</div><div class="sku-sub">Forecasted low velocity and minor donor role in Grocery</div></div><button class="action-pill reduce">Reduce / monitor</button></div>
+
+        <div class="card flush">
+          <table>
+            <thead><tr><th>Channel</th><th>4pk status</th><th>Forecast impact</th><th>Recommendation</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Grocery</strong></td><td><span class="badge amber">Watch</span></td><td class="warn mono">-20 to +180</td><td>Monitor before wider expansion</td></tr>
+              <tr><td><strong>Club</strong></td><td><span class="badge green">Incremental</span></td><td class="up mono">+140 to +260</td><td>Expand selectively</td></tr>
+              <tr><td><strong>Convenience</strong></td><td><span class="badge gray">Neutral</span></td><td class="flat mono">Low confidence</td><td>Hold - insufficient data</td></tr>
+              <tr><td><strong>Natural / specialty</strong></td><td><span class="badge red">Cannibalizing</span></td><td class="down mono">-70 to +20</td><td>Reduce overlap with 1ct</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="footer-note">Controlled expansion: competitor and full-category forecasts can be added after the same-flavor pack-ladder workflow is trusted.</div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach((screen) => {
+      screen.classList.toggle("active", screen.id === id);
+    });
+    document.querySelectorAll("[data-screen]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.screen === id && button.classList.contains("nav-item"));
+    });
+  }
+
+  document.querySelectorAll("[data-screen]").forEach((button) => {
+    button.addEventListener("click", () => showScreen(button.dataset.screen));
+  });
+</script>
+</body>
+</html>
