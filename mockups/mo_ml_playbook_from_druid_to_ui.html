@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo ML Playbook: Druid to UI</title>
+<style>
+:root {
+  --bg: #f5f9ff;
+  --surface: #ffffff;
+  --surface-2: #eef3fb;
+  --ink: #0d1733;
+  --muted: #526078;
+  --quiet: #7d879c;
+  --border: #d6deeb;
+  --navy: #0d1733;
+  --blue: #2357ad;
+  --blue-bg: #e7f0ff;
+  --green: #147a4c;
+  --green-bg: #e6f7ef;
+  --amber: #8a5000;
+  --amber-bg: #fff5e6;
+  --red: #9b0e1c;
+  --red-bg: #feeaec;
+  --purple: #5a3ea1;
+  --purple-bg: #efeafd;
+  --shadow: 0 12px 34px rgba(13, 23, 51, 0.10);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.shell {
+  width: min(1500px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 44px;
+}
+
+.hero {
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0d1733 0%, #142347 64%, #1e315f 100%);
+  color: #f7fbff;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin-bottom: 7px;
+  color: #84b7ff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(26px, 3.4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.hero p {
+  max-width: 1050px;
+  margin: 9px 0 0;
+  color: #cbd8ee;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.metric {
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  padding: 12px;
+}
+
+.metric strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.metric span {
+  display: block;
+  margin-top: 4px;
+  color: #cbd8ee;
+  font-size: 12px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.toc {
+  position: sticky;
+  top: 14px;
+  align-self: start;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.toc-title {
+  padding: 12px 13px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.toc a {
+  display: block;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.toc a:last-child { border-bottom: 0; }
+.toc a:hover { background: #fbfdff; color: var(--ink); }
+
+.stage {
+  min-height: calc(100vh - 48px);
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.stage-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.stage-num {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.stage-head h2 {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.stage-tag {
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tag-govern { background: var(--blue-bg); color: var(--blue); }
+.tag-prepare { background: var(--green-bg); color: var(--green); }
+.tag-model { background: var(--purple-bg); color: var(--purple); }
+.tag-validate { background: var(--amber-bg); color: var(--amber); }
+.tag-operate { background: var(--red-bg); color: var(--red); }
+
+.stage-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 0;
+}
+
+.exec {
+  padding: 18px;
+  border-right: 1px solid var(--border);
+}
+
+.tech {
+  padding: 18px;
+  background: #fbfdff;
+}
+
+.block-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--quiet);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.block-label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.exec p,
+.tech p {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+.tech ul,
+.exec ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.tech li + li,
+.exec li + li { margin-top: 6px; }
+
+.exit {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.exit strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.exit span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.artifact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.flow {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.flow h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flow-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 11px;
+}
+
+.flow-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.flow-card span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 1120px) {
+  .layout,
+  .stage-body,
+  .hero-metrics,
+  .flow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toc {
+    position: static;
+  }
+
+  .stage {
+    min-height: 0;
+  }
+
+  .exec {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stage-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .stage-tag {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="hero">
+    <div class="eyebrow">Mo by BUILT / ML delivery playbook</div>
+    <h1>From 97M SPINS Records in Druid to User-Facing Intelligence</h1>
+    <p>A stage-by-stage operating guide for preparing the SPINS datasource for ML utilization, training and validating the models, publishing governed scores, and presenting recommendations through the Mo UI.</p>
+    <div class="hero-metrics">
+      <div class="metric"><strong>97M</strong><span>records loaded into one Druid datasource</span></div>
+      <div class="metric"><strong>11 stages</strong><span>from data intake to monitoring</span></div>
+      <div class="metric"><strong>4 model jobs</strong><span>risk, donor ranking, events, price response</span></div>
+      <div class="metric"><strong>1 workflow</strong><span>Determine, Diagnose, Decide</span></div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="toc">
+      <div class="toc-title">Playbook Pages</div>
+      <a href="#stage-1">1. Intake and Governance</a>
+      <a href="#stage-2">2. Field Audit</a>
+      <a href="#stage-3">3. Enrichment</a>
+      <a href="#stage-4">4. Feature Preparation</a>
+      <a href="#stage-5">5. Labels and Dataset</a>
+      <a href="#stage-6">6. Model Training</a>
+      <a href="#stage-7">7. Fit Testing</a>
+      <a href="#stage-8">8. Validation</a>
+      <a href="#stage-9">9. Publishing</a>
+      <a href="#stage-10">10. UI Presentation</a>
+      <a href="#stage-11">11. Monitoring</a>
+      <a href="#flow">End-to-End Flow</a>
+    </aside>
+
+    <section>
+      <article class="stage" id="stage-1">
+        <div class="stage-head"><div class="stage-num">1</div><h2>Data Intake and Governance</h2><span class="stage-tag tag-govern">Govern</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Confirm that the 97M-record SPINS datasource is complete, stable, and fit to become an enterprise analytics asset. This stage protects the organization from building models on malformed, incomplete, or poorly governed source data.</p><div class="exit"><strong>Exit criteria</strong><span>Druid datasource is queryable, complete, permissioned, and ready for normalization.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Confirm datasource name, grain, time column, row count, retention, and segment health.</li><li>Verify the source grain is UPC x geography/account/channel x week.</li><li>Preserve all raw demand, price, promo, distribution, product, and retail fields.</li><li>Avoid filtering to BUILT-only at ingestion; competitor and category history are required.</li><li>Register ownership, refresh cadence, source lineage, and access rules.</li></ul><div class="artifact-row"><span class="chip">spins_weekly_pos</span><span class="chip">segment health</span><span class="chip">lineage</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-2">
+        <div class="stage-head"><div class="stage-num">2</div><h2>Source Data Quality and Field Audit</h2><span class="stage-tag tag-govern">Quality gate</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Before modeling starts, the team validates that the fields needed to explain demand transfer and price response are present and trustworthy. This is the quality gate that prevents black-box or misleading outputs later.</p><div class="exit"><strong>Exit criteria</strong><span>Field coverage and quality report is signed off, with known limitations captured as model guardrails.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Audit UPC, brand, description, account/channel, geography, week end date, units, base units, dollars, TDP, ARP, promo fields, first week selling, pack count, flavor, and store-selling measures.</li><li>Check null rates, duplicate keys, negative values, impossible prices, missing pack counts, and inconsistent UPC formatting.</li><li>Compare row counts by week, geography, brand, and category to detect ingestion gaps.</li><li>Flag military/DECA or other special channels if they should be suppressed.</li></ul><div class="artifact-row"><span class="chip">null report</span><span class="chip">duplicate audit</span><span class="chip">field coverage</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-3">
+        <div class="stage-head"><div class="stage-num">3</div><h2>Product, Market, Calendar, and Event Enrichment</h2><span class="stage-tag tag-prepare">Prepare</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The raw SPINS feed is converted into business language: product families, pack ladders, specific flavors, retail accounts, market hierarchies, calendar seasonality, and known product events. This lets Mo explain why something happened, not just that it happened.</p><div class="exit"><strong>Exit criteria</strong><span>Enriched weekly panel can support stable joins, comparison pool generation, seasonality controls, and explanation metadata.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Load product master and similarity mappings for BUILT and eligible competitors.</li><li>Attach normalized flavor, flavor family, brand line, pack count, pack-size band, protein attributes, competitor tier, and substitute group.</li><li>Load market hierarchy: account, banner, channel, region, geography type.</li><li>Load calendar dimensions: fiscal period, week of year, season, holiday flags.</li><li>Load event history for launches, discontinuations, assortment changes, promos, price actions, and availability issues.</li></ul><div class="artifact-row"><span class="chip">dim_product</span><span class="chip">dim_market</span><span class="chip">dim_calendar_week</span><span class="chip">fact_product_events</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-4">
+        <div class="stage-head"><div class="stage-num">4</div><h2>Druid Feature Preparation</h2><span class="stage-tag tag-prepare">Feature tables</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The 97M raw rows are not sent directly to machine learning. Druid first compresses them into governed, explainable feature tables that represent the business questions Mo needs to answer.</p><div class="exit"><strong>Exit criteria</strong><span>Feature tables exist at the correct grain, are reproducible, and can be queried without scanning the full raw datasource for every workflow.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Build normalized and enriched weekly tables.</li><li>Build comparison pools for pack ladder, same-flavor, same-family, same-brand, and competitor scopes.</li><li>Build focal and donor pre/post feature tables.</li><li>Build event detection, new UPC, classification, and ramp monitoring tables.</li></ul><div class="artifact-row"><span class="chip">built_filtered_weekly</span><span class="chip">built_enriched_weekly</span><span class="chip">comparison_pool_weekly</span><span class="chip">ml_training_features</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-5">
+        <div class="stage-head"><div class="stage-num">5</div><h2>Label Strategy and Training Dataset Assembly</h2><span class="stage-tag tag-model">Training data</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Because SPINS does not include a pre-labeled cannibalization field, the team creates transparent deterministic labels from observable business evidence. These labels become the supervised learning foundation.</p><div class="exit"><strong>Exit criteria</strong><span>Training dataset has labels, features, guardrail flags, data-quality fields, and lineage to source Druid records.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Create labels: CANNIBALIZING, WATCH, INCREMENTAL, and NEUTRAL.</li><li>Create secondary labels for distribution-led versus demand-led growth.</li><li>Compute incremental_share for UI interpretation.</li><li>Suppress or downgrade rows with insufficient weeks, promo confounds, heavy TDP movement, missing competitor context, or launch-ramp instability.</li><li>Use relationship distance and pack distance as structural substitution features.</li></ul><div class="artifact-row"><span class="chip">labels</span><span class="chip">incremental_share</span><span class="chip">guardrails</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-6">
+        <div class="stage-head"><div class="stage-num">6</div><h2>Model Training</h2><span class="stage-tag tag-model">Models</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Mo trains several focused models rather than one oversized model. Each model has a clear job: identify cannibalization risk, rank likely donors, detect important events, and estimate price response.</p><div class="exit"><strong>Exit criteria</strong><span>Candidate models are trained with versioned artifacts, reproducible inputs, and documented feature importance.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Train cannibalization classifier on ml_training_features.</li><li>Train donor ranker to order likely donor SKUs.</li><li>Train event detector to prioritize material business events.</li><li>Train own-price, cross-price, promo, and forecast models for price elasticity.</li><li>Start with interpretable baselines, then advance to LightGBM or similar models with driver explanations.</li></ul><div class="artifact-row"><span class="chip">model_cannibal</span><span class="chip">model_ranker</span><span class="chip">model_event</span><span class="chip">price models</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-7">
+        <div class="stage-head"><div class="stage-num">7</div><h2>Fit Testing and Model Diagnostics</h2><span class="stage-tag tag-validate">Fit testing</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The team tests whether each model actually learned useful patterns instead of memorizing noise, seasonality, distribution changes, or promotional shocks.</p><div class="exit"><strong>Exit criteria</strong><span>Model performance is acceptable overall and stable across important business segments, or limitations are documented as UI guardrails.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Evaluate precision, recall, F1, ROC-AUC, PR-AUC, and calibration by confidence bucket.</li><li>Evaluate donor ranking with top-k hit rate and mean reciprocal rank.</li><li>Evaluate event detector precision so Mo does not flood users with weak alerts.</li><li>Evaluate price models with out-of-sample error, elasticity sign checks, and stability by segment.</li><li>Run diagnostics by relationship distance, geography, channel, pack count, flavor family, launch age, promo intensity, and TDP movement.</li></ul><div class="artifact-row"><span class="chip">calibration</span><span class="chip">segment diagnostics</span><span class="chip">top-k donor rank</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-8">
+        <div class="stage-head"><div class="stage-num">8</div><h2>Validation and Business Review</h2><span class="stage-tag tag-validate">Business signoff</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Model quality is not accepted by statistics alone. Business stakeholders review examples to confirm that recommendations make commercial sense and are explainable enough to trust.</p><div class="exit"><strong>Exit criteria</strong><span>Business reviewers approve model behavior, action language, and confidence thresholds for pilot use.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Review high-confidence cases, low-confidence cases, false positives, and false negatives.</li><li>Compare model conclusions against known launches, assortment changes, and pricing actions.</li><li>Verify recommended actions: keep, expand, monitor, reduce overlap, defend price, and test price correction.</li><li>Confirm explanations cite real evidence: donor decline, focal lift, TDP movement, price change, promo depth, competitor gap, and scoring window.</li></ul><div class="artifact-row"><span class="chip">case review</span><span class="chip">thresholds</span><span class="chip">action language</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-9">
+        <div class="stage-head"><div class="stage-num">9</div><h2>Scoring, Event Packaging, and Druid Publishing</h2><span class="stage-tag tag-operate">Publish</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>Validated model outputs are converted into governed Druid tables that the product can query reliably. This makes Mo operational rather than experimental.</p><div class="exit"><strong>Exit criteria</strong><span>Scored output tables are available in Druid and match the UI contracts for Mo screens.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Score focal x donor x account x geography x window pairs.</li><li>Write scored_cannibalization with status, risk score, incremental share, donor rankings, confidence, top drivers, model version, and lineage.</li><li>Write scored_price_elasticity, price_elasticity_forecast_weekly, and price_event_queue.</li><li>Assemble unified event queues with suppression rules and severity.</li><li>Store source datasource, scoring window, feature version, model version, score timestamp, and source columns.</li></ul><div class="artifact-row"><span class="chip">scored_cannibalization</span><span class="chip">scored_price_elasticity</span><span class="chip">event_queue</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-10">
+        <div class="stage-head"><div class="stage-num">10</div><h2>UI Presentation and User Workflow</h2><span class="stage-tag tag-operate">Mo UI</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The UI does not expose raw model complexity. It turns the pipeline into a clear decision workflow: determine what matters, diagnose why it matters, and decide what to do.</p><div class="exit"><strong>Exit criteria</strong><span>Users can move from alert to diagnosis to action without needing to understand the full ML pipeline.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Present priority event landing pages for cannibalization and price elasticity.</li><li>Provide drill-down screens for SKU summary, geography heatmap, pack ladder, pre/post diagnostics, elasticity summary, promo response, competitive price gap, MULO norms, and what-if forecasting.</li><li>Show confidence, action labels, top drivers, provenance, and suppression status.</li><li>Keep deterministic evidence visible beside ML scoring.</li><li>Link pricing signals back to cannibalization when a price move may source demand from another BUILT pack size.</li></ul><div class="artifact-row"><span class="chip">Determine</span><span class="chip">Diagnose</span><span class="chip">Decide</span></div></div></div>
+      </article>
+
+      <article class="stage" id="stage-11">
+        <div class="stage-head"><div class="stage-num">11</div><h2>Monitoring, Retraining, and Governance</h2><span class="stage-tag tag-operate">Operate</span></div>
+        <div class="stage-body"><div class="exec"><span class="block-label">Executive view</span><p>The system must remain trustworthy as data, retailers, products, pricing, and shopper behavior change. Monitoring turns the ML product into a managed capability.</p><div class="exit"><strong>Exit criteria</strong><span>Mo has a repeatable operating rhythm for refresh, review, retraining, and governance.</span></div></div><div class="tech"><span class="block-label">Technical work</span><ul><li>Monitor data freshness, row counts, schema drift, feature drift, score drift, confidence mix, event volume, and UI usage.</li><li>Track user feedback, dismissed alerts, accepted recommendations, and override reasons.</li><li>Retrain on a defined cadence or when drift/quality thresholds are crossed.</li><li>Version every model, feature table, scoring run, and action vocabulary.</li><li>Maintain audit trails for executive and commercial review.</li></ul><div class="artifact-row"><span class="chip">drift checks</span><span class="chip">feedback loop</span><span class="chip">retraining</span></div></div></div>
+      </article>
+
+      <section class="flow" id="flow">
+        <h2>End-to-End Flow</h2>
+        <div class="flow-grid">
+          <div class="flow-card"><strong>1. Govern</strong><span>Confirm the 97M-row Druid datasource is complete, stable, and traceable.</span></div>
+          <div class="flow-card"><strong>2. Prepare</strong><span>Normalize, enrich, compare, and aggregate into feature tables.</span></div>
+          <div class="flow-card"><strong>3. Train</strong><span>Fit focused models for cannibalization, donor ranking, events, and price response.</span></div>
+          <div class="flow-card"><strong>4. Validate</strong><span>Test fit, calibrate confidence, and review examples with business stakeholders.</span></div>
+          <div class="flow-card"><strong>5. Present</strong><span>Publish scores to Druid and expose them in Mo's Determine, Diagnose, Decide workflow.</span></div>
+        </div>
+      </section>
+    </section>
+  </div>
+</main>
+</body>
+</html>
