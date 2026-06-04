@@ -55,6 +55,8 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `mockups/mo_ml_playbook_from_druid_to_ui.html`: visual stage-by-stage ML playbook.
 - `docs/mo_druid_query_register.md`: actual Druid SQL register linked from playbook query IDs.
 - `mockups/mo_druid_query_register.html`: browser-friendly query register for testing query-anchor navigation from the playbook.
+- `docs/mo_druid_error_register.md`: running log of Druid query errors encountered during live testing, with root cause and remedy for each.
+- `mockups/mo_druid_error_register.html`: browser-friendly version of the error register.
 - `docs/Mo_Build_Field_Guide_price_elasticity_addendum.md`: price elasticity module guide.
 - `docs/built_cannibalization_druid_ml_plan_3.md`: current detailed Druid/ML query plan.
 - `mockups/mo_intelligence_suite_v12.html`: latest Mo intelligence suite mockup.

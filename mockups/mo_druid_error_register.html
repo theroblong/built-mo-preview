@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Druid Error Register</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--red:#c0392b;--red-bg:#fff5f5;--red-border:#f5c6c2;--amber:#b45309;--amber-bg:#fffbeb;--amber-border:#fcd34d;--green:#1a7a45;--green-bg:#f0faf4;--green-border:#86efac;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55}
+.shell{width:min(1100px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}
+.hero{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08);padding:22px;margin-bottom:14px}
+.hero h1{margin:0 0 6px;font-size:30px;line-height:1.1}.hero p{max-width:820px;color:var(--muted);margin:0}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px}
+.toc{position:sticky;top:14px;align-self:start;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden}
+.toc-title{padding:10px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}
+.toc a{display:block;padding:7px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:700}
+.toc a:hover{text-decoration:underline}
+.entry{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 4px 14px rgba(13,23,51,.06);padding:18px;margin-bottom:14px;scroll-margin-top:18px}
+.entry-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.eid{font-family:var(--mono);font-size:12px;font-weight:900;padding:4px 9px;border-radius:5px;white-space:nowrap;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.eid.fixed{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.eid.proactive{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.entry-title{font-size:17px;font-weight:800;margin:0}
+.entry-meta{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin-bottom:10px;font-size:13px}
+.entry-meta dt{color:var(--muted);font-weight:700}
+.entry-meta dd{margin:0}
+.entry p{color:var(--muted);margin:6px 0}
+.entry p strong{color:var(--ink)}
+pre{margin:10px 0 0;overflow:auto;background:#0d1733;color:#eef6ff;border-radius:8px;padding:12px;font-family:var(--mono);font-size:12px;line-height:1.45}
+code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+pre code{background:none;padding:0;border:none;font-size:12px}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+th{background:var(--surface-2);text-align:left;padding:6px 10px;border:1px solid var(--border);font-weight:700}
+td{padding:5px 10px;border:1px solid var(--border);vertical-align:top}
+td code{font-size:11px}
+.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:700}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.toc{position:static}}
+</style>
+</head>
+<body><main class="shell" id="top">
+<section class="hero">
+  <h1>Mo Druid Error Register</h1>
+  <p>Running log of errors encountered during live Druid query testing, with root cause and remedy for each. Add new entries as testing continues. Green badge = fixed in register. Amber = proactive fix (not yet hit at runtime).</p>
+</section>
+<div class="layout">
+<aside class="toc">
+  <div class="toc-title">Errors</div>
+  <a href="#e01">E01 — Column name commas</a>
+  <a href="#e02">E02 — TIME_PARSE __time</a>
+  <a href="#e03">E03 — Q0 timeout 404</a>
+  <a href="#e04">E04 — Lookup tab 403</a>
+  <a href="#e05">E05 — EXTERN FORBIDDEN</a>
+  <a href="#e06">E06 — UNION ALL literals</a>
+  <a href="#e07">E07 — EXTERN AS t() syntax</a>
+  <a href="#e08">E08 — ORDER BY non-time</a>
+  <a href="#e09">E09 — ORDER BY __time,col</a>
+  <a href="#e10">E10 — BroadcastTablesTooLarge</a>
+  <a href="#e11">E11 — TIME_PARSE format</a>
+  <a href="#e12">E12 — Missing CLUSTERED BY</a>
+</aside>
+<section>
+
+<section class="entry" id="e01">
+<div class="entry-header"><span class="eid fixed">E01 FIXED</span><h2 class="entry-title">Q0: Column names contain commas not present in spins_full</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q0</dd>
+  <dt>Error</dt><dd><code>INVALID_INPUT: Column 'Units, Yago' not found in any table</code></dd>
+</dl>
+<p><strong>Root cause:</strong> Register was written with comma-separated SPINS column names. Actual column names in <code>spins_full</code> use spaces only.</p>
+<p><strong>Remedy:</strong> Stripped commas from 13 column references. Full mapping:</p>
+<table>
+<tr><th>Was</th><th>Fixed to</th></tr>
+<tr><td><code>"Units, Yago"</code></td><td><code>"Units Yago"</code></td></tr>
+<tr><td><code>"Base Units, Yago"</code></td><td><code>"Base Units Yago"</code></td></tr>
+<tr><td><code>"TDP, Yago"</code></td><td><code>"TDP Yago"</code></td></tr>
+<tr><td><code>"ARP, Yago"</code></td><td><code>"ARP Yago"</code></td></tr>
+<tr><td><code>"ARP % Discount, Any Promo"</code></td><td><code>"ARP % Discount Any Promo"</code></td></tr>
+<tr><td><code>"Units, Promo"</code></td><td><code>"Units Promo"</code></td></tr>
+<tr><td><code>"Units, Non-Promo"</code></td><td><code>"Units Non-Promo"</code></td></tr>
+<tr><td><code>"Units, % Promo"</code></td><td><code>"Units % Promo"</code></td></tr>
+<tr><td><code>"TDP, Any Promo"</code></td><td><code>"TDP Any Promo"</code></td></tr>
+<tr><td><code>"TDP, Non-Promo"</code></td><td><code>"TDP Non-Promo"</code></td></tr>
+<tr><td><code>"Units ,% Lift, TPR"</code></td><td><code>"Units % Lift TPR"</code></td></tr>
+<tr><td><code>"Units ,% Lift, Any Display"</code></td><td><code>"Units % Lift Any Display"</code></td></tr>
+<tr><td><code>"Units ,% Lift, Any Feature"</code></td><td><code>"Units % Lift Any Feature"</code></td></tr>
+</table>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e02">
+<div class="entry-header"><span class="eid fixed">E02 FIXED</span><h2 class="entry-title">Q0: TIME_PARSE on "Time Period End Date" redundant</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q0</dd>
+  <dt>Error</dt><dd>Design improvement — not a runtime error</dd>
+</dl>
+<p><strong>Root cause:</strong> Original Q0 used <code>TIME_PARSE("Time Period End Date", 'MM/dd/yyyy') AS __time</code>. The <code>spins_full</code> datasource already has a native <code>__time</code> column set to the correct week-end timestamp at ingestion. Re-parsing a string column is slower and adds format-mismatch risk.</p>
+<p><strong>Remedy:</strong> Replaced with <code>__time</code> directly. Eliminates the TIME_PARSE call and the string column dependency.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e03">
+<div class="entry-header"><span class="eid fixed">E03 FIXED</span><h2 class="entry-title">Q0: Task timeout (404) — 62.9M row OVERWRITE ALL exceeds cluster limit</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q0</dd>
+  <dt>Error</dt><dd>HTTP 404 after ~1.5 hours — Druid task record lost (cluster task duration limit reached)</dd>
+</dl>
+<p><strong>Root cause:</strong> Two compounding issues: (1) The subcategory <code>'WELLNESS &amp; NUTRITION BARS'</code> is correct for BUILT (99.8% of BUILT rows are there), but the full subcategory contains ~62.9M rows — too large for a single OVERWRITE ALL on this cluster. (2) Initial diagnosis incorrectly identified <code>GRANOLA &amp; SNACK BARS</code> as the right subcategory based on a single sample row.</p>
+<p><strong>Data confirmed via query:</strong> BUILT brand split = 912K rows in WELLNESS &amp; NUTRITION BARS vs 1,788 in GRANOLA &amp; SNACK BARS.</p>
+<p><strong>Remedy:</strong> Keep <code>'WELLNESS &amp; NUTRITION BARS'</code>. Replace <code>OVERWRITE ALL</code> with <code>OVERWRITE WHERE __time &gt;= TIMESTAMP '...' AND __time &lt; TIMESTAMP '...'</code> and run in annual batches (~20–25M rows each). Note: Q0 Batch 1 actually succeeded silently despite the 404 — always verify with <code>SELECT COUNT(*) FROM built_filtered_weekly</code> before re-running.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e04">
+<div class="entry-header"><span class="eid fixed">E04 FIXED</span><h2 class="entry-title">QS1/QS2/QS3: Druid Lookup tab returns 403</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Setup (lookup ingestion)</dd>
+  <dt>Error</dt><dd>HTTP 403 Unauthorized on the Druid Lookup tab</dd>
+</dl>
+<p><strong>Root cause:</strong> Current user role lacks the <code>EXTERNAL</code> resource action required to manage Druid Lookups.</p>
+<p><strong>Remedy:</strong> Abandoned Druid Lookups. Created <code>flavor_mapping</code>, <code>flavor_canonical_overrides</code>, and <code>item_catalog</code> as regular Druid datasources via SQL <code>REPLACE INTO</code>. Changed <code>item_catalog</code> from UPC-keyed to brand-keyed design (tier is a brand-level concept). Updated Q2 and Q2b joins from <code>c.upc = ic.upc</code> to <code>c.source_brand = ic.brand</code>.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e05">
+<div class="entry-header"><span class="eid fixed">E05 FIXED</span><h2 class="entry-title">QS1: EXTERN FORBIDDEN</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>QS1 (flavor_mapping seed)</dd>
+  <dt>Error</dt><dd><code>FORBIDDEN: Unauthorized</code></dd>
+</dl>
+<p><strong>Root cause:</strong> The <code>EXTERN()</code> function (including <code>inline</code> type) requires a separate cluster permission that the current role does not have.</p>
+<p><strong>Remedy:</strong> Avoid EXTERN entirely. Read from <code>spins_full</code> using <code>SELECT DISTINCT "UPC"</code> subquery, then derive all curated values (flavor family, normalized names, pack count, size) via CASE expressions keyed on UPC. No new permissions required.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e06">
+<div class="entry-header"><span class="eid fixed">E06 FIXED</span><h2 class="entry-title">QS1: UNION ALL with literal rows not supported</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>QS1 (flavor_mapping seed — interim approach)</dd>
+  <dt>Error</dt><dd><code>INVALID_INPUT: SQL requires union with input of a datasource type that is not supported. Union operation is only supported between regular tables.</code></dd>
+</dl>
+<p><strong>Root cause:</strong> Druid MSQ does not support <code>UNION ALL</code> between literal <code>SELECT 'value' AS col</code> rows without a <code>FROM</code> clause. Only <code>UNION ALL</code> between real Druid datasource tables is supported.</p>
+<p><strong>Remedy:</strong> Same as E05 — use <code>spins_full</code> as the row source with CASE expressions.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e07">
+<div class="entry-header"><span class="eid fixed">E07 MOOT</span><h2 class="entry-title">QS1: EXTERN AS t(col VARCHAR) type-declaration syntax not supported</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>QS1 (flavor_mapping seed — before E05 was discovered)</dd>
+  <dt>Error</dt><dd><code>INVALID_INPUT: Received an unexpected token [VARCHAR] (line [21], column [9]), acceptable options: [")", ","]</code></dd>
+</dl>
+<p><strong>Root cause:</strong> This Druid version requires the older three-argument EXTERN form where the schema is a third JSON argument. It does not support the newer <code>AS t(col TYPE, ...)</code> type declaration syntax.</p>
+<p><strong>Status:</strong> Moot — EXTERN is FORBIDDEN regardless (E05). Documented for reference if permissions change.</p>
+<p><strong>Three-argument form for reference:</strong></p>
+<pre><code>FROM TABLE(
+  EXTERN(
+    '{"type":"inline","data":"..."}',
+    '{"type":"csv","findColumnsFromHeader":true}',
+    '[{"name":"col1","type":"string"},...]'
+  )
+)</code></pre>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e08">
+<div class="entry-header"><span class="eid fixed">E08 FIXED</span><h2 class="entry-title">QS1v: ORDER BY non-time column not supported</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>QS1v (validation query)</dd>
+  <dt>Error</dt><dd><code>INVALID_INPUT: SQL query requires ordering a table by non-time column [[upc]], which is not supported.</code></dd>
+</dl>
+<p><strong>Root cause:</strong> Druid does not support top-level <code>ORDER BY</code> on non-<code>__time</code> columns in scan queries against time-series datasources.</p>
+<p><strong>Attempted fix:</strong> Changed to <code>ORDER BY __time, upc</code> — still failed (see E09).</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e09">
+<div class="entry-header"><span class="eid fixed">E09 FIXED</span><h2 class="entry-title">QS1v: ORDER BY __time, col not supported in CTE context</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>QS1v (validation query)</dd>
+  <dt>Error</dt><dd><code>INVALID_INPUT: SQL query requires ordering a table by non-time column [[__time, upc]], which is not supported.</code></dd>
+</dl>
+<p><strong>Root cause:</strong> Inside a CTE, <code>__time</code> loses its special primary-time column status and is treated as a regular column. Any multi-column ORDER BY — even <code>ORDER BY __time, other_col</code> — is rejected.</p>
+<p><strong>Remedy:</strong> Removed <code>ORDER BY</code> entirely from QS1v. Mismatch rows are returned in any order — the validation purpose (zero rows = clean) is unaffected. Also removed from Q2b and Q2c for the same reason.</p>
+<p><strong>General rule for this cluster:</strong> Only bare <code>ORDER BY __time</code> is permitted at the top level of a scan query. Remove all other top-level ORDER BY clauses.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e10">
+<div class="entry-header"><span class="eid fixed">E10 FIXED</span><h2 class="entry-title">Q2: BroadcastTablesTooLarge on self-join</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (comparison_pool_weekly)</dd>
+  <dt>Error</dt><dd><code>BroadcastTablesTooLarge: Size of broadcast tables in JOIN exceeds reserved memory limit (memory reserved for broadcast tables = [311,387,750] bytes).</code></dd>
+</dl>
+<p><strong>Root cause:</strong> Q2 self-joins <code>built_enriched_weekly</code>. Druid's default join algorithm broadcasts the right side into each worker's memory. <code>built_enriched_weekly</code> exceeds the ~311 MB broadcast limit on this cluster (1 GB max memory, single middlemanager, ~29% reserved for broadcast tables).</p>
+<p><strong>Remedy:</strong> Add <code>SET sqlJoinAlgorithm = 'sortMerge';</code> at the top of the query. Sort-merge join streams and shuffles both sides by the join key instead of broadcasting. Also applied proactively to Q4 and Q5 which have the same large-table join pattern.</p>
+<pre><code>SET sqlJoinAlgorithm = 'sortMerge';
+
+REPLACE INTO "comparison_pool_weekly"
+...</code></pre>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e11">
+<div class="entry-header"><span class="eid proactive">E11 PROACTIVE</span><h2 class="entry-title">Q3/Q4/Q5: TIME_PARSE format mismatch for first_week_selling</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q3, Q4, Q5</dd>
+  <dt>Error</dt><dd>Not yet hit at runtime — identified proactively during code review</dd>
+</dl>
+<p><strong>Root cause:</strong> Q3/Q4/Q5 called <code>TIME_PARSE(first_week_selling, 'MM/dd/yyyy')</code>. However, <code>first_week_selling</code> is stored in <code>spins_full</code> as ISO format (<code>2023-01-08</code>, pattern <code>yyyy-MM-dd</code>) and is passed through Q0 and Q1 without format conversion.</p>
+<p><strong>Remedy:</strong> Changed all occurrences to <code>TIME_PARSE(first_week_selling, 'yyyy-MM-dd')</code> in Q3, Q4, and Q5 (9 occurrences total).</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e12">
+<div class="entry-header"><span class="eid proactive">E12 PROACTIVE</span><h2 class="entry-title">Q0–Q8: Missing CLUSTERED BY on all pipeline REPLACE INTO queries</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q0 through Q8</dd>
+  <dt>Error</dt><dd>Structural performance gap — not a runtime error</dd>
+</dl>
+<p><strong>Root cause:</strong> All <code>REPLACE INTO … PARTITIONED BY DAY</code> queries were missing <code>CLUSTERED BY</code>. Without it, rows within each day's segment are in arbitrary order. Downstream JOINs and GROUP BYs on <code>upc</code>, <code>focal_upc</code>, <code>geography_raw</code>, etc. cannot range-scan and must full-segment-scan instead.</p>
+<p><strong>Remedy:</strong> Added <code>CLUSTERED BY &lt;join-key columns&gt;</code> after <code>PARTITIONED BY DAY</code> in Q0–Q8:</p>
+<table>
+<tr><th>Query</th><th>Table</th><th>CLUSTERED BY</th></tr>
+<tr><td>Q0</td><td><code>built_filtered_weekly</code></td><td><code>upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q1</td><td><code>built_enriched_weekly</code></td><td><code>upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q2</td><td><code>comparison_pool_weekly</code></td><td><code>focal_upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q3</td><td><code>built_prepost_features</code></td><td><code>upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q4</td><td><code>donor_prepost_features</code></td><td><code>focal_upc, candidate_upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q5</td><td><code>ml_training_features</code></td><td><code>focal_upc, donor_upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q6</td><td><code>event_detection_weekly</code></td><td><code>upc, channel_outlet, retail_account, geography_raw</code></td></tr>
+<tr><td>Q7</td><td><code>new_upc_candidates</code></td><td><code>upc</code></td></tr>
+<tr><td>Q8</td><td><code>new_upc_classifications</code></td><td><code>upc</code></td></tr>
+</table>
+<p><strong>Note:</strong> Q9 and Q14–Q22 should follow the same pattern. Apply at minimum <code>CLUSTERED BY upc</code> (or <code>focal_upc</code> for pair-based output tables).</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+</section>
+</div>
+</main>
+</body>
+</html>
