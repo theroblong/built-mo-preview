@@ -137,7 +137,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - SET sqlJoinAlgorithm = 'sortMerge' — switches from broadcast to shuffle-based sort-merge join
 - SET durableShuffleStorage = 'true' — routes shuffle files to S3; also enabled cluster-wide by Rob
 - SET sqlSortMergeDiskBuffered = 'true' — spills merge buffers to disk; complements durable shuffle
-- SET maxNumTasks = 8 — adds parallelism (effective if cluster has multiple task slots)
+- SET maxNumTasks = 4 — adds parallelism (effective if cluster has multiple task slots)
 - SET rowsPerSegment = 5000000 — increases output segment size from 3M to 5M rows
 
 ## Open Follow-Ups

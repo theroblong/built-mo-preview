@@ -253,7 +253,7 @@ REPLACE INTO "comparison_pool_weekly"
 <pre><code>SET sqlJoinAlgorithm      = 'sortMerge';
 SET sqlSortMergeDiskBuffered = 'true';
 SET durableShuffleStorage = 'true';    -- also enabled at cluster level
-SET maxNumTasks           = 8;         -- effective if cluster has multiple task slots
+SET maxNumTasks           = 4;         -- effective if cluster has multiple task slots
 SET rowsPerSegment        = 5000000;</code></pre>
 <ul>
 <li><code>durableShuffleStorage = 'true'</code> — routes shuffle files to S3 instead of local disk. <strong>Primary fix.</strong> Also enabled cluster-wide in Druid runtime config by cluster admin.</li>

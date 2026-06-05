@@ -170,7 +170,7 @@ FROM TABLE(
 SET sqlJoinAlgorithm      = 'sortMerge';
 SET sqlSortMergeDiskBuffered = 'true';
 SET durableShuffleStorage = 'true';    -- also enabled at cluster level
-SET maxNumTasks           = 8;         -- effective if cluster has multiple task slots
+SET maxNumTasks           = 4;         -- effective if cluster has multiple task slots
 SET rowsPerSegment        = 5000000;
 ```
 
