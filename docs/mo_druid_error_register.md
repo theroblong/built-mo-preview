@@ -170,7 +170,7 @@ FROM TABLE(
 SET sqlJoinAlgorithm      = 'sortMerge';
 SET sqlSortMergeDiskBuffered = 'true';
 SET durableShuffleStorage = 'true';    -- also enabled at cluster level
-SET maxNumTasks           = 16;        -- effective if cluster has multiple task slots
+SET maxNumTasks           = 8;         -- effective if cluster has multiple task slots
 SET rowsPerSegment        = 5000000;
 ```
 
@@ -289,3 +289,23 @@ druid.msq.intermediate.storage.type=s3
 druid.msq.intermediate.storage.bucket=<your-s3-bucket>
 druid.msq.intermediate.storage.prefix=druid/msq/intermediate
 ```
+
+---
+
+## E19 — Q2: Task disappeared on worker — first run with cluster-level durableShuffleStorage active
+
+**Query:** Q2 (comparison_pool_weekly), 2023 batch (Batch 1)
+**Task ID:** `query-444287e6-40c4-4111-879b-d9ed739b86dc`
+**Error:** `general: This task disappeared on the worker where it was assigned. See overlord logs for more details.`
+**Progress:** ~2/3 of 16M rows on Stage 3 (input step) — furthest progress on Q2 to date
+**Settings:** `sqlJoinAlgorithm=sortMerge`, `sqlSortMergeDiskBuffered=true`, `maxNumTasks=8` (7 workers); `durableShuffleStorage` NOT set in query — Rob completed cluster-level MSQ intermediate S3 storage config (`druid.msq.intermediate.storage.enable=true` + S3 connector)
+**UI observation:** "Network Connectivity Issues" flashed yellow periodically during execution
+
+**Analysis:**
+- This is the first run since Rob completed the MSQ intermediate S3 storage connector config. `durableShuffleStorage` is now active cluster-wide; shuffle files route to S3 without the explicit SET command (per E13 note).
+- Reaching 2/3 of 16M rows is meaningful progress — all prior multi-worker sort-merge attempts failed with explicit pod eviction at ~10-11 min (E15–E17). The further progress strongly suggests S3 shuffle is active and disk pressure is no longer the primary blocker.
+- "Task disappeared" differs from the prior "Worker0 evicted" messages. The controller lost contact with a worker rather than receiving an explicit K8s eviction event. Combined with the periodic "Network Connectivity Issues" UI flashes, this points to a pod OOM crash or a transient network partition — not disk saturation.
+
+**Remedy / next steps:**
+1. Add `SET durableShuffleStorage = 'true'` explicitly to Q2 — safe now that Rob's cluster config is complete (see E14 for why it was removed). Explicit SET confirms it's active and documents intent.
+2. Check K8s overlord logs for the specific worker pod that disappeared (`query-444287e6-40c4-4111-879b-d9ed739b86dc`) to confirm OOM vs. network partition.

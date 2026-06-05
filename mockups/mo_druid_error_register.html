@@ -253,7 +253,7 @@ REPLACE INTO "comparison_pool_weekly"
 <pre><code>SET sqlJoinAlgorithm      = 'sortMerge';
 SET sqlSortMergeDiskBuffered = 'true';
 SET durableShuffleStorage = 'true';    -- also enabled at cluster level
-SET maxNumTasks           = 16;        -- effective if cluster has multiple task slots
+SET maxNumTasks           = 8;         -- effective if cluster has multiple task slots
 SET rowsPerSegment        = 5000000;</code></pre>
 <ul>
 <li><code>durableShuffleStorage = 'true'</code> — routes shuffle files to S3 instead of local disk. <strong>Primary fix.</strong> Also enabled cluster-wide in Druid runtime config by cluster admin.</li>
@@ -357,6 +357,30 @@ druid.msq.intermediate.storage.prefix=druid/msq/intermediate</code></pre>
 <tr><td>sortMerge + 15 workers, 2023 batch</td><td>Worker0 pod evicted ~10-11 min (E16–E17)</td></tr>
 </table>
 <p><strong>Conclusion:</strong> Q2 is blocked on pod ephemeral storage quota. Rob must complete MSQ intermediate S3 storage connector config (<code>druid.msq.intermediate.storage.enable=true</code>) to route shuffle files off local pod disk.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="entry" id="e19">
+<div class="entry-header"><span class="eid">E19 BLOCKED</span><h2 class="entry-title">Q2: Task disappeared on worker — first run with cluster-level durableShuffleStorage active</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (comparison_pool_weekly), 2023 batch (Batch 1)</dd>
+  <dt>Task ID</dt><dd><code>query-444287e6-40c4-4111-879b-d9ed739b86dc</code></dd>
+  <dt>Error</dt><dd><code>general: This task disappeared on the worker where it was assigned.</code></dd>
+  <dt>Progress</dt><dd>~2/3 of 16M rows on Stage 3 (input step) — furthest progress on Q2 to date</dd>
+  <dt>Settings</dt><dd>sortMerge + diskBuffered + maxNumTasks=8 (7 workers); durableShuffleStorage not set in query — Rob completed cluster-level MSQ intermediate S3 storage config</dd>
+  <dt>UI observation</dt><dd>"Network Connectivity Issues" flashed yellow periodically during execution</dd>
+</dl>
+<p><strong>Analysis:</strong></p>
+<ul>
+  <li>First run since Rob completed MSQ intermediate S3 storage connector config. <code>durableShuffleStorage</code> is now active cluster-wide even without the explicit SET command (per E13 note).</li>
+  <li>Reaching 2/3 of 16M rows is meaningful progress — all prior multi-worker sort-merge attempts failed with explicit pod eviction at ~10–11 min (E15–E17). The further progress strongly suggests S3 shuffle is active and disk pressure is no longer the primary blocker.</li>
+  <li>"Task disappeared" differs from prior "Worker0 evicted" messages — the controller lost contact with a worker rather than receiving an explicit K8s eviction event. Combined with the periodic network connectivity UI flashes, this points to a pod OOM crash or transient network partition — not disk saturation.</li>
+</ul>
+<p><strong>Next steps:</strong></p>
+<ol>
+  <li>Add <code>SET durableShuffleStorage = 'true'</code> explicitly to Q2 — safe now that Rob's cluster config is complete (see E14). Explicit SET confirms it's active and documents intent.</li>
+  <li>Check K8s overlord logs for the specific worker pod that disappeared (<code>query-444287e6-40c4-4111-879b-d9ed739b86dc</code>) to confirm OOM vs. network partition.</li>
+</ol>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 

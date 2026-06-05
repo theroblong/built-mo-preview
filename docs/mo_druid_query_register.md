@@ -1435,8 +1435,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```sql
 SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
 SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
--- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config (Rob to complete)
-SET maxNumTasks           = 16;                    -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+SET durableShuffleStorage = 'true';               -- routes shuffle files to S3; cluster-level config completed by Rob
+SET maxNumTasks           = 8;                     -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
 -- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
 -- Run once per year-range (same batching pattern as Q0).
@@ -2049,8 +2049,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```sql
 SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
 SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
--- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config (Rob to complete)
-SET maxNumTasks           = 16;                    -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+SET durableShuffleStorage = 'true';               -- routes shuffle files to S3; cluster-level config completed by Rob
+SET maxNumTasks           = 8;                     -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
 -- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
 REPLACE INTO "donor_prepost_features"
@@ -2222,8 +2222,8 @@ CLUSTERED BY focal_upc, candidate_upc, channel_outlet, retail_account, geography
 ```sql
 SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
 SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
--- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config (Rob to complete)
-SET maxNumTasks           = 16;                    -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+SET durableShuffleStorage = 'true';               -- routes shuffle files to S3; cluster-level config completed by Rob
+SET maxNumTasks           = 8;                     -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
 -- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
 REPLACE INTO "ml_training_features"
