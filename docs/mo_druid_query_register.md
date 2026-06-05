@@ -1433,15 +1433,20 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 **Context required:** Set `{"sqlJoinAlgorithm": "sortMerge"}` in the Druid SQL console context panel before running — Q2 self-joins `built_enriched_weekly` which exceeds the cluster's broadcast join memory limit (~311 MB). sortMerge streams both sides instead of broadcasting.
 
 ```sql
-SET sqlJoinAlgorithm      = 'sortMerge';
-SET sqlSortMergeDiskBuffered = 'true';
--- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config;
--- omit until Rob completes the MSQ intermediate storage backend configuration.
-SET maxNumTasks           = 16;
-SET rowsPerSegment        = 5000000;
+SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
+SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
+-- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config (Rob to complete)
+SET maxNumTasks           = 16;                    -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+-- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
+-- Run once per year-range (same batching pattern as Q0).
+-- Adjust __time bounds per batch; re-run with the next range when complete.
+--   Batch 1: 2023-01-01 → 2024-01-01
+--   Batch 2: 2024-01-01 → 2025-01-01
+--   Batch 3: 2025-01-01 → present
 REPLACE INTO "comparison_pool_weekly"
-OVERWRITE ALL
+OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01'
+            AND __time <  TIMESTAMP '2024-01-01'
 SELECT
   f.__time,
   f.geography_raw, f.geography_display, f.geography_level,
@@ -1601,6 +1606,10 @@ WHERE
   (f.parent_brand = 'BUILT' OR c.parent_brand = 'BUILT')
   AND f.military_excluded_flag = 0
   AND c.military_excluded_flag = 0
+  AND f.__time >= TIMESTAMP '2023-01-01'
+  AND f.__time <  TIMESTAMP '2024-01-01'
+  AND c.__time >= TIMESTAMP '2023-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
+  AND c.__time <  TIMESTAMP '2024-01-01'
 PARTITIONED BY DAY
 CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 ```
@@ -2038,12 +2047,11 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 **Context required:** Set `{"sqlJoinAlgorithm": "sortMerge"}` in the query context panel — this query joins two large materialized tables and is likely to exceed the broadcast join memory limit.
 
 ```sql
-SET sqlJoinAlgorithm      = 'sortMerge';
-SET sqlSortMergeDiskBuffered = 'true';
--- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config;
--- omit until Rob completes the MSQ intermediate storage backend configuration.
-SET maxNumTasks           = 16;
-SET rowsPerSegment        = 5000000;
+SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
+SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
+-- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config (Rob to complete)
+SET maxNumTasks           = 16;                    -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+-- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
 REPLACE INTO "donor_prepost_features"
 OVERWRITE ALL
@@ -2212,12 +2220,11 @@ CLUSTERED BY focal_upc, candidate_upc, channel_outlet, retail_account, geography
 **`Units/TDP` is never computed anywhere in this query.**
 
 ```sql
-SET sqlJoinAlgorithm      = 'sortMerge';
-SET sqlSortMergeDiskBuffered = 'true';
--- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config;
--- omit until Rob completes the MSQ intermediate storage backend configuration.
-SET maxNumTasks           = 16;
-SET rowsPerSegment        = 5000000;
+SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
+SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
+-- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config (Rob to complete)
+SET maxNumTasks           = 16;                    -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+-- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
 REPLACE INTO "ml_training_features"
 OVERWRITE ALL

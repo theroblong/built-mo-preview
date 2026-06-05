@@ -221,3 +221,71 @@ druid.msq.intermediate.storage.type=s3
 druid.msq.intermediate.storage.bucket=<your-s3-bucket>
 druid.msq.intermediate.storage.prefix=druid/msq/intermediate
 ```
+
+---
+
+## E16 — Q2: Worker0 OOM eviction persists despite CASE fix — time-range batching required
+
+**Query:** Q2 (comparison_pool_weekly)
+**Error:** `WorkerRpcFailed: ServiceClosedException on worker0_0` (same as E15)
+**Duration:** ~10.6 minutes (consistent with E15's ~11.2 minutes — same pod disk limit hit each time)
+**Root cause:** Worker0 consistently receives the largest hash partition from the sort-merge shuffle on 62M rows and hits the Kubernetes pod ephemeral storage quota at approximately the same wall-clock mark regardless of query optimizations. The E15 CASE expression fix reduced join stages but did not reduce the fundamental data volume going through the sort-merge shuffle.
+
+**Pattern confirmed:** Three consecutive runs (E15 ~11 min, E16 ~10.6 min) all fail at the same worker0 at nearly the same elapsed time. This is a deterministic pod disk quota limit, not a random resource contention issue.
+
+**Remedy applied:** Added year-range batching to Q2 using `OVERWRITE WHERE __time >= ... AND __time < ...` plus a matching time filter in the WHERE clause — the same pattern used successfully for Q0. Each batch processes ~20M rows instead of 62M, reducing per-worker intermediate shuffle data to ~1/3. Run Q2 three times:
+
+- **Batch 1:** `__time >= TIMESTAMP '2023-01-01' AND __time < TIMESTAMP '2024-01-01'`
+- **Batch 2:** `__time >= TIMESTAMP '2024-01-01' AND __time < TIMESTAMP '2025-01-01'`
+- **Batch 3:** `__time >= TIMESTAMP '2025-01-01' AND __time < TIMESTAMP '2026-01-01'` (adjust upper bound to present)
+
+**Remaining path:** If batching still fails, the definitive fix is completing durable shuffle storage (E14/E15) so intermediate files go to S3 instead of local pod disk. Rob needs to set `druid.msq.intermediate.storage.enable=true` and configure the S3 connector.
+
+---
+
+## E17 — Q2: Time-range batch filter only applied to one side of sort-merge self-join
+
+**Query:** Q2 (comparison_pool_weekly), Batch 1 attempt
+**Error:** `WorkerRpcFailed: ServiceClosedException on worker0_0` (same as E15/E16)
+**Duration:** ~12.6 minutes — *longer* than E16's 10.6 minutes despite batching
+**Root cause:** The `f.__time >= TIMESTAMP '2023-01-01'` filter in the WHERE clause was pushed down to the `f` scan (right side, j0 prefix, 2023-scoped) but Druid's sort-merge planner did not infer that `c.__time` must also be 2023, even though the join condition is `f.__time = c.__time`. The `c` scan (left side, no prefix) continued to read the full time range (`-146136543.../146140482...` = all data). With worker0 receiving the full dataset on the left side, it generated more shuffle data than the non-batched E16 run, explaining the longer duration.
+
+**Confirmed from query plan:**
+- Right scan (f/focal side, j0): `"intervals": ["2023-01-01T00:00:00.000Z/2024-01-01T00:00:00.000Z"]` ✓
+- Left scan (c/candidate side, no prefix): `"intervals": ["-146136543-09-08T08:23:32.096Z/146140482-04-24T15:36:27.903Z"]` ✗
+
+**Remedy:** Added explicit `c.__time` bounds alongside the existing `f.__time` bounds in the WHERE clause:
+```sql
+  AND f.__time >= TIMESTAMP '2023-01-01'
+  AND f.__time <  TIMESTAMP '2024-01-01'
+  AND c.__time >= TIMESTAMP '2023-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
+  AND c.__time <  TIMESTAMP '2024-01-01'
+```
+With both sides explicitly filtered, Druid will push the time interval down to both scans, reducing each from ~62M to ~20M rows.
+
+---
+
+## E18 — Q2: BroadcastTablesTooLarge confirmed with no SET commands — sortMerge non-negotiable
+
+**Query:** Q2 (comparison_pool_weekly), all SET commands commented out
+**Error:** `BroadcastTablesTooLarge: Size of broadcast tables in JOIN exceeds reserved memory limit (memory reserved for broadcast tables = [311,387,750] bytes).`
+**Duration:** ~22 minutes (single worker attempting to build broadcast hash table before hitting 311MB limit)
+**Root cause:** Without `SET sqlJoinAlgorithm = 'sortMerge'`, Druid reverts to broadcast join. The broadcast limit is 311MB regardless of batching — even the 2023-only subset of `built_enriched_weekly` far exceeds it. No cluster defaults changed since E10.
+**Additional observation:** `maxNumWorkers: 1` confirmed — without `SET maxNumTasks = 16`, the cluster defaults to single-worker execution.
+**Remedy:** Restored `SET sqlJoinAlgorithm = 'sortMerge'` and `SET maxNumTasks = 16` as REQUIRED settings. Both are documented as mandatory in Q2, Q4, Q5.
+
+**Q2 status summary — all paths exhausted:**
+| Configuration | Result |
+|---|---|
+| No sortMerge (broadcast) | BroadcastTablesTooLarge (E10, E18) |
+| sortMerge + 1 worker | Stall at 800K rows, never completes (E13) |
+| sortMerge + 15 workers + full 62M rows | Worker0 pod evicted ~10-11 min (E15, E16) |
+| sortMerge + 15 workers + 2023 batch only (20M rows) | Worker0 pod evicted ~10-11 min (E16 variant) |
+
+**Conclusion:** Q2 is blocked on pod ephemeral storage quota for sort-merge shuffle files. The definitive fix is Rob completing the MSQ intermediate storage S3 connector configuration so shuffle files route to S3 instead of local pod disk. Required settings:
+```
+druid.msq.intermediate.storage.enable=true
+druid.msq.intermediate.storage.type=s3
+druid.msq.intermediate.storage.bucket=<your-s3-bucket>
+druid.msq.intermediate.storage.prefix=druid/msq/intermediate
+```

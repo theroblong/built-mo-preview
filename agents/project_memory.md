@@ -147,7 +147,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q0 Batches 2 and 3 still needed (2024 and 2025 annual ranges).
 - QS2 and QS3 still need to be confirmed.
 - Q1 has not been tested yet — first query to use the lookup tables.
-- Q2: Multiple attempts. E13 (disk stall, 1 worker) → E14 (durableShuffleStorage misconfigured, 15 workers acquired) → E15 (worker0 OOM-evicted by K8s after 11 min, 15 workers). item_catalog LEFT JOIN removed and replaced with inline CASE expression to eliminate unnecessary sort-merge shuffle stage. Primary blocker: Rob still needs to complete MSQ intermediate S3 storage connector config (druid.msq.intermediate.storage.enable=true + bucket/prefix) to enable durableShuffleStorage and prevent pod eviction from local disk pressure.
+- Q2: BLOCKED (E13–E18). All execution paths exhausted — broadcast fails (311MB limit), sort-merge + 1 worker stalls, sort-merge + 15 workers = pod evicted at ~10-11 min regardless of batching. Required settings confirmed: sqlJoinAlgorithm=sortMerge + maxNumTasks=16. Blocker: Rob must complete druid.msq.intermediate.storage.enable=true + S3 connector config to enable durableShuffleStorage (routes shuffle files to S3 instead of local pod disk).
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.

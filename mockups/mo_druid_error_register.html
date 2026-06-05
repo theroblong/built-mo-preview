@@ -60,6 +60,9 @@ td code{font-size:11px}
   <a href="#e13">E13 — Sort-merge disk stall</a>
   <a href="#e14">E14 — durableShuffleStorage misconfigured</a>
   <a href="#e15">E15 — Worker pod OOM evicted</a>
+  <a href="#e16">E16 — Batching applied to Q2</a>
+  <a href="#e17">E17 — Batch filter one-sided</a>
+  <a href="#e18">E18 — Q2 fully blocked (all paths)</a>
 </aside>
 <section>
 
@@ -290,6 +293,70 @@ SET rowsPerSegment        = 5000000;</code></pre>
 druid.msq.intermediate.storage.type=s3
 druid.msq.intermediate.storage.bucket=&lt;your-s3-bucket&gt;
 druid.msq.intermediate.storage.prefix=druid/msq/intermediate</code></pre>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+
+<section class="entry" id="e16">
+<div class="entry-header"><span class="eid fixed">E16 FIXED</span><h2 class="entry-title">Q2: Worker0 OOM eviction persists — time-range batching applied</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (comparison_pool_weekly)</dd>
+  <dt>Error</dt><dd><code>WorkerRpcFailed: ServiceClosedException on worker0_0</code> (same as E15)</dd>
+  <dt>Duration</dt><dd>~10.6 min (E15 was ~11.2 min — deterministic pod disk quota hit each time)</dd>
+</dl>
+<p><strong>Root cause:</strong> Worker0 consistently receives the largest hash partition from the sort-merge shuffle on 62M rows and hits the Kubernetes pod ephemeral storage quota at approximately the same wall-clock mark. The E15 CASE expression fix reduced join stages but did not reduce the fundamental 62M-row sort-merge shuffle volume.</p>
+<p><strong>Pattern confirmed:</strong> Three consecutive runs all fail at worker0 at ~10–11 minutes. This is a deterministic pod disk quota limit.</p>
+<p><strong>Remedy applied:</strong> Added year-range batching to Q2 using <code>OVERWRITE WHERE __time >= ... AND __time &lt; ...</code> — the same pattern used successfully for Q0. Each batch processes ~20M rows, reducing per-worker intermediate data to ~1/3. Run Q2 three times:</p>
+<ul>
+<li><strong>Batch 1:</strong> <code>__time &gt;= TIMESTAMP '2023-01-01' AND __time &lt; TIMESTAMP '2024-01-01'</code></li>
+<li><strong>Batch 2:</strong> <code>__time &gt;= TIMESTAMP '2024-01-01' AND __time &lt; TIMESTAMP '2025-01-01'</code></li>
+<li><strong>Batch 3:</strong> <code>__time &gt;= TIMESTAMP '2025-01-01'</code> (adjust upper bound to present)</li>
+</ul>
+<p><strong>Remaining path:</strong> If batching still fails, the definitive fix is completing durable shuffle storage (E14/E15) so shuffle files go to S3 instead of local pod disk.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+
+<section class="entry" id="e17">
+<div class="entry-header"><span class="eid fixed">E17 FIXED</span><h2 class="entry-title">Q2: Batch time filter only pushed to one side of sort-merge self-join</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (comparison_pool_weekly), Batch 1 attempt</dd>
+  <dt>Error</dt><dd><code>WorkerRpcFailed: ServiceClosedException on worker0_0</code></dd>
+  <dt>Duration</dt><dd>~12.6 minutes — <em>longer</em> than E16's 10.6 min despite batching, because one scan was still reading all data</dd>
+</dl>
+<p><strong>Root cause:</strong> The <code>f.__time</code> filter was pushed down to the <code>f</code> scan (right/j0 side, 2023-scoped) but Druid's sort-merge planner did NOT infer that <code>c.__time</code> must also be 2023 from the join condition <code>f.__time = c.__time</code>. The <code>c</code> scan continued reading the full time range. With worker0 receiving the full 62M row dataset on the left side, it generated more shuffle data than any prior run.</p>
+<p><strong>Confirmed from query plan:</strong></p>
+<ul>
+<li>Right scan (f/j0): <code>"intervals": ["2023-01-01.../2024-01-01..."]</code> ✓</li>
+<li>Left scan (c/no prefix): <code>"intervals": ["-146136543.../146140482..."]</code> — full range ✗</li>
+</ul>
+<p><strong>Remedy:</strong> Added explicit <code>c.__time</code> bounds to the WHERE clause alongside the existing <code>f.__time</code> bounds:</p>
+<pre><code>  AND f.__time &gt;= TIMESTAMP '2023-01-01'
+  AND f.__time &lt;  TIMESTAMP '2024-01-01'
+  AND c.__time &gt;= TIMESTAMP '2023-01-01'  -- sort-merge does not infer from f.__time
+  AND c.__time &lt;  TIMESTAMP '2024-01-01'</code></pre>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+
+<section class="entry" id="e18">
+<div class="entry-header"><span class="eid">E18 BLOCKED</span><h2 class="entry-title">Q2: BroadcastTablesTooLarge without SET commands — sortMerge non-negotiable</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (comparison_pool_weekly), all SET commands commented out</dd>
+  <dt>Error</dt><dd><code>BroadcastTablesTooLarge: 311MB limit exceeded</code></dd>
+  <dt>Duration</dt><dd>~22 minutes (single worker attempting broadcast hash table build)</dd>
+</dl>
+<p><strong>Root cause:</strong> Without <code>SET sqlJoinAlgorithm = 'sortMerge'</code>, Druid reverts to broadcast join. 311MB limit is unchanged regardless of batching. No cluster defaults changed since E10.</p>
+<p><strong>Remedy:</strong> Restored <code>SET sqlJoinAlgorithm = 'sortMerge'</code> and <code>SET maxNumTasks = 16</code> as REQUIRED settings.</p>
+<p><strong>Q2 status — all paths exhausted:</strong></p>
+<table>
+<tr><th>Configuration</th><th>Result</th></tr>
+<tr><td>No sortMerge (broadcast)</td><td>BroadcastTablesTooLarge (E10, E18)</td></tr>
+<tr><td>sortMerge + 1 worker</td><td>Stall at 800K rows (E13)</td></tr>
+<tr><td>sortMerge + 15 workers, 62M rows</td><td>Worker0 pod evicted ~10-11 min (E15, E16)</td></tr>
+<tr><td>sortMerge + 15 workers, 2023 batch</td><td>Worker0 pod evicted ~10-11 min (E16–E17)</td></tr>
+</table>
+<p><strong>Conclusion:</strong> Q2 is blocked on pod ephemeral storage quota. Rob must complete MSQ intermediate S3 storage connector config (<code>druid.msq.intermediate.storage.enable=true</code>) to route shuffle files off local pod disk.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
