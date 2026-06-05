@@ -1433,7 +1433,12 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 **Context required:** Set `{"sqlJoinAlgorithm": "sortMerge"}` in the Druid SQL console context panel before running — Q2 self-joins `built_enriched_weekly` which exceeds the cluster's broadcast join memory limit (~311 MB). sortMerge streams both sides instead of broadcasting.
 
 ```sql
-SET sqlJoinAlgorithm = 'sortMerge';
+SET sqlJoinAlgorithm      = 'sortMerge';
+SET sqlSortMergeDiskBuffered = 'true';
+-- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config;
+-- omit until Rob completes the MSQ intermediate storage backend configuration.
+SET maxNumTasks           = 16;
+SET rowsPerSegment        = 5000000;
 
 REPLACE INTO "comparison_pool_weekly"
 OVERWRITE ALL
@@ -1545,7 +1550,39 @@ SELECT
   c.units_lift_any_feature                               AS candidate_units_lift_any_feature,
   c.first_week_selling                                   AS candidate_first_week_selling,
   c.incr_units                                           AS candidate_incr_units,
-  ic.competitor_tier                                     AS candidate_competitor_tier
+  CASE c.source_brand
+    WHEN 'QUEST'                     THEN 1
+    WHEN 'BAREBELLS'                 THEN 1
+    WHEN 'ONE BAR'                   THEN 1
+    WHEN 'RXBAR'                     THEN 1
+    WHEN 'PERFECT BAR'               THEN 1
+    WHEN 'THINK!'                    THEN 1
+    WHEN 'PURE PROTEIN'              THEN 1
+    WHEN 'POWER CRUNCH'              THEN 1
+    WHEN 'NO COW'                    THEN 1
+    WHEN 'ROBERT IRVINES FITCRUNCH'  THEN 1
+    WHEN 'CLIF BUILDERS'             THEN 1
+    WHEN 'KIND'                      THEN 2
+    WHEN 'ATKINS'                    THEN 2
+    WHEN 'LUNA'                      THEN 2
+    WHEN 'GOMACRO'                   THEN 2
+    WHEN 'ZONE PERFECT'              THEN 2
+    WHEN 'MET-RX'                    THEN 2
+    WHEN 'NUGO NUTRITION'            THEN 2
+    WHEN 'ALOHA'                     THEN 2
+    WHEN 'LENNY & LARRYS'            THEN 2
+    WHEN 'PRIVATE LABEL'             THEN 2
+    WHEN 'CLIF BAR'                  THEN 3
+    WHEN 'LARABAR'                   THEN 3
+    WHEN 'BOBOS'                     THEN 3
+    WHEN 'CLIF ZBAR'                 THEN 3
+    WHEN 'HONEY STINGER'             THEN 3
+    WHEN 'CLIO'                      THEN 3
+    WHEN 'THATS IT'                  THEN 3
+    WHEN 'SPECIAL K'                 THEN 3
+    WHEN 'GATORADE'                  THEN 3
+    ELSE NULL
+  END                                                    AS candidate_competitor_tier
 
 FROM "built_enriched_weekly" f
 JOIN "built_enriched_weekly" c
@@ -1559,7 +1596,7 @@ JOIN "built_enriched_weekly" c
     OR f.spins_flavor = c.spins_flavor
     OR (f.parent_brand = c.parent_brand AND f.parent_brand = 'BUILT')
   )
-LEFT JOIN "item_catalog" ic ON c.source_brand = ic.brand
+-- item_catalog tier inlined as CASE to avoid sort-merge on a 30-row table
 WHERE
   (f.parent_brand = 'BUILT' OR c.parent_brand = 'BUILT')
   AND f.military_excluded_flag = 0
@@ -1596,7 +1633,39 @@ SELECT
   c.upc                                              AS competitor_upc,
   c.description                                      AS competitor_description,
   c.source_brand                                     AS competitor_brand,
-  ic.competitor_tier,
+  CASE c.source_brand
+    WHEN 'QUEST'                     THEN 1
+    WHEN 'BAREBELLS'                 THEN 1
+    WHEN 'ONE BAR'                   THEN 1
+    WHEN 'RXBAR'                     THEN 1
+    WHEN 'PERFECT BAR'               THEN 1
+    WHEN 'THINK!'                    THEN 1
+    WHEN 'PURE PROTEIN'              THEN 1
+    WHEN 'POWER CRUNCH'              THEN 1
+    WHEN 'NO COW'                    THEN 1
+    WHEN 'ROBERT IRVINES FITCRUNCH'  THEN 1
+    WHEN 'CLIF BUILDERS'             THEN 1
+    WHEN 'KIND'                      THEN 2
+    WHEN 'ATKINS'                    THEN 2
+    WHEN 'LUNA'                      THEN 2
+    WHEN 'GOMACRO'                   THEN 2
+    WHEN 'ZONE PERFECT'              THEN 2
+    WHEN 'MET-RX'                    THEN 2
+    WHEN 'NUGO NUTRITION'            THEN 2
+    WHEN 'ALOHA'                     THEN 2
+    WHEN 'LENNY & LARRYS'            THEN 2
+    WHEN 'PRIVATE LABEL'             THEN 2
+    WHEN 'CLIF BAR'                  THEN 3
+    WHEN 'LARABAR'                   THEN 3
+    WHEN 'BOBOS'                     THEN 3
+    WHEN 'CLIF ZBAR'                 THEN 3
+    WHEN 'HONEY STINGER'             THEN 3
+    WHEN 'CLIO'                      THEN 3
+    WHEN 'THATS IT'                  THEN 3
+    WHEN 'SPECIAL K'                 THEN 3
+    WHEN 'GATORADE'                  THEN 3
+    ELSE NULL
+  END                                                    AS competitor_tier,
   c.spins_flavor_raw                                 AS competitor_spins_flavor,
   c.source_pack_count                                AS competitor_pack_count,
   c.arp                                              AS competitor_arp,
@@ -1613,7 +1682,7 @@ JOIN "built_filtered_weekly" c
   AND f.retail_account  = c.retail_account
   AND f.geography_raw   = c.geography_raw
   AND c.source_brand    = :competitor_brand
-LEFT JOIN "item_catalog" ic ON c.source_brand = ic.brand
+-- item_catalog tier inlined as CASE to avoid sort-merge on a 30-row table
 WHERE
   f.upc          = :focal_upc
   AND f.retail_account  = :retail_account
@@ -1969,7 +2038,12 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 **Context required:** Set `{"sqlJoinAlgorithm": "sortMerge"}` in the query context panel — this query joins two large materialized tables and is likely to exceed the broadcast join memory limit.
 
 ```sql
-SET sqlJoinAlgorithm = 'sortMerge';
+SET sqlJoinAlgorithm      = 'sortMerge';
+SET sqlSortMergeDiskBuffered = 'true';
+-- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config;
+-- omit until Rob completes the MSQ intermediate storage backend configuration.
+SET maxNumTasks           = 16;
+SET rowsPerSegment        = 5000000;
 
 REPLACE INTO "donor_prepost_features"
 OVERWRITE ALL
@@ -2138,7 +2212,12 @@ CLUSTERED BY focal_upc, candidate_upc, channel_outlet, retail_account, geography
 **`Units/TDP` is never computed anywhere in this query.**
 
 ```sql
-SET sqlJoinAlgorithm = 'sortMerge';
+SET sqlJoinAlgorithm      = 'sortMerge';
+SET sqlSortMergeDiskBuffered = 'true';
+-- durableShuffleStorage requires druid.msq.intermediate.storage.enable=true + S3 connector config;
+-- omit until Rob completes the MSQ intermediate storage backend configuration.
+SET maxNumTasks           = 16;
+SET rowsPerSegment        = 5000000;
 
 REPLACE INTO "ml_training_features"
 OVERWRITE ALL
@@ -3020,7 +3099,39 @@ SELECT
   c.upc                                                  AS competitor_upc,
   c.description                                          AS competitor_description,
   c.source_brand                                         AS competitor_brand,
-  ic.competitor_tier,
+  CASE c.source_brand
+    WHEN 'QUEST'                     THEN 1
+    WHEN 'BAREBELLS'                 THEN 1
+    WHEN 'ONE BAR'                   THEN 1
+    WHEN 'RXBAR'                     THEN 1
+    WHEN 'PERFECT BAR'               THEN 1
+    WHEN 'THINK!'                    THEN 1
+    WHEN 'PURE PROTEIN'              THEN 1
+    WHEN 'POWER CRUNCH'              THEN 1
+    WHEN 'NO COW'                    THEN 1
+    WHEN 'ROBERT IRVINES FITCRUNCH'  THEN 1
+    WHEN 'CLIF BUILDERS'             THEN 1
+    WHEN 'KIND'                      THEN 2
+    WHEN 'ATKINS'                    THEN 2
+    WHEN 'LUNA'                      THEN 2
+    WHEN 'GOMACRO'                   THEN 2
+    WHEN 'ZONE PERFECT'              THEN 2
+    WHEN 'MET-RX'                    THEN 2
+    WHEN 'NUGO NUTRITION'            THEN 2
+    WHEN 'ALOHA'                     THEN 2
+    WHEN 'LENNY & LARRYS'            THEN 2
+    WHEN 'PRIVATE LABEL'             THEN 2
+    WHEN 'CLIF BAR'                  THEN 3
+    WHEN 'LARABAR'                   THEN 3
+    WHEN 'BOBOS'                     THEN 3
+    WHEN 'CLIF ZBAR'                 THEN 3
+    WHEN 'HONEY STINGER'             THEN 3
+    WHEN 'CLIO'                      THEN 3
+    WHEN 'THATS IT'                  THEN 3
+    WHEN 'SPECIAL K'                 THEN 3
+    WHEN 'GATORADE'                  THEN 3
+    ELSE NULL
+  END                                                    AS competitor_tier,
   c.spins_flavor_raw                                     AS competitor_spins_flavor_raw,
   c.source_pack_count                                    AS competitor_pack_count,
   c.arp / NULLIF(c.source_pack_count, 0)                AS competitor_price_per_bar,
@@ -3057,7 +3168,7 @@ JOIN "built_filtered_weekly" c
   AND c.source_brand NOT IN ('BUILT','BUILT BAR','BUILT PUFF','BUILT SOUR PUFF')
   AND c.arp > 0
   AND c.source_pack_count > 0
-LEFT JOIN "item_catalog" ic ON c.source_brand = ic.brand
+-- item_catalog tier inlined as CASE to avoid sort-merge on a 30-row table
 WHERE
   c.channel_outlet != 'CONVENTIONAL|MILITARY'
   AND c.retail_account != 'DECA'

@@ -57,6 +57,9 @@ td code{font-size:11px}
   <a href="#e10">E10 — BroadcastTablesTooLarge</a>
   <a href="#e11">E11 — TIME_PARSE format</a>
   <a href="#e12">E12 — Missing CLUSTERED BY</a>
+  <a href="#e13">E13 — Sort-merge disk stall</a>
+  <a href="#e14">E14 — durableShuffleStorage misconfigured</a>
+  <a href="#e15">E15 — Worker pod OOM evicted</a>
 </aside>
 <section>
 
@@ -232,6 +235,61 @@ REPLACE INTO "comparison_pool_weekly"
 <tr><td>Q8</td><td><code>new_upc_classifications</code></td><td><code>upc</code></td></tr>
 </table>
 <p><strong>Note:</strong> Q9 and Q14–Q22 should follow the same pattern. Apply at minimum <code>CLUSTERED BY upc</code> (or <code>focal_upc</code> for pair-based output tables).</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+
+<section class="entry" id="e13">
+<div class="entry-header"><span class="eid fixed">E13 FIXED</span><h2 class="entry-title">Q2/Q4/Q5: Sort-merge stalls at ~800K rows — local disk saturation</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (confirmed); Q4 and Q5 (proactive)</dd>
+  <dt>Error</dt><dd>No error message — task stops advancing at ~800K rows remaining out of ~62M. Preceded by fast initial progress.</dd>
+</dl>
+<p><strong>Root cause:</strong> Sort-merge join writes large intermediate shuffle files to local disk per partition. On a single middlemanager worker processing 62M rows, those files accumulate and eventually saturate local disk I/O. The task stalls waiting for disk I/O that has no capacity remaining.</p>
+<p><strong>Remedy:</strong> Four SET commands added to Q2, Q4, Q5:</p>
+<pre><code>SET sqlJoinAlgorithm      = 'sortMerge';
+SET sqlSortMergeDiskBuffered = 'true';
+SET durableShuffleStorage = 'true';    -- also enabled at cluster level
+SET maxNumTasks           = 16;        -- effective if cluster has multiple task slots
+SET rowsPerSegment        = 5000000;</code></pre>
+<ul>
+<li><code>durableShuffleStorage = 'true'</code> — routes shuffle files to S3 instead of local disk. <strong>Primary fix.</strong> Also enabled cluster-wide in Druid runtime config by cluster admin.</li>
+<li><code>sqlSortMergeDiskBuffered = 'true'</code> — spills sort-merge merge buffers to disk rather than memory. Complements durable shuffle by covering the in-memory merge phase.</li>
+<li><code>maxNumTasks = 16</code> — adds parallelism. Safe with durable shuffle on (S3 absorbs shuffle load; more workers don't add local disk pressure).</li>
+<li><code>rowsPerSegment = 5000000</code> — increases output segment size from 3M to 5M rows. Minor optimization; does not affect shuffle or stall.</li>
+</ul>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+
+<section class="entry" id="e14">
+<div class="entry-header"><span class="eid fixed">E14 FIXED</span><h2 class="entry-title">Q2: durableShuffleStorage fails — MSQ intermediate storage connector not configured</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (confirmed); Q4 and Q5 (same applies)</dd>
+  <dt>Error</dt><dd><code>DurableStorageConfiguration: Durable storage mode can only be enabled when druid.msq.intermediate.storage.enable is set to true and the connector is configured correctly. Got error: Storage connector not configured.</code></dd>
+</dl>
+<p><strong>Root cause:</strong> <code>SET durableShuffleStorage = 'true'</code> requires two things at the cluster level: (1) <code>druid.msq.intermediate.storage.enable = true</code> in runtime.properties, and (2) the MSQ intermediate S3 connector fully configured with bucket, path, and credentials. The S3 extension modules are loaded but the MSQ-specific connector backend was not wired up.</p>
+<p><strong>Remedy:</strong> Removed <code>SET durableShuffleStorage = 'true'</code> from Q2, Q4, Q5. Replaced with a comment. To re-enable: set <code>druid.msq.intermediate.storage.enable=true</code> and configure the MSQ S3 intermediate storage connector in runtime.properties.</p>
+<p><strong>Silver lining:</strong> <code>maxNumTasks = 16</code> was confirmed working — cluster scaled to <strong>15 workers</strong> (<code>maxNumWorkers: 15</code> confirmed in tuningConfig). With 15 workers splitting the sort-merge shuffle, each worker handles ~1/15th of the disk load that caused the earlier single-worker stall (E13). This parallelism improvement may be sufficient to complete Q2 without durable shuffle storage.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+
+<section class="entry" id="e15">
+<div class="entry-header"><span class="eid fixed">E15 PARTIAL</span><h2 class="entry-title">Q2: WorkerRpcFailed — worker pod OOM-evicted by Kubernetes</h2></div>
+<dl class="entry-meta">
+  <dt>Query</dt><dd>Q2 (comparison_pool_weekly)</dd>
+  <dt>Error</dt><dd><code>WorkerRpcFailed: RPC to worker[...-worker0_0] failed: ServiceClosedException: Service [...-worker0_0] is closed</code></dd>
+  <dt>Duration</dt><dd>~11 minutes (longer than E13, confirming incremental progress with 15 workers)</dd>
+</dl>
+<p><strong>Root cause:</strong> Worker0's Kubernetes pod was killed mid-execution — most likely OOM-evicted due to ephemeral storage or memory pressure from sort-merge disk buffers accumulating on local pod disk. K8s evicts pods that exceed ephemeral storage or memory limits, closing the worker service and causing the controller RPC to fail.</p>
+<p><strong>Contributing factor:</strong> <code>SET sqlJoinAlgorithm = 'sortMerge'</code> was applying sort-merge to ALL joins, including the <code>LEFT JOIN "item_catalog"</code> which is only 30 rows. Forcing sort-merge on a 30-row table creates an unnecessary extra shuffle stage and adds intermediate data per worker.</p>
+<p><strong>Remedy applied:</strong> Removed <code>LEFT JOIN "item_catalog"</code> from Q2 and Q2b. Replaced <code>ic.competitor_tier</code> with an inline <code>CASE c.source_brand WHEN ... END</code> expression containing all 30 tier assignments. Eliminates one sort-merge join stage and reduces per-worker intermediate data volume.</p>
+<p><strong>Remaining issue:</strong> Until <code>durableShuffleStorage</code> is fully configured (see E14), worker pods may still be evicted under heavy ephemeral storage pressure. Rob should complete the MSQ intermediate S3 connector configuration:</p>
+<pre><code>druid.msq.intermediate.storage.enable=true
+druid.msq.intermediate.storage.type=s3
+druid.msq.intermediate.storage.bucket=&lt;your-s3-bucket&gt;
+druid.msq.intermediate.storage.prefix=druid/msq/intermediate</code></pre>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 

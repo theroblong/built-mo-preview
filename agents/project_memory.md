@@ -131,13 +131,14 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - Q1: not yet run.
 - Q2: STALLED — sortMerge resolves BroadcastTablesTooLarge but stalls at ~800K rows remaining out of ~62M due to local disk saturation from shuffle intermediate files. Email sent to Rob outlining root cause and 4 recommended SET commands. Awaiting his response before updating the register.
 
-## Pending Cluster Settings (awaiting Rob's approval before adding to register)
+## Cluster Settings (approved and applied to Q2, Q4, Q5)
 
-Four SET commands evaluated for Q2 (and Q4/Q5 proactively). All zero data risk:
-1. SET durableShuffleStorage = 'true' — routes shuffle files to S3 instead of local disk; PRIMARY FIX for the stall.
-2. SET sqlSortMergeDiskBuffered = 'true' — spills merge buffers to disk instead of memory; good complement to #1.
-3. SET maxNumTasks = 16 — increases parallel worker tasks; only effective if cluster has multiple task slots (verify with Rob — task JSON showed maxNumWorkers=1 on a "tiny-cluster" middlemanager).
-4. SET rowsPerSegment = 5000000 — increases segment size from 3M to 5M rows; safe general optimization, won't fix the stall.
+All four SET commands added to Q2, Q4, Q5 in the query register:
+- SET sqlJoinAlgorithm = 'sortMerge' — switches from broadcast to shuffle-based sort-merge join
+- SET durableShuffleStorage = 'true' — routes shuffle files to S3; also enabled cluster-wide by Rob
+- SET sqlSortMergeDiskBuffered = 'true' — spills merge buffers to disk; complements durable shuffle
+- SET maxNumTasks = 16 — adds parallelism (effective if cluster has multiple task slots)
+- SET rowsPerSegment = 5000000 — increases output segment size from 3M to 5M rows
 
 ## Open Follow-Ups
 
@@ -146,7 +147,7 @@ Four SET commands evaluated for Q2 (and Q4/Q5 proactively). All zero data risk:
 - Q0 Batches 2 and 3 still needed (2024 and 2025 annual ranges).
 - QS2 and QS3 still need to be confirmed.
 - Q1 has not been tested yet — first query to use the lookup tables.
-- Q2 stall: awaiting Rob's cluster capacity info and approval of SET commands.
+- Q2: Multiple attempts. E13 (disk stall, 1 worker) → E14 (durableShuffleStorage misconfigured, 15 workers acquired) → E15 (worker0 OOM-evicted by K8s after 11 min, 15 workers). item_catalog LEFT JOIN removed and replaced with inline CASE expression to eliminate unnecessary sort-merge shuffle stage. Primary blocker: Rob still needs to complete MSQ intermediate S3 storage connector config (druid.msq.intermediate.storage.enable=true + bucket/prefix) to enable durableShuffleStorage and prevent pod eviction from local disk pressure.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
