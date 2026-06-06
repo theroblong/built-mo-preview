@@ -147,7 +147,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q0 Batches 2 and 3 still needed (2024 and 2025 annual ranges).
 - QS2 and QS3 still need to be confirmed.
 - Q1 has not been tested yet — first query to use the lookup tables.
-- Q2: BLOCKED (E13–E19). Rob completed cluster-level durableShuffleStorage (MSQ intermediate S3 storage). First run with it active (maxNumTasks=8, 7 workers) reached 2/3 of 16M rows on Stage 3 — furthest progress yet — then failed with "task disappeared on worker" + Network Connectivity Issues flash. Likely pod OOM (not disk). Next: add SET durableShuffleStorage = 'true' explicitly; check overlord logs for OOM vs. network partition on task query-444287e6-40c4-4111-879b-d9ed739b86dc.
+- Q2: IN PROGRESS. Batch 1 (2023) COMPLETE — 6,505,424 rows (86% SAME_FLAVOR_CROSS_BRAND). Batches 2 (2024) and 3 (2025→present) pending. SQL advanced to Batch 2 bounds.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.

@@ -1410,12 +1410,12 @@ SET maxNumTasks           = 4;                     -- REQUIRED: single-worker so
 
 -- Run once per year-range (same batching pattern as Q0).
 -- Adjust __time bounds per batch; re-run with the next range when complete.
---   Batch 1: 2023-01-01 → 2024-01-01
+--   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE (6,505,424 rows)
 --   Batch 2: 2024-01-01 → 2025-01-01
 --   Batch 3: 2025-01-01 → present
 REPLACE INTO "comparison_pool_weekly"
-OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01'
-            AND __time <  TIMESTAMP '2024-01-01'
+OVERWRITE WHERE __time >= TIMESTAMP '2024-01-01'
+            AND __time <  TIMESTAMP '2025-01-01'
 SELECT
   f.__time,
   f.geography_raw, f.geography_display, f.geography_level,
@@ -1575,15 +1575,38 @@ WHERE
   (f.parent_brand = 'BUILT' OR c.parent_brand = 'BUILT')
   AND f.military_excluded_flag = 0
   AND c.military_excluded_flag = 0
-  AND f.__time >= TIMESTAMP '2023-01-01'
-  AND f.__time <  TIMESTAMP '2024-01-01'
-  AND c.__time >= TIMESTAMP '2023-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
-  AND c.__time <  TIMESTAMP '2024-01-01'
+  AND f.__time >= TIMESTAMP '2024-01-01'
+  AND f.__time <  TIMESTAMP '2025-01-01'
+  AND c.__time >= TIMESTAMP '2024-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
+  AND c.__time <  TIMESTAMP '2025-01-01'
 PARTITIONED BY DAY
 CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 </code></pre>
-<p class="note">**Note:** Distance 6 pairs are on-demand via Query 2b only.</p>
-<p class="note">---</p>
+<p class="note"><strong>Note:</strong> Distance 6 pairs are on-demand via Query 2b only.</p>
+<p><strong>Batch status:</strong></p>
+<table>
+<tr><th>Batch</th><th>Range</th><th>Status</th><th>Row count</th></tr>
+<tr><td>1</td><td>2023-01-01 → 2024-01-01</td><td>✓ Complete</td><td>6,505,424</td></tr>
+<tr><td>2</td><td>2024-01-01 → 2025-01-01</td><td>Pending</td><td>—</td></tr>
+<tr><td>3</td><td>2025-01-01 → present</td><td>Pending</td><td>—</td></tr>
+</table>
+<p><strong>Batch 1 output — comparison type breakdown (2023):</strong></p>
+<table>
+<tr><th>comparison_type</th><th>pairs</th></tr>
+<tr><td>SAME_FLAVOR_CROSS_BRAND</td><td>5,601,172</td></tr>
+<tr><td>CROSS_FLAVOR_SAME_BRAND</td><td>838,224</td></tr>
+<tr><td>SAME_FLAVOR_SAME_BRAND</td><td>29,428</td></tr>
+<tr><td>SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER</td><td>22,012</td></tr>
+<tr><td>CROSS_FLAVOR_CROSS_BRAND</td><td>14,588</td></tr>
+<tr><td>SAME_SPECIFIC_FLAVOR_CROSS_BRAND</td><td>0 (expected — specific_flavor_normalized is brand-specific; cross-brand matching occurs at spins_flavor level)</td></tr>
+</table>
+<p><strong>Verify (run after each batch):</strong></p>
+<pre><code>SELECT comparison_type, COUNT(*) AS pairs
+FROM comparison_pool_weekly
+WHERE __time >= TIMESTAMP '2024-01-01'
+  AND __time &lt;  TIMESTAMP '2025-01-01'
+GROUP BY comparison_type
+ORDER BY pairs DESC</code></pre>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q2b">
 <h2>Q2b On-demand competitive pool</h2>

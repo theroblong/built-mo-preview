@@ -1441,12 +1441,12 @@ SET maxNumTasks           = 4;                     -- REQUIRED: single-worker so
 
 -- Run once per year-range (same batching pattern as Q0).
 -- Adjust __time bounds per batch; re-run with the next range when complete.
---   Batch 1: 2023-01-01 → 2024-01-01
+--   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE (6,505,424 rows)
 --   Batch 2: 2024-01-01 → 2025-01-01
 --   Batch 3: 2025-01-01 → present
 REPLACE INTO "comparison_pool_weekly"
-OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01'
-            AND __time <  TIMESTAMP '2024-01-01'
+OVERWRITE WHERE __time >= TIMESTAMP '2024-01-01'
+            AND __time <  TIMESTAMP '2025-01-01'
 SELECT
   f.__time,
   f.geography_raw, f.geography_display, f.geography_level,
@@ -1606,15 +1606,42 @@ WHERE
   (f.parent_brand = 'BUILT' OR c.parent_brand = 'BUILT')
   AND f.military_excluded_flag = 0
   AND c.military_excluded_flag = 0
-  AND f.__time >= TIMESTAMP '2023-01-01'
-  AND f.__time <  TIMESTAMP '2024-01-01'
-  AND c.__time >= TIMESTAMP '2023-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
-  AND c.__time <  TIMESTAMP '2024-01-01'
+  AND f.__time >= TIMESTAMP '2024-01-01'
+  AND f.__time <  TIMESTAMP '2025-01-01'
+  AND c.__time >= TIMESTAMP '2024-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
+  AND c.__time <  TIMESTAMP '2025-01-01'
 PARTITIONED BY DAY
 CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 ```
 
 **Note:** Distance 6 pairs are on-demand via Query 2b only.
+
+**Batch status:**
+| Batch | Range | Status | Row count |
+|---|---|---|---|
+| 1 | 2023-01-01 → 2024-01-01 | ✓ Complete | 6,505,424 |
+| 2 | 2024-01-01 → 2025-01-01 | Pending | — |
+| 3 | 2025-01-01 → present | Pending | — |
+
+**Batch 1 output — comparison type breakdown (2023):**
+| comparison_type | pairs |
+|---|---|
+| SAME_FLAVOR_CROSS_BRAND | 5,601,172 |
+| CROSS_FLAVOR_SAME_BRAND | 838,224 |
+| SAME_FLAVOR_SAME_BRAND | 29,428 |
+| SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER | 22,012 |
+| CROSS_FLAVOR_CROSS_BRAND | 14,588 |
+| SAME_SPECIFIC_FLAVOR_CROSS_BRAND | 0 (expected — specific_flavor_normalized is brand-specific; cross-brand matching occurs at spins_flavor level) |
+
+**Verify (run after each batch):**
+```sql
+SELECT comparison_type, COUNT(*) AS pairs
+FROM comparison_pool_weekly
+WHERE __time >= TIMESTAMP '2024-01-01'
+  AND __time <  TIMESTAMP '2025-01-01'
+GROUP BY comparison_type
+ORDER BY pairs DESC
+```
 
 ---
 
