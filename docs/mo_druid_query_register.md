@@ -1443,9 +1443,10 @@ SET maxNumTasks           = 4;                     -- REQUIRED: single-worker so
 -- Adjust __time bounds per batch; re-run with the next range when complete.
 --   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE (6,505,424 rows)
 --   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE (9,881,582 rows; +52% vs 2023 — BUILT SKU expansion)
---   Batch 3: 2025-01-01 → present
+--   Batch 3: 2025-01-01 → 2027-01-01  (upper bound required for DAY alignment; covers all present data)
 REPLACE INTO "comparison_pool_weekly"
 OVERWRITE WHERE __time >= TIMESTAMP '2025-01-01'
+            AND __time <  TIMESTAMP '2027-01-01'
 SELECT
   f.__time,
   f.geography_raw, f.geography_display, f.geography_level,
@@ -1606,7 +1607,9 @@ WHERE
   AND f.military_excluded_flag = 0
   AND c.military_excluded_flag = 0
   AND f.__time >= TIMESTAMP '2025-01-01'
+  AND f.__time <  TIMESTAMP '2027-01-01'
   AND c.__time >= TIMESTAMP '2025-01-01'  -- explicit: sort-merge does not infer c.__time from f.__time filter
+  AND c.__time <  TIMESTAMP '2027-01-01'
 PARTITIONED BY DAY
 CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 ```
@@ -1618,7 +1621,7 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 |---|---|---|---|
 | 1 | 2023-01-01 → 2024-01-01 | ✓ Complete | 6,505,424 |
 | 2 | 2024-01-01 → 2025-01-01 | ✓ Complete | 9,881,582 |
-| 3 | 2025-01-01 → present | Pending | — |
+| 3 | 2025-01-01 → 2027-01-01 | Running | — |
 
 **Output — comparison type breakdown by year:**
 | comparison_type | 2023 | 2024 |

@@ -309,3 +309,17 @@ druid.msq.intermediate.storage.prefix=druid/msq/intermediate
 **Remedy / next steps:**
 1. Add `SET durableShuffleStorage = 'true'` explicitly to Q2 — safe now that Rob's cluster config is complete (see E14 for why it was removed). Explicit SET confirms it's active and documents intent.
 2. Check K8s overlord logs for the specific worker pod that disappeared (`query-444287e6-40c4-4111-879b-d9ed739b86dc`) to confirm OOM vs. network partition.
+
+---
+
+## E20 — Q2: INVALID_INPUT — open-ended OVERWRITE WHERE not aligned with PARTITIONED BY DAY
+
+**Query:** Q2 (comparison_pool_weekly), Batch 3 (2025-01-01 → present)
+**Error:** `INVALID_INPUT: OVERWRITE WHERE clause identified interval [2025-01-01T00:00:00.000Z/146140482-04-24T15:36:27.903Z] which is not aligned with PARTITIONED BY granularity [{type=period, period=P1D, timeZone=UTC, origin=null}]`
+**Root cause:** Druid MSQ requires both bounds of the `OVERWRITE WHERE` range to align with the `PARTITIONED BY` granularity. An open-ended upper bound resolves internally to the maximum representable timestamp (`146140482-04-24...`), which is not on a day boundary.
+**Remedy:** Add an explicit future upper bound aligned to DAY granularity. `2027-01-01` provides a full year of runway beyond present data:
+```sql
+OVERWRITE WHERE __time >= TIMESTAMP '2025-01-01'
+            AND __time <  TIMESTAMP '2027-01-01'
+```
+Match the same bounds in the WHERE clause for both `f.__time` and `c.__time`. Update the upper bound when re-running this batch in future years.
