@@ -631,7 +631,7 @@ FROM (
 PARTITIONED BY ALL
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT COUNT(*) FROM flavor_mapping</code> — expect rows matching distinct BUILT UPCs. Then run QS1v.</p>
-<p class="note">---</p>
+<p><strong>Status: ✓ COMPLETE</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="qs1v">
 <h2>QS1v Flavor mapping validation</h2>
@@ -1131,7 +1131,7 @@ WHERE actual_brand             != expected_brand
    OR actual_size              != expected_size
 </code></pre>
 <p class="note"><strong>Verify:</strong> Zero rows = perfect match. Any row returned identifies which UPC and column differs from the CSV.</p>
-<p class="note">---</p>
+<p><strong>Status: ✓ COMPLETE</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="qs2">
 <h2>QS2 Flavor canonical overrides seed</h2>
@@ -1162,7 +1162,7 @@ FROM (
 PARTITIONED BY ALL
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT upc, spins_flavor_canonical FROM flavor_canonical_overrides ORDER BY __time, upc</code> — expect 4 rows.</p>
-<p class="note">---</p>
+<p><strong>Status: ✓ COMPLETE</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="qs3">
 <h2>QS3 Item catalog seed</h2>
@@ -1219,7 +1219,7 @@ FROM (
 PARTITIONED BY ALL
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT competitor_tier, COUNT(*) AS brands FROM item_catalog GROUP BY 1 ORDER BY 1</code> — expect Tier 1: 11, Tier 2: 10, Tier 3: 9.</p>
-<p class="note">---</p>
+<p><strong>Status: ✓ COMPLETE</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q0">
 <h2>Q0 Category extract normalization</h2>
@@ -1229,9 +1229,9 @@ PARTITIONED BY ALL
 -- Run once per year-range to stay within cluster task-time limits.
 -- Adjust the __time bounds for each batch; re-run with the next range when complete.
 -- Example batches (tune start/end to match your data's actual date range):
---   Batch 1: 2023-01-01 → 2024-01-01
---   Batch 2: 2024-01-01 → 2025-01-01
---   Batch 3: 2025-01-01 → present (omit upper bound or use a future date)
+--   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE
+--   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE
+--   Batch 3: 2025-01-01 → present      ✓ COMPLETE
 REPLACE INTO "built_filtered_weekly"
 OVERWRITE WHERE __time &gt;= TIMESTAMP '2023-01-01'
             AND __time &lt;  TIMESTAMP '2024-01-01'
@@ -1303,7 +1303,7 @@ PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT COUNT(*) FROM built_filtered_weekly</code> — expect roughly one-third of the full ~62.9M total per batch. After all batches: <code>SELECT MIN(__time), MAX(__time), COUNT(*) FROM built_filtered_weekly</code>.</p>
-<p class="note">---</p>
+<p><strong>Status: ✓ COMPLETE (all 3 batches)</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q1">
 <h2>Q1 Enriched weekly base table</h2>
@@ -1395,7 +1395,7 @@ PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT COUNT(DISTINCT upc) FROM built_enriched_weekly WHERE parent_brand = 'BUILT'</code> — expect ~91, matching built_specific_flavor_mapping.csv.</p>
-<p class="note">---</p>
+<p><strong>Status: ✓ COMPLETE</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q2">
 <h2>Q2 Universal comparison pool</h2>

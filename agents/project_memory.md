@@ -144,9 +144,9 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
 - Decide whether the visual HTML pages should be linked from `README.md`.
-- Q0 Batches 2 and 3 still needed (2024 and 2025 annual ranges).
-- QS2 and QS3 still need to be confirmed.
-- Q1 has not been tested yet — first query to use the lookup tables.
+- QS1, QS1v, QS2, QS3: ✓ COMPLETE
+- Q0: ✓ COMPLETE (all 3 batches)
+- Q1: ✓ COMPLETE
 - Q2: IN PROGRESS. Batch 1 (2023) COMPLETE — 6,505,424 rows. Batch 2 (2024) COMPLETE — 9,881,582 rows (+52%; reflects BUILT SKU expansion). Batch 3 (2025-01-01→2027-01-01) RUNNING — open-ended OVERWRITE requires explicit DAY-aligned upper bound (E20).
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).

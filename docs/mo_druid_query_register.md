@@ -632,6 +632,8 @@ PARTITIONED BY ALL
 
 **Verify:** `SELECT COUNT(*) FROM flavor_mapping` — expect rows matching distinct BUILT UPCs in `spins_full`. Then run QS1v to validate values against the CSV.
 
+**Status: ✓ COMPLETE**
+
 ---
 
 <a id="qs1v"></a>
@@ -1137,6 +1139,8 @@ WHERE actual_brand             != expected_brand
 
 **Verify:** Zero rows returned = perfect match. Any row returned identifies which UPC and which column differs from the CSV.
 
+**Status: ✓ COMPLETE**
+
 ---
 
 <a id="qs2"></a>
@@ -1172,6 +1176,8 @@ PARTITIONED BY ALL
 ```
 
 **Verify:** `SELECT upc, spins_flavor_canonical FROM flavor_canonical_overrides ORDER BY __time, upc` — expect 4 rows.
+
+**Status: ✓ COMPLETE**
 
 ---
 
@@ -1235,6 +1241,8 @@ PARTITIONED BY ALL
 
 **Verify:** `SELECT competitor_tier, COUNT(*) AS brands FROM item_catalog GROUP BY 1 ORDER BY 1` — expect Tier 1: 11, Tier 2: 10, Tier 3: 9.
 
+**Status: ✓ COMPLETE**
+
 ---
 
 <a id="q0"></a>
@@ -1249,9 +1257,9 @@ PARTITIONED BY ALL
 -- Run once per year-range to stay within cluster task-time limits.
 -- Adjust the __time bounds for each batch; re-run with the next range when complete.
 -- Example batches (tune start/end to match your data's actual date range):
---   Batch 1: 2023-01-01 → 2024-01-01
---   Batch 2: 2024-01-01 → 2025-01-01
---   Batch 3: 2025-01-01 → present (omit upper bound or use a future date)
+--   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE
+--   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE
+--   Batch 3: 2025-01-01 → present      ✓ COMPLETE
 REPLACE INTO "built_filtered_weekly"
 OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01'
             AND __time <  TIMESTAMP '2024-01-01'
@@ -1324,6 +1332,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```
 
 **Verify:** `SELECT COUNT(*) FROM built_filtered_weekly` — expect roughly one-third of the full ~62.9M total per batch. After all batches: `SELECT MIN(__time), MAX(__time), COUNT(*) FROM built_filtered_weekly`.
+
+**Status: ✓ COMPLETE (all 3 batches)**
 
 ---
 
@@ -1421,6 +1431,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```
 
 **Verify:** `SELECT COUNT(DISTINCT upc) FROM built_enriched_weekly WHERE parent_brand = 'BUILT'` — expect ~91, matching built_specific_flavor_mapping.csv.
+
+**Status: ✓ COMPLETE**
 
 ---
 
