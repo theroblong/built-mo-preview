@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-04 (session 2 — Druid query testing, end of day)
+Last synced: 2026-06-06 (session 3 — P3 Polars proof-of-concept added; pipeline order confirmed)
 
 ## Repository
 
@@ -69,7 +69,8 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `e3fe9e5` — Add durable project memory and commit-time memory sync instruction.
 - `c0a560f` — Add actual Druid query register and wire playbook query IDs to register anchors.
 - `20cdd21` — Add one-click SQL copy controls to the Druid query register mockup.
-- Pending — Druid query register corrections + error register from live testing session (ready to push).
+- `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
+- Pending — P3 Polars proof-of-concept added to both query registers; HTML TOC paired Q3/P3 links, green Copy Python button; pipeline order Q2→Q2b→Q2c→Q3.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -148,6 +149,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q0: ✓ COMPLETE (all 3 batches)
 - Q1: ✓ COMPLETE
 - Q2: IN PROGRESS. Batch 1 (2023) COMPLETE — 6,505,424 rows. Batch 2 (2024) COMPLETE — 9,881,582 rows (+52%; reflects BUILT SKU expansion). Batch 3 (2025-01-01→2027-01-01) RUNNING — open-ended OVERWRITE requires explicit DAY-aligned upper bound (E20).
+- Q2b, Q2c: QUEUED — will be tested immediately after Q2 completes, before Q3.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.

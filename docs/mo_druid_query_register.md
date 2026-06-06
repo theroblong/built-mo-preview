@@ -2082,6 +2082,188 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 
 ---
 
+<a id="p3"></a>
+
+## P3 Focal pre/post window aggregation — Polars
+
+**Purpose:** Python/Polars equivalent of Q3. Reads `built_enriched_weekly` from Druid via SQL API, computes the same four window aggregations (4w, 13w, 26w, YTD) per (upc × geography × retail_account × channel_outlet), and writes to `built_prepost_features_py.parquet` for validation against Q3's output. Swap `OUTPUT_FILE` and batch-ingest into Druid once validated.
+
+**Validation:** After running Q3 and P3, batch-ingest the Parquet into Druid as `built_prepost_features_py`, then run the diff queries: row count match, key coverage, and numeric drift (< 1e-6 expected). See Q3 section for the full diff SQL.
+
+```python
+"""
+P3  Focal pre/post window aggregation — Polars
+Equivalent of Q3. Reads built_enriched_weekly from Druid via SQL API,
+computes four window aggregations (4w, 13w, 26w, YTD) per
+(upc x geography x retail_account x channel_outlet), and writes the
+result to Parquet for validation.
+
+Validation output : built_prepost_features_py.parquet
+Production output : built_prepost_features  (swap OUTPUT_FILE when validated)
+"""
+
+import polars as pl
+import requests
+
+DRUID_SQL_URL = "http://druid-router:8888/druid/v2/sql"  # adjust to your cluster
+OUTPUT_FILE   = "built_prepost_features_py.parquet"       # swap when validated
+
+
+# ── 1. Fetch ──────────────────────────────────────────────────────────────────
+def druid_query(sql: str) -> pl.DataFrame:
+    resp = requests.post(
+        DRUID_SQL_URL,
+        json={"query": sql, "resultFormat": "array", "header": True},
+        timeout=600,
+    )
+    resp.raise_for_status()
+    rows = resp.json()
+    return pl.DataFrame(rows[1:], schema=rows[0], orient="row") if len(rows) > 1 else pl.DataFrame()
+
+raw = druid_query("""
+SELECT
+  __time, upc, description, channel_outlet, retail_account,
+  geography_raw, geography_display, geography_level,
+  parent_brand, brand_line,
+  specific_flavor_normalized, spins_flavor, pack_count,
+  base_units, base_units_yago,
+  avg_weekly_units_spm, avg_weekly_units_per_store_selling_per_item,
+  pct_stores_selling, arp, arp_pct_discount_any_promo,
+  promo_weeks, units_pct_promo, tdp,
+  first_week_selling
+FROM built_enriched_weekly
+WHERE parent_brand = 'BUILT'
+  AND military_excluded_flag = 0
+  AND first_week_selling IS NOT NULL
+""")
+
+
+# ── 2. Parse dates, derive launch window position ─────────────────────────────
+df = (
+    raw
+    .with_columns([
+        pl.col("__time").str.to_datetime("%Y-%m-%dT%H:%M:%S%.3fZ", time_unit="ms"),
+        pl.col("first_week_selling").str.to_date("%Y-%m-%d").alias("launch_date"),
+    ])
+    .with_columns([
+        (
+            (pl.col("__time").dt.epoch(time_unit="d") -
+             pl.col("launch_date").cast(pl.Datetime(time_unit="ms")).dt.epoch(time_unit="d")) // 7
+        ).cast(pl.Int32).alias("weeks_from_launch"),
+        pl.col("launch_date").dt.year().cast(pl.Int32).alias("launch_year"),
+        pl.col("__time").dt.year().cast(pl.Int32).alias("row_year"),
+    ])
+)
+
+
+# ── 3. Aggregate — all four windows in one pass ───────────────────────────────
+GROUP_KEYS = [
+    "upc", "description", "channel_outlet", "retail_account",
+    "geography_raw", "geography_display", "geography_level",
+    "parent_brand", "brand_line",
+    "specific_flavor_normalized", "spins_flavor", "pack_count",
+    "first_week_selling", "launch_date",
+]
+
+def between(lo: int, hi: int) -> pl.Expr:
+    return pl.col("weeks_from_launch").is_between(lo, hi)
+
+def cond_sum(col: str, lo: int, hi: int) -> pl.Expr:
+    return pl.when(between(lo, hi)).then(pl.col(col)).otherwise(0).sum()
+
+def cond_avg(col: str, lo: int, hi: int) -> pl.Expr:
+    return pl.when(between(lo, hi)).then(pl.col(col)).otherwise(None).mean()
+
+def cond_count(lo: int, hi: int) -> pl.Expr:
+    return between(lo, hi).cast(pl.Int32).sum()
+
+w = pl.col("weeks_from_launch")
+
+result = (
+    df.group_by(GROUP_KEYS).agg([
+        # ── 4-week ──────────────────────────────────────────────────────────
+        cond_sum("base_units", -4, -1).alias("pre_4w_base_units"),
+        cond_sum("base_units",  0,  3).alias("post_4w_base_units"),
+        cond_sum("tdp",        -4, -1).alias("pre_4w_tdp"),
+        cond_sum("tdp",         0,  3).alias("post_4w_tdp"),
+        cond_avg("avg_weekly_units_spm",                          -4, -1).alias("pre_4w_velocity_spm"),
+        cond_avg("avg_weekly_units_spm",                           0,  3).alias("post_4w_velocity_spm"),
+        cond_avg("avg_weekly_units_per_store_selling_per_item",   -4, -1).alias("pre_4w_velocity_store_selling"),
+        cond_avg("avg_weekly_units_per_store_selling_per_item",    0,  3).alias("post_4w_velocity_store_selling"),
+        cond_avg("pct_stores_selling",   -4, -1).alias("pre_4w_pct_stores_selling"),
+        cond_avg("pct_stores_selling",    0,  3).alias("post_4w_pct_stores_selling"),
+        cond_avg("arp", -4, -1).alias("pre_4w_arp"),
+        cond_avg("arp",  0,  3).alias("post_4w_arp"),
+        cond_sum("promo_weeks",    -4, -1).alias("pre_4w_promo_weeks"),
+        cond_sum("promo_weeks",     0,  3).alias("post_4w_promo_weeks"),
+        cond_avg("units_pct_promo", -4, -1).alias("pre_4w_units_pct_promo"),
+        cond_avg("units_pct_promo",  0,  3).alias("post_4w_units_pct_promo"),
+        cond_count(-4, -1).alias("pre_4w_weeks_count"),
+        cond_count( 0,  3).alias("post_4w_weeks_count"),
+
+        # ── 13-week ─────────────────────────────────────────────────────────
+        cond_sum("base_units",      -13, -1).alias("pre_13w_base_units"),
+        cond_sum("base_units",        0, 12).alias("post_13w_base_units"),
+        cond_sum("base_units",      -26,-14).alias("prior_13w_base_units"),
+        cond_sum("base_units_yago",   0, 12).alias("yago_13w_base_units"),
+        cond_sum("tdp",             -13, -1).alias("pre_13w_tdp"),
+        cond_sum("tdp",               0, 12).alias("post_13w_tdp"),
+        cond_avg("avg_weekly_units_spm",                         -13, -1).alias("pre_13w_velocity_spm"),
+        cond_avg("avg_weekly_units_spm",                           0, 12).alias("post_13w_velocity_spm"),
+        cond_avg("avg_weekly_units_spm",                         -26,-14).alias("prior_13w_velocity_spm"),
+        cond_avg("avg_weekly_units_per_store_selling_per_item",  -13, -1).alias("pre_13w_velocity_store_selling"),
+        cond_avg("avg_weekly_units_per_store_selling_per_item",    0, 12).alias("post_13w_velocity_store_selling"),
+        cond_avg("pct_stores_selling",  -13, -1).alias("pre_13w_pct_stores_selling"),
+        cond_avg("pct_stores_selling",    0, 12).alias("post_13w_pct_stores_selling"),
+        cond_avg("arp", -13, -1).alias("pre_13w_arp"),
+        cond_avg("arp",   0, 12).alias("post_13w_arp"),
+        cond_sum("promo_weeks",       -13, -1).alias("pre_13w_promo_weeks"),
+        cond_sum("promo_weeks",         0, 12).alias("post_13w_promo_weeks"),
+        cond_avg("units_pct_promo",   -13, -1).alias("pre_13w_units_pct_promo"),
+        cond_avg("units_pct_promo",     0, 12).alias("post_13w_units_pct_promo"),
+        cond_avg("arp_pct_discount_any_promo", -13, -1).alias("pre_13w_arp_discount"),
+        cond_avg("arp_pct_discount_any_promo",   0, 12).alias("post_13w_arp_discount"),
+        cond_count(-13, -1).alias("pre_13w_weeks_count"),
+        cond_count(  0, 12).alias("post_13w_weeks_count"),
+
+        # ── 26-week ─────────────────────────────────────────────────────────
+        cond_sum("base_units",           -26, -1).alias("pre_26w_base_units"),
+        cond_sum("base_units",             0, 25).alias("post_26w_base_units"),
+        cond_avg("avg_weekly_units_spm",  -26, -1).alias("pre_26w_velocity_spm"),
+        cond_avg("avg_weekly_units_spm",    0, 25).alias("post_26w_velocity_spm"),
+        cond_sum("tdp", -26, -1).alias("pre_26w_tdp"),
+        cond_sum("tdp",   0, 25).alias("post_26w_tdp"),
+        cond_count(-26, -1).alias("pre_26w_weeks_count"),
+        cond_count(  0, 25).alias("post_26w_weeks_count"),
+
+        # ── YTD (calendar year of launch) ───────────────────────────────────
+        pl.when(
+            (pl.col("row_year") == pl.col("launch_year")) & (w < 0)
+        ).then(pl.col("base_units")).otherwise(0).sum().alias("pre_ytd_base_units"),
+        pl.when(
+            (pl.col("row_year") == pl.col("launch_year")) & (w >= 0)
+        ).then(pl.col("base_units")).otherwise(0).sum().alias("post_ytd_base_units"),
+        (
+            ((pl.col("row_year") == pl.col("launch_year")) & (w < 0)).cast(pl.Int32).sum()
+        ).alias("pre_ytd_weeks_count"),
+        (
+            ((pl.col("row_year") == pl.col("launch_year")) & (w >= 0)).cast(pl.Int32).sum()
+        ).alias("post_ytd_weeks_count"),
+    ])
+    .rename({"launch_date": "__time"})  # match Q3 output schema (__time = launch_date)
+)
+
+
+# ── 4. Write ──────────────────────────────────────────────────────────────────
+result.write_parquet(OUTPUT_FILE)
+print(f"Wrote {len(result):,} rows → {OUTPUT_FILE}")
+print("Next: batch-ingest into Druid as built_prepost_features_py, then run diff query.")
+```
+
+**Verify:** Row count, key coverage, and numeric drift vs `built_prepost_features`. See diff SQL in Q3 section.
+
+---
+
 <a id="q4"></a>
 
 ## Q4 Donor pre/post aggregation
