@@ -1638,17 +1638,17 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 | **Total** | 2023–2026 | ✓ **COMPLETE** | **29,813,824** | |
 
 **Output — comparison type breakdown by year:**
-| comparison_type | 2023 | 2024 |
-|---|---|---|
-| SAME_FLAVOR_CROSS_BRAND | 5,601,172 | 8,250,618 |
-| CROSS_FLAVOR_SAME_BRAND | 838,224 | 1,525,128 |
-| SAME_FLAVOR_SAME_BRAND | 29,428 | 41,892 |
-| SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER | 22,012 | 41,484 |
-| CROSS_FLAVOR_CROSS_BRAND | 14,588 | 22,460 |
-| SAME_SPECIFIC_FLAVOR_CROSS_BRAND | 0 | 0 |
-| **Total** | **6,505,424** | **9,881,582** |
+| comparison_type | 2023 | 2024 | 2025 | 2026 (partial) |
+|---|---|---|---|---|
+| SAME_FLAVOR_CROSS_BRAND | 5,601,172 | 8,250,618 | 7,849,348 | 2,756,118 |
+| CROSS_FLAVOR_SAME_BRAND | 838,224 | 1,525,128 | 1,657,720 | 980,588 |
+| SAME_FLAVOR_SAME_BRAND | 29,428 | 41,892 | 41,852 | 18,140 |
+| SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER | 22,012 | 41,484 | 70,462 | 30,316 |
+| CROSS_FLAVOR_CROSS_BRAND | 14,588 | 22,460 | 14,010 | 8,264 |
+| SAME_SPECIFIC_FLAVOR_CROSS_BRAND | 0 | 0 | 0 | 0 |
+| **Total** | **6,505,424** | **9,881,582** | **9,633,392** | **3,793,426** |
 
-Note: `SAME_SPECIFIC_FLAVOR_CROSS_BRAND` = 0 is expected — `specific_flavor_normalized` is brand-specific; cross-brand matching occurs at the `spins_flavor` level. The +52% row count in 2024 reflects BUILT SKU expansion (new products and pack sizes introduced). 2026 partial year (3,793,426) reflects data through current date.
+Note: `SAME_SPECIFIC_FLAVOR_CROSS_BRAND` = 0 across all years — `specific_flavor_normalized` is brand-specific; cross-brand matching occurs at the `spins_flavor` level. `SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER` +70% from 2024→2025 (41,484→70,462) reflects BUILT pack ladder expansion. 2026 is a partial year through current date.
 
 **Status: ✓ COMPLETE (all 3 batches — 29,813,824 rows total)**
 

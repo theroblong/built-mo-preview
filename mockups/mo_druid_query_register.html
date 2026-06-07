@@ -1596,16 +1596,16 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 </table>
 <p><strong>Output — comparison type breakdown by year:</strong></p>
 <table>
-<tr><th>comparison_type</th><th>2023</th><th>2024</th></tr>
-<tr><td>SAME_FLAVOR_CROSS_BRAND</td><td>5,601,172</td><td>8,250,618</td></tr>
-<tr><td>CROSS_FLAVOR_SAME_BRAND</td><td>838,224</td><td>1,525,128</td></tr>
-<tr><td>SAME_FLAVOR_SAME_BRAND</td><td>29,428</td><td>41,892</td></tr>
-<tr><td>SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER</td><td>22,012</td><td>41,484</td></tr>
-<tr><td>CROSS_FLAVOR_CROSS_BRAND</td><td>14,588</td><td>22,460</td></tr>
-<tr><td>SAME_SPECIFIC_FLAVOR_CROSS_BRAND</td><td>0</td><td>0</td></tr>
-<tr><td><strong>Total</strong></td><td><strong>6,505,424</strong></td><td><strong>9,881,582</strong></td></tr>
+<tr><th>comparison_type</th><th>2023</th><th>2024</th><th>2025</th><th>2026 (partial)</th></tr>
+<tr><td>SAME_FLAVOR_CROSS_BRAND</td><td>5,601,172</td><td>8,250,618</td><td>7,849,348</td><td>2,756,118</td></tr>
+<tr><td>CROSS_FLAVOR_SAME_BRAND</td><td>838,224</td><td>1,525,128</td><td>1,657,720</td><td>980,588</td></tr>
+<tr><td>SAME_FLAVOR_SAME_BRAND</td><td>29,428</td><td>41,892</td><td>41,852</td><td>18,140</td></tr>
+<tr><td>SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER</td><td>22,012</td><td>41,484</td><td>70,462</td><td>30,316</td></tr>
+<tr><td>CROSS_FLAVOR_CROSS_BRAND</td><td>14,588</td><td>22,460</td><td>14,010</td><td>8,264</td></tr>
+<tr><td>SAME_SPECIFIC_FLAVOR_CROSS_BRAND</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>6,505,424</strong></td><td><strong>9,881,582</strong></td><td><strong>9,633,392</strong></td><td><strong>3,793,426</strong></td></tr>
 </table>
-<p class="note">SAME_SPECIFIC_FLAVOR_CROSS_BRAND = 0 is expected — specific_flavor_normalized is brand-specific; cross-brand matching occurs at the spins_flavor level. The +52% row count in 2024 reflects BUILT SKU expansion. 2026 partial year (3,793,426) reflects data through current date.</p>
+<p class="note">SAME_SPECIFIC_FLAVOR_CROSS_BRAND = 0 across all years — specific_flavor_normalized is brand-specific; cross-brand matching occurs at the spins_flavor level. SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER +70% from 2024→2025 (41,484→70,462) reflects BUILT pack ladder expansion. 2026 is a partial year through current date.</p>
 <p class="status">✓ COMPLETE (all 3 batches — 29,813,824 rows total)</p>
 <p><strong>Verify (run after each batch):</strong></p>
 <pre><code>SELECT
