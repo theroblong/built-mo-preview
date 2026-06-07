@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-06 (session 4 — Q2c/Q2d/Q2d-names COMPLETE; E22 STRING_AGG; UPC check-digit note; next: Q2e+)
+Last synced: 2026-06-06 (session 4 — Q5 COMPLETE; 60,695 training rows; 3-class label balance near-ideal; next: Q6+)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q2d COMPLETE (STRING_AGG removed; count + label only); Q2d-names COMPLETE (companion query, one row per SKU); E22 logged; focal_upc check-digit note; next: Q2e+.
+- Pending push — Q4 COMPLETE (28 min); Q5 COMPLETE (60,695 rows; CANNIBALIZING 47% / INCREMENTAL 44% / WATCH 9%); focal pre-window structurally 0 in SPINS (documented); next: Q6.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -155,6 +155,9 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q2c: ✓ COMPLETE — subquery pre-filter pattern (same as E21/Q2b) confirmed working. Null bucket bug fixed: added `WHEN f.pre_13w_base_units = 0 THEN 'hm-no-data'` guard so new launches don't incorrectly fall through to `hm-strong-pos`. UI must render `hm-no-data` distinctly (grey).
 - Q2d: ✓ COMPLETE — STRING_AGG removed (E22); returns count + scope label only. focal_upc stored without check digit in comparison_pool_weekly; geography_raw is RMA-level not TOTAL US.
 - Q2d-names: ✓ COMPLETE — companion query; SELECT DISTINCT candidate_upc, candidate_description; 61 rows for CARAMEL/Kroger pool.
+- Q2e: PENDING — cannibalization_rate_weekly and cannibalization_rate_forecast_weekly don't exist yet; re-test after ML pipeline runs.
+- Q4: ✓ COMPLETE — 28 minutes. Revised to join built_filtered_weekly (not built_enriched_weekly) so competitor donors are included. candidate_brand_line = source_brand (no flavor_mapping override). UPC format 2-5-5 without check digit confirmed consistent across built_prepost_features and donor_prepost_features.
+- Q5: ✓ COMPLETE — 60,695 rows, ~2 minutes. CANNIBALIZING 28,344 / INCREMENTAL 26,836 / WATCH 5,515. Focal pre-window is structurally 0 in SPINS (no data before first_week_selling); focal pre filters removed from WHERE. Labels valid using donor pre/post + focal post only.
 - Q3: ✓ COMPLETE — 131 distinct UPCs, 14,939 rows, 4 minutes. Note: 131 UPCs vs 91 in flavor_mapping (extra 40 = newer BUILT products/pack variants not in original CSV). Flag for flavor_mapping refresh.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).

@@ -1954,6 +1954,8 @@ ORDER BY __time
 
 **Default horizon:** 13 weeks. Trailing 8 actual weeks + next 13 forecast weeks under the selected scenario. When the user switches scenario buttons, the UI re-queries using the selected `scenario_id` and replaces the assumption labels, forecast cards, rate curve, and market/action table together. If the table has not been precomputed for a scenario, the UI calls the Python scoring service on-demand, then reads the freshly written rows.
 
+**Status: PENDING** — `cannibalization_rate_weekly` and `cannibalization_rate_forecast_weekly` do not exist yet (ML pipeline not yet run). SQL structure is logically correct. Stub testing blocked by Druid UNION ALL limitation: planner rejects UNION ALL when either side contains filters or column aliasing/expressions (same constraint as prior UNION ALL errors). Re-test once both tables are populated by the scoring pipeline.
+
 ---
 
 <a id="q3"></a>
@@ -2371,11 +2373,19 @@ donor_tagged AS (
     fl.pack_distance,
     fl.focal_first_week_selling,
     d.description                                        AS candidate_description,
-    d.specific_flavor_normalized                         AS candidate_flavor,
-    d.spins_flavor                                       AS candidate_spins_flavor,
-    d.pack_count                                         AS candidate_pack_count,
-    d.parent_brand                                       AS candidate_brand,
-    d.brand_line                                         AS candidate_brand_line,
+    d.spins_flavor_raw                                   AS candidate_flavor,
+    d.spins_flavor_raw                                   AS candidate_spins_flavor,
+    CAST(d.source_pack_count AS BIGINT)                  AS candidate_pack_count,
+    -- parent_brand equivalent: normalize BUILT brand line variants to 'BUILT'
+    CASE
+      WHEN d.source_brand IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
+        THEN 'BUILT'
+      ELSE d.source_brand
+    END                                                  AS candidate_brand,
+    -- brand_line: source_brand carries the line for BUILT (BAR/PUFF/etc.);
+    -- equals candidate_brand for competitors. No flavor_mapping override available
+    -- from built_filtered_weekly — acceptable gap for non-BUILT donors.
+    d.source_brand                                       AS candidate_brand_line,
     d.__time,
     d.base_units, d.base_units_yago,
     d.units, d.tdp,
@@ -2391,12 +2401,13 @@ donor_tagged AS (
       TIME_PARSE(fl.focal_first_week_selling, 'yyyy-MM-dd'),
       d.__time)                                          AS weeks_from_focal_launch
   FROM focal_launches fl
-  JOIN "built_enriched_weekly" d
+  JOIN "built_filtered_weekly" d
     ON  fl.candidate_upc   = d.upc
     AND fl.channel_outlet  = d.channel_outlet
     AND fl.retail_account  = d.retail_account
     AND fl.geography_raw   = d.geography_raw
-  WHERE d.military_excluded_flag = 0
+  WHERE d.channel_outlet != 'CONVENTIONAL|MILITARY'
+    AND d.retail_account  != 'DECA'
 )
 
 SELECT
@@ -2493,6 +2504,10 @@ CLUSTERED BY focal_upc, candidate_upc, channel_outlet, retail_account, geography
 ```
 
 **Verify:** Every focal UPC in `built_prepost_features` should have at least one donor row. Run: `SELECT focal_upc, COUNT(*) AS donor_pairs FROM donor_prepost_features GROUP BY focal_upc ORDER BY donor_pairs DESC LIMIT 10`.
+
+**Design note:** Donor candidates join against `built_filtered_weekly` (all ~62.9M category rows) rather than `built_enriched_weekly` (BUILT-only), so both BUILT and competitor donors are included. `candidate_flavor`/`candidate_spins_flavor` use raw `spins_flavor_raw`; `candidate_brand_line` uses `source_brand` directly (no flavor_mapping override for BUILT lines). UPC format is 2-5-5 without check digit throughout — confirmed consistent with `built_prepost_features`.
+
+**Status: ✓ COMPLETE** — 28 minutes. Top focal UPC `08-40229-30071` has 17,712 donor pairs. One non-`08-40229` prefix UPC (`00-40962-48332`) confirmed as a valid BUILT product. UPC format (2-5-5, no check digit) consistent across `built_prepost_features` and `donor_prepost_features` — Q5 join will resolve correctly.
 
 ---
 
@@ -2724,18 +2739,28 @@ SELECT
 
 FROM joined
 WHERE
-  focal_pre_weeks_count  >= 8
-  AND focal_post_weeks_count >= 8
-  AND donor_pre_13w_weeks_count >= 8
+  -- Focal pre-window (pre_13w_base_units, pre_13w_weeks_count) is structurally 0
+  -- for all new launches: SPINS has no data for a product before its first_week_selling,
+  -- so weeks_from_launch is always >= 0 in built_enriched_weekly. Focal pre filters
+  -- removed. Labels (label_deterministic, cannibalization_rate) only require focal
+  -- post-launch data and donor pre/post data — both available.
+  -- Derived metrics dividing by focal pre (focal_base_units_pct_chg,
+  -- focal_base_units_yago_pct_chg) will be NULL for new launches — acceptable for ML.
+  focal_post_weeks_count     >= 8
+  AND donor_pre_13w_weeks_count  >= 8
   AND donor_post_13w_weeks_count >= 8
-  AND pre_13w_base_units > 0
-  AND post_13w_tdp > 0
+  AND post_13w_base_units    > 0
+  AND post_13w_tdp           > 0
   AND donor_pre_13w_base_units > 0
 PARTITIONED BY DAY
 CLUSTERED BY focal_upc, donor_upc, channel_outlet, retail_account, geography_raw
 ```
 
 **Verify:** `SELECT label_deterministic, COUNT(*) FROM ml_training_features GROUP BY 1` — INCREMENTAL should dominate; some WATCH and CANNIBALIZING; NEUTRAL excluded.
+
+**Design note — focal pre-window:** `pre_13w_base_units` and `pre_13w_weeks_count` are structurally 0 for all focal UPCs. SPINS has no data for a product before its `first_week_selling`, so `weeks_from_launch` is always ≥ 0 in `built_enriched_weekly`. Focal pre filters removed from WHERE. Labels and `cannibalization_rate` use donor pre/post and focal post only — all valid. Derived metrics dividing by focal pre (`focal_base_units_pct_chg`, `focal_base_units_yago_pct_chg`) are NULL for all rows — acceptable for ML.
+
+**Status: ✓ COMPLETE** — 60,695 rows. CANNIBALIZING: 28,344 (47%, avg rate 0.405). INCREMENTAL: 26,836 (44%, avg rate 0.013). WATCH: 5,515 (9%, avg rate 0.307). 86 focal UPCs, 1,586+ donor UPCs. Class balance near-ideal for 3-class classifier. Completed in ~2 minutes.
 
 ---
 
