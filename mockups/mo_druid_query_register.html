@@ -2923,7 +2923,7 @@ CLUSTERED BY upc
 <section class="query" id="q8">
 <h2>Q8 New UPC classification</h2>
 <p class="note"><strong>Purpose:</strong> Classify each new UPC as <code>NEW_PACK_SIZE</code>, <code>NEW_FLAVOR_CANDIDATE</code>, or <code>DUPLICATE_OR_RELAUNCH</code>. Only <code>NEW_PACK_SIZE</code> rows with no flavor taxonomy conflict auto-enroll in pack ladder scoring.</p>
-<p class="note"><strong>Note:</strong> Druid does not support <code>EXISTS</code> or correlated scalar subqueries with <code>ORDER BY</code>. Rewritten using a single <code>flavor_joins</code> CTE: LEFT JOIN <code>new_upc_candidates</code> against <code>existing_catalog</code> on flavor equality, then conditional <code>SUM</code>/<code>MIN</code> aggregates replicate EXISTS logic. <code>NOT IN (SELECT upc FROM new_upc_candidates)</code> replaced with equivalent date filter. <code>ORDER BY ABS(pack_count delta)</code> replaced with <code>MIN</code> for pack partner lookup.</p>
+<p class="note"><strong>Note:</strong> Druid does not support <code>EXISTS</code> or correlated scalar subqueries with <code>ORDER BY</code>. Rewritten using a single <code>flavor_joins</code> CTE: LEFT JOIN <code>new_upc_candidates</code> against <code>existing_catalog</code> on flavor equality, then conditional <code>SUM</code>/<code>ANY_VALUE</code> aggregates replicate EXISTS logic. <code>NOT IN (SELECT upc FROM new_upc_candidates)</code> replaced with equivalent date filter. <code>ORDER BY ABS(pack_count delta)</code> replaced with <code>ANY_VALUE</code> for pack partner lookup. Note: <code>MIN</code>/<code>MAX</code> do not support STRING columns in Druid — use <code>ANY_VALUE</code> for non-deterministic string selection from a group.</p>
 <pre><code>
 REPLACE INTO "new_upc_classifications"
 OVERWRITE ALL
@@ -2944,8 +2944,8 @@ flavor_joins AS (
              THEN 1 ELSE 0 END)                                          AS same_flavor_diff_pack,
     SUM(CASE WHEN e.pack_count  = n.pack_count
              THEN 1 ELSE 0 END)                                          AS same_flavor_same_pack,
-    MIN(CASE WHEN e.pack_count != n.pack_count THEN e.upc         ELSE NULL END) AS pack_partner_upc,
-    MIN(CASE WHEN e.pack_count != n.pack_count THEN e.description ELSE NULL END) AS pack_partner_desc
+    ANY_VALUE(CASE WHEN e.pack_count != n.pack_count THEN e.upc         ELSE NULL END) AS pack_partner_upc,
+    ANY_VALUE(CASE WHEN e.pack_count != n.pack_count THEN e.description ELSE NULL END) AS pack_partner_desc
   FROM "new_upc_candidates" n
   LEFT JOIN existing_catalog e
     ON e.specific_flavor_normalized = n.specific_flavor_normalized
