@@ -323,3 +323,26 @@ OVERWRITE WHERE __time >= TIMESTAMP '2025-01-01'
             AND __time <  TIMESTAMP '2027-01-01'
 ```
 Match the same bounds in the WHERE clause for both `f.__time` and `c.__time`. Update the upper bound when re-running this batch in future years.
+
+---
+
+## E21 — Q2b: Gateway Timeout — Druid native join broadcasts full right-hand side before WHERE filters apply
+
+**Query:** Q2b (on-demand competitive pool SELECT)
+**Error:** HTTP 504 Gateway Timeout after ~5 minutes
+**Root cause:** Druid native joins (non-MSQ SELECT) broadcast the entire right-hand side table into memory before applying WHERE clause filters. Putting `source_brand = :competitor_brand` in the ON clause or in WHERE does not prevent Druid from loading all of `built_filtered_weekly` (~62.9M rows) before the filter applies. `TIMESTAMPADD(WEEK, -N, CURRENT_TIMESTAMP)` also cannot be evaluated at plan time, preventing segment pruning.
+**Remedy:** Wrap the competitor side in a subquery with all dimension filters (brand, channel_outlet, retail_account, geography_raw, literal `__time` lower bound) applied inside it. Druid evaluates the subquery first, reducing the broadcast to a small pre-filtered slice. Use a literal `TIMESTAMP '...'` instead of `TIMESTAMPADD` so segment pruning works at plan time:
+```sql
+JOIN (
+  SELECT __time, channel_outlet, retail_account, geography_raw,
+         upc, description, source_brand, spins_flavor_raw,
+         source_pack_count, arp, base_units, avg_weekly_units_spm
+  FROM "built_filtered_weekly"
+  WHERE source_brand   = :competitor_brand
+    AND channel_outlet = :channel_outlet
+    AND retail_account = :retail_account
+    AND geography_raw  = :geography_raw
+    AND __time >= :lookback_date
+) c ON ...
+```
+**Result:** Query time dropped from >5 min (timeout) to 4.06s. Confirmed returning correct data (BUILT Puff Salted Caramel vs QUEST at Kroger / CONVENTIONAL|FOOD).

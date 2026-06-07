@@ -1670,11 +1670,15 @@ ORDER BY 1, pairs DESC
 
 ## Q2b On-demand competitive pool
 
-**Purpose:** Parameterized query run on-demand when a user selects "Specific competitor brand(s)" in the comparison scope modal. Results sorted by `competitor_tier` ASC (Tier 1 first). Not pre-materialized — called directly from the UI fetch layer against `built_enriched_weekly`.
+**Purpose:** Parameterized query run on-demand when a user selects "Specific competitor brand(s)" in the comparison scope modal. Returns distance-6 (CROSS_FLAVOR_CROSS_BRAND) pairs not pre-materialized in `comparison_pool_weekly`. Called directly from the UI fetch layer.
+
+**Fix (E21):** The competitor side must be a subquery with all dimension filters applied before the join. Druid native joins broadcast the right-hand side before WHERE filters take effect — `source_brand` in the ON clause caused a full `built_filtered_weekly` scan (Gateway Timeout). Subquery pre-filters to brand + channel + retail_account + geography + literal time bound before broadcast. Use a literal `TIMESTAMP` (not `TIMESTAMPADD`) for segment pruning. App layer substitutes `:params` before sending.
 
 ```sql
 -- Parameters: :focal_upc, :competitor_brand, :retail_account,
---             :channel_outlet, :geography_raw, :window_weeks
+--             :channel_outlet, :geography_raw, :lookback_date (literal TIMESTAMP, 52w ago)
+-- Note: :retail_account/:channel_outlet/:geography_raw formats are SPINS values, e.g.
+--   channel_outlet = 'CONVENTIONAL|FOOD', geography_raw = 'KROGER CORP W/ HARRIS TEETER... - RMA'
 SELECT
   f.__time,
   f.geography_raw, f.geography_display, f.geography_level,
@@ -1733,23 +1737,34 @@ SELECT
   6                                                  AS relationship_distance,
   NULL                                               AS pack_distance
 FROM "built_enriched_weekly" f
-JOIN "built_filtered_weekly" c
-  ON  f.__time          = c.__time
-  AND f.channel_outlet  = c.channel_outlet
-  AND f.retail_account  = c.retail_account
-  AND f.geography_raw   = c.geography_raw
-  AND c.source_brand    = :competitor_brand
--- item_catalog tier inlined as CASE to avoid sort-merge on a 30-row table
+JOIN (
+  -- Subquery pre-filters competitor side before broadcast (E21 fix)
+  SELECT __time, channel_outlet, retail_account, geography_raw,
+         upc, description, source_brand, spins_flavor_raw,
+         source_pack_count, arp, base_units, avg_weekly_units_spm
+  FROM "built_filtered_weekly"
+  WHERE source_brand   = :competitor_brand
+    AND channel_outlet = :channel_outlet
+    AND retail_account = :retail_account
+    AND geography_raw  = :geography_raw
+    AND __time >= :lookback_date
+) c
+  ON  f.__time         = c.__time
+  AND f.channel_outlet = c.channel_outlet
+  AND f.retail_account = c.retail_account
+  AND f.geography_raw  = c.geography_raw
 WHERE
-  f.upc          = :focal_upc
-  AND f.retail_account  = :retail_account
-  AND f.channel_outlet  = :channel_outlet
-  AND f.geography_raw   = :geography_raw
+  f.upc                = :focal_upc
+  AND f.retail_account = :retail_account
+  AND f.channel_outlet = :channel_outlet
+  AND f.geography_raw  = :geography_raw
   AND f.military_excluded_flag = 0
-  AND c.channel_outlet != 'CONVENTIONAL|MILITARY'
-  AND c.retail_account != 'DECA'
-  AND f.__time >= TIMESTAMPADD(WEEK, -:window_weeks, CURRENT_TIMESTAMP)
+  AND f.__time         >= :lookback_date
 ```
+
+**Verify:** Results return one row per (focal_upc, week, competitor_upc). Row count = focal_weeks_in_window × competitor_SKU_count_in_geography. All rows should have `comparison_type = 'CROSS_FLAVOR_CROSS_BRAND'` and `relationship_distance = 6`.
+
+**Status: ✓ COMPLETE** — confirmed returning real data at Kroger / CONVENTIONAL|FOOD (4.06s).
 
 ---
 

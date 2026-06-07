@@ -70,7 +70,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `c0a560f` — Add actual Druid query register and wire playbook query IDs to register anchors.
 - `20cdd21` — Add one-click SQL copy controls to the Druid query register mockup.
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
-- Pending — P3 added to both registers; Q2 all 3 batches COMPLETE (29,813,824 rows total); Q2b queued next.
+- Pending — Q2 complete (29,813,824 rows); Q2b complete (E21 fixed, subquery pattern); E21 documented; Q2c queued.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -149,7 +149,8 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q0: ✓ COMPLETE (all 3 batches)
 - Q1: ✓ COMPLETE
 - Q2: ✓ COMPLETE (all 3 batches). Batch 1 (2023): 6,505,424 rows. Batch 2 (2024): 9,881,582 rows (+52%; BUILT SKU expansion). Batch 3 (2025-01-01→2027-01-01): 13,426,818 rows (2025: 9,633,392 / 2026: 3,793,426; 11h 12m). Grand total: 29,813,824 rows.
-- Q2b, Q2c: QUEUED — will be tested immediately after Q2 completes, before Q3.
+- Q2b: ✓ COMPLETE — E21 (Gateway Timeout) fixed with subquery pre-filter pattern; confirmed 4.06s at Kroger/CONVENTIONAL|FOOD.
+- Q2c: QUEUED — next after Q2b.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
