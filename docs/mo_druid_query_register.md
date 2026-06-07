@@ -2770,10 +2770,16 @@ CLUSTERED BY focal_upc, donor_upc, channel_outlet, retail_account, geography_raw
 
 **Purpose:** Compute rolling 4w, 8w, and 13w averages, standard deviations, and z-scores for `base_units`, `avg_weekly_units_spm`, and `tdp`. Powers Layer 1 of the two-layer event detector. Window functions require Druid 0.22+ with SQL windowing enabled.
 
+**Status: ✓ COMPLETE — 13w z-score classification confirmed. EXTREME_OUTLIER fires at max_z13 ≈ 3.328 (= 12/√13, the theoretical ceiling). Distribution healthy: EXTREME_OUTLIER small fraction across all UPCs.**
+
+**Note (E23):** Druid does not support `STDDEV_SAMP` as a window function. Standard deviation is computed manually via `SQRT((SUM(x²) - SUM(x)²/n) / (n-1))` using a 4-CTE structure: `src` → `win` (window SUM/SUM_SQ/COUNT/AVG/LAG) → `std` (SQRT derivation) → `zs` (z-scores) → final SELECT (outlier classes).
+
+**Note (threshold calibration):** With an 8-week rolling window the theoretical max z-score is 7√2/4 ≈ 2.475, making the 3.0 EXTREME_OUTLIER threshold unreachable. With a 13-week window the ceiling is 12/√13 ≈ 3.33, so EXTREME_OUTLIER fires on genuine spikes. Outlier classification uses 13w z-scores; 8w z-scores are retained as signal columns.
+
 ```sql
 REPLACE INTO "event_detection_weekly"
 OVERWRITE ALL
-WITH base AS (
+WITH src AS (
   SELECT
     __time,
     upc, description,
@@ -2781,69 +2787,120 @@ WITH base AS (
     geography_raw, geography_display, geography_level,
     parent_brand, specific_flavor_normalized, spins_flavor, pack_count,
     base_units, avg_weekly_units_spm, tdp,
-    pct_stores_selling, stores_selling,
+    pct_stores_selling, stores_selling
+  FROM "built_enriched_weekly"
+  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
+),
+win AS (
+  SELECT
+    *,
+    COUNT(*) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS cnt4,
+    COUNT(*) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS cnt8,
+    COUNT(*) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS cnt13,
 
-    -- Rolling 4w base_units
+    -- base_units: 4w, 8w, 13w
     AVG(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
-    ) AS base_units_roll4_avg,
-    STDDEV(base_units) OVER (
+      ORDER BY __time ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS bu_avg4,
+    SUM(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
-    ) AS base_units_roll4_std,
+      ORDER BY __time ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS bu_sum4,
+    SUM(base_units * base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+    ) AS bu_sumsq4,
 
-    -- Rolling 8w base_units (primary z-score baseline)
     AVG(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
-    ) AS base_units_roll8_avg,
-    STDDEV(base_units) OVER (
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS bu_avg8,
+    SUM(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
-    ) AS base_units_roll8_std,
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS bu_sum8,
+    SUM(base_units * base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS bu_sumsq8,
 
-    -- Rolling 13w base_units
     AVG(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
-    ) AS base_units_roll13_avg,
-    STDDEV(base_units) OVER (
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS bu_avg13,
+    SUM(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
-    ) AS base_units_roll13_std,
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS bu_sum13,
+    SUM(base_units * base_units) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS bu_sumsq13,
 
-    -- Rolling 8w velocity (avg_weekly_units_spm)
+    -- avg_weekly_units_spm: 8w, 13w
     AVG(avg_weekly_units_spm) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
-    ) AS velocity_spm_roll8_avg,
-    STDDEV(avg_weekly_units_spm) OVER (
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS spm_avg8,
+    SUM(avg_weekly_units_spm) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
-    ) AS velocity_spm_roll8_std,
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS spm_sum8,
+    SUM(avg_weekly_units_spm * avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS spm_sumsq8,
 
-    -- Rolling 8w TDP
+    AVG(avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS spm_avg13,
+    SUM(avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS spm_sum13,
+    SUM(avg_weekly_units_spm * avg_weekly_units_spm) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS spm_sumsq13,
+
+    -- tdp: 8w, 13w
     AVG(tdp) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
-    ) AS tdp_roll8_avg,
-    STDDEV(tdp) OVER (
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS tdp_avg8,
+    SUM(tdp) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
-      ORDER BY __time
-      ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
-    ) AS tdp_roll8_std,
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS tdp_sum8,
+    SUM(tdp * tdp) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+    ) AS tdp_sumsq8,
 
-    -- Week-over-week deltas
+    AVG(tdp) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS tdp_avg13,
+    SUM(tdp) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS tdp_sum13,
+    SUM(tdp * tdp) OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time ROWS BETWEEN 12 PRECEDING AND CURRENT ROW
+    ) AS tdp_sumsq13,
+
     base_units - LAG(base_units) OVER (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
       ORDER BY __time
@@ -2852,9 +2909,30 @@ WITH base AS (
       PARTITION BY upc, channel_outlet, retail_account, geography_raw
       ORDER BY __time
     ) AS velocity_spm_wow_delta
-
-  FROM "built_enriched_weekly"
-  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
+  FROM src
+),
+std AS (
+  SELECT
+    *,
+    SQRT(GREATEST(0, (bu_sumsq4   - bu_sum4   * bu_sum4   / NULLIF(cnt4,  0)) / NULLIF(cnt4  - 1, 0))) AS bu_std4,
+    SQRT(GREATEST(0, (bu_sumsq8   - bu_sum8   * bu_sum8   / NULLIF(cnt8,  0)) / NULLIF(cnt8  - 1, 0))) AS bu_std8,
+    SQRT(GREATEST(0, (bu_sumsq13  - bu_sum13  * bu_sum13  / NULLIF(cnt13, 0)) / NULLIF(cnt13 - 1, 0))) AS bu_std13,
+    SQRT(GREATEST(0, (spm_sumsq8  - spm_sum8  * spm_sum8  / NULLIF(cnt8,  0)) / NULLIF(cnt8  - 1, 0))) AS spm_std8,
+    SQRT(GREATEST(0, (spm_sumsq13 - spm_sum13 * spm_sum13 / NULLIF(cnt13, 0)) / NULLIF(cnt13 - 1, 0))) AS spm_std13,
+    SQRT(GREATEST(0, (tdp_sumsq8  - tdp_sum8  * tdp_sum8  / NULLIF(cnt8,  0)) / NULLIF(cnt8  - 1, 0))) AS tdp_std8,
+    SQRT(GREATEST(0, (tdp_sumsq13 - tdp_sum13 * tdp_sum13 / NULLIF(cnt13, 0)) / NULLIF(cnt13 - 1, 0))) AS tdp_std13
+  FROM win
+),
+zs AS (
+  SELECT
+    *,
+    CASE WHEN bu_std8   > 0 THEN (base_units           - bu_avg8)   / bu_std8   ELSE 0 END AS bu_z8,
+    CASE WHEN bu_std13  > 0 THEN (base_units           - bu_avg13)  / bu_std13  ELSE 0 END AS bu_z13,
+    CASE WHEN spm_std8  > 0 THEN (avg_weekly_units_spm - spm_avg8)  / spm_std8  ELSE 0 END AS spm_z8,
+    CASE WHEN spm_std13 > 0 THEN (avg_weekly_units_spm - spm_avg13) / spm_std13 ELSE 0 END AS spm_z13,
+    CASE WHEN tdp_std8  > 0 THEN (tdp                 - tdp_avg8)  / tdp_std8  ELSE 0 END AS tdp_z8,
+    CASE WHEN tdp_std13 > 0 THEN (tdp                 - tdp_avg13) / tdp_std13 ELSE 0 END AS tdp_z13
+  FROM std
 )
 
 SELECT
@@ -2866,66 +2944,53 @@ SELECT
   base_units, avg_weekly_units_spm, tdp,
   pct_stores_selling, stores_selling,
 
-  -- Rolling stats (passed to Python Welch t-test)
-  base_units_roll4_avg, base_units_roll4_std,
-  base_units_roll8_avg, base_units_roll8_std,
-  base_units_roll13_avg, base_units_roll13_std,
-  velocity_spm_roll8_avg, velocity_spm_roll8_std,
-  tdp_roll8_avg, tdp_roll8_std,
-  base_units_wow_delta, velocity_spm_wow_delta,
+  bu_avg4   AS base_units_roll4_avg,
+  bu_std4   AS base_units_roll4_std,
+  bu_avg8   AS base_units_roll8_avg,
+  bu_std8   AS base_units_roll8_std,
+  bu_avg13  AS base_units_roll13_avg,
+  bu_std13  AS base_units_roll13_std,
+  spm_avg8  AS velocity_spm_roll8_avg,
+  spm_std8  AS velocity_spm_roll8_std,
+  spm_avg13 AS velocity_spm_roll13_avg,
+  spm_std13 AS velocity_spm_roll13_std,
+  tdp_avg8  AS tdp_roll8_avg,
+  tdp_std8  AS tdp_roll8_std,
+  tdp_avg13 AS tdp_roll13_avg,
+  tdp_std13 AS tdp_roll13_std,
+  base_units_wow_delta,
+  velocity_spm_wow_delta,
 
-  -- Z-scores vs 8-week rolling baseline
-  CASE
-    WHEN base_units_roll8_std > 0
-      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
-    ELSE 0
-  END AS base_units_z8,
+  -- 8w z-scores: short-term signal
+  bu_z8  AS base_units_z8,
+  spm_z8 AS velocity_spm_z8,
+  tdp_z8 AS tdp_z8,
+
+  -- 13w z-scores: outlier classification baseline (ceiling ~3.33 vs 8w ceiling ~2.47)
+  bu_z13  AS base_units_z13,
+  spm_z13 AS velocity_spm_z13,
+  tdp_z13 AS tdp_z13,
 
   CASE
-    WHEN velocity_spm_roll8_std > 0
-      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
-    ELSE 0
-  END AS velocity_spm_z8,
-
-  CASE
-    WHEN tdp_roll8_std > 0
-      THEN (tdp - tdp_roll8_avg) / tdp_roll8_std
-    ELSE 0
-  END AS tdp_z8,
-
-  -- Outlier classification (Layer 1 gate — both base_units and velocity)
-  CASE
-    WHEN ABS(CASE WHEN base_units_roll8_std > 0
-      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
-      ELSE 0 END) >= 3.0 THEN 'EXTREME_OUTLIER'
-    WHEN ABS(CASE WHEN base_units_roll8_std > 0
-      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
-      ELSE 0 END) >= 2.0 THEN 'OUTLIER'
-    WHEN ABS(CASE WHEN base_units_roll8_std > 0
-      THEN (base_units - base_units_roll8_avg) / base_units_roll8_std
-      ELSE 0 END) >= 1.5 THEN 'WATCH'
+    WHEN ABS(bu_z13) >= 3.0 THEN 'EXTREME_OUTLIER'
+    WHEN ABS(bu_z13) >= 2.0 THEN 'OUTLIER'
+    WHEN ABS(bu_z13) >= 1.5 THEN 'WATCH'
     ELSE 'NORMAL'
   END AS base_units_outlier_class,
 
   CASE
-    WHEN ABS(CASE WHEN velocity_spm_roll8_std > 0
-      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
-      ELSE 0 END) >= 3.0 THEN 'EXTREME_OUTLIER'
-    WHEN ABS(CASE WHEN velocity_spm_roll8_std > 0
-      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
-      ELSE 0 END) >= 2.0 THEN 'OUTLIER'
-    WHEN ABS(CASE WHEN velocity_spm_roll8_std > 0
-      THEN (avg_weekly_units_spm - velocity_spm_roll8_avg) / velocity_spm_roll8_std
-      ELSE 0 END) >= 1.5 THEN 'WATCH'
+    WHEN ABS(spm_z13) >= 3.0 THEN 'EXTREME_OUTLIER'
+    WHEN ABS(spm_z13) >= 2.0 THEN 'OUTLIER'
+    WHEN ABS(spm_z13) >= 1.5 THEN 'WATCH'
     ELSE 'NORMAL'
-  END AS velocity_outlier_class
+  END AS velocity_spm_outlier_class
 
-FROM base
+FROM zs
 PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```
 
-**Verify:** `SELECT upc, MAX(ABS(base_units_z8)) AS max_z FROM event_detection_weekly GROUP BY upc ORDER BY max_z DESC LIMIT 10`. Rows with |z| > 2.0 are Layer 1 event candidates.
+**Verify:** `SELECT upc, MAX(ABS(base_units_z13)) AS max_z13, COUNT(*) FILTER (WHERE base_units_outlier_class = 'EXTREME_OUTLIER') AS extreme FROM event_detection_weekly GROUP BY upc ORDER BY max_z13 DESC LIMIT 20`
 
 ---
 
@@ -3518,7 +3583,7 @@ WITH windows AS (
     AVG(p.price_per_bar) FILTER (
       WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
     ) AS post_13w_avg_price_per_bar,
-    STDDEV(p.price_per_bar) FILTER (
+    STDDEV_SAMP(p.price_per_bar) FILTER (
       WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
     ) AS post_13w_std_price_per_bar,
     SUM(p.base_units) FILTER (

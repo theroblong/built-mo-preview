@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-06 (session 4 — Q5 COMPLETE; 60,695 training rows; 3-class label balance near-ideal; next: Q6+)
+Last synced: 2026-06-06 (session 5 — Q6 COMPLETE; 13w z-score classification confirmed; EXTREME_OUTLIER fires at max_z13 ≈ 3.328; next: Q7+)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q4 COMPLETE (28 min); Q5 COMPLETE (60,695 rows; CANNIBALIZING 47% / INCREMENTAL 44% / WATCH 9%); focal pre-window structurally 0 in SPINS (documented); next: Q6.
+- Pending push — Q6 COMPLETE (two runs; 13w z-score fix confirmed); next: Q7+.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -158,6 +158,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q2e: PENDING — cannibalization_rate_weekly and cannibalization_rate_forecast_weekly don't exist yet; re-test after ML pipeline runs.
 - Q4: ✓ COMPLETE — 28 minutes. Revised to join built_filtered_weekly (not built_enriched_weekly) so competitor donors are included. candidate_brand_line = source_brand (no flavor_mapping override). UPC format 2-5-5 without check digit confirmed consistent across built_prepost_features and donor_prepost_features.
 - Q5: ✓ COMPLETE — 60,695 rows, ~2 minutes. CANNIBALIZING 28,344 / INCREMENTAL 26,836 / WATCH 5,515. Focal pre-window is structurally 0 in SPINS (no data before first_week_selling); focal pre filters removed from WHERE. Labels valid using donor pre/post + focal post only.
+- Q6: ✓ COMPLETE — two runs. 8w z-score ceiling 7√2/4 ≈ 2.475 blocked EXTREME_OUTLIER (threshold 3.0). Fixed: outlier classification uses 13w z-scores (ceiling 12/√13 ≈ 3.328); EXTREME_OUTLIER now fires. 8w z-scores retained as signal. Adds velocity_spm_roll13_avg/std, tdp_roll13_avg/std, base_units_z13, velocity_spm_z13, tdp_z13.
 - Q3: ✓ COMPLETE — 131 distinct UPCs, 14,939 rows, 4 minutes. Note: 131 UPCs vs 91 in flavor_mapping (extra 40 = newer BUILT products/pack variants not in original CSV). Flag for flavor_mapping refresh.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).

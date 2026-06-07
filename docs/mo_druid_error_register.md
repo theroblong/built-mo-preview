@@ -363,3 +363,15 @@ JOIN (
 **Remedy:** Removed `STRING_AGG` from Q2d entirely. Pool count (`COUNT(DISTINCT candidate_upc)`) is unaffected. SKU names moved to companion query Q2d-names, which uses `SELECT DISTINCT candidate_upc, candidate_description` — one row per SKU, no aggregation, no size limit. UI receives the full list and sorts/renders client-side.
 
 **Result:** Q2d returns in ~0.55s; Q2d-names returns 61 rows for the CARAMEL / Kroger pool with no errors.
+
+---
+
+## E23 — Q6: STDDEV_SAMP not supported as a window function
+
+**Query:** Q6
+
+**Error:** `INVALID_INPUT: No match found for function signature STDDEV_SAMP(<NUMERIC>) (line [18], column [5])` — reproduced identically whether the function was spelled `STDDEV(` or `STDDEV_SAMP(`.
+
+**Root cause:** Druid's window function engine (via Calcite) supports only `SUM`, `COUNT`, `MIN`, `MAX`, `AVG`, `FIRST_VALUE`, `LAST_VALUE`, and `NTH_VALUE` as aggregate window functions. `STDDEV_SAMP`, `STDDEV_POP`, `VAR_SAMP`, and `VAR_POP` are not supported in an `OVER (...)` context, even though they work as plain aggregates.
+
+**Remedy:** Compute sample standard deviation manually using the computational formula: `SQRT(GREATEST(0, (SUM(x*x) OVER w - SUM(x) OVER w * SUM(x) OVER w / NULLIF(COUNT(*) OVER w, 0)) / NULLIF(COUNT(*) OVER w - 1, 0)))`. To avoid repeating this expression in every z-score and outlier CASE, Q6 is restructured into 4 CTEs: `src` (raw read) → `win` (SUM, SUM_SQ, COUNT, AVG, LAG window aggregates) → `std` (SQRT derivation, one alias per metric/window) → `zs` (z-score aliases) → final SELECT (outlier classification using simple `ABS(bu_z8) >= threshold` tests).

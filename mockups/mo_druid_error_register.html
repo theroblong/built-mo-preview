@@ -438,6 +438,17 @@ druid.msq.intermediate.storage.prefix=druid/msq/intermediate</code></pre>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
+<section class="entry" id="e23">
+<div class="entry-header"><span class="eid">E23 RESOLVED</span><h2 class="entry-title">Q6: STDDEV_SAMP not supported as a window function</h2></div>
+<dl>
+<dt>Query</dt><dd>Q6 (rolling stats + z-scores)</dd>
+<dt>Error</dt><dd><code>INVALID_INPUT: No match found for function signature STDDEV_SAMP(&lt;NUMERIC&gt;) (line [18], column [5])</code> — reproduced identically with both <code>STDDEV(</code> and <code>STDDEV_SAMP(</code>.</dd>
+</dl>
+<p><strong>Root cause:</strong> Druid's window function engine (via Calcite) supports only <code>SUM</code>, <code>COUNT</code>, <code>MIN</code>, <code>MAX</code>, <code>AVG</code>, <code>FIRST_VALUE</code>, <code>LAST_VALUE</code>, and <code>NTH_VALUE</code> as aggregate window functions. <code>STDDEV_SAMP</code>, <code>STDDEV_POP</code>, <code>VAR_SAMP</code>, and <code>VAR_POP</code> are not supported in an <code>OVER (...)</code> context, even though they work as plain aggregates.</p>
+<p><strong>Remedy:</strong> Compute sample standard deviation manually using the computational formula: <code>SQRT(GREATEST(0, (SUM(x*x) OVER w - SUM(x) OVER w * SUM(x) OVER w / NULLIF(COUNT(*) OVER w, 0)) / NULLIF(COUNT(*) OVER w - 1, 0)))</code>. Q6 restructured into 4 CTEs: <code>src</code> (raw read) → <code>win</code> (SUM, SUM_SQ, COUNT, AVG, LAG window aggregates) → <code>std</code> (SQRT derivation) → <code>zs</code> (z-score aliases) → final SELECT (outlier classes using simple <code>ABS(bu_z8) &gt;= threshold</code> tests).</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
 </section>
 </div>
 </main>
