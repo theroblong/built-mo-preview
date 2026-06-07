@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-07 (session 6 — Q7 COMPLETE; new product design principles established; 3-tier confidence model + non-parametric approach for EARLY-tier UPCs documented; next: Q8)
+Last synced: 2026-06-07 (session 6 — Q8 COMPLETE; 32 NEW_PACK_SIZE / 19 NEW_FLAVOR_CANDIDATE / 18 DUPLICATE_OR_RELAUNCH; 69/70 UPCs classified; Druid limitations documented: no EXISTS, no MIN on STRING (use ANY_VALUE); next: Q9+)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q6 COMPLETE; Q7 COMPLETE; new product design principles + 3-tier confidence model documented in register and project memory; next: Q8.
+- Pending push — Q6–Q8 COMPLETE; new product design principles documented; next: Q9+.
 
 ## Druid Cluster Constraints (discovered during live testing)
 

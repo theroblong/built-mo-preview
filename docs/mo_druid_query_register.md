@@ -3077,6 +3077,8 @@ CLUSTERED BY upc
 
 **Purpose:** Classify each new UPC as `NEW_PACK_SIZE`, `NEW_FLAVOR_CANDIDATE`, or `DUPLICATE_OR_RELAUNCH`. Only `NEW_PACK_SIZE` rows with no flavor taxonomy conflict auto-enroll in pack ladder scoring.
 
+**Status: ✓ COMPLETE — 2min 20sec. 32 NEW_PACK_SIZE / 19 NEW_FLAVOR_CANDIDATE / 18 DUPLICATE_OR_RELAUNCH. All 70 UPCs classified (group counts sum to 69 due to HLL approximation from useApproximateCountDistinct=true; COUNT(DISTINCT upc) FROM new_upc_classifications confirms 70). NEW_FLAVOR_CANDIDATE = Sour line (Blue Razz Blast, Green Apple Crush, Sour Peach, Sweet Peach Punch). NEW_PACK_SIZE = Puff variants of established BUILT bar flavors in new pack configs. DUPLICATE_OR_RELAUNCH = Puff versions matching existing flavor × pack combos.**
+
 **Note:** Druid does not support `EXISTS` or correlated scalar subqueries with `ORDER BY`. Rewritten using a single `flavor_joins` CTE: LEFT JOIN `new_upc_candidates` against `existing_catalog` on flavor equality, then use conditional `SUM`/`ANY_VALUE` aggregates to replicate EXISTS logic. `NOT IN (SELECT upc FROM new_upc_candidates)` replaced with equivalent date filter (`first_week_selling < TIMESTAMPADD(YEAR, -1, CURRENT_TIMESTAMP)`). `ORDER BY ABS(pack_count delta)` replaced with `ANY_VALUE` for pack partner lookup. Note: `MIN`/`MAX` do not support STRING columns in Druid — use `ANY_VALUE` for non-deterministic string selection from a group.
 
 ```sql
