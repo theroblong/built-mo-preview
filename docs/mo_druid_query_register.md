@@ -2998,67 +2998,47 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 
 ## Q7 New UPC detection
 
-**Purpose:** Anti-join of current-week BUILT UPCs against all prior weeks. Outputs net-new UPCs that did not exist in any earlier week of the data.
+**Purpose:** Identify BUILT UPCs whose `first_week_selling` falls within the past 12 months. Returns one row per UPC × channel × retail_account × geography_raw showing metrics from that UPC's first appearance at each location. Used to populate the "recent launch" cohort for Q8 classification, flavor_mapping refresh, and Mo UI launch tracking.
+
+**Note:** Original anti-join design (latest-week UPCs vs all prior weeks) always returns 0 rows for a historically-loaded dataset. Redefined to use a 12-month `first_week_selling` lookback — analytically meaningful for both historical analysis and ongoing weekly runs. Cutoff is dynamic: `TIMESTAMPADD(YEAR, -1, CURRENT_TIMESTAMP)`.
 
 ```sql
 REPLACE INTO "new_upc_candidates"
 OVERWRITE ALL
-WITH
-
-latest_week AS (
-  SELECT MAX(__time) AS max_week
-  FROM "built_enriched_weekly"
-  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
-),
-
-current_week_upcs AS (
-  SELECT DISTINCT
-    w.upc, w.description, w.source_brand,
-    w.spins_flavor_raw, w.spins_flavor_mapped,
-    w.spins_flavor_canonical, w.spins_flavor,
-    w.specific_flavor_normalized,
-    w.pack_count, w.size_oz,
-    w.__time                                             AS first_seen_week,
-    w.channel_outlet, w.retail_account, w.geography_raw,
-    w.units, w.base_units, w.tdp
-  FROM "built_enriched_weekly" w
-  CROSS JOIN latest_week lw
-  WHERE
-    w.parent_brand = 'BUILT'
-    AND w.military_excluded_flag = 0
-    AND w.__time = lw.max_week
-),
-
-historical_upcs AS (
-  SELECT DISTINCT upc
+WITH candidates AS (
+  SELECT
+    *,
+    ROW_NUMBER() OVER (
+      PARTITION BY upc, channel_outlet, retail_account, geography_raw
+      ORDER BY __time
+    ) AS rn
   FROM "built_enriched_weekly"
   WHERE parent_brand = 'BUILT'
     AND military_excluded_flag = 0
-    AND __time < (SELECT MAX(__time) FROM "built_enriched_weekly"
-                  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0)
+    AND TIME_PARSE(first_week_selling, 'yyyy-MM-dd') >= TIMESTAMPADD(YEAR, -1, CURRENT_TIMESTAMP)
 )
 
 SELECT
-  c.first_seen_week                                      AS __time,
-  c.upc, c.description, c.source_brand,
-  c.spins_flavor_raw, c.spins_flavor_mapped,
-  c.spins_flavor_canonical, c.spins_flavor,
-  c.specific_flavor_normalized,
-  c.pack_count, c.size_oz,
-  c.channel_outlet, c.retail_account, c.geography_raw,
-  c.units                                                AS units_first_week,
-  c.base_units                                           AS base_units_first_week,
-  c.tdp                                                  AS tdp_first_week,
-  'Y'                                                    AS manual_review_needed,
-  CURRENT_TIMESTAMP                                      AS detected_at
-FROM current_week_upcs c
-LEFT JOIN historical_upcs h ON c.upc = h.upc
-WHERE h.upc IS NULL
+  __time,
+  upc, description, source_brand,
+  spins_flavor_raw, spins_flavor_mapped,
+  spins_flavor_canonical, spins_flavor,
+  specific_flavor_normalized,
+  pack_count, size_oz,
+  first_week_selling,
+  channel_outlet, retail_account, geography_raw,
+  units      AS units_first_week,
+  base_units AS base_units_first_week,
+  tdp        AS tdp_first_week,
+  'Y'        AS manual_review_needed,
+  CURRENT_TIMESTAMP AS detected_at
+FROM candidates
+WHERE rn = 1
 PARTITIONED BY DAY
 CLUSTERED BY upc
 ```
 
-**Verify:** `SELECT COUNT(*) FROM new_upc_candidates`. Expect 0–5 rows per week. More than 10 in a single week warrants investigation before proceeding to Q8.
+**Verify:** `SELECT upc, description, first_week_selling, COUNT(*) AS geo_count FROM new_upc_candidates GROUP BY upc, description, first_week_selling ORDER BY first_week_selling DESC LIMIT 20`. Expect multiple UPCs with varying geo_counts; most recent first_week_selling dates at top.
 
 ---
 
