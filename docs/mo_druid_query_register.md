@@ -1774,7 +1774,11 @@ WHERE
 
 **Purpose:** Powers the geography × SKU heatmap on the Cross-flavor screen. Returns `base_units_pct_chg` and a `heatmap_bucket` for each (SKU, geography) cell. Run at render time against `built_prepost_features` — not pre-materialized.
 
-Five heatmap buckets match CSS class names: `hm-strong-neg` (< −10%), `hm-mild-neg` (−10% to −3%), `hm-neutral` (−3% to +3%), `hm-mild-pos` (+3% to +10%), `hm-strong-pos` (> +10%).
+Six heatmap buckets match CSS class names: `hm-no-data` (pre = 0, new launch), `hm-strong-neg` (< −10%), `hm-mild-neg` (−10% to −3%), `hm-neutral` (−3% to +3%), `hm-mild-pos` (+3% to +10%), `hm-strong-pos` (> +10%).
+
+**Fix (E21 pattern):** `built_enriched_weekly` must be wrapped in a subquery with all filters pre-applied before broadcast. Bare JOIN + WHERE causes full-table broadcast (~914K rows) before filters take effect — Gateway Timeout. App layer substitutes `:params` before sending.
+
+**Fix (null bucket):** Added `WHEN f.pre_13w_base_units = 0 THEN 'hm-no-data'` guard. New launches with no pre-window history produce `pre = 0`, making pct_chg NULL and the original ELSE clause incorrectly return `hm-strong-pos`.
 
 ```sql
 -- Parameters: :spins_flavor, :channel_outlet, :retail_account
@@ -1788,33 +1792,37 @@ SELECT
   f.channel_outlet,
   f.pre_13w_base_units,
   f.post_13w_base_units,
-  -- Percentage change (13w default)
   (f.post_13w_base_units - f.pre_13w_base_units)
     / NULLIF(f.pre_13w_base_units, 0)              AS base_units_pct_chg,
-  -- Heatmap bucket matching CSS class names in the UI
   CASE
+    WHEN f.pre_13w_base_units = 0                  THEN 'hm-no-data'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) < -0.10  THEN 'hm-strong-neg'
+           / f.pre_13w_base_units < -0.10          THEN 'hm-strong-neg'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) < -0.03  THEN 'hm-mild-neg'
+           / f.pre_13w_base_units < -0.03          THEN 'hm-mild-neg'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) <= 0.03  THEN 'hm-neutral'
+           / f.pre_13w_base_units <= 0.03          THEN 'hm-neutral'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) <= 0.10  THEN 'hm-mild-pos'
+           / f.pre_13w_base_units <= 0.10          THEN 'hm-mild-pos'
     ELSE 'hm-strong-pos'
   END AS heatmap_bucket
 FROM "built_prepost_features" f
-JOIN "built_enriched_weekly" e
-  ON  f.upc          = e.upc
+JOIN (
+  SELECT DISTINCT upc, channel_outlet, retail_account, geography_raw
+  FROM "built_enriched_weekly"
+  WHERE spins_flavor        = :spins_flavor
+    AND channel_outlet      = :channel_outlet
+    AND retail_account      = :retail_account
+    AND parent_brand        = 'BUILT'
+    AND military_excluded_flag = 0
+) e
+  ON  f.upc            = e.upc
   AND f.channel_outlet = e.channel_outlet
   AND f.retail_account = e.retail_account
   AND f.geography_raw  = e.geography_raw
 WHERE
-  e.spins_flavor      = :spins_flavor
-  AND f.channel_outlet  = :channel_outlet
-  AND f.retail_account  = :retail_account
-  AND e.parent_brand    = 'BUILT'
-  AND e.military_excluded_flag = 0
+  f.channel_outlet = :channel_outlet
+  AND f.retail_account = :retail_account
 GROUP BY
   f.upc, f.description, f.pack_count,
   f.geography_raw, f.geography_display,
@@ -1822,7 +1830,7 @@ GROUP BY
   f.pre_13w_base_units, f.post_13w_base_units
 ```
 
-**Status: QUEUED — pending Q3.** SQL parses correctly (`:param` substitution confirmed valid). Blocked on `built_prepost_features` which is Q3's output. Re-test after Q3 completes.
+**Status: ✓ COMPLETE** — subquery fix confirmed working. Null bucket fix applied (`hm-no-data` for new launches with `pre_13w_base_units = 0`). UI should render `hm-no-data` cells distinctly (e.g. grey) rather than as strong positive.
 
 ---
 

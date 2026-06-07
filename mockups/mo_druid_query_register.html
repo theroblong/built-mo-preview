@@ -1714,7 +1714,9 @@ WHERE
 <section class="query" id="q2c">
 <h2>Q2c Cross-flavor heatmap aggregation</h2>
 <p class="note"><strong>Purpose:</strong> Powers the geography × SKU heatmap on the Cross-flavor screen. Returns <code>base_units_pct_chg</code> and a <code>heatmap_bucket</code> for each (SKU, geography) cell. Run at render time against <code>built_prepost_features</code> — not pre-materialized.</p>
-<p class="note">Five heatmap buckets match CSS class names: <code>hm-strong-neg</code> (&lt; −10%), <code>hm-mild-neg</code> (−10% to −3%), <code>hm-neutral</code> (−3% to +3%), <code>hm-mild-pos</code> (+3% to +10%), <code>hm-strong-pos</code> (&gt; +10%).</p>
+<p class="note">Six heatmap buckets match CSS class names: <code>hm-no-data</code> (pre = 0, new launch), <code>hm-strong-neg</code> (&lt; −10%), <code>hm-mild-neg</code> (−10% to −3%), <code>hm-neutral</code> (−3% to +3%), <code>hm-mild-pos</code> (+3% to +10%), <code>hm-strong-pos</code> (&gt; +10%).</p>
+<p class="note"><strong>Fix (E21 pattern):</strong> <code>built_enriched_weekly</code> must be wrapped in a subquery with all filters pre-applied before broadcast. Bare JOIN + WHERE causes full-table broadcast (~914K rows) before filters take effect — Gateway Timeout. App layer substitutes <code>:params</code> before sending.</p>
+<p class="note"><strong>Fix (null bucket):</strong> Added <code>WHEN f.pre_13w_base_units = 0 THEN 'hm-no-data'</code> guard. New launches with no pre-window history produce pre = 0, making pct_chg NULL and the original ELSE clause incorrectly return <code>hm-strong-pos</code>.</p>
 <pre><code>
 -- Parameters: :spins_flavor, :channel_outlet, :retail_account
 SELECT
@@ -1727,40 +1729,44 @@ SELECT
   f.channel_outlet,
   f.pre_13w_base_units,
   f.post_13w_base_units,
-  -- Percentage change (13w default)
   (f.post_13w_base_units - f.pre_13w_base_units)
     / NULLIF(f.pre_13w_base_units, 0)              AS base_units_pct_chg,
-  -- Heatmap bucket matching CSS class names in the UI
   CASE
+    WHEN f.pre_13w_base_units = 0                  THEN 'hm-no-data'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) &lt; -0.10  THEN 'hm-strong-neg'
+           / f.pre_13w_base_units &lt; -0.10          THEN 'hm-strong-neg'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) &lt; -0.03  THEN 'hm-mild-neg'
+           / f.pre_13w_base_units &lt; -0.03          THEN 'hm-mild-neg'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) &lt;= 0.03  THEN 'hm-neutral'
+           / f.pre_13w_base_units &lt;= 0.03          THEN 'hm-neutral'
     WHEN (f.post_13w_base_units - f.pre_13w_base_units)
-           / NULLIF(f.pre_13w_base_units, 0) &lt;= 0.10  THEN 'hm-mild-pos'
+           / f.pre_13w_base_units &lt;= 0.10          THEN 'hm-mild-pos'
     ELSE 'hm-strong-pos'
   END AS heatmap_bucket
 FROM "built_prepost_features" f
-JOIN "built_enriched_weekly" e
-  ON  f.upc          = e.upc
+JOIN (
+  SELECT DISTINCT upc, channel_outlet, retail_account, geography_raw
+  FROM "built_enriched_weekly"
+  WHERE spins_flavor        = :spins_flavor
+    AND channel_outlet      = :channel_outlet
+    AND retail_account      = :retail_account
+    AND parent_brand        = 'BUILT'
+    AND military_excluded_flag = 0
+) e
+  ON  f.upc            = e.upc
   AND f.channel_outlet = e.channel_outlet
   AND f.retail_account = e.retail_account
   AND f.geography_raw  = e.geography_raw
 WHERE
-  e.spins_flavor      = :spins_flavor
-  AND f.channel_outlet  = :channel_outlet
-  AND f.retail_account  = :retail_account
-  AND e.parent_brand    = 'BUILT'
-  AND e.military_excluded_flag = 0
+  f.channel_outlet = :channel_outlet
+  AND f.retail_account = :retail_account
 GROUP BY
   f.upc, f.description, f.pack_count,
   f.geography_raw, f.geography_display,
   f.retail_account, f.channel_outlet,
   f.pre_13w_base_units, f.post_13w_base_units
 </code></pre>
-<p class="note"><strong>Status: QUEUED — pending Q3.</strong> SQL parses correctly (`:param` substitution confirmed valid). Blocked on <code>built_prepost_features</code> which is Q3's output. Re-test after Q3 completes.</p>
+<p class="note"><strong>Status: ✓ COMPLETE</strong> — subquery fix confirmed working. Null bucket fix applied (<code>hm-no-data</code> for new launches with <code>pre_13w_base_units = 0</code>). UI should render <code>hm-no-data</code> cells distinctly (e.g. grey) rather than as strong positive.</p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q2d">
 <h2>Q2d Scope bar metadata</h2>
