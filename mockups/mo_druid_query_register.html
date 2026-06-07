@@ -2937,12 +2937,13 @@ WITH existing_catalog AS (
 )
 
 SELECT
+  n.__time,
   n.upc, n.description, n.source_brand,
   n.spins_flavor_raw, n.spins_flavor_mapped,
   n.spins_flavor_canonical, n.spins_flavor,
   n.specific_flavor_normalized,
   n.pack_count, n.size_oz,
-  n.first_seen_week, n.manual_review_needed, n.detected_at,
+  n.manual_review_needed, n.detected_at,
 
   -- Classification
   CASE
