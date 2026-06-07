@@ -3039,12 +3039,12 @@ historical_upcs AS (
 )
 
 SELECT
+  c.first_seen_week                                      AS __time,
   c.upc, c.description, c.source_brand,
   c.spins_flavor_raw, c.spins_flavor_mapped,
   c.spins_flavor_canonical, c.spins_flavor,
   c.specific_flavor_normalized,
   c.pack_count, c.size_oz,
-  c.first_seen_week,
   c.channel_outlet, c.retail_account, c.geography_raw,
   c.units                                                AS units_first_week,
   c.base_units                                           AS base_units_first_week,
