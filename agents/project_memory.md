@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-06 (session 5 — Q6 COMPLETE; 13w z-score classification confirmed; EXTREME_OUTLIER fires at max_z13 ≈ 3.328; next: Q7+)
+Last synced: 2026-06-07 (session 6 — Q7 COMPLETE; new product design principles established; 3-tier confidence model + non-parametric approach for EARLY-tier UPCs documented; next: Q8)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q6 COMPLETE (two runs; 13w z-score fix confirmed); next: Q7+.
+- Pending push — Q6 COMPLETE; Q7 COMPLETE; new product design principles + 3-tier confidence model documented in register and project memory; next: Q8.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -123,6 +123,35 @@ Druid in a single datasource using SPINS table format. The operating flow is:
   the register for actual SQL testing.
 - The browser-friendly Druid query register should include a copy control on
   each query card so users can copy a single query body for Druid console testing.
+
+## New Product Design Principles (established 2026-06-07)
+
+BUILT is a growing brand requiring near-real-time insight into new product performance. These principles apply specifically to products in `new_upc_candidates` (Q7) and any UPC with < 13 post-launch weeks.
+
+**Mo must never show empty results.** Blank screens read as broken tools. Every product surfaces something actionable in Determine, Diagnose, and Decide regardless of history length.
+
+**Two separate flows — training vs. inference:**
+- Training pipeline (Q3 → Q5 → LightGBM fit): correctly excludes products with < 8 post-launch weeks. Exclusion is intentional — undercooked products distort model weights.
+- Inference/scoring pipeline: includes ALL active UPCs from `built_enriched_weekly`. LightGBM handles NULL features natively. Scoring queries pull from `built_enriched_weekly` directly, not from `built_prepost_features`. New focal UPCs can still have full donor pre/post features because donors are established products.
+
+**Three-tier confidence model (computed at query time from first_week_selling):**
+- `FULL`: 13+ post-launch weeks — full pre/post diagnostics, LightGBM score, price elasticity
+- `PARTIAL`: 8–12 weeks — LightGBM score with available features, partial diagnostics, elasticity with wider CIs
+- `EARLY`: < 8 weeks (current state of all 70 Puff/Sour Puff UPCs) — non-parametric and heuristic methods only
+
+**Non-parametric and heuristic methods for EARLY-tier products:**
+- k-NN similarity: top-5 most similar established BUILT UPCs by flavor, pack, channel, first-week velocity → surface their labels as "similar product benchmark"
+- Launch trajectory percentile: rank week-N velocity vs. all established BUILT products at same N post-launch weeks
+- Category benchmark: velocity and TDP vs. category norms from `built_filtered_weekly` — available from day 1
+- Heuristic assortment flag: pack-count variant of existing flavor → likely cannibalistic; new flavor, no existing match → likely incremental
+- Trend extrapolation: simple trend fit to available weeks, project to 13w with uncertainty band, updated weekly
+
+**Determine / Diagnose / Decide for EARLY-tier:**
+- Determine: k-NN benchmark prediction + similarity confidence. Never hide the card. Label: "Prediction based on similar established products — model score available after 8 post-launch weeks."
+- Diagnose: launch trajectory chart + percentile vs. launch cohort. Pre/post panel replaced with: "Pre/post comparison requires 13+ post-launch weeks. Estimated available [first_week_selling + 13 weeks]. Showing N-week launch trend."
+- Decide: category-norm price positioning + heuristic assortment recommendation. Elasticity flagged as "category prior — refines after 8+ weeks of own-product data."
+
+**`new_upc_candidates` (Q7) is the product registry** that drives UI routing and tier assignment. Tier upgrades automatically as `first_week_selling + N weeks` passes — no manual intervention. The 70 Built Puff UPCs (first_week_selling 2026-04-19) are the primary test case for this system.
 
 ## Query Testing Status (as of 2026-06-04)
 

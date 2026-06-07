@@ -2856,7 +2856,32 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 <section class="query" id="q7">
 <h2>Q7 New UPC detection</h2>
 <p class="note"><strong>Purpose:</strong> Identify BUILT UPCs whose <code>first_week_selling</code> falls within the past 12 months. Returns one row per UPC × channel × retail_account × geography_raw showing metrics from that UPC's first appearance at each location. Used to populate the "recent launch" cohort for Q8 classification, flavor_mapping refresh, and Mo UI launch tracking.</p>
+<p class="note"><strong>Status: ✓ COMPLETE — 13 minutes. 70 distinct UPCs / 5,622 geo rows. Entire 12-month cohort is the Built Puff product line (first_week_selling 2026-04-19, ~7 weeks before run date). These UPCs are the "40 extra" not in flavor_mapping; Q8 will classify them. ROW_NUMBER() window is expensive — optimize if this becomes a hot weekly path.</strong></p>
 <p class="note"><strong>Note:</strong> Original anti-join design (latest-week UPCs vs all prior weeks) always returns 0 rows for a historically-loaded dataset. Redefined to use a 12-month <code>first_week_selling</code> lookback — analytically meaningful for both historical analysis and ongoing weekly runs. Cutoff is dynamic: <code>TIMESTAMPADD(YEAR, -1, CURRENT_TIMESTAMP)</code>.</p>
+<p class="note"><strong>Architectural note — new product inclusion and humane UI design:</strong></p>
+<p class="note">BUILT is a growing brand that needs near-real-time insight into new product performance. The 70 Puff and Sour Puff UPCs are of particular interest as they expand into new assortment combinations and interact with existing products. Mo must never show empty results — blank screens read as broken tools to end users. Every product must surface something actionable in each of the three views.</p>
+<p class="note"><strong>Two separate flows — training vs. inference:</strong> The training pipeline (Q3 → Q5 → LightGBM fit) intentionally excludes products with &lt; 8 post-launch weeks — undercooked products distort model weights, exclusion is correct. The inference/scoring pipeline must include ALL active UPCs from <code>built_enriched_weekly</code>, including the 70 Puff UPCs. LightGBM handles NULL features natively. Donor pre/post features are available because donors are established products. Focal pre features are NULL for all products (structural SPINS limitation, already accounted for in training).</p>
+<p class="note"><strong>Three-tier confidence model:</strong></p>
+<ul class="note">
+  <li><code>FULL</code>: 13+ post-launch weeks — full pre/post diagnostics, LightGBM score, price elasticity</li>
+  <li><code>PARTIAL</code>: 8–12 post-launch weeks — LightGBM score using available features, partial diagnostics, elasticity with wider CIs</li>
+  <li><code>EARLY</code>: &lt; 8 post-launch weeks (current state of Puff/Sour Puff) — no parametric pre/post, but still actionable via non-parametric and heuristic methods</li>
+</ul>
+<p class="note"><strong>Non-parametric and heuristic approaches for EARLY-tier products:</strong></p>
+<ul class="note">
+  <li><em>k-NN similarity</em>: find top-5 most similar established BUILT UPCs by flavor profile, pack count, channel, and first-week velocity. Surface their cannibalization labels and price elasticity as a "similar product benchmark." Actionable immediately at launch.</li>
+  <li><em>Launch trajectory percentile</em>: rank each new product's week-N velocity against all established BUILT products at the same N weeks post-launch. No history threshold required.</li>
+  <li><em>Category benchmark</em>: compare new UPC velocity and TDP to category norms from <code>built_filtered_weekly</code>. Computed from day 1.</li>
+  <li><em>Heuristic assortment flag</em>: pack-count variant of existing flavor → likely cannibalistic with single-unit sibling; new flavor with no existing match → likely incremental. Feeds Q8 and Decide view immediately.</li>
+  <li><em>Trend extrapolation</em>: fit simple trend to available post-launch weeks and project 13-week trajectory with uncertainty band. Updated weekly.</li>
+</ul>
+<p class="note"><strong>Determine / Diagnose / Decide handling for EARLY-tier products:</strong></p>
+<ul class="note">
+  <li><em>Determine</em>: show k-NN benchmark prediction + similarity confidence. Label: "Prediction based on similar established products — model score available after 8 post-launch weeks." Never hide the card.</li>
+  <li><em>Diagnose</em>: show launch trajectory chart + percentile ranking vs. launch cohort. Replace pre/post panel with: "Pre/post comparison requires 13+ post-launch weeks. Estimated available [first_week_selling + 13 weeks]. Showing N-week launch trend."</li>
+  <li><em>Decide</em>: show category-norm price positioning and heuristic assortment recommendation. Flag elasticity as "category prior — refines with own-product data after 8+ weeks."</li>
+</ul>
+<p class="note"><strong><code>new_upc_candidates</code> (Q7) is the registry that drives all of this.</strong> The scoring pipeline and UI routing layer read from this table to determine which products are EARLY-tier and route them to non-parametric handlers. The <code>first_week_selling</code> date computes weeks-since-launch at query time and upgrades tier automatically as history accumulates — no manual intervention needed.</p>
 <pre><code>
 REPLACE INTO "new_upc_candidates"
 OVERWRITE ALL
