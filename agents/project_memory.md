@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-06 (session 3 — P3 Polars proof-of-concept added; pipeline order confirmed)
+Last synced: 2026-06-06 (session 3 — P3 added; Q2 all batches complete; next: Q2b → Q2c → Q3)
 
 ## Repository
 
@@ -70,7 +70,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `c0a560f` — Add actual Druid query register and wire playbook query IDs to register anchors.
 - `20cdd21` — Add one-click SQL copy controls to the Druid query register mockup.
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
-- Pending — P3 Polars proof-of-concept added to both query registers; HTML TOC paired Q3/P3 links, green Copy Python button; pipeline order Q2→Q2b→Q2c→Q3.
+- Pending — P3 added to both registers; Q2 all 3 batches COMPLETE (29,813,824 rows total); Q2b queued next.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -148,7 +148,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - QS1, QS1v, QS2, QS3: ✓ COMPLETE
 - Q0: ✓ COMPLETE (all 3 batches)
 - Q1: ✓ COMPLETE
-- Q2: IN PROGRESS. Batch 1 (2023) COMPLETE — 6,505,424 rows. Batch 2 (2024) COMPLETE — 9,881,582 rows (+52%; reflects BUILT SKU expansion). Batch 3 (2025-01-01→2027-01-01) RUNNING — open-ended OVERWRITE requires explicit DAY-aligned upper bound (E20).
+- Q2: ✓ COMPLETE (all 3 batches). Batch 1 (2023): 6,505,424 rows. Batch 2 (2024): 9,881,582 rows (+52%; BUILT SKU expansion). Batch 3 (2025-01-01→2027-01-01): 13,426,818 rows (2025: 9,633,392 / 2026: 3,793,426; 11h 12m). Grand total: 29,813,824 rows.
 - Q2b, Q2c: QUEUED — will be tested immediately after Q2 completes, before Q3.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).

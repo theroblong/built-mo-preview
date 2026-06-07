@@ -1414,7 +1414,8 @@ SET maxNumTasks           = 4;                     -- REQUIRED: single-worker so
 -- Adjust __time bounds per batch; re-run with the next range when complete.
 --   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE (6,505,424 rows)
 --   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE (9,881,582 rows; +52% vs 2023 — BUILT SKU expansion)
---   Batch 3: 2025-01-01 → 2027-01-01  (upper bound required for DAY alignment; covers all present data)
+--   Batch 3: 2025-01-01 → 2027-01-01  ✓ COMPLETE (13,426,818 rows: 2025=9,633,392 / 2026=3,793,426; 11h 12m; DAY-aligned upper bound required — E20)
+--   Grand total: 29,813,824 rows
 REPLACE INTO "comparison_pool_weekly"
 OVERWRITE WHERE __time >= TIMESTAMP '2025-01-01'
             AND __time <  TIMESTAMP '2027-01-01'
@@ -1587,10 +1588,11 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 <p class="note"><strong>Note:</strong> Distance 6 pairs are on-demand via Query 2b only.</p>
 <p><strong>Batch status:</strong></p>
 <table>
-<tr><th>Batch</th><th>Range</th><th>Status</th><th>Row count</th></tr>
-<tr><td>1</td><td>2023-01-01 → 2024-01-01</td><td>✓ Complete</td><td>6,505,424</td></tr>
-<tr><td>2</td><td>2024-01-01 → 2025-01-01</td><td>✓ Complete</td><td>9,881,582</td></tr>
-<tr><td>3</td><td>2025-01-01 → 2027-01-01</td><td>Running</td><td>—</td></tr>
+<tr><th>Batch</th><th>Range</th><th>Status</th><th>Row count</th><th>Duration</th></tr>
+<tr><td>1</td><td>2023-01-01 → 2024-01-01</td><td>✓ Complete</td><td>6,505,424</td><td>—</td></tr>
+<tr><td>2</td><td>2024-01-01 → 2025-01-01</td><td>✓ Complete</td><td>9,881,582</td><td>~6h</td></tr>
+<tr><td>3</td><td>2025-01-01 → 2027-01-01</td><td>✓ Complete</td><td>13,426,818 (2025: 9,633,392 / 2026: 3,793,426)</td><td>11h 12m</td></tr>
+<tr><td><strong>Total</strong></td><td>2023–2026</td><td>✓ <strong>COMPLETE</strong></td><td><strong>29,813,824</strong></td><td></td></tr>
 </table>
 <p><strong>Output — comparison type breakdown by year:</strong></p>
 <table>
@@ -1603,7 +1605,8 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 <tr><td>SAME_SPECIFIC_FLAVOR_CROSS_BRAND</td><td>0</td><td>0</td></tr>
 <tr><td><strong>Total</strong></td><td><strong>6,505,424</strong></td><td><strong>9,881,582</strong></td></tr>
 </table>
-<p class="note">SAME_SPECIFIC_FLAVOR_CROSS_BRAND = 0 is expected — specific_flavor_normalized is brand-specific; cross-brand matching occurs at the spins_flavor level. The +52% row count in 2024 reflects BUILT SKU expansion.</p>
+<p class="note">SAME_SPECIFIC_FLAVOR_CROSS_BRAND = 0 is expected — specific_flavor_normalized is brand-specific; cross-brand matching occurs at the spins_flavor level. The +52% row count in 2024 reflects BUILT SKU expansion. 2026 partial year (3,793,426) reflects data through current date.</p>
+<p class="status">✓ COMPLETE (all 3 batches — 29,813,824 rows total)</p>
 <p><strong>Verify (run after each batch):</strong></p>
 <pre><code>SELECT
   TIME_FLOOR(__time, 'P1Y') AS year,

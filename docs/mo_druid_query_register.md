@@ -1455,7 +1455,8 @@ SET maxNumTasks           = 4;                     -- REQUIRED: single-worker so
 -- Adjust __time bounds per batch; re-run with the next range when complete.
 --   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE (6,505,424 rows)
 --   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE (9,881,582 rows; +52% vs 2023 — BUILT SKU expansion)
---   Batch 3: 2025-01-01 → 2027-01-01  (upper bound required for DAY alignment; covers all present data)
+--   Batch 3: 2025-01-01 → 2027-01-01  ✓ COMPLETE (13,426,818 rows: 2025=9,633,392 / 2026=3,793,426; 11h 12m; DAY-aligned upper bound required — E20)
+--   Grand total: 29,813,824 rows
 REPLACE INTO "comparison_pool_weekly"
 OVERWRITE WHERE __time >= TIMESTAMP '2025-01-01'
             AND __time <  TIMESTAMP '2027-01-01'
@@ -1629,11 +1630,12 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 **Note:** Distance 6 pairs are on-demand via Query 2b only.
 
 **Batch status:**
-| Batch | Range | Status | Row count |
-|---|---|---|---|
-| 1 | 2023-01-01 → 2024-01-01 | ✓ Complete | 6,505,424 |
-| 2 | 2024-01-01 → 2025-01-01 | ✓ Complete | 9,881,582 |
-| 3 | 2025-01-01 → 2027-01-01 | Running | — |
+| Batch | Range | Status | Row count | Duration |
+|---|---|---|---|---|
+| 1 | 2023-01-01 → 2024-01-01 | ✓ Complete | 6,505,424 | — |
+| 2 | 2024-01-01 → 2025-01-01 | ✓ Complete | 9,881,582 | ~6h |
+| 3 | 2025-01-01 → 2027-01-01 | ✓ Complete | 13,426,818 (2025: 9,633,392 / 2026: 3,793,426) | 11h 12m |
+| **Total** | 2023–2026 | ✓ **COMPLETE** | **29,813,824** | |
 
 **Output — comparison type breakdown by year:**
 | comparison_type | 2023 | 2024 |
@@ -1646,7 +1648,9 @@ CLUSTERED BY focal_upc, channel_outlet, retail_account, geography_raw
 | SAME_SPECIFIC_FLAVOR_CROSS_BRAND | 0 | 0 |
 | **Total** | **6,505,424** | **9,881,582** |
 
-Note: `SAME_SPECIFIC_FLAVOR_CROSS_BRAND` = 0 is expected — `specific_flavor_normalized` is brand-specific; cross-brand matching occurs at the `spins_flavor` level. The +52% row count in 2024 reflects BUILT SKU expansion (new products and pack sizes introduced).
+Note: `SAME_SPECIFIC_FLAVOR_CROSS_BRAND` = 0 is expected — `specific_flavor_normalized` is brand-specific; cross-brand matching occurs at the `spins_flavor` level. The +52% row count in 2024 reflects BUILT SKU expansion (new products and pack sizes introduced). 2026 partial year (3,793,426) reflects data through current date.
+
+**Status: ✓ COMPLETE (all 3 batches — 29,813,824 rows total)**
 
 **Verify (run after each batch):**
 ```sql
