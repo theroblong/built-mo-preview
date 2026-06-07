@@ -3077,17 +3077,35 @@ CLUSTERED BY upc
 
 **Purpose:** Classify each new UPC as `NEW_PACK_SIZE`, `NEW_FLAVOR_CANDIDATE`, or `DUPLICATE_OR_RELAUNCH`. Only `NEW_PACK_SIZE` rows with no flavor taxonomy conflict auto-enroll in pack ladder scoring.
 
+**Note:** Druid does not support `EXISTS` or correlated scalar subqueries with `ORDER BY`. Rewritten using a single `flavor_joins` CTE: LEFT JOIN `new_upc_candidates` against `existing_catalog` on flavor equality, then use conditional `SUM`/`MIN` aggregates to replicate EXISTS logic. `NOT IN (SELECT upc FROM new_upc_candidates)` replaced with equivalent date filter (`first_week_selling < TIMESTAMPADD(YEAR, -1, CURRENT_TIMESTAMP)`). `ORDER BY ABS(pack_count delta)` replaced with `MIN` for pack partner lookup.
+
 ```sql
 REPLACE INTO "new_upc_classifications"
 OVERWRITE ALL
 WITH existing_catalog AS (
   SELECT DISTINCT
     upc, specific_flavor_normalized,
-    spins_flavor_canonical, spins_flavor,
-    pack_count, description
+    spins_flavor_canonical, pack_count, description
   FROM "built_enriched_weekly"
-  WHERE parent_brand = 'BUILT' AND military_excluded_flag = 0
-    AND upc NOT IN (SELECT upc FROM "new_upc_candidates")
+  WHERE parent_brand = 'BUILT'
+    AND military_excluded_flag = 0
+    AND TIME_PARSE(first_week_selling, 'yyyy-MM-dd') < TIMESTAMPADD(YEAR, -1, CURRENT_TIMESTAMP)
+),
+flavor_joins AS (
+  SELECT
+    n.upc AS new_upc,
+    SUM(CASE WHEN e.pack_count != n.pack_count
+              AND n.spins_flavor_mapped = n.spins_flavor_canonical
+             THEN 1 ELSE 0 END)                                          AS same_flavor_diff_pack,
+    SUM(CASE WHEN e.pack_count  = n.pack_count
+             THEN 1 ELSE 0 END)                                          AS same_flavor_same_pack,
+    MIN(CASE WHEN e.pack_count != n.pack_count THEN e.upc         ELSE NULL END) AS pack_partner_upc,
+    MIN(CASE WHEN e.pack_count != n.pack_count THEN e.description ELSE NULL END) AS pack_partner_desc
+  FROM "new_upc_candidates" n
+  LEFT JOIN existing_catalog e
+    ON e.specific_flavor_normalized = n.specific_flavor_normalized
+    AND e.spins_flavor_canonical    = n.spins_flavor_canonical
+  GROUP BY n.upc
 )
 
 SELECT
@@ -3099,52 +3117,25 @@ SELECT
   n.pack_count, n.size_oz,
   n.manual_review_needed, n.detected_at,
 
-  -- Classification
   CASE
-    WHEN EXISTS (
-      SELECT 1 FROM existing_catalog e
-      WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
-        AND e.spins_flavor_canonical     = n.spins_flavor_canonical
-        AND e.pack_count                != n.pack_count
-        AND n.spins_flavor_mapped        = n.spins_flavor_canonical
-    )
-    AND n.pack_count IN (1,2,3,4,5,6,8,10,12,15,16,18,20,24)
+    WHEN COALESCE(fj.same_flavor_diff_pack, 0) > 0
+      AND n.pack_count IN (1,2,3,4,5,6,8,10,12,15,16,18,20,24)
       THEN 'NEW_PACK_SIZE'
-    WHEN EXISTS (
-      SELECT 1 FROM existing_catalog e
-      WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
-        AND e.pack_count                 = n.pack_count
-    )
+    WHEN COALESCE(fj.same_flavor_same_pack, 0) > 0
       THEN 'DUPLICATE_OR_RELAUNCH'
     ELSE 'NEW_FLAVOR_CANDIDATE'
   END AS upc_classification,
 
-  -- Closest pack-ladder partner (populated for NEW_PACK_SIZE rows only)
-  (
-    SELECT e.upc FROM existing_catalog e
-    WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
-      AND e.spins_flavor_canonical     = n.spins_flavor_canonical
-      AND e.pack_count                != n.pack_count
-    ORDER BY ABS(e.pack_count - n.pack_count)
-    LIMIT 1
-  ) AS closest_pack_partner_upc,
+  fj.pack_partner_upc  AS closest_pack_partner_upc,
+  fj.pack_partner_desc AS closest_pack_partner_description,
 
-  (
-    SELECT e.description FROM existing_catalog e
-    WHERE e.specific_flavor_normalized = n.specific_flavor_normalized
-      AND e.spins_flavor_canonical     = n.spins_flavor_canonical
-      AND e.pack_count                != n.pack_count
-    ORDER BY ABS(e.pack_count - n.pack_count)
-    LIMIT 1
-  ) AS closest_pack_partner_description,
-
-  -- Taxonomy conflict: mapped FLAVOR != canonical FLAVOR
   CASE
     WHEN n.spins_flavor_mapped != n.spins_flavor_canonical THEN 'Y'
     ELSE 'N'
   END AS flavor_taxonomy_conflict
 
 FROM "new_upc_candidates" n
+LEFT JOIN flavor_joins fj ON fj.new_upc = n.upc
 PARTITIONED BY DAY
 CLUSTERED BY upc
 ```
