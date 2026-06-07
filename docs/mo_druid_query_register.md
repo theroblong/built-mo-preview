@@ -2101,6 +2101,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 
 **Verify:** `SELECT COUNT(DISTINCT upc) FROM built_prepost_features` should match BUILT SKU count. Check `pre_13w_weeks_count` is non-zero for established SKUs.
 
+**Status: ✓ COMPLETE** — 131 distinct UPCs, 14,939 total rows, completed in 4 minutes. Note: 131 UPCs vs 91 in `flavor_mapping` — extra 40 are BUILT SKUs in `built_enriched_weekly` not covered by the original flavor_mapping CSV (newer products/pack variants). Flag for flavor_mapping refresh.
+
 ---
 
 <a id="p3"></a>

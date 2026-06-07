@@ -2023,6 +2023,7 @@ PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT COUNT(DISTINCT upc) FROM built_prepost_features</code> should match BUILT SKU count. Check <code>pre_13w_weeks_count</code> is non-zero for established SKUs.</p>
+<p class="status">✓ COMPLETE — 131 distinct UPCs, 14,939 total rows, 4 minutes. Note: 131 UPCs vs 91 in <code>flavor_mapping</code> — extra 40 are BUILT SKUs not covered by original CSV (newer products/pack variants). Flag for flavor_mapping refresh.</p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 
 <section class="query py-query" id="p3" data-lang="python">
