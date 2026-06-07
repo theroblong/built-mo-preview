@@ -1838,18 +1838,19 @@ GROUP BY
 
 ## Q2d Scope bar metadata
 
-**Purpose:** Lightweight aggregate against `comparison_pool_weekly`. Returns `comparison_type`, `relationship_distance`, `pool_sku_count`, and `pool_sku_names` for the active focal × geography × comparison type selection. The UI uses `pool_sku_count` and `pool_sku_names` to populate the `scope-bar-dist` slot; the `scope-bar-value` slot reads the plain-English label from the CASE expression below.
+**Purpose:** Lightweight aggregate against `comparison_pool_weekly`. Returns `comparison_type`, `relationship_distance`, `pool_sku_count`, and `comparison_scope_label` for the active focal × geography × comparison type selection. The UI uses `pool_sku_count` to populate the `scope-bar-dist` slot and `comparison_scope_label` for the `scope-bar-value` slot. SKU names are loaded separately on demand via Q2d-names.
+
+**Note:** `focal_upc` in `comparison_pool_weekly` is stored **without the check digit** (e.g., `08-40229-30034` not `08-40229-30034-3`). App layer must strip the check digit before querying. `geography_raw` stores RMA-level values (e.g., `KROGER CORP W/ AK, HARRIS TEETER, ROUNDYS AND RULER - RMA`), not TOTAL US rollups.
+
+**Note (STRING_AGG):** See E22 — `STRING_AGG(DISTINCT ...)` is blocked by `useApproximateCountDistinct`; `ORDER BY` inside `STRING_AGG` is not supported; concatenating large pools exceeds the 1024-byte serialization limit. Pool names moved to Q2d-names to avoid all three.
 
 ```sql
--- Parameters: :focal_upc, :channel_outlet, :retail_account,
---             :geography_raw, :comparison_type
+-- Parameters: :focal_upc (no check digit), :channel_outlet, :retail_account,
+--             :geography_raw (RMA-level), :comparison_type
 SELECT
   comparison_type,
   relationship_distance,
   COUNT(DISTINCT candidate_upc)                     AS pool_sku_count,
-  STRING_AGG(DISTINCT candidate_description, ', '
-    ORDER BY candidate_description)                 AS pool_sku_names,
-  -- Plain-English scope label (maps comparison_type to UI string at render time)
   CASE comparison_type
     WHEN 'SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER'
       THEN 'Pack size comparison'
@@ -1872,6 +1873,33 @@ WHERE
   AND comparison_type = :comparison_type
 GROUP BY comparison_type, relationship_distance
 ```
+
+**Status: ✓ COMPLETE** — confirmed 1 row, 61 SKUs, `Cross-flavor · all brands` label at Kroger / CONVENTIONAL|FOOD / SAME_FLAVOR_CROSS_BRAND in 0.55s.
+
+---
+
+<a id="q2d-names"></a>
+
+## Q2d-names Scope bar SKU name list (on-demand companion to Q2d)
+
+**Purpose:** Returns one row per distinct candidate SKU for the active pool. Called on demand (tooltip / expand) rather than at page load. UI sorts and displays client-side. Avoids STRING_AGG serialization limits entirely — see E22.
+
+```sql
+-- Parameters: :focal_upc (no check digit), :channel_outlet, :retail_account,
+--             :geography_raw (RMA-level), :comparison_type
+SELECT DISTINCT
+  candidate_upc,
+  candidate_description
+FROM "comparison_pool_weekly"
+WHERE
+  focal_upc      = :focal_upc
+  AND channel_outlet = :channel_outlet
+  AND retail_account = :retail_account
+  AND geography_raw  = :geography_raw
+  AND comparison_type = :comparison_type
+```
+
+**Status: ✓ COMPLETE** — confirmed 61 rows (SAME_FLAVOR_CROSS_BRAND CARAMEL competitors at Kroger), including Kind, Barebells, Clif, Quest, Alani, Pure Protein, Atkins, and others.
 
 ---
 

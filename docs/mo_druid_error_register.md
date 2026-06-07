@@ -346,3 +346,20 @@ JOIN (
 ) c ON ...
 ```
 **Result:** Query time dropped from >5 min (timeout) to 4.06s. Confirmed returning correct data (BUILT Puff Salted Caramel vs QUEST at Kroger / CONVENTIONAL|FOOD).
+
+
+---
+
+## E22 — Q2d: STRING_AGG limitations — DISTINCT blocked, ORDER BY unsupported, serialization limit exceeded
+
+**Query:** Q2d  
+**Errors (three distinct failures, same root area):**
+1. `INVALID_INPUT: Aggregation [STRING_AGG] with DISTINCT is not supported when useApproximateCountDistinct is enabled.`
+2. `INVALID_INPUT: Query could not be planned. [Aggregation [LISTAGG($3, $4) WITHIN GROUP ([3])] is not supported]` — triggered by `ORDER BY` inside `STRING_AGG`.
+3. `RUNTIME_FAILURE (OPERATOR): Unable to serialize [ARRAY<STRING>], max size bytes is [1024], but need at least [1039] bytes` — triggered when pool was large enough (61 SKUs) that concatenated descriptions exceeded 1024 bytes.
+
+**Root cause:** Druid's `STRING_AGG` function has three hard constraints on this cluster: (1) `DISTINCT` modifier requires `useApproximateCountDistinct = false`; (2) `ORDER BY` inside the aggregation is not supported; (3) output is bounded by a 1024-byte serialization limit, which pools of ~20+ SKUs routinely exceed.
+
+**Remedy:** Removed `STRING_AGG` from Q2d entirely. Pool count (`COUNT(DISTINCT candidate_upc)`) is unaffected. SKU names moved to companion query Q2d-names, which uses `SELECT DISTINCT candidate_upc, candidate_description` — one row per SKU, no aggregation, no size limit. UI receives the full list and sorts/renders client-side.
+
+**Result:** Q2d returns in ~0.55s; Q2d-names returns 61 rows for the CARAMEL / Kroger pool with no errors.

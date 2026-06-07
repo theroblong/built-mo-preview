@@ -421,6 +421,23 @@ druid.msq.intermediate.storage.prefix=druid/msq/intermediate</code></pre>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
+<section class="entry" id="e22">
+<div class="entry-header"><span class="eid">E22 RESOLVED</span><h2 class="entry-title">Q2d: STRING_AGG limitations — DISTINCT blocked, ORDER BY unsupported, serialization limit exceeded</h2></div>
+<dl>
+<dt>Query</dt><dd>Q2d (scope bar metadata)</dd>
+<dt>Errors</dt><dd>Three distinct failures on the same STRING_AGG call</dd>
+</dl>
+<ol>
+<li><code>INVALID_INPUT: Aggregation [STRING_AGG] with DISTINCT is not supported when useApproximateCountDistinct is enabled.</code></li>
+<li><code>INVALID_INPUT: Query could not be planned. [Aggregation [LISTAGG($3, $4) WITHIN GROUP ([3])] is not supported]</code> — triggered by <code>ORDER BY</code> inside <code>STRING_AGG</code>.</li>
+<li><code>RUNTIME_FAILURE (OPERATOR): Unable to serialize [ARRAY&lt;STRING&gt;], max size bytes is [1024], but need at least [1039] bytes</code> — triggered when pool size was large enough that concatenated descriptions exceeded 1024 bytes.</li>
+</ol>
+<p><strong>Root cause:</strong> Druid's <code>STRING_AGG</code> has three hard constraints on this cluster: (1) <code>DISTINCT</code> modifier requires <code>useApproximateCountDistinct = false</code>; (2) <code>ORDER BY</code> inside the aggregation is not supported; (3) output is bounded by a 1024-byte serialization limit, which pools of ~20+ SKUs routinely exceed.</p>
+<p><strong>Remedy:</strong> Removed <code>STRING_AGG</code> from Q2d entirely. Pool count (<code>COUNT(DISTINCT candidate_upc)</code>) is unaffected. SKU names moved to companion query Q2d-names, which uses <code>SELECT DISTINCT candidate_upc, candidate_description</code> — one row per SKU, no aggregation, no size limit. UI receives the full list and sorts/renders client-side.</p>
+<p><strong>Result:</strong> Q2d returns in ~0.55s; Q2d-names returns 61 rows for the CARAMEL / Kroger pool with no errors.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
 </section>
 </div>
 </main>

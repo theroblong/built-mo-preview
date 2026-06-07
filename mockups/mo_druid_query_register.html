@@ -23,7 +23,7 @@
 <a href="#q2">Q2</a>
 <a href="#q2b">Q2b</a>
 <a href="#q2c">Q2c</a>
-<a href="#q2d">Q2d</a>
+<div class="toc-pair"><a href="#q2d">Q2d</a><a href="#q2d-names" class="py-link">names</a></div>
 <a href="#q2e">Q2e</a>
 <div class="toc-pair"><a href="#q3">Q3</a><a href="#p3" class="py-link">P3</a></div>
 <a href="#q4">Q4</a>
@@ -1770,17 +1770,16 @@ GROUP BY
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q2d">
 <h2>Q2d Scope bar metadata</h2>
-<p class="note"><strong>Purpose:</strong> Lightweight aggregate against <code>comparison_pool_weekly</code>. Returns <code>comparison_type</code>, <code>relationship_distance</code>, <code>pool_sku_count</code>, and <code>pool_sku_names</code> for the active focal × geography × comparison type selection. The UI uses <code>pool_sku_count</code> and <code>pool_sku_names</code> to populate the <code>scope-bar-dist</code> slot; the <code>scope-bar-value</code> slot reads the plain-English label from the CASE expression below.</p>
+<p class="note"><strong>Purpose:</strong> Lightweight aggregate against <code>comparison_pool_weekly</code>. Returns <code>comparison_type</code>, <code>relationship_distance</code>, <code>pool_sku_count</code>, and <code>comparison_scope_label</code> for the active focal × geography × comparison type selection. The UI uses <code>pool_sku_count</code> for the <code>scope-bar-dist</code> slot and <code>comparison_scope_label</code> for the <code>scope-bar-value</code> slot. SKU names are loaded separately on demand via Q2d-names.</p>
+<p class="note"><strong>Note:</strong> <code>focal_upc</code> in <code>comparison_pool_weekly</code> is stored <strong>without the check digit</strong> (e.g., <code>08-40229-30034</code> not <code>08-40229-30034-3</code>). App layer must strip the check digit before querying. <code>geography_raw</code> stores RMA-level values, not TOTAL US rollups.</p>
+<p class="note"><strong>Note (STRING_AGG):</strong> See E22 — <code>STRING_AGG(DISTINCT ...)</code> is blocked by <code>useApproximateCountDistinct</code>; <code>ORDER BY</code> inside <code>STRING_AGG</code> is not supported; concatenating large pools exceeds the 1024-byte serialization limit. Pool names moved to Q2d-names.</p>
 <pre><code>
--- Parameters: :focal_upc, :channel_outlet, :retail_account,
---             :geography_raw, :comparison_type
+-- Parameters: :focal_upc (no check digit), :channel_outlet, :retail_account,
+--             :geography_raw (RMA-level), :comparison_type
 SELECT
   comparison_type,
   relationship_distance,
   COUNT(DISTINCT candidate_upc)                     AS pool_sku_count,
-  STRING_AGG(DISTINCT candidate_description, ', '
-    ORDER BY candidate_description)                 AS pool_sku_names,
-  -- Plain-English scope label (maps comparison_type to UI string at render time)
   CASE comparison_type
     WHEN 'SAME_SPECIFIC_FLAVOR_SAME_BRAND_PACK_LADDER'
       THEN 'Pack size comparison'
@@ -1803,7 +1802,26 @@ WHERE
   AND comparison_type = :comparison_type
 GROUP BY comparison_type, relationship_distance
 </code></pre>
-<p class="note">---</p>
+<p class="note"><strong>Status: ✓ COMPLETE</strong> — confirmed 1 row, 61 SKUs, <code>Cross-flavor · all brands</code> label at Kroger / CONVENTIONAL|FOOD / SAME_FLAVOR_CROSS_BRAND in 0.55s.</p>
+<div class="top"><a href="#top">Back to top</a></div></section>
+<section class="query" id="q2d-names">
+<h2>Q2d-names Scope bar SKU name list (on-demand companion to Q2d)</h2>
+<p class="note"><strong>Purpose:</strong> Returns one row per distinct candidate SKU for the active pool. Called on demand (tooltip / expand) rather than at page load. UI sorts and displays client-side. Avoids STRING_AGG serialization limits entirely — see E22.</p>
+<pre><code>
+-- Parameters: :focal_upc (no check digit), :channel_outlet, :retail_account,
+--             :geography_raw (RMA-level), :comparison_type
+SELECT DISTINCT
+  candidate_upc,
+  candidate_description
+FROM "comparison_pool_weekly"
+WHERE
+  focal_upc      = :focal_upc
+  AND channel_outlet = :channel_outlet
+  AND retail_account = :retail_account
+  AND geography_raw  = :geography_raw
+  AND comparison_type = :comparison_type
+</code></pre>
+<p class="note"><strong>Status: ✓ COMPLETE</strong> — confirmed 61 rows (SAME_FLAVOR_CROSS_BRAND CARAMEL competitors at Kroger), including Kind, Barebells, Clif, Quest, Alani, Pure Protein, Atkins, and others.</p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q2e">
 <h2>Q2e Cannibalization rate trend retrieval</h2>
