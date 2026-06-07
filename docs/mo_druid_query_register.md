@@ -1822,6 +1822,8 @@ GROUP BY
   f.pre_13w_base_units, f.post_13w_base_units
 ```
 
+**Status: QUEUED — pending Q3.** SQL parses correctly (`:param` substitution confirmed valid). Blocked on `built_prepost_features` which is Q3's output. Re-test after Q3 completes.
+
 ---
 
 <a id="q2d"></a>

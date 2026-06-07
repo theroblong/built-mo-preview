@@ -150,7 +150,7 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q1: ✓ COMPLETE
 - Q2: ✓ COMPLETE (all 3 batches). Batch 1 (2023): 6,505,424 rows. Batch 2 (2024): 9,881,582 rows (+52%; BUILT SKU expansion). Batch 3 (2025-01-01→2027-01-01): 13,426,818 rows (2025: 9,633,392 / 2026: 3,793,426; 11h 12m). Grand total: 29,813,824 rows.
 - Q2b: ✓ COMPLETE — E21 (Gateway Timeout) fixed with subquery pre-filter pattern; confirmed 4.06s at Kroger/CONVENTIONAL|FOOD.
-- Q2c: QUEUED — next after Q2b.
+- Q2c: QUEUED-PENDING-Q3 — SQL valid, blocked on built_prepost_features (Q3 output). Re-test after Q3 completes.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
