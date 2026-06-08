@@ -3622,9 +3622,13 @@ WITH windows AS (
     AVG(p.price_per_bar) FILTER (
       WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
     ) AS post_13w_avg_price_per_bar,
-    STDDEV_SAMP(p.price_per_bar) FILTER (
+    -- STDDEV_SAMP not supported in Druid; compute via SUM/SUM_SQ/COUNT (see E23)
+    SUM(p.price_per_bar) FILTER (
       WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
-    ) AS post_13w_std_price_per_bar,
+    ) AS post_13w_price_sum,
+    SUM(p.price_per_bar * p.price_per_bar) FILTER (
+      WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
+    ) AS post_13w_price_sumsq,
     SUM(p.base_units) FILTER (
       WHERE p.__time BETWEEN TIMESTAMPADD(WEEK,-12,w.__time) AND w.__time
     ) AS post_13w_base_units,
@@ -3687,6 +3691,15 @@ WITH windows AS (
     w.retail_account, w.geography_raw, w.geography_level,
     w.parent_brand, w.specific_flavor_normalized,
     w.spins_flavor, w.pack_count
+),
+std_cte AS (
+  SELECT *,
+    SQRT(GREATEST(0,
+      (post_13w_price_sumsq
+       - post_13w_price_sum * post_13w_price_sum / NULLIF(post_13w_weeks_count, 0)
+      ) / NULLIF(post_13w_weeks_count - 1, 0)
+    )) AS post_13w_std_price_per_bar
+  FROM windows
 )
 
 SELECT
@@ -3736,13 +3749,16 @@ SELECT
     ELSE NULL
   END AS naive_price_elasticity
 
-FROM windows
+FROM std_cte
 WHERE
   pre_13w_weeks_count  >= 8
   AND post_13w_weeks_count >= 8
   AND pre_13w_base_units > 0
 PARTITIONED BY DAY
+CLUSTERED BY upc
 ```
+
+**Status: ✓ COMPLETE** — succeeded without sortMerge SET commands (self-join on ~700K-row `price_elasticity_weekly_features` stays within broadcast limit). 75,844 rows; 78 UPCs with sufficient 25-week history; min_pre_weeks = 8; max_post_weeks = 13. The 53 UPCs absent from training (131 total − 78) lack 25 weeks of price history — primarily the Puff/Sour Puff cohort launched 2026-04-19.
 
 ---
 
