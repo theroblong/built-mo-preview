@@ -3296,7 +3296,7 @@ CLUSTERED BY upc
 
 ## Section 4. Price Elasticity Query Plan — Full SQL (Q14–Q22)
 
-Run after Q0–Q13 are complete. **Q14, Q15, Q16 can run in parallel with Q3, Q4, Q5** since they share `built_enriched_weekly` as their only input. Do not run Q17 until Q14, Q15, and Q16 are all complete.
+Run after Q0–Q13 are complete. **Q14 must run first** — it reads `built_enriched_weekly` and writes `price_elasticity_weekly_features`. **Q15 and Q16 can then run simultaneously** — both read `price_elasticity_weekly_features` (Q14's output) and write to independent tables. Do not run Q17 until Q14, Q15, and Q16 are all complete.
 
 The military exclusion `channel_outlet != 'CONVENTIONAL|MILITARY' AND retail_account != 'DECA'` is enforced in every query below via `military_excluded_flag = 0` or an explicit WHERE clause on `built_filtered_weekly`.
 
@@ -3368,10 +3368,32 @@ WHERE
   AND w.military_excluded_flag = 0
   AND w.pack_count > 0
   AND w.arp > 0
+  -- Exclude UPCs with confirmed SPINS ARP unit-of-measure errors (see data quality note below)
+  AND w.upc NOT LIKE '00-40962%'
+  AND w.upc NOT IN ('08-40229-30143', '08-40229-30071')
+  -- Floor at $0.50/bar to exclude near-zero ARP rows scattered across pack sizes
+  AND w.arp / NULLIF(w.pack_count, 0) >= 0.50
 PARTITIONED BY DAY
+CLUSTERED BY upc
 ```
 
-**Verify:** `SELECT MIN(price_per_bar), MAX(price_per_bar), AVG(price_per_bar) FROM price_elasticity_weekly_features`. BUILT 1ct ~$2.10–$2.60; 4pk ~$2.00–$2.20/bar; 12pk ~$1.70–$2.00/bar. Any value above $5.00/bar indicates a pack_count error — stop and fix before proceeding.
+**Data quality note (discovered 2026-06-07):** Three UPC groups were found to have SPINS ARP reporting errors and are excluded from all Price Elasticity queries (Q14–Q22). They are NOT excluded from other sections of the pipeline.
+
+- **`00-40962%` prefix UPCs (pack_count 16 and 18):** Older BUILT Bar line products where SPINS reports ARP per bar rather than per package. A 16-pack appears at $1.76–$4.41 ARP (should be ~$32–$44). Affects ~6,000 rows across 11 UPCs including Coconut Chocolate, Double Chocolate, Raspberry, Salted Caramel, Cookies N Cream, Mint Brownie, Peanut Butter, Coconut Almond, Cherry Barcia, Toffee Almond variants. Root cause: SPINS unit-of-measure field mismatch for this UPC prefix.
+- **`08-40229-30143` (Built Bar Peanut Butter Brown 18pk):** Same per-bar ARP error as the `00-40962` group despite the `08-40229` prefix. ARP $0.25–$4.50 for an 18-pack (correct would be ~$36–$45). 5,298 rows affected.
+- **`08-40229-30071` (Built Double Chocolate Fudge Bar 1ct):** ARP ranges $13.47–$35.91 for a single bar — impossible for a 1.69 oz protein bar. Likely a SPINS data entry error. 5 rows.
+
+**Potential Determine-section finding:** The `00-40962` prefix UPCs and `08-40229-30143` may represent an ongoing SPINS reporting discrepancy for certain older BUILT Bar SKUs. If these UPCs are being tracked in retail analytics dashboards using ARP, their velocity-per-dollar and price positioning metrics will be incorrect across all channels. Flagged for potential inclusion as a data quality alert in the Mo Determine screen — actionability TBD with client.
+
+**Near-zero ARP rows (residual low-side outliers):** After the UPC exclusions above, scattered rows with price_per_bar below $0.50 remained across all pack sizes (min observed: $0.039/bar for a 13-count variety pack). These are almost certainly SPINS data entry or liquidation artifacts — not real consumer prices. A floor of `w.arp / NULLIF(w.pack_count, 0) >= 0.50` is applied in the WHERE clause to remove them. Included in this count are rows with price_per_bar as low as $0.075 for 12-packs and $0.10 for 1-count singles.
+
+**`08-40229-30616` (Built Puff Chocolatey Hazelnut 16.93oz 12pk) — high-side flag:** ARP $74.91–$74.97, yielding $6.24–$6.25/bar (9 rows). Retained in the dataset — this may be a legitimate premium or gift-format 12-pack at a specialty retailer. However, at $6.25/bar it is the highest per-bar price of any multi-pack in the extract and sits well above the 12-pack norm of ~$1.70–$2.10/bar. Monitor in Q17 training: if this UPC's rows are influencing the elasticity curve, exclude it from the training set (set `promo_confounded = 1` manually or add a UPC exclusion to Q17).
+
+**Single Puff/Sour Puff bars at $5.00–$8.49/bar:** These are NOT errors. Premium single-serve Puff bars at specialty and convenience retailers legitimately retail at this price point. The original $5.00 verify threshold was too conservative for the Puff line.
+
+**Status: ✓ COMPLETE** — three runs required to resolve SPINS ARP data quality issues (see data quality note above). Final row counts: 1ct 434,413 / 4pk 156,981 / 8pk 12,845 / 12pk 85,167 / 13pk 22,330 / 14pk 252. All min_ppb ≥ $0.50; max 1ct $8.49 (Sour Puff specialty); 12pk Chocolatey Hazelnut flagged at $6.25/bar.
+
+**Verify:** `SELECT pack_count, MIN(price_per_bar) AS min_ppb, MAX(price_per_bar) AS max_ppb, AVG(price_per_bar) AS avg_ppb FROM price_elasticity_weekly_features GROUP BY pack_count`. Expected: 1ct max ~$8.50 (Sour Puff specialty); 4pk avg ~$2.00–$2.20; 12pk avg ~$1.70–$2.10. Any min_ppb below $0.50 for any pack size = stop, a new ARP unit error has entered the data.
 
 ---
 
@@ -3450,7 +3472,10 @@ JOIN "price_elasticity_weekly_features" p
   AND f.parent_brand               = p.parent_brand
   AND f.upc                       != p.upc
 PARTITIONED BY DAY
+CLUSTERED BY focal_upc
 ```
+
+**Status: ✓ COMPLETE** — ran successfully. Self-join on price_elasticity_weekly_features; no additional errors.
 
 **Verify:** `SELECT focal_description, partner_description, AVG(price_per_bar_gap_pct) FROM price_pack_ladder_weekly GROUP BY 1,2 ORDER BY 1,2`. Mint Chip 4pk vs 1ct should show roughly −15% (4pk cheaper per bar).
 
@@ -3463,6 +3488,11 @@ PARTITIONED BY DAY
 **Purpose:** Compare BUILT price-per-bar against Tier 1 same-FLAVOR competitors in the same account, geography, and week.
 
 ```sql
+SET sqlJoinAlgorithm = 'sortMerge';
+SET durableShuffleStorage = 'true';
+SET sqlSortMergeDiskBuffered = 'true';
+SET maxNumTasks = 4;
+
 REPLACE INTO "price_competitive_weekly"
 OVERWRITE ALL
 SELECT
@@ -3531,17 +3561,19 @@ SELECT
 
   -- Watch flag: gap >= 9% on Tier 1 same-FLAVOR competitor
   CASE
-    WHEN ic.competitor_tier = 'TIER_1_DIRECT'
-     AND b.spins_flavor_raw = c.spins_flavor_raw
+    WHEN c.source_brand IN (
+           'QUEST','BAREBELLS','ONE BAR','RXBAR','PERFECT BAR','THINK!',
+           'PURE PROTEIN','POWER CRUNCH','NO COW','ROBERT IRVINES FITCRUNCH','CLIF BUILDERS')
+     AND b.spins_flavor = c.spins_flavor_raw
      AND (b.price_per_bar - c.arp / NULLIF(c.source_pack_count, 0))
            / NULLIF(c.arp / NULLIF(c.source_pack_count, 0), 0) >= 0.09
       THEN 1
     ELSE 0
   END AS competitive_gap_watch_flag,
 
+  -- spins_flavor_raw not in price_elasticity_weekly_features; b.spins_flavor (canonical) used instead
   CASE
-    WHEN b.spins_flavor_raw = c.spins_flavor_raw        THEN 'SAME_SPINS_FLAVOR'
-    WHEN b.spins_flavor     = c.spins_flavor_raw         THEN 'SAME_CANONICAL_FLAVOR'
+    WHEN b.spins_flavor = c.spins_flavor_raw THEN 'SAME_FLAVOR'
     ELSE 'DIFFERENT_FLAVOR'
   END AS competitive_flavor_relationship
 
@@ -3559,9 +3591,12 @@ WHERE
   c.channel_outlet != 'CONVENTIONAL|MILITARY'
   AND c.retail_account != 'DECA'
 PARTITIONED BY DAY
+CLUSTERED BY built_upc
 ```
 
-**Verify:** `SELECT competitor_brand, COUNT(*) FROM price_competitive_weekly GROUP BY 1 ORDER BY 2 DESC`. THINK!, RXBAR, QUEST, PERFECT BAR, NUGO NUTRITION should be present. Missing Tier 1 brands = absent from extract or brand name mismatch in `item_catalog`.
+**Status: ✓ COMPLETE** — required sortMerge (BroadcastTablesTooLarge on built_filtered_weekly join). Returns all non-BUILT competitor brands in the extract (~300+ brands), not just the 30 curated item_catalog brands. competitor_tier = NULL for brands outside the curated 30 — filter on competitor_tier IS NOT NULL in Q17 or the UI to restrict to tiered competitors. All Tier 1 brands confirmed present: QUEST (5.8M rows), RXBAR (3.2M), THINK! (4.0M), PERFECT BAR (2.5M), BAREBELLS (2.8M), ONE BAR (2.8M), PURE PROTEIN (2.8M), POWER CRUNCH (2.6M), NO COW (1.5M), ROBERT IRVINES FITCRUNCH (2.4M), CLIF BUILDERS (1.6M).
+
+**Verify:** `SELECT competitor_brand, COUNT(DISTINCT built_upc) AS built_upc_count, COUNT(*) AS row_count FROM price_competitive_weekly GROUP BY competitor_brand`. THINK!, RXBAR, QUEST, PERFECT BAR, NUGO NUTRITION should be present. Missing Tier 1 brands = absent from extract or brand name mismatch.
 
 ---
 

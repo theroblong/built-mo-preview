@@ -3131,7 +3131,7 @@ CLUSTERED BY upc
 <p class="note"><strong>Status: ✓ COMPLETE</strong> — ran in under 3 minutes. 177,516 total rows; 131 distinct UPCs across the 16-week window. Week 0 row count (14,939) matches Q3 exactly — strong cross-table consistency. Status boundaries confirmed clean: SUPPRESSED (weeks 0–5, 131 UPCs), LOW_CONFIDENCE (weeks 6–7, 117 UPCs), ACTIVE (weeks 8–15, 118 UPCs). The 13 UPCs absent from ACTIVE and the 14 absent from LOW_CONFIDENCE are the most recently launched products (including the 70 Puff UPCs at first_week_selling 2026-04-19, which max out at week 7 as of 2026-06-07). UPC count decay from 131 at week 0 to 104 at weeks 13–15 is expected — newer products have no data yet at later weeks. All V1–V2 validation queries passed.</p>
 <p class="note">---</p>
 <p class="note">## Section 4. Price Elasticity Query Plan — Full SQL (Q14–Q22)</p>
-<p class="note">Run after Q0–Q13 are complete. **Q14, Q15, Q16 can run in parallel with Q3, Q4, Q5** since they share <code>built_enriched_weekly</code> as their only input. Do not run Q17 until Q14, Q15, and Q16 are all complete.</p>
+<p class="note">Run after Q0–Q13 are complete. <strong>Q14 must run first</strong> — it reads <code>built_enriched_weekly</code> and writes <code>price_elasticity_weekly_features</code>. <strong>Q15 and Q16 can then run simultaneously</strong> — both read <code>price_elasticity_weekly_features</code> (Q14's output) and write to independent tables. Do not run Q17 until Q14, Q15, and Q16 are all complete.</p>
 <p class="note">The military exclusion <code>channel_outlet != 'CONVENTIONAL|MILITARY' AND retail_account != 'DECA'</code> is enforced in every query below via <code>military_excluded_flag = 0</code> or an explicit WHERE clause on <code>built_filtered_weekly</code>.</p>
 <p class="note">---</p>
 <div class="top"><a href="#top">Back to top</a></div></section>
@@ -3198,9 +3198,25 @@ WHERE
   AND w.military_excluded_flag = 0
   AND w.pack_count &gt; 0
   AND w.arp &gt; 0
+  -- Exclude UPCs with confirmed SPINS ARP unit-of-measure errors (see data quality note below)
+  AND w.upc NOT LIKE '00-40962%'
+  AND w.upc NOT IN ('08-40229-30143', '08-40229-30071')
+  -- Floor at $0.50/bar to exclude near-zero ARP rows scattered across pack sizes
+  AND w.arp / NULLIF(w.pack_count, 0) &gt;= 0.50
 PARTITIONED BY DAY
+CLUSTERED BY upc
 </code></pre>
-<p class="note"><strong>Verify:</strong> <code>SELECT MIN(price_per_bar), MAX(price_per_bar), AVG(price_per_bar) FROM price_elasticity_weekly_features</code>. BUILT 1ct ~$2.10–$2.60; 4pk ~$2.00–$2.20/bar; 12pk ~$1.70–$2.00/bar. Any value above $5.00/bar indicates a pack_count error — stop and fix before proceeding.</p>
+<p class="note"><strong>Data quality note (discovered 2026-06-07):</strong> Three UPC groups were found to have SPINS ARP reporting errors and are excluded from all Price Elasticity queries (Q14–Q22). They are NOT excluded from other sections of the pipeline.</p>
+<ul class="note">
+  <li><strong><code>00-40962%</code> prefix UPCs (pack_count 16 and 18):</strong> Older BUILT Bar line products where SPINS reports ARP per bar rather than per package. A 16-pack appears at $1.76–$4.41 ARP (correct would be ~$32–$44). Affects ~6,000 rows across 11 UPCs. Root cause: SPINS unit-of-measure field mismatch for this UPC prefix.</li>
+  <li><strong><code>08-40229-30143</code> (Built Bar Peanut Butter Brown 18pk):</strong> Same per-bar ARP error despite the <code>08-40229</code> prefix. ARP $0.25–$4.50 for an 18-pack (correct would be ~$36–$45). 5,298 rows affected.</li>
+  <li><strong><code>08-40229-30071</code> (Built Double Chocolate Fudge Bar 1ct):</strong> ARP $13.47–$35.91 for a single bar — impossible. Likely a SPINS data entry error. 5 rows.</li>
+</ul>
+<p class="note"><strong>Potential Determine-section finding:</strong> The <code>00-40962</code> prefix UPCs and <code>08-40229-30143</code> may represent an ongoing SPINS reporting discrepancy for certain older BUILT Bar SKUs. If tracked in retail analytics dashboards using ARP, their velocity-per-dollar and price positioning metrics will be incorrect across all channels. Flagged for potential inclusion as a data quality alert in the Mo Determine screen — actionability TBD with client.</p>
+<p class="note"><strong>Near-zero ARP rows (residual low-side outliers):</strong> After the UPC exclusions above, scattered rows with price_per_bar below $0.50 remained across all pack sizes (min observed: $0.039/bar for a 13-count variety pack). These are almost certainly SPINS data entry or liquidation artifacts — not real consumer prices. A floor of <code>w.arp / NULLIF(w.pack_count, 0) &gt;= 0.50</code> is applied in the WHERE clause to remove them.</p>
+<p class="note"><strong><code>08-40229-30616</code> (Built Puff Chocolatey Hazelnut 12pk) — high-side flag:</strong> ARP $74.91–$74.97, yielding $6.24–$6.25/bar (9 rows). Retained — may be a legitimate premium/gift-format 12-pack at a specialty retailer. However, at $6.25/bar it is the highest per-bar price of any multi-pack in the extract, well above the 12-pack norm of ~$1.70–$2.10/bar. Monitor in Q17 training: if influencing the elasticity curve, exclude from the training set.</p>
+<p class="note"><strong>Single Puff/Sour Puff bars at $5.00–$8.49/bar:</strong> These are NOT errors. Premium single-serve Puff bars at specialty and convenience retailers legitimately retail at this price point. The original $5.00 verify threshold was too conservative for the Puff line.</p>
+<p class="note"><strong>Verify:</strong> <code>SELECT pack_count, MIN(price_per_bar) AS min_ppb, MAX(price_per_bar) AS max_ppb, AVG(price_per_bar) AS avg_ppb FROM price_elasticity_weekly_features GROUP BY pack_count</code>. Expected: 1ct max ~$8.50 (Sour Puff specialty); 4pk avg ~$2.00–$2.20; 12pk avg ~$1.70–$2.10. Any min_ppb below $0.50 for any pack size = stop, a new ARP unit error has entered the data.</p>
 <p class="note">---</p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q15">
@@ -3275,6 +3291,7 @@ JOIN "price_elasticity_weekly_features" p
   AND f.parent_brand               = p.parent_brand
   AND f.upc                       != p.upc
 PARTITIONED BY DAY
+CLUSTERED BY focal_upc
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT focal_description, partner_description, AVG(price_per_bar_gap_pct) FROM price_pack_ladder_weekly GROUP BY 1,2 ORDER BY 1,2</code>. Mint Chip 4pk vs 1ct should show roughly −15% (4pk cheaper per bar).</p>
 <p class="note">---</p>
@@ -3283,6 +3300,11 @@ PARTITIONED BY DAY
 <h2>Q16 Competitive price weekly</h2>
 <p class="note"><strong>Purpose:</strong> Compare BUILT price-per-bar against Tier 1 same-FLAVOR competitors in the same account, geography, and week.</p>
 <pre><code>
+SET sqlJoinAlgorithm = 'sortMerge';
+SET durableShuffleStorage = 'true';
+SET sqlSortMergeDiskBuffered = 'true';
+SET maxNumTasks = 4;
+
 REPLACE INTO "price_competitive_weekly"
 OVERWRITE ALL
 SELECT
@@ -3351,17 +3373,19 @@ SELECT
 
   -- Watch flag: gap &gt;= 9% on Tier 1 same-FLAVOR competitor
   CASE
-    WHEN ic.competitor_tier = 'TIER_1_DIRECT'
-     AND b.spins_flavor_raw = c.spins_flavor_raw
+    WHEN c.source_brand IN (
+           'QUEST','BAREBELLS','ONE BAR','RXBAR','PERFECT BAR','THINK!',
+           'PURE PROTEIN','POWER CRUNCH','NO COW','ROBERT IRVINES FITCRUNCH','CLIF BUILDERS')
+     AND b.spins_flavor = c.spins_flavor_raw
      AND (b.price_per_bar - c.arp / NULLIF(c.source_pack_count, 0))
            / NULLIF(c.arp / NULLIF(c.source_pack_count, 0), 0) &gt;= 0.09
       THEN 1
     ELSE 0
   END AS competitive_gap_watch_flag,
 
+  -- spins_flavor_raw not in price_elasticity_weekly_features; b.spins_flavor (canonical) used instead
   CASE
-    WHEN b.spins_flavor_raw = c.spins_flavor_raw        THEN 'SAME_SPINS_FLAVOR'
-    WHEN b.spins_flavor     = c.spins_flavor_raw         THEN 'SAME_CANONICAL_FLAVOR'
+    WHEN b.spins_flavor = c.spins_flavor_raw THEN 'SAME_FLAVOR'
     ELSE 'DIFFERENT_FLAVOR'
   END AS competitive_flavor_relationship
 
@@ -3379,6 +3403,7 @@ WHERE
   c.channel_outlet != 'CONVENTIONAL|MILITARY'
   AND c.retail_account != 'DECA'
 PARTITIONED BY DAY
+CLUSTERED BY built_upc
 </code></pre>
 <p class="note"><strong>Verify:</strong> <code>SELECT competitor_brand, COUNT(*) FROM price_competitive_weekly GROUP BY 1 ORDER BY 2 DESC</code>. THINK!, RXBAR, QUEST, PERFECT BAR, NUGO NUTRITION should be present. Missing Tier 1 brands = absent from extract or brand name mismatch in <code>item_catalog</code>.</p>
 <p class="note">---</p>

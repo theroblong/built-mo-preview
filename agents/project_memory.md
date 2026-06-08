@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-07 (session 7 — Q9 COMPLETE; 177,516 rows / 131 UPCs / 16-week window; week 0 rows match Q3 exactly (14,939); status boundaries clean: SUPPRESSED 0–5, LOW_CONFIDENCE 6–7, ACTIVE 8–15; CLUSTERED BY upc added; next: Q10+)
+Last synced: 2026-06-08 (session 8 — Q14/Q15/Q16 COMPLETE; price elasticity foundation tables populated; SPINS ARP data quality issues discovered and documented; next: Q17)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q6–Q9 COMPLETE; new product design principles documented; next: Q10+.
+- Pending push — Q6–Q16 COMPLETE; price elasticity foundation tables populated; SPINS ARP data quality issues documented; next: Q17.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -191,5 +191,8 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q3: ✓ COMPLETE — 131 distinct UPCs, 14,939 rows, 4 minutes. Note: 131 UPCs vs 91 in flavor_mapping (extra 40 = newer BUILT products/pack variants not in original CSV). Flag for flavor_mapping refresh.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
 - Q9: ✓ COMPLETE — CLUSTERED BY upc added; 177,516 rows; validated.
-- Q10–Q13 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q9).
+- Q14: ✓ COMPLETE — SPINS ARP data quality issues found and fixed (00-40962 prefix UPCs excluded, $0.50/bar floor added, 08-40229-30143 and 08-40229-30071 excluded). 711,427 rows across pack sizes 1/4/8/12/13/14.
+- Q15: ✓ COMPLETE — pack price ladder weekly populated.
+- Q16: ✓ COMPLETE — competitive price weekly populated; sortMerge required (BroadcastTablesTooLarge on built_filtered_weekly); hundreds of competitor brands present (all non-BUILT brands in extract); competitor_tier=NULL for brands outside curated 30 — filter in UI or Q17.
+- Q10–Q13 and Q17–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q16).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
