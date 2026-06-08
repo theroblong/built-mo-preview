@@ -3758,7 +3758,7 @@ PARTITIONED BY DAY
 CLUSTERED BY upc
 ```
 
-**Status: ✓ COMPLETE** — succeeded without sortMerge SET commands (self-join on ~700K-row `price_elasticity_weekly_features` stays within broadcast limit). 75,844 rows; 78 UPCs with sufficient 25-week history; min_pre_weeks = 8; max_post_weeks = 13. The 53 UPCs absent from training (131 total − 78) lack 25 weeks of price history — primarily the Puff/Sour Puff cohort launched 2026-04-19.
+**Status: ✓ COMPLETE** — succeeded without sortMerge SET commands (self-join on ~700K-row `price_elasticity_weekly_features` stays within broadcast limit). 90,757 rows / 152 segments (mid-load validation returned 75,844 — partial read); 78 UPCs with sufficient 25-week history; min_pre_weeks = 8; max_post_weeks = 13. The 53 UPCs absent from training (131 total − 78) lack 25 weeks of price history — primarily the Puff/Sour Puff cohort launched 2026-04-19.
 
 ---
 
@@ -3821,7 +3821,7 @@ PARTITIONED BY DAY
 CLUSTERED BY pack_size_bucket, pack_count
 ```
 
-**Status: ✓ COMPLETE** — 172 segments / 54.82 MB. `norm_median_price_per_bar` dropped (see E24 — APPROX_QUANTILE and APPROX_QUANTILE_DS both unsupported in MSQ); AVG used instead. Segments were at 0% available immediately post-write; allow a few minutes for segment loading before querying.
+**Status: ✓ COMPLETE** — 246,317 rows / 172 segments / 54.82 MB. `norm_median_price_per_bar` dropped (see E24 — APPROX_QUANTILE and APPROX_QUANTILE_DS both unsupported in MSQ); AVG used instead.
 
 ---
 
