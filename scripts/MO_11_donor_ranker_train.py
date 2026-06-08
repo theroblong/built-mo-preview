@@ -12,7 +12,7 @@ FEATURE_COLS = [
     "donor_base_units_pct_chg", "donor_velocity_spm_pct_chg",
     "base_units_delta_diff", "velocity_spm_delta_diff",
     "pack_distance", "relationship_distance",
-    "pre_13w_base_units", "post_13w_weeks_count",
+    "donor_pre_13w_base_units", "donor_post_13w_weeks_count",
     "focal_tdp_pct_chg", "focal_base_units_pct_chg",
 ]
 
@@ -22,8 +22,8 @@ def load_ranking_data() -> tuple[pd.DataFrame, list[int]]:
     SELECT *
     FROM "ml_training_features"
     WHERE label_deterministic != 'NEUTRAL'
-      AND pre_13w_weeks_count >= 8
-      AND post_13w_weeks_count >= 8
+      AND focal_post_weeks_count >= 8
+      AND donor_pre_13w_weeks_count >= 8
     """
     df = query_druid(sql)
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     if missing:
         print(f"WARNING: missing feature columns: {missing}")
 
-    X = df[available].fillna(0)
+    X = df[available].apply(pd.to_numeric, errors="coerce").fillna(0)
     y = df["relevance"]
 
     model = lgb.LGBMRanker(

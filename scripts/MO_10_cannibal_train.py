@@ -16,9 +16,9 @@ FEATURE_COLS = [
     "base_units_delta_diff", "focal_tdp_pct_chg",
     "focal_velocity_spm_pct_chg", "donor_velocity_spm_pct_chg",
     "velocity_spm_delta_diff", "pack_distance", "relationship_distance",
-    "focal_price_per_unit", "focal_post_promo_weeks", "donor_post_promo_weeks",
-    "focal_post_units_pct_promo", "donor_post_units_pct_promo",
-    "focal_post_arp_discount_any_promo", "donor_post_arp_discount_any_promo",
+    "focal_price_per_unit", "focal_post_promo_weeks", "donor_post_13w_promo_weeks",
+    "focal_post_units_pct_promo", "donor_post_13w_units_pct_promo",
+    "focal_post_arp_discount", "donor_post_13w_arp_discount",
     "focal_arp_pct_chg", "focal_promo_week_delta", "donor_promo_week_delta",
 ]
 LABEL_COL = "label_deterministic"
@@ -29,9 +29,9 @@ def load_training_data() -> pd.DataFrame:
     SELECT *
     FROM "ml_training_features"
     WHERE label_deterministic NOT IN ('NEUTRAL')
-      AND pre_13w_weeks_count >= 8
-      AND post_13w_weeks_count >= 8
-      AND pre_13w_base_units > 0
+      AND focal_post_weeks_count >= 8
+      AND donor_pre_13w_weeks_count >= 8
+      AND donor_pre_13w_base_units > 0
     """
     df = query_druid(sql)
     df["label_binary"] = (df[LABEL_COL] == "CANNIBALIZING").astype(int)
@@ -43,7 +43,7 @@ def train(df: pd.DataFrame):
     missing = [c for c in FEATURE_COLS if c not in df.columns]
     if missing:
         print(f"WARNING: {len(missing)} feature columns not found in data: {missing}")
-    X = df[available].fillna(0)
+    X = df[available].apply(pd.to_numeric, errors="coerce").fillna(0)
     y = df["label_binary"]
 
     X_train, X_val, y_train, y_val = train_test_split(

@@ -1,0 +1,26 @@
+{
+  "roc_auc": 1.0,
+  "model_version": "v1",
+  "n_train": 60695,
+  "features_used": [
+    "donor_base_units_pct_chg",
+    "focal_base_units_pct_chg",
+    "base_units_delta_diff",
+    "focal_tdp_pct_chg",
+    "focal_velocity_spm_pct_chg",
+    "donor_velocity_spm_pct_chg",
+    "velocity_spm_delta_diff",
+    "pack_distance",
+    "relationship_distance",
+    "focal_price_per_unit",
+    "focal_post_promo_weeks",
+    "donor_post_13w_promo_weeks",
+    "focal_post_units_pct_promo",
+    "donor_post_13w_units_pct_promo",
+    "focal_post_arp_discount",
+    "donor_post_13w_arp_discount",
+    "focal_arp_pct_chg",
+    "focal_promo_week_delta",
+    "donor_promo_week_delta"
+  ]
+}

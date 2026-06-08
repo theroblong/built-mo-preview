@@ -23,7 +23,8 @@ def query_druid(sql: str, context: dict | None = None, timeout: int = 120) -> pd
         f"{DRUID_HOST}/druid/v2/sql/",
         json=payload, auth=_AUTH, headers=_HEADERS, timeout=timeout,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise RuntimeError(f"Druid query failed {resp.status_code}:\n{resp.text}")
     return pd.DataFrame(resp.json())
 
 

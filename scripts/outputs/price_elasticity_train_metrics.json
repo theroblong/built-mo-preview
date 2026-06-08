@@ -1,0 +1,17 @@
+{
+  "mae": 0.0699,
+  "r2": 0.9686,
+  "model_version": "v1",
+  "n_train": 90757,
+  "features_used": [
+    "pre_13w_avg_price_per_bar",
+    "post_13w_avg_price_per_bar",
+    "log_price_change",
+    "pre_13w_velocity_spm",
+    "pre_13w_weeks_count",
+    "post_13w_weeks_count",
+    "pack_count",
+    "naive_price_elasticity",
+    "promo_confounded"
+  ]
+}

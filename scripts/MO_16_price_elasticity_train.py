@@ -18,7 +18,7 @@ OWN_PRICE_FEATURES = [
     "pre_13w_avg_price_per_bar",
     "post_13w_avg_price_per_bar",
     "log_price_change",
-    "pre_13w_avg_velocity_spm",
+    "pre_13w_velocity_spm",
     "pre_13w_weeks_count",
     "post_13w_weeks_count",
     "pack_count",
@@ -28,9 +28,7 @@ OWN_PRICE_FEATURES = [
 # They'll be added to the feature set only if found in the data.
 OPTIONAL_FEATURES = [
     "naive_price_elasticity",
-    "promo_depth_bucket",
-    "promo_confound_flag",
-    "seasonality_index",
+    "promo_confounded",
 ]
 
 
@@ -45,12 +43,23 @@ def load_elasticity_data() -> pd.DataFrame:
     """
     df = query_druid(sql)
 
+    # Druid returns numeric columns as object dtype in JSON response
+    numeric_cols = [
+        "pre_13w_avg_price_per_bar", "post_13w_avg_price_per_bar",
+        "pre_13w_velocity_spm", "pre_13w_weeks_count", "post_13w_weeks_count",
+        "pack_count", "naive_price_elasticity", "promo_confounded",
+        "pre_13w_base_units", "post_13w_base_units",
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
     df["log_price_change"] = np.log(
         df["post_13w_avg_price_per_bar"].clip(lower=0.01) /
         df["pre_13w_avg_price_per_bar"].clip(lower=0.01)
     )
     df["log_unit_change"] = np.log(
-        (df["post_13w_avg_base_units"] + 1) /
+        (df["post_13w_base_units"] + 1) /
         (df["pre_13w_base_units"] + 1)
     )
     return df
