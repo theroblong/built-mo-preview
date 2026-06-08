@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-07 (session 6 — Q8 COMPLETE; 32 NEW_PACK_SIZE / 19 NEW_FLAVOR_CANDIDATE / 18 DUPLICATE_OR_RELAUNCH; 69/70 UPCs classified; Druid limitations documented: no EXISTS, no MIN on STRING (use ANY_VALUE); next: Q9+)
+Last synced: 2026-06-07 (session 7 — Q9 COMPLETE; 177,516 rows / 131 UPCs / 16-week window; week 0 rows match Q3 exactly (14,939); status boundaries clean: SUPPRESSED 0–5, LOW_CONFIDENCE 6–7, ACTIVE 8–15; CLUSTERED BY upc added; next: Q10+)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q6–Q8 COMPLETE; new product design principles documented; next: Q9+.
+- Pending push — Q6–Q9 COMPLETE; new product design principles documented; next: Q10+.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -190,5 +190,6 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q6: ✓ COMPLETE — two runs. 8w z-score ceiling 7√2/4 ≈ 2.475 blocked EXTREME_OUTLIER (threshold 3.0). Fixed: outlier classification uses 13w z-scores (ceiling 12/√13 ≈ 3.328); EXTREME_OUTLIER now fires. 8w z-scores retained as signal. Adds velocity_spm_roll13_avg/std, tdp_roll13_avg/std, base_units_z13, velocity_spm_z13, tdp_z13.
 - Q3: ✓ COMPLETE — 131 distinct UPCs, 14,939 rows, 4 minutes. Note: 131 UPCs vs 91 in flavor_mapping (extra 40 = newer BUILT products/pack variants not in original CSV). Flag for flavor_mapping refresh.
 - Q8 subquery ORDER BY ABS(e.pack_count - n.pack_count) may fail — defer fix until Q8 is tested.
-- Q9 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q8).
+- Q9: ✓ COMPLETE — CLUSTERED BY upc added; 177,516 rows; validated.
+- Q10–Q13 and Q14–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q9).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
