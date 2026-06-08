@@ -3879,7 +3879,10 @@ WHERE
   AND source_pack_count > 0
   AND nfp_protein IS NOT NULL
 PARTITIONED BY DAY
+CLUSTERED BY source_brand, upc
 ```
+
+**Status: ✓ COMPLETE** — 11,188,447 rows / 172 segments / 375.21 MB. Includes all WELLNESS & NUTRITION BARS brands with `nfp_protein` populated. `velocity_flavor_index` and `penetration_flavor_index` computed as window ratios vs. same-flavor-group average per account/geo/week.
 
 ---
 
@@ -3889,89 +3892,90 @@ PARTITIONED BY DAY
 
 **Purpose:** Create the `price_event_queue` table and pre-populate the two event types that are fully deterministic from Druid data. The remaining eight event types (`DRASTIC_PRICE_CHANGE`, `PROMO_RESPONSE_BREAKPOINT`, `NEW_ITEM_PRICE_BASELINE`, `PACK_NORM_GAP`, `ELASTICITY_CONFIDENCE_DOWNGRADE`, `PRICE_DEFENSE_OPPORTUNITY`, `PRICE_DONOR_OVERLAP`, and scored variants) are written by `MO_14.7_price_events.py` after ML scoring completes.
 
+**Run Q22a first (REPLACE INTO), then Q22b (INSERT INTO). Do not run Q22b before Q22a — INSERT INTO requires the table to exist.**
+
+### Q22a — COMPETITIVE_PRICE_GAP events
+
 ```sql
 REPLACE INTO "price_event_queue"
 OVERWRITE ALL
-WITH
-
--- COMPETITIVE_PRICE_GAP: BUILT >= 9% above Tier 1 same-FLAVOR competitor
-competitive_gap_events AS (
-  SELECT
-    MAX(pcw.__time)                                      AS __time,
-    pcw.built_upc                                        AS focal_upc,
-    pcw.built_description                                AS focal_description,
-    pcw.channel_outlet, pcw.retail_account,
-    pcw.geography_raw                                    AS geography_display,
-    pcw.geography_level,
-    'COMPETITIVE_PRICE_GAP'                              AS event_type,
-    'Price gap: BUILT '
-      || pcw.built_description
-      || ' vs '
-      || MIN(pcw.competitor_brand)
-      || ' — gap '
-      || CAST(ROUND(AVG(pcw.price_gap_pct_vs_competitor) * 100, 1) AS VARCHAR)
-      || '%'                                             AS event_label,
-    'red'                                                AS event_color,
-    'High'                                               AS confidence,
-    AVG(pcw.price_gap_pct_vs_competitor)                 AS trigger_value,
-    'price_gap_pct_vs_competitor'                        AS trigger_column,
-    'price_competitive_weekly'                           AS source_table,
-    '13w'                                                AS scoring_window,
-    0                                                    AS cross_tool_flag,
-    NULL                                                 AS cross_tool_event_id,
-    CURRENT_TIMESTAMP                                    AS scored_at
-  FROM "price_competitive_weekly" pcw
-  WHERE
-    pcw.competitive_gap_watch_flag = 1
-    AND pcw.competitive_flavor_relationship IN
-          ('SAME_SPINS_FLAVOR', 'SAME_CANONICAL_FLAVOR')
-  GROUP BY
-    pcw.built_upc, pcw.built_description,
-    pcw.channel_outlet, pcw.retail_account,
-    pcw.geography_raw, pcw.geography_level
-  HAVING AVG(pcw.price_gap_pct_vs_competitor) >= 0.09
-),
-
--- PACK_LADDER_COMPRESSION: 4pk→12pk per-bar gap < 10%
-ladder_compression_events AS (
-  SELECT
-    MAX(ppl.__time)                                      AS __time,
-    ppl.focal_upc,
-    ppl.focal_description,
-    ppl.channel_outlet, ppl.retail_account,
-    ppl.geography_raw                                    AS geography_display,
-    ppl.geography_level,
-    'PACK_LADDER_COMPRESSION'                            AS event_type,
-    'Pack ladder compression: '
-      || ppl.focal_description
-      || ' → '
-      || MIN(ppl.partner_description)
-      || ' per-bar gap below 10%'                        AS event_label,
-    'blue'                                               AS event_color,
-    'Medium'                                             AS confidence,
-    AVG(ppl.trade_up_savings_pct)                        AS trigger_value,
-    'trade_up_savings_pct'                               AS trigger_column,
-    'price_pack_ladder_weekly'                           AS source_table,
-    '13w'                                                AS scoring_window,
-    0                                                    AS cross_tool_flag,
-    NULL                                                 AS cross_tool_event_id,
-    CURRENT_TIMESTAMP                                    AS scored_at
-  FROM "price_pack_ladder_weekly" ppl
-  WHERE
-    ppl.ladder_compression_flag = 1
-    AND ppl.pack_direction = 'TRADE_UP_AVAILABLE'
-  GROUP BY
-    ppl.focal_upc, ppl.focal_description,
-    ppl.channel_outlet, ppl.retail_account,
-    ppl.geography_raw, ppl.geography_level
-)
-
-SELECT * FROM competitive_gap_events
-UNION ALL
-SELECT * FROM ladder_compression_events
+SELECT
+  MAX(pcw.__time)                                      AS __time,
+  pcw.built_upc                                        AS focal_upc,
+  pcw.built_description                                AS focal_description,
+  pcw.channel_outlet, pcw.retail_account,
+  pcw.geography_raw                                    AS geography_display,
+  pcw.geography_level,
+  'COMPETITIVE_PRICE_GAP'                              AS event_type,
+  'Price gap: BUILT '
+    || pcw.built_description
+    || ' vs '
+    || ANY_VALUE(pcw.competitor_brand)
+    || ' — gap '
+    || CAST(ROUND(AVG(pcw.price_gap_pct_vs_competitor) * 100, 1) AS VARCHAR)
+    || '%'                                             AS event_label,
+  'red'                                                AS event_color,
+  'High'                                               AS confidence,
+  AVG(pcw.price_gap_pct_vs_competitor)                 AS trigger_value,
+  'price_gap_pct_vs_competitor'                        AS trigger_column,
+  'price_competitive_weekly'                           AS source_table,
+  '13w'                                                AS scoring_window,
+  0                                                    AS cross_tool_flag,
+  CAST(NULL AS VARCHAR)                                AS cross_tool_event_id,
+  CURRENT_TIMESTAMP                                    AS scored_at
+FROM "price_competitive_weekly" pcw
+WHERE
+  pcw.competitive_gap_watch_flag = 1
+  AND pcw.competitive_flavor_relationship = 'SAME_FLAVOR'
+GROUP BY
+  pcw.built_upc, pcw.built_description,
+  pcw.channel_outlet, pcw.retail_account,
+  pcw.geography_raw, pcw.geography_level
+HAVING AVG(pcw.price_gap_pct_vs_competitor) >= 0.09
 PARTITIONED BY DAY
+CLUSTERED BY focal_upc
+```
+
+### Q22b — PACK_LADDER_COMPRESSION events
+
+```sql
+INSERT INTO "price_event_queue"
+SELECT
+  MAX(ppl.__time)                                      AS __time,
+  ppl.focal_upc,
+  ppl.focal_description,
+  ppl.channel_outlet, ppl.retail_account,
+  ppl.geography_raw                                    AS geography_display,
+  ppl.geography_level,
+  'PACK_LADDER_COMPRESSION'                            AS event_type,
+  'Pack ladder compression: '
+    || ppl.focal_description
+    || ' → '
+    || ANY_VALUE(ppl.partner_description)
+    || ' per-bar gap below 10%'                        AS event_label,
+  'blue'                                               AS event_color,
+  'Medium'                                             AS confidence,
+  AVG(ppl.trade_up_savings_pct)                        AS trigger_value,
+  'trade_up_savings_pct'                               AS trigger_column,
+  'price_pack_ladder_weekly'                           AS source_table,
+  '13w'                                                AS scoring_window,
+  0                                                    AS cross_tool_flag,
+  CAST(NULL AS VARCHAR)                                AS cross_tool_event_id,
+  CURRENT_TIMESTAMP                                    AS scored_at
+FROM "price_pack_ladder_weekly" ppl
+WHERE
+  ppl.ladder_compression_flag = 1
+  AND ppl.pack_direction = 'TRADE_UP_AVAILABLE'
+GROUP BY
+  ppl.focal_upc, ppl.focal_description,
+  ppl.channel_outlet, ppl.retail_account,
+  ppl.geography_raw, ppl.geography_level
+PARTITIONED BY DAY
+CLUSTERED BY focal_upc
 ```
 
 **Note:** The Python script `MO_14.7_price_events.py` appends the remaining event types to this table using `INSERT INTO` after ML scoring completes. Do not overwrite the table after the Python job has run — use INSERT, not REPLACE.
+
+**Status: ✓ COMPLETE** — Q22a: 2,559 `COMPETITIVE_PRICE_GAP` events / 104 distinct UPCs (avg 104% per-bar gap vs Tier 1 same-flavor competitors — high average driven by single-serve BUILT Puff vs multi-pack competitors). Q22b: 786 `PACK_LADDER_COMPRESSION` events / 29 distinct UPCs (avg −7.3% savings — inverted ladders where larger pack costs more per bar than smaller pack). Split into Q22a (REPLACE INTO) + Q22b (INSERT INTO) due to E26 (UNION ALL between aggregated CTEs unsupported in MSQ).
 
 ---

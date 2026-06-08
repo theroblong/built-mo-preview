@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-08 (session 9 — Q20 COMPLETE; next: Q21, Q22)
+Last synced: 2026-06-08 (session 9 — Q20–Q22 COMPLETE; full price elasticity section done; next: push)
 
 ## Repository
 
@@ -72,7 +72,7 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `b9a7496` — Druid query/error register updates: maxNumTasks=4, durableShuffleStorage, E19/E20, Q0/Q1/QS complete, Q2 batch progress.
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
-- Pending push — Q6–Q20 COMPLETE; price elasticity foundation + training features + MULO FOOD pack size norms populated; next: Q21, Q22.
+- Pending push — Q6–Q22 COMPLETE; full price elasticity section done; price_event_queue seeded with 3,345 deterministic events.
 
 ## Druid Cluster Constraints (discovered during live testing)
 
@@ -195,6 +195,8 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - Q15: ✓ COMPLETE — pack price ladder weekly populated.
 - Q16: ✓ COMPLETE — competitive price weekly populated; sortMerge required (BroadcastTablesTooLarge on built_filtered_weekly); hundreds of competitor brands present (all non-BUILT brands in extract); competitor_tier=NULL for brands outside curated 30 — filter in UI or Q17.
 - Q17: ✓ COMPLETE — no sortMerge needed; self-join on ~700K rows within broadcast limit; 75,844 rows; 78 UPCs trained; 53 excluded (lack 25w price history, primarily Puff/Sour Puff cohort). STDDEV_SAMP fixed with SUM/SUM_SQ/COUNT + std_cte pattern (same as Q6/E23).
-- Q20: ✓ COMPLETE — 172 segments / 54.82 MB; CLUSTERED BY pack_size_bucket, pack_count added; median dropped (E24).
-- Q10–Q13 and Q21–Q22 need CLUSTERED BY added when tested (same pattern as Q0–Q20).
+- Q20: ✓ COMPLETE — 246,317 rows / 172 segments / 54.82 MB; CLUSTERED BY pack_size_bucket, pack_count added; median dropped (E24).
+- Q21: ✓ COMPLETE — 11,188,447 rows / 172 segments / 375.21 MB; all WELLNESS & NUTRITION BARS brands with nfp_protein populated; CLUSTERED BY source_brand, upc.
+- Q22: ✓ COMPLETE — split into Q22a (REPLACE INTO, 2,559 COMPETITIVE_PRICE_GAP events / 104 UPCs) + Q22b (INSERT INTO, 786 PACK_LADDER_COMPRESSION events / 29 UPCs). UNION ALL between aggregated CTEs unsupported in MSQ (E26); MIN on STRING unsupported (E25); competitive_flavor_relationship stale values fixed. CLUSTERED BY focal_upc.
+- Q10–Q13 need CLUSTERED BY added when tested (same pattern as Q0–Q22).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.

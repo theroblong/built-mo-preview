@@ -366,6 +366,32 @@ JOIN (
 
 ---
 
+## E26 — Q22: UNION ALL between aggregated CTEs not supported in MSQ
+
+**Query:** Q22
+
+**Error:** `INVALID_INPUT: SQL requires union between inputs that are not simple table scans and involve a filter or aliasing. Or column types of tables being unioned are not of same type.`
+
+**Root cause:** Druid MSQ only supports `UNION ALL` between simple table scans (`SELECT cols FROM table`). Both sides of Q22's UNION ALL were CTEs containing `GROUP BY`, `HAVING`, and aggregate functions — not simple scans. MSQ cannot plan this.
+
+**Remedy:** Split Q22 into two separate queries. Q22a uses `REPLACE INTO ... OVERWRITE ALL` for the first event type (`COMPETITIVE_PRICE_GAP`) to create the table. Q22b uses `INSERT INTO` for the second event type (`PACK_LADDER_COMPRESSION`) to append. Run Q22a first, then Q22b. Also changed `NULL AS cross_tool_event_id` → `CAST(NULL AS VARCHAR)` in both queries to give the NULL column an explicit type.
+
+---
+
+## E25 — Q22: MIN / MAX not supported on STRING columns in MSQ GROUP BY
+
+**Query:** Q22
+
+**Error:** `INVALID_INPUT: Aggregation [MIN] does not support type [STRING], column [v0]`
+
+**Root cause:** Druid MSQ does not support `MIN()` or `MAX()` on STRING-typed columns in a GROUP BY aggregation context. These functions are only valid for numeric types in MSQ.
+
+**Remedy:** Replace `MIN(string_col)` with `ANY_VALUE(string_col)`. `ANY_VALUE` is a Druid-native aggregate that returns an arbitrary (non-deterministic) value from the group — semantically correct when the goal is to pick one representative string for a label, not to find a true lexicographic minimum. Applied to `MIN(pcw.competitor_brand)` and `MIN(ppl.partner_description)` in Q22's two CTEs.
+
+**Also fixed in same pass:** `competitive_flavor_relationship` filter in `competitive_gap_events` CTE referenced stale values `'SAME_SPINS_FLAVOR'` and `'SAME_CANONICAL_FLAVOR'` — Q16 actually writes `'SAME_FLAVOR'` / `'DIFFERENT_FLAVOR'`. Corrected to `= 'SAME_FLAVOR'`.
+
+---
+
 ## E24 — Q20: APPROX_QUANTILE and APPROX_QUANTILE_DS not supported in MSQ
 
 **Query:** Q20
