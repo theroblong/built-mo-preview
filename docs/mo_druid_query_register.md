@@ -3790,8 +3790,7 @@ SELECT
   source_pack_count                                      AS pack_count,
   COUNT(DISTINCT upc)                                    AS norm_sku_count,
   AVG(arp / NULLIF(source_pack_count, 0))               AS norm_avg_price_per_bar,
-  APPROX_QUANTILE(arp / NULLIF(source_pack_count, 0), 0.50)
-                                                         AS norm_median_price_per_bar,
+  -- norm_median_price_per_bar dropped: APPROX_QUANTILE and APPROX_QUANTILE_DS both unsupported in MSQ; AVG sufficient for benchmark norm
   AVG(avg_weekly_units_spm)                              AS norm_avg_velocity_spm,
   AVG(avg_weekly_units_per_store_selling_per_item)       AS norm_avg_velocity_store_selling,
   AVG(pct_stores_selling)                                AS norm_avg_pct_stores_selling,
@@ -3819,7 +3818,10 @@ GROUP BY
   END,
   source_pack_count
 PARTITIONED BY DAY
+CLUSTERED BY pack_size_bucket, pack_count
 ```
+
+**Status: ✓ COMPLETE** — 172 segments / 54.82 MB. `norm_median_price_per_bar` dropped (see E24 — APPROX_QUANTILE and APPROX_QUANTILE_DS both unsupported in MSQ); AVG used instead. Segments were at 0% available immediately post-write; allow a few minutes for segment loading before querying.
 
 ---
 

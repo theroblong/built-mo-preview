@@ -366,6 +366,18 @@ JOIN (
 
 ---
 
+## E24 — Q20: APPROX_QUANTILE and APPROX_QUANTILE_DS not supported in MSQ
+
+**Query:** Q20
+
+**Error:** `INVALID_INPUT: No match found for function signature APPROX_QUANTILE(<NUMERIC>, <NUMERIC>) (line [22], column [5])`. After substituting `APPROX_QUANTILE_DS`, identical error: `No match found for function signature APPROX_QUANTILE_DS(<NUMERIC>, <NUMERIC>)`.
+
+**Root cause:** `APPROX_QUANTILE` (approxHistogram-based, deprecated) and `APPROX_QUANTILE_DS` (DataSketches-based) are both unavailable in the MSQ ingestion engine on this cluster. Neither the approxHistogram nor the DataSketches quantile extension appears to be registered for use in MSQ context. `PERCENTILE_CONT` / `PERCENTILE_DISC` are also unsupported in Druid SQL. NTILE is a window function for row ranking, not a GROUP BY aggregate, and cannot compute a median within a GROUP BY group without a complex subquery restructure.
+
+**Remedy:** Drop the median column. `norm_avg_price_per_bar` (AVG) is sufficient as a category benchmark norm for Q20's use case. If a true median is needed in a future query, restructure to a two-step approach: (1) window CTE using `NTILE(2) OVER (PARTITION BY group_cols ORDER BY metric)` to label each row's half, (2) outer GROUP BY filtering on the boundary bucket — but note this approximates the median, not computes it exactly.
+
+---
+
 ## E23 — Q6: STDDEV_SAMP not supported as a window function
 
 **Query:** Q6
