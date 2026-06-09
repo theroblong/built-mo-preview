@@ -3,6 +3,9 @@ import time
 import requests
 import pandas as pd
 from requests.auth import HTTPBasicAuth
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DRUID_HOST     = os.environ["DRUID_HOST"]
 DRUID_USERNAME = os.environ["DRUID_USERNAME"]
