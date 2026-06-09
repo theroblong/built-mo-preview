@@ -59,7 +59,7 @@ table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}th,td{tex
 <section>
 <p class="note"><strong>Execution note:</strong> P1–P3 (training) can run in any order. P4 requires P1+P2+P3. P5 requires P4. P6 requires P5. P7–P9 run in sequence. P10 requires P8 and Q22a/Q22b (already seeded).</p>
 <p class="note"><strong>Druid read vs write:</strong> SELECT queries use <code>/druid/v2/sql/</code>. REPLACE INTO / INSERT INTO use <code>/druid/v2/sql/statements</code> (async MSQ). Always call <code>poll_msq()</code> after a write to confirm SUCCESS before proceeding to the next script.</p>
-<p class="note"><strong>Druid write-back on Azure:</strong> Score in Python → write to Azure Blob Storage → submit MSQ REPLACE INTO with Druid's Azure input source. See <a href="#azure-notes" style="color:var(--green);font-weight:800">Azure deployment notes</a>.</p>
+<p class="note"><strong>Druid write-back (MinIO pattern):</strong> ⚠️ EXTERN is blocked (E05 confirmed). All write-back uses <code>mo_writeback.py</code>: Python scores → parquet → MinIO upload → ingestion spec generated → human submits spec to <code>/druid/indexer/v1/task</code>. All specs are append-only. See <a href="#azure-notes" style="color:var(--green);font-weight:800">deployment notes</a>.</p>
 
 <!-- ═══════════════════════════════════════════════════════════
      P0 — DRUID CONNECTION
@@ -91,39 +91,43 @@ _AUTH    = HTTPBasicAuth(DRUID_USERNAME, DRUID_PASSWORD)
 _HEADERS = {"Content-Type": "application/json"}
 
 
-def query_druid(sql: str, context: dict | None = None) -> pd.DataFrame:
+_TERMINAL_FAIL_STATES = {"FAILED", "CANCELED", "CANCELLED"}
+
+
+def query_druid(sql: str, context: dict | None = None, timeout: int = 120) -> pd.DataFrame:
     """Run a SELECT query and return results as a DataFrame."""
-    payload = {"query": sql}
+    payload: dict = {"query": sql}
     if context:
         payload["context"] = context
     resp = requests.post(
         f"{DRUID_HOST}/druid/v2/sql/",
-        json=payload, auth=_AUTH, headers=_HEADERS, timeout=120
+        json=payload, auth=_AUTH, headers=_HEADERS, timeout=timeout,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise RuntimeError(f"Druid query failed {resp.status_code}:\n{resp.text}")
     return pd.DataFrame(resp.json())
 
 
 def submit_msq(sql: str, context: dict | None = None) -> str:
     """Submit an async MSQ ingestion query. Returns the queryId."""
-    payload = {"query": sql, "context": {"executionMode": "ASYNC"}}
+    payload: dict = {"query": sql, "context": {"executionMode": "ASYNC"}}
     if context:
         payload["context"].update(context)
     resp = requests.post(
         f"{DRUID_HOST}/druid/v2/sql/statements",
-        json=payload, auth=_AUTH, headers=_HEADERS, timeout=30
+        json=payload, auth=_AUTH, headers=_HEADERS, timeout=30,
     )
     resp.raise_for_status()
     return resp.json()["queryId"]
 
 
 def poll_msq(query_id: str, interval: int = 15, timeout: int = 7200) -> dict:
-    """Poll an async MSQ task until SUCCESS, FAILED, or timeout."""
+    """Poll an async MSQ task until SUCCESS, terminal failure, or timeout."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         resp = requests.get(
             f"{DRUID_HOST}/druid/v2/sql/statements/{query_id}",
-            auth=_AUTH, headers=_HEADERS, timeout=30
+            auth=_AUTH, headers=_HEADERS, timeout=30,
         )
         resp.raise_for_status()
         result = resp.json()
@@ -131,12 +135,12 @@ def poll_msq(query_id: str, interval: int = 15, timeout: int = 7200) -> dict:
         print(f"  MSQ {query_id}: {state}")
         if state == "SUCCESS":
             return result
-        if state in ("FAILED", "UNDETERMINED"):
-            raise RuntimeError(f"MSQ task {query_id} failed:\n{result}")
+        if state in _TERMINAL_FAIL_STATES:
+            raise RuntimeError(f"MSQ task {query_id} entered state {state}:\n{result}")
         time.sleep(interval)
     raise TimeoutError(f"MSQ task {query_id} did not complete within {timeout}s")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-draft">DRAFT</span> — Not yet tested against live cluster. Set env vars and run a quick <code>query_druid("SELECT 1")</code> to verify connectivity before running any pipeline script.</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — Connectivity confirmed (200 OK on live cluster). <code>raise_for_status()</code> replaced with explicit error body logging; <code>poll_msq</code> terminal states updated to include <code>CANCELLED</code>. ⚠️ EXTERN is blocked on this cluster (E05) — write-back via native indexer API pending Rob approval.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -171,9 +175,9 @@ FEATURE_COLS = [
     "base_units_delta_diff", "focal_tdp_pct_chg",
     "focal_velocity_spm_pct_chg", "donor_velocity_spm_pct_chg",
     "velocity_spm_delta_diff", "pack_distance", "relationship_distance",
-    "focal_price_per_unit", "focal_post_promo_weeks", "donor_post_promo_weeks",
-    "focal_post_units_pct_promo", "donor_post_units_pct_promo",
-    "focal_post_arp_discount_any_promo", "donor_post_arp_discount_any_promo",
+    "focal_price_per_unit", "focal_post_promo_weeks", "donor_post_13w_promo_weeks",
+    "focal_post_units_pct_promo", "donor_post_13w_units_pct_promo",
+    "focal_post_arp_discount", "donor_post_13w_arp_discount",
     "focal_arp_pct_chg", "focal_promo_week_delta", "donor_promo_week_delta",
 ]
 LABEL_COL = "label_deterministic"
@@ -183,16 +187,17 @@ def load_training_data() -> pd.DataFrame:
     SELECT *
     FROM "ml_training_features"
     WHERE label_deterministic NOT IN ('NEUTRAL')
-      AND pre_13w_weeks_count >= 8
-      AND post_13w_weeks_count >= 8
-      AND pre_13w_base_units > 0
+      AND focal_post_weeks_count >= 8
+      AND donor_pre_13w_weeks_count >= 8
+      AND donor_pre_13w_base_units > 0
     """
     df = query_druid(sql)
     df["label_binary"] = (df[LABEL_COL] == "CANNIBALIZING").astype(int)
     return df
 
 def train(df: pd.DataFrame):
-    X = df[FEATURE_COLS].fillna(0)
+    available = [c for c in FEATURE_COLS if c in df.columns]
+    X = df[available].apply(pd.to_numeric, errors="coerce").fillna(0)
     y = df["label_binary"]
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
@@ -225,7 +230,7 @@ if __name__ == "__main__":
               open(f"outputs/cannibal_train_metrics.json", "w"))
     print(f"Saved model_cannibal_{MODEL_VERSION}.pkl")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — Requires <code>ml_training_features</code> (Q5 ✓ COMPLETE).</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — Val ROC-AUC 1.0 (label is deterministic given features — expected). Column names confirmed against live schema. Artifacts: <code>outputs/model_cannibal_v1.pkl</code>, <code>outputs/cannibal_feature_importance.csv</code>, <code>outputs/cannibal_train_metrics.json</code>.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -254,25 +259,21 @@ FEATURE_COLS = [
     "donor_base_units_pct_chg", "donor_velocity_spm_pct_chg",
     "base_units_delta_diff", "velocity_spm_delta_diff",
     "pack_distance", "relationship_distance",
-    "pre_13w_base_units", "donor_post_promo_weeks",
+    "donor_pre_13w_base_units", "donor_post_13w_weeks_count",
     "focal_tdp_pct_chg", "focal_base_units_pct_chg",
 ]
 
 def load_ranking_data() -> tuple[pd.DataFrame, list[int]]:
     sql = """
-    SELECT focal_upc, label_deterministic,
-           donor_base_units_pct_chg, donor_velocity_spm_pct_chg,
-           base_units_delta_diff, velocity_spm_delta_diff,
-           pack_distance, relationship_distance, pre_13w_base_units,
-           focal_tdp_pct_chg, focal_base_units_pct_chg,
-           post_13w_weeks_count AS donor_post_promo_weeks
+    SELECT *
     FROM "ml_training_features"
     WHERE label_deterministic != 'NEUTRAL'
-      AND pre_13w_weeks_count >= 8
-      AND post_13w_weeks_count >= 8
-    ORDER BY focal_upc
+      AND focal_post_weeks_count >= 8
+      AND donor_pre_13w_weeks_count >= 8
     """
     df = query_druid(sql)
+    # Must sort by focal_upc in Python — Druid ORDER BY blocked (E08/E09)
+    df = df.sort_values("focal_upc").reset_index(drop=True)
     rel_map = {"CANNIBALIZING": 2, "WATCH": 1, "INCREMENTAL": 0}
     df["relevance"] = df["label_deterministic"].map(rel_map).fillna(0).astype(int)
     group_sizes = df.groupby("focal_upc", sort=False).size().tolist()
@@ -280,7 +281,8 @@ def load_ranking_data() -> tuple[pd.DataFrame, list[int]]:
 
 if __name__ == "__main__":
     df, group_sizes = load_ranking_data()
-    X = df[FEATURE_COLS].fillna(0)
+    available = [c for c in FEATURE_COLS if c in df.columns]
+    X = df[available].apply(pd.to_numeric, errors="coerce").fillna(0)
     y = df["relevance"]
     model = lgb.LGBMRanker(
         objective="lambdarank", n_estimators=300, learning_rate=0.05,
@@ -291,7 +293,7 @@ if __name__ == "__main__":
         pickle.dump(model, f)
     print(f"Saved model_ranker_{MODEL_VERSION}.pkl")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span></p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — Model saved. "No further splits" warnings are expected with deterministic labels. Critical fix: sort by <code>focal_upc</code> in Python — Druid does not support ORDER BY in top-level scans (E08/E09). Artifact: <code>outputs/model_ranker_v1.pkl</code>.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -300,7 +302,7 @@ if __name__ == "__main__":
 ═══════════════════════════════════════════════════════════ -->
 <section class="query" id="p3" data-lang="python">
 <h2>P3 — <code>MO_12_event_detector_train.py</code></h2>
-<p class="note"><strong>Purpose:</strong> Train LightGBM binary classifier to flag whether a scored row represents a significant business event worth surfacing on Priority Events. Event label is programmatically constructed: donor_pct_chg &lt; −5% AND focal_pct_chg &gt; 3%. Balanced class weights.</p>
+<p class="note"><strong>Purpose:</strong> Train LightGBM binary classifier to flag whether a scored row represents a significant business event worth surfacing on Priority Events. Event label: <code>label_deterministic == "CANNIBALIZING" AND donor_base_units_pct_chg &lt; -0.05</code>. Note: <code>focal_base_units_pct_chg</code> is structurally NULL for all rows (no focal pre-window in SPINS before <code>first_week_selling</code>) — excluded from features and label.</p>
 <table>
   <tr><th>Slot</th><th>Name</th><th>Notes</th></tr>
   <tr><td>Input Druid</td><td><code>ml_training_features</code></td><td>Q5 ✓ COMPLETE</td></tr>
@@ -312,45 +314,61 @@ if __name__ == "__main__":
 import pickle
 import lightgbm as lgb
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
 from mo_druid_client import query_druid
 
 MODEL_VERSION = "v1"
 
+# focal_*_pct_chg columns are structurally NULL — excluded from feature set
 FEATURE_COLS = [
-    "donor_base_units_pct_chg", "focal_base_units_pct_chg",
-    "focal_tdp_pct_chg", "focal_velocity_spm_pct_chg",
-    "donor_velocity_spm_pct_chg", "pack_distance", "relationship_distance",
+    "donor_base_units_pct_chg", "donor_velocity_spm_pct_chg",
+    "pack_distance", "relationship_distance",
     "focal_post_promo_weeks", "promo_confounded",
 ]
 
 def label_significant(row) -> int:
-    donor_chg = row.get("donor_base_units_pct_chg", 0) or 0
-    focal_chg = row.get("focal_base_units_pct_chg", 0) or 0
-    return int(abs(donor_chg) > 0.05 and abs(focal_chg) > 0.03)
+    # focal_base_units_pct_chg is NULL for all rows — focal items have no
+    # pre-window in SPINS. Use donor decline as the primary signal.
+    if str(row.get("label_deterministic") or "") != "CANNIBALIZING":
+        return 0
+    try:
+        return int(float(row.get("donor_base_units_pct_chg")) &lt; -0.05)
+    except (TypeError, ValueError):
+        return 0
 
 if __name__ == "__main__":
     sql = """
     SELECT *
     FROM "ml_training_features"
     WHERE label_deterministic != 'NEUTRAL'
-      AND pre_13w_weeks_count >= 8
-      AND post_13w_weeks_count >= 8
+      AND focal_post_weeks_count >= 8
+      AND donor_pre_13w_weeks_count >= 8
     """
     df = query_druid(sql)
     df["significant"] = df.apply(label_significant, axis=1)
-    print(f"Significant events: {df['significant'].sum():,} / {len(df):,}")
-    X = df[FEATURE_COLS].fillna(0).astype(float)
+    print(f"Significant events: {df['significant'].sum():,} / {len(df):,} ({df['significant'].mean():.1%})")
+    available = [c for c in FEATURE_COLS if c in df.columns]
+    X = df[available].apply(pd.to_numeric, errors="coerce").fillna(0)
+    # Clip extreme pct_chg outliers — tiny denominators produce artifacts > 500%
+    for col in ["donor_base_units_pct_chg", "donor_velocity_spm_pct_chg"]:
+        if col in X.columns:
+            X[col] = X[col].clip(-1.0, 2.0)
     y = df["significant"]
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     model = lgb.LGBMClassifier(
         objective="binary", n_estimators=300, learning_rate=0.05,
-        num_leaves=31, class_weight="balanced", random_state=42,
+        num_leaves=31, random_state=42,
     )
-    model.fit(X, y)
+    model.fit(X_train, y_train, eval_set=[(X_val, y_val)],
+              callbacks=[lgb.early_stopping(50), lgb.log_evaluation(50)])
+    auc = roc_auc_score(y_val, model.predict_proba(X_val)[:, 1])
+    print(f"\nVal ROC-AUC: {auc:.4f}")
     with open(f"outputs/model_event_{MODEL_VERSION}.pkl", "wb") as f:
         pickle.dump(model, f)
     print(f"Saved model_event_{MODEL_VERSION}.pkl")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span></p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — Val ROC-AUC 1.0. Artifact: <code>outputs/model_event_v1.pkl</code>. Key fixes: (1) focal pct_chg columns are all NULL — excluded from features and label; (2) label redesigned to use <code>CANNIBALIZING AND donor_base_units_pct_chg &lt; -0.05</code>; (3) extreme outliers clipped to <code>[-1, 2]</code> to prevent LightGBM histogram binning failure.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -366,17 +384,21 @@ if __name__ == "__main__":
   <tr><td>Input artifact</td><td><code>outputs/model_cannibal_v1.pkl</code></td><td>From P1</td></tr>
   <tr><td>Input artifact</td><td><code>outputs/model_ranker_v1.pkl</code></td><td>From P2</td></tr>
   <tr><td>Input artifact</td><td><code>outputs/model_event_v1.pkl</code></td><td>From P3</td></tr>
-  <tr><td>Output Druid</td><td><code>scored_cannibalization</code></td><td>Via MSQ REPLACE INTO EXTERN</td></tr>
-  <tr><td>Output file</td><td><code>outputs/scored_cannibalization.jsonl</code></td><td>Intermediate before Druid ingest</td></tr>
+  <tr><td>Output parquet</td><td><code>s3://mo-ml/scored_cannibalization/…/scored_cannibalization.parquet</code></td><td>MinIO upload</td></tr>
+  <tr><td>Output spec</td><td><code>outputs/scored_cannibalization_ingest_spec.json</code></td><td>Human submits to Druid</td></tr>
+  <tr><td>Output Druid</td><td><code>scored_cannibalization</code></td><td>Append-only — human must POST spec</td></tr>
   <tr><td>Dependencies</td><td>P1, P2, P3</td><td>All model artifacts required</td></tr>
 </table>
-<p class="note"><strong>Key libraries:</strong> <code>lightgbm</code>, <code>shap</code>, <code>scipy</code>, <code>pandas</code></p>
+<p class="note"><strong>Key libraries:</strong> <code>lightgbm</code>, <code>shap</code>, <code>pandas</code>, <code>boto3</code>, <code>pyarrow</code></p>
 <pre><code>
 # scripts/MO_13_cannibal_score.py
-import pickle, numpy as np, pandas as pd
-from datetime import datetime, timezone
+import pickle
 import shap
-from mo_druid_client import query_druid, submit_msq, poll_msq
+import numpy as np
+import pandas as pd
+from datetime import datetime, timezone
+from mo_druid_client import query_druid
+from mo_writeback import write_back
 
 MODEL_VERSION = "v1"
 
@@ -385,21 +407,20 @@ FEATURE_COLS = [
     "base_units_delta_diff", "focal_tdp_pct_chg",
     "focal_velocity_spm_pct_chg", "donor_velocity_spm_pct_chg",
     "velocity_spm_delta_diff", "pack_distance", "relationship_distance",
-    "focal_price_per_unit", "focal_post_promo_weeks", "donor_post_promo_weeks",
-    "focal_post_units_pct_promo", "donor_post_units_pct_promo",
-    "focal_post_arp_discount_any_promo", "donor_post_arp_discount_any_promo",
+    "focal_price_per_unit", "focal_post_promo_weeks", "donor_post_13w_promo_weeks",
+    "focal_post_units_pct_promo", "donor_post_13w_units_pct_promo",
+    "focal_post_arp_discount", "donor_post_13w_arp_discount",
     "focal_arp_pct_chg", "focal_promo_week_delta", "donor_promo_week_delta",
 ]
 
-def assign_confidence(row) -> str:
-    if row.get("scoring_status") == "SUPPRESSED":
-        return "Suppressed"
-    pre_wks = row.get("pre_13w_weeks_count", 0) or 0
-    post_wks = row.get("post_13w_weeks_count", 0) or 0
-    p_val = row.get("p_value") or 1.0
-    if pre_wks >= 12 and post_wks >= 10 and p_val < 0.05:
+def assign_confidence(pre_wks, post_wks) -> str:
+    try:
+        pre_wks, post_wks = float(pre_wks or 0), float(post_wks or 0)
+    except (TypeError, ValueError):
+        return "Low"
+    if pre_wks >= 12 and post_wks >= 10:
         return "High"
-    if pre_wks >= 8 and post_wks >= 8 and p_val < 0.10:
+    if pre_wks >= 8 and post_wks >= 8:
         return "Medium"
     return "Low"
 
@@ -412,39 +433,56 @@ if __name__ == "__main__":
         model_cannibal = pickle.load(f)
     with open(f"outputs/model_ranker_{MODEL_VERSION}.pkl", "rb") as f:
         model_ranker = pickle.load(f)
-    explainer = shap.TreeExplainer(model_cannibal)
 
-    sql = "SELECT * FROM \"ml_training_features\" WHERE label_deterministic != 'NEUTRAL'"
+    sql = """
+    SELECT *
+    FROM "ml_training_features"
+    WHERE label_deterministic != 'NEUTRAL'
+      AND focal_post_weeks_count >= 8
+      AND donor_pre_13w_weeks_count >= 8
+    """
     df = query_druid(sql)
 
-    X = df[FEATURE_COLS].fillna(0)
+    available = [c for c in FEATURE_COLS if c in df.columns]
+    X = df[available].apply(pd.to_numeric, errors="coerce").fillna(0)
+
     df["cannibal_prob"] = model_cannibal.predict_proba(X)[:, 1]
     df["cannibal_status"] = pd.cut(
         df["cannibal_prob"], bins=[-0.001, 0.35, 0.65, 1.001],
-        labels=["Incremental", "Watch", "Cannibalizing"]
-    )
+        labels=["Incremental", "Watch", "Cannibalizing"],
+    ).astype(str)
+
+    explainer = shap.TreeExplainer(model_cannibal)
     shap_matrix = explainer.shap_values(X)
     if isinstance(shap_matrix, list):
         shap_matrix = shap_matrix[1]
-    drivers = [top_shap_drivers(row, FEATURE_COLS) for row in shap_matrix]
-    for i, d in enumerate(drivers):
-        df.at[df.index[i], "shap_feature_1"] = d[0][0] if len(d) > 0 else None
-        df.at[df.index[i], "shap_value_1"]   = d[0][1] if len(d) > 0 else None
-        df.at[df.index[i], "shap_feature_2"] = d[1][0] if len(d) > 1 else None
-        df.at[df.index[i], "shap_value_2"]   = d[1][1] if len(d) > 1 else None
-        df.at[df.index[i], "shap_feature_3"] = d[2][0] if len(d) > 2 else None
-        df.at[df.index[i], "shap_value_3"]   = d[2][1] if len(d) > 2 else None
-    df["cannibal_confidence"] = df.apply(assign_confidence, axis=1)
+    drivers = [top_shap_drivers(row, available) for row in shap_matrix]
+    df["shap_feature_1"] = [d[0][0] if len(d) > 0 else None for d in drivers]
+    df["shap_value_1"]   = [d[0][1] if len(d) > 0 else None for d in drivers]
+    df["shap_feature_2"] = [d[1][0] if len(d) > 1 else None for d in drivers]
+    df["shap_value_2"]   = [d[1][1] if len(d) > 1 else None for d in drivers]
+    df["shap_feature_3"] = [d[2][0] if len(d) > 2 else None for d in drivers]
+    df["shap_value_3"]   = [d[2][1] if len(d) > 2 else None for d in drivers]
+
+    df["cannibal_confidence"] = [
+        assign_confidence(r.get("focal_pre_weeks_count"), r.get("focal_post_weeks_count"))
+        for _, r in df.iterrows()
+    ]
     df["model_version"] = MODEL_VERSION
     df["scored_at"] = datetime.now(timezone.utc).isoformat()
 
-    out_path = "outputs/scored_cannibalization.jsonl"
-    df.to_json(out_path, orient="records", lines=True)
-    print(f"Wrote {len(df):,} scored rows to {out_path}")
-    # TODO: submit_msq(REPLACE INTO scored_cannibalization FROM EXTERN(out_path))
-    # See Azure deployment notes for EXTERN spec on Azure Blob.
+    output_cols = [
+        "focal_upc", "focal_description", "donor_upc", "donor_description",
+        "channel_outlet", "retail_account", "geography_raw", "geography_level",
+        "window_type", "comparison_type", "pack_distance", "relationship_distance",
+        "cannibal_prob", "cannibal_status", "cannibal_confidence",
+        "shap_feature_1", "shap_value_1", "shap_feature_2", "shap_value_2",
+        "shap_feature_3", "shap_value_3", "model_version", "scored_at",
+    ]
+    out = df[[c for c in output_cols if c in df.columns]].copy()
+    write_back(out, "scored_cannibalization", timestamp_col="scored_at")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — Requires P1, P2, P3 artifacts. Druid write-back stub is in-progress (see Azure notes).</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 60,695 rows scored. Parquet at <code>s3://mo-ml/scored_cannibalization/2026-06-09/scored_cannibalization.parquet</code>. Spec at <code>outputs/scored_cannibalization_ingest_spec.json</code> — pending Druid ingestion submission.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -611,14 +649,17 @@ from mo_druid_client import query_druid
 
 MODEL_VERSION = "v1"
 
+# Confirmed column names from live schema (price_elasticity_training_features)
 OWN_PRICE_FEATURES = [
     "pre_13w_avg_price_per_bar", "post_13w_avg_price_per_bar",
     "log_price_change",
-    "pre_13w_avg_velocity_spm",
+    "pre_13w_velocity_spm",       # confirmed name — no avg_ prefix
     "pre_13w_weeks_count", "post_13w_weeks_count",
-    "pack_count", "naive_price_elasticity",
-    "promo_depth_bucket", "promo_confound_flag",
-    "seasonality_index",
+    "pack_count",
+]
+OPTIONAL_FEATURES = [
+    "naive_price_elasticity",     # present in schema
+    "promo_confounded",           # present — not promo_confound_flag
 ]
 
 def load_elasticity_data() -> pd.DataFrame:
@@ -628,16 +669,25 @@ def load_elasticity_data() -> pd.DataFrame:
     WHERE pre_13w_weeks_count >= 8
       AND post_13w_weeks_count >= 8
       AND pre_13w_base_units > 0
-      AND post_13w_avg_price_per_bar IS NOT NULL
       AND pre_13w_avg_price_per_bar > 0
     """
     df = query_druid(sql)
+    # Druid returns numeric columns as object dtype in JSON response
+    numeric_cols = [
+        "pre_13w_avg_price_per_bar", "post_13w_avg_price_per_bar",
+        "pre_13w_velocity_spm", "pre_13w_weeks_count", "post_13w_weeks_count",
+        "pack_count", "naive_price_elasticity", "promo_confounded",
+        "pre_13w_base_units", "post_13w_base_units",
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
     df["log_price_change"] = np.log(
         df["post_13w_avg_price_per_bar"].clip(lower=0.01) /
         df["pre_13w_avg_price_per_bar"].clip(lower=0.01)
     )
     df["log_unit_change"] = np.log(
-        (df["post_13w_avg_base_units"] + 1) /
+        (df["post_13w_base_units"] + 1) /    # confirmed: post_13w_base_units
         (df["pre_13w_base_units"] + 1)
     )
     return df
@@ -668,7 +718,7 @@ if __name__ == "__main__":
     print(f"Saved model_own_price_elasticity_{MODEL_VERSION}.pkl")
     # TODO: train cross-price and promo elasticity models
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — Requires Q17 (✓ COMPLETE, 90,757 rows).</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — Own-price model: R²=0.969, MAE=0.070 (log-unit-change units). 68,735 training rows after dropna. Artifact: <code>outputs/model_own_price_elasticity_v1.pkl</code>. Column name fixes: <code>pre_13w_velocity_spm</code> (not <code>pre_13w_avg_velocity_spm</code>), <code>post_13w_base_units</code> (not <code>post_13w_avg_base_units</code>).</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -684,30 +734,77 @@ if __name__ == "__main__":
   <tr><td>Input Druid</td><td><code>price_competitive_weekly</code></td><td>Q16 ✓</td></tr>
   <tr><td>Input Druid</td><td><code>price_pack_ladder_weekly</code></td><td>Q14 ✓</td></tr>
   <tr><td>Input artifact</td><td><code>outputs/model_own_price_elasticity_v1.pkl</code></td><td>From P7</td></tr>
-  <tr><td>Output Druid</td><td><code>scored_price_elasticity</code></td><td>REPLACE INTO OVERWRITE ALL</td></tr>
-  <tr><td>Dependencies</td><td>P7; Q14, Q16, Q17 ✓</td><td></td></tr>
+  <tr><td>Output parquet</td><td><code>s3://mo-ml/scored_price_elasticity/…/scored_price_elasticity.parquet</code></td><td>MinIO upload</td></tr>
+  <tr><td>Output spec</td><td><code>outputs/scored_price_elasticity_ingest_spec.json</code></td><td>Human submits to Druid</td></tr>
+  <tr><td>Output Druid</td><td><code>scored_price_elasticity</code></td><td>Append-only — human must POST spec</td></tr>
+  <tr><td>Dependencies</td><td>P7; Q17 ✓</td><td></td></tr>
 </table>
-<p class="note"><strong><code>scored_price_elasticity</code> schema:</strong></p>
-<table>
-  <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
-  <tr><td><code>__time</code></td><td>TIMESTAMP</td><td>Scoring week</td></tr>
-  <tr><td><code>upc</code></td><td>VARCHAR</td><td></td></tr>
-  <tr><td><code>description</code></td><td>VARCHAR</td><td>Denormalized for UI</td></tr>
-  <tr><td><code>pack_count</code></td><td>INTEGER</td><td></td></tr>
-  <tr><td><code>channel_outlet</code></td><td>VARCHAR</td><td></td></tr>
-  <tr><td><code>retail_account</code></td><td>VARCHAR</td><td></td></tr>
-  <tr><td><code>geography_raw</code></td><td>VARCHAR</td><td></td></tr>
-  <tr><td><code>own_price_elasticity_signed</code></td><td>DOUBLE</td><td>Use in formulas</td></tr>
-  <tr><td><code>own_price_elasticity_abs</code></td><td>DOUBLE</td><td>Display in UI</td></tr>
-  <tr><td><code>cross_price_elasticity</code></td><td>DOUBLE</td><td>Signed</td></tr>
-  <tr><td><code>promo_elasticity</code></td><td>DOUBLE</td><td>Lift per 10-pt promo depth</td></tr>
-  <tr><td><code>elasticity_confidence</code></td><td>VARCHAR</td><td>High / Medium / Low</td></tr>
-  <tr><td><code>guardrail_flag</code></td><td>VARCHAR</td><td>NULL or reason code</td></tr>
-  <tr><td><code>shap_feature_1 … shap_value_3</code></td><td>VARCHAR/DOUBLE</td><td>Top-3 SHAP drivers</td></tr>
-  <tr><td><code>model_version</code></td><td>VARCHAR</td><td></td></tr>
-  <tr><td><code>scored_at</code></td><td>TIMESTAMP</td><td></td></tr>
-</table>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — Stub implementation pending P7 completion. Schema is final.</p>
+<pre><code>
+# scripts/MO_17_price_elasticity_score.py
+import json, pickle
+import numpy as np
+import pandas as pd
+from datetime import datetime, timezone
+from mo_druid_client import query_druid
+from mo_writeback import write_back
+
+MODEL_VERSION = "v1"
+
+def load_scoring_data() -> pd.DataFrame:
+    sql = """
+    SELECT *
+    FROM "price_elasticity_training_features"
+    WHERE pre_13w_weeks_count >= 8
+      AND post_13w_weeks_count >= 8
+      AND pre_13w_base_units > 0
+      AND pre_13w_avg_price_per_bar > 0
+    """
+    df = query_druid(sql)
+    for col in ["pre_13w_avg_price_per_bar", "post_13w_avg_price_per_bar",
+                "pre_13w_velocity_spm", "pre_13w_weeks_count", "post_13w_weeks_count",
+                "pack_count", "naive_price_elasticity", "promo_confounded",
+                "pre_13w_base_units", "post_13w_base_units"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["log_price_change"] = np.log(
+        df["post_13w_avg_price_per_bar"].clip(lower=0.01) /
+        df["pre_13w_avg_price_per_bar"].clip(lower=0.01)
+    )
+    return df
+
+if __name__ == "__main__":
+    with open(f"outputs/model_own_price_elasticity_{MODEL_VERSION}.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open("outputs/price_elasticity_train_metrics.json") as f:
+        features_used = json.load(f)["features_used"]
+
+    df = load_scoring_data()
+    available = [c for c in features_used if c in df.columns]
+    X = df[available].fillna(0)
+
+    df["predicted_log_unit_change"] = model.predict(X)
+    df["implied_elasticity"] = df["predicted_log_unit_change"] / df["log_price_change"].replace(0, np.nan)
+    df["elasticity_band"] = pd.cut(
+        df["implied_elasticity"],
+        bins=[-np.inf, -2.0, -1.0, -0.5, 0.0, np.inf],
+        labels=["Highly Elastic", "Elastic", "Moderately Elastic", "Inelastic", "Positive"],
+    ).astype(str)
+    df["model_version"] = MODEL_VERSION
+    df["scored_at"] = datetime.now(timezone.utc).isoformat()
+
+    output_cols = [
+        "upc", "description", "channel_outlet", "retail_account",
+        "geography_raw", "geography_level",
+        "pre_13w_avg_price_per_bar", "post_13w_avg_price_per_bar", "log_price_change",
+        "pre_13w_velocity_spm", "pre_13w_weeks_count", "post_13w_weeks_count",
+        "naive_price_elasticity", "promo_confounded",
+        "predicted_log_unit_change", "implied_elasticity", "elasticity_band",
+        "model_version", "scored_at",
+    ]
+    out = df[[c for c in output_cols if c in df.columns]].copy()
+    write_back(out, "scored_price_elasticity", timestamp_col="scored_at")
+</code></pre>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 90,757 rows scored. Parquet at <code>s3://mo-ml/scored_price_elasticity/2026-06-09/scored_price_elasticity.parquet</code>. Spec at <code>outputs/scored_price_elasticity_ingest_spec.json</code> — pending Druid ingestion submission.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -836,18 +933,18 @@ if __name__ == "__main__":
 <h2 style="color:var(--ink)">Execution Order</h2>
 <p class="note">P1–P3 (training) can run in any order or in parallel. Everything else is sequential.</p>
 <table>
-  <tr><th>Step</th><th>Script</th><th>Output</th><th>Druid prerequisite</th></tr>
-  <tr><td>0</td><td><code>mo_druid_client.py</code></td><td>shared module</td><td>—</td></tr>
-  <tr><td>1</td><td>P1 <code>MO_10_cannibal_train.py</code></td><td><code>model_cannibal_v1.pkl</code></td><td>Q5 ✓</td></tr>
-  <tr><td>2</td><td>P2 <code>MO_11_donor_ranker_train.py</code></td><td><code>model_ranker_v1.pkl</code></td><td>Q5 ✓</td></tr>
-  <tr><td>3</td><td>P3 <code>MO_12_event_detector_train.py</code></td><td><code>model_event_v1.pkl</code></td><td>Q5, Q6 ✓</td></tr>
-  <tr><td>4</td><td>P4 <code>MO_13_cannibal_score.py</code></td><td><code>scored_cannibalization</code></td><td>P1 + P2 + P3</td></tr>
-  <tr><td>5</td><td>P5 <code>MO_14_event_assemble.py</code></td><td><code>event_queue</code></td><td>P4; Q6 ✓</td></tr>
-  <tr><td>6</td><td>P6 <code>MO_15_new_pack_enroll.py</code></td><td><code>event_queue</code> (append)</td><td>Q8 ✓; P5</td></tr>
-  <tr><td>7</td><td>P7 <code>MO_16_price_elasticity_train.py</code></td><td><code>model_own_price_elasticity_v1.pkl</code></td><td>Q17 ✓</td></tr>
-  <tr><td>8</td><td>P8 <code>MO_17_price_elasticity_score.py</code></td><td><code>scored_price_elasticity</code></td><td>P7</td></tr>
-  <tr><td>9</td><td>P9 <code>MO_18_price_elasticity_forecast.py</code></td><td><code>price_elasticity_forecast_weekly</code></td><td>P8</td></tr>
-  <tr><td>10</td><td>P10 <code>MO_14.7_price_events.py</code></td><td><code>price_event_queue</code> (append)</td><td>P8; Q20–Q22 ✓</td></tr>
+  <tr><th>Step</th><th>Script</th><th>Output</th><th>Status</th><th>Druid prerequisite</th></tr>
+  <tr><td>0</td><td><code>mo_druid_client.py</code></td><td>shared module</td><td><span class="badge badge-done">COMPLETE</span></td><td>—</td></tr>
+  <tr><td>1</td><td>P1 <code>MO_10_cannibal_train.py</code></td><td><code>model_cannibal_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> ROC-AUC 1.0</td><td>Q5 ✓</td></tr>
+  <tr><td>2</td><td>P2 <code>MO_11_donor_ranker_train.py</code></td><td><code>model_ranker_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span></td><td>Q5 ✓</td></tr>
+  <tr><td>3</td><td>P3 <code>MO_12_event_detector_train.py</code></td><td><code>model_event_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> ROC-AUC 1.0</td><td>Q5 ✓</td></tr>
+  <tr><td>4</td><td>P4 <code>MO_13_cannibal_score.py</code></td><td><code>scored_cannibalization</code></td><td><span class="badge badge-done">COMPLETE</span> 60,695 rows — Druid ingestion pending</td><td>P1 + P2 + P3</td></tr>
+  <tr><td>5</td><td>P5 <code>MO_14_event_assemble.py</code></td><td><code>event_queue</code></td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>P4; Q6 ✓</td></tr>
+  <tr><td>6</td><td>P6 <code>MO_15_new_pack_enroll.py</code></td><td><code>event_queue</code> (append)</td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>Q8 ✓; P5</td></tr>
+  <tr><td>7</td><td>P7 <code>MO_16_price_elasticity_train.py</code></td><td><code>model_own_price_elasticity_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> R²=0.969</td><td>Q17 ✓</td></tr>
+  <tr><td>8</td><td>P8 <code>MO_17_price_elasticity_score.py</code></td><td><code>scored_price_elasticity</code></td><td><span class="badge badge-done">COMPLETE</span> 90,757 rows — Druid ingestion pending</td><td>P7</td></tr>
+  <tr><td>9</td><td>P9 <code>MO_18_price_elasticity_forecast.py</code></td><td><code>price_elasticity_forecast_weekly</code></td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>P8</td></tr>
+  <tr><td>10</td><td>P10 <code>MO_14.7_price_events.py</code></td><td><code>price_event_queue</code> (append)</td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>P8; Q20–Q22 ✓</td></tr>
 </table>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
@@ -864,28 +961,13 @@ if __name__ == "__main__":
   <tr><td>Azure Databricks</td><td>When data volumes grow to Spark scale; Druid REST API works the same</td></tr>
   <tr><td>Azure Container Instance</td><td>Lightweight periodic scoring cron jobs</td></tr>
 </table>
-<p class="note"><strong>Druid write-back on Azure:</strong></p>
-<ol>
-  <li>Score in Python → write output to <strong>Azure Blob Storage</strong> (parquet or JSON Lines)</li>
-  <li>Submit MSQ <code>REPLACE INTO</code> with Druid's Azure input source</li>
-  <li>Poll via <code>poll_msq()</code> until SUCCESS</li>
-</ol>
-<pre><code>
--- Azure Blob EXTERN spec (in MSQ REPLACE INTO statement)
-REPLACE INTO "scored_cannibalization" OVERWRITE ALL
-SELECT * FROM EXTERN(
-  '{"type":"azureStorage","uris":["wasbs://container@account.blob.core.windows.net/scored_cannibalization.json"]}',
-  '{"type":"json"}'
-) AS t(
-  focal_upc VARCHAR, donor_upc VARCHAR, cannibal_prob DOUBLE,
-  cannibal_status VARCHAR, cannibal_confidence VARCHAR,
-  shap_feature_1 VARCHAR, shap_value_1 DOUBLE,
-  shap_feature_2 VARCHAR, shap_value_2 DOUBLE,
-  shap_feature_3 VARCHAR, shap_value_3 DOUBLE,
-  model_version VARCHAR, scored_at VARCHAR
-)
-PARTITIONED BY DAY
-CLUSTERED BY focal_upc
+<p class="note"><strong>Write-back pattern — MinIO → Druid native batch (EXTERN is blocked, E05):</strong></p>
+<p class="note">All write-back uses <code>mo_writeback.py</code>. Python scores → writes parquet → uploads to MinIO → generates Druid ingestion spec → prints human-review prompt. A human must submit the spec to Druid. Nothing auto-submits. All specs use <code>appendToExisting: true</code>.</p>
+<p class="note"><strong>Required env vars (write-back):</strong></p>
+<pre><code>export MINIO_ENDPOINT="minio.built.internal:9000"  # host:port, no scheme
+export MINIO_ACCESS_KEY="..."
+export MINIO_SECRET_KEY="..."
+export MINIO_BUCKET="mo-ml"
 </code></pre>
 <p class="note"><strong>Environment variables for Azure ML:</strong> Set <code>DRUID_HOST</code>, <code>DRUID_USERNAME</code>, <code>DRUID_PASSWORD</code> as Azure ML environment variables or Key Vault secrets — never hard-code in scripts.</p>
 <p class="note"><strong>Python dependencies:</strong> <code>lightgbm</code>, <code>shap</code>, <code>scikit-learn</code>, <code>pandas</code>, <code>numpy</code>, <code>scipy</code>, <code>requests</code>, <code>python-dotenv</code></p>
