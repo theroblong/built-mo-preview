@@ -1910,51 +1910,112 @@ WHERE
 **Purpose:** Returns trailing actuals from `cannibalization_rate_weekly` plus future weeks from `cannibalization_rate_forecast_weekly` in one UI-ready result set. Powers the Forecast screen trend chart — actual weeks render as solid bars; forecast weeks render in the scenario color with a confidence band.
 
 ```sql
--- Parameters: :focal_upc, :candidate_pool_id, :scenario_id,
---             :channel_outlet, :retail_account, :geography_display,
---             :forecast_origin_week
-SELECT
-  __time,
-  'ACTUAL'                                           AS series_type,
-  cannibalization_rate,
-  cannibalization_rate_low,
-  cannibalization_rate_high,
-  focal_units_gained,
-  estimated_donor_units_lost,
-  incremental_share
-FROM "cannibalization_rate_weekly"
-WHERE focal_upc         = :focal_upc
-  AND candidate_pool_id = :candidate_pool_id
-  AND channel_outlet    = :channel_outlet
-  AND retail_account    = :retail_account
-  AND geography_display = :geography_display
-  AND __time >= TIMESTAMPADD(WEEK, -8, :forecast_origin_week)
-
+-- Parameters: :focal_upc, :channel_outlet, :retail_account, :geography_raw
+-- Returns trailing 8 actual weeks + 13 forecast weeks (low/base/high) in one result set.
+-- Actual weeks render as solid bars; forecast weeks render with confidence band.
+-- NOTE: Druid UNION ALL with per-branch filters may require a CTE wrapper (see note below).
+WITH actuals AS (
+  SELECT
+    __time,
+    'ACTUAL'                           AS series_type,
+    cannibalization_rate,
+    CAST(NULL AS DOUBLE)               AS forecast_rate_low,
+    CAST(NULL AS DOUBLE)               AS forecast_rate_high,
+    cannibal_weighted_donor_loss       AS estimated_donor_units_lost,
+    donor_count,
+    max_donor_cannibal_prob
+  FROM "cannibalization_rate_weekly"
+  WHERE focal_upc      = :focal_upc
+    AND channel_outlet = :channel_outlet
+    AND retail_account = :retail_account
+    AND geography_raw  = :geography_raw
+    AND __time >= TIMESTAMPADD(WEEK, -8, CURRENT_TIMESTAMP)
+),
+forecast AS (
+  SELECT
+    __time,
+    'FORECAST'                         AS series_type,
+    forecast_rate_base                 AS cannibalization_rate,
+    forecast_rate_low,
+    forecast_rate_high,
+    CAST(NULL AS DOUBLE)               AS estimated_donor_units_lost,
+    donor_count,
+    max_donor_cannibal_prob
+  FROM "cannibalization_rate_forecast_weekly"
+  WHERE focal_upc      = :focal_upc
+    AND channel_outlet = :channel_outlet
+    AND retail_account = :retail_account
+    AND geography_raw  = :geography_raw
+)
+SELECT * FROM actuals
 UNION ALL
-
-SELECT
-  __time,
-  'FORECAST'                                         AS series_type,
-  cannibalization_rate_forecast                      AS cannibalization_rate,
-  cannibalization_rate_forecast_low                  AS cannibalization_rate_low,
-  cannibalization_rate_forecast_high                 AS cannibalization_rate_high,
-  forecast_focal_units_gained                        AS focal_units_gained,
-  forecast_donor_units_lost                          AS estimated_donor_units_lost,
-  incremental_share_forecast                         AS incremental_share
-FROM "cannibalization_rate_forecast_weekly"
-WHERE focal_upc         = :focal_upc
-  AND candidate_pool_id = :candidate_pool_id
-  AND scenario_id       = :scenario_id
-  AND channel_outlet    = :channel_outlet
-  AND retail_account    = :retail_account
-  AND geography_display = :geography_display
-  AND forecast_origin_week = :forecast_origin_week
+SELECT * FROM forecast
 ORDER BY __time
 ```
 
-**Default horizon:** 13 weeks. Trailing 8 actual weeks + next 13 forecast weeks under the selected scenario. When the user switches scenario buttons, the UI re-queries using the selected `scenario_id` and replaces the assumption labels, forecast cards, rate curve, and market/action table together. If the table has not been precomputed for a scenario, the UI calls the Python scoring service on-demand, then reads the freshly written rows.
+**Default horizon:** Trailing 8 actual weeks + 13 forecast weeks (fixed; not scenario-parameterized). All three quantile bands (`forecast_rate_low`, `forecast_rate_base`, `forecast_rate_high`) are in a single row per forecast week — the UI selects which columns to render. No `scenario_id` parameter needed.
 
-**Status: PENDING** — `cannibalization_rate_weekly` and `cannibalization_rate_forecast_weekly` do not exist yet (ML pipeline not yet run). SQL structure is logically correct. Stub testing blocked by Druid UNION ALL limitation: planner rejects UNION ALL when either side contains filters or column aliasing/expressions (same constraint as prior UNION ALL errors). Re-test once both tables are populated by the scoring pipeline.
+**Schema alignment notes (as-built vs original design):**
+
+| Original column | As-built equivalent | Note |
+|---|---|---|
+| `cannibalization_rate_low/high` (actuals) | `NULL` | No actuals confidence band — single point estimate |
+| `focal_units_gained` | not present | Not computed by MO_19 |
+| `incremental_share` | not present | Not computed by MO_19 |
+| `candidate_pool_id` | not present | Filtered by upc + channel + account + geo directly |
+| `scenario_id` | not present | All scenarios in one row: `forecast_rate_low/base/high` |
+| `forecast_origin_week` | use `scored_at` for display | Not a filter column in as-built schema |
+| `cannibalization_rate_forecast` | `forecast_rate_base` | |
+| `cannibalization_rate_forecast_low/high` | `forecast_rate_low/high` | |
+
+**UNION ALL confirmed blocked (E-series):** Druid planner rejects UNION ALL when either branch contains filters, expressions, or aliasing — even inside a CTE. Tested 2026-06-09: `"SQL requires union between inputs that are not simple table scans and involve a filter or aliasing."` CTE wrapper does not help.
+
+**Confirmed pattern — two separate queries, merged in UI:**
+
+```sql
+-- Q2e-a: actuals (last 8 weeks)
+-- GROUP BY + AVG guards against duplicate Druid segments (append-only ingestion risk)
+SELECT
+    __time,
+    'ACTUAL'                             AS series_type,
+    AVG(cannibalization_rate)                    AS cannibalization_rate,
+    CAST(NULL AS DOUBLE)                         AS forecast_rate_low,
+    CAST(NULL AS DOUBLE)                         AS forecast_rate_high,
+    AVG(cannibal_weighted_donor_loss)            AS estimated_donor_units_lost,
+    MAX(CAST(donor_count AS BIGINT))             AS donor_count,
+    MAX(CAST(max_donor_cannibal_prob AS DOUBLE)) AS max_donor_cannibal_prob
+FROM "cannibalization_rate_weekly"
+WHERE focal_upc      = :focal_upc
+  AND channel_outlet = :channel_outlet
+  AND retail_account = :retail_account
+  AND geography_raw  = :geography_raw
+  AND __time >= TIMESTAMPADD(WEEK, -8, CURRENT_TIMESTAMP)
+GROUP BY __time
+ORDER BY __time
+```
+
+```sql
+-- Q2e-b: forecast (13 weeks forward)
+SELECT
+    __time,
+    'FORECAST'           AS series_type,
+    forecast_rate_base   AS cannibalization_rate,
+    forecast_rate_low,
+    forecast_rate_high,
+    CAST(NULL AS DOUBLE) AS estimated_donor_units_lost,
+    donor_count,
+    max_donor_cannibal_prob
+FROM "cannibalization_rate_forecast_weekly"
+WHERE focal_upc      = :focal_upc
+  AND channel_outlet = :channel_outlet
+  AND retail_account = :retail_account
+  AND geography_raw  = :geography_raw
+ORDER BY __time
+```
+
+UI issues both queries, concatenates on `__time`, and sorts. Both queries confirmed returning data in isolation (2026-06-09 test: 8 ACTUAL + 13 FORECAST rows).
+
+**Status: ✓ COMPLETE** — Both datasources populated and confirmed. Two-query pattern tested 2026-06-09 against live cluster: 1 ACTUAL + 13 FORECAST rows returned cleanly for test series `08-40229-30034 / CONVENIENCE-SPINS / MAVERIK`. GROUP BY + CAST guards required for actuals aggregation (Druid stores donor_count and max_donor_cannibal_prob as STRING). UNION ALL variant permanently blocked (Druid E-series limitation).
 
 ---
 

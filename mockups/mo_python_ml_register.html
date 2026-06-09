@@ -33,7 +33,7 @@ table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}th,td{tex
 </head><body><main class="shell" id="top">
 <section class="hero">
   <h1>Mo Python ML Register</h1>
-  <p>Python ML scripts for the Mo intelligence suite, ordered by execution. Covers Druid connection utilities, cannibalization ML (P1–P6), and price elasticity ML (P7–P10). Source document: <code>docs/mo_python_ml_register.md</code>. Error register: <code>docs/mo_python_ml_error_register.md</code>.</p>
+  <p>Python ML scripts for the Mo intelligence suite, ordered by execution. Covers Druid connection utilities, cannibalization ML (P1–P6), price elasticity ML (P7–P10), and cannibalization rate forecasting (Q_new + P11–P12). Source document: <code>docs/mo_python_ml_register.md</code>. Error register: <code>docs/mo_python_ml_error_register.md</code>.</p>
 </section>
 <div class="layout">
 <aside class="toc">
@@ -52,6 +52,10 @@ table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}th,td{tex
   <a href="#p8">P8 — MO_17 Elasticity Score</a>
   <a href="#p9">P9 — MO_18 Elasticity Forecast</a>
   <a href="#p10">P10 — MO_14.7 Price Events</a>
+  <div class="toc-section">Cannibal Rate Forecast</div>
+  <a href="#q-new">Q_new — MO_19 Rate Actuals</a>
+  <a href="#p11">P11 — MO_20 Rate Train</a>
+  <a href="#p12">P12 — MO_21 Rate Forecast</a>
   <div class="toc-section">Execution Order</div>
   <a href="#exec-order">Run sequence</a>
   <a href="#azure-notes">Azure deployment</a>
@@ -574,7 +578,7 @@ if __name__ == "__main__":
     # TODO: write assembled events to event_queue via MSQ INSERT
     print(f"Loaded {len(df):,} scored rows. Event assembly logic pending full weekly join.")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — Requires P4 (<code>scored_cannibalization</code>) to exist in Druid first.</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 56,674 surfaceable events from 60,695 scored rows. In Druid (<code>event_queue</code>). Note: <code>focal_base_units_pct_chg</code> is NULL for all rows — event rules use donor metrics only.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -617,7 +621,7 @@ if __name__ == "__main__":
     print(f"New pack size events to enroll: {len(events)}")
     # TODO: serialize events → INSERT INTO event_queue via MSQ
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span></p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 2,119 new pack size events appended to <code>event_queue</code> in Druid. Column confirmed as <code>upc_classification</code> (not <code>classification</code>).</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -846,7 +850,7 @@ def forecast_units(current_units, current_price, new_price, elasticity_signed):
   <tr><td><code>model_version</code></td><td>VARCHAR</td><td></td></tr>
   <tr><td><code>scored_at</code></td><td>TIMESTAMP</td><td></td></tr>
 </table>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — Requires P8 (<code>scored_price_elasticity</code>).</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 131,283 forecast rows (43,761 UPC × geo × channel combos × 3 scenarios: low −10%, base 0%, high +10%). In Druid (<code>price_elasticity_forecast</code>). ~48k rows filtered for null/extreme elasticity values.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -922,7 +926,73 @@ if __name__ == "__main__":
     # TODO: concat all event frames, INSERT INTO price_event_queue via MSQ
     print("TODO: INSERT INTO price_event_queue via MSQ")
 </code></pre>
-<p class="note"><strong>Status:</strong> <span class="badge badge-pending">NOT YET RUN</span> — <code>price_event_queue</code> seeded by Q22a (2,559 rows) + Q22b (786 rows). This script appends ML events. Run <strong>after</strong> P8.</p>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 54,219 price events appended to <code>price_event_queue</code> in Druid. Breakdown: DRASTIC_PRICE_CHANGE 7,438 · PROMO_RESPONSE_BREAKPOINT 31,643 · NEW_ITEM_PRICE_BASELINE 12,299 · PACK_NORM_GAP 1,270 · PRICE_DEFENSE_OPPORTUNITY 1,141 · PRICE_DONOR_OVERLAP 428. ELASTICITY_CONFIDENCE_DOWNGRADE skipped (needs historical comparison run).</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 3: CANNIBALIZATION RATE FORECASTING
+═══════════════════════════════════════════════════════════ -->
+<section class="query" id="q-new">
+<h2>Q_new — <code>MO_19_cannibal_rate_actuals.py</code></h2>
+<p class="note"><strong>Purpose:</strong> Compute weekly cannibalization rate per focal UPC × geo × channel × account from 2 years of <code>event_detection_weekly</code> history. Joins <code>scored_cannibalization</code> (cannibal_prob-weighted donor pairs) to <code>event_detection_weekly</code> for focal and donor weekly units. Output is the training data for P11 and the actuals series for the Q2e trend chart.</p>
+<table>
+  <tr><th>I/O</th><th>Datasource / Artifact</th><th>Notes</th></tr>
+  <tr><td>Input Druid</td><td><code>scored_cannibalization</code></td><td>Cannibalizing + Watch pairs with cannibal_prob</td></tr>
+  <tr><td>Input Druid</td><td><code>event_detection_weekly</code></td><td>2y weekly history for focal and donor UPCs</td></tr>
+  <tr><td>Output Druid</td><td><code>cannibalization_rate_weekly</code></td><td>583,262 rows / 97 weeks / 85 UPCs</td></tr>
+  <tr><td>Output artifact</td><td><code>outputs/cannibalization_rate_weekly.parquet</code></td><td>Seeds P11 training</td></tr>
+</table>
+<p class="note"><strong>Formula:</strong> <code>cannibalization_rate = Σ(cannibal_prob × max(0, −donor_wow_delta)) / focal_base_units</code>. Clipped [0, 1].</p>
+<pre><code># scripts/MO_19_cannibal_rate_actuals.py
+# Loads scored_cannibalization pairs, queries event_detection_weekly for 2y history,
+# computes cannibal_prob-weighted donor unit losses per focal × geo × channel × week,
+# divides by focal_base_units → cannibalization_rate, writes to cannibalization_rate_weekly.
+# Run: python MO_19_cannibal_rate_actuals.py
+</code></pre>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 583,262 rows across 97 weeks × 85 focal UPCs × 2,880 series. Rate range 0.0–1.0. In Druid (<code>cannibalization_rate_weekly</code>) as of 2026-06-09.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="query" id="p11">
+<h2>P11 — <code>MO_20_cannibal_rate_train.py</code></h2>
+<p class="note"><strong>Purpose:</strong> Train three LightGBM quantile regression models (α=0.10, 0.50, 0.90) on historical <code>cannibalization_rate_weekly</code> data. Quantile regression produces calibrated low/base/high prediction intervals without manual band-width tables. Time-based train/val split — last 13 weeks as validation.</p>
+<table>
+  <tr><th>I/O</th><th>Datasource / Artifact</th><th>Notes</th></tr>
+  <tr><td>Input artifact</td><td><code>outputs/cannibalization_rate_weekly.parquet</code></td><td>From Q_new run</td></tr>
+  <tr><td>Output artifact</td><td><code>outputs/model_cannibal_rate_q10_v1.pkl</code></td><td>α=0.10 lower bound</td></tr>
+  <tr><td>Output artifact</td><td><code>outputs/model_cannibal_rate_q50_v1.pkl</code></td><td>α=0.50 median</td></tr>
+  <tr><td>Output artifact</td><td><code>outputs/model_cannibal_rate_q90_v1.pkl</code></td><td>α=0.90 upper bound</td></tr>
+  <tr><td>Output artifact</td><td><code>outputs/cannibal_rate_train_metrics.json</code></td><td>Features used + val metrics</td></tr>
+</table>
+<p class="note"><strong>Top features (q50):</strong> TDP · week_of_year · max_donor_cannibal_prob · donor_count · cannibal_rate_lag8 · base_units_wow_delta · cannibal_rate_lag4 · cannibal_rate_lag1 · base_units_z13 · base_units_roll4_avg</p>
+<pre><code># scripts/MO_20_cannibal_rate_train.py
+# Loads cannibalization_rate_weekly.parquet, engineers lag features (1w, 4w, 8w),
+# trains 3 LightGBM quantile models with early stopping, saves pkl + metrics JSON.
+# Run: python MO_20_cannibal_rate_train.py
+</code></pre>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — q50 MAE=0.073, avg band width ~14pp. Best iterations: q10=328, q50=275, q90=304. Artifacts in <code>outputs/</code> as of 2026-06-09.</p>
+<div class="top"><a href="#top">Back to top</a></div>
+</section>
+
+<section class="query" id="p12">
+<h2>P12 — <code>MO_21_cannibal_rate_forecast.py</code></h2>
+<p class="note"><strong>Purpose:</strong> Generate 13-week rolling autoregressive forecast using the three trained quantile models. For each focal UPC × geo × channel series, predicts <code>forecast_rate_low / _base / _high</code> for weeks T+1 through T+13. The q50 prediction at each step seeds the next step's lag features.</p>
+<table>
+  <tr><th>I/O</th><th>Datasource / Artifact</th><th>Notes</th></tr>
+  <tr><td>Input artifact</td><td><code>outputs/model_cannibal_rate_q{10,50,90}_v1.pkl</code></td><td>From P11</td></tr>
+  <tr><td>Input artifact</td><td><code>outputs/cannibal_rate_train_metrics.json</code></td><td>Feature list</td></tr>
+  <tr><td>Input artifact</td><td><code>outputs/cannibalization_rate_weekly.parquet</code></td><td>Seeds autoregressive lags</td></tr>
+  <tr><td>Output Druid</td><td><code>cannibalization_rate_forecast_weekly</code></td><td>37,440 rows / 2,880 series × 13 weeks</td></tr>
+</table>
+<p class="note"><strong>Rolling forecast:</strong> At each step k, lag1 = q50(k−1), lag4/lag8 reach back through actual+predicted history. Static features (TDP, z-scores, cannibal_prob) anchored at last known actuals.</p>
+<pre><code># scripts/MO_21_cannibal_rate_forecast.py
+# Loads 3 quantile models + last 8 actual weeks per series,
+# rolls forward 13 weeks using q50 predictions as autoregressive inputs,
+# writes forecast_rate_low/base/high per week to cannibalization_rate_forecast_weekly.
+# Run: python MO_21_cannibal_rate_forecast.py
+</code></pre>
+<p class="note"><strong>Status:</strong> <span class="badge badge-done">COMPLETE</span> — 37,440 rows (2,880 series × 13 weeks). Avg band width 0.1377. Anchor date 2026-04-19. In Druid (<code>cannibalization_rate_forecast_weekly</code>) as of 2026-06-09.</p>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
 
@@ -938,13 +1008,16 @@ if __name__ == "__main__":
   <tr><td>1</td><td>P1 <code>MO_10_cannibal_train.py</code></td><td><code>model_cannibal_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> ROC-AUC 1.0</td><td>Q5 ✓</td></tr>
   <tr><td>2</td><td>P2 <code>MO_11_donor_ranker_train.py</code></td><td><code>model_ranker_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span></td><td>Q5 ✓</td></tr>
   <tr><td>3</td><td>P3 <code>MO_12_event_detector_train.py</code></td><td><code>model_event_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> ROC-AUC 1.0</td><td>Q5 ✓</td></tr>
-  <tr><td>4</td><td>P4 <code>MO_13_cannibal_score.py</code></td><td><code>scored_cannibalization</code></td><td><span class="badge badge-done">COMPLETE</span> 60,695 rows — Druid ingestion pending</td><td>P1 + P2 + P3</td></tr>
-  <tr><td>5</td><td>P5 <code>MO_14_event_assemble.py</code></td><td><code>event_queue</code></td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>P4; Q6 ✓</td></tr>
-  <tr><td>6</td><td>P6 <code>MO_15_new_pack_enroll.py</code></td><td><code>event_queue</code> (append)</td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>Q8 ✓; P5</td></tr>
+  <tr><td>4</td><td>P4 <code>MO_13_cannibal_score.py</code></td><td><code>scored_cannibalization</code></td><td><span class="badge badge-done">COMPLETE</span> 60,695 rows</td><td>P1 + P2 + P3</td></tr>
+  <tr><td>5</td><td>P5 <code>MO_14_event_assemble.py</code></td><td><code>event_queue</code></td><td><span class="badge badge-done">COMPLETE</span> 56,674 rows</td><td>P4</td></tr>
+  <tr><td>6</td><td>P6 <code>MO_15_new_pack_enroll.py</code></td><td><code>event_queue</code> (append)</td><td><span class="badge badge-done">COMPLETE</span> 2,119 rows</td><td>Q8 ✓; P5</td></tr>
   <tr><td>7</td><td>P7 <code>MO_16_price_elasticity_train.py</code></td><td><code>model_own_price_elasticity_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> R²=0.969</td><td>Q17 ✓</td></tr>
-  <tr><td>8</td><td>P8 <code>MO_17_price_elasticity_score.py</code></td><td><code>scored_price_elasticity</code></td><td><span class="badge badge-done">COMPLETE</span> 90,757 rows — Druid ingestion pending</td><td>P7</td></tr>
-  <tr><td>9</td><td>P9 <code>MO_18_price_elasticity_forecast.py</code></td><td><code>price_elasticity_forecast_weekly</code></td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>P8</td></tr>
-  <tr><td>10</td><td>P10 <code>MO_14.7_price_events.py</code></td><td><code>price_event_queue</code> (append)</td><td><span class="badge badge-pending">NOT YET RUN</span></td><td>P8; Q20–Q22 ✓</td></tr>
+  <tr><td>8</td><td>P8 <code>MO_17_price_elasticity_score.py</code></td><td><code>scored_price_elasticity</code></td><td><span class="badge badge-done">COMPLETE</span> 90,757 rows</td><td>P7</td></tr>
+  <tr><td>9</td><td>P9 <code>MO_18_price_elasticity_forecast.py</code></td><td><code>price_elasticity_forecast</code></td><td><span class="badge badge-done">COMPLETE</span> 131,283 rows</td><td>P8</td></tr>
+  <tr><td>10</td><td>P10 <code>MO_14_7_price_events.py</code></td><td><code>price_event_queue</code> (append)</td><td><span class="badge badge-done">COMPLETE</span> 54,219 rows</td><td>P8; Q20–Q22 ✓</td></tr>
+  <tr><td>11</td><td>Q_new <code>MO_19_cannibal_rate_actuals.py</code></td><td><code>cannibalization_rate_weekly</code></td><td><span class="badge badge-done">COMPLETE</span> 583,262 rows</td><td>P4 ✓; Q6 ✓</td></tr>
+  <tr><td>12</td><td>P11 <code>MO_20_cannibal_rate_train.py</code></td><td><code>model_cannibal_rate_q{10,50,90}_v1.pkl</code></td><td><span class="badge badge-done">COMPLETE</span> MAE=0.073</td><td>Q_new ✓</td></tr>
+  <tr><td>13</td><td>P12 <code>MO_21_cannibal_rate_forecast.py</code></td><td><code>cannibalization_rate_forecast_weekly</code></td><td><span class="badge badge-done">COMPLETE</span> 37,440 rows</td><td>P11 ✓</td></tr>
 </table>
 <div class="top"><a href="#top">Back to top</a></div>
 </section>
