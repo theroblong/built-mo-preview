@@ -1,0 +1,71 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "scored_cannibalization",
+      "timestampSpec": {
+        "column": "scored_at",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "focal_upc",
+          "focal_description",
+          "donor_upc",
+          "donor_description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "geography_level",
+          "window_type",
+          "comparison_type",
+          "pack_distance",
+          "relationship_distance",
+          "cannibal_prob",
+          "cannibal_status",
+          "cannibal_confidence",
+          "shap_feature_1",
+          "shap_value_1",
+          "shap_feature_2",
+          "shap_value_2",
+          "shap_feature_3",
+          "shap_value_3",
+          "model_version"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/scored_cannibalization/2026-06-09/scored_cannibalization.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "YOUR_MINIO_ACCESS_KEY",
+          "secretAccessKey": "YOUR_MINIO_SECRET_KEY"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

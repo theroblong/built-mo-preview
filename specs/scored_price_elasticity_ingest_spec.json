@@ -1,0 +1,67 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "scored_price_elasticity",
+      "timestampSpec": {
+        "column": "scored_at",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "upc",
+          "description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "geography_level",
+          "pre_13w_avg_price_per_bar",
+          "post_13w_avg_price_per_bar",
+          "log_price_change",
+          "pre_13w_velocity_spm",
+          "pre_13w_weeks_count",
+          "post_13w_weeks_count",
+          "naive_price_elasticity",
+          "promo_confounded",
+          "predicted_log_unit_change",
+          "implied_elasticity",
+          "elasticity_band",
+          "model_version"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/scored_price_elasticity/2026-06-09/scored_price_elasticity.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "YOUR_MINIO_ACCESS_KEY",
+          "secretAccessKey": "YOUR_MINIO_SECRET_KEY"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}
