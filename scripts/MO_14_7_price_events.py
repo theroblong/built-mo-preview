@@ -13,26 +13,34 @@ def _event_row(
     event_type, event_label, event_color, confidence,
     trigger_value, trigger_column, source_table,
     scoring_window="13w",
+    focal_pack_count=None, partner_pack_count=None, partner_description=None,
 ):
     return {
-        "focal_upc":          upc,
-        "focal_description":  description,
-        "channel_outlet":     channel,
-        "retail_account":     account,
-        "geography_display":  geo_display,
-        "geography_level":    geo_level,
-        "event_type":         event_type,
-        "event_label":        event_label,
-        "event_color":        event_color,
-        "confidence":         confidence,
-        "trigger_value":      trigger_value,
-        "trigger_column":     trigger_column,
-        "source_table":       source_table,
-        "scoring_window":     scoring_window,
-        "cross_tool_flag":    0,
+        "focal_upc":           upc,
+        "focal_description":   description,
+        "channel_outlet":      channel,
+        "retail_account":      account,
+        "geography_display":   geo_display,
+        "geography_level":     geo_level,
+        "event_type":          event_type,
+        "event_label":         event_label,
+        "event_color":         event_color,
+        "confidence":          confidence,
+        "trigger_value":       trigger_value,
+        "trigger_column":      trigger_column,
+        "source_table":        source_table,
+        "scoring_window":      scoring_window,
+        "focal_pack_count":    focal_pack_count,
+        "partner_pack_count":  partner_pack_count,
+        "partner_description": partner_description,
+        "cross_tool_flag":     0,
         "cross_tool_event_id": None,
-        "scored_at":          SCORED_AT,
+        "scored_at":           SCORED_AT,
     }
+
+
+def _is_own_brand(description: str | None) -> bool:
+    return bool(description and "built" in str(description).lower())
 
 
 # ── Detector 1: DRASTIC_PRICE_CHANGE ─────────────────────────────────────────
@@ -156,15 +164,27 @@ def detect_price_defense(df_ladder: pd.DataFrame) -> list[dict]:
     rows = []
     mask = df_ladder["price_per_bar_gap_pct"].abs() >= 0.09
     for _, r in df_ladder[mask].iterrows():
-        gap_pct = round(float(r["price_per_bar_gap_pct"]) * 100, 1)
-        direction = "below" if gap_pct < 0 else "above"
+        partner_desc = r.get("partner_description") or ""
+        # Own-brand pack gaps belong in the Pack Ladder screen, not Priority Events
+        if _is_own_brand(partner_desc):
+            continue
+        gap_pct        = round(float(r["price_per_bar_gap_pct"]) * 100, 1)
+        direction      = "below" if gap_pct < 0 else "above"
+        focal_ct       = int(r.get("focal_pack_count") or 0)
+        partner_ct     = int(r.get("partner_pack_count") or 0)
+        focal_lbl      = f"{focal_ct}-ct" if focal_ct else "pack"
+        partner_lbl    = f"{partner_ct}-ct" if partner_ct else "pack"
+        competitor     = partner_desc.split()[0] if partner_desc else "competitor"
         rows.append(_event_row(
             r["focal_upc"], r["focal_description"], r["channel_outlet"],
             r["retail_account"], r.get("geography_display"), r["geography_level"],
             "PRICE_DEFENSE_OPPORTUNITY",
-            f"BUILT {abs(gap_pct):.1f}% {direction} partner pack price",
+            f"BUILT {focal_lbl} priced {abs(gap_pct):.1f}% {direction} {competitor} {partner_lbl} per bar",
             "amber", "Medium",
             gap_pct, "price_per_bar_gap_pct", "price_pack_ladder_weekly",
+            focal_pack_count=focal_ct or None,
+            partner_pack_count=partner_ct or None,
+            partner_description=partner_desc or None,
         ))
     return rows
 
@@ -177,14 +197,25 @@ def detect_price_donor_overlap(df_ladder: pd.DataFrame) -> list[dict]:
     df_ladder["_flag"] = df_ladder["ladder_compression_flag"].astype(str).str.strip()
     flagged = df_ladder[df_ladder["_flag"].isin(["1", "Y", "True", "true", "yes"])]
     for _, r in flagged.iterrows():
+        partner_desc = r.get("partner_description") or ""
+        # Own-brand pack compression belongs in the Pack Ladder screen, not Priority Events
+        if _is_own_brand(partner_desc):
+            continue
+        focal_ct    = int(r.get("focal_pack_count") or 0)
+        partner_ct  = int(r.get("partner_pack_count") or 0)
+        focal_lbl   = f"{focal_ct}-ct" if focal_ct else "pack"
+        partner_lbl = f"{partner_ct}-ct" if partner_ct else "pack"
+        gap_val     = float(pd.to_numeric(r.get("price_per_bar_gap_pct"), errors="coerce") or 0)
         rows.append(_event_row(
             r["focal_upc"], r["focal_description"], r["channel_outlet"],
             r["retail_account"], r.get("geography_display"), r["geography_level"],
             "PRICE_DONOR_OVERLAP",
-            f"Pack ladder compression with {r.get('partner_description','partner')}",
+            f"Per-bar price gap with {partner_desc} {partner_lbl} compressed to {abs(gap_val)*100:.1f}%",
             "amber", "Medium",
-            float(pd.to_numeric(r.get("price_per_bar_gap_pct"), errors="coerce") or 0),
-            "ladder_compression_flag", "price_pack_ladder_weekly",
+            gap_val, "ladder_compression_flag", "price_pack_ladder_weekly",
+            focal_pack_count=focal_ct or None,
+            partner_pack_count=partner_ct or None,
+            partner_description=partner_desc or None,
         ))
     return rows
 
