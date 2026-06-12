@@ -168,6 +168,14 @@ def detect_price_defense(df_ladder: pd.DataFrame) -> list[dict]:
         # Own-brand pack gaps belong in the Pack Ladder screen, not Priority Events
         if _is_own_brand(partner_desc):
             continue
+        # Only compare equivalent pack sizes — BUILT 4-ct vs Quest 4-ct, not 1-ct vs 4-ct
+        focal_ct_raw   = r.get("focal_pack_count")
+        partner_ct_raw = r.get("partner_pack_count")
+        try:
+            if int(focal_ct_raw or 0) != int(partner_ct_raw or 0):
+                continue
+        except (TypeError, ValueError):
+            pass
         gap_pct        = round(float(r["price_per_bar_gap_pct"]) * 100, 1)
         direction      = "below" if gap_pct < 0 else "above"
         focal_ct       = int(r.get("focal_pack_count") or 0)
