@@ -70,7 +70,8 @@ def detect_promo_breakpoint(df_scored: pd.DataFrame) -> list[dict]:
     rows = []
     mask = (
         (df_scored["promo_confounded"].fillna(0).astype(float) == 1) &
-        (df_scored["log_price_change"].abs() >= np.log(1.05))
+        (df_scored["log_price_change"].abs() >= np.log(1.15)) &
+        (df_scored["elasticity_band"] != "Positive")
     )
     for _, r in df_scored[mask].iterrows():
         rows.append(_event_row(
