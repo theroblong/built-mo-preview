@@ -231,7 +231,10 @@ def detect_price_donor_overlap(df_ladder: pd.DataFrame) -> list[dict]:
 
 if __name__ == "__main__":
     print("Loading scored_price_elasticity...")
-    scored = query_druid('SELECT * FROM "scored_price_elasticity"')
+    scored = query_druid("""
+        SELECT * FROM "scored_price_elasticity"
+        WHERE __time = (SELECT MAX(__time) FROM "scored_price_elasticity")
+    """)
     for col in ["pre_13w_avg_price_per_bar", "post_13w_avg_price_per_bar",
                 "log_price_change", "implied_elasticity", "promo_confounded"]:
         if col in scored.columns:
