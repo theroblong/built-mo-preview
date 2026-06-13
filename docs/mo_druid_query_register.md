@@ -4040,3 +4040,17 @@ CLUSTERED BY focal_upc
 **Status: ✓ COMPLETE** — Q22a: 2,559 `COMPETITIVE_PRICE_GAP` events / 104 distinct UPCs (avg 104% per-bar gap vs Tier 1 same-flavor competitors — high average driven by single-serve BUILT Puff vs multi-pack competitors). Q22b: 786 `PACK_LADDER_COMPRESSION` events / 29 distinct UPCs (avg −7.3% savings — inverted ladders where larger pack costs more per bar than smaller pack). Split into Q22a (REPLACE INTO) + Q22b (INSERT INTO) due to E26 (UNION ALL between aggregated CTEs unsupported in MSQ).
 
 ---
+
+## MO_22 Pool pre-launch baseline (ON HOLD)
+
+**Script:** `scripts/MO_22_pool_prelaunch_baseline.py`
+
+**Purpose:** Would build `comparison_pool_prelaunch_baseline` — one row per (focal_upc, candidate_upc, channel_outlet, retail_account, geography_raw) — storing the average candidate base_units for the 13 weeks before the focal's first sale. Intended to power a "vs. pre-launch average" win/loss baseline for Pool Health competitor SKUs.
+
+**Why it's on hold:** The decision was made to use week-over-week (WoW) for all pool SKUs instead (focal and competitors on equal footing). Pre-launch baseline was methodologically sound but created a fairness problem: focal win% (vs. rolling avg) and competitor win% (vs. fixed baseline) answered different questions and couldn't be fairly blended into a single pool win rate.
+
+**Root cause documented (for future reference):** `comparison_pool_weekly` is a self-join of `built_enriched_weekly` on `__time`. Pre-launch, the focal has no rows, so no pair rows exist for those weeks even though candidates were actively selling. This table can never have pre-launch rows for candidates without a structural pipeline change. MO_22 works around this by querying `built_enriched_weekly` for the candidate side only. The script is complete and correct — resume when/if pre-launch baseline framing is revisited.
+
+**Status: ON HOLD** — WoW for all SKUs is the active methodology as of 2026-06-13. MO_22 was killed mid-run (stuck on `built_enriched_weekly` query with 1803 UPCs and no date filter — add a lookback filter of 2–3 years before re-running).
+
+---
