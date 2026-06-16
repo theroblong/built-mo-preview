@@ -88,6 +88,14 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-16 (update 2) — Price event bug fixes: PACK_NORM_GAP and NEW_ITEM_PRICE_BASELINE per-bar unit mismatch
+
+Two price event detectors were comparing prices at different units (pack vs. per-bar), producing nonsense percentages (e.g., "1093.3% above MULO norm").
+
+**PACK_NORM_GAP fix (MO_14_7_price_events.py):** `detect_pack_norm_gap()` was dividing `arp` (full pack price, e.g. $16.15 for an 8-pack) by `norm_avg_price_per_bar` (per-bar norm, e.g. $1.35). Changed to use `price_per_bar` column (= arp/pack_count = $2.02/bar) so both sides are per-bar. The Ahold 8-pack example now reads 49.6% above MULO norm, a realistic and still-actionable signal. Pipeline re-run: 1,172 PACK_NORM_GAP events written to `price_event_queue`.
+
+**NEW_ITEM_PRICE_BASELINE fix (events.py enrichment):** The backend was enriching `current_arp` for the "Week N — price baseline window open" card from `price_pack_ladder_weekly.focal_arp` (pack price) then displaying it as "/bar" in the KPI pill. Fixed by dividing by `focal_pack_count` before storing, so both "Current ARP" and "MULO norm" pills are now per-bar prices.
+
 ### 2026-06-16 — Retailer Summary, Pack Norms, Benchmark Chips, Mo Chat everywhere
 
 **Retailer Summary (new screen)**
