@@ -88,7 +88,23 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
-At this stage, the repo contains a complete planning set for a cannibalization prediction initiative:
+### 2026-06-16 — Retailer Summary, Pack Norms, Benchmark Chips, Mo Chat everywhere
+
+**Retailer Summary (new screen)**
+A cross-retailer portfolio scorecard showing BUILT's full SKU landscape across all accounts — no focal UPC required. Columns: Scored SKUs, 13w Sales, YTD Sales, Own-Brand Issues, Competitor Wins, Highly Elastic, Active Events. Dollar columns use the SPINS Base Dollars formula: `sum(post_13w_arp × post_Xw_base_units)` across all scored BUILT SKUs per account, sourced from `built_prepost_features`. Confirmed against live data: Walmart $33.6M (13w) / $62.1M (YTD). Table is sortable by any column, includes a type-ahead account filter, and scrolls with a sticky header. Mo Chat is now available on this screen with portfolio-aware proactive messages and context.
+
+**Pack Norms (replaces MULO Food Norms)**
+Shows BUILT's own-brand pack ladder step discounts vs. competitor norms at the selected retailer/channel. Powered by new MO_23 pipeline (`scripts/MO_23_pack_norms.py`) writing competitor pack step-discount norms to the `competitor_pack_size_norms` Druid table (1,159 rows; account/channel/overall scope fallback). Key insight surfaced immediately: BUILT underdiscounts multipacks vs. competitors (−17% on 4pk, −22% on 12pk at Walmart MULO). Columns: BUILT ARP (total shelf price), BUILT $/bar, BUILT step discount, Comp norm $/bar, Comp step discount, Diff, Comp SKU count. BUILT-only velocity tiles highlight the highest-velocity pack tier.
+
+**Benchmark chips**
+Inline velocity and ARP delta chips on the SKU Summary (Cannibalization) and Elasticity Summary (Price Elasticity) screens. Shows how the focal SKU compares to the account portfolio average. Source: new `/api/retailer/account-avg` endpoint; implemented via `useAccountAvg` React hook and `benchmarkDelta` helper.
+
+**Mo Chat on all screens**
+Mo Chat (the Puff avatar button) is now present on every screen including Retailer Summary. The Retailer Summary has its own proactive message, screen context, and chips oriented toward portfolio prioritization. Mo's backend context for the retailer screen fetches live account scorecard data and dollar sales totals so it can answer questions grounded in real numbers.
+
+---
+
+At the planning stage, the repo contains a complete planning set for a cannibalization prediction initiative:
 
 - a named analyst persona for the work
 - a baseline strategy for cannibalization modeling
