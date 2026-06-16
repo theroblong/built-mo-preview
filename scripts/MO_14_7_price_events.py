@@ -115,7 +115,7 @@ def detect_new_item_baseline(df_ramp: pd.DataFrame) -> list[dict]:
 
 # ── Detector 4: PACK_NORM_GAP ─────────────────────────────────────────────────
 def detect_pack_norm_gap(df_weekly: pd.DataFrame, df_norms: pd.DataFrame) -> list[dict]:
-    for col in ["pack_count", "arp", "norm_avg_price_per_bar"]:
+    for col in ["pack_count", "arp", "price_per_bar", "norm_avg_price_per_bar"]:
         for df in [df_weekly, df_norms]:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -138,7 +138,9 @@ def detect_pack_norm_gap(df_weekly: pd.DataFrame, df_norms: pd.DataFrame) -> lis
         on=["channel_outlet", "retail_account", "geography_raw", "pack_count"],
         how="inner",
     )
-    merged["price_index"] = merged["arp"] / merged["norm_avg_price_per_bar"].replace(0, np.nan)
+    # price_per_bar (arp / pack_count) vs norm_avg_price_per_bar — both per-bar; using
+    # arp here caused 10-20× inflated ratios (pack price ÷ per-bar norm).
+    merged["price_index"] = merged["price_per_bar"] / merged["norm_avg_price_per_bar"].replace(0, np.nan)
 
     rows = []
     for _, r in merged[merged["price_index"] >= 1.07].iterrows():
