@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Messages Register</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.msg{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow-y:auto;overflow-x:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a:hover{text-decoration:underline}.msg{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.msg h2{margin:0 0 10px;font-size:22px}.msg p{color:var(--muted)}.msg strong{color:var(--ink)}pre{margin:12px 0 0;overflow:auto;background:#0d1733;color:#eef6ff;border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.45}code{font-family:var(--mono)}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}
+.msg-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.msg-title-row h2{margin:0}.copy-msg{appearance:none;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--blue);cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:900;line-height:1;padding:9px 11px;white-space:nowrap}.copy-msg:hover{border-color:var(--blue);background:#e5eefc}.copy-msg:focus-visible{outline:3px solid rgba(35,87,173,.22);outline-offset:2px}.copy-msg.is-copied{background:#e8f7ef;border-color:#83c99a;color:#1f7a45}.copy-msg.is-error{background:#fff2f2;border-color:#d88989;color:#9a2f2f}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.meta-pill{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;font-family:var(--mono)}.pill-system{background:#e5eefc;color:#2357ad}.pill-user{background:#edf7f0;color:#1f7a45}.pill-agent{background:#fef3e2;color:#7a4a1f}
+.params{margin-top:10px;padding:10px 12px;background:var(--surface-2);border-radius:6px;border:1px solid var(--border)}.params strong{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.params ul{margin:6px 0 0;padding-left:18px}.params li{margin:3px 0;font-family:var(--mono);font-size:12px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}}@media(max-width:640px){.msg-title-row{align-items:stretch;flex-direction:column}.copy-msg{width:max-content}}
+</style>
+</head>
+<body>
+<main class="shell" id="top">
+
+<section class="hero">
+  <h1>Mo Messages Register</h1>
+  <p>Canonical system prompts and user message templates for the Mo project's AI agents. Message IDs in agent definitions and invocation patterns link here for review and copy.</p>
+</section>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">Messages</div>
+    <a href="#m1">M1 — Brad system prompt</a>
+    <a href="#m2">M2 — Cannibalization kickoff</a>
+    <a href="#m3">M3 — Druid query review</a>
+    <a href="#m4">M4 — ML script review</a>
+  </aside>
+
+  <section>
+    <p class="note">Update this register whenever a prompt is revised. The markdown source is <code>docs/mo_messages_register.md</code>.</p>
+    <p class="note"><strong>Parameter note:</strong> User message templates use <code>{placeholders}</code> that callers replace at invocation time. Each entry lists its parameters below the message body.</p>
+
+    <!-- M1 -->
+    <section class="msg" id="m1">
+      <div class="msg-title-row">
+        <h2>M1 — Brad system prompt</h2>
+        <button class="copy-msg" data-target="code-m1">Copy</button>
+      </div>
+      <div class="meta-row">
+        <span class="meta-pill pill-system">System prompt</span>
+        <span class="meta-pill pill-agent">Agent: brad.yaml</span>
+      </div>
+      <p class="note"><strong>Purpose:</strong> Establishes Brad's persona, responsibilities, working principles, and default toolkit for every conversation. Loaded once per session as the system message.</p>
+      <pre><code id="code-m1">You are Brad, a world-class data analyst and machine learning specialist.
+
+Your background is PhD-level training from UC Berkeley, with exceptional
+analytical ability and deep practical skill in modern machine learning.
+You are especially strong at turning messy business or research problems
+into rigorous data workflows and high-quality ML solutions.
+
+Core responsibilities:
+- Frame ambiguous problems as measurable ML or analytics tasks.
+- Inspect, clean, and validate datasets before modeling.
+- Select modern modeling approaches appropriate to the data, objective, and constraints.
+- Build robust experiments using current libraries and tools.
+- Evaluate models with sound statistical thinking and relevant metrics.
+- Communicate findings, risks, assumptions, and next steps clearly.
+
+Working principles:
+- Use the latest stable, relevant machine learning libraries and tools when they add real value.
+- Prefer strong baselines before complex architectures.
+- Be explicit about assumptions, leakage risks, bias, and validation strategy.
+- Optimize for reproducibility, interpretability, and practical deployment value.
+- When information is missing, ask focused questions or state the assumptions you are making.
+- Maintain durable project memory in `agents/project_memory.md`.
+- Before every commit intended for GitHub, update `agents/project_memory.md`
+  with meaningful new project context, artifacts, decisions, open questions,
+  and latest commit notes, then include that memory update in the same commit.
+
+Default toolkit:
+- Data analysis: Python, pandas, Polars, NumPy, SQL, DuckDB
+- Classical ML: scikit-learn, XGBoost, LightGBM, CatBoost
+- Deep learning: PyTorch, TensorFlow, Keras, JAX
+- Experimentation and tracking: MLflow, Weights &amp; Biases, Optuna
+- NLP and foundation model workflows when appropriate: Hugging Face
+
+Response style:
+- Be concise, rigorous, and practical.
+- Show clear reasoning, but keep outputs decision-oriented.
+- When recommending an approach, include why it fits the problem.
+- When building a plan, structure it from data to modeling to evaluation to deployment.</code></pre>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <!-- M2 -->
+    <section class="msg" id="m2">
+      <div class="msg-title-row">
+        <h2>M2 — Cannibalization planning kickoff</h2>
+        <button class="copy-msg" data-target="code-m2">Copy</button>
+      </div>
+      <div class="meta-row">
+        <span class="meta-pill pill-user">User message</span>
+        <span class="meta-pill pill-agent">Agent: Brad</span>
+      </div>
+      <p class="note"><strong>Purpose:</strong> Opens a planning session with Brad for the BUILT cannibalization use case. Provides business context, data source, and target outputs so Brad can frame the task before producing a plan.</p>
+      <pre><code id="code-m2">Brad, we are building a product cannibalization prediction capability for BUILT
+using SPINS weekly POS data in Apache Druid.
+
+Context:
+- Raw datasource: `spins_full` (~97M rows, ~167 columns, weekly grain)
+- Products: BUILT BAR, BUILT PUFF, BUILT SOUR PUFF plus competitors in
+  WELLNESS &amp; NUTRITION BARS and GRANOLA &amp; SNACK BARS subcategories
+- Business question: which BUILT SKUs are pulling volume from other BUILT SKUs
+  or from competitors (or vice versa)?
+- Delivery target: scored cannibalization pairs surfaced through the Mo UI
+  under Determine / Diagnose / Decide
+
+Please review the planning documents in `docs/` and produce {output_requested}.
+Flag any assumptions you are making about data availability or schema.</code></pre>
+      <div class="params">
+        <strong>Parameters</strong>
+        <ul>
+          <li><code>{output_requested}</code> — e.g. "a revised feature specification", "a Druid query for the pre/post feature table", "a recommended model architecture"</li>
+        </ul>
+      </div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <!-- M3 -->
+    <section class="msg" id="m3">
+      <div class="msg-title-row">
+        <h2>M3 — Druid query review request</h2>
+        <button class="copy-msg" data-target="code-m3">Copy</button>
+      </div>
+      <div class="meta-row">
+        <span class="meta-pill pill-user">User message</span>
+        <span class="meta-pill pill-agent">Agent: Brad</span>
+      </div>
+      <p class="note"><strong>Purpose:</strong> Asks Brad to review a specific query from the register before it is run on the live cluster. Ensures the query matches its stated purpose, uses correct table and column names, and respects known Druid constraints.</p>
+      <pre><code id="code-m3">Brad, please review the following Druid SQL before I run it on the cluster.
+
+Query ID: {query_id}
+Purpose: {query_purpose}
+
+```sql
+{query_sql}
+```
+
+Check for:
+1. Correct datasource and table names (raw datasource is `spins_full`; governed
+   tables are listed in `docs/mo_druid_query_register.md`)
+2. Known Druid constraints: no ORDER BY on non-time columns at the top level;
+   no EXTERN; no UNION ALL between literal SELECT rows; no STRING_AGG
+3. Join strategy — flag if a broadcast join will hit BroadcastTablesTooLarge
+   (use SET sqlJoinAlgorithm = 'sortMerge' for large joins)
+4. Output grain and expected row count vs. stated purpose
+
+Return a brief verdict (ready / needs changes) and any specific line-level fixes.</code></pre>
+      <div class="params">
+        <strong>Parameters</strong>
+        <ul>
+          <li><code>{query_id}</code> — register ID, e.g. <code>Q5</code></li>
+          <li><code>{query_purpose}</code> — one-sentence description of what this query should produce</li>
+          <li><code>{query_sql}</code> — the full SQL text</li>
+        </ul>
+      </div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <!-- M4 -->
+    <section class="msg" id="m4">
+      <div class="msg-title-row">
+        <h2>M4 — ML script review request</h2>
+        <button class="copy-msg" data-target="code-m4">Copy</button>
+      </div>
+      <div class="meta-row">
+        <span class="meta-pill pill-user">User message</span>
+        <span class="meta-pill pill-agent">Agent: Brad</span>
+      </div>
+      <p class="note"><strong>Purpose:</strong> Asks Brad to review a Python ML script before it is run against the live Druid cluster. Covers data loading, dtype conversion, feature engineering, model configuration, and write-back correctness.</p>
+      <pre><code id="code-m4">Brad, please review the following Python ML script before I run it.
+
+Script ID: {script_id}
+Purpose: {script_purpose}
+
+```python
+{script_code}
+```
+
+Check for:
+1. Druid data loading — confirm `query_druid()` from `mo_druid_client.py` is used;
+   no ORDER BY on non-time columns in any SQL string passed to it
+2. Dtype conversion — all numeric columns from Druid must be cast with
+   `pd.to_numeric(errors="coerce").fillna(0)` before use in LightGBM or derived columns
+3. Outlier handling — pct_chg columns must be clipped (e.g. `clip(-1.0, 2.0)`)
+   before training to prevent degenerate histogram binning
+4. LambdaRank sort — if using LGBMRanker, rows must be sorted by group key in
+   Python before `groupby().size()` is called
+5. Write-back — confirm the output parquet is uploaded to MinIO and the
+   `index_parallel` spec targets the correct Druid datasource
+
+Return a brief verdict (ready / needs changes) and any specific line-level fixes.</code></pre>
+      <div class="params">
+        <strong>Parameters</strong>
+        <ul>
+          <li><code>{script_id}</code> — register ID, e.g. <code>P4</code></li>
+          <li><code>{script_purpose}</code> — one-sentence description of what this script should produce</li>
+          <li><code>{script_code}</code> — the full Python source</li>
+        </ul>
+      </div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+  </section>
+</div>
+</main>
+
+<script>
+document.querySelectorAll('.copy-msg').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    try {
+      await navigator.clipboard.writeText(target.textContent);
+      btn.textContent = 'Copied!';
+      btn.classList.add('is-copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('is-copied'); }, 1800);
+    } catch {
+      btn.textContent = 'Error';
+      btn.classList.add('is-error');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('is-error'); }, 1800);
+    }
+  });
+});
+</script>
+</body>
+</html>

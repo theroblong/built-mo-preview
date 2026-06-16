@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Cannibalization Model Reference</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--red:#9a2020;--red-bg:#fff2f2;--green:#1f7a45;--green-bg:#edf7f0;--amber:#7a5c1f;--amber-bg:#fef9ed;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.entry{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow-y:auto;overflow-x:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a:hover{text-decoration:underline}.entry{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.entry h2{margin:0 0 10px;font-size:22px}.entry p{color:var(--muted)}.entry strong{color:var(--ink)}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:var(--surface-2);text-align:left;padding:8px 10px;font-size:12px;font-weight:700;border:1px solid var(--border)}td{padding:8px 10px;font-size:12px;border:1px solid var(--border);vertical-align:top}code{font-family:var(--mono)}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}.callout{background:var(--surface-2);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 12px;margin:10px 0}.status-cannibalizing{background:var(--red-bg);color:var(--red);font-weight:700;padding:2px 7px;border-radius:4px}.status-watch{background:var(--amber-bg);color:var(--amber);font-weight:700;padding:2px 7px;border-radius:4px}.status-incremental{background:var(--green-bg);color:var(--green);font-weight:700;padding:2px 7px;border-radius:4px}pre{margin:12px 0 0;overflow:auto;background:#0d1733;color:#eef6ff;border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.45}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}}
+</style>
+</head>
+<body>
+<main class="shell" id="top">
+
+<section class="hero">
+  <h1>Mo Cannibalization Model Reference</h1>
+  <p>Operational reference for interpreting <code>scored_cannibalization</code> outputs. Covers status definitions, relationship distance semantics, confidence label meaning, scoring coverage, and write-back mechanics.</p>
+</section>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">Sections</div>
+    <a href="#status">Status Definitions</a>
+    <a href="#distance">relationship_distance</a>
+    <a href="#confidence">Confidence vs. Certainty</a>
+    <a href="#coverage">Scoring Coverage</a>
+    <a href="#writeback">Write-Back Pattern</a>
+  </aside>
+
+  <section>
+
+    <section class="entry" id="status">
+      <h2>Cannibalization Status Definitions</h2>
+      <p class="note">Sourced from <code>scored_cannibalization.cannibal_prob</code> thresholds. As of the 2026-06-09 pipeline run (60,695 rows, 85 focal UPCs):</p>
+      <table>
+        <tr><th>Status</th><th>cannibal_prob range</th><th>Row count</th><th>Meaning</th></tr>
+        <tr>
+          <td><span class="status-cannibalizing">Cannibalizing</span></td>
+          <td>≥ 0.66 (in practice &gt; 0.99 for most rows)</td>
+          <td>28,337</td>
+          <td>Confirmed active volume transfer from donor to focal</td>
+        </tr>
+        <tr>
+          <td><span class="status-watch">Watch</span></td>
+          <td>0.36 – 0.64</td>
+          <td>19</td>
+          <td>Elevated co-movement below confirmation threshold; early or weak signal; monitor Pre/Post, do not act on it alone</td>
+        </tr>
+        <tr>
+          <td><span class="status-incremental">Incremental</span></td>
+          <td>≤ 0.33</td>
+          <td>32,339</td>
+          <td>Focal SKU is growing category demand, not pulling from donor</td>
+        </tr>
+      </table>
+      <p class="note">The distribution is genuinely bimodal — most pairs are either clearly cannibalizing or clearly incremental. The Watch band is narrow by design.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="distance">
+      <h2>relationship_distance Values</h2>
+      <table>
+        <tr><th>Distance</th><th>Meaning</th><th>Business implication</th></tr>
+        <tr><td><strong>1</strong></td><td>BUILT sibling — same brand, pack/format variants (pack ladder)</td><td>Internal demand shift; warning signal</td></tr>
+        <tr><td><strong>3</strong></td><td>BUILT adjacent — different BUILT product line, same flavor territory</td><td>Internal demand shift; warning signal</td></tr>
+        <tr><td><strong>4</strong></td><td>Competitor (Quest, Barebells, Atkins, etc.)</td><td>Market share gain; positive signal</td></tr>
+      </table>
+      <p class="note">Only distances 1, 3, and 4 appear in the current data. There are no distance-2 or distance-5 rows in <code>scored_cannibalization</code>.</p>
+      <div class="callout">
+        <strong>UI priority rule:</strong> Surface own-brand alerts first (distance 1 or 3 — more actionable for assortment decisions); fall back to competitor signal if no own-brand issue exists for the selected filter.<br><br>
+        <span style="color:var(--red)">Cannibalizing a BUILT sibling (dist 1 or 3)</span> = internal demand shift = red/amber InsightBox.<br>
+        <span style="color:var(--green)">Cannibalizing a competitor (dist 4)</span> = market share gain = green InsightBox.
+      </div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="confidence">
+      <h2>cannibal_confidence Measures Data Maturity, Not Model Certainty</h2>
+      <p class="note"><code>cannibal_confidence</code> (Low / Medium / High) is assigned based on weeks of pre/post history available, <strong>not</strong> on <code>cannibal_prob</code>. A row can have <code>cannibal_prob = 1.00</code> (model is 100% certain) AND <code>cannibal_confidence = Low</code> (only 3 weeks of data). These measure different things and must not be conflated.</p>
+      <table>
+        <tr><th>Druid value</th><th>UI display name</th><th>Condition</th></tr>
+        <tr><td>Low</td><td><strong>Early signal</strong></td><td><code>focal_post_weeks_count &lt; 8</code></td></tr>
+        <tr><td>Medium</td><td><strong>Developing</strong></td><td><code>focal_post_weeks_count ≥ 8</code> AND <code>donor_pre_weeks_count ≥ 8</code></td></tr>
+        <tr><td>High</td><td><strong>Confirmed</strong></td><td><code>focal_post_weeks_count ≥ 12</code> AND <code>donor_pre_weeks_count ≥ 10</code></td></tr>
+      </table>
+      <p class="note">The Druid column values ("Low", "Medium", "High") are unchanged — UI translation is display-layer only. Low-confidence events are hidden by default behind a "Show early signals" toggle on the Priority Events screen.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="coverage">
+      <h2>Scoring Coverage</h2>
+      <p class="note">As of the 2026-06-09 pipeline run — 60,695 rows, 85 focal UPCs, <strong>47.8% filter-combo coverage</strong> (1,498 of 3,137).</p>
+      <table>
+        <tr><th>Channel</th><th>Scored combos</th></tr>
+        <tr><td>CONVENTIONAL|MULTI OUTLET</td><td>475</td></tr>
+        <tr><td>REGIONAL &amp; INDEP GROCERY</td><td>404</td></tr>
+        <tr><td>CONVENTIONAL|FOOD</td><td>280</td></tr>
+        <tr><td>NATURAL EXPANDED</td><td>247</td></tr>
+        <tr><td>CONVENTIONAL|CONVENIENCE</td><td>48</td></tr>
+        <tr><td>CONVENTIONAL|MASS MERCH</td><td>30</td></tr>
+        <tr><td>VITAMINS &amp; SUPPLEMENTS</td><td>23</td></tr>
+        <tr><td>CONV|DRUG / CONV|CLUB / CONV-SPINS</td><td>14</td></tr>
+      </table>
+      <div class="callout"><strong>Root cause of gaps:</strong> Not a bug. Q5 (<code>ml_training_features</code>) enforces intentional data-maturity gates: <code>focal_post_weeks_count ≥ 8</code>, <code>donor_pre_13w_weeks_count ≥ 8</code>, and positive base_units / TDP in both windows. Products that haven't cleared these gates are structurally excluded until they do.<br><br><strong>For demos:</strong> MULO, CONVENTIONAL|FOOD, and REGIONAL &amp; INDEP GROCERY are the most reliable channels.</div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="writeback">
+      <h2>Pipeline Write-Back Pattern</h2>
+      <p class="note">Scored outputs are written back to Druid via MinIO parquet upload. No direct EXTERN or REPLACE INTO from Python is supported on this cluster (EXTERN is blocked — E05).</p>
+      <pre><code>1. Python script writes scored DataFrame to a local .parquet file
+2. Upload parquet to MinIO bucket via scripts/mo_writeback.py
+3. mo_writeback.py generates an index_parallel ingestion spec
+   targeting the correct Druid datasource
+4. Human POSTs the spec to the Druid indexer:
+      POST /druid/indexer/v1/task
+5. Poll task status until SUCCESS</code></pre>
+      <p class="note" style="margin-top:10px">Credentials are in <code>scripts/.env</code> (gitignored). Redacted specs for sharing live in <code>specs/</code>.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+  </section>
+</div>
+</main>
+</body>
+</html>

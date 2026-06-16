@@ -71,6 +71,21 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 - [docs/Mo_Build_Field_Guide_price_elasticity_addendum.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/Mo_Build_Field_Guide_price_elasticity_addendum.md)  
   A field-guide addendum for building the Price Elasticity Druid outputs, models, UI wiring, and guardrails.
 
+- [docs/mo_messages_register.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_messages_register.md)  
+  The canonical register of system prompts and user message templates for the Mo project's AI agents. Includes Brad's system prompt (M1) and parameterized templates for common agent invocations. Browser-friendly version: [mockups/mo_messages_register.html](/Users/jasonbrazeal/Documents/FirstAgent/mockups/mo_messages_register.html).
+
+- [docs/mo_ml_field_notes.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_ml_field_notes.md)  
+  Operational findings from running the Mo ML pipeline: focal pct_chg columns are structurally NULL, Druid returns numeric columns as object dtype, outlier clipping requirements, ORDER BY constraints, confirmed column name differences in price_elasticity_training_features, LambdaRank sort requirements, and LightGBM degenerate label behavior. Read before writing or modifying any pipeline script. Browser-friendly version: [mockups/mo_ml_field_notes.html](/Users/jasonbrazeal/Documents/FirstAgent/mockups/mo_ml_field_notes.html).
+
+- [docs/mo_built_spins_hierarchy.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_built_spins_hierarchy.md)  
+  SPINS attribute codes used in the Mo pipeline: pack size (1=Singles through 4=Family Size), protein, sugars, calories, and sugar-alcohol codes 1–20, panel data fields (Trips, HH Count, Buy Rate), and company report templates. Source: BUILT product hierarchy slide from 2026-06-12 client meeting. Browser-friendly version: [mockups/mo_built_spins_hierarchy.html](/Users/jasonbrazeal/Documents/FirstAgent/mockups/mo_built_spins_hierarchy.html).
+
+- [docs/mo_cannibalization_model_reference.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_cannibalization_model_reference.md)  
+  Operational reference for interpreting scored_cannibalization outputs: status thresholds (Cannibalizing ≥ 0.66, Watch 0.36–0.64, Incremental ≤ 0.33), relationship_distance meanings (1=sibling, 3=adjacent, 4=competitor), cannibal_confidence as data maturity not model certainty, scoring coverage by channel (47.8% overall), and the MinIO write-back pattern. Browser-friendly version: [mockups/mo_cannibalization_model_reference.html](/Users/jasonbrazeal/Documents/FirstAgent/mockups/mo_cannibalization_model_reference.html).
+
+- [docs/mo_vision_framework.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_vision_framework.md)  
+  The strategic frame all Mo screens are measured against: Brian's 7 questions, the 4-question frame (what changed / why / how confident / what to do), the Brian-style narrative template, priority screen ranking, and vision gaps backlog. Browser-friendly version: [mockups/mo_vision_framework.html](/Users/jasonbrazeal/Documents/FirstAgent/mockups/mo_vision_framework.html).
+
 ## What we have built so far
 
 At this stage, the repo contains a complete planning set for a cannibalization prediction initiative:
@@ -149,6 +164,21 @@ If you are new to the repo, read the documents in this order:
 
 17. [docs/Mo_Build_Field_Guide_price_elasticity_addendum.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/Mo_Build_Field_Guide_price_elasticity_addendum.md)  
    Use this with the original Mo Build Field Guide when implementing the Price Elasticity module.
+
+18. [docs/mo_messages_register.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_messages_register.md)  
+   Use this to find or copy the canonical system prompts and user message templates for Brad and other Mo agents. Update this register whenever a prompt is revised.
+
+19. [docs/mo_ml_field_notes.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_ml_field_notes.md)  
+   Read this before writing or modifying any pipeline script. Contains data quirks and LightGBM patterns discovered during live cluster execution that are not in planning documents.
+
+20. [docs/mo_built_spins_hierarchy.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_built_spins_hierarchy.md)  
+   Use this when working with pack size filtering, attribute-based comparisons, or panel data fields in the Mo pipeline or UI.
+
+21. [docs/mo_cannibalization_model_reference.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_cannibalization_model_reference.md)  
+   Use this when interpreting scored_cannibalization outputs, designing UI verdict logic, troubleshooting coverage gaps, or working with the write-back pipeline.
+
+22. [docs/mo_vision_framework.md](/Users/jasonbrazeal/Documents/FirstAgent/docs/mo_vision_framework.md)  
+   Use this to evaluate whether any new screen, metric, or feature answers one of Brian's 7 questions and satisfies the 4-question frame before shipping to clients.
 
 ## How to use this repo
 
@@ -232,20 +262,31 @@ The strongest follow-on artifacts would be:
 ├── All_items_extract_100.csv
 ├── agents/
 │   └── brad.yaml
-└── docs/
-    ├── brad_cannibalization_data_requirements.md
-    ├── brad_cannibalization_diagrams.md
-    ├── brad_cannibalization_implementation_blueprint.md
-    ├── brad_cannibalization_plan.md
-    ├── brad_cannibalization_plan_aevah.md
-    ├── brad_cannibalization_project_roadmap.md
-    ├── brad_aevah_spins_processing_value_overview.md
-    ├── brad_built_cannibalization_druid_ml_plan.md
-    ├── brad_built_cannibalization_druid_ml_plan_evaluation.md
-    ├── brad_built_cannibalization_ui_v2_comparison_pools.md
-    ├── brad_built_druid_data_onboarding_and_ml_soundness_check.md
-    ├── brad_built_lean_client_data_request_matrix.md
-    ├── brad_built_predictive_forecasting_extension_for_mo.md
-    ├── brad_built_spins_95m_utilization_audit.md
-    └── brad_weekly_win_count_bonus_path.md
+├── docs/
+│   ├── brad_cannibalization_data_requirements.md
+│   ├── brad_cannibalization_diagrams.md
+│   ├── brad_cannibalization_implementation_blueprint.md
+│   ├── brad_cannibalization_plan.md
+│   ├── brad_cannibalization_plan_aevah.md
+│   ├── brad_cannibalization_project_roadmap.md
+│   ├── brad_aevah_spins_processing_value_overview.md
+│   ├── brad_built_cannibalization_druid_ml_plan.md
+│   ├── brad_built_cannibalization_druid_ml_plan_evaluation.md
+│   ├── brad_built_cannibalization_ui_v2_comparison_pools.md
+│   ├── brad_built_druid_data_onboarding_and_ml_soundness_check.md
+│   ├── brad_built_lean_client_data_request_matrix.md
+│   ├── brad_built_predictive_forecasting_extension_for_mo.md
+│   ├── brad_built_spins_95m_utilization_audit.md
+│   ├── brad_weekly_win_count_bonus_path.md
+│   ├── mo_messages_register.md
+│   ├── mo_ml_field_notes.md
+│   ├── mo_built_spins_hierarchy.md
+│   ├── mo_cannibalization_model_reference.md
+│   └── mo_vision_framework.md
+└── mockups/
+    ├── mo_messages_register.html
+    ├── mo_ml_field_notes.html
+    ├── mo_built_spins_hierarchy.html
+    ├── mo_cannibalization_model_reference.html
+    └── mo_vision_framework.html
 ```

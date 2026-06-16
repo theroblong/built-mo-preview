@@ -61,6 +61,18 @@ Druid in a single datasource using SPINS table format. The operating flow is:
 - `docs/built_cannibalization_druid_ml_plan_3.md`: current detailed Druid/ML query plan.
 - `mockups/mo_intelligence_suite_v12.html`: latest Mo intelligence suite mockup.
 
+## Documentation Artifacts (added 2026-06-16)
+
+Five new reference documents added to `docs/` with browser-friendly HTML companions in `mockups/`:
+
+- `docs/mo_messages_register.md` — canonical system prompts and user message templates (M1 Brad system prompt, M2–M4 parameterized invocation templates)
+- `docs/mo_ml_field_notes.md` — operational ML findings: DQ1 focal pct_chg NULL; DQ2 Druid object dtype; DQ3 outlier histogram collapse; DQ4 ORDER BY forbidden; DQ5 column name mismatches in price_elasticity_training_features; LG1 LambdaRank sort; LG2 degenerate label warnings
+- `docs/mo_built_spins_hierarchy.md` — SPINS attribute codes: pack size 1–4, protein 5–9, sugars 10–13, calories 14–18, sugar alcohols 19–20; panel data fields (Trips, HH Count, Buy Rate)
+- `docs/mo_cannibalization_model_reference.md` — scored_cannibalization status thresholds; relationship_distance 1/3/4 meanings; cannibal_confidence = data maturity not model certainty; scoring coverage by channel; MinIO write-back pattern
+- `docs/mo_vision_framework.md` — Brian's 7 questions; design principles; 4-question frame; Brian-style narrative template; priority screens; vision gaps backlog
+
+README.md updated: all new docs added to core documents list (positions 18–22 in reading order) and to repo structure tree.
+
 ## Recent Commits
 
 - `919431e` — Initial BUILT Mo preview project.

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo Vision Framework</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.entry{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow-y:auto;overflow-x:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a:hover{text-decoration:underline}.entry{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.entry h2{margin:0 0 10px;font-size:22px}.entry p{color:var(--muted)}.entry strong{color:var(--ink)}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:var(--surface-2);text-align:left;padding:8px 10px;font-size:12px;font-weight:700;border:1px solid var(--border)}td{padding:8px 10px;font-size:12px;border:1px solid var(--border);vertical-align:top}td:first-child{font-weight:700;white-space:nowrap}code{font-family:var(--mono)}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}.callout{background:var(--surface-2);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 12px;margin:10px 0}.narrative{background:#0d1733;color:#eef6ff;border-radius:8px;padding:16px 18px;margin:12px 0;font-size:13px;line-height:1.6;font-style:italic}.q-frame{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.q-box{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px}.q-box .q-num{font-family:var(--mono);font-size:11px;font-weight:900;color:var(--blue);margin-bottom:4px}.q-box .q-text{font-size:13px;color:var(--ink);font-weight:600}.principle-list{list-style:none;padding:0;margin:10px 0}.principle-list li{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}.principle-list li:last-child{border-bottom:none}.principle-list li strong{display:inline-block;min-width:220px;color:var(--ink)}.principle-list li span{color:var(--muted)}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}.q-frame{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="shell" id="top">
+
+<section class="hero">
+  <h1>Mo Vision Framework</h1>
+  <p>The strategic frame that all Mo screens, metrics, and UX decisions are measured against. Sourced from Brian Cluster (Director of Analytics, BUILT) across product design sessions.</p>
+</section>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">Sections</div>
+    <a href="#seven-questions">Brian's 7 Questions</a>
+    <a href="#principles">Design Principles</a>
+    <a href="#four-questions">4-Question Frame</a>
+    <a href="#narrative">Narrative Template</a>
+    <a href="#priority-screens">Priority Screens</a>
+    <a href="#gaps">Vision Gaps</a>
+  </aside>
+
+  <section>
+
+    <section class="entry" id="seven-questions">
+      <h2>Brian's 7 Questions</h2>
+      <p class="note">Every Mo screen should answer at least one of these questions. If a screen cannot be mapped to one of them, it either needs an InsightBox added or should not be built yet.</p>
+      <table>
+        <tr><th>#</th><th>Question</th><th>Primary screen(s)</th></tr>
+        <tr><td>Q1</td><td>Is the 4pk cannibalizing the 1ct?</td><td>Cannibalization → Determine (Priority Events) + Decide (Explanation)</td></tr>
+        <tr><td>Q2</td><td>Which pack size is most price sensitive?</td><td>Price Elasticity → Determine (Elasticity Summary)</td></tr>
+        <tr><td>Q3</td><td>Is the 4pk ramping normally?</td><td>Cannibalization → Diagnose (Launch Monitor)</td></tr>
+        <tr><td>Q4</td><td>Will adding distribution help or hurt?</td><td>Cannibalization → Diagnose (Geography — Expand / Hold / Reduce verdict)</td></tr>
+        <tr><td>Q5</td><td>Are our promotions working or just discounting?</td><td>Price Elasticity → Diagnose (Promo Response)</td></tr>
+        <tr><td>Q6</td><td>Where are we vs. competitors on price?</td><td>Price Elasticity → Diagnose (Competitive Price) + MULO Norms</td></tr>
+        <tr><td>Q7</td><td>What should I actually do?</td><td>Decide phase — Assortment Action + Pricing Action</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="principles">
+      <h2>Design Principles (non-negotiable)</h2>
+      <ul class="principle-list">
+        <li><strong>Base Units, not raw Units</strong><span> — always strip promotions from the headline demand signal</span></li>
+        <li><strong>avg_weekly_units_spm, not Units/TDP</strong><span> — velocity is units per store with movement; <code>Units/TDP</code> must never appear in the UI</span></li>
+        <li><strong>Military excluded</strong><span> — DECA CONUS excluded everywhere (WHERE clause in all queries)</span></li>
+        <li><strong>Ramp suppression</strong><span> — scoring suppressed weeks 1–6, surfaced as SUPPRESSED in status</span></li>
+        <li><strong>Incremental vs. transfer</strong><span> — every cannibalization verdict must distinguish new demand from demand shift</span></li>
+        <li><strong>SHAP specificity</strong><span> — narratives must use actual measured values from <code>ml_training_features</code>, not log-odds alone</span></li>
+        <li><strong>Promo confound flag</strong><span> — always surface when promo weeks overlap the measurement window</span></li>
+      </ul>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="four-questions">
+      <h2>The 4-Question Frame</h2>
+      <p class="note">Every chart or metric on every screen should answer all four questions. If a screen does not answer all four, it is incomplete — add an InsightBox or synthesis verdict before shipping to clients.</p>
+      <div class="q-frame">
+        <div class="q-box"><div class="q-num">1</div><div class="q-text">What changed?</div></div>
+        <div class="q-box"><div class="q-num">2</div><div class="q-text">Why did it change?</div></div>
+        <div class="q-box"><div class="q-num">3</div><div class="q-text">How confident are we?</div></div>
+        <div class="q-box"><div class="q-num">4</div><div class="q-text">What should we do?</div></div>
+      </div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="narrative">
+      <h2>Brian-Style Narrative Template</h2>
+      <p class="note">Every Explanation-tab narrative must follow this sentence pattern:</p>
+      <div class="narrative">"[Focal SKU] is scoring [X%] [cannibalizing / watching / incremental] against [Donor SKU] at [Account] ([Channel]) because [donor base units fell/grew X%] in the [13-week] measurement window [that focal TDP expanded/contracted X%]."</div>
+      <div class="callout"><strong>Hard requirement:</strong> Every specific number in the narrative must come from <code>ml_training_features</code> pct_chg columns, not inferred from SHAP log-odds. Narratives that invent numbers from model coefficients erode client trust.</div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="priority-screens">
+      <h2>Priority Screens (highest client value, in order)</h2>
+      <table>
+        <tr><th>Rank</th><th>Screen</th><th>Reason</th></tr>
+        <tr><td>1</td><td>Explanation tab (Cannibalization Decide)</td><td>Brian narrative with actual pct_chg values; most defensible, most differentiating</td></tr>
+        <tr><td>2</td><td>Pack Size Elasticity Comparison</td><td>Directly answers Brian's Q2</td></tr>
+        <tr><td>3</td><td>Geography (Cannibalization Diagnose)</td><td>Directly answers Brian's Q4 with Expand / Hold / Reduce verdict</td></tr>
+        <tr><td>4</td><td>Competitive screens</td><td>Answers comparison validity question with expandable volume context</td></tr>
+        <tr><td>5</td><td>Rate Forecast</td><td>Quantifies risk trajectory, gives something to act on</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="gaps">
+      <h2>Vision Gaps (backlog)</h2>
+      <table>
+        <tr><th>Gap</th><th>Notes</th></tr>
+        <tr><td>Revenue impact estimates</td><td>Lost dollar value from cannibalization — not yet built</td></tr>
+        <tr><td>Incremental demand vs. demand transfer in promo</td><td>Beyond the confound flag — not yet built</td></tr>
+        <tr><td>SHAP for price elasticity model</td><td>MO_17 does not yet store SHAP values</td></tr>
+        <tr><td>Retailer benchmarking</td><td>Item vs. retailer avg + retailer vs. retailer comparisons; <code>built_filtered_weekly</code> and <code>scored_price_elasticity</code> support both without new ingestion</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+  </section>
+</div>
+</main>
+</body>
+</html>

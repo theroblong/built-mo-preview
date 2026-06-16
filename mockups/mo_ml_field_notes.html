@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo ML Field Notes</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--green:#1f7a45;--green-bg:#edf7f0;--green-border:#83c99a;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.entry{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow-y:auto;overflow-x:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc-section{padding:8px 13px 4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border)}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a.lg-link{color:var(--green)}.toc a:hover{text-decoration:underline}.entry{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.entry.lg-entry{border-left:4px solid var(--green-border)}.entry h2{margin:0 0 10px;font-size:22px}.entry.lg-entry h2{color:var(--green)}.entry p{color:var(--muted)}.entry strong{color:var(--ink)}pre{margin:12px 0 0;overflow:auto;background:#0d1733;color:#eef6ff;border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.45}code{font-family:var(--mono)}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:var(--surface-2);text-align:left;padding:8px 10px;font-size:12px;font-weight:700;border:1px solid var(--border)}td{padding:8px 10px;font-size:12px;border:1px solid var(--border);vertical-align:top}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}.why{background:var(--surface-2);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 12px;margin:10px 0}.how{background:var(--green-bg);border-left:3px solid var(--green-border);border-radius:0 6px 6px 0;padding:10px 12px;margin:10px 0}.why strong,.how strong{font-size:11px;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}}
+</style>
+</head>
+<body>
+<main class="shell" id="top">
+
+<section class="hero">
+  <h1>Mo ML Field Notes</h1>
+  <p>Operational findings from running the Mo ML pipeline against the live Druid cluster. Facts discovered during execution that are not in planning documents or script stubs. Read before writing or modifying any pipeline script.</p>
+</section>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">Index</div>
+    <div class="toc-section">Data Quirks</div>
+    <a href="#dq1">DQ1 — focal pct_chg NULL</a>
+    <a href="#dq2">DQ2 — object dtype from Druid</a>
+    <a href="#dq3">DQ3 — outlier histogram collapse</a>
+    <a href="#dq4">DQ4 — ORDER BY forbidden</a>
+    <a href="#dq5">DQ5 — column name mismatches</a>
+    <div class="toc-section">LightGBM Patterns</div>
+    <a href="#lg1" class="lg-link">LG1 — LambdaRank sort</a>
+    <a href="#lg2" class="lg-link">LG2 — degenerate label warnings</a>
+  </aside>
+
+  <section>
+
+    <h3 style="margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em">Data Quirks</h3>
+
+    <section class="entry" id="dq1">
+      <h2>DQ1 — focal pct_chg columns are NULL for all rows</h2>
+      <p class="note"><code>focal_base_units_pct_chg</code>, <code>focal_tdp_pct_chg</code>, and <code>focal_velocity_spm_pct_chg</code> are NULL for every row in <code>ml_training_features</code>.</p>
+      <div class="why"><strong>Why</strong>SPINS has no sales history for a product before its <code>first_week_selling</code> date. The pre-window for the focal SKU is structurally empty.</div>
+      <div class="how"><strong>How to apply</strong>Exclude all focal <code>pct_chg</code> columns from feature sets in P3 and P4. Use donor-side columns for signals instead. Any <code>fillna(0)</code> on these columns produces zero-variance features that add noise without signal.</div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="dq2">
+      <h2>DQ2 — Druid returns numeric columns as object dtype</h2>
+      <p class="note">All numeric columns from <code>/druid/v2/sql/</code> arrive as Python <code>object</code> dtype (strings or <code>None</code>) in the JSON response. Passing them directly to LightGBM raises <code>ValueError: pandas dtypes must be int, float or bool</code>.</p>
+      <div class="why"><strong>Why</strong>Druid's JSON serializer does not guarantee numeric types. A single <code>NULL</code> value in a column forces pandas to infer <code>object</code> for the entire column.</div>
+      <div class="how"><strong>How to apply</strong>In every script that trains or scores, convert immediately after loading:</div>
+      <pre><code>df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors="coerce").fillna(0)</code></pre>
+      <p class="note" style="margin-top:10px">Never skip this step, even for columns that look numeric in the Druid console.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="dq3">
+      <h2>DQ3 — Extreme outliers in pct_chg columns break LightGBM histogram binning</h2>
+      <p class="note"><code>donor_base_units_pct_chg</code> can reach values like 5,098 when the pre-window denominator is near zero. This collapses LightGBM's histogram bins and produces <em>"No further splits with positive gain, best gain: -inf"</em> for ALL trees — the model trains but learns nothing.</p>
+      <div class="why"><strong>Why</strong>LightGBM's histogram algorithm allocates bins across the observed range. With variance ~3,730 the bins are too wide to separate any meaningful signal.</div>
+      <div class="how"><strong>How to apply</strong>Always clip pct_chg columns before training:</div>
+      <pre><code>for col in pct_chg_cols:
+    df[col] = df[col].clip(-1.0, 2.0)</code></pre>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="dq4">
+      <h2>DQ4 — Druid SQL forbids ORDER BY on non-time columns</h2>
+      <p class="note">Any query with <code>ORDER BY &lt;non-time-col&gt;</code> at the top level returns a Druid 400 error: <em>"SQL query requires ordering a table by non-time column"</em>. This silently swallows if the calling code has a bare <code>except: pass</code>.</p>
+      <div class="why"><strong>Why</strong>Druid's SQL planner only allows top-level ordering by <code>__time</code>. Arbitrary column sorts are unsupported at the query layer.</div>
+      <div class="how"><strong>How to apply</strong>Never use <code>ORDER BY</code> on non-time columns in Druid SQL. Sort in Python after fetching:</div>
+      <pre><code>df = df.sort_values("some_col", ascending=False).reset_index(drop=True)</code></pre>
+      <p class="note" style="margin-top:10px">This burned us in the <code>cannibal_guardrail</code> block of <code>price_elasticity.py</code> — the 400 was silently caught and the guardrail always returned false.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="dq5">
+      <h2>DQ5 — price_elasticity_training_features column names differ from assumed names</h2>
+      <p class="note">Confirmed schema (verified with <code>SELECT * LIMIT 1</code>):</p>
+      <table>
+        <tr><th>Assumed name</th><th>Actual name</th></tr>
+        <tr><td><code>pre_13w_avg_velocity_spm</code></td><td><code>pre_13w_velocity_spm</code></td></tr>
+        <tr><td><code>post_13w_avg_base_units</code></td><td><code>post_13w_base_units</code></td></tr>
+        <tr><td><code>promo_confound_flag</code></td><td><code>promo_confounded</code></td></tr>
+        <tr><td><code>promo_depth_bucket</code></td><td>does not exist in this table</td></tr>
+        <tr><td><code>seasonality_index</code></td><td>does not exist in this table</td></tr>
+      </table>
+      <div class="how"><strong>How to apply</strong>Always verify schema with <code>SELECT * LIMIT 1</code> before writing any new script against a datasource for the first time.</div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <h3 style="margin:14px 0 10px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em">LightGBM Patterns</h3>
+
+    <section class="entry lg-entry" id="lg1">
+      <h2>LG1 — LambdaRank requires Python-side sort before groupby</h2>
+      <p class="note">Druid does not support <code>ORDER BY</code> on non-time columns (see DQ4). <code>LGBMRanker</code> requires rows to be physically sorted by group key before <code>group_sizes</code> is computed — its internal grouping is positional, not key-based. Out-of-order rows produce wrong group assignments and silent ranking errors.</p>
+      <div class="how"><strong>How to apply</strong>In every ranking script (P2, P4), sort in Python before computing groups:</div>
+      <pre><code>df = df.sort_values("focal_upc").reset_index(drop=True)
+group_sizes = df.groupby("focal_upc", sort=False).size().tolist()</code></pre>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry lg-entry" id="lg2">
+      <h2>LG2 — "No further splits" warnings are expected and harmless at ROC-AUC 1.0</h2>
+      <p class="note">P1 and P3 both emit <em>"No further splits with positive gain, best gain: -inf"</em> warnings at the leaf level but achieve ROC-AUC 1.0. The warning fires when a leaf is already pure; other leaves in the same tree continue splitting normally.</p>
+      <div class="why"><strong>Why</strong>Labels in these scripts are derived from the same features used for training, making the classification task trivially solvable. The model memorizes the rule.</div>
+      <div class="how"><strong>How to apply</strong>Do not treat these warnings as errors in the Mo context. A flat logloss curve with AUC near 1.0 confirms the model is learning correctly. The warning only becomes a real problem when it fires on ALL trees AND the model was expected to generalize — see DQ3 for the degenerate-binning case where the same symptom indicates an actual data problem.</div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+  </section>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BUILT / SPINS Product Hierarchy Reference</title>
+<style>
+:root{--bg:#f5f9ff;--surface:#fff;--ink:#0d1733;--muted:#526078;--border:#d6deeb;--blue:#2357ad;--surface-2:#eef3fb;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}.shell{width:min(1320px,calc(100vw - 32px));margin:0 auto;padding:24px 0 48px}.hero,.entry{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:0 12px 34px rgba(13,23,51,.08)}.hero{padding:22px;margin-bottom:14px}.hero h1{margin:0;font-size:34px;line-height:1.1}.hero p{max-width:980px;color:var(--muted)}.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}.toc{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow-y:auto;overflow-x:hidden}.toc-title{padding:12px 13px;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:900;font-size:11px;text-transform:uppercase}.toc a{display:block;padding:8px 13px;border-bottom:1px solid var(--border);color:var(--blue);text-decoration:none;font-size:12px;font-weight:800}.toc a:hover{text-decoration:underline}.entry{padding:18px;margin-bottom:14px;scroll-margin-top:18px}.entry h2{margin:0 0 10px;font-size:22px}.entry p{color:var(--muted)}.entry strong{color:var(--ink)}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:var(--surface-2);text-align:left;padding:8px 10px;font-size:12px;font-weight:700;border:1px solid var(--border)}td{padding:8px 10px;font-size:12px;border:1px solid var(--border);vertical-align:top}code{font-family:var(--mono)}.note{color:var(--muted);margin:8px 0}.top{font-size:12px;margin-top:12px}.top a{color:var(--blue);text-decoration:none;font-weight:800}.callout{background:var(--surface-2);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 12px;margin:10px 0;color:var(--muted)}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.toc{position:static}}
+</style>
+</head>
+<body>
+<main class="shell" id="top">
+
+<section class="hero">
+  <h1>BUILT / SPINS Product Hierarchy Reference</h1>
+  <p>SPINS attribute codes used in the Mo pipeline for pack size, protein, sugars, calories, and sugar alcohols. Source: BUILT product hierarchy slide shared by client after the 2026-06-12 meeting.</p>
+</section>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">Sections</div>
+    <a href="#brand-totals">Brand Totals</a>
+    <a href="#pack-size">Pack Size</a>
+    <a href="#protein">Protein</a>
+    <a href="#sugars">Sugars</a>
+    <a href="#calories">Calories</a>
+    <a href="#sugar-alcohols">Sugar Alcohols</a>
+    <a href="#panel-data">Panel Data</a>
+    <a href="#report-templates">Report Templates</a>
+  </aside>
+
+  <section>
+
+    <section class="entry" id="brand-totals">
+      <h2>Brand Totals</h2>
+      <table>
+        <tr><th>Brand line</th></tr>
+        <tr><td>BUILT BAR</td></tr>
+        <tr><td>BUILT PUFF</td></tr>
+        <tr><td>BUILT SOUR PUFF</td></tr>
+        <tr><td>PPG - BUILT TOTAL</td></tr>
+        <tr><td>Top Competitors</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="pack-size">
+      <h2>Pack Size</h2>
+      <table>
+        <tr><th>Code</th><th>Label</th><th>Pack count range</th></tr>
+        <tr><td><strong>1</strong></td><td>Singles</td><td>1</td></tr>
+        <tr><td><strong>2</strong></td><td>Multipack</td><td>2–5</td></tr>
+        <tr><td><strong>3</strong></td><td>Value Pack</td><td>6–9</td></tr>
+        <tr><td><strong>4</strong></td><td>Family Size</td><td>10+</td></tr>
+      </table>
+      <div class="callout">Pack size codes map to <code>focal_pack_count</code> and <code>candidate_pack_count</code> in <code>comparison_pool_weekly</code>. Use them when displaying pack distance context in the UI or filtering by pack tier.</div>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="protein">
+      <h2>Protein (g)</h2>
+      <table>
+        <tr><th>Code</th><th>Label</th></tr>
+        <tr><td><strong>5</strong></td><td>Under 10g</td></tr>
+        <tr><td><strong>6</strong></td><td>10–14.99g</td></tr>
+        <tr><td><strong>7</strong></td><td>15–19.99g</td></tr>
+        <tr><td><strong>8</strong></td><td>20–24.999g</td></tr>
+        <tr><td><strong>9</strong></td><td>25+g</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="sugars">
+      <h2>Sugars (g)</h2>
+      <table>
+        <tr><th>Code</th><th>Label</th></tr>
+        <tr><td><strong>10</strong></td><td>0–5g</td></tr>
+        <tr><td><strong>11</strong></td><td>5–10g</td></tr>
+        <tr><td><strong>12</strong></td><td>10–15g</td></tr>
+        <tr><td><strong>13</strong></td><td>15+g</td></tr>
+      </table>
+      <p class="note">Note: code 13 (15+g) may represent a restricted or inactive bucket — flag if encountered in production data.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="calories">
+      <h2>Calories</h2>
+      <table>
+        <tr><th>Code</th><th>Label</th></tr>
+        <tr><td><strong>14</strong></td><td>Under 100</td></tr>
+        <tr><td><strong>15</strong></td><td>100–150</td></tr>
+        <tr><td><strong>16</strong></td><td>150–200</td></tr>
+        <tr><td><strong>17</strong></td><td>200–250</td></tr>
+        <tr><td><strong>18</strong></td><td>250+</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="sugar-alcohols">
+      <h2>Sugar Alcohols</h2>
+      <table>
+        <tr><th>Code</th><th>Label</th></tr>
+        <tr><td><strong>19</strong></td><td>Y (contains sugar alcohols)</td></tr>
+        <tr><td><strong>20</strong></td><td>N</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="panel-data">
+      <h2>Panel Data Fields</h2>
+      <p class="note">Available from SPINS panel data (confirmed 2026-06-12 client meeting):</p>
+      <table>
+        <tr><th>Field</th><th>Notes</th></tr>
+        <tr><td><strong>Trips</strong></td><td>Household purchase trip count</td></tr>
+        <tr><td><strong>HH Count</strong></td><td>Household reach</td></tr>
+        <tr><td><strong>Buy Rate</strong></td><td>Units purchased per buying household</td></tr>
+      </table>
+      <p class="note">These fields are available under Category Insights and BUILT Insights. If surfaced in the SPINS extract, they can enrich the SKU Summary and Mo Chat context.</p>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+    <section class="entry" id="report-templates">
+      <h2>Company Report Templates</h2>
+      <table>
+        <tr><th>Template</th></tr>
+        <tr><td>General performance</td></tr>
+        <tr><td>Promotional Analysis</td></tr>
+        <tr><td>Category Review</td></tr>
+        <tr><td>Other (TBD)</td></tr>
+      </table>
+      <p class="top"><a href="#top">↑ top</a></p>
+    </section>
+
+  </section>
+</div>
+</main>
+</body>
+</html>
