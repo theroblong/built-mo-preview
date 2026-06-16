@@ -88,6 +88,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-16 (update 3) — API performance: parallel Druid queries + Retailer Summary cache
+
+Screens were slowing down as each feature added more sequential Druid round trips. Root cause: no parallelism and no caching — total latency = sum of all queries per request.
+
+**retailer.py `/summary`:** The 5 independent queries (scored_cannibalization, scored_price_elasticity, built_prepost_features, event_queue, price_event_queue) now fire in parallel via `ThreadPoolExecutor(5)`. Added a 120-second in-process TTL cache keyed on `channel_outlet` — subsequent loads within 2 minutes return instantly.
+
+**events.py `/api/events`:** The two always-on queries (event_queue + price_event_queue) now fire in parallel. Three separate `scored_price_elasticity` lookups for PROMO_RESPONSE_BREAKPOINT, PACK_NORM_GAP, and PRICE_DEFENSE_OPPORTUNITY were merged into one shared fetch, saving 2 Druid round trips on every per-SKU events page load.
+
+Going forward: any endpoint with ≥2 independent Druid queries should use `ThreadPoolExecutor`; portfolio-level endpoints (no focal UPC, stable data) should carry a short TTL cache.
+
 ### 2026-06-16 (update 2) — Price event bug fixes: PACK_NORM_GAP and NEW_ITEM_PRICE_BASELINE per-bar unit mismatch
 
 Two price event detectors were comparing prices at different units (pack vs. per-bar), producing nonsense percentages (e.g., "1093.3% above MULO norm").
