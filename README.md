@@ -88,6 +88,29 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 (update 2) — UC8/UC14 benchmarking, screentips, Brian walkthrough, smoke test fixes
+
+**UC8 benchmarking quick wins (three screens)**
+- *Elasticity Summary (PriceElasticityDetermine.tsx):* New `/api/price-elasticity/elasticity-benchmark` endpoint queries `scored_price_elasticity` for all BUILT SKUs at the current channel+account, deduplicates to latest per UPC, filters to negative ε only and |ε| ≤ 50 (removes promo-artifact positive values and near-zero-denominator outliers), returns `{min_elasticity, median_elasticity, max_elasticity, upc_count}`. UI renders a green→red gradient range bar with the focal SKU dot and a median tick — answers "is my −14 elasticity good or bad?" with Kroger portfolio context. Bar direction fixed: lo = max_elasticity (least elastic, green left), hi = min_elasticity (most elastic, red right).
+- *Pre/Post (Diagnose.tsx):* Added `useAccountAvg` + `benchmarkDelta` hook to Diagnose. Chip above the pre/post table shows post-13w velocity and ARP/bar vs. account portfolio average — same pattern as SKU Summary and Elasticity Summary.
+- *Retailer Summary (RetailerSummary.tsx + retailer.py):* Avg PE column added. `_q_elast()` extended to pull `implied_elasticity`; per-account accumulator averages values across scored SKUs. Cell color-coded red < −1.5, amber −0.8 to −1.5, green > −0.8. `RetailerAccount` type in `types.ts` extended with `avg_elasticity: number | null`. ColSpan 9 → 10.
+
+**UC14 partial — BUILT PE on Competitive Price screen**
+BUILT PE context strip rendered above the competitor table in `PriceElasticityDiagnose.tsx`. Shows: focal elasticity value + band badge, "A 1% price increase → ≈X% unit loss," amber caveat when promo-confounded, "Competitor elasticity estimates: coming (MO_25)." Fetched from 5th parallel call to `/api/price-elasticity/scores` on page load. UC14 status moved to 🟡 Partial.
+
+**Badge screentips**
+`Badge` component extended with optional `title` prop (`cursor: help` shown when present). Tooltip text added to: cannibal status badges (Cannibalizing/Watch/Incremental), cannibal confidence badges (Confirmed/Developing/Early signal), event confidence badges in `EventCard`, and elasticity band badges in `PriceElasticityDetermine` (Summary + pack comparison table) and `PriceElasticityDiagnose` (PE context strip). Every label Brian will see on demo day now has a hover definition.
+
+**Brian walkthrough (docs/WALKTHROUGH.md)**
+Complete rewrite as a 30-minute question-anchored demo script. Structured by Brian's 7 questions, not UI tab structure. Every filter selection uses the exact SPINS SKU description from the live dropdown (verified against `/api/filters/upcs`). Mo Chat used as transition mechanism between questions. Screens-to-skip table prevents navigating to data-sparse views. Full glossary and anticipated Q&A appended.
+
+**Smoke test fixes found and resolved**
+- Wiki had wrong price_elasticity router prefix (`/api/price` → `/api/price-elasticity`) — corrected in `04-api-reference.md`
+- Elasticity range bar: `span` declared but unused → division-by-zero not guarded; fixed by renaming to `denom` with early return when `hi === lo`
+- Benchmark endpoint included positive ε (promo artifacts, +44 to +645) and near-zero outliers in min/max calculation, making the range bar useless; fixed with `v < 0 and abs(v) <= 50` filter
+- Range bar direction was inverted (green/left showed most elastic); fixed by swapping lo/hi mapping in `SummaryScreen`
+- Launch Monitor Q3 demo UPC (`08-40229-30734` at Walmart) is now all SUPPRESSED; replaced with `Built Puff Chocolate Milkshake Protein Bar 1.41 Oz` at Kroger (ACTIVE wk 15, full progression visible in table)
+
 ### 2026-06-17 — Own-brand terminology, price event queue cleanup, Retailer Summary drill-through fix
 
 **Own-brand vs. competitor terminology (design principle)**
