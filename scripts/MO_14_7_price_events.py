@@ -149,10 +149,10 @@ def detect_pack_norm_gap(df_weekly: pd.DataFrame, df_norms: pd.DataFrame) -> lis
             r["upc"], r["description"], r["channel_outlet"],
             r["retail_account"], r.get("geography_display", r.get("geography_raw")), r["geography_level"],
             "PACK_NORM_GAP",
-            f"BUILT {pct_above:.1f}% above MULO {int(r['pack_count'])}-pack norm",
+            f"BUILT {pct_above:.1f}% above {int(r['pack_count'])}-pack norm",
             "amber", "Medium",
             round(float(r["price_index"]), 3),
-            "price_index_vs_mulo_norm",
+            "price_index_vs_pack_norm",
             "price_elasticity_weekly_features + mulo_food_pack_size_norms",
         ))
     return rows
