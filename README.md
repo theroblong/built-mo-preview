@@ -88,6 +88,15 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 (update 3) — Pricing Action badge label fix + Rob solo-run setup
+
+**Pricing Action event badge fix (PriceDecide.tsx)**
+Active price events on the Pricing Action tab each carry a severity badge. The badge was rendering the raw `event_color` string from the API (`"amber"`) as its text content — a code-visible value, not a user-facing label. Fixed: added a `{ red: "Alert", amber: "Watch", green: "OK" }` map so badges now read **Alert / Watch / OK** while still styled in the correct color. Isolated to this one render path; EventCard and ScoredTable already used proper labels.
+
+**Rob solo-run readiness**
+- `customer-built-mo-api/.env.example` expanded from 3 → 8 vars: added `ANTHROPIC_API_KEY` (required for Mo Chat), `MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET` (ML pipeline write-back only, skip for demo). Each group has a comment explaining which vars are demo-critical.
+- `customer-built-mo-ui/docs/WALKTHROUGH.md` now has a "First-Time Setup" section above "Before You Begin" covering: `git pull`, `cp .env.example .env`, `python3 -m venv .venv && pip install -r requirements.txt`, `npm install`. Prior version assumed the venv already existed.
+
 ### 2026-06-17 (update 2) — UC8/UC14 benchmarking, screentips, Brian walkthrough, smoke test fixes
 
 **UC8 benchmarking quick wins (three screens)**
