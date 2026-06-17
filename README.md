@@ -88,6 +88,10 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 (update 5) — MO_24_ramp_monitor.py added to repo
+
+Added `scripts/MO_24_ramp_monitor.py` — the pipeline script that generates `new_product_ramp_monitor` in Druid. Implements Brian's 12-week launch window standard: SUPPRESSED weeks 0–5, LOW_CONFIDENCE weeks 6–7, ACTIVE weeks 8–11. Ribbon text uses "of 12" consistently. Sources from `event_detection_weekly` (weekly metrics) + `built_prepost_features` (description, geography, ARP). Runs as P4.5 in the pipeline — after MO_13 (cannibal score) and before MO_14_7 (which reads the table for NEW_ITEM_PRICE_BASELINE detection). Also tightened MO_14_7's NEW_ITEM_PRICE_BASELINE detection window from 8–16 to 8–12 weeks to match.
+
 ### 2026-06-17 (update 4) — Remove Avg PE column from Retailer Summary
 
 Avg PE column removed from the Retailer Summary scorecard. Some accounts showed extreme values (e.g. −5.3T) due to near-zero-velocity SKUs producing unstable elasticity estimates that passed the |ε| ≤ 50 filter used at the individual SKU level but compounded badly when averaged. Column definition and cell removed from `RetailerSummary.tsx`, `avg_elasticity` field removed from `RetailerAccount` interface in `api/types.ts`. API continues to return the field (no backend change). Walkthrough and both wiki files updated. colSpan reverted 10 → 9.
