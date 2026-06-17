@@ -92,8 +92,8 @@ def detect_new_item_baseline(df_ramp: pd.DataFrame) -> list[dict]:
     for col in ["weeks_since_launch", "arp"]:
         if col in df_ramp.columns:
             df_ramp[col] = pd.to_numeric(df_ramp[col], errors="coerce")
-    # One event per UPC × geo × channel — keep most recent week in 8–16 window
-    in_window = df_ramp[df_ramp["weeks_since_launch"].between(8, 16)].copy()
+    # One event per UPC × geo × channel — keep most recent week in 8–12 window
+    in_window = df_ramp[df_ramp["weeks_since_launch"].between(8, 12)].copy()
     in_window = in_window.sort_values("weeks_since_launch", ascending=False)
     df_ramp = in_window.drop_duplicates(
         subset=["upc", "channel_outlet", "retail_account", "geography_raw"]
