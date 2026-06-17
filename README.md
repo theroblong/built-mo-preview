@@ -88,6 +88,14 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 (update 6) — PE Forecast redundancy noted; full demo smoke test passed
+
+**Scenario Forecast / Price Forecast redundancy (deferred)**
+Noted that Scenario Forecast (Price Elasticity → Determine) appears to be a less complete version of Price Forecast (Price Elasticity → Decide). The Decide version adds: donor pressure on adjacent packs, margin direction, cannibal guardrail, quality warnings, BUILT own-brand pack ladder, and a no-elasticity empty state with three fallback options. The two tabs are candidates for consolidation. Discussion deferred; flagged in wiki (05-ui-screens.md) and project memory. Do not demo the Scenario Forecast tab to Brian — redirect to Price Forecast (Decide).
+
+**Full demo smoke test — all endpoints green**
+All 7 walkthrough questions verified against live Druid data: Q1 (35 events), Q2 (benchmark n=38, median −14.27 at Kroger), Q3 (Launch Monitor ACTIVE from wk 9), Q4 (Geography Cannibalizing prob=1.0), Q5 (promo type buckets present), Q6 (29 competitors), Q7 (2 recs, 5 active events). Retailer Summary 13 accounts clean. All four repos committed and pushed.
+
 ### 2026-06-17 (update 5) — MO_24_ramp_monitor.py added to repo
 
 Added `scripts/MO_24_ramp_monitor.py` — the pipeline script that generates `new_product_ramp_monitor` in Druid. Implements Brian's 12-week launch window standard: SUPPRESSED weeks 0–5, LOW_CONFIDENCE weeks 6–7, ACTIVE weeks 8–11. Ribbon text uses "of 12" consistently. Sources from `event_detection_weekly` (weekly metrics) + `built_prepost_features` (description, geography, ARP). Runs as P4.5 in the pipeline — after MO_13 (cannibal score) and before MO_14_7 (which reads the table for NEW_ITEM_PRICE_BASELINE detection). Also tightened MO_14_7's NEW_ITEM_PRICE_BASELINE detection window from 8–16 to 8–12 weeks to match.
