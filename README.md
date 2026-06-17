@@ -88,6 +88,10 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 (update 4) — Remove Avg PE column from Retailer Summary
+
+Avg PE column removed from the Retailer Summary scorecard. Some accounts showed extreme values (e.g. −5.3T) due to near-zero-velocity SKUs producing unstable elasticity estimates that passed the |ε| ≤ 50 filter used at the individual SKU level but compounded badly when averaged. Column definition and cell removed from `RetailerSummary.tsx`, `avg_elasticity` field removed from `RetailerAccount` interface in `api/types.ts`. API continues to return the field (no backend change). Walkthrough and both wiki files updated. colSpan reverted 10 → 9.
+
 ### 2026-06-17 (update 3) — Pricing Action badge label fix + Rob solo-run setup
 
 **Pricing Action event badge fix (PriceDecide.tsx)**
