@@ -88,6 +88,25 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 — Own-brand terminology, price event queue cleanup, Retailer Summary drill-through fix
+
+**Own-brand vs. competitor terminology (design principle)**
+Established that "competitor" in Mo always means another brand. BUILT's own pack sizes (1ct, 4Pk, 12Pk) are never called "competitor." The EventDetailModal (`src/components/ui/EventDetailModal.tsx`) now detects whether a price event's partner is a BUILT SKU by checking `partner_description` for "built" (case-insensitive), then falls back to parsing the event label. When the partner is own-brand: modal says "another BUILT pack size" / "the BUILT X-ct," KPI pill is labeled "Per-bar gap vs own pack," and the nav CTA routes to Pack Ladder. When the partner is a competitor: modal uses "[Name]'s X-ct" or "same-pack competitor," and the CTA routes to Price Forecast. Applies to both PRICE_DEFENSE_OPPORTUNITY and PRICE_DONOR_OVERLAP cases.
+
+**Pack Ladder label and Gap% fix (PriceDecide.tsx)**
+The Pack Ladder section on Price Forecast / Decide was labeling BUILT-vs-BUILT comparisons with the word "competitor." Renamed to "BUILT own-brand pack ladder — per-bar price gap" with an explanatory note. Column headers updated to reflect own-brand comparison. Gap% display bug fixed: `price_per_bar_gap_pct` is stored as a decimal (−0.242) in Druid but was displayed without multiplying by 100, showing −0.2% instead of −24.2%.
+
+**Price Forecast empty state**
+Replaced the dead-end "No elasticity data" state with an actionable explanation: smaller/specialty accounts often lack the price variation needed for elasticity scoring, so what-if modeling isn't available there. Now suggests switching to CONVENTIONAL|MULTI OUTLET, using the own-brand pack ladder comparison, or bringing per-bar pricing data to the buyer conversation directly.
+
+**Price event queue: MAX(__time) query (events.py)**
+Changed `price_event_queue` filter from `__time >= TIMESTAMPADD(DAY, -90, CURRENT_TIMESTAMP)` to `__time = (SELECT MAX(__time) FROM "price_event_queue")`. Druid ingests with APPEND mode — previous pipeline runs accumulate. Old own-brand PRICE_DEFENSE and PRICE_DONOR_OVERLAP events from before the own-brand filter was added were still visible via the 90-day window. MAX(__time) always shows exactly the latest pipeline run. Pipeline re-run (24,423 events: PRICE_DEFENSE=0, PRICE_DONOR_OVERLAP=0 — all own-brand, correctly filtered) confirmed clean state.
+
+**Retailer Summary → Cannibalization drill-through fix (filters.py + App.tsx)**
+Two bugs prevented drill-through from landing on the correct account/channel:
+1. `filters.py /dimensions` only queried `cannibalization_rate_weekly` for available filter combinations. Some accounts exist in `scored_cannibalization` but not in `cannibalization_rate_weekly`. Added `scored_cannibalization` as a supplemental source — Python merges both sets, deduplicating by `(channel, account, geo_raw)`.
+2. `App.tsx` dimensions `useEffect` only fires when `filters.upc` changes. If a user clicks "View Details →" for a UPC that's already selected, the UPC doesn't change and the pending account/channel refs are never consumed. Fixed with `dimFetchKey` state (bumped on same-UPC drill-through), added to the `useEffect` dependency array to force a re-fetch.
+
 ### 2026-06-16 (update 3) — API performance: parallel Druid queries + Retailer Summary cache
 
 Screens were slowing down as each feature added more sequential Druid round trips. Root cause: no parallelism and no caching — total latency = sum of all queries per request.

@@ -185,7 +185,7 @@ def detect_price_defense(df_ladder: pd.DataFrame) -> list[dict]:
         partner_ct     = int(r.get("partner_pack_count") or 0)
         focal_lbl      = f"{focal_ct}-ct" if focal_ct else "pack"
         partner_lbl    = f"{partner_ct}-ct" if partner_ct else "pack"
-        competitor     = partner_desc.split()[0] if partner_desc else "competitor"
+        competitor     = partner_desc.split()[0] if partner_desc else "same-pack competitor"
         rows.append(_event_row(
             r["focal_upc"], r["focal_description"], r["channel_outlet"],
             r["retail_account"], r.get("geography_display"), r["geography_level"],
