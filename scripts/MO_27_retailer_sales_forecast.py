@@ -191,9 +191,10 @@ if __name__ == "__main__":
 
             X = _build_feature_row(state, features_used)
 
-            units_low  = float(np.clip(models["q10"].predict(X)[0], 0, None))
-            units_base = float(np.clip(models["q50"].predict(X)[0], 0, None))
-            units_high = float(np.clip(models["q90"].predict(X)[0], 0, None))
+            # Models predict in log1p space — invert with expm1
+            units_low  = float(np.expm1(max(0, models["q10"].predict(X)[0])))
+            units_base = float(np.expm1(max(0, models["q50"].predict(X)[0])))
+            units_high = float(np.expm1(max(0, models["q90"].predict(X)[0])))
 
             # Feed q50 back as next step's lag seed
             units_history.append(units_base)

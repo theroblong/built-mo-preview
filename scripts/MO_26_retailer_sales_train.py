@@ -72,7 +72,7 @@ FEATURE_COLS = [
 
 LGBM_BASE = dict(
     boosting_type="gbdt",
-    n_estimators=600,
+    n_estimators=1000,
     learning_rate=0.04,
     num_leaves=63,
     min_child_samples=20,
@@ -112,9 +112,17 @@ if __name__ == "__main__":
     if "channel_outlet" in df.columns:
         df["channel_outlet"] = df["channel_outlet"].astype("category")
 
-    # ── Clip extreme base_units (outlier suppression, not removal) ───────────
+    # ── Drop rows where target is null (can't train or evaluate on these) ──────
+    before = len(df)
+    df = df.dropna(subset=["base_units"]).copy()
+    if len(df) < before:
+        print(f"  Dropped {before - len(df):,} rows with null base_units")
+
+    # ── Log-transform target: log1p compresses heavy tail, forces positivity ───
+    # Predictions are in log-space; MO_27 inverts with expm1 before output.
     p99 = df["base_units"].quantile(0.99)
-    df["base_units"] = df["base_units"].clip(upper=p99 * 2)
+    print(f"  p99 base_units: {p99:.0f}  (no clip needed — log transform handles scale)")
+    df["log_base_units"] = np.log1p(df["base_units"])
 
     # ── Temporal train / val split (last 13 weeks = val) ────────────────────
     cutoff = df["__time"].max() - pd.Timedelta(weeks=13)
@@ -129,9 +137,10 @@ if __name__ == "__main__":
         print(f"  WARNING — feature columns not found (will be skipped): {missing}")
 
     X_train = train[available]
-    y_train = train["base_units"].values
+    y_train = train["log_base_units"].values          # log-space target
     X_val   = val[available]
-    y_val   = val["base_units"].values
+    y_val_log   = val["log_base_units"].values        # log-space for pinball
+    y_val_units = val["base_units"].values            # original units for MAE/RMSE
 
     # ── Train one model per quantile ─────────────────────────────────────────
     models  = {}
@@ -146,18 +155,18 @@ if __name__ == "__main__":
         )
         model.fit(
             X_train, y_train,
-            eval_set=[(X_val, y_val)],
+            eval_set=[(X_val, y_val_log)],
             callbacks=[
                 lgb.early_stopping(50, verbose=False),
                 lgb.log_evaluation(100),
             ],
         )
-        preds = model.predict(X_val)
-        preds_clipped = np.clip(preds, 0, None)
-        pb  = pinball(y_val, preds_clipped, q)
-        mae = float(np.mean(np.abs(y_val - preds_clipped))) if q == 0.50 else None
-        rmse = float(np.sqrt(np.mean((y_val - preds_clipped) ** 2))) if q == 0.50 else None
-        print(f"  Best iter: {model.best_iteration_}  |  Pinball: {pb:.4f}"
+        preds_log   = model.predict(X_val)
+        preds_units = np.expm1(np.clip(preds_log, 0, None))   # back to unit scale
+        pb   = pinball(y_val_log, preds_log, q)                # pinball in log-space
+        mae  = float(np.mean(np.abs(y_val_units - preds_units))) if q == 0.50 else None
+        rmse = float(np.sqrt(np.mean((y_val_units - preds_units) ** 2))) if q == 0.50 else None
+        print(f"  Best iter: {model.best_iteration_}  |  Pinball (log): {pb:.4f}"
               + (f"  |  MAE: {mae:.1f}  |  RMSE: {rmse:.1f}" if mae is not None else ""))
 
         models[tag] = model
