@@ -72,7 +72,7 @@ FEATURE_COLS = [
 
 LGBM_BASE = dict(
     boosting_type="gbdt",
-    n_estimators=1000,
+    n_estimators=1500,
     learning_rate=0.04,
     num_leaves=63,
     min_child_samples=20,
