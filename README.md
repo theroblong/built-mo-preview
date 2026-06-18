@@ -88,6 +88,27 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-17 (update 8) — Mo Chat knowledge base expansion; $/bar on Pack Ladder; REL column removed
+
+**Brian collab session transcript analyzed** (`docs/Built - Aevah Collab Session.docx`, 36 min). Key items surfaced:
+- Brian asked "what is REL, what does 4 mean?" on the Competitive screen → Mo Chat couldn't answer; column removed; Mo updated
+- Brian's Hy-Vee story: 4-pack price reduction → $/bar gap vs. 1ct narrowed → singles fell, 4-pack surged → $/bar must be visible at a glance
+- Brian confirmed retailer-first demo flow: Retailer Summary → account → SKU → Determine → Diagnose → Decide
+- Big demo scheduled **2026-06-25 (Thursday), 90 minutes** — audience includes stakeholders who control buying decisions; need ROI framing (7% → 5% forecast error) and credible cross-brand cannibalization answers
+- Items deferred to 2026-06-18: (2) cross-retailer SKU view ("flip the script" — start with SKU, see all retailers), (4) export to spreadsheet for forecasting team
+
+**$/bar column added to Cannibalization Pack Ladder** (`Diagnose.tsx`): per-bar price (ARP ÷ pack_count) now shown next to ARP in the Pack Ladder table, making value-gap shifts visible without mental math.
+
+**REL column removed from Competitive screen** (`Diagnose.tsx`): D-distance badge was internal scoring metadata. Removed from UI; footnote updated to keep only Tier 1 explanation. Mo Chat now holds the full explanation.
+
+**Mo Chat system prompt expanded** (`mo_chat.py`):
+- `_DATA_GLOSSARY` added: D1–D5 relationship distance taxonomy with plain-English eligibility rules per screen; pack_distance vs relationship_distance distinction; cannibal_status values; confidence labels (Early signal/Developing/Confirmed); Launch Monitor status codes; elasticity band definitions with interpretation; $/bar definition; competitor terminology rule
+- `_SCREEN_MAP` updated: richer column/eligibility descriptions for Pack Ladder, Competitive, Launch Monitor, Elasticity Summary, Price Forecast; ramp window corrected to 12 weeks
+- Stale refs removed: price determine `forecast` tab from `navigate_to` sub_tab list and `SCREEN_LABELS`
+- **Rule going forward:** update `mo_chat.py` in the same commit as every UI or data model change
+
+**PE Forecast redundancy resolved**: Scenario Forecast tab removed from Price Elasticity → Determine. Nav CTA ("Ready to model a price change? → Price Forecast →") added at bottom of Elasticity Summary, navigates to Decide → Price Forecast. PE Determine now has 3 tabs: Price Events · Elasticity Summary · Pack Elasticity.
+
 ### 2026-06-17 (update 6) — PE Forecast redundancy noted; full demo smoke test passed
 
 **Scenario Forecast / Price Forecast redundancy (deferred)**
