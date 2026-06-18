@@ -73,7 +73,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timezone
 from mo_druid_client import query_druid
-from mo_writeback import write_back
 
 SCORED_AT      = datetime.now(timezone.utc).isoformat()
 LOOKBACK       = "INTERVAL '3' YEAR"   # full available SPINS history
