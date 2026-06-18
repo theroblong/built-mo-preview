@@ -88,6 +88,34 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-18 — Cross-retailer SKU view + Finance tools build plan
+
+**Problem:** Retailer Summary lets you start with a retailer and drill to SKUs. Brian also needs to start with a SKU and see how it performs across all retailers ("flip the script"). Finance team is the next audience — they need planning tools in a format they're accustomed to (pivot tables, spreadsheets, promo ROI).
+
+**Build sequence:**
+
+1. **Cross-retailer SKU view — current state** (building now)
+   - New header tab next to Retailer Summary; UPC filter → scorecard rows per retailer
+   - Columns: Account, Channel, 13w Sales, YTD Sales, Velocity, Elasticity Band, Cannibal Status, Active Events
+   - New API endpoint `/api/retailer/sku-summary` — pivoted from existing `built_prepost_features` + `scored_price_elasticity` + `scored_cannibalization`
+   - Fast-path forecast: derived from existing signals (velocity × TDP trend × cannibalization rate)
+
+2. **Export to CSV** on existing tables (Retailer Summary, SKU Retailer View, Assortment Action) — no API changes, client-side Blob download
+
+3. **MO_25 — retailer sales forecast pipeline** (new ML component)
+   - Panel model: (upc, retailer, channel, geo, week) grain; `built_filtered_weekly` source
+   - Features: pack_count, flavor_family, elasticity, promo depth, competitor tier, weeks_since_launch, TDP trend
+   - Output: `retailer_sales_forecast` Druid table → 13-week forward base_units per retailer per SKU
+   - The number Finance can export into their Excel forecasting model
+
+4. **Finance planning tools** (after demo)
+   - Promo ROI calculator: spend input → expected dollar lift (`lift% × base_units × ARP`)
+   - SKU Contribution column: each retailer's % of total BUILT base dollar sales for that SKU
+   - Assortment Planning table: pivot-style rows=SKUs / cols=retailers, sortable/filterable/exportable
+   - Forecast scenario export: what-if slider result (current ARP, proposed ARP, delta units, delta $) to CSV
+
+**Why this order:** Items 1 + 2 use only existing Druid data and ship fast. Item 3 is the "new predictive data" value-add that justifies the platform to Finance. Item 4 is the Finance-native UX layer built once we know what the audience wants to see.
+
 ### 2026-06-17 (update 8) — Mo Chat knowledge base expansion; $/bar on Pack Ladder; REL column removed
 
 **Brian collab session transcript analyzed** (`docs/Built - Aevah Collab Session.docx`, 36 min). Key items surfaced:
