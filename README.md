@@ -88,6 +88,15 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 4) — Pack Crossover subtitle corrected; visual heuristic vs. model clarified
+
+**Pack Crossover tile subtitle corrected (3 files)**
+The tile subtitle read "crossing lines = cannibalization" — this was imprecise in two ways:
+1. Transfer signal can appear as divergence (one up, one down) without the lines ever crossing in absolute volume — still valid evidence of displacement.
+2. Volume crossing has nothing to do with Mo's actual cannibalization model, which uses timing correlation of distribution growth vs. velocity decline at account level (`scored_cannibalization`).
+
+Fixed to: *"one rising while another falls = transfer signal"* in `Trends.tsx`. Same correction applied to the Mo Chat system prompt (`mo_chat.py`) and UI screens wiki (`05-ui-screens.md`). A full interpretation note (heuristic vs. model; divergence vs. crossing; two cases to distinguish) added to the wiki tile table. Walkthrough Act 1 now has a presenter note for when FP&A asks about the Pack Crossover tile.
+
 ### 2026-06-22 (update 3) — Mo Chat product add for Trends; avatar location fix; walkthrough updated
 
 **Mo Chat: add/switch products on Trends (bug fix + new capability)**
