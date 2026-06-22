@@ -88,6 +88,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 5) — Positive elasticity root cause traced to SPINS promo data gap at Ahold Delhaize
+
+**Root cause: SPINS promo columns missing for Ahold Delhaize FOOD**
+C&C single at Ahold Delhaize shows ε ≈ +10 in `scored_price_elasticity`, meaning the Price Forecast tile predicts *more* units when price goes up — counterintuitive and confusing during demos.
+
+Investigation traced to `built_filtered_weekly`: `units_promo`, `incr_units`, `units_lift_tpr`, `units_lift_any_display`, and `units_lift_any_feature` are all zero for every week at Ahold Delhaize FOOD. Because `is_promo` in the Price & Promo tile is derived from `units_promo > 0`, no weeks were ever flagged as promotional. The elasticity model treated every week — including Jan 2026 when ARP dropped ~31% to $2.07/bar — as a base-price observation and fit a spurious positive slope.
+
+This is a native SPINS feed gap, not a pipeline bug or join issue. The `/api/trends/price-promo` docstring incorrectly cited `price_elasticity_weekly_features` as the promo source — corrected to accurately reflect that all fields come from `built_filtered_weekly` directly.
+
+**Changes:**
+- `trends.py` docstring corrected (stale reference to `price_elasticity_weekly_features` removed)
+- `07-demo-guide.md` Data Notes updated: avoid Ahold Delhaize for price elasticity demos; use Kroger or Walmart
+- `feedback_ml_data_quirks.md` updated: Ahold Delhaize promo gap + positive-ε root cause pattern documented
+
 ### 2026-06-22 (update 4) — Pack Crossover subtitle corrected; visual heuristic vs. model clarified
 
 **Pack Crossover tile subtitle corrected (3 files)**
