@@ -88,6 +88,37 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 — Mo Chat filter tools; channel exclusions fixed; FP&A walkthrough smoke-tested and corrected
+
+**Demo walkthrough script location (for Rob):**
+`customer-built-mo-ui/docs/WALKTHROUGH.md` — two scripts: 60-Minute FP&A / Executive Demo and 30-Minute Brand/Analytics Demo. A README.md was added to `customer-built-mo-ui` pointing directly to it. The wiki `07-demo-guide.md` also now leads with this pointer.
+
+**Mo Chat filter manipulation tools (Trends screen)**
+Mo can now directly update the Trends filter bar in response to natural-language requests. Three new tools added to `mo_chat.py`:
+- `get_channel_list` — returns exact `channel_outlet` strings from Druid, same exclusion list as `/api/trends/channels`
+- `get_account_list` — returns exact `retail_account` strings from Druid
+- `update_filters` — backend returns `{filters: {...}}`; MoPanel dispatches `mo-update-filters` CustomEvent; Trends.tsx listener applies changes (set_channel auto-clears accounts since accounts don't cross channels)
+
+Guard pattern: Mo must call the list tools before using values, preventing hallucinated SPINS strings (e.g. "DRUG" vs `CONVENTIONAL|DRUG`). LLM does fuzzy matching between user intent and exact Druid string.
+
+**Stop button / ESC cancel (all Mo Chat instances)**
+MoPanel now shows a Stop button while a request is in flight; ESC also cancels. Uses `AbortController` — `CanceledError` silently swallowed. Hint text toggles between `"Enter to send · Shift+Enter for newline"` and `"ESC · stop"`.
+
+**EXCLUDED_CHANNELS single source of truth**
+`_EXCLUDED_CHANNELS` renamed to public `EXCLUDED_CHANNELS` in `trends.py`; imported by `mo_chat.py`. Both the `/api/trends/channels` REST endpoint and `_tool_get_channel_list()` now apply identical filtering. Excluded: `CONVENTIONAL|MILITARY`, `CONVENTIONAL|MULO + CONVENIENCE`, `CONVENTIONAL|DOLLAR`, `CONVENIENCE - SPINS`. Valid channels after exclusions: FOOD, MASS MERCH, MULTI OUTLET, DRUG, CONVENIENCE, NATURAL EXPANDED, REGIONAL & INDEP GROCERY. Trends.tsx now fetches channels dynamically from the API instead of a hardcoded array (hardcoded array had wrong label "DRUG" vs `CONVENTIONAL|DRUG`).
+
+**Price & Promo tile: no data in CONVENTIONAL|CONVENIENCE**
+Confirmed via smoke test: SPINS does not populate ARP / promo-lift columns for the convenience channel in `built_filtered_weekly`. Velocity tile still shows data (uses `base_units` only). Price & Promo tile shows "No data." silently. Documented in wiki `05-ui-screens.md` and `07-demo-guide.md`. Avoid convenience channel during any demo involving the Price & Promo tile.
+
+**FP&A walkthrough smoke test (2026-06-22)**
+All key demo endpoints re-verified against live Druid. Three issues found and corrected in `docs/WALKTHROUGH.md`:
+
+1. **Act 2 narrative corrected and reframed.** Old script said "the 4-pack launch is drawing from the single bar" — factually wrong; with focal=C&C single bar, top BUILT donor is the old Built C&C Bar 1.69oz format (brand renovation displacement), not the Puff 4-pack. Reframed entirely: Mo detects timing correlation (focal distribution up + donor velocity down), not causal transfer. The model tells you *which* relationship to investigate; the team decides what it means. "Signal detection + routing, not verdict delivery."
+
+2. **Confidence badge explained.** All cannibal scores return `confidence: Low` (data maturity, not model certainty). Walkthrough now has a presenter note distinguishing probability (signal strength, 99.9%) from confidence (data maturity). An FP&A audience will notice the Low badge and ask.
+
+3. **Promo Response language corrected.** "Breakpoints / price thresholds" replaced with "lift by tactic" — the screen shows TPR-only (57.1% lift) vs Display-Only (58.3% lift) type buckets, not price thresholds. ARP narrative updated: base price $2.85–2.90 holding steady, with April 2026 promo dip to $2.50 / 111% TPR lift.
+
 ### 2026-06-18 — Cross-retailer SKU view + Finance tools build plan
 
 **Problem:** Retailer Summary lets you start with a retailer and drill to SKUs. Brian also needs to start with a SKU and see how it performs across all retailers ("flip the script"). Finance team is the next audience — they need planning tools in a format they're accustomed to (pivot tables, spreadsheets, promo ROI).
