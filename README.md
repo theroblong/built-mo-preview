@@ -88,6 +88,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 8) — FP&A demo condensed from 60 to 30 minutes
+
+Per `WALKTHROUGH-OVERVIEW.md` from Rob: go deep on Cannibalization and Price Elasticity only; fly over everything else as the future adoption roadmap. 90-minute slot — script now runs ~28 minutes, leaving ~60 minutes for BUILT to ask questions and drive the conversation.
+
+**What was cut:** Act 1 (Trends portfolio + Retailer Summary + Mo Chat bridge), Act 5 (Forecast), Act 6 (Mo Chat standalone). These moved to a 60-second fly-over in the close.
+
+**New structure:**
+1. Opening (2 min) — one framing question, straight to Cannibalization
+2. Act 1 — Cannibalization (13 min): Priority Events → SKU Summary → Geography → Decide (Explanation + Assortment Action)
+3. Act 2 — Price Elasticity (11 min): Elasticity Summary → Promo Response → Competitive Price
+4. Close (3 min): roadmap fly-over (Trends, Retailer Summary, Forecast, Mo Chat) + closing question
+
+`reference_vision_docs.md` memory updated with new demo format and pointers to `WALKTHROUGH-OVERVIEW.md` and `MO-PRESENTATION-BRIEF.md`.
+
 ### 2026-06-22 (update 7) — Promo flag coverage tested across retailers and SKU formats
 
 Ran a cross-retailer query (Kroger, Walmart, Ahold Delhaize, Publix, Meijer, Target) across 4 SKUs (C&C single, C&C 12pk, PB Cup 4pk, Double Choc single) to determine which SPINS field most reliably signals a promo week.
