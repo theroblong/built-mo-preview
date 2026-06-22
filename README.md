@@ -88,6 +88,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 3) — Mo Chat product add for Trends; avatar location fix; walkthrough updated
+
+**Mo Chat: add/switch products on Trends (bug fix + new capability)**
+Root cause: `update_filters` had no product parameters, so when a user asked Mo to "add [product]" while on the Trends page, Mo had no tool for it and fell back to `navigate_to` with suite="cannibalization" — the only navigate target it knew. This caused unexpected navigation away from Trends.
+
+Three-part fix:
+- **`get_product_list(search=)`** — new tool in `mo_chat.py`; searches `built_filtered_weekly` WHERE `source_brand LIKE '%BUILT%'` by name fragment; returns up to 20 matching `{upc, description}` pairs. Guard pattern: Mo must call this before using any UPC.
+- **`update_filters` gains `add_products` and `set_products`** — UPC string arrays; Mo calls `get_product_list` → resolves UPC → calls `update_filters(add_products=[upc])`. Never navigates away from Trends for a product request.
+- **Trends.tsx** handles `add_products` / `set_products` in the `mo-update-filters` CustomEvent listener, adding/replacing `selectedUpcs` state directly.
+- **Walkthrough** updated: Act 6 now includes `"Add the Salted Caramel 1ct to the Trends view"` as a demo question, with a presenter note on the Trends filter-via-Mo-Chat capability.
+
+**Mo Chat avatar location corrected in walkthrough**
+Three instances of "bottom-right corner" fixed to "top-right header" in `docs/WALKTHROUGH.md`.
+
 ### 2026-06-22 (update 2) — Price & Promo tile fix; cross-flavor demo combos; walkthrough note
 
 **Price & Promo tile: account state never cleared (bug fix)**
