@@ -88,6 +88,24 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 6) — Price elasticity model validation gap documented; backtesting options captured
+
+Rob asked whether we backtested the elasticity model after the Ahold Delhaize positive-ε oddity. Short answer: partial.
+
+**What MO_16 does:** Random 80/20 `train_test_split`; LightGBM early stopping on the val set; MAE and R² saved to `outputs/price_elasticity_train_metrics.json` (R²=0.9687, MAE=0.0699). This validates that the model generalizes across the training distribution.
+
+**What it doesn't do:**
+- No temporal holdout — we never trained on weeks 1–N and predicted weeks N+1 onward against actuals
+- No account-level holdout — no leave-one-retailer-out check
+- No post-hoc event backtesting — no step that takes a scored ε, applies it to a historical price event, and compares predicted vs. actual unit lift
+
+The Ahold case was a data quality failure (SPINS promo columns all zero), not a model failure — but the current validation setup cannot distinguish the two. Accounts with missing promo data produce unreliable elasticities silently.
+
+**Three revisit options documented** in `project_pe_backtesting.md` memory and `03-ml-pipeline.md` wiki:
+1. Temporal holdout (reserve last 13 weeks in MO_16 — no schema changes needed)
+2. Account-level cross-validation (leave-one-retailer-out; full re-run per fold)
+3. Post-hoc event validation (fastest — join `price_event_queue` to `built_filtered_weekly` actuals; no re-run needed)
+
 ### 2026-06-22 (update 5) — Positive elasticity root cause traced to SPINS promo data gap at Ahold Delhaize
 
 **Root cause: SPINS promo columns missing for Ahold Delhaize FOOD**
