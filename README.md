@@ -88,6 +88,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 7) — Promo flag coverage tested across retailers and SKU formats
+
+Ran a cross-retailer query (Kroger, Walmart, Ahold Delhaize, Publix, Meijer, Target) across 4 SKUs (C&C single, C&C 12pk, PB Cup 4pk, Double Choc single) to determine which SPINS field most reliably signals a promo week.
+
+**Finding: `arp_pct_discount` (`arp < base_arp`) is unreliable for multipacks across all retailers.** It misses 33–53% of promo weeks on the 4pk and 12pk formats because those SKUs are frequently promoted via display or circular without a shelf price cut. `arp_pct_discount` only fires when the actual retail price drops below the everyday shelf price (TPR). Single bars at major retailers (Kroger, Walmart, Meijer) fare better — 2–8% miss rate — but Ahold single still misses 34% and Publix single misses 19%.
+
+**Recommended combined flag:** `incr_units > 0 OR arp < base_arp`. Covers TPR (price-cut promos) via `arp_pct_discount` and display/feature promos via `incr_units`. Neither alone is sufficient across all formats.
+
+**Impact on MO_16 re-run plan:** If we do a promo-clean elasticity re-run (P7/P8), use the combined flag to exclude promo weeks rather than `promo_confounded` (which has the same coverage gap) or `arp_pct_discount` alone (which misses multipack display activity). Documented in `project_pe_backtesting.md` memory and `03-ml-pipeline.md` wiki.
+
 ### 2026-06-22 (update 6) — Price elasticity model validation gap documented; backtesting options captured
 
 Rob asked whether we backtested the elasticity model after the Ahold Delhaize positive-ε oddity. Short answer: partial.
