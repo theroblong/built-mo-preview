@@ -88,6 +88,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-22 (update 2) — Price & Promo tile fix; cross-flavor demo combos; walkthrough note
+
+**Price & Promo tile: account state never cleared (bug fix)**
+`PriceTile` had a one-way account sync: the `useEffect` only set the internal `account` state when `initialAccount` existed AND the tile had no account yet. When the user removed the retail account from global filters, the tile kept querying with the stale account (e.g. KROGER persisting after switching to MASS MERCH with no account). Fixed to always mirror `selectedAccounts[0]`:
+```tsx
+useEffect(() => { setAccount(initialAccount ?? ""); }, [initialAccount]);
+```
+Verified in three filter states: Kroger+Walmart (tile shows KROGER), MASS MERCH no account (tile shows "All accounts"), MASS MERCH with more products (tile stays "All accounts"). Fix committed + pushed to `customer-built-mo-ui`.
+
+**Cross-flavor demo combos — which flavor family returns >2 SKUs**
+`comparison_pool_weekly` D3 rows (SAME_BRAND cross-flavor) at Kroger MULO:
+- **PB Cup 4pk** (`08-40229-30646`) → 3 partners: PB Puff single (Cannibalizing prob=0.9999), PB Puff 12pk, PB Protein Bar — red + gray rows, best demo variety
+- **Double Choc** (`08-40229-30071`) → 3 partners: Choc Milkshake, Dbch Nsb 12pk, Dbl Choc Bar 12pk — all unscored (gray only)
+- **C&C single** (`08-40229-30550`) → only 2 partners — avoid for this tab
+Demo guide and test examples updated. Presenter note added to WALKTHROUGH.md Q4 (30-min script).
+
 ### 2026-06-22 — Mo Chat filter tools; channel exclusions fixed; FP&A walkthrough smoke-tested and corrected
 
 **Demo walkthrough script location (for Rob):**
