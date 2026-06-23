@@ -288,6 +288,20 @@ Active price events on the Pricing Action tab each carry a severity badge. The b
 - `customer-built-mo-api/.env.example` expanded from 3 → 8 vars: added `ANTHROPIC_API_KEY` (required for Mo Chat), `MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET` (ML pipeline write-back only, skip for demo). Each group has a comment explaining which vars are demo-critical.
 - `customer-built-mo-ui/docs/WALKTHROUGH.md` now has a "First-Time Setup" section above "Before You Begin" covering: `git pull`, `cp .env.example .env`, `python3 -m venv .venv && pip install -r requirements.txt`, `npm install`. Prior version assumed the venv already existed.
 
+### 2026-06-23 — Mo Chat bug fixes + Trends screen awareness + error handling
+
+**Three Mo Chat bugs fixed:**
+
+*Pack Crossover tile tool confusion:* When user asked "describe what's happening with the pack crossover" on the Trends dashboard, Mo was calling `get_cannibalization_packladder` (queries `price_pack_ladder_weekly`, returns empty for Trends filter context) instead of `get_velocity_trend`. Root cause: "use get_velocity_trend for sales trajectory" didn't cover the "describe this tile" intent, so Mo pattern-matched "pack crossover" to the Cannibalization Suite tool. Fix: explicit `PACK CROSSOVER TILE` instruction in `_SCREEN_MAP` Trends section.
+
+*Channel switch false-confirmation:* When user said "switch to convenience," Mo called `get_channel_list`, found `CONVENTIONAL|CONVENIENCE` in the list, and confirmed "you're already on CONVENTIONAL|CONVENIENCE" without calling `update_filters`. Fix: explicit note in `get_channel_list` tool description that the list shows *available* channels (not the *current* channel) — Mo must always call `update_filters` to apply the change.
+
+*Trends context — "select a focal UPC from the dropdown":* Trends has no focal UPC selector; products are in the Products filter bar. `filters.upc` is always empty on Trends, so MoPanel was hitting the generic `!filters.upc` branch and telling users to select a UPC that doesn't exist. Mo also had no idea which products were visible. Fix: `Trends.tsx` → `App.tsx` → `MoPanel.tsx` → `ChatRequest.selected_products` pipeline passes the current product list to every chat request. `_build_system()` for `trends::dashboard` now lists all 6 tile names, selected products with UPCs, and what Mo can help with. `MoPanel.tsx` proactive message uses `formatTrendsProductLabel()` to show e.g. "Built Puff Cookies N Cream (single · 4pk · 12pk) at KROGER + WALMART" instead of repeating the truncated base name.
+
+**Graceful 500/529 error handling:** `_call_anthropic_with_tools()` now catches `APIStatusError` (429/500/502/503/529) and `APIConnectionError`/`APITimeoutError` — returns a friendly user-facing message instead of crashing the FastAPI route.
+
+Wiki updated: `customer-built-doc/wiki/06-mo-chat.md` — new Trends Screen Awareness section, Error Handling section, updated proactive message logic, updated roadmap table, `get_channel_list` tool note.
+
 ### 2026-06-17 (update 2) — UC8/UC14 benchmarking, screentips, Brian walkthrough, smoke test fixes
 
 **UC8 benchmarking quick wins (three screens)**
