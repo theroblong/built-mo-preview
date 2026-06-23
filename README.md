@@ -88,6 +88,33 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-23 (update 2) — Aevah Standup Jun 23 directives captured in project roadmap
+
+Key directives from Rob/Jason standup transcript extracted and saved to project memory + wiki (`customer-built-doc/wiki/08-roadmap.md`).
+
+**Near-term (high priority for Jun 25 demo):**
+- **Chart annotation lines + Mo explanation** — Detect significant changes in Trends charts algorithmically (divergence, crossover, spike); draw a vertical dashed line at the event date; clicking fires a pre-built deterministic Mo Chat prompt explaining what happened and what it could mean. Hero use case: Cookies N Cream 1ct vs 4pk divergence at Walmart, Dec 2025 – Feb 2026. Rob: "Let's build that. Don't worry about accuracy — just draw the line and have Mo say something." First pass = concept proof.
+- **Mo drives actionability** — Rob's core directive: "AI needs to help them act on the dashboard, not just see it. The dashboard screams at them when something needs to be done." We're automating the analyst, not building another dashboard.
+- **Deterministic Mo prompts** — When an annotation or button triggers Mo, pre-build the prompt from known context (SKU, date, account, event type) for predictable, relatable answers.
+
+**Long-term (90-day production standup scope):**
+- **Validation / testing harness** — Two modes: (1) raw SPINS data quality check, (2) model output validation. Generates a gap lookup table the UI references to display "insufficient data" notes. Drives customer trust.
+- **Edge case identification and process definition** — Deeper backtesting, second training pass, edge case catalog, external data integration (BUILT's own promo/merch dates overlaid on charts).
+
+### 2026-06-23 — Mo Chat bug fixes + Trends screen awareness + error handling
+
+**Three Mo Chat bugs fixed:**
+
+*Pack Crossover tile tool confusion:* When user asked "describe what's happening with the pack crossover" on the Trends dashboard, Mo was calling `get_cannibalization_packladder` (queries `price_pack_ladder_weekly`, returns empty for Trends filter context) instead of `get_velocity_trend`. Root cause: "use get_velocity_trend for sales trajectory" didn't cover the "describe this tile" intent, so Mo pattern-matched "pack crossover" to the Cannibalization Suite tool. Fix: explicit `PACK CROSSOVER TILE` instruction in `_SCREEN_MAP` Trends section.
+
+*Channel switch false-confirmation:* When user said "switch to convenience," Mo called `get_channel_list`, found `CONVENTIONAL|CONVENIENCE` in the list, and confirmed "you're already on CONVENTIONAL|CONVENIENCE" without calling `update_filters`. Fix: explicit note in `get_channel_list` tool description that the list shows *available* channels (not the *current* channel) — Mo must always call `update_filters` to apply the change.
+
+*Trends context — "select a focal UPC from the dropdown":* Trends has no focal UPC selector; products are in the Products filter bar. `filters.upc` is always empty on Trends, so MoPanel was hitting the generic `!filters.upc` branch and telling users to select a UPC that doesn't exist. Mo also had no idea which products were visible. Fix: `Trends.tsx` → `App.tsx` → `MoPanel.tsx` → `ChatRequest.selected_products` pipeline passes the current product list to every chat request. `_build_system()` for `trends::dashboard` now lists all 6 tile names, selected products with UPCs, and what Mo can help with. `MoPanel.tsx` proactive message uses `formatTrendsProductLabel()` to show e.g. "Built Puff Cookies N Cream (single · 4pk · 12pk) at KROGER + WALMART" instead of repeating the truncated base name.
+
+**Graceful 500/529 error handling:** `_call_anthropic_with_tools()` now catches `APIStatusError` (429/500/502/503/529) and `APIConnectionError`/`APITimeoutError` — returns a friendly user-facing message instead of crashing the FastAPI route.
+
+Wiki updated: `customer-built-doc/wiki/06-mo-chat.md` — new Trends Screen Awareness section, Error Handling section, updated proactive message logic, updated roadmap table, `get_channel_list` tool note.
+
 ### 2026-06-22 (update 8) — FP&A demo condensed from 60 to 30 minutes
 
 Per `WALKTHROUGH-OVERVIEW.md` from Rob: go deep on Cannibalization and Price Elasticity only; fly over everything else as the future adoption roadmap. 90-minute slot — script now runs ~28 minutes, leaving ~60 minutes for BUILT to ask questions and drive the conversation.
@@ -287,6 +314,19 @@ Active price events on the Pricing Action tab each carry a severity badge. The b
 **Rob solo-run readiness**
 - `customer-built-mo-api/.env.example` expanded from 3 → 8 vars: added `ANTHROPIC_API_KEY` (required for Mo Chat), `MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET` (ML pipeline write-back only, skip for demo). Each group has a comment explaining which vars are demo-critical.
 - `customer-built-mo-ui/docs/WALKTHROUGH.md` now has a "First-Time Setup" section above "Before You Begin" covering: `git pull`, `cp .env.example .env`, `python3 -m venv .venv && pip install -r requirements.txt`, `npm install`. Prior version assumed the venv already existed.
+
+### 2026-06-23 (update 2) — Aevah Standup directives captured in roadmap
+
+Key directives from Rob/Jason standup extracted from transcript and saved to project memory + wiki (`08-roadmap.md`):
+
+**Near-term (high priority for Jun 25 demo):**
+- **Chart annotation lines + Mo explanation** — Detect significant changes in Trends charts algorithmically; draw a vertical dashed line at the event date; clicking fires a pre-built deterministic Mo Chat prompt. Hero use case: Cookies N Cream 1ct vs 4pk divergence at Walmart, Dec 2025 – Feb 2026. Rob: "Let's build that. Don't worry about accuracy — just draw the line and have Mo say something." First pass = concept proof.
+- **Mo drives actionability** — Rob's core directive: "AI needs to help them act on the dashboard, not just see it. The dashboard screams at them when something needs to be done." We're automating the analyst, not helping the analyst.
+- **Deterministic Mo prompts** — When an annotation or button triggers Mo, pre-build the prompt from known context (SKU, date, account, event type) for predictable, relatable answers.
+
+**Long-term (90-day production standup scope):**
+- **Validation / testing harness** — Two modes: (1) raw SPINS data quality check, (2) model output validation. Generates a gap lookup table the UI references to show "insufficient data" notes. Drives customer trust.
+- **Edge case identification and process definition** — Deeper backtesting, second training pass, edge case catalog, external data integration (BUILT's own promo dates overlaid on charts).
 
 ### 2026-06-23 — Mo Chat bug fixes + Trends screen awareness + error handling
 
