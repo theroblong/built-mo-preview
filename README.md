@@ -88,6 +88,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-23 (update 3) — Trends Price & Promo account dropdown fix
+
+**Bug:** When the user selected 2+ channels in the Trends filter bar and removed all account chips, the Price & Promo tile's account dropdown was empty — no accounts available to pick.
+
+**Root cause:** `PriceTile` built its accounts list from `knownAccounts` (velocity-derived, only fills when exactly 1 UPC is selected) with `selectedAccounts` as fallback. With 3 UPCs selected and no explicit account selection, both were empty arrays.
+
+**Fix (`Trends.tsx`):** Added `channelFilteredAccountOptions` — all accounts from the pre-loaded `allAccounts` map filtered to the active channels (or all channels if none selected), deduped + sorted. This is the same list the Account picker in the filter bar shows. Now used as the fallback for `PriceTile` accounts in both the main tile and `TileExpandView`, so the dropdown is always populated from the channel-aware account universe regardless of UPC count or whether the user has explicit account chips selected.
+
+---
+
 ### 2026-06-23 (update 2) — Aevah Standup Jun 23 directives captured in project roadmap
 
 Key directives from Rob/Jason standup transcript extracted and saved to project memory + wiki (`customer-built-doc/wiki/08-roadmap.md`).
