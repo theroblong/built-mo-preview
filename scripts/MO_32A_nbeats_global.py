@@ -30,6 +30,8 @@ Outputs (in scripts/outputs/):
 """
 
 import os
+os.environ["OMP_NUM_THREADS"] = "1"    # prevent OpenMP thread pool hang on macOS
+os.environ["MKL_NUM_THREADS"] = "1"
 import json
 import warnings
 import logging
@@ -254,6 +256,7 @@ def main():
             scaler_type="standard",
             random_seed=42,
             accelerator="cpu",
+            start_padding_enabled=True, # zero-pads series shorter than input_size
             enable_progress_bar=False,
             enable_model_summary=False,
         )
