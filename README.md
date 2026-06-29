@@ -88,6 +88,53 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-29 (update 3) — FP&A research report + ensemble analysis + July 2026 projection
+
+**MO_34 — Per-series ensemble trigger analysis (`scripts/MO_34_ensemble_trigger.py`)**
+
+Head-to-head comparison of LightGBM vs. ETS (Holt linear trend) on 106 qualifying series at the Dec 2024 cutpoint. LightGBM wins 74/106 series (70%); ETS wins only 1. Key finding: ETS fails on mature/growth series because it cannot see TDP or elasticity signals — it extrapolates raw units and overshoots when distribution growth moderates. LGB overall 29.4% vs ETS 52.6%; ensemble (best-of-both router) 28.1% (+1.25pp). Growth stage breakdown: Expanding series LGB 35.6% vs ETS 50.0%; Mature LGB 20.1% vs ETS 56.5%. Outputs: per-series CSV, metrics JSON, 3 charts (scatter, growth-stage bars, ensemble gain waterfall).
+
+**MO_35 — Forward projection to July 2026 (`scripts/MO_35_forward_projection.py`)**
+
+Trained on full 3-year SPINS history through April 2026 (288 qualifying series). Projects 13 weeks forward to ~July 19 2026, answering "where is BUILT today?" — live intelligence unavailable to BUILT without this system. Plan (q50): 328K units/week, 4.3M total Q2–Q3 2026. Range: 3.7M (floor/q10) to 4.6M (ceiling/q90). −2.7% vs. prior 13-week average (consistent with post-winter seasonal pattern). Outputs: summary JSON + 2 charts (total portfolio forward + top-6 retailer breakdown).
+
+**MO_36 — Self-contained HTML research report (`scripts/MO_36_report.py`)**
+
+Generates `scripts/outputs/built_demand_intelligence_report.html` — a 2.4 MB email-ready research paper. All 11 charts from MO_32B–35 embedded as base64 PNG. Nine sections: Executive Summary (4 KPI chips) → The Challenge (growth-mode distortion) → Our Approach (domain signals + ensemble) → Validation (horse race, 3-cutpoint walk-forward) → LGB vs. ETS (growth stage bars + per-series scatter) → Quarterly Retraining (rolling vs. stale table) → FP&A Tools (4 business questions) → July 2026 Projection → ROI Calculation (~$22M at $1M/1pp) → Technical Appendix. To share: attach the `.html` file to email; instruct recipients to download and open in Chrome/Safari (not in the email client preview pane).
+
+---
+
+### 2026-06-29 (update 2) — FP&A business decision charts; quarterly rolling retrain simulation
+
+**MO_32B — Quarterly rolling-origin retraining simulation (`scripts/MO_32B_quarterly_rollforward.py`)**
+
+5 quarterly retrain windows covering all of 2025 + Q1 2026. Rolling LightGBM (retrained each quarter) achieves 13.1% wMAPE overall vs. 27.1% for the stale Dec 2024 model and 25.0% for MA 13wk. Retraining gain is +14.1pp overall, rising to +18.9pp by Q1 2026. Production story: quarterly retraining is not optional — a model trained once and left degrades as BUILT's portfolio evolves. Outputs: metrics JSON, per-window CSV, 3 charts (rolling accuracy, stitched forecast, retrain value bar).
+
+**MO_33 — FP&A business decision charts (`scripts/MO_33_fpa_business_charts.py`)**
+
+5 presentation-ready charts answering the FP&A questions BUILT actually asks, trained on Dec 2025 data with 4.4% wMAPE validation:
+1. "What will I sell next quarter?" — top-6 retailer forecast with q10/q90 confidence bands
+2. "Am I growing from real demand or cannibalizing myself?" — units vs. cannibalization pressure over time
+3. "How much do I need to manufacture?" — total portfolio demand with floor/plan/ceiling bands
+4. "Which retailer should I prioritize for expansion?" — velocity × growth × TDP bubble chart
+5. "Which method should I trust?" — horse race: all 4 methods vs. Q1 2026 actuals with wMAPE annotations
+
+---
+
+### 2026-06-29 — FP&A forecasting v2.0.0: multi-model backtesting + walk-forward validation
+
+Complete retailer demand forecasting pipeline built and validated across 3 independent temporal cutpoints:
+
+| Cutpoint | OOS Period | Series | LightGBM wMAPE | Naïve wMAPE |
+|---|---|---|---|---|
+| Dec 2024 | Q1–Q4 2025 (68 weeks) | 143 | 30.1% | 62.2% |
+| Oct 2025 | Nov 2025–Apr 2026 (29 weeks) | 206 | 6.1% | 37.1% |
+| Dec 2025 | Jan–Apr 2026 (16 weeks) | 280 | **4.7%** | 40.6% |
+
+Scripts: `MO_28_v2_eval.py` (baseline + SHAP), `MO_29_backtest_oct2025.py`, `MO_30_multi_model_backtest.py` (Prophet 174.9% / ETS 52.8% / MA 54.7% / LGB 30.1% at Dec 2024), `MO_31_walkforward_jan2026.py` (3-cutpoint walk-forward charts), `MO_32A_nbeats_global.py` (N-BEATS global neural: Dec2024 55.6% / Oct2025 117.9% / Dec2025 46.4% — growth-mode distortion confirmed). Key insight: N-BEATS and ETS fail on growth-mode brands because they cannot see TDP expansion. LightGBM's domain signals (TDP, elasticity, cannibalization) are what drive the 10× accuracy gap.
+
+---
+
 ### 2026-06-23 (update 3) — Trends Price & Promo account dropdown fix
 
 **Bug:** When the user selected 2+ channels in the Trends filter bar and removed all account chips, the Price & Promo tile's account dropdown was empty — no accounts available to pick.
