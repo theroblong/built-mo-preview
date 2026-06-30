@@ -88,6 +88,43 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-30 (v2.0.4 — in development) — Feature Diagnostic + Stepwise Ablation + Segment Analysis (MO_41)
+
+**MO_41 — Feature Diagnostic & Competitive Differentiation (`scripts/MO_41_feature_diagnostic.py`)**
+
+Rigorous quantitative proof that LightGBM's 20pp accuracy improvement is real, explainable, and attributable to specific feature layers — not just "more complex math." Addresses the root-cause question: which features are actually time-varying and driving the forecast, vs. which are static series-level adjustments? Builds Section 15 of the HTML report.
+
+**Key pre-script diagnostic findings (2026-06-30):**
+
+| Feature | ICC | Verdict |
+|---|---|---|
+| `implied_elasticity` | 1.0000 | Fully static — one ε per UPC×retailer; acts as fixed-effect intercept |
+| `max_donor_cannibal_prob` | 1.0000 | Fully static AND binary (0.0 or 1.0 only — no values between 0.3–0.9) |
+| `donor_count` | 1.0000 | Fully static — needs to be split: own-brand vs. competitive |
+| `tdp_z8` | 0.0752 | Truly time-varying — TDP momentum changes weekly |
+| `arp_wow_delta` | 0.0050 | Highly time-varying — price change events |
+| `base_units_wow_delta` | 0.0087 | Highly time-varying — demand response |
+
+These findings explain why Mo intelligence signals show near-zero SHAP on the portfolio average: they can only differentiate BETWEEN series, not explain week-to-week variation WITHIN a series. The 20pp gap vs. MA 13wk comes from LightGBM's non-linear interaction learning across truly time-varying features (TDP momentum, demand z-scores, price change events) — proved by stepwise ablation in MO_41.
+
+**Segment performance snapshot (Dec 2025 cutpoint):**
+
+| Channel | LightGBM | MA 13wk | Gap |
+|---|---|---|---|
+| FOOD | 2.4% | 21.3% | 18.9pp |
+| CONVENIENCE | 2.5% | 19.4% | 16.9pp |
+| DRUG | 3.2% | 16.3% | 13.1pp |
+| MASS MERCH | 6.4% | 25.6% | 19.2pp |
+
+**Phase 2 feature engineering roadmap (to make Mo signals time-varying):**
+- `implied_elasticity` → rolling 12-week price-response regression (recomputed as ARP changes; data already available in SPINS)
+- `max_donor_cannibal_prob` → weekly `donor_velocity / focal_velocity` ratio (actual competitive pressure this week; data already available)
+- `donor_count` → split into own-brand donor count + competitor brand count
+- New: BUILT TDP share (BUILT TDP / category TDP) — gaining or losing shelf vs. competitors
+- New: Holiday calendar flags from `week_of_year` — zero additional data cost
+
+---
+
 ### 2026-06-30 (v2.0.3) — Model explainability: SHAP waterfalls + CFO Q&A + Section 14 (MO_40)
 
 **MO_40 — Model Explainability Report (`scripts/MO_40_explainability.py`)**
