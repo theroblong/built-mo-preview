@@ -759,12 +759,13 @@ def _chart5_dollar_impact(bb4pk_arp, cd4pk_arp, bb8pk_arp,
             ax.text(bar.get_x() + bar.get_width() / 2, h + 3,
                     f"${h:,.0f}K", ha="center", va="bottom", fontsize=8.5, color="#333")
 
-    # Add wMAPE labels below x-axis
+    # Add wMAPE labels inside the Mo bars
     mo_wmapes = [s[3] for s in skus]
-    for i, (sku_label, wm) in enumerate(zip(labels, mo_wmapes)):
-        ax.text(x[i] + width/2, -25,
+    for i, wm in enumerate(mo_wmapes):
+        bar_h = mo_q[i] / 1000
+        ax.text(x[i] + width/2, bar_h * 0.5,
                 f"{wm:.1f}%\nwMAPE",
-                ha="center", va="top", fontsize=7.5, color=C_MO, transform=ax.get_xaxis_transform())
+                ha="center", va="center", fontsize=7.5, color="white", fontweight="bold")
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=9.5)

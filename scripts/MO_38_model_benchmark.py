@@ -712,39 +712,80 @@ def main():
     print("\n[Chart 3/4] Accuracy comparison chart …")
     chart_accuracy(all_results, os.path.join(OUTPUT_DIR, "v2_mo38_accuracy_comparison.png"))
 
-    # ── Chart 4: External candidates (standalone table) ───────────────────────
+    # ── Chart 4: External candidates (card layout) ────────────────────────────
     print("[Chart 4/4] External candidates chart …")
-    fig, ax = plt.subplots(figsize=(14, 5))
-    fig.patch.set_facecolor("#f8f9fa")
-    ax.axis("off")
-    ax.set_title("Tier 3 — External Feature Candidates for FP&A Integration\n"
-                 "(addresses Connor Lain's Jun 26 question about external data)",
-                 fontsize=13, fontweight="bold", pad=12)
+    import textwrap as _tw
 
-    cols = ["Name", "Tier", "Data Source", "Join Strategy", "Business Hypothesis",
-            "Effort", "Priority"]
-    rows = [[c["name"], c["tier"], c["source"], c["join"], c["hypothesis"],
-             c["effort"], c["priority"]] for c in EXTERNAL_CANDIDATES]
+    BG_CARD   = "#f8f9fa"
+    HDR_BLUE  = "#1565c0"
+    TEXT_DARK = "#1a1a2e"
+    TEXT_GREY = "#546e7a"
+    TIER_COL  = {"3A": "#4caf50", "3B": "#ff9800", "3C": "#e53935"}
+    PRI_COL   = {"High": "#c62828", "Medium": "#e65100"}
 
-    tbl = ax.table(cellText=rows, colLabels=cols,
-                   loc="center", cellLoc="left")
-    tbl.auto_set_font_size(False)
-    tbl.set_fontsize(8.5)
-    tbl.auto_set_column_width(list(range(len(cols))))
+    n = len(EXTERNAL_CANDIDATES)
+    fig, axes = plt.subplots(1, n, figsize=(n * 4.2, 6.0))
+    fig.patch.set_facecolor(BG_CARD)
+    fig.suptitle("Tier 3 — External Data Candidates for FP&A Integration\n"
+                 "(Connor Lain's Jun 26 question: what would external data actually add?)",
+                 fontsize=12, fontweight="bold", color=TEXT_DARK, y=0.98)
 
-    priority_map = {"High": "#ffe4e4", "Medium": "#fff3e0"}
-    for ri in range(len(rows)):
-        priority = rows[ri][6]
-        bg = priority_map.get(priority, "#f9f9f9")
-        for ci in range(len(cols)):
-            tbl[(ri + 1, ci)].set_facecolor(bg)
-    for ci in range(len(cols)):
-        tbl[(0, ci)].set_facecolor("#dce8f5")
-        tbl[(0, ci)].set_text_props(fontweight="bold")
+    for ax, cand in zip(axes, EXTERNAL_CANDIDATES):
+        ax.set_facecolor("white")
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_edgecolor("#d0d0d0")
+            spine.set_linewidth(0.8)
 
-    plt.tight_layout(pad=2)
+        tier_col = TIER_COL.get(cand["tier"], "#888")
+        pri_col  = PRI_COL.get(cand["priority"], "#555")
+
+        # Header bar
+        ax.add_patch(plt.Rectangle((0, 0.87), 1, 0.13, transform=ax.transAxes,
+                                   facecolor=tier_col, alpha=0.18, clip_on=False))
+        ax.text(0.06, 0.935, f"Tier {cand['tier']}", transform=ax.transAxes,
+                fontsize=9, fontweight="bold", color=tier_col, va="center")
+        ax.text(0.94, 0.935, cand["priority"], transform=ax.transAxes,
+                fontsize=9, fontweight="bold", color=pri_col, va="center", ha="right")
+
+        # Name
+        name_wrapped = '\n'.join(_tw.wrap(cand["name"], 22))
+        ax.text(0.06, 0.79, name_wrapped, transform=ax.transAxes,
+                fontsize=11, fontweight="bold", color=TEXT_DARK, va="top", linespacing=1.35)
+
+        # Source
+        ax.text(0.06, 0.63, "Source", transform=ax.transAxes,
+                fontsize=7.5, color=TEXT_GREY, va="top", fontweight="bold")
+        src_wrapped = '\n'.join(_tw.wrap(cand["source"], 30))
+        ax.text(0.06, 0.585, src_wrapped, transform=ax.transAxes,
+                fontsize=8.5, color=TEXT_DARK, va="top", linespacing=1.3)
+
+        # Join strategy
+        ax.text(0.06, 0.465, "How to integrate", transform=ax.transAxes,
+                fontsize=7.5, color=TEXT_GREY, va="top", fontweight="bold")
+        join_wrapped = '\n'.join(_tw.wrap(cand["join"], 30))
+        ax.text(0.06, 0.42, join_wrapped, transform=ax.transAxes,
+                fontsize=8.0, color=TEXT_DARK, va="top", linespacing=1.3)
+
+        # Hypothesis
+        ax.text(0.06, 0.25, "Business hypothesis", transform=ax.transAxes,
+                fontsize=7.5, color=TEXT_GREY, va="top", fontweight="bold")
+        hyp_wrapped = '\n'.join(_tw.wrap(cand["hypothesis"], 30))
+        ax.text(0.06, 0.205, hyp_wrapped, transform=ax.transAxes,
+                fontsize=8.0, color="#37474f", va="top", style="italic", linespacing=1.3)
+
+        # Effort footer
+        ax.add_patch(plt.Rectangle((0, 0), 1, 0.10, transform=ax.transAxes,
+                                   facecolor="#f0f4f8", clip_on=False))
+        ax.text(0.5, 0.05, f"Effort: {cand['effort']}", transform=ax.transAxes,
+                fontsize=8.5, color=TEXT_GREY, va="center", ha="center", fontweight="bold")
+
+    plt.tight_layout(rect=[0, 0, 1, 0.91], pad=1.0)
     fig.savefig(os.path.join(OUTPUT_DIR, "v2_mo38_external_candidates.png"),
-                dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
+                dpi=150, bbox_inches="tight", facecolor=BG_CARD)
     plt.close(fig)
     print(f"  Saved: v2_mo38_external_candidates.png")
 
