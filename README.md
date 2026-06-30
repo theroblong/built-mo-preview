@@ -88,6 +88,27 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-30 (v2.0.3) — Model explainability: SHAP waterfalls + CFO Q&A + Section 14 (MO_40)
+
+**MO_40 — Model Explainability Report (`scripts/MO_40_explainability.py`)**
+
+Answers the "black box" objection from Bracken (CFO), Jeff (SVP Finance), Connor (FP&A), and Chase. Re-trains LightGBM on Dec 2025 cutpoint, computes SHAP TreeExplainer values across all 2,126 test rows (27 features), and generates five charts. HTML report extended with Section 14: CFO/FP&A Q&A (5 questions) + honest limitations table. Report grows from 5.4 MB → 6.1 MB (v2.0.3).
+
+**Focal SKU accuracy at Walmart (Dec 2025 cutpoint, 13-week OOS average):**
+| SKU | Actual avg units/wk | Forecast avg units/wk | Error |
+|---|---|---|---|
+| Brownie Batter 4pk (mature) | 27,317 | 28,472 | 4.2% |
+| Cookie Dough Chunk 4pk (growing) | 29,275 | 29,772 | 1.7% |
+| Brownie Batter 8pk (cold-start) | — uses MA 13wk (<52 weeks) — | | |
+
+**Section 14 contents:**
+- SHAP feature importance: top 20 features ranked by mean |SHAP| across all 164 qualifying series; tiered by demand dynamics / velocity / distribution / price / lifecycle / Mo intelligence
+- Waterfall charts (BB 4pk + CD 4pk): each feature's average contribution to the Q1 2026 Walmart forecast in plain business terms; summary box shows base → forecast → actual
+- Cold-start narrative (BB 8pk): explains the ≥52-week threshold, shows history, MA 13wk forecast line, and wMAPE; demonstrates the system auto-selects the right model by SKU age
+- Prediction audit: actual vs. forecast scatter (all 164 series, color-coded by wMAPE) + accuracy distribution histogram
+- CFO/FP&A Q&A: 5 written answers — Excel vs. model; trust/audit trail; TDP inflection (Bracken's concern); when it will be wrong; what external data actually adds + realistic ROI per addition
+- Honest limitations: distribution inflection points, new SKUs <52 weeks, promo week lag, competitive response lag, geography granularity
+
 ### 2026-06-30 (v2.0.2) — OLS Linear Regression added to benchmark + HTML report extended to 13 sections (MO_39)
 
 **MO_39 — Linear Regression benchmark + HTML report extension (`scripts/MO_39_linear_regression_benchmark.py`)**
