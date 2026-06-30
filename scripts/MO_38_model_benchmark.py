@@ -724,11 +724,11 @@ def main():
     PRI_COL   = {"High": "#c62828", "Medium": "#e65100"}
 
     n = len(EXTERNAL_CANDIDATES)
-    fig, axes = plt.subplots(1, n, figsize=(n * 4.2, 6.0))
+    fig, axes = plt.subplots(1, n, figsize=(n * 5.2, 9.0))
     fig.patch.set_facecolor(BG_CARD)
     fig.suptitle("Tier 3 — External Data Candidates for FP&A Integration\n"
                  "(Connor Lain's Jun 26 question: what would external data actually add?)",
-                 fontsize=12, fontweight="bold", color=TEXT_DARK, y=0.98)
+                 fontsize=14, fontweight="bold", color=TEXT_DARK, y=0.98)
 
     for ax, cand in zip(axes, EXTERNAL_CANDIDATES):
         ax.set_facecolor("white")
@@ -747,41 +747,41 @@ def main():
         ax.add_patch(plt.Rectangle((0, 0.87), 1, 0.13, transform=ax.transAxes,
                                    facecolor=tier_col, alpha=0.18, clip_on=False))
         ax.text(0.06, 0.935, f"Tier {cand['tier']}", transform=ax.transAxes,
-                fontsize=9, fontweight="bold", color=tier_col, va="center")
+                fontsize=11, fontweight="bold", color=tier_col, va="center")
         ax.text(0.94, 0.935, cand["priority"], transform=ax.transAxes,
-                fontsize=9, fontweight="bold", color=pri_col, va="center", ha="right")
+                fontsize=11, fontweight="bold", color=pri_col, va="center", ha="right")
 
         # Name
-        name_wrapped = '\n'.join(_tw.wrap(cand["name"], 22))
+        name_wrapped = '\n'.join(_tw.wrap(cand["name"], 20))
         ax.text(0.06, 0.79, name_wrapped, transform=ax.transAxes,
-                fontsize=11, fontweight="bold", color=TEXT_DARK, va="top", linespacing=1.35)
+                fontsize=14, fontweight="bold", color=TEXT_DARK, va="top", linespacing=1.35)
 
         # Source
         ax.text(0.06, 0.63, "Source", transform=ax.transAxes,
-                fontsize=7.5, color=TEXT_GREY, va="top", fontweight="bold")
-        src_wrapped = '\n'.join(_tw.wrap(cand["source"], 30))
+                fontsize=10, color=TEXT_GREY, va="top", fontweight="bold")
+        src_wrapped = '\n'.join(_tw.wrap(cand["source"], 26))
         ax.text(0.06, 0.585, src_wrapped, transform=ax.transAxes,
-                fontsize=8.5, color=TEXT_DARK, va="top", linespacing=1.3)
+                fontsize=11, color=TEXT_DARK, va="top", linespacing=1.3)
 
         # Join strategy
         ax.text(0.06, 0.465, "How to integrate", transform=ax.transAxes,
-                fontsize=7.5, color=TEXT_GREY, va="top", fontweight="bold")
-        join_wrapped = '\n'.join(_tw.wrap(cand["join"], 30))
+                fontsize=10, color=TEXT_GREY, va="top", fontweight="bold")
+        join_wrapped = '\n'.join(_tw.wrap(cand["join"], 26))
         ax.text(0.06, 0.42, join_wrapped, transform=ax.transAxes,
-                fontsize=8.0, color=TEXT_DARK, va="top", linespacing=1.3)
+                fontsize=10.5, color=TEXT_DARK, va="top", linespacing=1.3)
 
         # Hypothesis
         ax.text(0.06, 0.25, "Business hypothesis", transform=ax.transAxes,
-                fontsize=7.5, color=TEXT_GREY, va="top", fontweight="bold")
-        hyp_wrapped = '\n'.join(_tw.wrap(cand["hypothesis"], 30))
+                fontsize=10, color=TEXT_GREY, va="top", fontweight="bold")
+        hyp_wrapped = '\n'.join(_tw.wrap(cand["hypothesis"], 26))
         ax.text(0.06, 0.205, hyp_wrapped, transform=ax.transAxes,
-                fontsize=8.0, color="#37474f", va="top", style="italic", linespacing=1.3)
+                fontsize=10.5, color="#37474f", va="top", style="italic", linespacing=1.3)
 
         # Effort footer
         ax.add_patch(plt.Rectangle((0, 0), 1, 0.10, transform=ax.transAxes,
                                    facecolor="#f0f4f8", clip_on=False))
         ax.text(0.5, 0.05, f"Effort: {cand['effort']}", transform=ax.transAxes,
-                fontsize=8.5, color=TEXT_GREY, va="center", ha="center", fontweight="bold")
+                fontsize=11, color=TEXT_GREY, va="center", ha="center", fontweight="bold")
 
     plt.tight_layout(rect=[0, 0, 1, 0.91], pad=1.0)
     fig.savefig(os.path.join(OUTPUT_DIR, "v2_mo38_external_candidates.png"),
