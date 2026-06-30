@@ -88,6 +88,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-30 (v2.0.1) — Full model benchmark + feature illumination (MO_38, in progress)
+
+**MO_38 — Model benchmark + feature illumination (`scripts/MO_38_model_benchmark.py`)**
+
+Extends the FP&A forecasting research with two deliverables: (1) apples-to-apples accuracy benchmark — TFT (Temporal Fusion Transformer), Ridge Regression, and Lasso Regression vs. LightGBM ensemble on the same 3 temporal cutpoints (Dec 2024 / Oct 2025 / Dec 2025, h=13 quarterly horizon) and same 25 domain-engineered features; (2) feature illumination — tier map of all 27 current features (Tier 1: demand dynamics, velocity, distribution, price, lifecycle/seasonality; Tier 2: Mo intelligence — elasticity, cannib rate, donor count), LightGBM SHAP, Ridge coefficients (directional, linear), Lasso auto-selection (which features survive L1 penalty), and external candidate table (Tier 3: holiday flags, weather index, consumer sentiment, BUILT ERP calendar) with join strategy and lift hypothesis. TFT receives all 25 features as `hist_exog_list` — key test of whether domain-intelligent features close the gap between TFT and LightGBM. Lasso coefficients are the most interpretable feature importance story for FP&A: no SHAP explanation required. **Script written 2026-06-30; training in progress as of commit.**
+
+Outputs (pending): `v2_mo38_accuracy_comparison.png`, `v2_mo38_feature_tiers.png`, `v2_mo38_shap_ridge_lasso.png`, `v2_mo38_external_candidates.png`, `v2_mo38_summary.json`, `v2_mo38_by_series_dec2025.csv`
+
+---
+
 ### 2026-06-29 (update 4) — Real-world SKU stories + expanded HTML report
 
 **MO_37 — Real-world SKU storytelling charts (`scripts/MO_37_sku_stories.py`)**
