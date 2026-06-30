@@ -88,6 +88,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### Next (Phase 2) — Advanced Forecasting Techniques (approved 2026-06-30)
+
+Priority sequence agreed with Jason:
+
+1. **LightGBM quantile regression** — P10/P50/P90 scenarios natively from the existing model. Zero new architecture. Gives Connor/Chase worst/expected/best case output in one training call. ~half a day.
+2. **BSTS / CausalImpact** — Bayesian Structural Time Series counterfactual analysis. Answers "what would units have been without this promo / price change?" — the FP&A question SHAP cannot answer. Python: `orbit` (Uber) or `tfp` (TensorFlow Probability) + Google `CausalImpact`.
+3. **DAGs via DoWhy** — Directed Acyclic Graphs to formally prove causality (price → demand vs. seasonal confounders). Long-term credibility play for Bracken and Jeff. Moves claims from correlational to causal.
+4. **DeepGLO** — Deep Global-Local model: matrix factorization network + temporal convolutional network, designed for high-dimensional multi-series. Benchmarks the global-plus-local architecture class.
+5. **GRU** — Gated Recurrent Unit. Lighter and faster than LSTM; another neural benchmark alongside N-BEATS. ~1 day.
+
+Note: TreeSHAP already in use (MO_40 used `shap.TreeExplainer`, which is TreeSHAP — exact polynomial-time algorithm for tree ensembles). BSTS and DAGs are the highest-value net-new additions.
+
+---
+
 ### 2026-06-30 (v2.0.4) — Feature Diagnostic + Stepwise Ablation + Segment Analysis (MO_41)
 
 **MO_41 — Feature Diagnostic & Competitive Differentiation (`scripts/MO_41_feature_diagnostic.py`)**
