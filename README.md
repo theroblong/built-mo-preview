@@ -88,13 +88,26 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
-### 2026-06-30 (v2.0.4 — in development) — Feature Diagnostic + Stepwise Ablation + Segment Analysis (MO_41)
+### 2026-06-30 (v2.0.4) — Feature Diagnostic + Stepwise Ablation + Segment Analysis (MO_41)
 
 **MO_41 — Feature Diagnostic & Competitive Differentiation (`scripts/MO_41_feature_diagnostic.py`)**
 
-Rigorous quantitative proof that LightGBM's 20pp accuracy improvement is real, explainable, and attributable to specific feature layers — not just "more complex math." Addresses the root-cause question: which features are actually time-varying and driving the forecast, vs. which are static series-level adjustments? Builds Section 15 of the HTML report.
+Rigorous quantitative proof that LightGBM's 20pp accuracy improvement is real, explainable, and attributable to specific feature layers — not just "more complex math." Addresses the root-cause question: which features are actually time-varying and driving the forecast, vs. which are static series-level adjustments? Section 15 added to HTML report. HTML report grows from 8.6 MB → 8.7 MB (v2.0.4).
 
-**Key pre-script diagnostic findings (2026-06-30):**
+**Core finding:** M1 (demand foundation, 11 features) = **3.53% wMAPE** — the best single result. MA 13wk baseline = **27.03%**. Each additional Mo signal layer adds marginal overhead because those signals are static per series (ICC = 1.0); Phase 2 converts them to time-varying weekly inputs.
+
+**Stepwise ablation results (Dec 2025 cutpoint, 164 qualifying series, 2,126 test rows):**
+
+| Model | Features | wMAPE | vs. MA 13wk |
+|---|---|---|---|
+| MA 13wk baseline | — | 27.03% | — |
+| M1: Demand Foundation | 11 | **3.53%** | **−23.5pp** |
+| M2: + Per-Store Velocity | 15 | 3.70% | −23.3pp |
+| M3: + TDP & Price | 21 | 4.04% | −23.0pp |
+| M4: + Lifecycle & Season | 24 | 4.09% | −22.9pp |
+| M5: + Mo Intelligence | 27 | 4.33% | −22.7pp |
+
+**ICC audit findings (2026-06-30):**
 
 | Feature | ICC | Verdict |
 |---|---|---|

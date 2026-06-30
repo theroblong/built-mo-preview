@@ -1,0 +1,38 @@
+======================================================================
+MO_41 — Feature Diagnostic, Ablation Study & Segment Analysis
+======================================================================
+
+Loading /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/retailer_sales_weekly.parquet …
+  Rows: 37,420  |  Series: 613
+  Qualifying series: 164  |  Train: 15,073  |  Val: 1,290  |  Test: 2,126
+  MA 13wk wMAPE (baseline): 27.03%
+
+[1/5] Feature variability ICC audit …
+  Computing ICC for all features …
+    Saved: v2_mo41_icc_audit.png
+
+[2/5] Stepwise ablation study …
+  Running stepwise ablation (5 LightGBM variants) …
+    Training M1: Demand Foundation (11 features) …
+      wMAPE: 3.53%  (best iter: 785)
+    Training M2: + Per-Store Velocity (15 features) …
+      wMAPE: 3.70%  (best iter: 798)
+    Training M3: + TDP & Price (21 features) …
+      wMAPE: 4.04%  (best iter: 337)
+    Training M4: + Lifecycle & Season (24 features) …
+      wMAPE: 4.09%  (best iter: 792)
+    Training M5: + Mo Intelligence (27 features) …
+      wMAPE: 4.33%  (best iter: 797)
+    Saved: v2_mo41_ablation_waterfall.png
+
+[3–5/5] Segment heatmap, assortment analysis, roadmap …
+Traceback (most recent call last):
+  File "/Users/jasonbrazeal/Documents/FirstAgent/scripts/MO_41_feature_diagnostic.py", line 960, in <module>
+    main()
+  File "/Users/jasonbrazeal/Documents/FirstAgent/scripts/MO_41_feature_diagnostic.py", line 919, in main
+    chart_segment_heatmap(meta, stats, seg_out)
+  File "/Users/jasonbrazeal/Documents/FirstAgent/scripts/MO_41_feature_diagnostic.py", line 437, in chart_segment_heatmap
+    ax2.axhline(y=y_start - 0.01, xmin=0, xmax=1, color="#ccc", linewidth=0.8,
+  File "/opt/anaconda3/envs/mo-ml/lib/python3.12/site-packages/matplotlib/axes/_axes.py", line 814, in axhline
+    raise ValueError("'transform' is not allowed as a keyword "
+ValueError: 'transform' is not allowed as a keyword argument; axhline generates its own transform.
