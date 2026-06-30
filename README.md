@@ -88,6 +88,14 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-29 (update 4) — Real-world SKU stories + expanded HTML report
+
+**MO_37 — Real-world SKU storytelling charts (`scripts/MO_37_sku_stories.py`)**
+
+Five charts using three specific BUILT products at Walmart as concrete examples — translating abstract accuracy metrics into planning decisions FP&A teams can act on. Focal SKUs: Brownie Batter 4pk (138 weeks, mature), Cookie Dough Chunk 4pk (89 weeks, growing), Brownie Batter 8pk (49 weeks, cold-start). Charts: (1) Multi-horizon zoom — same Dec 2025 forecast shown at 2.7yr/1yr/1Q/1mo windows; (2) Method horse race on a single SKU — LightGBM 5.8% vs ETS 27% vs MA 20.5% vs Naive 31.6% for BB 4pk at Walmart; (3) Demand decomposition — TDP expansion vs. velocity gain (what drove growth?); (4) Cold-start bridge — BB 8pk launched at high TDP (53% of stores from day 1), MA 13wk (18.5%) beats ETS (26.5%) as the cold-start bridge before LGB threshold; (5) Dollar translation — quarterly planning error in $ for each SKU at 35% (Excel) vs. actual wMAPE. HTML report (MO_36) extended with 5 new charts, new Sections 8 and 9, report size 4.3 MB.
+
+---
+
 ### 2026-06-29 (update 3) — FP&A research report + ensemble analysis + July 2026 projection
 
 **MO_34 — Per-series ensemble trigger analysis (`scripts/MO_34_ensemble_trigger.py`)**
@@ -100,7 +108,7 @@ Trained on full 3-year SPINS history through April 2026 (288 qualifying series).
 
 **MO_36 — Self-contained HTML research report (`scripts/MO_36_report.py`)**
 
-Generates `scripts/outputs/built_demand_intelligence_report.html` — a 2.4 MB email-ready research paper. All 11 charts from MO_32B–35 embedded as base64 PNG. Nine sections: Executive Summary (4 KPI chips) → The Challenge (growth-mode distortion) → Our Approach (domain signals + ensemble) → Validation (horse race, 3-cutpoint walk-forward) → LGB vs. ETS (growth stage bars + per-series scatter) → Quarterly Retraining (rolling vs. stale table) → FP&A Tools (4 business questions) → July 2026 Projection → ROI Calculation (~$22M at $1M/1pp) → Technical Appendix. To share: attach the `.html` file to email; instruct recipients to download and open in Chrome/Safari (not in the email client preview pane).
+Generates `scripts/outputs/built_demand_intelligence_report.html` — a 4.3 MB email-ready research paper (extended with MO_37 charts). 16 total charts from MO_32B–37 embedded as base64 PNG. 11 sections + Appendix: Executive Summary (4 KPI chips) → The Challenge → Our Approach → Validation → LGB vs. ETS → Quarterly Retraining → FP&A Tools (4 questions) → July 2026 Projection → Real-World Examples at Walmart (NEW) → What's Driving Your Growth? (demand decomposition + cold-start + dollar translation, NEW) → ROI Calculation (~$22M at $1M/1pp) → Next Steps → Technical Appendix. To share: attach the `.html` file to email; instruct recipients to download and open in Chrome/Safari.
 
 ---
 

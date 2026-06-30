@@ -46,6 +46,7 @@ def main():
     m33  = load_json("v2_mo33_summary.json")
     m34  = load_json("v2_mo34_metrics.json")
     m35  = load_json("v2_mo35_metrics.json")
+    m37  = load_json("v2_mo37_summary.json")
 
     # Key numbers
     lgb_best   = m33.get("accuracy", {}).get("Rolling LightGBM q50", 4.4)
@@ -750,9 +751,160 @@ def main():
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ SKU STORIES -->
+<div class="section">
+  <h2><span class="section-num">8</span>Real-World Examples: BUILT at Walmart</h2>
+
+  <p>
+    The accuracy metrics in prior sections describe the full 161-series portfolio.
+    This section zooms to three specific BUILT products at Walmart — the kind of
+    planning conversations Connor, Chase, and Jeff have weekly — and shows what
+    "5.8% wMAPE" means for an actual SKU on an actual shelf.
+  </p>
+
+  <div class="callout insight">
+    <strong>Three Products, Three Stories</strong>
+    <ul style="margin:.5em 0 0 1.2em;">
+      <li><strong>Brownie Batter 4pk</strong> — mature anchor (138 weeks of Walmart history, ~22K units/week)</li>
+      <li><strong>Cookie Dough Chunk 4pk</strong> — actively growing (89 weeks, strong TDP expansion)</li>
+      <li><strong>Brownie Batter 8pk</strong> — new format launch (49 weeks, LightGBM not yet eligible)</li>
+    </ul>
+    All at Walmart CONVENTIONAL|MASS MERCH / WALMART CORP - RMA.
+  </div>
+
+  <h3>The Same Forecast, Four Zoom Levels</h3>
+  <p>
+    A CFO and a supply chain planner need to see the same data at different time horizons.
+    The panels below show the Brownie Batter 4pk forecast through four zoom levels —
+    full 2.7-year arc, last 12 months, last quarter, and most recent month.
+    The forecast line and confidence band are identical in each panel; only the time window changes.
+  </p>
+  <div class="chart-block">
+    {embed_png("v2_mo37_chart1_zoom.png")}
+    <div class="chart-caption">
+      Figure 12 — Brownie Batter 4pk at Walmart. Four zoom levels of the same Dec 2025 forecast.
+      Solid line = historical actuals. Dashed line = Jan–Apr 2026 actuals (OOS validation).
+      Blue line = LightGBM q50 forecast. Shaded band = q10–q90 planning range.
+    </div>
+  </div>
+
+  <h3>Method Head-to-Head: One SKU, All Forecasts</h3>
+  <p>
+    Every week of Q1 2026 (January through April), we know what LightGBM predicted
+    and what Brownie Batter 4pk at Walmart actually sold. The chart below shows all
+    four methods side by side on this single product, with the error in dollars annotated.
+    This is the kind of accountability chart that lets Connor compare methods on his
+    most important SKU.
+  </p>
+  <div class="chart-block">
+    {embed_png("v2_mo37_chart2_horse_race.png")}
+    <div class="chart-caption">
+      Figure 13 — All methods vs. actuals for Brownie Batter 4pk at Walmart, Jan–Apr 2026.
+      LightGBM (5.8% wMAPE) vs. ETS trend (27%), MA 13wk (20.5%), and Naive (31.6%).
+      Dollar error box shows the weekly planning error in $ at $8.97 ARP.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ DEMAND DECOMP -->
+<div class="section">
+  <h2><span class="section-num">9</span>What's Driving Your Growth?</h2>
+
+  <p>
+    Units sold went up — but <em>why?</em> There are three distinct sources of unit growth,
+    and each calls for a different business response. Mo separates them:
+  </p>
+  <ul>
+    <li><strong>Distribution growth (TDP)</strong> — more stores carrying the product.
+        Units increase because the footprint expanded, not because demand per store improved.
+        Planning implication: when TDP maxes out (e.g., in every Walmart store), this
+        source of growth disappears. </li>
+    <li><strong>Velocity improvement</strong> — the same number of stores selling more
+        per week. This is genuine demand growth — consumers choosing BUILT more often.
+        Planning implication: this is the durable signal. A product gaining velocity even
+        at flat TDP is earning its shelf space. </li>
+    <li><strong>Promo or price lift</strong> — temporary unit spikes tied to a price cut
+        or display event. These reset when the promo ends. Planning implication:
+        promo units should be planned separately from base demand. </li>
+  </ul>
+
+  <h3>BUILT at Walmart: Mostly a Distribution Story</h3>
+  <p>
+    For both the Brownie Batter 4pk and Cookie Dough Chunk 4pk at Walmart, the
+    TDP (distribution breadth) index tracks closely with unit growth — while velocity
+    per store has improved more modestly. This means the majority of BUILT's Walmart
+    unit growth since launch has been driven by getting into more stores, not by
+    selling more at existing stores. When that expansion slows or plateaus, the
+    forecasting model — and FP&amp;A — needs to plan for it.
+  </p>
+  <div class="chart-block">
+    {embed_png("v2_mo37_chart3_demand_decomp.png")}
+    <div class="chart-caption">
+      Figure 14 — Demand decomposition: Brownie Batter 4pk (left) and Cookie Dough Chunk 4pk (right)
+      at Walmart. Bars = weekly units. Green line = TDP index (store distribution, indexed to launch).
+      Purple dashed = velocity index (units per store per month, indexed to launch).
+      The growth attribution callout shows what % of unit growth came from new stores vs. sell-through improvement.
+    </div>
+  </div>
+
+  <div class="callout insight">
+    <strong>Why This Matters for FP&amp;A</strong>
+    If 80–90% of a product's growth is TDP-driven and TDP is approaching its ceiling
+    (Walmart has ~4,700 stores; TDP of 90 means distribution in ~4,230), the product
+    will transition from a growth story to a volume-defense story within 1–2 years.
+    Mo's forecast model captures this through the TDP feature — as TDP growth flattens,
+    the model naturally projects demand leveling off, rather than extrapolating the
+    historical uptrend indefinitely (which is what a trend-only model like ETS would do).
+  </div>
+
+  <h3>New Product Cold-Start: Brownie Batter 8pk</h3>
+  <p>
+    The Brownie Batter 8pk format launched at Walmart in May 2025 and had only 32 weeks
+    of sales history by December 2025 — below LightGBM's 52-week minimum training threshold.
+    For new products in this position, the ensemble automatically falls back to simpler models
+    that don't require deep history. The chart below shows which models guide planning
+    during the cold-start window, and what happens at the handoff point.
+  </p>
+  <div class="chart-block">
+    {embed_png("v2_mo37_chart4_coldstart.png")}
+    <div class="chart-caption">
+      Figure 15 — Brownie Batter 8pk at Walmart, weeks 1–49 from launch (May 2025 – Apr 2026).
+      LightGBM is excluded until week 52. A moving average or trend model bridges the gap.
+      Note: the 8pk launched immediately into 53% of Walmart stores (high TDP from day 1),
+      so a simple MA 13wk (18.5% wMAPE) outperforms ETS's trend extrapolation (26.5%)
+      — ETS overshoots when the product isn't ramping steeply from zero.
+    </div>
+  </div>
+
+  <h3>What Forecast Accuracy Means in Dollars</h3>
+  <p>
+    Abstract accuracy metrics are hard to act on. The chart below translates wMAPE into
+    quarterly planning error in dollars, for each of the three focal SKUs at Walmart.
+    The comparison is between a 35% static baseline (Excel-style, trained once and held)
+    and Mo's actual validated wMAPE for each SKU.
+  </p>
+  <div class="chart-block">
+    {embed_png("v2_mo37_chart5_dollar_impact.png")}
+    <div class="chart-caption">
+      Figure 16 — Quarterly inventory planning error in dollars per SKU at Walmart.
+      Left bar = Excel/static baseline (35% wMAPE). Right bar = Mo ensemble (actual validated wMAPE).
+      Green arrows show the quarterly savings. Total shown for these three SKUs only;
+      the full portfolio savings scale with the number of active series.
+    </div>
+  </div>
+
+  <div class="callout finding">
+    <strong>From Three SKUs to a Portfolio</strong>
+    The three Walmart SKUs in these examples represent a small slice of the 161+ active
+    series in the model. If similar accuracy gains apply across the portfolio at comparable
+    revenue volumes, the aggregate quarterly planning improvement is substantial.
+    The ROI section below applies the full portfolio calculation.
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════ ROI -->
 <div class="section">
-  <h2><span class="section-num">8</span>ROI Calculation</h2>
+  <h2><span class="section-num">10</span>ROI Calculation</h2>
 
   <p>
     Brian established the framing: <em>"1 percentage point improvement in forecast accuracy
@@ -842,7 +994,7 @@ def main():
 
 <!-- ══════════════════════════════════════════════════════════════ NEXT STEPS -->
 <div class="section">
-  <h2><span class="section-num">9</span>Next Steps</h2>
+  <h2><span class="section-num">11</span>Next Steps</h2>
 
   <ol>
     <li>
@@ -935,6 +1087,7 @@ def main():
       <tr><td>MO_34</td><td>Per-series LGB vs ETS + ensemble trigger</td><td>Ensemble analysis charts</td></tr>
       <tr><td>MO_35</td><td>Forward projection to July 2026</td><td>July 2026 forecast charts</td></tr>
       <tr><td>MO_36</td><td>This report</td><td>HTML document</td></tr>
+      <tr><td>MO_37</td><td>Real-world SKU stories: zoom, horse race, demand decomp, cold-start, $ impact</td><td>5 Walmart SKU charts</td></tr>
     </tbody>
   </table>
 </div>
