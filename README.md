@@ -88,11 +88,21 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
-### 2026-06-30 (v2.0.1) — Full model benchmark + feature illumination (MO_38, in progress)
+### 2026-06-30 (v2.0.1) — Full model benchmark + feature illumination (MO_38, complete)
 
 **MO_38 — Model benchmark + feature illumination (`scripts/MO_38_model_benchmark.py`)**
 
-Extends the FP&A forecasting research with two deliverables: (1) apples-to-apples accuracy benchmark — TFT (Temporal Fusion Transformer), Ridge Regression, and Lasso Regression vs. LightGBM ensemble on the same 3 temporal cutpoints (Dec 2024 / Oct 2025 / Dec 2025, h=13 quarterly horizon) and same 25 domain-engineered features; (2) feature illumination — tier map of all 27 current features (Tier 1: demand dynamics, velocity, distribution, price, lifecycle/seasonality; Tier 2: Mo intelligence — elasticity, cannib rate, donor count), LightGBM SHAP, Ridge coefficients (directional, linear), Lasso auto-selection (which features survive L1 penalty), and external candidate table (Tier 3: holiday flags, weather index, consumer sentiment, BUILT ERP calendar) with join strategy and lift hypothesis. TFT receives all 25 features as `hist_exog_list` — key test of whether domain-intelligent features close the gap between TFT and LightGBM. Lasso coefficients are the most interpretable feature importance story for FP&A: no SHAP explanation required. **Script written 2026-06-30; training in progress as of commit.**
+Apples-to-apples accuracy benchmark: TFT, Ridge Regression, and Lasso Regression vs. LightGBM on the same 3 temporal cutpoints (Dec 2024 / Oct 2025 / Dec 2025, h=13 OOS weeks) and the same 27 domain-engineered features. All 6 methods evaluated on 37,420 rows / 613 series (post-MULO filter).
+
+| Cutpoint | Series | LightGBM | TFT | Ridge | Lasso | MA 13wk | Naive |
+|---|---|---|---|---|---|---|---|
+| Dec 2024 | 111 | **28.7%** | 55.2% | 55.3% | 52.6% | 50.4% | 56.9% |
+| Oct 2025 | 136 | **7.0%** | 90.4% | 82.0% | 80.4% | 40.2% | 37.5% |
+| Dec 2025 | 164 | **4.3%** | 145.3% | 80.4% | 79.5% | 24.6% | 42.1% |
+
+LightGBM dominates across all cutpoints and improves as training data accumulates. TFT degraded with scale (55% → 90% → 145%), indicating insufficient data for the architecture at 111–280 series / 500 steps — though neural approaches with fewer parameters (iTransformer, PatchTST) remain worth revisiting as the portfolio grows. Ridge and Lasso land at 52–82%: they see the same 25 features as LightGBM but can't exploit non-linear demand response; Lasso selected 19–22 of 27 features (confirming feature quality, not sparseness, is the bottleneck for linear models). MA 13wk (24.6% at Dec 2025) is the strongest no-feature baseline — useful for cold-start and stable-mature series.
+
+Feature illumination outputs: 27-feature tier map (Tier 1–2 current + Tier 3 external candidates), LightGBM SHAP, Ridge coefficients (direction + magnitude), Lasso selection panel. 4 charts + summary JSON + per-series CSV embedded in report.
 
 Outputs (pending): `v2_mo38_accuracy_comparison.png`, `v2_mo38_feature_tiers.png`, `v2_mo38_shap_ridge_lasso.png`, `v2_mo38_external_candidates.png`, `v2_mo38_summary.json`, `v2_mo38_by_series_dec2025.csv`
 
