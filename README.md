@@ -88,6 +88,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-06-30 (v2.0.2) — OLS Linear Regression added to benchmark + HTML report extended to 13 sections (MO_39)
+
+**MO_39 — Linear Regression benchmark + HTML report extension (`scripts/MO_39_linear_regression_benchmark.py`)**
+
+Adds OLS Linear Regression (unregularized) to the 7-model benchmark. Loads prior results from `v2_mo38_summary.json` — no TFT re-run required. Generates an updated comparison chart and patches the HTML report with two new sections (Section 12: full 7-model benchmark; Section 13: feature transparency). Report updated from 4.3 MB → 5.4 MB.
+
+| Cutpoint | LightGBM | Lin. Reg. | Ridge | Lasso | TFT | MA 13wk | Naive |
+|---|---|---|---|---|---|---|---|
+| Dec 2024 | **28.7%** | 55.4% | 55.3% | 52.6% | 55.2% | 50.4% | 56.9% |
+| Oct 2025 | **7.0%** | 82.1% | 82.0% | 80.4% | 90.4% | 40.2% | 37.5% |
+| Dec 2025 | **4.3%** | 80.3% | 80.3% | 79.5% | 145.3% | 24.6% | 42.1% |
+
+OLS ≈ Ridge at every cutpoint (within 0.1pp) — L2 regularization adds nothing at this data scale; coefficient estimates are already stable. Lasso edges both by ~0.8pp via sparse feature selection. Key observation: MA 13wk (24.6%) beats all three linear models at Dec 2025 — a 13-week moving average is more robust than a 25-feature linear model on stable mature series because linear regression extrapolates multicollinear rolling features poorly OOS.
+
 ### 2026-06-30 (v2.0.1) — Full model benchmark + feature illumination (MO_38, complete)
 
 **MO_38 — Model benchmark + feature illumination (`scripts/MO_38_model_benchmark.py`)**
