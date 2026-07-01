@@ -4,6 +4,36 @@ This repository contains the planning and documentation package for building a p
 
 The current repo is documentation-first. It does not yet contain modeling code or production pipelines. Instead, it captures the strategy, architecture, data requirements, diagrams, and execution plan needed to move into implementation cleanly.
 
+---
+
+## Open Agenda Items (as of 2026-06-30)
+
+### Question for Brian / Jeff (via Rob)
+
+> **Strategic direction: BUILT-specific depth vs. multi-client SPINS platform breadth?**
+>
+> The forecasting pipeline is currently calibrated for BUILT's ~105 SKUs × 47 retailers. The same architecture — LightGBM with SPINS domain features, quantile scenario bands, BSTS causal event analysis — could generalize to any CPG brand on the Aevah platform with minimal rework.
+>
+> The answer shapes the next investment:
+> - **BUILT-specific depth** → improve BUILT model accuracy (YAGO features, competitive category context, Phase 2 Mo signals, revenue model); timeline weeks to months; payoff demonstrated in Connor's next planning cycle.
+> - **Multi-client SPINS platform breadth** → generalize forecasting architecture to serve any Aevah client from spins_full; requires category-agnostic global model pre-training; larger engineering lift; competitive differentiator for Aevah at scale.
+>
+> These are not mutually exclusive — BUILT-specific improvements are the proof of concept that validates the multi-client platform. But the investment sequencing differs.
+
+### Data Request for Connor (FP&A Director, BUILT)
+
+> **What is BUILT's current forecast accuracy?**
+>
+> To complete the ROI quantification (Brian's "$1M per 1% MAPE improvement" anchor), we need Connor's actual forecast error from recent quarters — not an industry estimate. Specifically:
+>
+> - For 3–5 representative SKU × retailer combinations (e.g., BB 4pk at Walmart, BB 4pk at Kroger, CD 4pk at Walmart), what was the forecast vs. actual for the most recent completed quarter?
+> - Even a rough MAPE estimate ("we're usually within 20–30%") is enough to anchor the dollar claim.
+> - Ideal: a simple Excel export of their weekly forecast vs. SPINS actuals for 1–2 SKUs over 13 weeks.
+>
+> Without this, all ROI numbers compare to a proxy baseline (MA 13wk = 27%), not to BUILT's own process. Connor's actual accuracy is the denominator in the ROI calculation.
+
+---
+
 ## What is in this repo
 
 ### Data sample
