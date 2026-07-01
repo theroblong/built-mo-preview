@@ -170,6 +170,34 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 
 ---
 
+### 2026-07-01 — Priority stack: close BUILT deal in July
+
+**Source:** Jun 25 + Jul 1 Aevah standup transcripts (`docs/Aevah Standup jun30-26.docx`, `docs/Aevah Standup jul 1 26.docx`). Rob's explicit goal: close BUILT in July.
+
+**Gating dependency:** Brian must sanity-check the HTML report and validate SPINS channel interpretations before going back to Jeff/Bracken. Brian also needs to clarify CRMA/RMA/MULO guardrails — Jason flagged these are not yet fully enforced in the tool.
+
+**What Connor/Bracken need to trust the system:**
+1. Accurate retailer-level elasticity (no positive anomalies surfacing in live demo)
+2. Explainability in business terms — not DAG diagrams; SHAP feature importance in plain English
+3. HTML report Q2 reframe: "how do I develop trust" (positive framing) vs "why should I trust a black box" (negative framing) — Rob's exact note from Jul 1 transcript
+4. Honest limitations: system says what it doesn't know (new SKUs <52wks, promo gaps, SPINS lag)
+
+**Priority stack:**
+
+| # | Task | Why |
+|---|---|---|
+| 1 | **Option B: two-source elasticity in UI** | Fix AHOLD/VS positive elasticity before any live demo; CRMA accounts → MO_44 OLS, KEY ACCOUNT → MO_17 |
+| 2 | **HTML report Q2 reframe + Brian review package** | Gating dependency before Jeff/Bracken follow-up |
+| 3 | **SPINS channel guardrails in UI/Mo Chat** | Jason explicitly flagged CRMA/RMA/MULO rules unresolved; demo safety |
+| 4 | **MO_16/17 Druid ingest** | Required before Option B API can query live data |
+
+**Demo operating rules (from Rob):**
+- Rob frames, Jason demonstrates; "screen time high, monologue low"
+- Don't fumble on-screen — defer to follow-up, which buys the next meeting
+- Future: self-demo mode ("Mo, show us this") with pop-ups — not in scope for July
+
+---
+
 ### 2026-07-01 — Price elasticity accuracy: $0.05 guardrail (MO_17) + MO_44 two-source fix (v2.1.0)
 
 **Root cause diagnosed:** 35.9% of `scored_price_elasticity` rows produced garbage elasticity values (AHOLD mean implied_elasticity = 1.2×10¹¹) due to division-by-near-zero in MO_17. When `log_price_change` is tiny (CRMA national aggregates barely move week-to-week), `predicted_log_unit_change / log_price_change` blows up even when the prediction is reasonable.
@@ -187,7 +215,9 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 - Per-account OLS uses full KEY ACCOUNT + CRMA → Walmart (−0.245), Kroger (−0.590), Ahold (−1.262), Albertsons (−1.066), Publix (−1.025) all now appear in table
 - Per-account OLS filtered to weeks with `|arp_wow_delta| ≥ $0.05 OR |Δ%| ≥ 2.5%` (uses pre-computed parquet columns)
 
-**Pending before Druid ingest:** MO_16 retrain with TDP features (`pre_13w_tdp`, `post_13w_tdp`, `tdp_pct_chg`) added to `OWN_PRICE_FEATURES`, then MO_17 re-score.
+**MO_16 v2 retrain (2026-07-01):** `pre_13w_tdp`, `post_13w_tdp`, `tdp_pct_chg` added to `OWN_PRICE_FEATURES`. Training data also filtered to the same $0.05 guardrail so model trains on genuine price-move windows only (57,193 rows vs 90,757 raw). Results: R²=0.9810 (↑ from 0.9687), MAE=0.0759. TDP control improved medians (AHOLD −0.247, Walmart −1.287, Kroger −1.270) but did not eliminate the ~30–50% Positive rate at CRMA-level accounts — CRMA aggregation is a geometry-of-data problem not solvable by features alone. MO_17 re-scored with v2 model; parquet on S3.
+
+**Pending before Druid ingest:** Option B UI wiring (serve MO_44 OLS elasticity for CRMA accounts, MO_17 for KEY ACCOUNT) — then submit Druid ingest + tag milestone.
 
 ---
 
@@ -438,7 +468,9 @@ Ran a cross-retailer query (Kroger, Walmart, Ahold Delhaize, Publix, Meijer, Tar
 
 Rob asked whether we backtested the elasticity model after the Ahold Delhaize positive-ε oddity. Short answer: partial.
 
-**What MO_16 does:** Random 80/20 `train_test_split`; LightGBM early stopping on the val set; MAE and R² saved to `outputs/price_elasticity_train_metrics.json` (R²=0.9687, MAE=0.0699). This validates that the model generalizes across the training distribution.
+**MO_16 v1 (original):** Random 80/20 `train_test_split`; R²=0.9687, MAE=0.0699. No TDP control; no price-change guardrail on training data.
+
+**MO_16 v2 (2026-07-01):** Added `pre_13w_tdp`, `post_13w_tdp`, `tdp_pct_chg` to `OWN_PRICE_FEATURES`. Training filtered to `|Δprice_per_bar| ≥ $0.05` (57,193 rows). R²=0.9810, MAE=0.0759. TDP improved medians; ~30% Positive rate at CRMA accounts persists — architecture limitation (aggregation dilutes signal; see Option B below).
 
 **What it doesn't do:**
 - No temporal holdout — we never trained on weeks 1–N and predicted weeks N+1 onward against actuals
