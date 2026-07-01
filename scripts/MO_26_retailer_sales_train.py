@@ -37,7 +37,7 @@ import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v1"
+MODEL_VERSION = "v2"
 QUANTILES     = [0.10, 0.50, 0.90]
 Q_TAGS        = ["q10", "q50", "q90"]
 
@@ -66,6 +66,8 @@ FEATURE_COLS = [
     "week_of_year",
     # Autoregressive lags (lagged at time T — no leakage)
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
+    # YAGO — year-ago lags (Bracken: "are 3 years of data comparable?")
+    "base_units_lag52", "velocity_spm_lag52",
     # Categorical
     "channel_outlet",
 ]

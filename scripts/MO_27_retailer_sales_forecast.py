@@ -53,7 +53,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v1"
+MODEL_VERSION  = "v2"
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
@@ -98,11 +98,11 @@ if __name__ == "__main__":
 
     df_actual = df_actual.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
-    # Keep enough trailing weeks to seed all lags (lag13 needs 13 weeks of history)
+    # Keep enough trailing weeks: lag13 needs 13, YAGO (lag52) needs 52 + 13 = 65
     df_seed = (
         df_actual
         .groupby(GROUP_COLS)
-        .tail(13)
+        .tail(65)
         .reset_index(drop=True)
     )
     anchor_date = df_actual["__time"].max()
@@ -120,6 +120,16 @@ if __name__ == "__main__":
         # Seed lag history from actuals
         units_history = g["base_units"].tolist()
         arp_history   = g["arp"].tolist()
+
+        # YAGO: precompute year-ago base_units for each of the 13 forecast steps.
+        # At step k (1-indexed), lag52 = actual at anchor - (52 - k) weeks.
+        # Index in units_history: N_actual - 53 + k  (always an actual, never a prediction)
+        N_actual  = len(units_history)
+        lag52_seq = [
+            float(units_history[N_actual - 53 + k])
+            if 0 <= (N_actual - 53 + k) < N_actual else np.nan
+            for k in range(1, FORECAST_WEEKS + 1)
+        ]
 
         # Latest row for static features
         latest = g.iloc[-1]
@@ -144,6 +154,7 @@ if __name__ == "__main__":
         static_feats = {}
         skip = {"channel_outlet", "week_of_year",
                 "base_units_lag1", "base_units_lag4", "base_units_lag13",
+                "base_units_lag52",                          # dynamic — updated per step
                 "arp_lag1", "arp_lag4", "arp_wow_delta",
                 "arp_roll8_avg", "arp_roll8_std", "arp"}
         for col in features_used:
@@ -162,6 +173,7 @@ if __name__ == "__main__":
             lag1  = units_history[-1]  if len(units_history) >= 1  else np.nan
             lag4  = units_history[-4]  if len(units_history) >= 4  else np.nan
             lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
+            lag52 = lag52_seq[step - 1]     # precomputed from actuals — no leakage
 
             arp_cur  = arp_history[-1] if arp_history else forecast_arp
             arp_lag1 = arp_history[-1] if len(arp_history) >= 1 else np.nan
@@ -187,6 +199,7 @@ if __name__ == "__main__":
                 "base_units_lag1":      lag1,
                 "base_units_lag4":      lag4,
                 "base_units_lag13":     lag13,
+                "base_units_lag52":     lag52,
             }
 
             X = _build_feature_row(state, features_used)

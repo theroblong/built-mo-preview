@@ -61,6 +61,8 @@ arp_wow_delta             float    — week-over-week ARP change (captures price
 base_units_lag1           float    — autoregressive lags (no data leakage)
 base_units_lag4           float
 base_units_lag13          float
+base_units_lag52          float    — YAGO: year-ago base_units (NaN for series < 52 weeks)
+velocity_spm_lag52        float    — YAGO: year-ago velocity SPM
 week_of_year              int      — seasonality signal
 implied_elasticity        float    — from scored_price_elasticity (static per series)
 elasticity_band           str
@@ -244,6 +246,10 @@ if __name__ == "__main__":
     for lag, col in [(1, "base_units_lag1"), (4, "base_units_lag4"), (13, "base_units_lag13")]:
         df[col] = df.groupby(GROUP_COLS)["base_units"].shift(lag)
 
+    # YAGO — year-ago lags (lag 52 weeks; NaN for series < 52 weeks — LightGBM handles gracefully)
+    df["base_units_lag52"]   = df.groupby(GROUP_COLS)["base_units"].shift(52)
+    df["velocity_spm_lag52"] = df.groupby(GROUP_COLS)["avg_weekly_units_spm"].shift(52)
+
     # ARP rolling stats and lags (price trend signal)
     for lag, col in [(1, "arp_lag1"), (4, "arp_lag4")]:
         df[col] = df.groupby(GROUP_COLS)["arp"].shift(lag)
@@ -286,6 +292,7 @@ if __name__ == "__main__":
         "velocity_spm_z8", "velocity_spm_z13", "tdp_z8",
         "arp_lag1", "arp_lag4", "arp_roll8_avg", "arp_roll8_std", "arp_wow_delta",
         "base_units_lag1", "base_units_lag4", "base_units_lag13",
+        "base_units_lag52", "velocity_spm_lag52",
         "week_of_year",
         "implied_elasticity", "elasticity_band",
         "max_donor_cannibal_prob", "donor_count",
