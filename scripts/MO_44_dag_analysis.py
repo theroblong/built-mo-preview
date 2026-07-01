@@ -37,9 +37,9 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR    = os.path.join(SCRIPT_DIR, "outputs")
 DATA_PATH  = os.path.join(SCRIPT_DIR, "outputs", "retailer_sales_weekly.parquet")
 HTML_IN    = os.path.join(SCRIPT_DIR, "..", "docs",
-                          "built_demand_intelligence_report_v2.0.6.html")
+                          "built_demand_intelligence_report_v2.0.8.html")
 HTML_OUT   = os.path.join(SCRIPT_DIR, "..", "docs",
-                          "built_demand_intelligence_report_v2.0.7.html")
+                          "built_demand_intelligence_report_v2.1.0.html")
 
 PALETTE = {
     "blue":   "#2563eb",
@@ -58,8 +58,10 @@ print("[MO_44] Loading data …")
 raw = pd.read_parquet(DATA_PATH)
 print(f"  raw shape: {raw.shape}")
 
-# Keep KEY ACCOUNT level: per-retailer Total US aggregates (no sub-geography double-count)
-df = raw[raw["geography_level"] == "KEY ACCOUNT"].copy()
+# KEY ACCOUNT = 72 small/regional retailers at their TOTAL US aggregate
+# CRMA        = 16 major national retailers (Walmart, Kroger, Ahold, etc.) — 1 row/UPC/week
+# RMA excluded (sub-regional breakdown, would double-count)
+df = raw[raw["geography_level"].isin(["KEY ACCOUNT", "CRMA"])].copy()
 
 # Drop rows with missing treatment / outcome
 df = df.dropna(subset=["base_units", "arp", "tdp", "weeks_since_launch"])
@@ -90,9 +92,14 @@ CONFOUNDERS = [
 TREATMENT = "log_arp"
 OUTCOME   = "log_units"
 
+# DoWhy portfolio ATE: KEY ACCOUNT only — avoids cross-retailer scale confound
+# (CRMA national aggregates have far higher base_units than regional KEY ACCOUNT
+#  rows, making cross-scale pooling produce a spurious positive ATE)
+df_ka = df[df["geography_level"] == "KEY ACCOUNT"].copy()
 dag_cols = [TREATMENT, OUTCOME] + CONFOUNDERS
-model_df = df[dag_cols].dropna().reset_index(drop=True)
-print(f"  model dataset: {model_df.shape}")
+model_df = df_ka[dag_cols].dropna().reset_index(drop=True)
+print(f"  model dataset (KEY ACCOUNT only for DoWhy ATE): {model_df.shape}")
+print(f"  full dataset (KEY ACCOUNT + CRMA for per-account): {len(df):,} rows")
 
 # ── 2. Define DAG ─────────────────────────────────────────────────────────
 # Edges encode domain knowledge:
@@ -286,9 +293,24 @@ print("[MO_44] Per-account OLS elasticity (backdoor proxy) …")
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
+MIN_ARP_DELTA_ABS = 0.05   # $0.05 minimum price change
+MIN_ARP_DELTA_PCT = 0.025  # 2.5% minimum price change
+
+MIN_ARP_DELTA_ABS = 0.05   # $0.05 minimum price change
+MIN_ARP_DELTA_PCT = 0.025  # 2.5% minimum price change
+
 def ols_elasticity(sub: pd.DataFrame) -> float | None:
-    sub = sub.dropna(subset=[TREATMENT, OUTCOME] + CONFOUNDERS)
+    sub = sub.dropna(subset=[TREATMENT, OUTCOME] + CONFOUNDERS).copy()
     if len(sub) < 30:
+        return None
+    # Keep only weeks with a genuine ARP move — filters out mix-shift noise
+    # parquet has arp_wow_delta (= arp - arp_lag1) and arp_lag1 pre-computed
+    if "arp_wow_delta" in sub.columns and "arp_lag1" in sub.columns:
+        delta_abs = sub["arp_wow_delta"].abs()
+        delta_pct = (delta_abs / sub["arp_lag1"].replace(0, np.nan)).abs()
+        genuine = (delta_abs >= MIN_ARP_DELTA_ABS) | (delta_pct >= MIN_ARP_DELTA_PCT)
+        sub = sub[genuine.fillna(False)]
+    if len(sub) < 20:
         return None
     X = sub[[TREATMENT] + CONFOUNDERS].values
     y = sub[OUTCOME].values
@@ -327,38 +349,51 @@ def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,
         colors.append(PALETTE["amber"])
 
     y = np.arange(len(methods))
-    ax.barh(y, vals, color=colors, alpha=0.85, height=0.5)
+    # Plot as scatter + CI whiskers (not barh) to avoid solid-block rendering
+    ax.scatter(vals, y, color=colors, s=160, zorder=5)
     ax.errorbar(vals, y,
                 xerr=[np.array(vals) - np.array(los),
                       np.array(his) - np.array(vals)],
-                fmt="none", color="black", capsize=6, linewidth=2)
+                fmt="none", color="black", capsize=8, linewidth=2, zorder=4)
     ax.axvline(0, color="black", linewidth=0.8, linestyle="--")
+    # Explicit xlim: a little beyond the CI range
+    x_margin = 0.05
+    ax.set_xlim(min(los) - x_margin, max(his) + x_margin)
     ax.set_yticks(y)
-    ax.set_yticklabels(methods, fontsize=10)
+    ax.set_yticklabels(methods, fontsize=11)
     ax.set_xlabel("Causal Estimate (log–log coefficient = elasticity)", fontsize=10)
     ax.set_title("DoWhy Causal Effect Estimates\n(Price → Demand, log–log scale)",
                  fontsize=12, fontweight="bold")
     ax.set_facecolor(PALETTE["light"])
+    ax.grid(axis="x", alpha=0.3)
     for i, (v, lo, hi) in enumerate(zip(vals, los, his)):
-        ax.text(v + 0.005, i, f"{v:.3f}", va="center", fontsize=10, color=PALETTE["dark"])
+        ax.text(v, i + 0.18, f"ε = {v:.3f}\n95% CI [{lo:.3f}, {hi:.3f}]",
+                ha="center", va="bottom", fontsize=9, color=PALETTE["dark"])
 
-    # Right: per-account OLS elasticity
+    # Right: per-account OLS elasticity — limit to 30 most negative + all positives
     ax2 = axes[1]
     if account_elasticity:
-        sorted_accts = sorted(account_elasticity.items(), key=lambda x: x[1])
-        accts = [a for a, _ in sorted_accts]
-        evals = [e for _, e in sorted_accts]
+        sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1])
+        # Keep extreme ends: all positive anomalies + bottom 25 most negative
+        positives = [(a, e) for a, e in sorted_items if e > 0]
+        negatives = [(a, e) for a, e in sorted_items if e <= 0]
+        show = negatives[-25:] + positives  # most negative 25 + all anomalies
+        accts = [a for a, _ in show]
+        evals = [e for _, e in show]
         bar_colors = [PALETTE["red"] if e > 0 else PALETTE["blue"] for e in evals]
         ya = np.arange(len(accts))
-        ax2.barh(ya, evals, color=bar_colors, alpha=0.85, height=0.6)
+        row_h = max(0.4, min(0.7, 12 / max(len(accts), 1)))
+        ax2.barh(ya, evals, color=bar_colors, alpha=0.85, height=row_h)
         ax2.axvline(0, color="black", linewidth=0.8, linestyle="--")
         ax2.axvline(lr_coef, color=PALETTE["green"], linewidth=2,
                     linestyle="-.", label=f"Portfolio ATE ({lr_coef:.3f})")
         ax2.set_yticks(ya)
-        ax2.set_yticklabels(accts, fontsize=8)
+        ax2.set_yticklabels(accts, fontsize=7.5)
         ax2.set_xlabel("OLS Elasticity (log ARP → log Units, backdoor controlled)", fontsize=9)
-        ax2.set_title("Per-Account Price Elasticity\n(OLS with confounder controls)",
-                      fontsize=12, fontweight="bold")
+        n_hidden = len(account_elasticity) - len(show)
+        title_note = f" (+{n_hidden} mid-range hidden)" if n_hidden > 0 else ""
+        ax2.set_title(f"Per-Account Price Elasticity{title_note}\n(25 most negative + anomalies shown)",
+                      fontsize=11, fontweight="bold")
         ax2.legend(fontsize=9)
         ax2.set_facecolor(PALETTE["light"])
 
@@ -539,12 +574,15 @@ def chart_business_summary(lr_coef: float, account_elasticity: dict,
                      color="white", pad=6, backgroundcolor=color)
         ax.axis("off")
 
-    # ── Elasticity heat by account ─────────────────────────────────────────
+    # ── Elasticity heat by account — show 20 most negative + all positives ───
     ax4 = fig.add_subplot(gs[1, :])
     if account_elasticity:
         sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1])
-        accts = [a for a, _ in sorted_items]
-        evals = [e for _, e in sorted_items]
+        positives = [(a, e) for a, e in sorted_items if e > 0]
+        negatives = [(a, e) for a, e in sorted_items if e <= 0]
+        show = negatives[-20:] + positives
+        accts = [a for a, _ in show]
+        evals = [e for _, e in show]
         colors = [PALETTE["red"] if e > 0 else PALETTE["blue"] for e in evals]
         ya = np.arange(len(accts))
         ax4.barh(ya, evals, color=colors, alpha=0.85, height=0.6)
@@ -552,14 +590,19 @@ def chart_business_summary(lr_coef: float, account_elasticity: dict,
                     linestyle="--", label=f"Portfolio ATE ({lr_coef:.3f})")
         ax4.axvline(0, color="gray", linewidth=0.8)
         ax4.set_yticks(ya)
-        ax4.set_yticklabels(accts, fontsize=9)
+        ax4.set_yticklabels(accts, fontsize=8)
         ax4.set_xlabel("Price Elasticity (log–log OLS, confounders controlled)", fontsize=10)
-        ax4.set_title("Price Elasticity by Retailer Account  ·  Negative = expected (price ↑ → demand ↓)",
-                      fontsize=12, fontweight="bold")
-        ax4.legend(fontsize=10)
+        n_hid = len(account_elasticity) - len(show)
+        ax4.set_title(f"Price Elasticity by Retailer  ·  20 most negative + anomalies"
+                      + (f" ({n_hid} mid-range hidden)" if n_hid else "")
+                      + "  ·  Negative = expected",
+                      fontsize=11, fontweight="bold")
+        ax4.legend(fontsize=9)
         ax4.set_facecolor(PALETTE["light"])
-        for i, (v, acct) in enumerate(zip(evals, accts)):
-            ax4.text(v + 0.003, i, f"{v:.2f}", va="center", fontsize=8)
+        for i, v in enumerate(evals):
+            ax4.text(v + 0.003 if v <= 0 else v - 0.003, i,
+                     f"{v:.2f}", va="center",
+                     ha="left" if v <= 0 else "right", fontsize=7.5)
 
     fig.suptitle("MO_44 · Causal Price→Demand Analysis  |  DoWhy Backdoor Identification",
                  fontsize=14, fontweight="bold", y=1.01)
@@ -712,14 +755,14 @@ else:
     html = html.replace("</body>", html_section17 + "\n</body>")
 
 # Update version watermark
-html = html.replace("v2.0.6", "v2.0.7")
-html = html.replace("Version 2.0.6", "Version 2.0.7")
+html = html.replace("v2.0.8", "v2.1.0")
+html = html.replace("Version 2.0.8", "Version 2.0.9")
 
 with open(HTML_OUT, "w", encoding="utf-8") as f:
     f.write(html)
 
 size_mb = os.path.getsize(HTML_OUT) / 1_048_576
-print(f"[MO_44] HTML v2.0.7 written → {HTML_OUT}  ({size_mb:.1f} MB)")
+print(f"[MO_44] HTML v2.1.0 written → {HTML_OUT}  ({size_mb:.1f} MB)")
 
 # ── 16. Summary ────────────────────────────────────────────────────────────
 print()
