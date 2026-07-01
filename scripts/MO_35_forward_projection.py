@@ -69,8 +69,13 @@ FEATURE_COLS = [
     "max_donor_cannibal_prob", "donor_count",
     "week_of_year",
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
+    "base_units_lag52",   # YAGO — needed for seasonal shape in forward forecast
     "channel_outlet",
 ]
+
+# Blend weight for seasonal adjustment in autoregressive forecast.
+# 0.0 = pure AR (flat); 1.0 = pure year-ago seasonal naive.  0.40 is default.
+SEASONAL_BLEND_WEIGHT = 0.40
 
 LGBM_BASE = dict(
     objective="quantile", alpha=0.5,
@@ -135,53 +140,118 @@ def qualify(df, cutoff, min_tr=MIN_TRAIN_WEEKS):
                          df2["retail_account"], df2["geography_raw"]))
     return df2[df2["_k"].isin(idx)].drop(columns=["_k"])
 
-def build_future_features(train_df, avail, last_date, h):
-    """Extrapolate feature rows h weeks past last_date using the latest known values.
+def _autoreg_forecast(train_df, avail, models, last_date, h):
+    """True per-group autoregressive forecast with YAGO seasonal blend.
 
-    For rolling/lag features: carry-forward the last observed value (conservative).
-    For week_of_year: use actual calendar week of the future date.
-    For autoregressive lags: shift the lag index forward.
+    Replaces the old ``build_future_features`` + batch-predict pattern.
+
+    At each step the blended q50 prediction is appended to units_history and
+    used as lag1 for the next step — so the model's own recent outputs feed
+    forward, exactly matching the training regime.  Without this the AR lags
+    collapse to the same anchor value for all 13 steps, producing a flat line.
+
+    Seasonal blend (SEASONAL_BLEND_WEIGHT):
+        Each prediction is nudged toward ``lag52 × yoy_ratio`` — the year-ago
+        actual for that calendar week, scaled by how current demand is tracking
+        relative to last year.  This injects the real seasonal curve (summer
+        uptick, winter dip, etc.) into the flat AR extrapolation without
+        requiring a retraining step.
+
+    Returns a DataFrame with GROUP_COLS + __time + pred_q10/q50/q90
+    (pred_ets / pred_naive are added by the caller).
     """
-    rows = []
-    future_dates = [last_date + pd.Timedelta(weeks=i+1) for i in range(h)]
+    all_rows = []
+    future_dates = [last_date + pd.Timedelta(weeks=i + 1) for i in range(h)]
 
     for key, grp in train_df.groupby(GROUP_COLS):
         grp = grp.sort_values("__time")
         last_row = grp.iloc[-1].copy()
 
-        # Rolling history for lag extrapolation
-        units_hist = grp["base_units"].values
+        units_hist = grp["base_units"].tolist()
+        arp_hist   = grp["arp"].tolist() if "arp" in grp.columns else []
+        N = len(units_hist)
+
+        # Precompute YAGO for each of the h forecast steps from actuals only.
+        # Step k (1-indexed): lag52 = units_hist at index N - 53 + k
+        lag52_seq = [
+            float(units_hist[N - 53 + k])
+            if 0 <= (N - 53 + k) < N else np.nan
+            for k in range(1, h + 1)
+        ]
+
+        # YoY ratio at anchor: scales the year-ago curve to current demand level.
+        _yago_anchor = float(units_hist[N - 52]) if N >= 52 else None
+        if _yago_anchor and _yago_anchor > 0:
+            yoy_ratio = float(np.clip(float(units_hist[-1]) / _yago_anchor, 0.5, 2.0))
+        else:
+            yoy_ratio = None
 
         for step, fd in enumerate(future_dates):
             fr = last_row.copy()
             fr["__time"] = fd
             fr["week_of_year"] = int(fd.isocalendar()[1])
+            lag52 = lag52_seq[step]
 
-            # Autoregressive lags — shift into future
-            lag1_idx  = len(units_hist) - 1 + step
-            lag4_idx  = len(units_hist) - 4 + step
-            lag13_idx = len(units_hist) - 13 + step
-
+            # Autoregressive lags — drawn from running history (actuals + predictions)
             if "base_units_lag1" in avail:
-                fr["base_units_lag1"] = (units_hist[lag1_idx]
-                                         if 0 <= lag1_idx < len(units_hist)
-                                         else units_hist[-1])
+                fr["base_units_lag1"]  = units_hist[-1]  if len(units_hist) >= 1  else np.nan
             if "base_units_lag4" in avail:
-                fr["base_units_lag4"] = (units_hist[lag4_idx]
-                                         if 0 <= lag4_idx < len(units_hist)
-                                         else units_hist[-4:].mean() if len(units_hist) >= 4
-                                         else units_hist[-1])
+                fr["base_units_lag4"]  = units_hist[-4]  if len(units_hist) >= 4  else units_hist[-1]
             if "base_units_lag13" in avail:
-                fr["base_units_lag13"] = (units_hist[lag13_idx]
-                                          if 0 <= lag13_idx < len(units_hist)
-                                          else units_hist[-13:].mean() if len(units_hist) >= 13
-                                          else units_hist[-1])
+                fr["base_units_lag13"] = units_hist[-13] if len(units_hist) >= 13 else units_hist[-1]
+            if "base_units_lag52" in avail:
+                fr["base_units_lag52"] = lag52
             if "weeks_since_launch" in avail and pd.notna(fr.get("weeks_since_launch")):
                 fr["weeks_since_launch"] = float(fr["weeks_since_launch"]) + step + 1
 
-            rows.append(dict(fr))
+            # ARP features — hold flat (no external signal); delta = 0
+            if arp_hist:
+                arp_cur = arp_hist[-1]
+                if "arp" in avail:           fr["arp"]           = arp_cur
+                if "arp_lag1" in avail:      fr["arp_lag1"]      = arp_cur
+                if "arp_lag4" in avail:      fr["arp_lag4"]      = (arp_hist[-4]
+                                                                     if len(arp_hist) >= 4
+                                                                     else arp_cur)
+                if "arp_wow_delta" in avail: fr["arp_wow_delta"] = 0.0
+                if "arp_roll8_avg" in avail: fr["arp_roll8_avg"] = float(np.nanmean(arp_hist[-8:]))
+                if "arp_roll8_std" in avail: fr["arp_roll8_std"] = float(np.nanstd(arp_hist[-8:])) if len(arp_hist) > 1 else 0.0
 
-    return pd.DataFrame(rows)
+            X = pd.DataFrame([dict(fr)])
+            if "channel_outlet" in X.columns:
+                X["channel_outlet"] = X["channel_outlet"].astype("category")
+            X_feat = X[[c for c in avail if c in X.columns]]
+
+            q10 = float(np.expm1(max(0, models["q10"].predict(X_feat)[0])))
+            q50 = float(np.expm1(max(0, models["q50"].predict(X_feat)[0])))
+            q90 = float(np.expm1(max(0, models["q90"].predict(X_feat)[0])))
+
+            # Seasonal blend: bend the flat AR mean toward the year-ago curve.
+            if yoy_ratio is not None and pd.notna(lag52) and lag52 > 0 and q50 > 0:
+                seasonal_ref = lag52 * yoy_ratio
+                blend_mult = (
+                    (1.0 - SEASONAL_BLEND_WEIGHT) * q50
+                    + SEASONAL_BLEND_WEIGHT * seasonal_ref
+                ) / q50
+                q10 = max(0.0, q10 * blend_mult)
+                q50 = max(0.0, q50 * blend_mult)
+                q90 = max(0.0, q90 * blend_mult)
+
+            # Feed blended q50 back so future steps see a realistic lag1
+            units_hist.append(q50)
+            if arp_hist:
+                arp_hist.append(arp_hist[-1])
+
+            all_rows.append({
+                **{c: fr.get(c) for c in GROUP_COLS},
+                "__time":    fd,
+                "pred_q10":  q10,
+                "pred_q50":  q50,
+                "pred_q90":  q90,
+                "pred_ets":  np.nan,
+                "pred_naive": np.nan,
+            })
+
+    return pd.DataFrame(all_rows)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -231,21 +301,11 @@ def main():
     m_q90 = train_lgbm(train_df, avail, 0.90)
     print(f"  q90 best iter: {m_q90.best_iteration_}")
 
-    # ── Build future feature rows ──────────────────────────────────────────────
-    print("\nBuilding future feature rows …")
-    future_df = build_future_features(train_df, avail, last_data_date, H)
+    # ── Autoregressive forecast (per-group, with YAGO seasonal blend) ─────────
+    print("\nRunning autoregressive forecast (per series, with seasonal blend) …")
+    _models = {"q10": m_q10, "q50": m_q50, "q90": m_q90}
+    future_df = _autoreg_forecast(train_df, avail, _models, last_data_date, H)
     future_df["__time"] = pd.to_datetime(future_df["__time"], utc=True)
-
-    # Ensure categoricals match training
-    if "channel_outlet" in future_df.columns:
-        future_df["channel_outlet"] = (
-            future_df["channel_outlet"].astype(str)
-            .astype(train_df["channel_outlet"].dtype))
-
-    avail_fut = [c for c in avail if c in future_df.columns]
-    future_df["pred_q50"] = np.expm1(np.clip(m_q50.predict(future_df[avail_fut]), 0, None))
-    future_df["pred_q10"] = np.expm1(np.clip(m_q10.predict(future_df[avail_fut]), 0, None))
-    future_df["pred_q90"] = np.expm1(np.clip(m_q90.predict(future_df[avail_fut]), 0, None))
 
     # ── ETS + Naive per series ─────────────────────────────────────────────────
     print("Fitting ETS (Holt) and Naive per series …")

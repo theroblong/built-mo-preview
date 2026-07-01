@@ -57,6 +57,14 @@ MODEL_VERSION  = "v3"
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
+# Seasonal blend weight: fraction of each forecast step pulled toward the
+# year-ago seasonal reference (lag52 × current-YoY-ratio).  Without this,
+# autoregressive convergence causes the 13-week forward forecast to collapse
+# to a flat mean after ~4 steps — the AR lags become self-predictions and
+# drown out the weekly seasonal variation in lag52.
+# 0.0 = pure AR (flat); 1.0 = pure seasonal naive.  0.40 is the default.
+SEASONAL_BLEND_WEIGHT = 0.40
+
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
 
@@ -130,6 +138,19 @@ if __name__ == "__main__":
             if 0 <= (N_actual - 53 + k) < N_actual else np.nan
             for k in range(1, FORECAST_WEEKS + 1)
         ]
+
+        # Year-over-year ratio at the anchor point.
+        # Used in the forecast loop to scale lag52_seq into a seasonal reference:
+        #   seasonal_ref[k] = lag52_seq[k] * yoy_ratio
+        # This projects the actual year-ago weekly curve forward, adjusted for
+        # how current demand is tracking relative to last year (up/down/flat).
+        _yago_anchor = float(units_history[N_actual - 52]) if N_actual >= 52 else None
+        if _yago_anchor and _yago_anchor > 0:
+            _anchor_units = float(units_history[-1])
+            # Sanity-clamp: cap at 2× up or down to avoid outlier series blowing up
+            yoy_ratio = float(np.clip(_anchor_units / _yago_anchor, 0.5, 2.0))
+        else:
+            yoy_ratio = None
 
         # Latest row for static features
         latest = g.iloc[-1]
@@ -223,7 +244,27 @@ if __name__ == "__main__":
             units_base = float(np.expm1(max(0, models["q50"].predict(X)[0])))
             units_high = float(np.expm1(max(0, models["q90"].predict(X)[0])))
 
-            # Feed q50 back as next step's lag seed
+            # Seasonal blend: prevent the AR collapse-to-flat problem.
+            # After ~4 steps, lag1/lag4/lag13 become self-predictions and the
+            # dominant AR signal drowns out lag52's weekly seasonal variation.
+            # We bend each step toward a seasonal reference:
+            #   seasonal_ref = this_week's_yago × yoy_ratio
+            # which projects the year-ago seasonal curve forward at the current
+            # year-over-year level.  All three quantiles shift by the same
+            # multiplicative factor to preserve the band shape.
+            if (yoy_ratio is not None and pd.notna(lag52)
+                    and lag52 > 0 and units_base > 0):
+                seasonal_ref = lag52 * yoy_ratio
+                blend_mult = (
+                    (1.0 - SEASONAL_BLEND_WEIGHT) * units_base
+                    + SEASONAL_BLEND_WEIGHT * seasonal_ref
+                ) / units_base
+                units_low  = max(0.0, units_low  * blend_mult)
+                units_base = max(0.0, units_base * blend_mult)
+                units_high = max(0.0, units_high * blend_mult)
+
+            # Feed blended q50 back as next step's lag seed (keeps AR and
+            # seasonal blend consistent across the full 13-step horizon)
             units_history.append(units_base)
             arp_history.append(arp_cur)  # hold ARP flat (no external signal yet)
 
