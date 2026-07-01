@@ -88,17 +88,35 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
-### Next (Phase 2) — Advanced Forecasting Techniques (approved 2026-06-30)
+### 2026-06-30 (v2.0.6) — Quantile Forecast + BSTS CausalImpact (MO_42, MO_43)
 
-Priority sequence agreed with Jason:
+**MO_42 — LightGBM Quantile Forecast (`scripts/MO_42_quantile_forecast.py`)**
 
-1. **LightGBM quantile regression** — P10/P50/P90 scenarios natively from the existing model. Zero new architecture. Gives Connor/Chase worst/expected/best case output in one training call. ~half a day.
-2. **BSTS / CausalImpact** — Bayesian Structural Time Series counterfactual analysis. Answers "what would units have been without this promo / price change?" — the FP&A question SHAP cannot answer. Python: `orbit` (Uber) or `tfp` (TensorFlow Probability) + Google `CausalImpact`.
-3. **DAGs via DoWhy** — Directed Acyclic Graphs to formally prove causality (price → demand vs. seasonal confounders). Long-term credibility play for Bracken and Jeff. Moves claims from correlational to causal.
-4. **DeepGLO** — Deep Global-Local model: matrix factorization network + temporal convolutional network, designed for high-dimensional multi-series. Benchmarks the global-plus-local architecture class.
-5. **GRU** — Gated Recurrent Unit. Lighter and faster than LSTM; another neural benchmark alongside N-BEATS. ~1 day.
+Three LightGBM quantile models (P10/P50/P90) at Dec 2025 cutpoint using pinball loss. Gives FP&A a calibrated floor/plan/upside range for every SKU × retailer, replacing a single point estimate with a statistically grounded scenario band. Section 16 added to HTML report.
 
-Note: TreeSHAP already in use (MO_40 used `shap.TreeExplainer`, which is TreeSHAP — exact polynomial-time algorithm for tree ensembles). BSTS and DAGs are the highest-value net-new additions.
+| Metric | Value |
+|---|---|
+| P50 wMAPE (plan accuracy) | **5.11%** |
+| Portfolio median band coverage | 69% (ideal 80% — bands are slightly tight; Phase 2 fix: widen to α=0.05/0.95 or use conformal prediction) |
+| 13-week revenue range (top series) | **$19.5M floor → $25.7M plan → $28.7M upside** |
+
+**MO_43 — BSTS / CausalImpact Price Event (`scripts/MO_43_causal_impact.py`)**
+
+Bayesian Structural Time Series counterfactual analysis of the Dec 7 2025 price reduction on BB 4pk at Kroger. Controls: BB 4pk at Walmart (same product, unaffected ARP) + Cookie Dough 4pk at Kroger (same retailer, stable ARP). Answers the FP&A question SHAP cannot: "What would demand have been without the price cut?" Section 17 added to HTML report.
+
+| Metric | Value |
+|---|---|
+| ARP change | $10.99 → $10.14 (−7.8%) from Dec 7 2025 |
+| Estimated incremental lift | **+28.6%** above BSTS counterfactual |
+| Cumulative extra units (8 weeks) | **+8,443 units** |
+| Estimated revenue impact | **+$85,569** |
+
+**Pending (Phase 2 queue):**
+3. **DAGs via DoWhy** — prove causality (price → demand vs. seasonal confounder)
+4. **DeepGLO** — global-local matrix factorization + TCN benchmark
+5. **GRU** — lighter neural baseline
+
+Note: TreeSHAP already in use via MO_40 (`shap.TreeExplainer`).
 
 ---
 
