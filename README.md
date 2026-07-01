@@ -232,6 +232,38 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 
 ### 2026-07-01 (update 2) — Option B wired + HTML report deduplication
 
+### 2026-07-01 (update 6) — Fix flat-line forward forecast: true AR loop + YAGO seasonal blend (MO_35 / MO_27)
+
+**Problem:** The forward forecast charts (Figure 10 in HTML report — "Where Is BUILT Today?") showed a completely flat line for all 13 forecast weeks. Every retailer (Walmart, SAMS, Kroger, Publix, etc.) forecast as a horizontal dashed line at a constant level. This made the forecast look like a boring average, not a credible prediction of real seasonal demand.
+
+**Root cause — two separate bugs:**
+
+*MO_35 `build_future_features` (primary culprit):* The "autoregressive" lag math used `lag1_idx = len(units_hist) - 1 + step`. At step ≥ 1, this index goes out of bounds (units_hist only held actuals, never updated with predictions). The fallback returned `units_hist[-1]` — the anchor value — for every single step. All 13 forecast steps saw identical lag1/lag4/lag13 inputs → identical model outputs → flat line. Additionally, `base_units_lag52` was missing from FEATURE_COLS entirely, so no year-ago seasonal signal could reach the model.
+
+*MO_27 AR convergence:* MO_27's loop was correctly implemented, but `base_units_lag52` ranks 22/29 by importance. After step 4, lag1/lag4/lag13 become self-predictions that dominate. The YAGO seasonal variation in lag52 is drowned out by the AR momentum → collapses to flat mean.
+
+*Why Q1 2026 backtesting charts (Figure 6) looked good:* Those validation forecasts used REAL actuals to compute lags at every step — no AR collapse possible when the target data already exists. The forward forecast (no future actuals) exposed the bug.
+
+**Fix — applied to both MO_35 and MO_27:**
+
+| Change | MO_35 | MO_27 |
+|---|---|---|
+| True AR loop | Replace `build_future_features` with `_autoreg_forecast`: per-group loop appending blended q50 to `units_hist` each step | Already correct; unchanged |
+| lag52 in features | `base_units_lag52` added to `FEATURE_COLS`; precomputed from actuals (no leakage) | Already in place from v2 |
+| Seasonal blend | `SEASONAL_BLEND_WEIGHT = 0.40` | `SEASONAL_BLEND_WEIGHT = 0.40` |
+
+**Seasonal blend formula:**
+```
+yoy_ratio       = anchor_units / yago_at_anchor   # clipped to [0.5, 2.0]
+seasonal_ref_k  = lag52_k × yoy_ratio             # projects year-ago curve at current YoY level
+blend_mult      = (0.60 × ar_pred + 0.40 × seasonal_ref_k) / ar_pred
+q10/q50/q90    *= blend_mult                       # band shape preserved; blended q50 fed back as next lag1
+```
+
+**Result:** Summer uptick now visible — SAMS curves up ~25% from anchor; Kroger rises ~18%; Walmart shows realistic recent softness; Publix traces its declining trend. Total portfolio: ~349K/wk plan for Q3 2026 (up from flat ~328K). Report v2.1.1 regenerated with fixed charts.
+
+---
+
 ### 2026-07-01 (update 5) — Rolling signals: time-varying competitive dynamics (MO_46 + MO_26/27 v3)
 
 **MO_41 audit root cause, Phase 2 fix:** The stepwise ablation in MO_41 proved that `implied_elasticity`, `max_donor_cannibal_prob`, and `donor_count` are fully static per series (ICC=1.0). They differentiate between series but explain no within-series week-to-week variation — hence near-zero SHAP values. MO_46 replaces them with live signals.
