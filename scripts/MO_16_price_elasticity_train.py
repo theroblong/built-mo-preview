@@ -10,10 +10,13 @@ from mo_druid_client import query_druid
 
 os.makedirs("outputs", exist_ok=True)
 
-MODEL_VERSION = "v1"
+MODEL_VERSION = "v2"
+
+MIN_PRICE_BAR_DELTA = 0.05  # $0.05 — matches MO_17 scoring guardrail
 
 # Confirmed columns from Q17 (price_elasticity_training_features).
 # log_price_change and log_unit_change are computed below from pre/post price and units.
+# v2: added TDP features to control for distribution expansion confounding price signal.
 OWN_PRICE_FEATURES = [
     "pre_13w_avg_price_per_bar",
     "post_13w_avg_price_per_bar",
@@ -22,6 +25,9 @@ OWN_PRICE_FEATURES = [
     "pre_13w_weeks_count",
     "post_13w_weeks_count",
     "pack_count",
+    "pre_13w_tdp",
+    "post_13w_tdp",
+    "tdp_pct_chg",
 ]
 
 # These columns may or may not be present in Q17 depending on what was built.
@@ -49,6 +55,7 @@ def load_elasticity_data() -> pd.DataFrame:
         "pre_13w_velocity_spm", "pre_13w_weeks_count", "post_13w_weeks_count",
         "pack_count", "naive_price_elasticity", "promo_confounded",
         "pre_13w_base_units", "post_13w_base_units",
+        "pre_13w_tdp", "post_13w_tdp", "tdp_pct_chg",
     ]
     for col in numeric_cols:
         if col in df.columns:
@@ -62,6 +69,18 @@ def load_elasticity_data() -> pd.DataFrame:
         (df["post_13w_base_units"] + 1) /
         (df["pre_13w_base_units"] + 1)
     )
+
+    # Apply same $0.05 price-per-bar guardrail used in MO_17 scoring —
+    # model trains only on rows with genuine price moves so it learns
+    # from signal, not CRMA-level noise.
+    before = len(df)
+    df = df[
+        (df["post_13w_avg_price_per_bar"] - df["pre_13w_avg_price_per_bar"]).abs()
+        >= MIN_PRICE_BAR_DELTA
+    ].copy()
+    print(f"  Price guardrail (|Δprice_per_bar| >= ${MIN_PRICE_BAR_DELTA}): "
+          f"{before - len(df):,} rows removed, {len(df):,} retained")
+
     return df
 
 

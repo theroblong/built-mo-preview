@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from mo_druid_client import query_druid
 from mo_writeback import write_back
 
-MODEL_VERSION = "v1"
+MODEL_VERSION = "v2"
 
 OWN_PRICE_FEATURES = [
     "pre_13w_avg_price_per_bar",
@@ -37,6 +37,7 @@ def load_scoring_data() -> pd.DataFrame:
         "pre_13w_velocity_spm", "pre_13w_weeks_count", "post_13w_weeks_count",
         "pack_count", "naive_price_elasticity", "promo_confounded",
         "pre_13w_base_units", "post_13w_base_units",
+        "pre_13w_tdp", "post_13w_tdp", "tdp_pct_chg",
     ]
     for col in numeric_cols:
         if col in df.columns:
