@@ -6,7 +6,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
-## Open Agenda Items (as of 2026-06-30)
+## Open Agenda Items (as of 2026-07-01)
+
+### Brian sanity-check (gating dependency for July close)
+
+> Rob is explicit: **Brian reviews and validates before going back to Jeff/Bracken.** Items that will be in the Brian package:
+>
+> 1. HTML report v2.1.0 — Q2 positively reframed; duplicate sections removed; AHOLD/VS positive elasticity explained with MO_44 OLS context; SHAP waterfalls for BB 4pk + CD 4pk at Walmart
+> 2. Option B two-source elasticity live in Mo — CRMA accounts now use MO_44 causal OLS (all 4 retailer.py assembly points); MULO guardrails shown in UI and Mo Chat
+> 3. Walk-through of Phase 2 rolling signals roadmap — what the model knows statically vs. what it will know weekly once MO_46 v3 pipeline runs (this is the Rob "pre-trained pathways" story)
+> 4. One honest known gap: post-hoc event validation — we know the model is accurate but we don't yet have a step that takes a price event, applies the elasticity, and compares predicted vs. actual unit lift. This is on the agenda; Brian should know.
 
 ### Question for Brian / Jeff (via Rob)
 
@@ -222,6 +231,53 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 ---
 
 ### 2026-07-01 (update 2) — Option B wired + HTML report deduplication
+
+### 2026-07-01 (update 5) — Rolling signals: time-varying competitive dynamics (MO_46 + MO_26/27 v3)
+
+**MO_41 audit root cause, Phase 2 fix:** The stepwise ablation in MO_41 proved that `implied_elasticity`, `max_donor_cannibal_prob`, and `donor_count` are fully static per series (ICC=1.0). They differentiate between series but explain no within-series week-to-week variation — hence near-zero SHAP values. MO_46 replaces them with live signals.
+
+**MO_46 — Rolling Cannibalization Pressure + Elasticity (`scripts/MO_46_rolling_signals.py`)**
+
+Computes two time-varying signals for every (focal_upc, channel, account, geo) series at every week:
+
+| Signal | Method | Range / Notes |
+|---|---|---|
+| `rolling_cannibal_pressure` | 8-week trailing Pearson(−r) between focal and donor_sum base_units | [−1, +1]; +1 = max zero-sum competition; 0 = no relationship; −1 = market expansion |
+| `rolling_cannibal_trend` | 4-week pressure minus 8-week pressure | Positive = competition accelerating |
+| `rolling_elasticity` | 13-week trailing OLS log(units) ~ log(arp), $0.05 price guardrail | [−5, 3]; NaN when insufficient price variation |
+| `rolling_elas_valid` | 1 if guardrail passed | 0 = not enough price variation in window |
+
+Donor pairs sourced from `scored_cannibalization` (`cannibal_status IN ('Cannibalizing', 'Watch')`) — same filter as the Pool Health API. ARP from `built_filtered_weekly`. Requires ≥5 valid weeks per window; flat series (std < 1e-8) → NaN.
+
+**Pipeline integration:**
+- **MO_25** joins `outputs/rolling_signals_weekly.parquet` at step 9; graceful skip (NaN-fill) if MO_46 not yet run
+- **MO_26 v3** adds all three rolling features to FEATURE_COLS
+- **MO_27 v3** seeds rolling signals from last observed values, held static across 13-week horizon (conservative — we don't forecast competitive dynamics autoregressively)
+
+**Why this matters for Rob's product vision:** Each signal contributes a named, explainable business event to the forecast — not just momentum residuals. When rolling_cannibal_pressure rises from 0.3 to 0.7 over 6 weeks, Mo can say "competitive tension is building at Walmart; the model reduced your Q3 forecast by ~800 units/week in response." That's the anti-black-box story for Brian: pre-trained pathways with attached narratives, not a number from nowhere.
+
+**Run sequence to activate v3:**
+```
+python MO_46_rolling_signals.py   → outputs/rolling_signals_weekly.parquet
+python MO_25_retailer_sales_actuals.py  → joins rolling signals, saves parquet
+python MO_26_retailer_sales_train.py    → trains v3 quantile models (PKLs)
+python MO_27_retailer_sales_forecast.py → v3 forecasts → Druid ingest
+```
+
+---
+
+### 2026-07-01 (update 4) — YAGO features: year-ago demand in retailer sales forecast (MO_25/26/27 v2)
+
+**Bracken's concern addressed:** "3 years of data but it's not comparable — promotional lift in '25 won't be what it is in '26 and '27." Year-ago lags let the model observe what demand looked like 52 weeks ago at the same seasonal point — explicitly showing whether growth is repeating, accelerating, or diverging from the year-ago pattern.
+
+**Changes:**
+- `MO_25`: `base_units_lag52` and `velocity_spm_lag52` added to output schema (shift(52) per GROUP_COLS series; NaN for series < 52 weeks — LightGBM handles gracefully)
+- `MO_26 v2`: both YAGO features added to `FEATURE_COLS`
+- `MO_27 v2`: `lag52_seq` pre-computed for all 13 forecast steps from actuals only (no data leakage); `.tail(13)` seed window extended to `.tail(65)` (52+13 weeks needed); `base_units_lag52` updated in `state` dict per step
+
+**Feature importance (MO_26 v2, gain importance):** `base_units_lag52` ranks 22/29 with importance 1102 — above all cannibalization features. 34.9% YAGO coverage (expected: SKUs launched after mid-2025 lack 52 weeks of history). This confirms that year-ago demand is a meaningful forward signal, not noise.
+
+---
 
 ### 2026-07-01 (update 3) — SPINS channel guardrails + Druid ingest
 
