@@ -221,6 +221,19 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 
 ---
 
+### 2026-07-01 (update 2) — Option B wired + HTML report deduplication
+
+**Option B two-source elasticity — complete (customer-built-mo-api):**
+`retailer.py` now applies `_CRMA_CAUSAL_ELASTICITY` (13-account MO_44 OLS dict) at all 4 assembly points: `/sku-summary` row loop, `/summary` elast_map, `/sku-list` enrich loop, and forecast drawer. KEY ACCOUNT retailers continue using `scored_price_elasticity` (MO_17). `mo_chat.py` `_DATA_GLOSSARY` updated with two-source methodology, all 13 per-account ε values, `Moderately Elastic` band added, and Vitamin Shoppe lifecycle note.
+
+**HTML report cleanup (docs/built_demand_intelligence_report_v2.1.0.html):**
+- Removed duplicate Section 14 "Model Explainability" (identical copy was appended twice)
+- Removed duplicate §17 "Causal DAG / DoWhy MO_44" (identical copy at end of file)
+- Q2 reframed: "Why should I trust a number from a model I can't open?" → "How do I develop trust as I learn more about the model?" (Rob's exact positive framing from Jul 1 standup)
+- File: 1888 → 1605 lines (283 lines of pure duplication removed)
+
+---
+
 ### 2026-06-30 (v2.0.7) — Causal DAG Analysis (MO_44)
 
 **MO_44 — Causal Price→Demand Analysis via DoWhy (`scripts/MO_44_dag_analysis.py`)**
