@@ -170,6 +170,27 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 
 ---
 
+### 2026-07-01 — Price elasticity accuracy: $0.05 guardrail (MO_17) + MO_44 two-source fix (v2.1.0)
+
+**Root cause diagnosed:** 35.9% of `scored_price_elasticity` rows produced garbage elasticity values (AHOLD mean implied_elasticity = 1.2×10¹¹) due to division-by-near-zero in MO_17. When `log_price_change` is tiny (CRMA national aggregates barely move week-to-week), `predicted_log_unit_change / log_price_change` blows up even when the prediction is reasonable.
+
+**Fix applied to MO_17:** Rows where `|post_13w_avg_price_per_bar − pre_13w_avg_price_per_bar| < $0.05` now get `elasticity_band = "Insufficient Price Variation"` and `implied_elasticity = NaN`. Threshold rationale: $0.05 / $2.59 avg per-bar price = 1.93% — anything smaller is sub-nickel noise, not a real pricing decision. 32,561 rows (35.9%) reclassified.
+
+**AHOLD Delhaize:** Positive elasticity in UI is a CRMA geography artifact. AHOLD aggregates Food Lion (strict EDLP), Stop & Shop / Giant (High-Low), and Hannaford (EDLP-leaning) into one national row. Banner-level promos cancel each other at the aggregate, leaving near-zero price signal. MO_44 OLS with TDP/maturity controls gives AHOLD ε=−1.262 (correctly negative). Remaining ~49% Positive rows after guardrail are a missing-TDP-feature issue in MO_16 — queued for retrain.
+
+**Vitamin Shoppe:** 59% Positive rows persist after guardrail — confirmed real by MO_44 OLS (ε=+0.881 with full controls). Mechanism is NOT Veblen/luxury-buyer pricing. Positive rows have avg price *decreasing* (log_price_change=−0.061) — consistent with clearance/lifecycle behavior where discounted SKUs are being discontinued and velocity declines alongside price.
+
+**Systematic ~30% Positive rate:** Affects all major CRMA retailers (Walmart 27%, Kroger 30%, Publix 33%) — not AHOLD-specific. Root cause: MO_16 `OWN_PRICE_FEATURES` lacks TDP. Distribution expansion events confound the price→demand signal.
+
+**MO_44 v2.1.0 fixes (HTML report):**
+- DoWhy portfolio ATE now uses KEY ACCOUNT rows only (avoids CRMA scale confound) → ε=−0.3437 restored
+- Per-account OLS uses full KEY ACCOUNT + CRMA → Walmart (−0.245), Kroger (−0.590), Ahold (−1.262), Albertsons (−1.066), Publix (−1.025) all now appear in table
+- Per-account OLS filtered to weeks with `|arp_wow_delta| ≥ $0.05 OR |Δ%| ≥ 2.5%` (uses pre-computed parquet columns)
+
+**Pending before Druid ingest:** MO_16 retrain with TDP features (`pre_13w_tdp`, `post_13w_tdp`, `tdp_pct_chg`) added to `OWN_PRICE_FEATURES`, then MO_17 re-score.
+
+---
+
 ### 2026-06-30 (v2.0.7) — Causal DAG Analysis (MO_44)
 
 **MO_44 — Causal Price→Demand Analysis via DoWhy (`scripts/MO_44_dag_analysis.py`)**

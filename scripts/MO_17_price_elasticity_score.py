@@ -72,15 +72,31 @@ if __name__ == "__main__":
     print("Scoring price elasticity...")
     df["predicted_log_unit_change"] = model.predict(X)
 
+    # Guard: less than $0.05 change in price_per_bar is sub-nickel noise —
+    # weekly ARP averages at CRMA/national scale barely move, and dividing
+    # a model prediction by a near-zero denominator produces astronomically
+    # wrong elasticity values (observed: AHOLD mean = 1.2e11).
+    MIN_PRICE_BAR_DELTA = 0.05
+    meaningful_price_move = (
+        (df["post_13w_avg_price_per_bar"] - df["pre_13w_avg_price_per_bar"]).abs()
+        >= MIN_PRICE_BAR_DELTA
+    )
+    insufficient = ~meaningful_price_move
+    n_insufficient = insufficient.sum()
+    print(f"  Rows with |Δprice_per_bar| < ${MIN_PRICE_BAR_DELTA:.2f}: {n_insufficient:,} "
+          f"({100*n_insufficient/len(df):.1f}%) → elasticity_band='Insufficient Price Variation'")
+
     # Convert log-unit-change back to implied elasticity: d(log Q) / d(log P)
     log_price_chg = df["log_price_change"].replace(0, np.nan)
     df["implied_elasticity"] = df["predicted_log_unit_change"] / log_price_chg
+    df.loc[insufficient, "implied_elasticity"] = np.nan
 
     df["elasticity_band"] = pd.cut(
         df["implied_elasticity"],
         bins=[-np.inf, -2.0, -1.0, -0.5, 0.0, np.inf],
         labels=["Highly Elastic", "Elastic", "Moderately Elastic", "Inelastic", "Positive"],
     ).astype(str)
+    df.loc[insufficient, "elasticity_band"] = "Insufficient Price Variation"
 
     df["model_version"] = MODEL_VERSION
     df["scored_at"] = datetime.now(timezone.utc).isoformat()
