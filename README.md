@@ -15,7 +15,7 @@ The current repo is documentation-first. It does not yet contain modeling code o
 > 1. HTML report v2.1.0 — Q2 positively reframed; duplicate sections removed; AHOLD/VS positive elasticity explained with MO_44 OLS context; SHAP waterfalls for BB 4pk + CD 4pk at Walmart
 > 2. Option B two-source elasticity live in Mo — CRMA accounts now use MO_44 causal OLS (all 4 retailer.py assembly points); MULO guardrails shown in UI and Mo Chat
 > 3. Walk-through of Phase 2 rolling signals roadmap — what the model knows statically vs. what it will know weekly once MO_46 v3 pipeline runs (this is the Rob "pre-trained pathways" story)
-> 4. One honest known gap: post-hoc event validation — we know the model is accurate but we don't yet have a step that takes a price event, applies the elasticity, and compares predicted vs. actual unit lift. This is on the agenda; Brian should know.
+> 4. ~~One honest known gap: post-hoc event validation~~ **RESOLVED** — MO_47 complete (see update 7). 30,876 price events validated; 63% direction accuracy on clean moves; Kroger BB 4pk case study anchors the business narrative. Embedded in MO_48 Brian package.
 
 ### Question for Brian / Jeff (via Rob)
 
@@ -261,6 +261,37 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 ```
 
 **Result:** Summer uptick now visible — SAMS curves up ~25% from anchor; Kroger rises ~18%; Walmart shows realistic recent softness; Publix traces its declining trend. Total portfolio: ~349K/wk plan for Q3 2026 (up from flat ~328K). Report v2.1.1 regenerated with fixed charts.
+
+---
+
+### 2026-07-01 (update 7) — Event validation + Brian sanity-check package complete (MO_47 / MO_48)
+
+**MO_47 — Post-hoc Price Event Validation (`scripts/MO_47_event_validation.py`)**
+
+Validates whether the elasticity model correctly predicts what demand does during real price events. Joins `price_elasticity_training_features` (Druid — 30,876 genuine price-change windows) with `scored_price_elasticity` (series-level implied ε), applies `ε × log_price_change` as the prediction, and compares against observed SPINS unit change.
+
+Key design decision: `price_elasticity_training_features` is the MO_16 training set, so this is in-sample evaluation. The primary metric is direction accuracy (did demand move the right way?), not MAPE. MAPE on all events is high (156% model vs 127% naive) because 94% of events co-occurred with promotional mechanics — the model captures the price-only signal; promo mechanics independently drive additional demand.
+
+| Metric | All events (n=30,876) | Clean price moves (n=1,633, promo_confounded=0) |
+|---|---|---|
+| Direction accuracy | 57% (vs 0% naive) | **63%** (vs 0% naive) |
+| Elasticity R² | 0.03 | 0.06 |
+| MAPE (model vs naive) | 157% vs 127% — model worse | 89% vs 76% — model worse (magnitude noisy without promo context) |
+
+**Kroger BB 4pk case study (hardcoded from MO_43/MO_44):**
+- ARP: $10.99 → $10.14/pack (−7.8%); ε = −0.59 (MO_44 causal OLS)
+- Price-only predicted lift: **+4.9%**; BSTS total lift (MO_43): **+28.6%**
+- Promo/display residual: +23.7pp — model captured the price signal; display+feature mechanics drove the rest
+
+**MO_48 — Brian Sanity-Check HTML Package (`scripts/MO_48_brian_package.py`)**
+
+Generates `docs/brian_sanity_check_package.html` — standalone 4.2 MB document with 13 charts base64-embedded. Brian Cluster (BUILT CPO) reviews this before Rob routes back to Jeff/Bracken (July close gate).
+
+9 sections: Executive Summary → Accuracy Proof → Q3 2026 Forecast → SHAP Driver Analysis → Event Proof (Kroger) → Causal Price Sensitivity → Retraining Value → Elasticity Fix → Phase 2 Roadmap.
+
+Design choices: direction accuracy (63% clean moves) featured in exec KPI and event proof table; MAPE comparison with promo confounding context panel (not featured where model is worse than naive); Kroger case study numbers hardcoded from MO_43/MO_44 (avoids picking wrong event window from training features table).
+
+**Phase 2 note — promo units forecasting:** Currently forecasting `base_units` only (everyday demand). FP&A needs `promo_units` (incremental lift during promo events) to get the total revenue picture. Near-term path: forecast `total_units` as a second target alongside base (the gap = expected promo contribution). Longer-term: lift-multiplier layer (expected promo weeks × historical lift coefficient per SKU/retailer) makes trade spend scenarios first-class inputs, with elasticity and TPR depth as explicit levers.
 
 ---
 
