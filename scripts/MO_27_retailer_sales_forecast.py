@@ -53,7 +53,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v2"
+MODEL_VERSION  = "v3"
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
@@ -150,13 +150,26 @@ if __name__ == "__main__":
             "arp_fallback":         int(latest.get("arp_fallback") or 0),
         }
 
+        # MO_46 rolling signals — static seed values (last observed; held flat across horizon)
+        _cp  = latest.get("rolling_cannibal_pressure")
+        _ct  = latest.get("rolling_cannibal_trend")
+        _re  = latest.get("rolling_elasticity")
+        rolling_seed = {
+            "rolling_cannibal_pressure": float(_cp) if pd.notna(_cp) else np.nan,
+            "rolling_cannibal_trend":    float(_ct) if pd.notna(_ct) else np.nan,
+            "rolling_elasticity":        float(_re) if pd.notna(_re) else np.nan,
+        }
+
         # Static features (unchanged across forecast horizon)
         static_feats = {}
         skip = {"channel_outlet", "week_of_year",
                 "base_units_lag1", "base_units_lag4", "base_units_lag13",
                 "base_units_lag52",                          # dynamic — updated per step
                 "arp_lag1", "arp_lag4", "arp_wow_delta",
-                "arp_roll8_avg", "arp_roll8_std", "arp"}
+                "arp_roll8_avg", "arp_roll8_std", "arp",
+                # MO_46 rolling signals — held static at last observed values;
+                # no autoregressive update (we don't forecast competitive dynamics)
+                "rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity"}
         for col in features_used:
             if col not in skip:
                 val = latest.get(col)
@@ -187,6 +200,7 @@ if __name__ == "__main__":
 
             state = {
                 **static_feats,
+                **rolling_seed,             # MO_46: static competitive signals
                 "channel_outlet":       channel,
                 "week_of_year":         int(forecast_date.isocalendar().week),
                 "weeks_since_launch":   wsl,

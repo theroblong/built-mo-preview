@@ -25,7 +25,7 @@ training for any series.
 
 OUTPUT
 ------
-  outputs/model_retailer_sales_q{10,50,90}_v1.pkl
+  outputs/model_retailer_sales_q{10,50,90}_v3.pkl
   outputs/retailer_sales_train_metrics.json
 """
 
@@ -37,7 +37,7 @@ import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v2"
+MODEL_VERSION = "v3"
 QUANTILES     = [0.10, 0.50, 0.90]
 Q_TAGS        = ["q10", "q50", "q90"]
 
@@ -68,6 +68,11 @@ FEATURE_COLS = [
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
     # YAGO — year-ago lags (Bracken: "are 3 years of data comparable?")
     "base_units_lag52", "velocity_spm_lag52",
+    # MO_46 rolling signals — time-varying competitive dynamics
+    # rolling_cannibal_pressure: -pearsonr(focal_8w, donor_sum_8w); +1 = max zero-sum tension
+    # rolling_cannibal_trend:     4w_pressure minus 8w_pressure; positive = accelerating
+    # rolling_elasticity:         13w trailing OLS ε; NaN when price guardrail fails
+    "rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity",
     # Categorical
     "channel_outlet",
 ]

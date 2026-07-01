@@ -68,12 +68,17 @@ implied_elasticity        float    — from scored_price_elasticity (static per 
 elasticity_band           str
 max_donor_cannibal_prob   float    — from scored_cannibalization (static per focal)
 donor_count               int
+rolling_cannibal_pressure float    — MO_46: 8w trailing Pearson(-r) vs donor_sum; NaN if no donors
+rolling_cannibal_trend    float    — MO_46: 4w pressure minus 8w pressure (acceleration)
+rolling_elasticity        float    — MO_46: 13w trailing OLS ε; NaN if guardrail failed
+rolling_elas_valid        int      — MO_46: 1 if rolling_elasticity is reliable
 scored_at                 str ISO
 """
 
 import numpy as np
 import pandas as pd
 from datetime import datetime, timezone
+from pathlib import Path
 from mo_druid_client import query_druid
 
 SCORED_AT      = datetime.now(timezone.utc).isoformat()
@@ -264,7 +269,32 @@ if __name__ == "__main__":
           .transform(lambda s: s.shift(1).rolling(8, min_periods=2).std())
     )
 
-    # ── 9. Quality filters ───────────────────────────────────────────────────
+    # ── 9. MO_46 rolling signals join (optional — run MO_46 first) ──────────
+    _rolling_path = Path("outputs/rolling_signals_weekly.parquet")
+    if _rolling_path.exists():
+        print("\nJoining MO_46 rolling signals …")
+        rolling = pd.read_parquet(_rolling_path)
+        rolling["__time"] = pd.to_datetime(rolling["__time"], utc=True)
+        for _c in ["rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity"]:
+            if _c in rolling.columns:
+                rolling[_c] = pd.to_numeric(rolling[_c], errors="coerce")
+        _join_cols = [c for c in
+                      ["rolling_cannibal_pressure", "rolling_cannibal_trend",
+                       "rolling_elasticity", "rolling_elas_valid"]
+                      if c in rolling.columns]
+        df = df.merge(rolling[GROUP_COLS + ["__time"] + _join_cols],
+                      on=GROUP_COLS + ["__time"], how="left")
+        for _c in _join_cols:
+            coverage = df[_c].notna().sum()
+            print(f"  {_c}: {coverage:,} / {len(df):,} rows "
+                  f"({coverage / len(df) * 100:.1f}% coverage)")
+    else:
+        print("\nSkipping MO_46 rolling signals join (run MO_46 first to generate the parquet).")
+        for _c in ["rolling_cannibal_pressure", "rolling_cannibal_trend",
+                   "rolling_elasticity", "rolling_elas_valid"]:
+            df[_c] = np.nan
+
+    # ── 11. Quality filters ──────────────────────────────────────────────────
     # Drop series with fewer than MIN_WEEKS usable rows
     series_len = df.groupby(GROUP_COLS)["base_units"].transform("count")
     before = len(df)
@@ -274,7 +304,7 @@ if __name__ == "__main__":
     # Drop rows where base_units lag1 is not yet available (first row per series)
     df = df.dropna(subset=["base_units_lag1"]).copy()
 
-    # ── 10. Assemble output ──────────────────────────────────────────────────
+    # ── 12. Assemble output ──────────────────────────────────────────────────
     df["first_week_selling"] = df["first_week_selling"].dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     df["scored_at"] = SCORED_AT
 
@@ -296,6 +326,9 @@ if __name__ == "__main__":
         "week_of_year",
         "implied_elasticity", "elasticity_band",
         "max_donor_cannibal_prob", "donor_count",
+        # MO_46 rolling signals (NaN if MO_46 not yet run)
+        "rolling_cannibal_pressure", "rolling_cannibal_trend",
+        "rolling_elasticity", "rolling_elas_valid",
         "scored_at",
     ]
     out = df[[c for c in output_cols if c in df.columns]].copy()
