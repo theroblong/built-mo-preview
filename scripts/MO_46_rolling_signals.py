@@ -102,8 +102,8 @@ def _add_cannibal_pressure(g: pd.DataFrame) -> pd.DataFrame:
     focal_s  = g["base_units"].astype(float)
     donor_s  = g["donor_sum_units"].fillna(0).astype(float)
 
-    corr_8w = focal_s.rolling(CANNIBAL_WINDOW,       min_periods=MIN_VALID_WEEKS).corr(donor_s)
-    corr_4w = focal_s.rolling(CANNIBAL_WINDOW_SHORT,  min_periods=MIN_VALID_WEEKS).corr(donor_s)
+    corr_8w = focal_s.rolling(CANNIBAL_WINDOW,      min_periods=MIN_VALID_WEEKS).corr(donor_s)
+    corr_4w = focal_s.rolling(CANNIBAL_WINDOW_SHORT, min_periods=min(MIN_VALID_WEEKS, CANNIBAL_WINDOW_SHORT)).corr(donor_s)
 
     g["rolling_cannibal_pressure"] = -corr_8w           # negative correlation = positive pressure
     g["rolling_cannibal_trend"]    = (-corr_4w) - (-corr_8w)   # positive = accelerating tension

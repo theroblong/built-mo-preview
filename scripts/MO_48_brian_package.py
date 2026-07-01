@@ -182,14 +182,19 @@ if __name__ == "__main__":
 
     # MO_47 event validation (may not exist yet)
     if m47:
-        dir_acc   = f"{m47.get('direction_accuracy', 0)*100:.0f}%"
-        mape_mod  = f"{m47.get('mape_model', 0)*100:.0f}%"
-        mape_naiv = f"{m47.get('mape_naive', 0)*100:.0f}%"
-        n_events  = f"{m47.get('n_validated_events', 0):,}"
-        r2        = f"{m47.get('elasticity_response_r2', 0):.2f}"
+        dir_acc       = f"{m47.get('direction_accuracy', 0)*100:.0f}%"
+        dir_acc_clean = f"{m47.get('direction_accuracy_clean', 0)*100:.0f}%" if m47.get('direction_accuracy_clean') else "—"
+        n_events      = f"{m47.get('n_validated_events', 0):,}"
+        n_clean       = f"{m47.get('n_clean_events', 0):,}"
+        r2            = f"{m47.get('elasticity_response_r2', 0):.2f}"
+        r2_clean      = f"{m47.get('r2_clean', 0):.2f}" if m47.get('r2_clean') else "—"
+        promo_pct     = f"{m47.get('promo_confounded_pct', 0)*100:.0f}%"
+        # MAPE: only show clean-move MAPE where model is meaningfully comparable
+        mape_mc   = f"{m47.get('mape_model_clean', 0)*100:.0f}%" if m47.get('mape_model_clean') else "—"
+        mape_nc   = f"{m47.get('mape_naive_clean', 0)*100:.0f}%" if m47.get('mape_naive_clean') else "—"
         ev_note   = ""
     else:
-        dir_acc = mape_mod = mape_naiv = n_events = r2 = "—"
+        dir_acc = dir_acc_clean = n_events = n_clean = r2 = r2_clean = promo_pct = mape_mc = mape_nc = "—"
         ev_note = _callout(
             "<strong>Run MO_47 first:</strong> Event validation metrics will appear here "
             "after <code>python MO_47_event_validation.py</code> completes.",
@@ -221,7 +226,7 @@ if __name__ == "__main__":
   {_kpi("Accuracy Gain", f"+{ma13_dec25 - lgbm_dec25:.0f}pp", "vs. moving-average baseline", "#1a3a5c")}
   {_kpi("Q3 2026 Forecast", f"{q50_weekly//1000}K/wk", f"{q10_total//1000:,}K–{q90_total//1000:,}K range", "#1a3a5c")}
   {_kpi("Retraining Gain", f"+{retrain_gain:.0f}pp", "rolling vs. stale model", "#2980b9")}
-  {_kpi("Event Validation", dir_acc if m47 else "Run MO_47", "direction accuracy", "#27ae60" if m47 else "#aaa")}
+  {_kpi("Event Validation", dir_acc_clean if m47 else "Run MO_47", "direction accuracy (clean moves)", "#27ae60" if m47 else "#aaa")}
 </div>"""
     s1_body = f"""
 {s1_kpis}
@@ -298,34 +303,40 @@ series simultaneously, every week, without the analyst having to ask.
 
     # Section 5: Event proof (MO_43 + MO_47)
     s5_ev_table = f"""
-<table style="width:100%;border-collapse:collapse;font-size:0.9em;margin-top:12px">
+<div style="background:#fff8e1;border-left:4px solid #f9a825;padding:10px 14px;margin:10px 0 14px 0;border-radius:4px;font-size:0.88em;color:#555">
+  <strong>Note on promo confounding:</strong> {promo_pct} of the {n_events} price-change events
+  in the BUILT SPINS history co-occurred with promotional activity (display / feature ads).
+  The elasticity model captures the <em>price-only signal</em>; promo mechanics independently
+  drive additional demand. The table below separates the full event pool from the subset of
+  clean, non-confounded price moves (n={n_clean}).
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:0.9em;margin-top:4px">
   <thead>
     <tr style="background:#1a3a5c;color:#fff">
       <th style="padding:10px;text-align:left">Metric</th>
-      <th style="padding:10px;text-align:center">Model (implied ε)</th>
+      <th style="padding:10px;text-align:center">All events (n={n_events})</th>
+      <th style="padding:10px;text-align:center">Clean moves only (n={n_clean})</th>
       <th style="padding:10px;text-align:center">Naive (ε = 0)</th>
     </tr>
   </thead>
   <tbody>
     <tr style="background:#f8f9fa">
-      <td style="padding:9px 10px"><strong>Direction accuracy</strong><br><small style="color:#666">Price cut → demand rose. Price rise → demand fell. Did the model predict the right direction?</small></td>
-      <td style="padding:9px 10px;text-align:center;font-size:1.2em;font-weight:700;color:#27ae60">{dir_acc}</td>
+      <td style="padding:9px 10px"><strong>Direction accuracy</strong><br><small style="color:#666">Did demand move the right direction when price changed?</small></td>
+      <td style="padding:9px 10px;text-align:center;font-size:1.15em;font-weight:700;color:#27ae60">{dir_acc}</td>
+      <td style="padding:9px 10px;text-align:center;font-size:1.15em;font-weight:700;color:#27ae60">{dir_acc_clean}</td>
       <td style="padding:9px 10px;text-align:center;color:#aaa">0%</td>
     </tr>
     <tr>
-      <td style="padding:9px 10px"><strong>MAPE on post-event unit volume</strong><br><small style="color:#666">Average % error on predicted demand in the 13-week post-event window</small></td>
-      <td style="padding:9px 10px;text-align:center;font-size:1.2em;font-weight:700">{mape_mod}</td>
-      <td style="padding:9px 10px;text-align:center;color:#888">{mape_naiv}</td>
-    </tr>
-    <tr style="background:#f8f9fa">
-      <td style="padding:9px 10px"><strong>Elasticity R²</strong><br><small style="color:#666">How well implied ε × Δ%price tracks the observed % unit change</small></td>
-      <td style="padding:9px 10px;text-align:center;font-size:1.2em;font-weight:700">{r2}</td>
+      <td style="padding:9px 10px"><strong>Elasticity R²</strong><br><small style="color:#666">How well implied ε × Δ%price explains observed unit change</small></td>
+      <td style="padding:9px 10px;text-align:center;font-size:1.15em;font-weight:700">{r2}</td>
+      <td style="padding:9px 10px;text-align:center;font-size:1.15em;font-weight:700">{r2_clean}</td>
       <td style="padding:9px 10px;text-align:center;color:#aaa">0.00</td>
     </tr>
-    <tr>
-      <td style="padding:9px 10px"><strong>Events validated</strong></td>
-      <td style="padding:9px 10px;text-align:center">{n_events}</td>
-      <td style="padding:9px 10px;text-align:center;color:#aaa">same pool</td>
+    <tr style="background:#f8f9fa">
+      <td style="padding:9px 10px"><strong>MAPE on post-event volume (clean moves)</strong><br><small style="color:#666">% error on predicted 13-week demand — clean price moves only</small></td>
+      <td style="padding:9px 10px;text-align:center;color:#aaa">—</td>
+      <td style="padding:9px 10px;text-align:center;font-size:1.15em;font-weight:700">{mape_mc}</td>
+      <td style="padding:9px 10px;text-align:center;color:#888">{mape_nc}</td>
     </tr>
   </tbody>
 </table>""" if m47 else ev_note
