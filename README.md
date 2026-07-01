@@ -223,6 +223,18 @@ Gated Recurrent Unit benchmark against N-BEATS and LightGBM at all 3 standard cu
 
 ### 2026-07-01 (update 2) — Option B wired + HTML report deduplication
 
+### 2026-07-01 (update 3) — SPINS channel guardrails + Druid ingest
+
+**SPINS channel guardrails (Priority 4):**
+- `price_elasticity.py`: `get_scores()` now returns `mulo_warning: True` + explanation when `channel_outlet = CONVENTIONAL|MULTI OUTLET`. `ELASTICITY_BAND_TAG` updated: `Elastic` band added (orange), `Positive` changed to amber with clearance/lifecycle note, `Insufficient Price Variation` added (gray).
+- `mo_chat.py`: MULO ELASTICITY GUARDRAIL block added to `_DATA_GLOSSARY` — Mo must never cite `scored_price_elasticity` elasticity values for MULO channel; redirects to MO_44 causal OLS or primary channel. Velocity/sales on MULO remain valid.
+- `PriceDecide.tsx` / `PriceElasticityDetermine.tsx`: Empty-state messages no longer recommend MULO as an elasticity source; both now direct to `CONVENTIONAL|FOOD` or `CONVENTIONAL|MASS MERCH` with a note explaining why MULO produces unreliable elasticity.
+
+**MO_16/17 Druid ingest (Priority 5):**
+Submitted `scored_price_elasticity_ingest_spec.json` → task `index_parallel_scored_price_elasticity_ojcemnig_2026-07-01T17:38:49.601Z` → **SUCCESS**. `scored_price_elasticity` v2 (MO_16 v2 TDP model + $0.05 guardrail, 57,193 training rows, R²=0.9810) is now live in Druid.
+
+---
+
 **Option B two-source elasticity — complete (customer-built-mo-api):**
 `retailer.py` now applies `_CRMA_CAUSAL_ELASTICITY` (13-account MO_44 OLS dict) at all 4 assembly points: `/sku-summary` row loop, `/summary` elast_map, `/sku-list` enrich loop, and forecast drawer. KEY ACCOUNT retailers continue using `scored_price_elasticity` (MO_17). `mo_chat.py` `_DATA_GLOSSARY` updated with two-source methodology, all 13 per-account ε values, `Moderately Elastic` band added, and Vitamin Shoppe lifecycle note.
 
