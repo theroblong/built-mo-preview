@@ -156,7 +156,7 @@
   }
   .answer-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
   }
   .card, .answer-card {
@@ -167,6 +167,46 @@
   }
   .answer-card {
     background: #f8fbff;
+  }
+  .lift-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 8px 0 24px;
+  }
+  .lift-card {
+    border: 1px solid #cbd9eb;
+    border-top: 4px solid #168a4f;
+    border-radius: 8px;
+    padding: 18px;
+    background: #f7fbf9;
+  }
+  .lift-card.alt {
+    border-top-color: #2563eb;
+    background: #f7faff;
+  }
+  .lift-card .tag {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #5b6a7a;
+    margin-bottom: 7px;
+  }
+  .lift-card .num {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 850;
+    color: #168a4f;
+    margin-bottom: 10px;
+  }
+  .lift-card.alt .num {
+    color: #1f5fbf;
+  }
+  .lift-card p {
+    margin: 0;
+    font-size: 13px;
+    color: #405060;
   }
   .card h3, .answer-card h3 {
     margin: 0 0 8px;
@@ -209,13 +249,13 @@
   @media (max-width: 980px) {
     .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ci-grid { grid-template-columns: 1fr; }
-    .answer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .answer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   @media (max-width: 760px) {
     .page { padding: 24px 16px 40px; }
     .cover { padding: 32px 26px; }
     h1 { font-size: 1.82rem; }
-    .two-col, .three-col, .answer-grid, .kpi-strip { grid-template-columns: 1fr; }
+    .two-col, .three-col, .answer-grid, .kpi-strip, .lift-grid { grid-template-columns: 1fr; }
     .section, .ci-panel { padding: 26px 22px; }
   }
 </style>
@@ -225,11 +265,10 @@
 
   <div class="cover">
     <div class="eyebrow">BUILT Bar - Finance Leadership Brief - Confidential</div>
-    <h1>What Mo Changes for Finance: Fewer Forecast Surprises, Cleaner Trade Spend Decisions, and a Better Operating Plan</h1>
+    <h1>What Mo Changes for Your Finance Team: Fewer Forecast Surprises, Cleaner Trade Spend Analysis, and a Better Operating Plan</h1>
     <div class="subtitle">
-      This is the CFO and VP Finance version of the BUILT demand intelligence work. It strips away
-      model language and focuses on the business answer: what outcome improves, why it matters,
-      who should care, and what decision is needed next.
+      If you own the operating plan, this version strips away model language and focuses on
+      the business answer: what outcome improves, why it matters, and where the impact shows up.
     </div>
     <div class="meta">Prepared July 2, 2026 - Aevah + BUILT</div>
   </div>
@@ -238,9 +277,10 @@
     <h2>Confidence Intervals</h2>
     <p class="ci-lead">
       The story is straightforward: the industry standard confidence interval is about 35%.
-      Across BUILT's data, Mo tightens that to 13.1%. In the strongest forecasts, Mo reaches
-      4.5%. That is a large improvement delivered at real-time refresh speed and scalable across
-      SKU-retailer planning.
+      Across BUILT's data, Mo improves precision by 167% by reducing that range to 13.1%.
+      In the strongest forecasts, Mo improves precision by 678% by reaching 4.5%. That is a
+      large improvement delivered at real-time refresh speed and scalable across SKU-retailer
+      planning.
     </p>
     <div class="ci-grid">
       <div class="kpi warn">
@@ -279,7 +319,7 @@
   <div class="section">
     <h2>The Executive Answer</h2>
     <p class="lead">
-      Mo gives finance a more reliable view of future demand and a clearer explanation of what is
+      Mo gives you a more reliable view of future demand and a clearer explanation of what is
       driving it. That matters because BUILT's planning risk is not just "how many bars will we sell?"
       It is whether those units are coming from real demand, more doors, price cuts, promotions, or
       demand pulled from another BUILT SKU.
@@ -287,35 +327,31 @@
     <div class="answer-grid">
       <div class="answer-card">
         <h3>So What?</h3>
-        <p>Finance gets a better operating number and a practical range around it, instead of a single fragile forecast.</p>
+        <p>You get a better operating number and a practical range around it, instead of a single fragile forecast.</p>
       </div>
       <div class="answer-card">
         <h3>Why?</h3>
         <p>BUILT is a growth-mode brand. Raw unit trends can overstate demand when distribution is expanding.</p>
       </div>
       <div class="answer-card">
-        <h3>Who Cares?</h3>
-        <p>Finance, supply chain, sales, and trade teams all make costly decisions from the demand plan.</p>
-      </div>
-      <div class="answer-card">
-        <h3>Decision Needed</h3>
-        <p>Approve a 30-45 day finance validation sprint using Connor's actual forecast history.</p>
+        <h3>Who Uses It?</h3>
+        <p>Your finance, supply chain, sales, and trade teams all make costly commitments from the demand plan.</p>
       </div>
     </div>
     <div class="callout good">
-      <strong>Bottom line:</strong> Mo should be positioned as a finance control layer for demand planning,
-      not as a data science project. The value is fewer surprises, better trade spend calls, and a
+      <strong>Bottom line:</strong> Mo functions as a finance control layer for demand planning,
+      rather than a data science project. The value is fewer surprises, better trade spend calls, and a
       forecast that leadership can interrogate and trust.
     </div>
   </div>
 
   <div class="section">
-    <h2>What Changes for Finance</h2>
+    <h2>What Changes for Your Finance Team</h2>
     <div class="three-col">
       <div class="card">
         <h3>1. Revenue Planning Gets a Better Number</h3>
         <p>
-          Instead of relying on a spreadsheet trend, finance gets a plan number grounded in recent sales,
+          Instead of relying on a spreadsheet trend, you get a plan number grounded in recent sales,
           retailer behavior, distribution, pricing, and promotion signals.
         </p>
       </div>
@@ -329,7 +365,7 @@
       <div class="card">
         <h3>3. Trade Spend Gets Accountability</h3>
         <p>
-          Finance can ask whether a promotion created incremental units or simply bought volume that
+          You can ask whether a promotion created incremental units or simply bought volume that
           would have happened anyway.
         </p>
       </div>
@@ -337,7 +373,7 @@
         <h3>4. Growth Quality Becomes Visible</h3>
         <p>
           Mo separates "we sold more because we are in more stores" from "we sold more per store."
-          Those are very different finance stories.
+          Those are very different operating stories.
         </p>
       </div>
       <div class="card">
@@ -361,9 +397,26 @@
     <h2>Plain-English Metrics</h2>
     <p class="lead">
       The numbers below are intentionally stated in operating language. The technical details are
-      available in the source reports, but finance does not need the model vocabulary to understand
-      the business implication.
+      available in the source reports, but the business implication is clear without model vocabulary.
     </p>
+    <div class="lift-grid">
+      <div class="lift-card">
+        <div class="tag">Across BUILT's Data</div>
+        <div class="num">+167%</div>
+        <p>
+          Mo improves precision by 167% by moving from the 35% industry benchmark to 13.1%.
+          That is about 2.7x as precise.
+        </p>
+      </div>
+      <div class="lift-card alt">
+        <div class="tag">Strongest Forecasts</div>
+        <div class="num">+678%</div>
+        <p>
+          At a 4.5% range, Mo improves precision by 678% versus the benchmark.
+          That is about 7.8x as precise.
+        </p>
+      </div>
+    </div>
     <table>
       <thead>
         <tr>
@@ -381,27 +434,27 @@
         <tr>
           <td class="td-good">+/-13.1% confidence interval over five quarters</td>
           <td>Across BUILT's own historical data, Mo tightened the average planning interval to 13.1%.</td>
-          <td>The improvement is large enough to justify a finance validation sprint.</td>
+          <td>That is a 167% increase in precision versus the industry benchmark.</td>
         </tr>
         <tr>
           <td class="td-good">+/-4.5% confidence interval</td>
           <td>In the strongest recent test, Mo's forecast was within a 4.5% average confidence interval of what actually sold.</td>
-          <td>Shows what the strongest version of the system can deliver at real-time refresh speed and at scale.</td>
+          <td>That is a 678% increase in precision versus the industry benchmark.</td>
         </tr>
         <tr>
           <td class="td-good">$22M+ value case</td>
           <td>Using Brian's rule of thumb, the forecast improvement can translate into meaningful annual value.</td>
-          <td>Finance should validate the number against BUILT's actual forecast misses.</td>
+          <td>The value case becomes strongest when compared with BUILT's actual forecast misses.</td>
         </tr>
         <tr>
           <td>349K units per week</td>
           <td>Mo's current planning signal for expected weekly demand in the July 2026 outlook.</td>
-          <td>Gives finance and supply chain a concrete planning anchor now.</td>
+          <td>Gives your finance and supply chain teams a concrete planning anchor now.</td>
         </tr>
         <tr>
           <td>About one-third promo-linked</td>
           <td>A meaningful share of total units depends on promotional support.</td>
-          <td>Finance should separate base demand from trade-funded demand before approving plans.</td>
+          <td>Base demand and trade-funded demand carry different margin and planning implications.</td>
         </tr>
       </tbody>
     </table>
@@ -410,47 +463,47 @@
   <div class="section">
     <h2>Outcome-Based Value Case</h2>
     <p class="lead">
-      The CFO question is not "how accurate is the model?" The CFO question is "what cost, risk,
-      or cash decision gets better?" The answer is fourfold.
+      Your question is not "how accurate is the model?" Your question is "what cost, risk,
+      or cash outcome gets better?" The answer shows up in five operating outcomes.
     </p>
     <table>
       <thead>
         <tr>
           <th>Business Outcome</th>
           <th>What Improves</th>
-          <th>Who Cares</th>
-          <th>Finance Impact</th>
+          <th>Teams Affected</th>
+          <th>What You Get</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>Fewer inventory surprises</strong></td>
-          <td>Demand plan is closer to actual sales and includes a planning range.</td>
-          <td>VP Finance, supply chain, operations</td>
+          <td>You get a demand plan that is closer to actual sales and includes a planning range.</td>
+          <td>Your finance team, supply chain, operations</td>
           <td>Less excess inventory, fewer urgent production changes, fewer stockout-driven lost sales.</td>
         </tr>
         <tr>
           <td><strong>Cleaner revenue forecast</strong></td>
-          <td>Plan separates base demand from promotion-dependent demand.</td>
-          <td>CFO, FP&amp;A, sales leadership</td>
+          <td>You get a plan that separates base demand from promotion-dependent demand.</td>
+          <td>Your FP&amp;A team and sales leadership</td>
           <td>Better monthly and quarterly revenue calls, with clearer downside and upside.</td>
         </tr>
         <tr>
           <td><strong>More disciplined trade spend</strong></td>
-          <td>Promotions can be evaluated against what would likely have happened without the promo.</td>
-          <td>CFO, VP Finance, trade, sales</td>
+          <td>You can evaluate promotions against what would likely have happened without the promo.</td>
+          <td>Your finance team, trade, sales</td>
           <td>Less spending to buy volume that is not truly incremental.</td>
         </tr>
         <tr>
-          <td><strong>Better retailer decisions</strong></td>
-          <td>Finance can see whether growth is from more doors or better per-store velocity.</td>
-          <td>Finance, sales, category teams</td>
+          <td><strong>Better retailer prioritization</strong></td>
+          <td>You can see whether growth is from more doors or better per-store velocity.</td>
+          <td>Your finance, sales, and category teams</td>
           <td>Better prioritization of retailer expansion, resets, and account-level commitments.</td>
         </tr>
         <tr>
           <td><strong>Lower analyst burden</strong></td>
-          <td>Recurring SPINS pulls and spreadsheet refreshes become an automated planning workflow.</td>
-          <td>FP&amp;A and analytics teams</td>
+          <td>Your team spends less time on recurring SPINS pulls and spreadsheet refreshes.</td>
+          <td>Your FP&amp;A and analytics teams</td>
           <td>More time spent on decisions, less time spent rebuilding the same analysis.</td>
         </tr>
       </tbody>
@@ -458,154 +511,41 @@
   </div>
 
   <div class="section">
-    <h2>Pricing and Promotion: The Most CFO-Relevant Example</h2>
+    <h2>Pricing and Promotion: What It Means for Your Team</h2>
     <p class="lead">
-      The Kroger Brownie Batter 4pk price move is the clearest "why finance should care" example.
+      The Kroger Brownie Batter 4pk price move is the clearest example of why this matters to your team.
       A simple before-and-after report would say units went up. Mo explains how much likely came
       from the price cut, how much came from broader promotion support, and what that means for
-      future trade spend.
+      your future trade spend.
     </p>
     <table>
       <thead>
         <tr>
           <th>Question</th>
           <th>Plain-English Answer</th>
-          <th>Finance Takeaway</th>
+          <th>What It Means for You</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>What happened?</td>
           <td>Kroger's Brownie Batter 4pk price dropped from $10.99 to $10.14 in December 2025.</td>
-          <td>Finance can evaluate a real pricing action, not a hypothetical.</td>
+          <td>You can evaluate a real pricing action, not a hypothetical.</td>
         </tr>
         <tr>
           <td>Did units lift?</td>
           <td>Yes. Units ran about 29% above the estimated no-change baseline over the measured period.</td>
-          <td>The event created meaningful incremental volume.</td>
+          <td>You can see the event created meaningful incremental volume.</td>
         </tr>
         <tr>
           <td>Was it all due to price?</td>
           <td>No. The price move alone explains only part of the lift; display and feature support did the rest.</td>
-          <td>Finance should fund the full promo package only when the combined lift clears ROI thresholds.</td>
+          <td>You can judge the full promo package by whether the combined lift clears ROI thresholds.</td>
         </tr>
         <tr>
           <td>What changes going forward?</td>
-          <td>Each retailer should have its own price-response assumption.</td>
-          <td>Promo business cases should stop using one generic price response across accounts.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>What Finance Should Not Overclaim Yet</h2>
-    <p class="lead">
-      The story is strong, but it will be stronger if finance is explicit about what still needs
-      confirmation. This builds credibility with a CFO audience.
-    </p>
-    <table>
-      <thead>
-        <tr>
-          <th>Open Item</th>
-          <th>Why It Matters</th>
-          <th>What We Need</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>BUILT's actual current forecast error</td>
-          <td>The $22M+ value case currently uses a benchmark. The final value case should use BUILT's actual history.</td>
-          <td>Connor's recent forecasts and actuals for priority SKU and retailer pairs.</td>
-        </tr>
-        <tr>
-          <td>Forward promo calendar</td>
-          <td>Mo can see promotions after they appear in sales data, but finance wants to know them before they happen.</td>
-          <td>H2 2026 promo calendar by retailer, SKU, week, and mechanic.</td>
-        </tr>
-        <tr>
-          <td>Known distribution changes</td>
-          <td>Major resets and new-door wins can change demand before SPINS fully reflects it.</td>
-          <td>Planned resets, new retailer launches, planogram changes, and distribution wins.</td>
-        </tr>
-        <tr>
-          <td>Shipment data</td>
-          <td>Retail scan data shows consumer purchases. Shipments show retailer ordering and supply risk earlier.</td>
-          <td>Weekly sell-in shipments by retailer and SKU.</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="callout warn">
-      <strong>Credibility stance:</strong> Do not sell this as a perfect forecast. Sell it as a materially
-      better planning system with a clear path to make the value case BUILT-specific.
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>Recommended Decision</h2>
-    <div class="callout good">
-      <strong>Approve a 30-45 day finance validation sprint.</strong>
-      The goal is to convert the value story from "benchmark-based and promising" to
-      "BUILT-validated and ready for operating use."
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Workstream</th>
-          <th>Owner</th>
-          <th>Output</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Historical forecast comparison</td>
-          <td>Connor + Aevah</td>
-          <td>Actual BUILT forecast miss rate vs. Mo forecast miss rate by SKU and retailer.</td>
-        </tr>
-        <tr>
-          <td>Dollarized variance</td>
-          <td>Finance + Aevah</td>
-          <td>Inventory, stockout, trade spend, and labor value range.</td>
-        </tr>
-        <tr>
-          <td>Promo and distribution inputs</td>
-          <td>Trade, sales, FP&amp;A</td>
-          <td>Forward-looking inputs that make the next forecast more useful before the sales data arrives.</td>
-        </tr>
-        <tr>
-          <td>Executive operating pack</td>
-          <td>Aevah + FP&amp;A</td>
-          <td>Floor, plan, upside, and plain-English driver summary for the next planning cycle.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Source Document Map</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Document</th>
-          <th>What It Is For</th>
-          <th>When to Use It</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>brian_fpa_brief.html</strong></td>
-          <td>The business narrative: what will BUILT sell, why is demand moving, and how Mo explains the answer.</td>
-          <td>Use for the live finance conversation.</td>
-        </tr>
-        <tr>
-          <td><strong>brian_sanity_check_package.html</strong></td>
-          <td>The proof pack: accuracy checks, price-event validation, retraining value, and promo/base split.</td>
-          <td>Use when leadership asks, "How do we know this is real?"</td>
-        </tr>
-        <tr>
-          <td><strong>built_demand_intelligence_report_v2.1.1.html</strong></td>
-          <td>The full study: methods, validation history, limitations, and detailed supporting evidence.</td>
-          <td>Use as the appendix for finance, analytics, and technical diligence.</td>
+          <td>Each retailer has its own price-response profile.</td>
+          <td>You can avoid generic price response assumptions that obscure account-level risk.</td>
         </tr>
       </tbody>
     </table>

@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BUILT Demand Intelligence - Finance Leadership Report</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f6fa;
+    color: #172033;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 44px 32px 56px;
+  }
+  .cover {
+    background: #17324d;
+    color: #fff;
+    border-radius: 10px;
+    padding: 44px 48px;
+    margin-bottom: 28px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: #8fc2ff;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 2.35rem;
+    line-height: 1.12;
+    margin: 0 0 16px;
+    letter-spacing: 0;
+  }
+  .subtitle {
+    max-width: 850px;
+    font-size: 1.08rem;
+    color: rgba(255,255,255,.88);
+  }
+  .meta {
+    margin-top: 26px;
+    font-size: 13px;
+    color: rgba(255,255,255,.68);
+  }
+  .section {
+    background: #fff;
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    padding: 34px 38px;
+    margin-bottom: 24px;
+  }
+  .section h2 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    line-height: 1.22;
+    color: #172033;
+  }
+  .section h3 {
+    margin: 22px 0 8px;
+    font-size: 1.05rem;
+    line-height: 1.28;
+    color: #17324d;
+  }
+  .lead {
+    max-width: 900px;
+    margin: 0 0 22px;
+    color: #405060;
+    font-size: 1.02rem;
+  }
+  .part-source {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    background: #edf4ff;
+    color: #1f5fbf;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin: 22px 0 28px;
+  }
+  .metric-card {
+    min-height: 142px;
+    border: 1px solid #dce3ee;
+    border-top: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: 16px 14px;
+    background: #fbfcff;
+  }
+  .metric-card.good { border-top-color: #168a4f; }
+  .metric-card.warn { border-top-color: #c47a13; }
+  .metric-card .tag {
+    margin-bottom: 8px;
+    color: #5b6a7a;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .metric-card .num {
+    color: #1f5fbf;
+    font-size: 1.75rem;
+    line-height: 1;
+    font-weight: 850;
+  }
+  .metric-card.good .num { color: #168a4f; }
+  .metric-card.warn .num { color: #a65f00; }
+  .metric-card .label {
+    margin-top: 9px;
+    color: #4d5b69;
+    font-size: 12px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .four-col {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .card {
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    padding: 18px;
+    background: #fbfcff;
+  }
+  .card h3 {
+    margin-top: 0;
+  }
+  .card p {
+    margin: 0;
+    color: #455565;
+    font-size: 13px;
+  }
+  .callout {
+    border-left: 4px solid #2563eb;
+    background: #edf4ff;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 18px;
+    margin: 20px 0;
+    color: #2f3d4d;
+  }
+  .callout.good {
+    border-color: #168a4f;
+    background: #ecf8f1;
+  }
+  .callout.warn {
+    border-color: #c47a13;
+    background: #fff8e8;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 14px;
+  }
+  th {
+    background: #eef3fb;
+    color: #243247;
+    text-align: left;
+    padding: 11px 12px;
+    border-bottom: 2px solid #d1dbe9;
+  }
+  td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #e8edf4;
+    vertical-align: top;
+  }
+  .td-good { color: #117342; font-weight: 800; }
+  .td-warn { color: #9a5b00; font-weight: 800; }
+  .td-hero { color: #1f5fbf; font-weight: 800; }
+  ul { margin: 10px 0 0 20px; padding: 0; }
+  li { margin: 6px 0; }
+  .footer {
+    color: #758292;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px 0 0;
+  }
+  @media (max-width: 1020px) {
+    .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .four-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .page { padding: 24px 16px 40px; }
+    .cover { padding: 32px 26px; }
+    h1 { font-size: 1.82rem; }
+    .section { padding: 26px 22px; }
+    .metric-grid, .two-col, .three-col, .four-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="eyebrow">BUILT Bar - Finance Leadership Brief - Confidential</div>
+    <h1>What Mo Changes for Your Operating Plan</h1>
+    <div class="subtitle">
+      This report combines the executive summary, the FP&amp;A planning brief, the forecasting
+      sanity check, and the demand intelligence study into one finance-facing narrative. If
+      you own the operating plan, it shows what improves, why it matters, and how the numbers
+      translate into planning, inventory, revenue, and trade spend outcomes.
+    </div>
+    <div class="meta">Prepared July 2, 2026 - Aevah + BUILT</div>
+  </div>
+
+  <div class="section">
+    <h2>Executive Summary</h2>
+    <p class="lead">
+      You get a 167% increase in planning precision across BUILT's data, moving from the
+      industry benchmark range of +/-35% to Mo's +/-13.1%. In the strongest forecasts, that
+      precision gain reaches 678% at a +/-4.5% range. The result is a faster, tighter, and
+      more explainable demand plan your team can use for revenue calls, inventory planning,
+      trade spend review, and retailer-level growth choices.
+    </p>
+
+    <div class="metric-grid">
+      <div class="metric-card good">
+        <div class="tag">Across BUILT Data</div>
+        <div class="num">+167%</div>
+        <div class="label">Increase in precision from +/-35% to +/-13.1%, equal to about 2.7x as precise.</div>
+      </div>
+      <div class="metric-card good">
+        <div class="tag">Strongest Forecasts</div>
+        <div class="num">+678%</div>
+        <div class="label">Increase in precision from +/-35% to +/-4.5%, equal to about 7.8x as precise.</div>
+      </div>
+      <div class="metric-card good">
+        <div class="tag">Value Case</div>
+        <div class="num">$22M+</div>
+        <div class="label">Estimated annual value using the $1M per one-point improvement framing.</div>
+      </div>
+      <div class="metric-card">
+        <div class="tag">July 2026 Outlook</div>
+        <div class="num">349K/wk</div>
+        <div class="label">Current weekly planning signal, with floor, plan, and upside ranges.</div>
+      </div>
+      <div class="metric-card warn">
+        <div class="tag">Promo Linked</div>
+        <div class="num">~30%</div>
+        <div class="label">Approximate share of volume tied to promotional support, not purely base demand.</div>
+      </div>
+    </div>
+
+    <div class="callout good">
+      <strong>Bottom line:</strong> Mo gives you a finance control layer for demand planning. It
+      tightens the planning range, explains what is moving the number, and separates base demand
+      from distribution, price, promotion, and cannibalization effects.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>The Executive Answer</h2>
+    <p class="lead">
+      Your planning risk is not only "how many bars will we sell?" It is whether those units
+      are coming from repeatable demand, more doors, price cuts, promotions, or demand pulled
+      away from another BUILT SKU. Mo turns that into a plain-English operating answer.
+    </p>
+    <div class="three-col">
+      <div class="card">
+        <h3>So What?</h3>
+        <p>You replace a fragile point forecast with a planning number and a practical range around it.</p>
+      </div>
+      <div class="card">
+        <h3>Why?</h3>
+        <p>BUILT is a growth-mode brand. Raw unit trends can overstate demand when distribution is expanding.</p>
+      </div>
+      <div class="card">
+        <h3>How You Use It</h3>
+        <p>Your team gets a clearer revenue call, a safer inventory plan, and a cleaner read on trade spend.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Confidence Intervals and Precision</h2>
+    <p class="lead">
+      The story is simple: the industry standard planning range is about +/-35%. Across BUILT's
+      data, Mo is +/-13.1%. In the strongest forecasts, Mo is +/-4.5%. The headline is not just
+      that the range is tighter; it is that you gain 167% to 678% more precision in the planning
+      signal.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Planning Range</th>
+          <th>Plain-English Meaning</th>
+          <th>Precision Impact for You</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-warn">+/-35% industry benchmark</td>
+          <td>Manual CPG forecasting often leaves a wide operating range, especially when growth is driven by new doors and promotion.</td>
+          <td>This is the uncertainty your plan is trying to reduce.</td>
+        </tr>
+        <tr>
+          <td class="td-good">+/-13.1% across BUILT data</td>
+          <td>Across five quarters of historical data, Mo averaged a 13.1% planning range from actual demand.</td>
+          <td>That is a 167% increase in precision, or about 2.7x as precise as the benchmark.</td>
+        </tr>
+        <tr>
+          <td class="td-good">+/-4.5% in the strongest forecasts</td>
+          <td>The strongest recent tests land near a 4.5% planning range.</td>
+          <td>That is a 678% increase in precision, or about 7.8x as precise as the benchmark.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>What Changes for Your Finance Team</h2>
+    <div class="three-col">
+      <div class="card">
+        <h3>Revenue Planning Gets a Better Number</h3>
+        <p>You get a plan grounded in recent sales, retailer behavior, distribution, pricing, and promotion signals.</p>
+      </div>
+      <div class="card">
+        <h3>Inventory Risk Gets a Range</h3>
+        <p>Your supply chain team can plan around a floor, a plan, and an upside case instead of one brittle number.</p>
+      </div>
+      <div class="card">
+        <h3>Trade Spend Gets Accountability</h3>
+        <p>You can see whether a promotion created incremental units or bought volume that would have happened anyway.</p>
+      </div>
+      <div class="card">
+        <h3>Growth Quality Becomes Visible</h3>
+        <p>You can separate "we sold more because we are in more stores" from "we sold more per store."</p>
+      </div>
+      <div class="card">
+        <h3>New SKU Launches Get Guardrails</h3>
+        <p>Your team can treat limited-history items differently until the sales pattern is mature enough.</p>
+      </div>
+      <div class="card">
+        <h3>Forecast Meetings Get Explainable</h3>
+        <p>Every major movement can be tied to a business driver: distribution, price, velocity, promo, or seasonality.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Outcome-Based Value Case</h2>
+    <p class="lead">
+      Your question is not "how accurate is the model?" Your question is "what cost, risk,
+      or cash outcome gets better?" The answer shows up in five operating outcomes.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Business Outcome</th>
+          <th>What Improves</th>
+          <th>Teams Affected</th>
+          <th>What You Get</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Fewer inventory surprises</strong></td>
+          <td>You get a demand plan closer to actual sales and a practical planning range.</td>
+          <td>Your finance team, supply chain, operations</td>
+          <td>Less excess inventory, fewer urgent production changes, fewer stockout-driven lost sales.</td>
+        </tr>
+        <tr>
+          <td><strong>Cleaner revenue forecast</strong></td>
+          <td>You get a plan that separates base demand from promotion-dependent demand.</td>
+          <td>Your FP&amp;A team and sales leadership</td>
+          <td>Better monthly and quarterly revenue calls, with clearer downside and upside.</td>
+        </tr>
+        <tr>
+          <td><strong>More disciplined trade spend</strong></td>
+          <td>You can evaluate promotions against what likely would have happened without the promo.</td>
+          <td>Your finance team, trade, sales</td>
+          <td>Less spending to buy volume that is not truly incremental.</td>
+        </tr>
+        <tr>
+          <td><strong>Better retailer prioritization</strong></td>
+          <td>You can see whether growth is coming from more doors or better per-store velocity.</td>
+          <td>Your finance, sales, and category teams</td>
+          <td>Better prioritization of retailer expansion, resets, and account-level commitments.</td>
+        </tr>
+        <tr>
+          <td><strong>Lower analyst burden</strong></td>
+          <td>Your team spends less time on recurring SPINS pulls and spreadsheet refreshes.</td>
+          <td>Your FP&amp;A and analytics teams</td>
+          <td>More time spent on business interpretation, less time rebuilding the same analysis.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Pricing and Promotion: What It Means for Your Team</h2>
+    <p class="lead">
+      The Kroger Brownie Batter 4pk price move is the clearest example of why this matters to
+      your team. A simple before-and-after report would say units went up. Mo separates the
+      price effect, broader promotion support, and the trade spend implication.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Question</th>
+          <th>Plain-English Answer</th>
+          <th>What It Means for You</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>What happened?</td>
+          <td>Kroger's Brownie Batter 4pk price dropped from $10.99 to $10.14 in December 2025.</td>
+          <td>You can evaluate a real pricing action, not a hypothetical.</td>
+        </tr>
+        <tr>
+          <td>Did units lift?</td>
+          <td>Yes. Units ran about 29% above the estimated no-change baseline over the measured period.</td>
+          <td>You can see the event created meaningful incremental volume.</td>
+        </tr>
+        <tr>
+          <td>Was it all due to price?</td>
+          <td>No. The price move explains only part of the lift; display and feature support did the rest.</td>
+          <td>You can judge the full promo package by whether the combined lift clears ROI thresholds.</td>
+        </tr>
+        <tr>
+          <td>What changes going forward?</td>
+          <td>Each retailer has its own price-response profile.</td>
+          <td>You can avoid generic price-response assumptions that obscure account-level risk.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="part-source">Contributing Report: brian_fpa_brief.html</div>
+    <h2>Summary: Three Planning Questions Your Team Can Answer</h2>
+    <p class="lead">
+      The FP&amp;A brief frames Mo around three operating questions: what you will sell, what is
+      driving the number, and how your team explains it. That framing keeps the work anchored
+      in planning outcomes rather than model vocabulary.
+    </p>
+    <div class="three-col">
+      <div class="card">
+        <h3>1. What will you sell next quarter?</h3>
+        <p>Mo produces retailer-level 13-week forecasts with a floor, plan, and ceiling, updated every SPINS cycle.</p>
+      </div>
+      <div class="card">
+        <h3>2. What is driving the number?</h3>
+        <p>Your team can separate distribution momentum, per-store velocity, pricing, promotion, and seasonality.</p>
+      </div>
+      <div class="card">
+        <h3>3. How do you explain it?</h3>
+        <p>Every forecast has a business reason, so your team can explain the plan without defending a black box.</p>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>FP&amp;A Lens</th>
+          <th>What the Source Report Shows</th>
+          <th>Why It Matters to You</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-good">Forecast validation</td>
+          <td>Rolling validation averaged 13.1% versus a 35% spreadsheet-style benchmark; the best quarter reached roughly 4.4%.</td>
+          <td>Your team gets a planning range that is materially more precise than the manual baseline.</td>
+        </tr>
+        <tr>
+          <td>Walmart growth story</td>
+          <td>For top Walmart SKUs, distribution growth was the primary driver, while velocity told a separate story.</td>
+          <td>You can avoid treating new doors as if they were organic demand acceleration.</td>
+        </tr>
+        <tr>
+          <td>Kroger price case</td>
+          <td>Brownie Batter 4pk dropped from $10.99 to $10.14; the total lift was about 28.6% above baseline.</td>
+          <td>You can evaluate price, display, and feature support as separate pieces of the same event.</td>
+        </tr>
+        <tr>
+          <td>Analyst workflow</td>
+          <td>The model translates forecast movements into plain-English drivers your FP&amp;A team can inspect.</td>
+          <td>Your analysts spend less time rebuilding spreadsheets and more time explaining the plan.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="part-source">Contributing Report: brian_sanity_check_package.html</div>
+    <h2>Summary: Forecast Proof and Pricing Diagnostics</h2>
+    <p class="lead">
+      The sanity-check package pressure-tests whether the forecast holds up against simple
+      baselines, real business events, and corrected price sensitivity logic. The useful
+      takeaway for you is confidence: the system wins against spreadsheet-like methods and
+      gives you a cleaner read on price and promotion.
+    </p>
+    <div class="four-col">
+      <div class="metric-card good">
+        <div class="tag">Dec 2025 Test</div>
+        <div class="num">4.3%</div>
+        <div class="label">Average forecast error across 164 SKU-retailer series.</div>
+      </div>
+      <div class="metric-card warn">
+        <div class="tag">Moving Average</div>
+        <div class="num">24.6%</div>
+        <div class="label">Best no-feature baseline at the same cutpoint.</div>
+      </div>
+      <div class="metric-card good">
+        <div class="tag">Retraining Gain</div>
+        <div class="num">+14pp</div>
+        <div class="label">Rolling retraining advantage versus stale-model performance.</div>
+      </div>
+      <div class="metric-card good">
+        <div class="tag">Clean Price Moves</div>
+        <div class="num">63%</div>
+        <div class="label">Direction accuracy for non-confounded price-change events.</div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Proof Point</th>
+          <th>What the Source Report Shows</th>
+          <th>What It Means for You</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-good">Accuracy beats baselines</td>
+          <td>At the December 2025 cutpoint, Mo produced 4.3% error versus 24.6% for a 13-week moving average.</td>
+          <td>You are not just replacing Excel; you are replacing a wide planning range with a much tighter signal.</td>
+        </tr>
+        <tr>
+          <td>Forecasts explain themselves</td>
+          <td>Feature analysis shows the model weighting demand momentum, distribution, year-ago patterns, and price.</td>
+          <td>Your team can trace the business reason behind forecast movement.</td>
+        </tr>
+        <tr>
+          <td>Kroger event proof</td>
+          <td>The price-only signal explained about +4.7% lift, while the full event showed +28.6% total lift.</td>
+          <td>You can separate price response from display and feature mechanics before judging trade spend.</td>
+        </tr>
+        <tr>
+          <td>Corrected elasticity logic</td>
+          <td>Earlier positive elasticity artifacts were corrected by controlling for distribution, maturity, pack size, and seasonality.</td>
+          <td>You get retailer-specific price sensitivity that is more credible for account planning.</td>
+        </tr>
+        <tr>
+          <td>Quarterly retraining matters</td>
+          <td>A stale model degraded toward 23.3% error; quarterly retraining recovered material accuracy.</td>
+          <td>Your operating model stays current as SKUs launch, retailers reset, and distribution expands.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Retailer Price Sensitivity Highlights</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Retailer</th>
+          <th>Elasticity</th>
+          <th>Plain-English Read</th>
+          <th>Planning Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Walmart</td>
+          <td class="td-warn">-0.245</td>
+          <td>Lower sensitivity than many peers.</td>
+          <td>Small price moves have limited volume risk relative to more elastic accounts.</td>
+        </tr>
+        <tr>
+          <td>Kroger</td>
+          <td class="td-warn">-0.590</td>
+          <td>Moderate sensitivity, validated by the December 2025 event.</td>
+          <td>Your trade analysis can separate price-only lift from broader promo lift.</td>
+        </tr>
+        <tr>
+          <td>Ahold Delhaize</td>
+          <td class="td-good">-1.262</td>
+          <td>High sensitivity after correcting aggregation artifacts.</td>
+          <td>Price moves carry more volume risk and deserve account-level review.</td>
+        </tr>
+        <tr>
+          <td>Whole Foods</td>
+          <td>-0.445</td>
+          <td>More muted sensitivity, consistent with premium positioning.</td>
+          <td>You can treat price response differently from mass and grocery accounts.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="part-source">Contributing Report: built_demand_intelligence_report_v2.1.1.html</div>
+    <h2>Summary: Forecasting Accuracy and Operating Model</h2>
+    <p class="lead">
+      The demand intelligence report provides the broadest technical and business evidence:
+      why growth-mode forecasting is hard, how Mo models the drivers, how it validates across
+      time, and how the plan translates into revenue, inventory, and trade spend use cases.
+    </p>
+
+    <h3>The Planning Problem</h3>
+    <p>
+      BUILT is not a steady-state brand. Distribution expansion can make total units rise even
+      when per-store velocity is flat. A simple trend forecast can mistake new doors for
+      durable demand and overstate the plan when distribution growth slows.
+    </p>
+    <div class="callout warn">
+      <strong>Growth-mode distortion:</strong> Pure trend extrapolation asks whether the trend
+      continues. Your planning question is different: is the trend coming from real demand,
+      more stores, promotion, price, or portfolio mix?
+    </div>
+
+    <h3>The Modeling Approach in Operating Language</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Model Layer</th>
+          <th>What It Adds</th>
+          <th>What You Get</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Distribution and velocity</td>
+          <td>Separates more doors from better sell-through per store.</td>
+          <td>A cleaner view of growth quality.</td>
+        </tr>
+        <tr>
+          <td>Price and promotion signals</td>
+          <td>Captures ARP movement, price sensitivity, and promo-linked volume.</td>
+          <td>A better trade spend read.</td>
+        </tr>
+        <tr>
+          <td>Cannibalization pressure</td>
+          <td>Detects when one BUILT SKU may be pulling volume from another.</td>
+          <td>A more realistic assortment and launch plan.</td>
+        </tr>
+        <tr>
+          <td>Walk-forward validation</td>
+          <td>Tests the model across multiple historical cutpoints instead of one favorable snapshot.</td>
+          <td>More confidence that performance is repeatable.</td>
+        </tr>
+        <tr>
+          <td>Quarterly retraining</td>
+          <td>Refreshes the model as new SKUs, resets, and account dynamics change.</td>
+          <td>Accuracy that stays current instead of decaying.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Validation Results You Can Use</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Measure</th>
+          <th>Mo Result</th>
+          <th>Baseline</th>
+          <th>What It Means for You</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Best quarter, Q1 2026</td>
+          <td class="td-good">~4.4%</td>
+          <td>35% industry benchmark</td>
+          <td>About a 30.6-point improvement, or roughly $31M under the $1M-per-point framing.</td>
+        </tr>
+        <tr>
+          <td>Five-quarter rolling average</td>
+          <td class="td-good">13.1%</td>
+          <td>35% industry benchmark</td>
+          <td>About a 21.9-point improvement, or roughly $22M under the same framing.</td>
+        </tr>
+        <tr>
+          <td>Rolling versus stale model</td>
+          <td class="td-good">13.1%</td>
+          <td>27.1% stale model</td>
+          <td>About a 14.1-point retraining advantage.</td>
+        </tr>
+        <tr>
+          <td>Moving-average comparison</td>
+          <td class="td-good">4.3% in Dec 2025 test</td>
+          <td>24.6% moving average</td>
+          <td>Mo wins by adding business drivers, not just a different smoothing formula.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>13-Week Outlook and Scenario Planning</h3>
+    <p>
+      The July 2026 outlook gives your team a plan around 349K units per week, plus a floor
+      and upside case. That matters because a single number forces false certainty. A range
+      lets your team plan inventory, production, and revenue with a defined downside and upside.
+    </p>
+    <div class="three-col">
+      <div class="card">
+        <h3>Floor</h3>
+        <p>Use the low case as a minimum commitment signal for inventory and supply planning.</p>
+      </div>
+      <div class="card">
+        <h3>Plan</h3>
+        <p>Use the middle case as the operating number for the revenue and demand plan.</p>
+      </div>
+      <div class="card">
+        <h3>Upside</h3>
+        <p>Use the high case to frame capacity, promotional upside, and retailer pull-through.</p>
+      </div>
+    </div>
+
+    <h3>Base Demand Versus Promo-Led Volume</h3>
+    <p>
+      The report separates base units from total units, showing that roughly 30% of BUILT's
+      volume is promo-linked. That distinction matters because the same top-line unit number
+      can have very different margin, inventory, and trade-spend implications.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Demand Layer</th>
+          <th>What It Means</th>
+          <th>How You Use It</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Base demand</td>
+          <td>Repeatable demand that is not dependent on temporary promo mechanics.</td>
+          <td>Anchor revenue quality, supply planning, and retailer health.</td>
+        </tr>
+        <tr>
+          <td>Promo lift</td>
+          <td>Incremental volume tied to price, display, feature, or trade support.</td>
+          <td>Evaluate whether the lift earns back the spend and margin tradeoff.</td>
+        </tr>
+        <tr>
+          <td>Total units</td>
+          <td>Base demand plus promo lift.</td>
+          <td>Plan manufacturing and retailer commitments while keeping margin quality visible.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>How the Combined Evidence Fits Together</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Your Question</th>
+          <th>Answer from the Reports</th>
+          <th>Outcome for Your Team</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>How much more precise is the plan?</td>
+          <td>Mo improves from a 35% industry range to 13.1% across BUILT data and roughly 4.5% in the strongest forecasts.</td>
+          <td>You lead with a 167% precision increase, with a path to 678% in the strongest cases.</td>
+        </tr>
+        <tr>
+          <td>What will we sell?</td>
+          <td>The 13-week outlook gives you a weekly plan and a floor/plan/upside range.</td>
+          <td>Your revenue, supply, and inventory planning use the same demand signal.</td>
+        </tr>
+        <tr>
+          <td>Why is demand moving?</td>
+          <td>Mo explains movement through distribution, velocity, price, promotion, seasonality, and cannibalization.</td>
+          <td>Your team can distinguish high-quality growth from paid or distribution-driven growth.</td>
+        </tr>
+        <tr>
+          <td>What happens when price changes?</td>
+          <td>Kroger showed a price-only lift around 4.7% and a total event lift around 28.6% with promo support.</td>
+          <td>You can separate the economics of price, display, and feature activity.</td>
+        </tr>
+        <tr>
+          <td>Does the model stay current?</td>
+          <td>Quarterly retraining materially improves accuracy versus stale forecasts.</td>
+          <td>Your model keeps pace with launch, reset, retailer, and portfolio changes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Aevah Mo Intelligence - BUILT Finance Leadership Report - Generated July 2, 2026 - Confidential
+  </div>
+
+</div>
+</body>
+</html>
