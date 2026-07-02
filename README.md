@@ -264,6 +264,26 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-01 (update 8) — MULO velocity fix + promo units forecast (MO_25/26/27)
+
+**MULO velocity undercount fix (`customer-built-mo-api/app/routers/trends.py`)**
+
+WALMART and KROGER primary SPINS rows live in `CONVENTIONAL|MULTI OUTLET` (MULO CRMA). The previous SQL excluded that channel by default, showing WALMART at ~32% of actual volume and KROGER at <1%.
+
+Fix: For named-account queries and single-UPC mode, SQL now includes MULO channel (`where_ch = ""`). A post-query dedup step retains only the MULO row per `(retail_account, upc, week)`, discarding non-MULO rows (which are a subset of the MULO CRMA total). Three MULO_GEOS Python filters that would have re-blocked valid named-retailer MULO rows were also removed. Pack Crossover (multi-UPC, no account filter) keeps MULO excluded to avoid double-counting aggregate MULO rows into per-UPC sums.
+
+**Promo units forecasting (MO_25 / MO_26 / MO_27)**
+
+FP&A needs `total_units` (base + promo) to forecast full revenue picture alongside `base_units`.
+
+*MO_25:* `built_filtered_weekly` query extended to include `units_promo`, `units_non_promo`. After ARP join, `total_units = base_units + units_promo.fillna(0)` computed. AR lags `total_units_lag1/4/13/52` added to parquet output.
+
+*MO_26:* Added `TOTAL_UNIT_FEATURE_COLS` (same as `FEATURE_COLS` but `total_units_lag*` replaces `base_units_lag*`). Trains parallel `model_total_units_q{10,50,90}_v3.pkl` with `log_total_units` target when `total_units` column is present. Metrics JSON updated with `total_units_trained` flag and per-quantile metrics.
+
+*MO_27:* Loads total_units models from metrics JSON flag. Seeds `total_history` from actuals. Parallel AR forecast loop per step mirrors the base_units loop, including seasonal blend. Outputs `forecast_total_units_low/base/high` columns (null when models absent). Promo contribution = `total - base` at any forecast step.
+
+---
+
 ### 2026-07-01 (update 7) — Event validation + Brian sanity-check package complete (MO_47 / MO_48)
 
 **MO_47 — Post-hoc Price Event Validation (`scripts/MO_47_event_validation.py`)**
