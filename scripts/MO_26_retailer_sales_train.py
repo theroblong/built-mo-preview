@@ -77,6 +77,12 @@ FEATURE_COLS = [
     "channel_outlet",
 ]
 
+# Total-units model swaps base_units AR lags for total_units lags; same demand-driver features
+TOTAL_UNIT_FEATURE_COLS = [
+    c for c in FEATURE_COLS
+    if not c.startswith("base_units_lag")
+] + ["total_units_lag1", "total_units_lag4", "total_units_lag13", "total_units_lag52"]
+
 LGBM_BASE = dict(
     boosting_type="gbdt",
     n_estimators=1500,
@@ -131,6 +137,10 @@ if __name__ == "__main__":
     print(f"  p99 base_units: {p99:.0f}  (no clip needed — log transform handles scale)")
     df["log_base_units"] = np.log1p(df["base_units"])
 
+    has_total = "total_units" in df.columns and df["total_units"].notna().any()
+    if has_total:
+        df["log_total_units"] = np.log1p(df["total_units"].clip(lower=0).fillna(0))
+
     # ── Temporal train / val split (last 13 weeks = val) ────────────────────
     cutoff = df["__time"].max() - pd.Timedelta(weeks=13)
     train  = df[df["__time"] <= cutoff].copy()
@@ -149,12 +159,12 @@ if __name__ == "__main__":
     y_val_log   = val["log_base_units"].values        # log-space for pinball
     y_val_units = val["base_units"].values            # original units for MAE/RMSE
 
-    # ── Train one model per quantile ─────────────────────────────────────────
+    # ── Train base_units models (q10/q50/q90) ────────────────────────────────
     models  = {}
     metrics = {}
 
     for q, tag in zip(QUANTILES, Q_TAGS):
-        print(f"\nTraining quantile={q} ({tag}) …")
+        print(f"\nTraining base_units quantile={q} ({tag}) …")
         model = lgb.LGBMRegressor(
             objective="quantile",
             alpha=q,
@@ -184,7 +194,7 @@ if __name__ == "__main__":
             **({"val_mae": mae, "val_rmse": rmse} if mae is not None else {}),
         }
 
-    # ── Save models ──────────────────────────────────────────────────────────
+    # ── Save base_units models ───────────────────────────────────────────────
     for tag, model in models.items():
         path = f"outputs/model_retailer_sales_{tag}_{MODEL_VERSION}.pkl"
         with open(path, "wb") as f:
@@ -196,8 +206,72 @@ if __name__ == "__main__":
         models["q50"].feature_importances_,
         index=models["q50"].feature_name_,
     ).sort_values(ascending=False)
-    print("\nTop 15 features (q50 gain importance):")
+    print("\nTop 15 features — base_units q50:")
     print(imp.head(15).to_string())
+
+    # ── Train total_units models (q10/q50/q90) ────────────────────────────────
+    models_total  = {}
+    metrics_total = {}
+
+    if has_total:
+        avail_total = [c for c in TOTAL_UNIT_FEATURE_COLS if c in df.columns]
+        miss_total  = [c for c in TOTAL_UNIT_FEATURE_COLS if c not in df.columns]
+        if miss_total:
+            print(f"  WARNING — total_units features missing: {miss_total}")
+
+        X_train_t = train[avail_total]
+        y_train_t = train["log_total_units"].values
+        X_val_t   = val[avail_total]
+        y_val_log_t   = val["log_total_units"].values
+        y_val_total   = val["total_units"].clip(lower=0).fillna(0).values
+
+        for q, tag in zip(QUANTILES, Q_TAGS):
+            print(f"\nTraining total_units quantile={q} ({tag}) …")
+            model_t = lgb.LGBMRegressor(
+                objective="quantile",
+                alpha=q,
+                **LGBM_BASE,
+            )
+            model_t.fit(
+                X_train_t, y_train_t,
+                eval_set=[(X_val_t, y_val_log_t)],
+                callbacks=[
+                    lgb.early_stopping(50, verbose=False),
+                    lgb.log_evaluation(100),
+                ],
+            )
+            preds_log_t   = model_t.predict(X_val_t)
+            preds_total   = np.expm1(np.clip(preds_log_t, 0, None))
+            pb_t  = pinball(y_val_log_t, preds_log_t, q)
+            mae_t = float(np.mean(np.abs(y_val_total - preds_total))) if q == 0.50 else None
+            rmse_t= float(np.sqrt(np.mean((y_val_total - preds_total) ** 2))) if q == 0.50 else None
+            print(f"  Best iter: {model_t.best_iteration_}  |  Pinball (log): {pb_t:.4f}"
+                  + (f"  |  MAE: {mae_t:.1f}  |  RMSE: {rmse_t:.1f}" if mae_t is not None else ""))
+
+            models_total[tag] = model_t
+            metrics_total[tag] = {
+                "quantile": q,
+                "best_iteration": int(model_t.best_iteration_),
+                "val_pinball_loss": pb_t,
+                **({"val_mae": mae_t, "val_rmse": rmse_t} if mae_t is not None else {}),
+            }
+
+        for tag, model_t in models_total.items():
+            path = f"outputs/model_total_units_{tag}_{MODEL_VERSION}.pkl"
+            with open(path, "wb") as f:
+                pickle.dump(model_t, f)
+            print(f"  Saved {path}")
+
+        imp_t = pd.Series(
+            models_total["q50"].feature_importances_,
+            index=models_total["q50"].feature_name_,
+        ).sort_values(ascending=False)
+        print("\nTop 15 features — total_units q50:")
+        print(imp_t.head(15).to_string())
+    else:
+        print("\n  Skipping total_units training (column not found in parquet).")
+        avail_total = []
+        miss_total  = []
 
     # ── Save metrics + feature list ──────────────────────────────────────────
     meta = {
@@ -212,6 +286,10 @@ if __name__ == "__main__":
         "target_p99_clip":  float(p99 * 2),
         "quantile_metrics": metrics,
         "top_features_q50": imp.head(20).to_dict(),
+        "total_units_trained":        has_total,
+        "total_units_features_used":  avail_total,
+        "total_units_features_missing": miss_total,
+        "total_units_quantile_metrics": metrics_total,
     }
     meta_path = "outputs/retailer_sales_train_metrics.json"
     with open(meta_path, "w") as f:

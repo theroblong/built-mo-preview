@@ -36,6 +36,8 @@ first_week_selling        str ISO  — lifecycle anchor
 weeks_since_launch        int      — 0-indexed; negative = pre-launch (clipped to 0)
 pack_count                int
 base_units                float    — primary demand signal (promo-stripped)
+total_units               float    — base_units + units_promo (= total scan volume)
+units_promo               float    — promo-display contribution (from built_filtered_weekly)
 avg_weekly_units_spm      float    — velocity
 tdp                       float    — distribution proxy
 arp                       float    — weekly avg retail price (from built_filtered_weekly)
@@ -63,6 +65,10 @@ base_units_lag4           float
 base_units_lag13          float
 base_units_lag52          float    — YAGO: year-ago base_units (NaN for series < 52 weeks)
 velocity_spm_lag52        float    — YAGO: year-ago velocity SPM
+total_units_lag1          float    — total_units AR lags (base + promo; for total_units model)
+total_units_lag4          float
+total_units_lag13         float
+total_units_lag52         float    — YAGO: year-ago total_units
 week_of_year              int      — seasonality signal
 implied_elasticity        float    — from scored_price_elasticity (static per series)
 elasticity_band           str
@@ -142,7 +148,7 @@ if __name__ == "__main__":
     # Weekly avg retail price is NOT carried into event_detection_weekly.
     # It's one of the strongest leading signals: a price cut 2–4 weeks out
     # typically drives measurable unit lift, and vice versa for price increases.
-    print("\nLoading built_filtered_weekly for weekly ARP …")
+    print("\nLoading built_filtered_weekly for weekly ARP + promo units …")
     bfw = query_druid(f"""
         SELECT
             __time,
@@ -150,7 +156,9 @@ if __name__ == "__main__":
             channel_outlet,
             retail_account,
             geography_raw,
-            arp
+            arp,
+            units_promo,
+            units_non_promo
         FROM "built_filtered_weekly"
         WHERE __time >= CURRENT_TIMESTAMP - {LOOKBACK}
           AND retail_account IS NOT NULL
@@ -158,15 +166,20 @@ if __name__ == "__main__":
           AND arp > 0
     """)
     print(f"  Rows: {len(bfw):,}")
-    bfw["arp"] = pd.to_numeric(bfw["arp"], errors="coerce")
+    bfw["arp"]            = pd.to_numeric(bfw["arp"],            errors="coerce")
+    bfw["units_promo"]    = pd.to_numeric(bfw["units_promo"],    errors="coerce")
+    bfw["units_non_promo"]= pd.to_numeric(bfw["units_non_promo"],errors="coerce")
     bfw = bfw.drop_duplicates(subset=["__time"] + GROUP_COLS)
     bfw["__time"] = pd.to_datetime(bfw["__time"], utc=True)
 
-    # ── 3. Merge ARP onto event_detection_weekly ─────────────────────────────
+    # ── 3. Merge ARP + promo units onto event_detection_weekly ──────────────
     df = edw.merge(bfw, on=["__time"] + GROUP_COLS, how="left")
     df["arp_fallback"] = 0
-    print(f"\n  After ARP join: {len(df):,} rows | ARP coverage: "
-          f"{df['arp'].notna().sum():,} / {len(df):,}")
+    # total_units = base (promo-stripped) + promo units; fallback 0 when promo missing
+    df["total_units"] = df["base_units"] + df["units_promo"].fillna(0)
+    print(f"\n  After ARP/promo join: {len(df):,} rows | ARP coverage: "
+          f"{df['arp'].notna().sum():,} / {len(df):,} | "
+          f"Promo coverage: {df['units_promo'].notna().sum():,} / {len(df):,}")
 
     # ── 4. Prepost: description, first_week_selling, pack_count, arp fallback
     print("\nLoading built_prepost_features …")
@@ -255,6 +268,11 @@ if __name__ == "__main__":
     df["base_units_lag52"]   = df.groupby(GROUP_COLS)["base_units"].shift(52)
     df["velocity_spm_lag52"] = df.groupby(GROUP_COLS)["avg_weekly_units_spm"].shift(52)
 
+    # Autoregressive lags on total_units (base + promo; same lag structure as base_units)
+    for lag, col in [(1, "total_units_lag1"), (4, "total_units_lag4"), (13, "total_units_lag13")]:
+        df[col] = df.groupby(GROUP_COLS)["total_units"].shift(lag)
+    df["total_units_lag52"] = df.groupby(GROUP_COLS)["total_units"].shift(52)
+
     # ARP rolling stats and lags (price trend signal)
     for lag, col in [(1, "arp_lag1"), (4, "arp_lag4")]:
         df[col] = df.groupby(GROUP_COLS)["arp"].shift(lag)
@@ -313,7 +331,7 @@ if __name__ == "__main__":
         "upc", "description",
         "channel_outlet", "retail_account", "geography_raw", "geography_display", "geography_level",
         "first_week_selling", "weeks_since_launch", "pack_count",
-        "base_units", "avg_weekly_units_spm", "tdp", "arp", "arp_fallback",
+        "base_units", "total_units", "units_promo", "avg_weekly_units_spm", "tdp", "arp", "arp_fallback",
         "base_units_roll4_avg",
         "base_units_roll8_avg",  "base_units_roll8_std",
         "base_units_roll13_avg", "base_units_roll13_std",
@@ -323,6 +341,7 @@ if __name__ == "__main__":
         "arp_lag1", "arp_lag4", "arp_roll8_avg", "arp_roll8_std", "arp_wow_delta",
         "base_units_lag1", "base_units_lag4", "base_units_lag13",
         "base_units_lag52", "velocity_spm_lag52",
+        "total_units_lag1", "total_units_lag4", "total_units_lag13", "total_units_lag52",
         "week_of_year",
         "implied_elasticity", "elasticity_band",
         "max_donor_cannibal_prob", "donor_count",

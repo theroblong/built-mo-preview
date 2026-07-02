@@ -31,12 +31,15 @@ anchor_date             str  — last actual week date (ISO)
 anchor_base_units       float — last actual week's base_units
 anchor_arp              float — last observed ARP
 forecast_week_number    int  — 1 through 13
-forecast_units_low      float — q10
+forecast_units_low      float — q10 (base units, promo-stripped)
 forecast_units_base     float — q50
 forecast_units_high     float — q90
 forecast_dollars_low    float — q10 × arp
 forecast_dollars_base   float — q50 × arp
 forecast_dollars_high   float — q90 × arp
+forecast_total_units_low  float — q10 total scan volume (base + promo); null if total_units model not trained
+forecast_total_units_base float — q50 total
+forecast_total_units_high float — q90 total
 weeks_since_launch      int  — at the forecast week (increments per step)
 elasticity_band         str
 max_donor_cannibal_prob float
@@ -68,7 +71,7 @@ SEASONAL_BLEND_WEIGHT = 0.40
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
 
-def _load_models_and_meta() -> tuple[dict, dict]:
+def _load_models_and_meta() -> tuple[dict, dict, dict]:
     models = {}
     for tag in Q_TAGS:
         path = f"outputs/model_retailer_sales_{tag}_{MODEL_VERSION}.pkl"
@@ -77,7 +80,15 @@ def _load_models_and_meta() -> tuple[dict, dict]:
         print(f"  Loaded {path}")
     with open("outputs/retailer_sales_train_metrics.json") as f:
         meta = json.load(f)
-    return models, meta
+    models_total = {}
+    if meta.get("total_units_trained"):
+        for tag in Q_TAGS:
+            path = f"outputs/model_total_units_{tag}_{MODEL_VERSION}.pkl"
+            if Path(path).exists():
+                with open(path, "rb") as f:
+                    models_total[tag] = pickle.load(f)
+                print(f"  Loaded {path}")
+    return models, meta, models_total
 
 
 def _build_feature_row(state: dict, features_used: list[str]) -> pd.DataFrame:
@@ -91,8 +102,10 @@ def _build_feature_row(state: dict, features_used: list[str]) -> pd.DataFrame:
 if __name__ == "__main__":
     # ── 1. Load models ───────────────────────────────────────────────────────
     print("Loading models and metadata …")
-    models, meta = _load_models_and_meta()
-    features_used = meta["features_used"]
+    models, meta, models_total = _load_models_and_meta()
+    features_used       = meta["features_used"]
+    features_used_total = meta.get("total_units_features_used", [])
+    forecast_total      = bool(models_total)
 
     # ── 2. Load actuals panel (seed data) ────────────────────────────────────
     print("\nLoading retailer_sales_weekly.parquet …")
@@ -128,6 +141,8 @@ if __name__ == "__main__":
         # Seed lag history from actuals
         units_history = g["base_units"].tolist()
         arp_history   = g["arp"].tolist()
+        # total_units history (base + promo); mirrors units_history structure
+        total_history = g["total_units"].fillna(g["base_units"]).tolist() if forecast_total and "total_units" in g.columns else []
 
         # YAGO: precompute year-ago base_units for each of the 13 forecast steps.
         # At step k (1-indexed), lag52 = actual at anchor - (52 - k) weeks.
@@ -151,6 +166,23 @@ if __name__ == "__main__":
             yoy_ratio = float(np.clip(_anchor_units / _yago_anchor, 0.5, 2.0))
         else:
             yoy_ratio = None
+
+        # Parallel YAGO seq + ratio for total_units
+        N_total = len(total_history)
+        if forecast_total and N_total > 0:
+            lag52_total_seq = [
+                float(total_history[N_total - 53 + k])
+                if 0 <= (N_total - 53 + k) < N_total else np.nan
+                for k in range(1, FORECAST_WEEKS + 1)
+            ]
+            _yago_total = float(total_history[N_total - 52]) if N_total >= 52 else None
+            if _yago_total and _yago_total > 0:
+                yoy_ratio_total = float(np.clip(float(total_history[-1]) / _yago_total, 0.5, 2.0))
+            else:
+                yoy_ratio_total = None
+        else:
+            lag52_total_seq = []
+            yoy_ratio_total = None
 
         # Latest row for static features
         latest = g.iloc[-1]
@@ -186,6 +218,8 @@ if __name__ == "__main__":
         skip = {"channel_outlet", "week_of_year",
                 "base_units_lag1", "base_units_lag4", "base_units_lag13",
                 "base_units_lag52",                          # dynamic — updated per step
+                "total_units_lag1", "total_units_lag4", "total_units_lag13",
+                "total_units_lag52",                         # dynamic — updated per step
                 "arp_lag1", "arp_lag4", "arp_wow_delta",
                 "arp_roll8_avg", "arp_roll8_std", "arp",
                 # MO_46 rolling signals — held static at last observed values;
@@ -219,6 +253,12 @@ if __name__ == "__main__":
             arp_roll8_std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
             arp_wow_delta = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
 
+            # total_units AR lags (from combined actuals + prior predictions)
+            t_lag1  = total_history[-1]  if len(total_history) >= 1  else np.nan
+            t_lag4  = total_history[-4]  if len(total_history) >= 4  else np.nan
+            t_lag13 = total_history[-13] if len(total_history) >= 13 else np.nan
+            t_lag52 = lag52_total_seq[step - 1] if lag52_total_seq else np.nan
+
             state = {
                 **static_feats,
                 **rolling_seed,             # MO_46: static competitive signals
@@ -235,6 +275,10 @@ if __name__ == "__main__":
                 "base_units_lag4":      lag4,
                 "base_units_lag13":     lag13,
                 "base_units_lag52":     lag52,
+                "total_units_lag1":     t_lag1,
+                "total_units_lag4":     t_lag4,
+                "total_units_lag13":    t_lag13,
+                "total_units_lag52":    t_lag52,
             }
 
             X = _build_feature_row(state, features_used)
@@ -268,6 +312,23 @@ if __name__ == "__main__":
             units_history.append(units_base)
             arp_history.append(arp_cur)  # hold ARP flat (no external signal yet)
 
+            # ── Parallel total_units forecast ────────────────────────────────
+            total_low = total_base = total_high = None
+            if forecast_total and features_used_total:
+                X_t = _build_feature_row(state, features_used_total)
+                total_low  = float(np.expm1(max(0, models_total["q10"].predict(X_t)[0])))
+                total_base = float(np.expm1(max(0, models_total["q50"].predict(X_t)[0])))
+                total_high = float(np.expm1(max(0, models_total["q90"].predict(X_t)[0])))
+                if (yoy_ratio_total is not None and pd.notna(t_lag52)
+                        and t_lag52 > 0 and total_base > 0):
+                    s_ref_t = t_lag52 * yoy_ratio_total
+                    bm_t = ((1.0 - SEASONAL_BLEND_WEIGHT) * total_base
+                            + SEASONAL_BLEND_WEIGHT * s_ref_t) / total_base
+                    total_low  = max(0.0, total_low  * bm_t)
+                    total_base = max(0.0, total_base * bm_t)
+                    total_high = max(0.0, total_high * bm_t)
+                total_history.append(total_base)
+
             all_rows.append({
                 **meta_fields,
                 "__time":               forecast_date,
@@ -278,6 +339,9 @@ if __name__ == "__main__":
                 "forecast_dollars_low":  round(units_low  * forecast_arp, 2),
                 "forecast_dollars_base": round(units_base * forecast_arp, 2),
                 "forecast_dollars_high": round(units_high * forecast_arp, 2),
+                "forecast_total_units_low":  total_low,
+                "forecast_total_units_base": total_base,
+                "forecast_total_units_high": total_high,
                 "weeks_since_launch":   wsl,
                 "model_version":        MODEL_VERSION,
                 "scored_at":            scored_at,
@@ -292,6 +356,10 @@ if __name__ == "__main__":
     print(f"  q50 unit range:        {out['forecast_units_base'].min():.0f} – {out['forecast_units_base'].max():.0f}")
     print(f"  q50 dollar range:      ${out['forecast_dollars_base'].min():.0f} – ${out['forecast_dollars_base'].max():.0f}")
     print(f"  Median band width:     {(out['forecast_units_high'] - out['forecast_units_low']).median():.0f} units")
+    if forecast_total and "forecast_total_units_base" in out.columns and out["forecast_total_units_base"].notna().any():
+        print(f"  q50 total_units range: {out['forecast_total_units_base'].min():.0f} – {out['forecast_total_units_base'].max():.0f}")
+        promo_est = out["forecast_total_units_base"] - out["forecast_units_base"]
+        print(f"  Median promo contribution: {promo_est.median():.0f} units/week")
 
     if out.empty:
         print("No rows to write.")
