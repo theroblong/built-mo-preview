@@ -137,7 +137,7 @@ if __name__ == "__main__":
     print(f"  p99 base_units: {p99:.0f}  (no clip needed — log transform handles scale)")
     df["log_base_units"] = np.log1p(df["base_units"])
 
-    has_total = "total_units" in df.columns and df["total_units"].notna().any()
+    has_total = bool("total_units" in df.columns and df["total_units"].notna().any())
     if has_total:
         df["log_total_units"] = np.log1p(df["total_units"].clip(lower=0).fillna(0))
 

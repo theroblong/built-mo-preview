@@ -107,23 +107,33 @@ if __name__ == "__main__":
         print(f"\n  {FORECAST_PARQUET} not found — showing actuals only.")
 
     # ── 3. Select top N series ────────────────────────────────────────────────
+    # Deduplicate by (upc, retail_account): for retailers that appear in both
+    # MULO and non-MULO channels, pick the highest-volume channel only.
     anchor = df_act["__time"].max()
     cutoff = anchor - pd.Timedelta(weeks=ACTUALS_WEEKS)
-    trailing_vol = (
-        df_act[df_act["__time"] > cutoff]
-        .groupby(GROUP_COLS)["base_units"].sum()
-        .sort_values(ascending=False)
+    trailing = df_act[df_act["__time"] > cutoff]
+    channel_vol = (
+        trailing.groupby(GROUP_COLS)["base_units"].sum()
+        .reset_index()
+        .sort_values("base_units", ascending=False)
     )
-    top_keys = [dict(zip(GROUP_COLS, k)) for k in trailing_vol.index[:TOP_N]]
+    # Take the dominant channel for each (upc, retail_account), then rank
+    top_channels = (
+        channel_vol
+        .drop_duplicates(subset=["upc", "retail_account"])   # best channel wins
+        .sort_values("base_units", ascending=False)
+        .head(TOP_N)
+    )
+    top_keys = top_channels[GROUP_COLS].to_dict("records")
 
-    print(f"\nTop {len(top_keys)} series (trailing {ACTUALS_WEEKS}w base units):")
+    print(f"\nTop {len(top_keys)} series (trailing {ACTUALS_WEEKS}w base units, dominant channel per retailer):")
     for i, sk in enumerate(top_keys):
         desc = df_act.loc[
             (df_act["upc"] == sk["upc"]) & (df_act["retail_account"] == sk["retail_account"]),
             "description"
         ]
         label = desc.iloc[0][:38] if len(desc) else sk["upc"][:20]
-        print(f"  {i+1}. {label} @ {sk['retail_account']}")
+        print(f"  {i+1}. {label} @ {sk['retail_account']} [{sk['channel_outlet']}]")
 
     # ── 4. Chart layout ───────────────────────────────────────────────────────
     ncols = 2
@@ -140,15 +150,17 @@ if __name__ == "__main__":
             act = act[act[col] == val]
         act = act[act["__time"] > cutoff].sort_values("__time")
 
-        desc_col = act["description"].iloc[0][:38] if "description" in act.columns and len(act) else sk["upc"][:20]
-        panel_title = f"{desc_col} @ {sk['retail_account']}"
+        desc_col = act["description"].iloc[0][:35] if "description" in act.columns and len(act) else sk["upc"][:20]
+        upc_suffix = sk["upc"][-6:]
+        panel_title = f"{desc_col} …{upc_suffix} @ {sk['retail_account']}"
 
-        adates = act["__time"].dt.to_pydatetime()
+        adates = act["__time"].to_numpy()
         abase  = act["base_units"].clip(lower=0).fillna(0).values
-        atotal = (
-            act["total_units"].clip(lower=0).fillna(abase).values
-            if has_total_actuals else abase
-        )
+        if has_total_actuals:
+            atotal_raw = act["total_units"].clip(lower=0).values
+            atotal = np.where(np.isnan(atotal_raw), abase, atotal_raw)
+        else:
+            atotal = abase
 
         # Actuals: total units line (dark) + base units line (lighter)
         ax.plot(adates, atotal, color=C_TOTAL, lw=2.0, label="Total units (actual)")
@@ -172,7 +184,7 @@ if __name__ == "__main__":
             fc = fc.sort_values("__time")
 
             if len(fc) > 0:
-                fdates  = fc["__time"].dt.to_pydatetime()
+                fdates  = fc["__time"].to_numpy()
                 fb_q50  = fc["forecast_units_base"].clip(lower=0).values
                 fb_q10  = fc["forecast_units_low"].clip(lower=0).values  if "forecast_units_low"  in fc.columns else fb_q50
                 fb_q90  = fc["forecast_units_high"].clip(lower=0).values if "forecast_units_high" in fc.columns else fb_q50
