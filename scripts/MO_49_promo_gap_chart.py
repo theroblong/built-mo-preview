@@ -132,8 +132,8 @@ if __name__ == "__main__":
             (df_act["upc"] == sk["upc"]) & (df_act["retail_account"] == sk["retail_account"]),
             "description"
         ]
-        label = desc.iloc[0][:38] if len(desc) else sk["upc"][:20]
-        print(f"  {i+1}. {label} @ {sk['retail_account']} [{sk['channel_outlet']}]")
+        label = desc.iloc[0][:35] if len(desc) else sk["upc"][:20]
+        print(f"  {i+1}. {label} …{sk['upc'][-6:]} @ {sk['retail_account']} [{sk['channel_outlet']}]")
 
     # ── 4. Chart layout ───────────────────────────────────────────────────────
     ncols = 2

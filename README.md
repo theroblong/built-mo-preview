@@ -264,6 +264,31 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 9) — MO_49 promo gap chart + FP&A / Brian report embedding
+
+**MO_49 — Base vs. Total Units Promo Gap Chart (`scripts/MO_49_promo_gap_chart.py`)**
+
+Standalone Python chart script reading `outputs/retailer_sales_weekly.parquet` (MO_25 actuals) and `outputs/retailer_sales_forecast.parquet` (MO_27 forecast). Selects top-6 BUILT SKU × retailer pairs by trailing 52-week base volume, deduplicated by `(upc, retail_account)` so MULO and non-MULO rows for the same retailer don't double-appear. Generates a 2-column × 3-row matplotlib panel figure:
+
+- Dark line = total units (base + promo actuals); lighter line = base units
+- Blue shaded gap = historical promo contribution
+- Orange shaded gap = projected promo contribution in 13-week forecast region
+- Dashed q50 lines + q10/q90 bands for both base and total forecasts
+
+Portfolio promo share: **30.2%**. Output: `outputs/mo49_promo_gap.html` (standalone embedded HTML) + `outputs/mo49_promo_gap_chart.png`.
+
+**Bug fixes applied in this build:**
+- `dt.to_pydatetime()` → `.to_numpy()` on both `adates` and `fdates` (removes FutureWarning)
+- `fillna(abase)` → `np.where(np.isnan(atotal_raw), abase, atotal_raw)` (pandas rejects ndarray in fillna)
+- UPC suffix (`…XXXXXX`) added to panel titles so same-description SKUs at different pack sizes are distinguishable
+- Top-series dedup: `drop_duplicates(subset=["upc","retail_account"])` picks dominant channel per retailer before ranking
+
+**Report embedding:**
+- `docs/built_demand_intelligence_report_v2.1.1.html` — new **Section 9b** ("Promo Contribution — Base vs. Total Units") inserted before Section 10 (ROI). Includes 30% promo share stat and a stress-test framing callout: "if promo spend drops 10%, base-units line is your real floor."
+- `docs/brian_sanity_check_package.html` — compact final section ("Promo vs. Base Demand — Are You Growing or Just Spending?") added with nav entry. Framed for Brian: is volume structurally earned or contingent on trade spend?
+
+---
+
 ### 2026-07-01 (update 8) — MULO velocity fix + promo units forecast (MO_25/26/27)
 
 **MULO velocity undercount fix (`customer-built-mo-api/app/routers/trends.py`)**
