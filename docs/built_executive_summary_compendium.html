@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BUILT Demand Intelligence - Executive Summary Compendium</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f6fa;
+    color: #172033;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 44px 32px 56px;
+  }
+  .cover {
+    background: #17324d;
+    color: #fff;
+    border-radius: 10px;
+    padding: 44px 48px;
+    margin-bottom: 28px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.7px;
+    text-transform: uppercase;
+    color: #7fb3ff;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 2.35rem;
+    line-height: 1.12;
+    margin: 0 0 16px;
+    letter-spacing: 0;
+  }
+  .subtitle {
+    max-width: 780px;
+    font-size: 1.08rem;
+    color: rgba(255,255,255,.86);
+  }
+  .meta {
+    margin-top: 26px;
+    font-size: 13px;
+    color: rgba(255,255,255,.66);
+  }
+  .source-note {
+    background: #ffffff;
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: #516070;
+  }
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 30px;
+  }
+  .kpi {
+    background: #fff;
+    border: 1px solid #dce3ee;
+    border-top: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: 18px 14px;
+    min-height: 126px;
+  }
+  .kpi.good { border-top-color: #168a4f; }
+  .kpi.warn { border-top-color: #c47a13; }
+  .kpi .num {
+    font-size: 1.85rem;
+    line-height: 1;
+    font-weight: 800;
+    color: #1f5fbf;
+    white-space: nowrap;
+  }
+  .kpi.good .num { color: #168a4f; }
+  .kpi.warn .num { color: #a65f00; }
+  .kpi .label {
+    margin-top: 9px;
+    font-size: 12px;
+    color: #4d5b69;
+  }
+  .section {
+    background: #fff;
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    padding: 34px 38px;
+    margin-bottom: 24px;
+  }
+  .section h2 {
+    margin: 0 0 10px;
+    font-size: 1.48rem;
+    line-height: 1.22;
+    color: #172033;
+  }
+  .lead {
+    max-width: 840px;
+    margin: 0 0 22px;
+    color: #405060;
+    font-size: 1.02rem;
+  }
+  .callout {
+    border-left: 4px solid #2563eb;
+    background: #edf4ff;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 18px;
+    margin: 20px 0;
+    color: #2f3d4d;
+  }
+  .callout.good {
+    border-color: #168a4f;
+    background: #ecf8f1;
+  }
+  .callout.warn {
+    border-color: #c47a13;
+    background: #fff8e8;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .card {
+    border: 1px solid #dce3ee;
+    border-radius: 8px;
+    padding: 18px;
+    background: #fbfcff;
+  }
+  .card h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: #17324d;
+  }
+  .card p {
+    margin: 0;
+    font-size: 13px;
+    color: #455565;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 14px;
+  }
+  th {
+    background: #eef3fb;
+    color: #243247;
+    text-align: left;
+    padding: 11px 12px;
+    border-bottom: 2px solid #d1dbe9;
+  }
+  td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #e8edf4;
+    vertical-align: top;
+  }
+  .td-good { color: #117342; font-weight: 700; }
+  .td-warn { color: #9a5b00; font-weight: 700; }
+  ul, ol { margin: 12px 0 0 20px; padding: 0; }
+  li { margin: 7px 0; }
+  .decision-list strong { color: #172033; }
+  .footer {
+    color: #758292;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px 0 0;
+  }
+  @media (max-width: 900px) {
+    .page { padding: 24px 16px 40px; }
+    .cover { padding: 32px 26px; }
+    h1 { font-size: 1.82rem; }
+    .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .section { padding: 26px 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="eyebrow">BUILT Bar - Aevah Mo Intelligence - Executive Compendium</div>
+    <h1>Finance-Grade Demand Intelligence for Forecasting, Trade Spend, and Operating Planning</h1>
+    <div class="subtitle">
+      A CFO and VP Finance summary of three BUILT demand intelligence briefs: what has been proven,
+      why it matters financially, what decisions it enables, and what inputs are needed next.
+    </div>
+    <div class="meta">Prepared July 2, 2026 - Confidential - Aevah + BUILT</div>
+  </div>
+
+  <div class="source-note">
+    Source documents reviewed:
+    <strong>brian_fpa_brief.html</strong>,
+    <strong>brian_sanity_check_package.html</strong>, and
+    <strong>built_demand_intelligence_report_v2.1.1.html</strong>.
+    This compendium intentionally excludes methodology detail and embedded charts; it is designed as
+    an executive front door for finance leadership.
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi good">
+      <div class="num">4.3-4.4%</div>
+      <div class="label">Best validated quarterly wMAPE at Dec 2025 / Q1 2026 cutpoint</div>
+    </div>
+    <div class="kpi good">
+      <div class="num">13.1%</div>
+      <div class="label">Rolling 5-quarter wMAPE across 2025 through Q1 2026</div>
+    </div>
+    <div class="kpi warn">
+      <div class="num">35%</div>
+      <div class="label">Industry benchmark for manual CPG forecasting baseline</div>
+    </div>
+    <div class="kpi good">
+      <div class="num">$22M+</div>
+      <div class="label">Potential annual value using Brian's $1M per 1pp framing</div>
+    </div>
+    <div class="kpi">
+      <div class="num">349K</div>
+      <div class="label">Estimated units per week in July 2026 projection, q50 plan</div>
+    </div>
+    <div class="kpi">
+      <div class="num">~30%</div>
+      <div class="label">Approximate share of portfolio volume driven by promotions</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Executive Thesis</h2>
+    <p class="lead">
+      The three documents tell one coherent story: Mo turns BUILT's SPINS data into a finance-grade
+      demand intelligence layer. It improves forecast accuracy, explains why demand is moving, and
+      gives FP&amp;A a defensible way to separate base demand, distribution-led growth, price response,
+      promotion lift, and cannibalization risk.
+    </p>
+    <div class="callout good">
+      <strong>Decision implication:</strong> Mo is no longer just an analytics demo. The evidence supports
+      a finance validation sprint against Connor's actual historical forecasts, followed by integration
+      into quarterly planning, trade spend review, and supply-chain demand commits.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>What the Compendium Proves</h2>
+    <div class="three-col">
+      <div class="card">
+        <h3>1. Forecast Accuracy Is Materially Better</h3>
+        <p>
+          The best Q1 2026 validation lands at 4.3-4.4% wMAPE across 164 series, versus 24.6-27.5%
+          for the strongest moving-average baselines and roughly 35% for manual CPG benchmarks.
+        </p>
+      </div>
+      <div class="card">
+        <h3>2. The Model Is Auditable</h3>
+        <p>
+          SHAP waterfalls and driver decomposition expose the forecast logic in business terms:
+          demand history, TDP trajectory, velocity, price, seasonality, and cannibalization.
+        </p>
+      </div>
+      <div class="card">
+        <h3>3. It Answers Planning Questions</h3>
+        <p>
+          Finance gets floor, plan, and ceiling forecasts; sales gets account-level drivers;
+          trade gets price and promo response; supply chain gets a quantitative operating range.
+        </p>
+      </div>
+      <div class="card">
+        <h3>4. Distribution Is the Central Growth Variable</h3>
+        <p>
+          BUILT's growth-mode problem is that unit gains often come from more doors, not higher
+          velocity. Mo separates TDP expansion from true per-store demand.
+        </p>
+      </div>
+      <div class="card">
+        <h3>5. Trade Spend Can Be Causal</h3>
+        <p>
+          The Kroger Brownie Batter 4pk case isolates a Dec 2025 price event and estimates
+          incremental lift rather than relying on raw before-and-after unit changes.
+        </p>
+      </div>
+      <div class="card">
+        <h3>6. Retraining Protects the Value</h3>
+        <p>
+          A stale model degrades as the portfolio evolves. Quarterly retraining keeps the model
+          aligned with new SKUs, distribution changes, and shifting retailer behavior.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Finance Value Case</h2>
+    <p class="lead">
+      The value case should be presented as a range until BUILT confirms its actual Excel baseline.
+      Using the current benchmark baseline, the annual value case is already credible enough to justify
+      a validation sprint.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Baseline</th>
+          <th>Mo Result</th>
+          <th>Improvement</th>
+          <th>Value Signal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Best quarter: Q1 2026, 13-week horizon</td>
+          <td>35% industry benchmark</td>
+          <td class="td-good">4.4% wMAPE</td>
+          <td class="td-good">30.6pp</td>
+          <td class="td-good">~$31M annualized at $1M/1pp</td>
+        </tr>
+        <tr>
+          <td>Rolling validation: five quarters</td>
+          <td>35% industry benchmark</td>
+          <td class="td-good">13.1% wMAPE</td>
+          <td class="td-good">21.9pp</td>
+          <td class="td-good">~$22M annualized</td>
+        </tr>
+        <tr>
+          <td>Retraining value</td>
+          <td>27.1% stale model</td>
+          <td class="td-good">13.1% rolling model</td>
+          <td class="td-good">14.1pp</td>
+          <td class="td-good">~$14M annualized</td>
+        </tr>
+        <tr>
+          <td>Conservative case if Connor's Excel is already strong</td>
+          <td>25% actual Excel wMAPE</td>
+          <td class="td-good">13.1% rolling model</td>
+          <td class="td-good">11.9pp</td>
+          <td class="td-good">~$12M annualized</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <strong>CFO caveat:</strong> The $22M+ figure is directionally strong but should not be treated
+      as final until Connor provides actual historical forecast vs. actuals. That comparison converts
+      the value case from benchmark-based to BUILT-specific.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Operating Decisions Enabled</h2>
+    <div class="two-col">
+      <div>
+        <ol class="decision-list">
+          <li><strong>Revenue planning:</strong> Use q50 as the operating plan while tracking q10/q90 as downside and upside cases.</li>
+          <li><strong>Inventory and safety stock:</strong> Replace generic buffers with statistically validated floor and ceiling bands.</li>
+          <li><strong>Trade spend ROI:</strong> Separate base price response from display and feature lift before funding future promos.</li>
+          <li><strong>Distribution planning:</strong> Identify when growth is driven by TDP expansion versus durable velocity improvement.</li>
+        </ol>
+      </div>
+      <div>
+        <ol class="decision-list" start="5">
+          <li><strong>SKU launch governance:</strong> Route new SKUs through a cold-start model until enough history exists for LightGBM.</li>
+          <li><strong>Account prioritization:</strong> Use retailer-level velocity, TDP, and forecast bands to prioritize expansion bets.</li>
+          <li><strong>Quarterly planning cadence:</strong> Retrain after each SPINS refresh and publish accuracy by SKU and account.</li>
+          <li><strong>Finance narrative:</strong> Give the leadership team a plain-English reason for every meaningful forecast change.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Pricing and Trade Spend Findings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Finding</th>
+          <th>Executive Meaning</th>
+          <th>Planning Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Portfolio price elasticity: epsilon = -0.343</td>
+          <td>A 10% price increase is associated with a 3.4% weekly unit decrease after controls.</td>
+          <td>Use price sensitivity as an input to revenue planning, not as a static assumption.</td>
+        </tr>
+        <tr>
+          <td>Kroger BB 4pk Dec 2025 price cut: -7.8% ARP</td>
+          <td>Observed lift was +28.6% versus counterfactual, or +8,443 incremental units over eight weeks.</td>
+          <td>Build a promo ROI database using counterfactual lift, not raw unit deltas.</td>
+        </tr>
+        <tr>
+          <td>Kroger price-only signal: +4.7% lift</td>
+          <td>The rest of the observed lift came from display and feature mechanics.</td>
+          <td>Quantify the multiplier from trade support instead of crediting all lift to price.</td>
+        </tr>
+        <tr>
+          <td>Key retailer elasticities: Walmart -0.245, Kroger -0.590, Ahold Delhaize -1.262</td>
+          <td>Price moves have different risk by account.</td>
+          <td>Finance should require account-specific elasticity in promo and pricing business cases.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Known Limits and Required Inputs</h2>
+    <p class="lead">
+      The model is strongest when it has current demand, distribution, and price signals. The main risks
+      are forward-looking business events that SPINS only reveals after the fact.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Risk or Missing Input</th>
+          <th>Why It Matters</th>
+          <th>What BUILT Should Provide</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Actual Excel baseline</td>
+          <td>Confirms the real dollar value gap versus Connor's current process.</td>
+          <td>Historical forecasts and actuals for priority SKU x retailer pairs.</td>
+        </tr>
+        <tr>
+          <td>Promo calendar</td>
+          <td>Promo weeks are currently inferred retroactively from SPINS.</td>
+          <td>H2 2026 retailer, SKU, week, TPR, display, and feature calendar.</td>
+        </tr>
+        <tr>
+          <td>Planogram and reset events</td>
+          <td>TDP changes appear in SPINS with a 4-8 week lag.</td>
+          <td>Known distribution wins, resets, new-door launches, and shelf changes.</td>
+        </tr>
+        <tr>
+          <td>Sell-in shipment data</td>
+          <td>SPINS is sell-through; shipments reveal retailer ordering and supply risk earlier.</td>
+          <td>Weekly shipments to retailer DCs by SKU and account.</td>
+        </tr>
+        <tr>
+          <td>Competitor pricing</td>
+          <td>Competitor cuts can change velocity before BUILT sees it in own sales.</td>
+          <td>Competitor ARP and promo signals where available from SPINS or internal tracking.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Recommended CFO / VP Finance Ask</h2>
+    <div class="callout">
+      <strong>Approve a 30-45 day finance validation sprint.</strong>
+      The sprint should compare Mo against Connor's actual forecast history, publish a SKU/account-level
+      accuracy tracker, and produce a finance-approved ROI range that can be used in budgeting and
+      trade planning decisions.
+    </div>
+    <ol>
+      <li>Connor provides historical forecast vs. actuals for recent quarters.</li>
+      <li>Aevah calculates actual wMAPE baseline, Mo wMAPE, and dollarized variance by account and SKU.</li>
+      <li>Finance selects the official value assumption: conservative, expected, and upside.</li>
+      <li>BUILT shares promo, reset, and sell-in data to convert the model from reactive to forward-looking.</li>
+      <li>Mo publishes the first operating forecast package: q10 floor, q50 plan, q90 ceiling, and driver reasons.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2>Source Document Map</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Role in the Story</th>
+          <th>Best Executive Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>brian_fpa_brief.html</strong></td>
+          <td>Narrative FP&amp;A brief organized around three questions: what will we sell, what is driving it, and how Mo explains it.</td>
+          <td>Use as the meeting narrative for Brian and finance leaders.</td>
+        </tr>
+        <tr>
+          <td><strong>brian_sanity_check_package.html</strong></td>
+          <td>Proof package validating accuracy, event behavior, elasticity fixes, retraining, Phase 2 signals, and promo/base split.</td>
+          <td>Use as the credibility backstop when leadership asks, "How do we know this is right?"</td>
+        </tr>
+        <tr>
+          <td><strong>built_demand_intelligence_report_v2.1.1.html</strong></td>
+          <td>Full quantitative study covering methods, validation, ROI, use cases, limitations, model zoo, quantile bands, and causal analysis.</td>
+          <td>Use as the appendix for finance, analytics, and technical stakeholders.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Aevah Mo Intelligence - Executive Summary Compendium - Generated July 2, 2026 - Confidential
+  </div>
+
+</div>
+</body>
+</html>
