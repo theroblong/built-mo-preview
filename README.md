@@ -264,6 +264,28 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 11) — Brian FP&A brief: Section 4 — open questions + roadmap
+
+Added a fourth section to `docs/brian_fpa_brief.html` (now 1.3 MB) covering the collaborative "what comes next" conversation:
+
+**Open questions table** — four named asks:
+- *Connor Lain:* Actual Excel wMAPE from any recent quarter (3–5 SKU × retailer pairs). Currently using 35% CPG benchmark; Connor's real number anchors the $22M ROI claim.
+- *Chase Sparrow / Chase Loftis:* H2 2026 promotional calendar (retailer, SKU, week, mechanic). Promo calendar is the single highest-value feature add — converts retroactive promo inference to forward-looking prediction.
+- *Connor / sales:* Planned distribution changes and planogram resets. TDP inflection points are the model's biggest blind spot; knowing them in advance closes the 4–8 week SPINS lag.
+- *Bracken / ops:* Sell-in shipment data access. Blending sell-in with SPINS sell-through closes the 1–4 week demand signal lag and surfaces retailer over/under-ordering risk.
+
+**6 enhancement cards:** Promo calendar, planogram/reset events, competitor ARP (live), sell-in data, macro/consumer signals, new-SKU cold-start model. Callout: promo calendar alone estimated at $3M/yr from a single spreadsheet share.
+
+**6-row Mo roadmap table:**
+- Accuracy tracker — rolling wMAPE visible to Jeff/Bracken (Phase 2 next sprint)
+- Total units in Mo UI forecast drawer — Druid live as of today
+- Quarterly retraining — in production
+- Phase 2 time-varying signals — MO_46 pipeline complete, UI wiring next
+- MS Copilot integration — architecture ready, needs BUILT IT handshake
+- Self-demo / explainer mode — Phase 3
+
+---
+
 ### 2026-07-02 (update 10) — v2.1.1 section restoration + Brian FP&A brief
 
 **v2.1.1 section restoration (`docs/built_demand_intelligence_report_v2.1.1.html`)**
