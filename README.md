@@ -264,6 +264,19 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 14) — mo_fpa_team_brief.html: collaborative tone reframe
+
+Removed all language that could read as critical of BUILT's existing forecasting process:
+- Section 1 lead no longer says "where errors cancel each other out" or "without the aggregation safety net" — rewritten as "Your team already runs a strong forecasting process — Mo is designed to complement and extend that precision"
+- Section 1 callout changed from "A 7% error can mask a 30% error at Kroger" to "What continuous retraining delivers" — focuses on Mo's improvement story, not BUILT's gaps
+- KPI strip "Current BUILT Baseline" → "Starting Point / Mo is built to go further"
+- Cover subtitle now reads "complement and supercharge your existing FP&A process"
+- "Analyst Time Gets Redirected" → "Analyst Capacity Gets Extended"
+
+**Tone principle saved to memory:** Never compare-against BUILT's existing process. "Complement and supercharge" is the frame. 35% dropped entirely. Their 7–10% corporate baseline is the starting point, not a weakness.
+
+---
+
 ### 2026-07-02 (update 13) — New: mo_fpa_team_brief.html — comprehensive FP&A team brief
 
 New document at `docs/mo_fpa_team_brief.html` — audience is BUILT Finance & FP&A Leadership (Bracken, Jeff, Connor); Brian presents/shares this with them.
