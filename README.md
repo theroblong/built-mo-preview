@@ -264,6 +264,25 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 15) — Rob feedback pass: abbreviation expansion, ensemble explanation, KPI progression, name removal
+
+Applied feedback from **Call with Jason Brazeal.docx** transcript (Jul 2 call with Rob):
+
+**mo_fpa_team_brief.html:**
+- **KPI strip** reframed as a 3-tier progression story: "SPINS Data Alone → 13.1%" / "BUILT's Current Process → 7–10%" / "Mo Unified Intelligence → 4.4%" — tells the story of how each layer adds value
+- **Ensemble layperson explanation** added before the model table: what an ensemble is, why combining multiple specialized models beats any single one, analogy to multiple analyst views
+- **Abbreviation expansion** throughout: first use in each section spells out the full term then abbreviation in parentheses — LightGBM, BSTS, SHAP, TDP, ARP, TPR all covered
+- **Employee names removed** from inputs section and closing panel: "Connor's Excel" → "BUILT's current forecast accuracy"; "Chase's team" → "your trade planning team". Rob's reasoning: at this stage, feelings matter and we don't want to create individual anxiety.
+
+**docs/built_demand_intelligence_report_v2.1.2.html** (new version, quick pass):
+- KPI strip: 35% CPG benchmark → "BUILT's current corporate forecast accuracy baseline (7–10%)"
+- Exec summary: added progression story (SPINS alone 13.1% → BUILT 7–10% → Mo 4.4%)
+- Abbreviation expansion in executive-facing sections: wMAPE, LightGBM, TDP, ARP, ETS
+- "Connor" name removed from Section 2 retraining paragraph
+- Version bumped v2.1.1 → v2.1.2, date updated July 2026
+
+---
+
 ### 2026-07-02 (update 14) — mo_fpa_team_brief.html: collaborative tone reframe
 
 Removed all language that could read as critical of BUILT's existing forecasting process:
