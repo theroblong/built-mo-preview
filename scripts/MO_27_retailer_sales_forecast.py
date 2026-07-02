@@ -364,4 +364,6 @@ if __name__ == "__main__":
     if out.empty:
         print("No rows to write.")
     else:
+        out.to_parquet("outputs/retailer_sales_forecast.parquet", index=False)
+        print("  Saved → outputs/retailer_sales_forecast.parquet")
         write_back(out, "retailer_sales_forecast", timestamp_col="__time")
