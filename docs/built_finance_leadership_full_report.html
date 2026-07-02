@@ -88,7 +88,7 @@
   }
   .metric-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin: 22px 0 28px;
   }
@@ -229,10 +229,11 @@
     <h2>Executive Summary</h2>
     <p class="lead">
       You get a 167% increase in planning precision across BUILT's data, moving from the
-      industry benchmark range of +/-35% to Mo's +/-13.1%. In the strongest forecasts, that
-      precision gain reaches 678% at a +/-4.5% range. The result is a faster, tighter, and
-      more explainable demand plan your team can use for revenue calls, inventory planning,
-      trade spend review, and retailer-level growth choices.
+      manual/spreadsheet benchmark used in the source reports, +/-35%, to Mo's +/-13.1%.
+      In the strongest forecasts, that precision gain reaches 678% at a +/-4.5% range.
+      You also get price-response validation and portfolio pressure visibility, giving your
+      team a faster, tighter, and more explainable demand plan for revenue calls, inventory
+      planning, trade spend review, and retailer-level growth choices.
     </p>
 
     <div class="metric-grid">
@@ -245,6 +246,16 @@
         <div class="tag">Strongest Forecasts</div>
         <div class="num">+678%</div>
         <div class="label">Increase in precision from +/-35% to +/-4.5%, equal to about 7.8x as precise.</div>
+      </div>
+      <div class="metric-card good">
+        <div class="tag">Elasticity Accuracy</div>
+        <div class="num">63%</div>
+        <div class="label">Direction accuracy on clean price moves; causal price-demand checks passed 4/4.</div>
+      </div>
+      <div class="metric-card warn">
+        <div class="tag">Cannibalization Signal</div>
+        <div class="num">8-week</div>
+        <div class="label">Actionable SKU-to-SKU pressure measure identified; current static scores saturate on 90%+ of series.</div>
       </div>
       <div class="metric-card good">
         <div class="tag">Value Case</div>
@@ -296,10 +307,10 @@
   <div class="section">
     <h2>Confidence Intervals and Precision</h2>
     <p class="lead">
-      The story is simple: the industry standard planning range is about +/-35%. Across BUILT's
-      data, Mo is +/-13.1%. In the strongest forecasts, Mo is +/-4.5%. The headline is not just
-      that the range is tighter; it is that you gain 167% to 678% more precision in the planning
-      signal.
+      The story is simple: the source reports use a manual/spreadsheet planning benchmark of
+      about +/-35%. Across BUILT's data, Mo is +/-13.1%. In the strongest forecasts, Mo is
+      +/-4.5%. The headline is not just that the range is tighter; it is that you gain 167%
+      to 678% more precision in the planning signal.
     </p>
     <table>
       <thead>
@@ -311,8 +322,8 @@
       </thead>
       <tbody>
         <tr>
-          <td class="td-warn">+/-35% industry benchmark</td>
-          <td>Manual CPG forecasting often leaves a wide operating range, especially when growth is driven by new doors and promotion.</td>
+          <td class="td-warn">+/-35% manual benchmark</td>
+          <td>The source reports use 35% as the manual/spreadsheet comparison point, especially when growth is driven by new doors and promotion.</td>
           <td>This is the uncertainty your plan is trying to reduce.</td>
         </tr>
         <tr>
@@ -561,8 +572,8 @@
         </tr>
         <tr>
           <td>Corrected elasticity logic</td>
-          <td>Earlier positive elasticity artifacts were corrected by controlling for distribution, maturity, pack size, and seasonality.</td>
-          <td>You get retailer-specific price sensitivity that is more credible for account planning.</td>
+          <td>Earlier positive elasticity artifacts were corrected by controlling for distribution, maturity, pack size, and seasonality; clean price moves reached 63% direction accuracy.</td>
+          <td>You get retailer-specific price sensitivity that is more credible for account planning and promo readouts.</td>
         </tr>
         <tr>
           <td>Quarterly retraining matters</td>
@@ -654,8 +665,8 @@
         </tr>
         <tr>
           <td>Cannibalization pressure</td>
-          <td>Detects when one BUILT SKU may be pulling volume from another.</td>
-          <td>A more realistic assortment and launch plan.</td>
+          <td>Detects when one BUILT SKU may be pulling volume from another; the stronger weekly measure is 8-week SKU-to-SKU pressure movement.</td>
+          <td>A more realistic assortment and launch plan without overstating the current signal as a validated accuracy percentage.</td>
         </tr>
         <tr>
           <td>Walk-forward validation</td>
@@ -684,13 +695,13 @@
         <tr>
           <td>Best quarter, Q1 2026</td>
           <td class="td-good">~4.4%</td>
-          <td>35% industry benchmark</td>
+          <td>35% manual benchmark</td>
           <td>About a 30.6-point improvement, or roughly $31M under the $1M-per-point framing.</td>
         </tr>
         <tr>
           <td>Five-quarter rolling average</td>
           <td class="td-good">13.1%</td>
-          <td>35% industry benchmark</td>
+          <td>35% manual benchmark</td>
           <td>About a 21.9-point improvement, or roughly $22M under the same framing.</td>
         </tr>
         <tr>
@@ -776,7 +787,7 @@
       <tbody>
         <tr>
           <td>How much more precise is the plan?</td>
-          <td>Mo improves from a 35% industry range to 13.1% across BUILT data and roughly 4.5% in the strongest forecasts.</td>
+          <td>Mo improves from the 35% manual benchmark used in the source reports to 13.1% across BUILT data and roughly 4.5% in the strongest forecasts.</td>
           <td>You lead with a 167% precision increase, with a path to 678% in the strongest cases.</td>
         </tr>
         <tr>
@@ -791,8 +802,13 @@
         </tr>
         <tr>
           <td>What happens when price changes?</td>
-          <td>Kroger showed a price-only lift around 4.7% and a total event lift around 28.6% with promo support.</td>
-          <td>You can separate the economics of price, display, and feature activity.</td>
+          <td>Kroger showed a price-only lift around 4.7% and a total event lift around 28.6% with promo support; clean price moves reached 63% direction accuracy.</td>
+          <td>You can separate the economics of price, display, and feature activity with a validated price-response signal.</td>
+        </tr>
+        <tr>
+          <td>Can you see cannibalization pressure?</td>
+          <td>The current static score identifies portfolio risk but saturates on 90%+ of series; the useful operating measure is weekly 8-week SKU-to-SKU pressure movement.</td>
+          <td>Your team gets visibility into SKU-level portfolio pressure without treating the current score as a validated accuracy rate.</td>
         </tr>
         <tr>
           <td>Does the model stay current?</td>

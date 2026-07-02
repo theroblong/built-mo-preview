@@ -51,7 +51,7 @@
   }
   .kpi-strip {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 12px;
     margin: 0 0 30px;
   }
@@ -276,17 +276,17 @@
   <div class="ci-panel">
     <h2>Confidence Intervals</h2>
     <p class="ci-lead">
-      The story is straightforward: the industry standard confidence interval is about 35%.
-      Across BUILT's data, Mo improves precision by 167% by reducing that range to 13.1%.
-      In the strongest forecasts, Mo improves precision by 678% by reaching 4.5%. That is a
-      large improvement delivered at real-time refresh speed and scalable across SKU-retailer
-      planning.
+      The story is straightforward: the source reports use a manual/spreadsheet benchmark
+      of about +/-35%. Across BUILT's data, Mo improves precision by 167% by reducing that
+      range to +/-13.1%. In the strongest forecasts, Mo improves precision by 678% by reaching
+      +/-4.5%. That is a large improvement delivered at real-time refresh speed and scalable
+      across SKU-retailer planning.
     </p>
     <div class="ci-grid">
       <div class="kpi warn">
-        <div class="tag">Industry Standard</div>
+        <div class="tag">Source Benchmark</div>
         <div class="num">+/-35%</div>
-        <div class="label">Manual CPG forecasting benchmarks often carry a planning confidence interval near 35%.</div>
+        <div class="label">The source reports use a manual/spreadsheet planning benchmark near 35%.</div>
       </div>
       <div class="kpi good">
         <div class="tag">Across Your Data</div>
@@ -303,16 +303,29 @@
 
   <div class="kpi-strip">
     <div class="kpi good">
+      <div class="tag">Value Case</div>
       <div class="num">$22M+</div>
       <div class="label">Estimated annual value case using Brian's $1M per one-point improvement framing.</div>
     </div>
     <div class="kpi">
-      <div class="num">349K / week</div>
+      <div class="tag">July 2026 Outlook</div>
+      <div class="num">349K/wk</div>
       <div class="label">Current planning signal for expected weekly demand in the July 2026 outlook.</div>
     </div>
     <div class="kpi">
+      <div class="tag">Promo Linked</div>
       <div class="num">1 in 3 units</div>
       <div class="label">Approximate share of volume tied to promotion, not purely base demand.</div>
+    </div>
+    <div class="kpi good">
+      <div class="tag">Elasticity Accuracy</div>
+      <div class="num">63%</div>
+      <div class="label">Direction accuracy on clean price moves; causal price-demand tests passed 4/4.</div>
+    </div>
+    <div class="kpi warn">
+      <div class="tag">Cannibalization Signal</div>
+      <div class="num">8-week</div>
+      <div class="label">Actionable SKU-to-SKU pressure measure identified; current static scores saturate on 90%+ of series.</div>
     </div>
   </div>
 
@@ -404,7 +417,7 @@
         <div class="tag">Across BUILT's Data</div>
         <div class="num">+167%</div>
         <p>
-          Mo improves precision by 167% by moving from the 35% industry benchmark to 13.1%.
+          Mo improves precision by 167% by moving from the 35% manual benchmark to 13.1%.
           That is about 2.7x as precise.
         </p>
       </div>
@@ -427,19 +440,29 @@
       </thead>
       <tbody>
         <tr>
-          <td class="td-warn">+/-35% benchmark confidence interval</td>
-          <td>Manual CPG forecasting is often much less precise, especially when growth is driven by distribution and promotion.</td>
-          <td>This is the industry problem Mo is built to solve.</td>
+          <td class="td-warn">+/-35% manual benchmark confidence interval</td>
+          <td>The source reports use 35% as the manual/spreadsheet comparison point, especially when growth is driven by distribution and promotion.</td>
+          <td>This is the planning uncertainty Mo is built to reduce.</td>
         </tr>
         <tr>
           <td class="td-good">+/-13.1% confidence interval over five quarters</td>
           <td>Across BUILT's own historical data, Mo tightened the average planning interval to 13.1%.</td>
-          <td>That is a 167% increase in precision versus the industry benchmark.</td>
+          <td>That is a 167% increase in precision versus the manual benchmark.</td>
         </tr>
         <tr>
           <td class="td-good">+/-4.5% confidence interval</td>
           <td>In the strongest recent test, Mo's forecast was within a 4.5% average confidence interval of what actually sold.</td>
-          <td>That is a 678% increase in precision versus the industry benchmark.</td>
+          <td>That is a 678% increase in precision versus the manual benchmark.</td>
+        </tr>
+        <tr>
+          <td class="td-good">63% price-direction accuracy</td>
+          <td>On clean, non-confounded price moves, Mo predicted whether demand moved up or down correctly 63% of the time.</td>
+          <td>You get a more defensible price-response read instead of blending price, display, feature, and distribution effects.</td>
+        </tr>
+        <tr>
+          <td class="td-warn">Cannibalization signal quality</td>
+          <td>The current static cannibalization score saturates on 90%+ of series, so the stronger measure is weekly 8-week SKU-to-SKU pressure movement.</td>
+          <td>Your team gets portfolio pressure visibility without overstating it as a validated cannibalization accuracy percentage.</td>
         </tr>
         <tr>
           <td class="td-good">$22M+ value case</td>
