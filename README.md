@@ -264,6 +264,25 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 13) — New: mo_fpa_team_brief.html — comprehensive FP&A team brief
+
+New document at `docs/mo_fpa_team_brief.html` — audience is BUILT Finance & FP&A Leadership (Bracken, Jeff, Connor); Brian presents/shares this with them.
+
+**Structure (6 sections + closing):**
+
+1. **Forecasting Foundation** — Ensemble model table (LightGBM + BSTS + SHAP + 4-week retrain). Key comparison: 4.4% at SKU×retailer level vs. BUILT's own 7-10% at total corporate — with explicit note that corporate accuracy benefits from aggregation (errors cancel); Mo achieves tighter accuracy at the harder granularity.
+2. **Cannibalization (Primary Use Case 1)** — 4-row FP&A scenario table: new flavor launch / pack expansion / revenue quality / inventory commitment. "So What? Now What?" closing.
+3. **Price Elasticity (Primary Use Case 2)** — Elasticity table (Walmart −0.245, Kroger −0.590, Ahold −1.262, Whole Foods −0.445). CausalImpact chart: +4.7% price-only vs. +28.6% total event lift at Kroger BB4pk. Trade spend ROI framing. Price scenario modeling cards.
+4. **Explainability & Audit Trail** — SHAP waterfall. Data lineage from raw SPINS to prediction. Due diligence / valuation angle (from transcript: Brian said company almost went bankrupt; finance team triple-checks everything; Rob mentioned PWC audit trail parallel). Mo Chat + auto-generated briefing per cycle.
+5. **Growth Quality & New Products** — TDP decomposition chart. 4-row growth type table (distribution-led / velocity-led / promo-led / cannibalization). Promo share (~30%) context.
+6. **What Your Team Gets** — 6 outcome cards + 90-day trust path table (Weeks 1–4 / 5–8 / 9–13) + 3 compounding input cards (promo calendar, Connor baseline, distribution changes).
+
+**Closing** — "So What? Now What?" dark two-column panel.
+
+**No 35% benchmark anywhere.** No "Prepared for Brian Cluster."
+
+---
+
 ### 2026-07-02 (update 12) — FP&A brief refined for finance audience (Bracken / Jeff / Connor)
 
 Revised `docs/brian_fpa_brief.html` per Brian/Rob/Jason transcript (Aevah Training Reports.docx, July 2 call). Brian will socialize with his finance team internally.
