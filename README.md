@@ -264,14 +264,27 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 12) — FP&A brief refined for finance audience (Bracken / Jeff / Connor)
+
+Revised `docs/brian_fpa_brief.html` per Brian/Rob/Jason transcript (Aevah Training Reports.docx, July 2 call). Brian will socialize with his finance team internally.
+
+**Key changes:**
+- **4.4% as hero headline** — Section 1 validation callout now leads with 4.4% wMAPE (Q1 2026, 13-week hold-out) vs. 24.6% moving average on the same data. 13.1% portfolio average follows. $22M ROI and $31M+ Q1 implication both stated.
+- **Benchmark language updated** — All "CPG industry benchmark" language replaced with "conservative manual/spreadsheet planning benchmark" per Rob's cpg_forecast_accuracy_external_sources.md. Brian explicitly pushed back on 35% as a standard in the call.
+- **Cannibalization as a full use case** — Section 2 now has a dedicated Cannibalization subsection (table + So What / Now What closing). Brian confirmed cannibalization + price elasticity are the two main use cases.
+- **"Forecasting inputs" framing** — Section 1 lead reworded to match Brian's own language: Mo provides "precision forecasting inputs for your FP&A process," not a replacement model.
+- **Trust-building added** — Section 3 reframed with data lineage + "how do I develop trust in it as I learn more?" + 4-week retrain cadence matches BUILT's own update cycle; briefing auto-regenerates each training run.
+- **No negative language** — "biggest blind spot" → "highest-value opportunity"; "falls back to" → neutral; Section 4 lead reframed as opportunity-positive.
+- **New closing section: "So What? Now What?"** — Dark two-column section at the end: So What = results (4.4%, elasticity, cannibalization, audit trail); Now What = path (Connor wMAPE, promo calendar, 90-day track record).
+
 ### 2026-07-02 (update 11) — Brian FP&A brief: Section 4 — open questions + roadmap
 
 Added a fourth section to `docs/brian_fpa_brief.html` (now 1.3 MB) covering the collaborative "what comes next" conversation:
 
 **Open questions table** — four named asks:
-- *Connor Lain:* Actual Excel wMAPE from any recent quarter (3–5 SKU × retailer pairs). Currently using 35% CPG benchmark; Connor's real number anchors the $22M ROI claim.
+- *Connor Lain:* Actual Excel wMAPE from any recent quarter (3–5 SKU × retailer pairs). Currently using conservative manual/spreadsheet planning benchmark; Connor's real number anchors the $22M ROI claim.
 - *Chase Sparrow / Chase Loftis:* H2 2026 promotional calendar (retailer, SKU, week, mechanic). Promo calendar is the single highest-value feature add — converts retroactive promo inference to forward-looking prediction.
-- *Connor / sales:* Planned distribution changes and planogram resets. TDP inflection points are the model's biggest blind spot; knowing them in advance closes the 4–8 week SPINS lag.
+- *Connor / sales:* Planned distribution changes and planogram resets. TDP inflection points are the key opportunity for improving forward-looking accuracy.
 - *Bracken / ops:* Sell-in shipment data access. Blending sell-in with SPINS sell-through closes the 1–4 week demand signal lag and surfaces retailer over/under-ordering risk.
 
 **6 enhancement cards:** Promo calendar, planogram/reset events, competitor ARP (live), sell-in data, macro/consumer signals, new-SKU cold-start model. Callout: promo calendar alone estimated at $3M/yr from a single spreadsheet share.
