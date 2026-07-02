@@ -264,6 +264,41 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-02 (update 10) — v2.1.1 section restoration + Brian FP&A brief
+
+**v2.1.1 section restoration (`docs/built_demand_intelligence_report_v2.1.1.html`)**
+
+v2.1.1 was silently missing sections 12–18. Root cause: those sections live **outside** the `</div><!-- /page -->` closing tag in v2.0.9 and weren't ported when v2.1.1 was created. Restored:
+
+- **12** Full Model Benchmark — 7 Methods Compared (MO_38/39)
+- **13** Feature Transparency — What the Model Is Looking At
+- **14** Model Explainability — How It Works & When to Trust It *(was duplicated in v2.0.9 — second copy removed)*
+- **15** Feature Diagnostic & Competitive Differentiation — Proving the Value Stack
+- **16** Quantile Forecast — P10/P50/P90 Scenario Bands
+- **17** BSTS / CausalImpact — Counterfactual Price Event Analysis
+- Causal DAG Analysis (MO_44) *(was duplicated — second copy removed)*
+- **18** FP&A Breakdown
+
+**Q2 reframe (Rob's direction):** "Why should I trust a number from a model I can't open?" → "How do I develop trust in the model as I learn more about it?" Applied to Section 14 Q&A panel.
+
+**Versioning rule going forward:** When bumping HTML report version, always verify `grep -c "<h2"` matches previous version. Sections 12+ must be ported from the prior version's post-`/page` tail manually. See memory `feedback_html_report_versioning.md` for the Python snippet and deduplication procedure.
+
+**New: `docs/brian_fpa_brief.html` — Rule-of-three FP&A briefing (1.2 MB)**
+
+Standalone document for Brian Cluster. Three business questions, four anchor charts, ROI KPI strip at top.
+
+| Section | Question | Anchor chart |
+|---|---|---|
+| 1 | What will BUILT sell next quarter? | Retailer-level 13-week projection (floor/plan/ceiling, top 6 accounts) |
+| 2 | What's driving those numbers? | TDP decomposition (Walmart) + CausalImpact 3-panel (Kroger price cut, Dec 2025) |
+| 3 | How does Mo explain every forecast? | SHAP waterfall BB4pk + Mo tool cards (Forecast Drawer, Mo Chat, Price Scenarios, Cannibalization Monitor) |
+
+KPI strip: 4.4% wMAPE / 35% baseline / 30.6pp gap / $22M ROI. Elasticity table per retailer. Purple "supercharger" callout: analyst shifts from building analysis to acting on it.
+
+Charts sourced from v2.1.1 by line: retailer projection (656), TDP decomposition (762), CausalImpact 3-panel context (1369 — preferred over 1373 result chart), SHAP waterfall (1168).
+
+---
+
 ### 2026-07-02 (update 9) — MO_49 promo gap chart + FP&A / Brian report embedding
 
 **MO_49 — Base vs. Total Units Promo Gap Chart (`scripts/MO_49_promo_gap_chart.py`)**
