@@ -342,6 +342,163 @@
 </div>
 
 <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SECTION 4 — OPEN QUESTIONS + WHAT'S NEXT
+════════════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-eyebrow">Looking Ahead</div>
+  <h2>Questions for BUILT + What We Build Next Together</h2>
+  <p class="lead">
+    The model is built. The accuracy is proven. The path from here depends on a few things
+    only BUILT can answer — and a clear roadmap of enhancements that can compound the accuracy
+    gains even further.
+  </p>
+
+  <!-- ── Open Questions ────────────────────────────────────────────────── -->
+  <h3 style="font-size:1.1rem;color:#1a3a5c;margin:0 0 14px">Open Questions for Brian, Connor &amp; the Team</h3>
+  <p style="font-size:14px;color:#444;line-height:1.7;margin-bottom:20px">
+    These are the inputs we need from BUILT to sharpen the model and anchor the ROI conversation
+    in your actual numbers rather than industry benchmarks.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30%">Question</th>
+        <th style="width:35%">Why it matters</th>
+        <th style="width:35%">Who can answer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>What is your current Excel forecast accuracy?</strong><br>
+            <span style="font-size:12px;color:#888">(wMAPE on 3–5 key SKU × retailer pairs, any recent quarter)</span></td>
+        <td>The $22M ROI figure uses a 35% industry-benchmark baseline. Connor's actual wMAPE could make the number larger — or more conservative and credible.</td>
+        <td><strong>Connor Lain</strong> — pulls these from existing SPINS vs. budget variance reports</td>
+      </tr>
+      <tr>
+        <td><strong>What promotions are planned for H2 2026?</strong><br>
+            <span style="font-size:12px;color:#888">(retailer, SKU, week, mechanic — TPR / display / feature)</span></td>
+        <td>The model currently <em>infers</em> promo weeks from SPINS retroactively. A forward-looking promo calendar is the single highest-value feature we could add — it turns a reactive model into a predictive one.</td>
+        <td><strong>Chase Sparrow / Chase Loftis</strong> — trade promotion planning</td>
+      </tr>
+      <tr>
+        <td><strong>Are there distribution changes planned?</strong><br>
+            <span style="font-size:12px;color:#888">(shelf resets, new retailer launches, planogram expansions)</span></td>
+        <td>TDP inflection points are the model's biggest blind spot. A planned Walmart reset that triples distribution isn't in SPINS until 4–8 weeks after execution. Knowing it in advance closes that gap entirely.</td>
+        <td><strong>Connor Lain / Sales team</strong> — customer planning calendars</td>
+      </tr>
+      <tr>
+        <td><strong>Can we connect to BUILT's sell-in data?</strong><br>
+            <span style="font-size:12px;color:#888">(shipments to retailer DCs, by SKU by week)</span></td>
+        <td>SPINS is sell-through (what consumers buy). BUILT's shipments are sell-in (what retailers order). Blending both closes the 1–4 week demand signal lag and enables early detection of retailer over/under-ordering.</td>
+        <td><strong>Bracken Palmer / ops team</strong> — ERP / order management access</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Forecast Enhancements ─────────────────────────────────────────── -->
+  <h3 style="font-size:1.1rem;color:#1a3a5c;margin:40px 0 14px">What We Could Blend In to Make Forecasting Even Sharper</h3>
+  <p style="font-size:14px;color:#444;line-height:1.7;margin-bottom:20px">
+    The current model uses 27 features derived entirely from SPINS POS data.
+    Each of the following additions would compound accuracy gains — and most require
+    only a data share from BUILT, not new infrastructure.
+  </p>
+
+  <div class="tool-grid">
+    <div class="tool-card">
+      <div class="icon">📅</div>
+      <h4>Promotional Calendar</h4>
+      <p>Forward-looking promo dates (TPR, display, feature) as explicit model features. Currently the model infers these retroactively. Adding them ahead of time is the fastest path to further accuracy improvement — especially for trade-heavy SKUs.</p>
+    </div>
+    <div class="tool-card">
+      <div class="icon">🏪</div>
+      <h4>Planogram &amp; Reset Events</h4>
+      <p>Shelf resets and new distribution commitments as forward-looking TDP signals. When a major retailer adds 800 stores, the model should know before SPINS reflects it — not 6 weeks later.</p>
+    </div>
+    <div class="tool-card">
+      <div class="icon">🏷️</div>
+      <h4>Competitor Pricing (Live)</h4>
+      <p>Competitor ARP as a time-varying signal, updated every SPINS cycle. Currently the model uses static competitor benchmarks. When a competitor cuts price aggressively, Mo should see it the same week and adjust the demand forecast accordingly.</p>
+    </div>
+    <div class="tool-card">
+      <div class="icon">📦</div>
+      <h4>Sell-In / Shipment Data</h4>
+      <p>BUILT's own shipment data blended with SPINS sell-through. Closes the 1–4 week lag in demand detection and surfaces retailer over/under-ordering patterns that indicate upcoming shelf voids or excess inventory risk.</p>
+    </div>
+    <div class="tool-card">
+      <div class="icon">🌍</div>
+      <h4>Macro &amp; Consumer Signals</h4>
+      <p>CPI (protein / health food sub-index), consumer confidence, and weather as lightweight external regressors. These matter most for quarterly planning horizons where short-term demand patterns give way to macro trends.</p>
+    </div>
+    <div class="tool-card">
+      <div class="icon">🚀</div>
+      <h4>New SKU Cold-Start Model</h4>
+      <p>SKUs under 52 weeks of history currently fall back to a moving average — the model can't use its full feature set. A cold-start bootstrap using category velocity benchmarks and similar-SKU launch curves would improve accuracy on BUILT's newest products.</p>
+    </div>
+  </div>
+
+  <div class="callout green" style="margin-top:28px">
+    <strong>Compounding effect:</strong> Each enhancement is additive. The promo calendar alone
+    could drop wMAPE by an estimated 3–5pp on high-velocity, promotion-heavy SKUs.
+    At $1M per 1pp, a 3pp improvement from a single data share is worth $3M annually —
+    and it requires nothing from Mo's infrastructure, only a spreadsheet from Chase's team.
+  </div>
+
+  <!-- ── Mo Roadmap ─────────────────────────────────────────────────────── -->
+  <h3 style="font-size:1.1rem;color:#1a3a5c;margin:40px 0 14px">Mo Roadmap — What's Coming</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:25%">Feature</th>
+        <th style="width:45%">What it does</th>
+        <th style="width:30%">Timeline / status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Accuracy Tracker</strong></td>
+        <td>Rolling wMAPE by SKU × account, visible to Jeff and Bracken — so they can watch accuracy improve over time as new SPINS cycles arrive and the model retrains.</td>
+        <td>Phase 2 — next sprint</td>
+      </tr>
+      <tr>
+        <td><strong>Total Units Forecast in Mo UI</strong></td>
+        <td>Forecast drawer currently shows base-unit demand. Adding total units (base + promo) gives trade teams the full revenue picture — and surfaces the earned-vs.-promotional split visually.</td>
+        <td>Ready — Druid live as of today</td>
+      </tr>
+      <tr>
+        <td><strong>Quarterly Retraining</strong></td>
+        <td>Model retrains every SPINS cycle on a rolling window. Accuracy degrades ~18pp if not retrained for 4 quarters. Automated retraining keeps the advantage compounding, not decaying.</td>
+        <td>In production now</td>
+      </tr>
+      <tr>
+        <td><strong>Time-Varying Signals (Phase 2)</strong></td>
+        <td>Rolling cannibalization pressure (8-week Pearson correlation) and rolling price elasticity (13-week OLS) replace static scores — so Mo sees competitive dynamics as they shift week by week, not just as historical averages.</td>
+        <td>Pipeline complete (MO_46); UI wiring next</td>
+      </tr>
+      <tr>
+        <td><strong>Microsoft Copilot Integration</strong></td>
+        <td>Mo's AI layer can connect to BUILT's internal Azure / Copilot token via a standard OpenAI-compatible endpoint. Connor's team could query Mo directly from Teams or Excel — no separate login required.</td>
+        <td>Architecture ready; requires BUILT IT handshake</td>
+      </tr>
+      <tr>
+        <td><strong>Self-Demo / Explainer Mode</strong></td>
+        <td>"Mo, walk Brian through what happened at Kroger last quarter." Mo narrates the screen, cites the causal analysis, and surfaces the recommended action — without anyone driving the mouse.</td>
+        <td>Future / Phase 3</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top:20px">
+    <strong>The compounding model:</strong> Every SPINS cycle, the model retrains on more data.
+    Every data share from BUILT (promo calendar, planogram, sell-in) adds a new signal layer.
+    Every quarter of production use builds the accuracy track record Jeff and Bracken need
+    to expand the engagement. The system gets smarter the longer it runs — and it's already running.
+  </div>
+</div>
+
 <footer>
   Aevah Mo Intelligence &nbsp;·&nbsp; Powered by SPINS POS Data &nbsp;·&nbsp;
   ML pipeline: MO_16 – MO_49 &nbsp;·&nbsp; Generated July 02, 2026 &nbsp;·&nbsp; Confidential
