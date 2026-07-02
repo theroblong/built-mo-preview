@@ -51,9 +51,32 @@
   }
   .kpi-strip {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     margin: 0 0 30px;
+  }
+  .ci-panel {
+    background: #fff;
+    border: 1px solid #dce3ee;
+    border-radius: 10px;
+    padding: 28px 30px 30px;
+    margin: 0 0 22px;
+  }
+  .ci-panel h2 {
+    margin: 0 0 8px;
+    font-size: 1.42rem;
+    color: #172033;
+  }
+  .ci-lead {
+    max-width: 880px;
+    margin: 0 0 18px;
+    color: #405060;
+    font-size: 1rem;
+  }
+  .ci-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
   }
   .kpi {
     background: #fff;
@@ -70,6 +93,14 @@
     line-height: 1.05;
     font-weight: 800;
     color: #1f5fbf;
+  }
+  .kpi .tag {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #5b6a7a;
+    margin-bottom: 8px;
   }
   .kpi.good .num { color: #168a4f; }
   .kpi.warn .num { color: #a65f00; }
@@ -177,14 +208,15 @@
   }
   @media (max-width: 980px) {
     .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ci-grid { grid-template-columns: 1fr; }
     .answer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 760px) {
     .page { padding: 24px 16px 40px; }
     .cover { padding: 32px 26px; }
     h1 { font-size: 1.82rem; }
-    .two-col, .three-col, .answer-grid { grid-template-columns: 1fr; }
-    .section { padding: 26px 22px; }
+    .two-col, .three-col, .answer-grid, .kpi-strip { grid-template-columns: 1fr; }
+    .section, .ci-panel { padding: 26px 22px; }
   }
 </style>
 </head>
@@ -202,19 +234,34 @@
     <div class="meta">Prepared July 2, 2026 - Aevah + BUILT</div>
   </div>
 
+  <div class="ci-panel">
+    <h2>Confidence Intervals</h2>
+    <p class="ci-lead">
+      The story is straightforward: the industry standard confidence interval is about 35%.
+      Across BUILT's data, Mo tightens that to 13.1%. In the strongest forecasts, Mo reaches
+      4.5%. That is a large improvement delivered at real-time refresh speed and scalable across
+      SKU-retailer planning.
+    </p>
+    <div class="ci-grid">
+      <div class="kpi warn">
+        <div class="tag">Industry Standard</div>
+        <div class="num">+/-35%</div>
+        <div class="label">Manual CPG forecasting benchmarks often carry a planning confidence interval near 35%.</div>
+      </div>
+      <div class="kpi good">
+        <div class="tag">Across Your Data</div>
+        <div class="num">+/-13.1%</div>
+        <div class="label">Across five quarters of BUILT data, Mo's average confidence interval was 13.1% from actual demand.</div>
+      </div>
+      <div class="kpi good">
+        <div class="tag">Strongest Forecasts</div>
+        <div class="num">+/-4.5%</div>
+        <div class="label">In the strongest holdout test, Mo's forecast landed inside a 4.5% average confidence interval.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="kpi-strip">
-    <div class="kpi good">
-      <div class="num">+/-4.5%</div>
-      <div class="label">In the strongest holdout test, Mo's forecast landed inside a 4.5% average planning confidence interval.</div>
-    </div>
-    <div class="kpi good">
-      <div class="num">+/-13.1%</div>
-      <div class="label">Across five quarters, Mo's average planning confidence interval was 13.1% from actual demand.</div>
-    </div>
-    <div class="kpi warn">
-      <div class="num">+/-35%</div>
-      <div class="label">Manual CPG forecasting benchmarks often carry a planning confidence interval near 35%.</div>
-    </div>
     <div class="kpi good">
       <div class="num">$22M+</div>
       <div class="label">Estimated annual value case using Brian's $1M per one-point improvement framing.</div>
@@ -327,19 +374,19 @@
       </thead>
       <tbody>
         <tr>
-          <td class="td-good">+/-4.5% confidence interval</td>
-          <td>In the best recent test, Mo's forecast was within a 4.5% average confidence interval of what actually sold.</td>
-          <td>Good enough to use as a serious planning input, not just a directional signal.</td>
+          <td class="td-warn">+/-35% benchmark confidence interval</td>
+          <td>Manual CPG forecasting is often much less precise, especially when growth is driven by distribution and promotion.</td>
+          <td>This is the industry problem Mo is built to solve.</td>
         </tr>
         <tr>
           <td class="td-good">+/-13.1% confidence interval over five quarters</td>
-          <td>The result held up over multiple planning periods, not just one favorable test.</td>
-          <td>Supports a recurring quarterly process rather than a one-time analysis.</td>
+          <td>Across BUILT's own historical data, Mo tightened the average planning interval to 13.1%.</td>
+          <td>The improvement is large enough to justify a finance validation sprint.</td>
         </tr>
         <tr>
-          <td class="td-warn">+/-35% benchmark confidence interval</td>
-          <td>Manual CPG forecasting is often much less precise, especially when growth is driven by distribution and promotion.</td>
-          <td>The gap is large enough to justify a finance validation sprint.</td>
+          <td class="td-good">+/-4.5% confidence interval</td>
+          <td>In the strongest recent test, Mo's forecast was within a 4.5% average confidence interval of what actually sold.</td>
+          <td>Shows what the strongest version of the system can deliver at real-time refresh speed and at scale.</td>
         </tr>
         <tr>
           <td class="td-good">$22M+ value case</td>
