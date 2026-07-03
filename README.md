@@ -264,6 +264,24 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-03 (update 18) — Fix year-56M timestamps in forecast chart
+
+**Bug:** SKU View forecast drawer showed dates like `56375475-04-11T00:00:00.000Z` at the right edge of the x-axis for forecast weeks 4–13 (confirmed at Kroger for BB 4pk).
+
+**Root cause:** PyArrow serializes pandas `datetime64[ns]` columns as INT64 nanoseconds in parquet files. Druid's `timestampSpec "format": "iso"` misreads those raw nanosecond integers as epoch milliseconds — a nanosecond timestamp for April 2026 (≈ 1.745 × 10¹⁸ ns) interpreted as epoch-ms maps to year ≈ 56,317,979. The bad data accumulated from multiple `appendToExisting: true` ingest runs and coexisted with valid rows.
+
+**Three-layer fix:**
+
+1. **`scripts/mo_writeback.py`** (prevents recurrence): `upload_parquet()` now converts the timestamp column to `"%Y-%m-%dT%H:%M:%S.000Z"` ISO string before writing parquet — Druid always sees a real string, regardless of PyArrow version.
+
+2. **`app/routers/retailer.py`** (rejects surviving bad rows): Added `WHERE __time BETWEEN TIMESTAMP '2020-01-01' AND TIMESTAMP '2030-01-01'` to forecast query.
+
+3. **`app/routers/retailer.py`** (dedup): Added deduplication by `forecast_week_number` per series — prior `appendToExisting` ingests also left 3–9× valid row duplicates.
+
+**Remaining action:** Next MO_27 run should re-ingest `retailer_sales_forecast` with `appendToExisting: false` to clean out all stale/corrupt Druid segments.
+
+---
+
 ### 2026-07-03 (update 17) — BUILT SKU expansion: what "3.5 → 7.5 SKUs" means
 
 **Question:** What is meant by "BUILT expanded from roughly 3.5 SKUs to 7.5 SKUs in a year"?
