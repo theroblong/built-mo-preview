@@ -264,6 +264,35 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-03 (update 17) — BUILT SKU expansion: what "3.5 → 7.5 SKUs" means
+
+**Question:** What is meant by "BUILT expanded from roughly 3.5 SKUs to 7.5 SKUs in a year"?
+
+This refers to **average items per store** (items per ACV store), not a raw count of distinct UPCs. BUILT has well over 100 UPCs in SPINS — the figure is a rate, not a headcount.
+
+**Metric definition:**
+
+> Total TDP across all BUILT UPCs ÷ Number of stores carrying any BUILT product
+
+If 1,000 stores each stock an average of 3.5 BUILT UPCs, the "SKU count" is 3.5. When that rises to 7.5, each store now carries roughly double the number of BUILT items on shelf.
+
+**What the growth story is:**
+
+BUILT is getting **deeper shelf placement within existing retailers**, not just entering new stores. Each retail partner went from allocating roughly a 3–4 item set to a 7–8 item set. Staggered first-dates in SPINS confirm this — new flavors, new pack sizes (4-pk, 12-pk, 18-pk variants of the same flavor), and new sub-lines (BUILT PUFF → BUILT SOUR PUFF) all hitting SPINS at different points, each adding a new shelf slot.
+
+**Why fractional (3.5, 7.5):**
+
+Not every store carries the same assortment. Walmart may carry 10 items while a regional grocery carries 2. The average across all stores distributing BUILT lands at a non-integer.
+
+**SKU layering visible in SPINS data:**
+- Core flavors (Brownie Batter, Coconut, Churro) — first date 2023-03-26 — the original set
+- 4-pk / 12-pk multipacks — mid-to-late 2023 — same flavor, new UPC, new shelf slot
+- BUILT SOUR PUFF sub-brand — Sep 2025 — entirely new SKU slot per store
+
+Each layer multiplies the store-level item count without requiring new store footprint. That is the 3.5 → 7.5 story.
+
+---
+
 ### 2026-07-03 (update 16) — v2.1.2 full name sweep: all employee names → role-based language
 
 Complete pass over `docs/built_demand_intelligence_report_v2.1.2.html` to remove every employee name reference:
