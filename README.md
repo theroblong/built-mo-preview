@@ -264,6 +264,17 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-03 (update 19) — Unify "Insufficient Price Variation" / "Price Stable" in SKU View
+
+Two visually different states were showing for the same elasticity condition (no price movement → model can't estimate):
+
+- Rows where the pipeline returned `elasticity_band = "Insufficient Price Variation"` showed the raw string with a bare tooltip (no `ELAST_TIPS` entry → label repeated itself)
+- Rows where `elasticity_band` was null but scan data existed showed a muted gray "Price Stable" badge with a full explanation
+
+**Fix:** Added "Insufficient Price Variation" to `ELAST_TIPS`; added an explicit render branch that shows the same muted "Price Stable" badge + full tooltip for both paths. Single source of truth for tooltip text.
+
+---
+
 ### 2026-07-03 (update 18) — Fix year-56M timestamps in forecast chart
 
 **Bug:** SKU View forecast drawer showed dates like `56375475-04-11T00:00:00.000Z` at the right edge of the x-axis for forecast weeks 4–13 (confirmed at Kroger for BB 4pk).
