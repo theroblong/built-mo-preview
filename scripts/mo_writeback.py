@@ -49,9 +49,17 @@ def _s3_client():
     )
 
 
-def upload_parquet(df: pd.DataFrame, minio_key: str) -> str:
+def upload_parquet(df: pd.DataFrame, minio_key: str, timestamp_col: str | None = None) -> str:
     """Write df to parquet locally, upload to MinIO, return s3:// URI."""
     local_path = f"outputs/{Path(minio_key).name}"
+    df = df.copy()
+    # Serialize timestamp column as ISO string so Druid "format":"iso" always works.
+    # PyArrow otherwise writes datetime64[ns] as INT64 nanoseconds, which Druid can
+    # misinterpret as epoch-milliseconds and produce year-56-million timestamps.
+    if timestamp_col and timestamp_col in df.columns:
+        df[timestamp_col] = pd.to_datetime(df[timestamp_col], utc=True).dt.strftime(
+            "%Y-%m-%dT%H:%M:%S.000Z"
+        )
     df.to_parquet(local_path, engine="pyarrow", index=False)
     print(f"  Wrote {len(df):,} rows → {local_path}")
     _s3_client().upload_file(local_path, MINIO_BUCKET, minio_key)
@@ -124,7 +132,7 @@ def write_back(
         minio_key = f"{datasource}/{date_str}/{datasource}.parquet"
 
     print(f"\nWrite-back: {datasource}")
-    uri = upload_parquet(df, minio_key)
+    uri = upload_parquet(df, minio_key, timestamp_col=timestamp_col)
     spec = build_ingest_spec(datasource, uri, timestamp_col, list(df.columns))
 
     spec_path = f"outputs/{datasource}_ingest_spec.json"
