@@ -264,6 +264,19 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-03 (update 16) — v2.1.2 full name sweep: all employee names → role-based language
+
+Complete pass over `docs/built_demand_intelligence_report_v2.1.2.html` to remove every employee name reference:
+
+- **Cover meta**: "Brian Cluster, Jeff Thompson, Connor Lain, Chase Sparrow, Rob" → "BUILT Finance & FP&A Leadership"
+- **Brian references (6)**: "Brian's $1M/1pp framing" / "per Brian's framing" / "Brian established the framing" / "Brian Cluster's $1M per 1pp" → "the $1M per 1pp planning framing" / "the planning framing for this analysis"
+- **Connor references (15)**: "Connor's Excel process" → "BUILT's current Excel process"; "Connor to share forecasts" → "BUILT to share forecasts"; "Connor's quarterly workflow" → "BUILT's quarterly workflow"; appendix credits → "Jun 26 FP&A team question" / "BUILT Finance leadership questions"
+- **Chase references (4)**: "Chase's use case" → "trade planning use case"; "This gives Chase..." → "This gives your trade team..."
+- **Jeff + Bracken references (5)**: "visible to Jeff and Bracken" → "visible to BUILT's finance leadership"; "Jeff's inventory commitments" → "Inventory and purchasing commitments"; "Connor, Chase, and Jeff have weekly" → "your FP&A, trade, and finance teams have weekly"
+- **Preserved (not names)**: "Roboto" (CSS font), "Robustness" (section header), "robust" (adjective)
+
+---
+
 ### 2026-07-02 (update 15) — Rob feedback pass: abbreviation expansion, ensemble explanation, KPI progression, name removal
 
 Applied feedback from **Call with Jason Brazeal.docx** transcript (Jul 2 call with Rob):
