@@ -264,6 +264,23 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 24) — FP&A report pipeline fully automated
+
+**HTML patch chain unified (MO_42, 43, 45, 44):** All patching scripts now write to `scripts/outputs/built_demand_intelligence_report.html` in place — the same pattern MO_40 and MO_41 already used. Previously, MO_45 read `docs/v2.0.7.html` and MO_44 read `docs/v2.0.8.html`, breaking the in-place chain and requiring manual porting of sections 12–18 on every version bump. That is resolved.
+
+**Orchestration script:** `run_fpa_report.sh` written at repo root. Accepts a version argument, chains all phases in correct order, validates every declared script exists before running (catches renames/additions immediately), and copies the final HTML to `docs/` with the version stamp applied. Do not run without authorization from Jason, Rob, or Brian.
+
+```bash
+./run_fpa_report.sh 2.1.3            # full run
+./run_fpa_report.sh 2.1.3 --skip-training   # HTML assembly only
+```
+
+**Keeping in sync:** Script registry arrays (`DATA_PHASE1–4`, `HTML_CHAIN`) at the top of `run_fpa_report.sh` are the canonical list. Update them when adding/removing/renaming any MO script.
+
+**Remaining manual step:** After MO_27, re-ingest `retailer_sales_forecast` into Druid with `appendToExisting: false` (edit the ingest spec manually).
+
+---
+
 ### 2026-07-06 (update 23) — Focused FP&A chain review: MO_25→MO_48
 
 Full review of the FP&A report generation chain. All 29 charts present (MO_36 needs 16, MO_48 needs 13 — all ✅). All JSON schema keys consistent across all 9 JSON files in the chain.

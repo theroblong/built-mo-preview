@@ -47,10 +47,8 @@ from neuralforecast.models import GRU
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR    = os.path.join(SCRIPT_DIR, "outputs")
 PARQUET    = os.path.join(OUT_DIR, "retailer_sales_weekly.parquet")
-HTML_IN    = os.path.join(SCRIPT_DIR, "..", "docs",
-                          "built_demand_intelligence_report_v2.0.7.html")
-HTML_OUT   = os.path.join(SCRIPT_DIR, "..", "docs",
-                          "built_demand_intelligence_report_v2.0.8.html")
+HTML_IN    = os.path.join(SCRIPT_DIR, "outputs", "built_demand_intelligence_report.html")
+HTML_OUT   = os.path.join(SCRIPT_DIR, "outputs", "built_demand_intelligence_report.html")
 
 PALETTE = {
     "blue":  "#2563eb", "green": "#16a34a", "amber": "#d97706",
@@ -715,14 +713,11 @@ if ANCHOR in html:
 else:
     html = html.replace("</body>", html_section18 + "\n</body>")
 
-html = html.replace("v2.0.7", "v2.0.8")
-html = html.replace("Version 2.0.7", "Version 2.0.8")
-
 with open(HTML_OUT, "w", encoding="utf-8") as f:
     f.write(html)
 
 size_mb = os.path.getsize(HTML_OUT) / 1_048_576
-print(f"[MO_45] HTML v2.0.8 → {HTML_OUT}  ({size_mb:.1f} MB)")
+print(f"[MO_45] HTML patched → {HTML_OUT}  ({size_mb:.1f} MB)")
 
 # ── Final summary ──────────────────────────────────────────────────────────
 print()

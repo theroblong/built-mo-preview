@@ -14,7 +14,7 @@ Outputs
   docs/built_demand_intelligence_report_v2.0.5.html
 """
 
-import os, sys, base64, warnings, shutil
+import os, sys, base64, warnings
 warnings.filterwarnings("ignore")
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -582,17 +582,12 @@ def main():
     )
     with open(REPORT_PATH, "r", encoding="utf-8") as f:
         html = f.read()
-    html = html.replace("v2.0.4", "v2.0.5")
     html = html.replace("</body>", section16 + "\n</body>", 1)
     with open(REPORT_PATH, "w", encoding="utf-8") as f:
         f.write(html)
 
-    dest = os.path.join(DOCS_DIR, "built_demand_intelligence_report_v2.0.5.html")
-    shutil.copy2(REPORT_PATH, dest)
-
     size_mb = os.path.getsize(REPORT_PATH) / 1e6
-    print(f"  Report → v2.0.5  ({size_mb:.1f} MB)")
-    print(f"  Saved: docs/built_demand_intelligence_report_v2.0.5.html")
+    print(f"  Report patched  ({size_mb:.1f} MB)")
 
     # ── Summary ────────────────────────────────────────────────────────────────
     print("\n" + "=" * 70)

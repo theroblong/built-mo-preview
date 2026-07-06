@@ -203,8 +203,10 @@ if __name__ == "__main__":
         print("  WARNING: v2_mo44_account_elasticity.json missing — using fallback ε values")
 
     # Key stats from metrics — loaded from JSON, not hardcoded
-    lgbm_dec25  = m33.get("accuracy", {}).get("Rolling LightGBM q50", 4.3)
-    ma13_dec25  = m33.get("accuracy", {}).get("MA 13wk", 24.6)
+    lgbm_dec25   = m33.get("accuracy", {}).get("Rolling LightGBM q50", 4.3)
+    ma13_dec25   = m33.get("accuracy", {}).get("MA 13wk", 24.6)
+    stale_dec25  = m33.get("accuracy", {}).get("Stale LightGBM", 23.3)
+    accuracy_gap = round(ma13_dec25 - lgbm_dec25)
     retrain_gain = m32b.get("retrain_gain_pp", 14.1)
     q50_weekly  = int(m35.get("projection", {}).get("q50_avg_weekly", 328606))
     q10_total   = int(m35.get("projection", {}).get("q10_total", 3681269))
@@ -258,26 +260,32 @@ if __name__ == "__main__":
   {_kpi("Retraining Gain", f"+{retrain_gain:.0f}pp", "rolling vs. stale model", "#2980b9")}
   {_kpi("Event Validation", dir_acc_clean if m47 else "Run MO_47", "direction accuracy (clean moves)", "#27ae60" if m47 else "#aaa")}
 </div>"""
+    _exec_intro = (
+        "<strong>What you're looking at:</strong> This is the forecasting and intelligence infrastructure "
+        "we've built for BUILT on top of the SPINS dataset. It does three things that Excel can't:"
+        '<ul style="margin:8px 0 0 20px">'
+        f"<li><strong>Forecasts accurately</strong> — {lgbm_dec25:.1f}% average error vs. ~{ma13_dec25:.0f}% for moving-average baselines, "
+        "validated across three independent time periods spanning 2024–2026.</li>"
+        "<li><strong>Explains itself</strong> — every forecast is decomposable into named business drivers "
+        "(distribution momentum, price moves, year-ago demand, competitive pressure). "
+        "A good analyst would weigh the same factors; this does it at scale, every week.</li>"
+        f"<li><strong>Gets smarter over time</strong> — quarterly retraining closes the accuracy gap that "
+        f"opens as BUILT's portfolio evolves. A stale model degrades from {lgbm_dec25:.1f}% to {stale_dec25:.1f}% within a year.</li>"
+        "</ul>"
+    )
     s1_body = f"""
 {s1_kpis}
-{_callout("""
-<strong>What you're looking at:</strong> This is the forecasting and intelligence infrastructure
-we've built for BUILT on top of the SPINS dataset. It does three things that Excel can't:
-<ul style="margin:8px 0 0 20px">
-<li><strong>Forecasts accurately</strong> — 4.3% average error vs. ~25% for moving-average baselines,
-validated across three independent time periods spanning 2024–2026.</li>
-<li><strong>Explains itself</strong> — every forecast is decomposable into named business drivers
-(distribution momentum, price moves, year-ago demand, competitive pressure).
-A good analyst would weigh the same factors; this does it at scale, every week.</li>
-<li><strong>Gets smarter over time</strong> — quarterly retraining closes the accuracy gap that
-opens as BUILT's portfolio evolves. A stale model degrades from 4.3% to 23.3% within a year.</li>
-</ul>
-""", "#1a3a5c", "#eef2f9")}"""
+{_callout(_exec_intro, "#1a3a5c", "#eef2f9")}"""
     s1 = _section("Executive Summary", s1_body, "exec-summary")
 
     # Section 2: Accuracy Proof
     s2_body = f"""
-{_callout("At the December 2025 cutpoint, the model was <strong>4.3% wMAPE</strong> on a 13-week out-of-sample test across 164 SKU × retailer series. The best no-feature baseline (MA 13wk) was <strong>24.6%</strong> — a 20pp gap. At Brian's own framing of $1M per 1% MAPE improvement, that's a <strong>~$20M accuracy advantage</strong>.", "#1a3a5c")}
+{_callout(
+    f"At the December 2025 cutpoint, the model was <strong>{lgbm_dec25:.1f}% wMAPE</strong> on a 13-week out-of-sample test across 164 SKU × retailer series. "
+    f"The best no-feature baseline (MA 13wk) was <strong>{ma13_dec25:.1f}%</strong> — a {accuracy_gap}pp gap. "
+    f"At the $1M per 1% MAPE improvement framing, that's a <strong>~${accuracy_gap}M accuracy advantage</strong>.",
+    "#1a3a5c"
+)}
 {_two_col(
     _img(OUTPUTS / "v2_mo37_chart2_horse_race.png",
          "Brownie Batter 4pk at Walmart — actual demand vs. all methods. "
@@ -426,7 +434,7 @@ series simultaneously, every week, without the analyst having to ask.
 
     # Section 7: Retraining
     s7_body = f"""
-{_callout(f"A model trained once and left for a year degrades from <strong>4.4% to 23.3% error</strong> as BUILT's portfolio evolves (new SKUs launch, distribution expands, competitive dynamics shift). Quarterly retraining recovered <strong>+{retrain_gain:.0f}pp</strong> of that accuracy across five consecutive quarters. Retraining is not a nice-to-have — it's the system's heartbeat.", "#c0392b", "#fdecea")}
+{_callout(f"A model trained once and left for a year degrades from <strong>{lgbm_dec25:.1f}% to {stale_dec25:.1f}% error</strong> as BUILT's portfolio evolves (new SKUs launch, distribution expands, competitive dynamics shift). Quarterly retraining recovered <strong>+{retrain_gain:.0f}pp</strong> of that accuracy across five consecutive quarters. Retraining is not a nice-to-have — it's the system's heartbeat.", "#c0392b", "#fdecea")}
 {_img(OUTPUTS / "v2_mo32b_retrain_value.png",
       f"Rolling retrain (13.1% wMAPE) vs. stale model (27.1%) vs. MA 13wk (25.0%) across "
       f"five consecutive quarters of 2025–2026. Retraining gain: +{retrain_gain:.0f}pp overall, "

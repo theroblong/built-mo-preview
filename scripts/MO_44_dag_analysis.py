@@ -37,10 +37,8 @@ from dowhy import CausalModel
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR    = os.path.join(SCRIPT_DIR, "outputs")
 DATA_PATH  = os.path.join(SCRIPT_DIR, "outputs", "retailer_sales_weekly.parquet")
-HTML_IN    = os.path.join(SCRIPT_DIR, "..", "docs",
-                          "built_demand_intelligence_report_v2.0.8.html")
-HTML_OUT   = os.path.join(SCRIPT_DIR, "..", "docs",
-                          "built_demand_intelligence_report_v2.1.0.html")
+HTML_IN    = os.path.join(SCRIPT_DIR, "outputs", "built_demand_intelligence_report.html")
+HTML_OUT   = os.path.join(SCRIPT_DIR, "outputs", "built_demand_intelligence_report.html")
 
 PALETTE = {
     "blue":   "#2563eb",
@@ -766,15 +764,11 @@ else:
     # Fallback: insert before </body>
     html = html.replace("</body>", html_section17 + "\n</body>")
 
-# Update version watermark
-html = html.replace("v2.0.8", "v2.1.0")
-html = html.replace("Version 2.0.8", "Version 2.0.9")
-
 with open(HTML_OUT, "w", encoding="utf-8") as f:
     f.write(html)
 
 size_mb = os.path.getsize(HTML_OUT) / 1_048_576
-print(f"[MO_44] HTML v2.1.0 written → {HTML_OUT}  ({size_mb:.1f} MB)")
+print(f"[MO_44] HTML patched → {HTML_OUT}  ({size_mb:.1f} MB)")
 
 # ── 16. Summary ────────────────────────────────────────────────────────────
 print()
