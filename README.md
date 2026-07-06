@@ -264,6 +264,20 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 20) — Visual confirmation: MULO fix now visible in Trends charts
+
+Observed in Mo Trends for C&C Puff (1ct + 4pk + 12pk) at Kroger + Walmart — the MULO velocity undercount fix applied 2026-07-01 is now clearly visible:
+
+**Multi-Retailer Velocity:** Walmart and Kroger now move in lockstep — seasonal rhythms (Jan health spike, summer softness) appear consistently in both lines. Before the fix, Kroger showed <1% of actual volume (most of its SPINS data lives in `CONVENTIONAL|MULTI OUTLET` which was excluded).
+
+**Distribution Arc (TDP):** Both retailers now show parallel growth curves from near-zero to ~60–70 TDP, reflecting their similar store-expansion timelines for the C&C Puff suite. Before the fix, Kroger TDP was near-zero.
+
+**Why it's safe (not double-counting):** The `retail_account IN ('KROGER','WALMART')` filter scopes MULO rows to that retailer's named data only — the national MULO aggregate does not bleed in. Post-query dedup in `trends.py` removes any remaining per-channel / MULO overlap.
+
+**Root cause reminder (fixed 2026-07-01):** `trends.py` SQL now uses `where_ch = ""` (include all channels) when named accounts are specified, rather than `AND channel_outlet != 'CONVENTIONAL|MULTI OUTLET'`. Pack Crossover still excludes MULO to avoid aggregating national totals.
+
+---
+
 ### 2026-07-03 (update 19) — Unify "Insufficient Price Variation" / "Price Stable" in SKU View
 
 Two visually different states were showing for the same elasticity condition (no price movement → model can't estimate):
