@@ -58,34 +58,34 @@ DEST="$DOCS/built_demand_intelligence_report_v${VERSION}.html"
 # Canonical list of every script this pipeline calls. Update here first.
 
 DATA_PHASE1=(
-  MO_25_retailer_actuals
-  MO_26_lgbm_train
-  MO_27_forecast_writeback
+  MO_25_retailer_sales_actuals
+  MO_26_retailer_sales_train
+  MO_27_retailer_sales_forecast
 )
 DATA_PHASE2=(
-  MO_32B_rolling_accuracy
+  MO_32B_quarterly_rollforward
 )
 DATA_PHASE3=(
-  MO_33_accuracy_charts
-  MO_34_ensemble_analysis
+  MO_33_fpa_business_charts
+  MO_34_ensemble_trigger
   MO_35_forward_projection
-  MO_37_sku_story_charts
+  MO_37_sku_stories
 )
 DATA_PHASE4=(
-  MO_38_benchmark_comparison
+  MO_38_model_benchmark
   MO_40_explainability
   MO_43_causal_impact
   MO_44_dag_analysis
   MO_47_event_validation
 )
 HTML_CHAIN=(
-  MO_36_html_report      # base HTML
-  MO_40_explainability   # §14 SHAP
-  MO_41_feature_diagnostic  # §15
-  MO_42_quantile_forecast   # §16
-  MO_43_causal_impact       # §17a
-  MO_45_gru_benchmark       # §18
-  MO_44_dag_analysis        # §17b DAG / elasticity
+  MO_36_report             # base HTML
+  MO_40_explainability     # §14 SHAP
+  MO_41_feature_diagnostic # §15
+  MO_42_quantile_forecast  # §16
+  MO_43_causal_impact      # §17a
+  MO_45_gru_benchmark      # §18
+  MO_44_dag_analysis       # §17b DAG / elasticity
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────
@@ -96,7 +96,9 @@ for s in "${ALL_SCRIPTS[@]}"; do
   [[ -f "$SCRIPTS/${s}.py" ]] || MISSING+=("${s}.py")
 done
 # Deduplicate (scripts appear in both DATA and HTML arrays)
-MISSING=($(printf '%s\n' "${MISSING[@]}" | sort -u))
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+  MISSING=($(printf '%s\n' "${MISSING[@]}" | sort -u))
+fi
 if [[ ${#MISSING[@]} -gt 0 ]]; then
   echo "Error: missing scripts — update run_fpa_report.sh registry:"
   printf '  %s\n' "${MISSING[@]}"
@@ -119,7 +121,7 @@ if [[ "$SKIP_TRAINING" == "false" ]]; then
   for s in "${DATA_PHASE3[@]}"; do python "${s}.py"; done
 
   log "Phase 4: Explainability + event data"
-  python MO_38_benchmark_comparison.py
+  python MO_38_model_benchmark.py
   python MO_40_explainability.py        # needs MO_38 CSV
   python MO_43_causal_impact.py
   python MO_44_dag_analysis.py

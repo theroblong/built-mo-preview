@@ -53,6 +53,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
+import matplotlib.lines as mlines
 import lightgbm as lgb
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
@@ -434,8 +435,9 @@ def chart_segment_heatmap(df_meta, stats, out_path):
     for ci, (hdr, cx) in enumerate(zip(col_labels, col_x)):
         ax2.text(cx, y_start, hdr, fontsize=8.5, fontweight="bold", va="top",
                  color="#1a1a2e", transform=ax2.transAxes)
-    ax2.axhline(y=y_start - 0.01, xmin=0, xmax=1, color="#ccc", linewidth=0.8,
-                transform=ax2.transAxes)
+    line = mlines.Line2D([0, 1], [y_start - 0.01, y_start - 0.01],
+                         color="#ccc", linewidth=0.8, transform=ax2.transAxes)
+    ax2.add_line(line)
 
     for ri, row in ra.iterrows():
         y = y_start - row_h * (ri + 1) - 0.01
@@ -596,8 +598,9 @@ def chart_phase2_roadmap(out_path):
     for hdr, cx in zip(headers, col_x):
         ax.text(cx, y_top, hdr, fontsize=9.5, fontweight="bold", va="top",
                 color="#1a1a2e", transform=ax.transAxes)
-    ax.axhline(y=y_top - 0.015, xmin=0.0, xmax=1.0, color="#333",
-               linewidth=1.2, transform=ax.transAxes)
+    line = mlines.Line2D([0, 1], [y_top - 0.015, y_top - 0.015],
+                         color="#333", linewidth=1.2, transform=ax.transAxes)
+    ax.add_line(line)
 
     row_h = 0.82 / (n_rows + 0.5)
     for ri, row in enumerate(ROADMAP_ROWS):
