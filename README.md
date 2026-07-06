@@ -264,6 +264,28 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 21) — Standing deliverable: refresh `built_demand_intelligence_report` on every SPINS delivery
+
+**Commitment:** Rob has stated he wants a new `built_demand_intelligence_report` for BUILT every time new SPINS data is uploaded. Documented in wiki `08-roadmap.md` and project memory.
+
+**Pipeline automation assessment (FP&A report chain — MO_25 → MO_48):**
+
+The report chain is ~70% automated. What works today: all 12+ generation scripts (MO_25–MO_47) are standalone Python files that read live Druid data, produce PNGs and JSON metrics, and MO_36 assembles them into a self-contained HTML. On new SPINS data, the entire chain re-runs against fresh numbers automatically.
+
+**Remaining manual gaps (30%):**
+
+| Gap | Impact | Fix |
+|-----|--------|-----|
+| No orchestration script | Must run ~14 scripts individually in order | Write `run_fpa_report.sh` |
+| `MO_48` `ACCOUNT_ELASTICITY` hardcoded | Elasticity table baked in from prior session run | Pull live from `scored_price_elasticity` / MO_44 JSON |
+| Sections 12–18 not in MO_36 | Manually re-ported on each version bump | Merge into MO_36 or create MO_36B |
+| Druid re-ingest needs manual flag | `appendToExisting: false` must be set by hand | Add flag to run script |
+| Versioning / naming manual | Rename + copy to `docs/` by hand | Add auto-version + copy step |
+
+**Recommendation:** A focused review of the FP&A chain (MO_25→MO_48) is warranted before the next SPINS delivery — specifically to verify chart/JSON key consistency and identify any other hardcoded dates or SKU references. The core Mo app pipeline (MO_10→MO_24) is solid and does not need re-review.
+
+---
+
 ### 2026-07-06 (update 20) — Visual confirmation: MULO fix now visible in Trends charts
 
 Observed in Mo Trends for C&C Puff (1ct + 4pk + 12pk) at Kroger + Walmart — the MULO velocity undercount fix applied 2026-07-01 is now clearly visible:
