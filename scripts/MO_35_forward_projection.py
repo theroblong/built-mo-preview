@@ -353,7 +353,7 @@ def main():
     hist_avg_wk = hist_wk["base_units"].tail(13).mean()
     growth_vs_hist = (q50_avg_wk - hist_avg_wk) / hist_avg_wk * 100
 
-    weeks_since_data = 9  # approximate weeks since SPINS cutoff
+    weeks_since_data = max(0, (pd.Timestamp.now(tz="UTC") - last_data_date).days // 7)
 
     print(f"\n  Q3 2026 Projection Summary ({H}-week horizon):")
     print(f"    Floor (q10):     {fmt_units(q10_total, None)} total units")

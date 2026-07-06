@@ -264,6 +264,26 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 23) — Focused FP&A chain review: MO_25→MO_48
+
+Full review of the FP&A report generation chain. All 29 charts present (MO_36 needs 16, MO_48 needs 13 — all ✅). All JSON schema keys consistent across all 9 JSON files in the chain.
+
+**Two bugs fixed:**
+
+| Script | Bug | Fix |
+|--------|-----|-----|
+| `MO_35_forward_projection.py:356` | `weeks_since_data = 9` hardcoded — would label chart incorrectly on new SPINS data | Now: `max(0, (pd.Timestamp.now(tz="UTC") - last_data_date).days // 7)` |
+| `MO_48_brian_package.py:176–177` | `lgbm_dec25 = 4.3`, `ma13_dec25 = 24.6` hardcoded (actual live values: 4.4 / 27.53) | Now loaded from `v2_mo33_summary.json["accuracy"]`; `v2_mo33_summary.json` added as 5th JSON input |
+
+**Intentional hardcoding — not bugs:**
+- MO_32B/33/34/37/40 cutoff dates (Dec 2024, Dec 2025) are historical backtesting windows — intentionally fixed reference periods
+- MO_37/40 UPCs (BB4PK, CD4PK, BB8PK) are permanent BUILT case study anchors
+- MO_43 (Kroger BB 4pk BSTS) is a one-time causal analysis artifact
+
+**Remaining pre-next-SPINS gaps:** orchestration script, MO_48 `ACCOUNT_ELASTICITY` table (MO_44 needs to write machine-readable per-account ε JSON), Sections 12–18 merge into MO_36, `excel_baseline` framing decision (35% industry vs BUILT-specific).
+
+---
+
 ### 2026-07-06 (update 22) — Druid cleanup: `retailer_sales_forecast` re-ingested with clean timestamps
 
 Re-ran MO_27 with the fixed `mo_writeback.py` (ISO string serialization). Verified clean output: `__time` is now `object` dtype with values like `2026-04-26T00:00:00.000Z` — no more INT64 nanoseconds.

@@ -167,14 +167,15 @@ if __name__ == "__main__":
     run_at = datetime.now(timezone.utc).strftime("%B %d, %Y")
 
     # Load JSON metrics
-    m38 = _load_json(OUTPUTS / "v2_mo38_summary.json")
+    m38  = _load_json(OUTPUTS / "v2_mo38_summary.json")
     m32b = _load_json(OUTPUTS / "v2_mo32b_metrics.json")
+    m33  = _load_json(OUTPUTS / "v2_mo33_summary.json")
     m35  = _load_json(OUTPUTS / "v2_mo35_metrics.json")
     m47  = _load_json(OUTPUTS / "event_validation_results.json")
 
-    # Key stats from metrics
-    lgbm_dec25  = 4.3   # Dec 2025 cutpoint wMAPE
-    ma13_dec25  = 24.6
+    # Key stats from metrics — loaded from JSON, not hardcoded
+    lgbm_dec25  = m33.get("accuracy", {}).get("Rolling LightGBM q50", 4.3)
+    ma13_dec25  = m33.get("accuracy", {}).get("MA 13wk", 24.6)
     retrain_gain = m32b.get("retrain_gain_pp", 14.1)
     q50_weekly  = int(m35.get("projection", {}).get("q50_avg_weekly", 328606))
     q10_total   = int(m35.get("projection", {}).get("q10_total", 3681269))
