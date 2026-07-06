@@ -16,6 +16,7 @@ Refutations: random_common_cause, placebo_treatment_refuter,
 Outputs: 5 PNG charts + Section 17 HTML block
 """
 
+import json
 import warnings, sys, os
 warnings.filterwarnings("ignore")
 
@@ -327,6 +328,17 @@ for acct, grp in df.groupby("retail_account"):
     if el is not None:
         account_elasticity[acct] = el
         print(f"  {acct}: ε = {el:.3f}")
+
+# Write per-account elasticity to JSON so MO_48 can load live values
+_elast_json_path = os.path.join(OUT_DIR, "v2_mo44_account_elasticity.json")
+with open(_elast_json_path, "w") as _f:
+    from datetime import datetime, timezone as _tz
+    json.dump({
+        "run_at": datetime.now(_tz.utc).isoformat(),
+        "portfolio_ate": lr_coef,
+        "account_elasticity": account_elasticity,
+    }, _f, indent=2)
+print(f"  saved: v2_mo44_account_elasticity.json  ({len(account_elasticity)} retailers)")
 
 # ── 9. Chart: effect estimates comparison ─────────────────────────────────
 def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,

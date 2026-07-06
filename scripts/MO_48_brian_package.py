@@ -102,22 +102,42 @@ def _two_col(left: str, right: str, split: str = "50% 50%") -> str:
 </div>"""
 
 
-# ── Per-account elasticity table (from MO_44 OLS — hardcoded from session) ──
-ACCOUNT_ELASTICITY = [
-    ("WALMART",          -0.245, "KEY ACCOUNT",  "Moderately Elastic",  "#e67e22", "Price-insensitive relative to peers; stable shelf"),
-    ("KROGER",           -0.590, "KEY ACCOUNT",  "Moderately Elastic",  "#e67e22", "Dec 2025 price cut delivered +28.6% lift (BSTS)"),
-    ("AHOLD DELHAIZE",   -1.262, "CRMA (fixed)", "Elastic",             "#c0392b", "Was +10x before fix — MO_44 OLS confirms −1.26"),
-    ("ALBERTSONS",       -1.066, "CRMA (fixed)", "Elastic",             "#c0392b", "High price sensitivity — price changes drive volume"),
-    ("PUBLIX",           -1.025, "CRMA (fixed)", "Elastic",             "#c0392b", "Similar to Albertsons; watch ARP decisions closely"),
-    ("MEIJER",           -0.812, "CRMA (fixed)", "Moderately Elastic",  "#e67e22", ""),
-    ("HARRIS TEETER",    -0.734, "CRMA (fixed)", "Moderately Elastic",  "#e67e22", ""),
-    ("WEIS MARKETS",     -0.687, "CRMA (fixed)", "Moderately Elastic",  "#e67e22", ""),
-    ("HY-VEE",           -0.623, "CRMA (fixed)", "Moderately Elastic",  "#e67e22", "Brian's Hy-Vee $/bar story — per-bar gap drives pack switching"),
-    ("GIANT EAGLE",      -0.518, "CRMA (fixed)", "Moderately Elastic",  "#e67e22", ""),
-    ("VITAMIN SHOPPE",   +0.881, "CRMA (fixed)", "Positive (confirmed)", "#8e44ad", "Confirmed clearance/lifecycle — declining SKUs cut price as velocity falls"),
-    ("WHOLE FOODS",      -0.445, "CRMA (fixed)", "Inelastic",           "#27ae60", "Premium positioning; price moves have muted demand effect"),
-    ("TARGET",           -0.312, "CRMA (fixed)", "Inelastic",           "#27ae60", ""),
-]
+# ── Per-account elasticity table ──────────────────────────────────────────
+# ε values loaded live from v2_mo44_account_elasticity.json (written by MO_44).
+# Annotations (source, band, color, note) are analyst-maintained and stable.
+# Fallback ε values used only if a retailer is missing from the JSON.
+
+_ELAST_ANNOTATIONS = {
+    "WALMART":        ("KEY ACCOUNT",  "Moderately Elastic",   "#e67e22", "Price-insensitive relative to peers; stable shelf"),
+    "KROGER":         ("KEY ACCOUNT",  "Moderately Elastic",   "#e67e22", "Dec 2025 price cut delivered +28.6% lift (BSTS)"),
+    "AHOLD DELHAIZE": ("CRMA (fixed)", "Elastic",              "#c0392b", "Was +10x before fix — MO_44 OLS confirms −1.26"),
+    "ALBERTSONS":     ("CRMA (fixed)", "Elastic",              "#c0392b", "High price sensitivity — price changes drive volume"),
+    "PUBLIX":         ("CRMA (fixed)", "Elastic",              "#c0392b", "Similar to Albertsons; watch ARP decisions closely"),
+    "MEIJER":         ("CRMA (fixed)", "Moderately Elastic",   "#e67e22", ""),
+    "HARRIS TEETER":  ("CRMA (fixed)", "Moderately Elastic",   "#e67e22", ""),
+    "WEIS MARKETS":   ("CRMA (fixed)", "Moderately Elastic",   "#e67e22", ""),
+    "HY-VEE":         ("CRMA (fixed)", "Moderately Elastic",   "#e67e22", "Brian's Hy-Vee $/bar story — per-bar gap drives pack switching"),
+    "GIANT EAGLE":    ("CRMA (fixed)", "Moderately Elastic",   "#e67e22", ""),
+    "VITAMIN SHOPPE": ("CRMA (fixed)", "Positive (confirmed)", "#8e44ad", "Confirmed clearance/lifecycle — declining SKUs cut price as velocity falls"),
+    "WHOLE FOODS":    ("CRMA (fixed)", "Inelastic",            "#27ae60", "Premium positioning; price moves have muted demand effect"),
+    "TARGET":         ("CRMA (fixed)", "Inelastic",            "#27ae60", ""),
+}
+
+_ELAST_FALLBACK = {
+    "WALMART": -0.245, "KROGER": -0.590, "AHOLD DELHAIZE": -1.262,
+    "ALBERTSONS": -1.066, "PUBLIX": -1.025, "MEIJER": -0.812,
+    "HARRIS TEETER": -0.734, "WEIS MARKETS": -0.687, "HY-VEE": -0.623,
+    "GIANT EAGLE": -0.518, "VITAMIN SHOPPE": +0.881, "WHOLE FOODS": -0.445,
+    "TARGET": -0.312,
+}
+
+def _build_account_elasticity(live_elast: dict) -> list:
+    return [
+        (acct,
+         live_elast.get(acct, _ELAST_FALLBACK[acct]),
+         src, band, color, note)
+        for acct, (src, band, color, note) in _ELAST_ANNOTATIONS.items()
+    ]
 
 
 def _elast_table() -> str:
@@ -167,11 +187,20 @@ if __name__ == "__main__":
     run_at = datetime.now(timezone.utc).strftime("%B %d, %Y")
 
     # Load JSON metrics
-    m38  = _load_json(OUTPUTS / "v2_mo38_summary.json")
-    m32b = _load_json(OUTPUTS / "v2_mo32b_metrics.json")
-    m33  = _load_json(OUTPUTS / "v2_mo33_summary.json")
-    m35  = _load_json(OUTPUTS / "v2_mo35_metrics.json")
-    m47  = _load_json(OUTPUTS / "event_validation_results.json")
+    m38   = _load_json(OUTPUTS / "v2_mo38_summary.json")
+    m32b  = _load_json(OUTPUTS / "v2_mo32b_metrics.json")
+    m33   = _load_json(OUTPUTS / "v2_mo33_summary.json")
+    m35   = _load_json(OUTPUTS / "v2_mo35_metrics.json")
+    m47   = _load_json(OUTPUTS / "event_validation_results.json")
+    m44e  = _load_json(OUTPUTS / "v2_mo44_account_elasticity.json")
+
+    # Build per-account elasticity table from live MO_44 JSON
+    _live_elast = m44e.get("account_elasticity", {}) if m44e else {}
+    ACCOUNT_ELASTICITY = _build_account_elasticity(_live_elast)
+    if _live_elast:
+        print(f"  Loaded {len(_live_elast)} live ε values from v2_mo44_account_elasticity.json")
+    else:
+        print("  WARNING: v2_mo44_account_elasticity.json missing — using fallback ε values")
 
     # Key stats from metrics — loaded from JSON, not hardcoded
     lgbm_dec25  = m33.get("accuracy", {}).get("Rolling LightGBM q50", 4.3)
