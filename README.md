@@ -264,6 +264,19 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 25) — Pipeline end-to-end test: PASS; v2.1.3 produced
+
+First full test run of `run_fpa_report.sh 2.1.3 --skip-training`. Two bugs found and fixed during the run:
+
+| Script | Bug | Fix |
+|--------|-----|-----|
+| `run_fpa_report.sh` | Registry names didn't match actual filenames (e.g. `MO_25_retailer_actuals` vs `MO_25_retailer_sales_actuals`); `set -u` unbound error on empty MISSING array | Corrected all 9 names; added empty-array guard |
+| `MO_41_feature_diagnostic.py` | Two `axhline(transform=...)` calls rejected by current matplotlib version | Replaced with `mlines.Line2D + ax.add_line()` |
+
+Output: `docs/built_demand_intelligence_report_v2.1.3.html` — **10.8 MB, 43 embedded charts**, all 7 patch sections present (§14 SHAP, §15 ablation, §16 quantile, §17a causal, §17b DAG, §18 GRU). Pipeline is ready for the next SPINS delivery.
+
+---
+
 ### 2026-07-06 (update 24) — FP&A report pipeline fully automated
 
 **HTML patch chain unified (MO_42, 43, 45, 44):** All patching scripts now write to `scripts/outputs/built_demand_intelligence_report.html` in place — the same pattern MO_40 and MO_41 already used. Previously, MO_45 read `docs/v2.0.7.html` and MO_44 read `docs/v2.0.8.html`, breaking the in-place chain and requiring manual porting of sections 12–18 on every version bump. That is resolved.
