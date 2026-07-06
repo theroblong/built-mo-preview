@@ -264,6 +264,19 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 22) — Druid cleanup: `retailer_sales_forecast` re-ingested with clean timestamps
+
+Re-ran MO_27 with the fixed `mo_writeback.py` (ISO string serialization). Verified clean output: `__time` is now `object` dtype with values like `2026-04-26T00:00:00.000Z` — no more INT64 nanoseconds.
+
+- New clean parquet: `s3://mo-ml/retailer_sales_forecast/2026-07-06/retailer_sales_forecast.parquet` (32,448 rows, 2,496 series, 104 UPCs)
+- Ingest spec updated: `appendToExisting: false` — submitting this to Druid replaces all stale/corrupt year-56M segments
+- The `appendToExisting: false` flag is a one-time manual edit for this cleanup; `mo_writeback.py` stays at `true` (append) by default for all other datasources
+- The API date filter (`WHERE __time BETWEEN '2020-01-01' AND '2030-01-01'`) remains as a permanent guard in `retailer.py`
+
+**To complete:** POST `outputs/retailer_sales_forecast_ingest_spec.json` to Druid to finish the cleanup.
+
+---
+
 ### 2026-07-06 (update 21) — Standing deliverable: refresh `built_demand_intelligence_report` on every SPINS delivery
 
 **Commitment:** Rob has stated he wants a new `built_demand_intelligence_report` for BUILT every time new SPINS data is uploaded. Documented in wiki `08-roadmap.md` and project memory.
