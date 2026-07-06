@@ -264,6 +264,18 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-06 (update 26) — SKU View forecast drawer: two behavioral caveats documented
+
+Reviewed forecast drawer behavior across multiple retailers. Both observations confirmed as working-as-designed:
+
+1. **Flat-zone → no directional badge (Walmart):** ▲/▼ badge uses ±5% threshold (forecast avg / anchor − 1). Walmart C&C 4pk: anchor 25,549 units/wk, forecast avg 26,025 (+1.9%) → below threshold → no badge. Chart visually slopes up because recent actuals dipped below anchor; model forecasts recovery to baseline, not a trend above it. Demo note: "recovering to baseline, not trending above it."
+
+2. **Cold-start → empty drawer (New Seasons Market):** Series with insufficient SPINS history are excluded from MO_27. New Seasons Market C&C 4pk launched Jan 31, 2026 — only ~11 weeks at the Apr 19, 2026 data cutoff, below the model's minimum training window. Drawer shows 0 units forecast, no dotted lines, no actuals-through date, default ε = -1.0. Actuals still render from `built_filtered_weekly`. Correct behavior — disclose in demos for recently launched retailers.
+
+Documented in memory (`project_sku_retailer_view.md`) and wiki (`05-ui-screens.md`).
+
+---
+
 ### 2026-07-06 (update 25) — Pipeline end-to-end test: PASS; v2.1.3 produced
 
 First full test run of `run_fpa_report.sh 2.1.3 --skip-training`. Two bugs found and fixed during the run:
