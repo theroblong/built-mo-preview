@@ -353,6 +353,20 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-07 (update 44) — MO_55 adj forecast + HTML v2.1.8 ingested and shipped
+
+**MO_55 Druid ingest:** `retailer_sales_forecast_adj` datasource created (new, not a re-ingest). 32,448 rows (2,496 series × 13 weeks) with 4 portfolio columns: `portfolio_adj_delta`, `portfolio_adj_type` (NONE/DONOR/FOCAL_LAUNCH), `portfolio_adj_source_upc`, `forecast_dollars_base_adj`. Adjusted rows: 3,204 (DONOR: 2,135 + FOCAL_LAUNCH: 1,069).
+
+**HTML v2.1.8 (13.1 MB):** Sections §14–§24 complete. New sections:
+- §21 MO_52: feature group ablation (all 8 groups rejected)
+- §22 MO_53: individual ablation — `donor_count` (−0.081pp) + `tdp_wow_delta` (−0.045pp) promoted → 28-feature champion
+- §23 MO_54: holiday binary flag ablation — all 6 flags rejected, `week_of_year` sufficient
+- §24 MO_56: time-varying signal ablation — `cannibal_rate` + `price_elasticity_effect` both rejected; AR lags encode Mo effects via lagged outcomes; MO_53 confirmed as final stopping point
+
+**Automation script:** `run_fpa_report.sh` now includes MO_56 at §24; MO_52/53/54/56 have cache-skip paths (load CSVs/PNGs, skip retraining, patch HTML directly).
+
+---
+
 ### 2026-07-07 (update 42) — MO_56: time-varying Mo signals correctly implemented — still rejected; MO_53 confirmed as final feature engineering stopping point
 
 `scripts/MO_56_time_varying_ablation.py` ran `cannibal_rate` + `price_elasticity_effect` individually and combined against MO_53 28-feature champion. First experiment with full conditional split (event-context vs stable).
