@@ -166,20 +166,40 @@ def qualify_cutpoint(df, cutoff_utc, min_train=52, min_test=13, horizon=13):
     return pd.concat(train_list), pd.concat(val_list), pd.concat(test_list), len(train_list)
 
 
+def _encode_categoricals(train_df, val_df, test_df, af):
+    """Integer-encode object columns so LightGBM dtype check passes.
+    Returns (tr, va, te, cat_feats) — copies, not views.
+    """
+    cat_feats = [c for c in af if train_df[c].dtype == object]
+    tr = train_df[af].copy()
+    va = val_df[af].copy()
+    te = test_df[af].copy()
+    for c in cat_feats:
+        cats = sorted(
+            set(tr[c].dropna().tolist()) |
+            set(va[c].dropna().tolist()) |
+            set(te[c].dropna().tolist())
+        )
+        cat_map = {v: i for i, v in enumerate(cats)}
+        for sub in [tr, va, te]:
+            sub[c] = sub[c].map(cat_map).fillna(-1).astype(int)
+    return tr, va, te, cat_feats
+
+
 def train_eval(train_df, val_df, test_df, feats, params=None):
     params = params or CHAMPION_PARAMS
     af = avail(feats, train_df)
     if not af:
         return np.nan, None
-    cat_feats = [c for c in af if train_df[c].dtype == object]
+    tr, va, te, cat_feats = _encode_categoricals(train_df, val_df, test_df, af)
     m = lgb.LGBMRegressor(**params)
     m.fit(
-        train_df[af], train_df["log_base_units"],
-        eval_set=[(val_df[af], val_df["log_base_units"])],
+        tr, train_df["log_base_units"],
+        eval_set=[(va, val_df["log_base_units"])],
         callbacks=[lgb.early_stopping(50, verbose=False), lgb.log_evaluation(9999)],
         categorical_feature=cat_feats if cat_feats else "auto",
     )
-    pred_log = m.predict(test_df[af])
+    pred_log = m.predict(te)
     pred     = np.expm1(pred_log)
     return wmape(test_df["base_units"].values, pred), m
 
@@ -298,7 +318,9 @@ def chart_rolling_cv(cv_df_champion, cv_df_promoted, out_path):
 
 def chart_shap(model, test_df, feats, out_path):
     af = avail(feats, test_df)
-    sample = test_df[af].sample(min(512, len(test_df)), random_state=42)
+    # Encode categoricals the same way train_eval did
+    _, _, te, _ = _encode_categoricals(test_df, test_df, test_df, af)
+    sample = te.sample(min(512, len(te)), random_state=42)
     explainer = shap.TreeExplainer(model)
     shap_vals = explainer.shap_values(sample)
     fig, ax = plt.subplots(figsize=(9, 6))
