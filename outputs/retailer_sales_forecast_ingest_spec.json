@@ -48,7 +48,7 @@
       "inputSource": {
         "type": "s3",
         "uris": [
-          "s3://mo-ml/retailer_sales_forecast/2026-07-02/retailer_sales_forecast.parquet"
+          "s3://mo-ml/retailer_sales_forecast/2026-07-07/retailer_sales_forecast.parquet"
         ],
         "properties": {
           "accessKeyId": "ingestion",

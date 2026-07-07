@@ -385,6 +385,25 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-07 (update 43) — MO_26→MO_27: retrain + fresh 13-week forecast ingested into Druid
+
+Retrained all six LightGBM quantile models (base_units + total_units, q10/q50/q90) on the MO_25 v7 dataset (147,882 rows, 2,496 series) using the confirmed MO_53 28-feature champion set.
+
+**MO_26 train metrics (val cutoff 2026-01-18):**
+
+| Model | q50 MAE | q50 RMSE | Pinball q10 | Pinball q50 | Pinball q90 |
+|-------|---------|----------|-------------|-------------|-------------|
+| base_units | 175.3 | 1,192.4 | 0.0069 | 0.0122 | 0.0084 |
+| total_units | 586.8 | 3,011.8 | 0.0207 | 0.0437 | 0.0261 |
+
+Top features: `base_units_lag1` (13,137) → `base_units_wow_delta` (11,278) → `base_units_roll4_avg` (10,723); `tdp_wow_delta` in top 15 (1,922) confirming its value as a MO_53 promote.
+
+**MO_27 output:** 32,448 rows (2,496 series × 13 weeks). All `forecast_*` columns present including `forecast_total_units_*` variants.
+
+**Druid ingest:** Old datasource dropped (13 segments cleared), fresh ingest submitted with `appendToExisting:false` → `SUCCESS`. No duplicate rows; clean slate for UI queries.
+
+---
+
 ### 2026-07-07 (update 37) — MO_54 plan: portfolio cannibalization gap + holiday re-encoding
 
 Two architectural gaps identified from MO_53 results and CPG domain discussion. Documented in memory and wiki as MO_54 work.
