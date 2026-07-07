@@ -87,6 +87,7 @@ HTML_CHAIN=(
   MO_45_gru_benchmark             # §18
   MO_44_dag_analysis              # §17b DAG / elasticity
   MO_50_rolling_signal_ablation   # §19 rolling vs. static Mo
+  MO_51_regularization_search     # §20 reg search + SHAP pruning + rolling CV
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────
