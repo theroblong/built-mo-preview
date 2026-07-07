@@ -721,6 +721,21 @@ causal price signal emerges with slope ≈ {lr_coef:.3f}.</p>
     {row_acct}
   </tbody>
 </table>
+<div style="margin:16px 0 28px;background:#f0f6ff;border:1px solid #bdd4f0;border-radius:8px;padding:16px 20px;font-size:.88rem;line-height:1.65">
+  <strong style="font-size:.92rem">How to read this table</strong>
+  <p style="margin:.6rem 0 .4rem"><strong>Price Elasticity (ε)</strong> measures the % change in demand for every 1% increase in price, estimated in a log–log causal model. A value of −1.0 means a 10% price increase leads to ~10% lower unit sales.</p>
+  <table style="width:100%;border-collapse:collapse;margin-top:.5rem">
+    <tr>
+      <td style="padding:.35rem .7rem;width:180px"><strong>↓ demand</strong> <span style="color:#64748b">(ε &lt; 0)</span></td>
+      <td style="padding:.35rem .7rem"><strong>Normal price sensitivity</strong> — demand falls when price rises. The more negative ε, the more sensitive shoppers at that retailer are to price. Food City (ε = −2.5) is roughly 10× more price-sensitive than Walmart (ε = −0.26).</td>
+    </tr>
+    <tr style="background:#e8f0fb">
+      <td style="padding:.35rem .7rem"><strong>↑ demand (anomaly)</strong> <span style="color:#64748b">(ε &gt; 0)</span></td>
+      <td style="padding:.35rem .7rem"><strong>Counterintuitive response</strong> — the model observes demand rising alongside price at this retailer. Three common explanations: <em>(1) premium / prestige signal</em> — price positions the product as high quality; <em>(2) clearance artifact</em> — a SKU was discontinued with price cuts while velocity also fell, making the log–log slope positive; <em>(3) aggregation noise</em> — small sample or MULO roll-up mixing retailer-specific effects. Treat these rows as flags for further investigation, not as evidence to raise prices.</td>
+    </tr>
+  </table>
+  <p style="margin:.6rem 0 0;color:#475569">Retailers with |ε| &lt; 0.30 (e.g., Walmart −0.26) are relatively price-insensitive — list price changes will have modest volume impact. Retailers with |ε| &gt; 1.5 (e.g., Food City −2.5) are highly price-elastic — small price changes drive large volume swings.</p>
+</div>
 
 <h3 style="font-size:1.15rem;margin-top:2rem">17.7 Methodology & Limitations</h3>
 <table style="width:100%;border-collapse:collapse;font-size:.9rem">

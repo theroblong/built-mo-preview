@@ -264,6 +264,16 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 27) — Per-retailer elasticity table explainer + Mo Chat grounding
+
+Added in-report explainer box directly below the Section 17.6 Per-Retailer Elasticity Table in MO_44. Explains the two direction labels in plain language:
+- **↓ demand (ε < 0):** Normal price sensitivity — demand falls when price rises. The more negative ε, the more price-sensitive. Food City (−2.5) is ~10× more sensitive than Walmart (−0.26). |ε| < 0.30 = insensitive; |ε| > 1.5 = highly elastic.
+- **↑ demand (anomaly) (ε > 0):** Three root causes: (1) prestige/premium signal; (2) clearance lifecycle artifact (price and velocity both falling = dying SKU, not luxury demand); (3) aggregation noise at MULO/CRMA level. **Do not recommend price increases at anomaly retailers.**
+
+Added `PRICE ELASTICITY INTERPRETATION` block to `mo_chat.py` `_DATA_GLOSSARY` with grounded benchmarks (portfolio ε ≈ −0.67, Food City/Walmart anchors, anomaly investigation guidance). Mo Chat can now answer elasticity direction questions accurately without hallucinating.
+
+---
+
 ### 2026-07-06 (update 26) — SKU View forecast drawer: two behavioral caveats documented
 
 Reviewed forecast drawer behavior across multiple retailers. Both observations confirmed as working-as-designed:
