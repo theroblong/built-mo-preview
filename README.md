@@ -323,9 +323,33 @@ Deep analysis of why cannibalization and elasticity have not improved wMAPE, and
 **Root cause 3 — wrong evaluation metric:**
 Global wMAPE averages across ~2,200 stable mature series and ~300 event-context series. Mo signals add noise on stable series but should improve accuracy exactly where forecasts matter most — new launches (wsl ≤ 26) and price events (|arp_pct_change| > 5%). Conditional accuracy by segment is the right proof point. M1 remains the floor for stable series; Mo targets improvement on event-context series.
 
-**MO_56 plan:** MO_25 update adds `cannibal_rate_sum` + `price_elasticity_effect`. MO_26 ablation runs on 512-series dataset with results split by event-context vs. stable. This is the path to defensible, CFO-ready numbers.
+**MO_56 plan:** MO_25 update adds `cannibal_rate` + `price_elasticity_effect`. MO_26 ablation runs on 512-series dataset with results split by event-context vs. stable. This is the path to defensible, CFO-ready numbers.
 
 **Conclusion:** MO_53's 28-feature set is the right stopping point for feature engineering. Holiday re-encoding hypothesis closed. The binary flags remain in the MO_25 parquet as audit columns in case a future model architecture needs them (e.g., neural net without tree splits).
+
+---
+
+### 2026-07-07 (update 41) — MO_25 v7 complete: both time-varying signals confirmed with strong coverage
+
+`scripts/MO_25_retailer_sales_actuals.py` updated to v7. Two new columns added to `outputs/retailer_sales_weekly.parquet` (147,882 rows, 2,496 series):
+
+**`cannibal_rate`** — sourced from `cannibalization_rate_weekly` (MO_19), aggregated per (focal, week), `null → 0`. The MO_50 73%-null failure was purely a missing `.fillna(0)`.
+
+| Metric | Value |
+|--------|-------|
+| Rows with `cannibal_rate > 0` | 27,211 (18.4%) |
+| Mean rate when active | 0.431 |
+
+18.4% is correct — cannibalization is event-driven, concentrated in launch windows and sibling-acceleration weeks. Not expected to be 100% populated.
+
+**`price_elasticity_effect`** — `arp_pct_change × implied_elasticity`. Nonzero only in price-event weeks; zero when price flat or elasticity unknown.
+
+| Metric | Value |
+|--------|-------|
+| Rows nonzero | 79,036 (53.4%) |
+| Range | [−1.500, 1.500] (clipped) |
+
+`arp_pct_change` saved as audit column. Both signals ready for MO_56 conditional ablation.
 
 **Next:** MO_55 — portfolio cannibalization constraint (post-processing layer on MO_27 output).
 
