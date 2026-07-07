@@ -31,6 +31,7 @@
 # Phase 5 — HTML assembly + patch chain (strict order):
 #   MO_36 (base) → MO_40 (§14) → MO_41 (§15) → MO_42 (§16)
 #                → MO_43 (§17a) → MO_45 (§18) → MO_44 (§17b DAG)
+#                → MO_50 (§19) → MO_51 (§20) → MO_52 (§21)
 #
 # Final — version-stamp + copy to docs/
 # ─────────────────────────────────────────────────────────────────────────────
@@ -88,6 +89,7 @@ HTML_CHAIN=(
   MO_44_dag_analysis              # §17b DAG / elasticity
   MO_50_rolling_signal_ablation   # §19 rolling vs. static Mo
   MO_51_regularization_search     # §20 reg search + SHAP pruning + rolling CV
+  MO_52_feature_ablation          # §21 MO_25 v4 feature group ablation
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────
