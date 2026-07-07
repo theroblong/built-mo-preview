@@ -282,6 +282,32 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 **Why all flags hurt:** `week_of_year` (1–52 continuous) is already in the champion. The tree can split directly on weeks 1–2 for the New Year spike, weeks 47–52 for the holiday period, etc. Binary flags add redundancy without signal — they compete for feature fraction against genuinely useful features. The January protein bar spike is real and already captured; it doesn't need a dedicated column.
 
+---
+
+### 2026-07-07 (update 39) — MO_55: portfolio cannibalization constraint — 833K units redistributed (1.18%), zero-sum satisfied
+
+`scripts/MO_55_portfolio_constraint.py` applies a post-forecast demand redistribution layer on top of MO_27 output. Individual series forecasts are generated in isolation — when BUILT launches a new SKU, incumbent siblings don't know demand is shifting. MO_55 enforces portfolio consistency using the BUILT-to-BUILT transition matrix from `scored_cannibalization`.
+
+**Algorithm:**
+- For each focal (launch-phase UPC, wsl ≤ 26): pull all BUILT sibling donors with `cannibal_prob ≥ 0.30`
+- Transfer decays linearly with `1 − (wsl / 26)` — strongest at launch, fades as AR lags accumulate history
+- Three caps prevent over-redistribution: `MIN_FOCAL_UNITS = 10` (skip near-zero presence), `MAX_TRANSFER_PCT = 20%` (global per donor, tracked via `portfolio_adj_delta`), `MAX_RECEIVE_PCT = 50%` (focal receives at most 50% of its own weekly forecast)
+
+**Result:**
+
+| Metric | Value |
+|--------|-------|
+| Total BUILT portfolio | 70,316,011 units (conserved) |
+| Units redistributed | 833,153 (1.18%) |
+| Focal series adjusted | 200 |
+| Donor range | −19 to −20% of 13w forecast |
+| Focal range | +42 to +50% of 13w forecast |
+| Zero-sum constraint | ✓ (max delta = 0.0000 units) |
+
+**Top focal:** `08-40229-30651` at Walmart receives +2,380 units (+49.6% of 13w forecast, wsl=17). **Top donor:** `08-40229-30546` at Walmart gives up 96,767 units (−11.5%).
+
+Output: `outputs/retailer_sales_forecast_adj.parquet` (32,448 rows). New columns: `portfolio_adj_delta`, `portfolio_adj_type` (FOCAL_LAUNCH / DONOR / NONE), `portfolio_adj_source_upc`, `forecast_dollars_base_adj`. Next step: human review → S3 upload → Druid ingest as `retailer_sales_forecast_adj`.
+
 **Conclusion:** MO_53's 28-feature set is the right stopping point for feature engineering. Holiday re-encoding hypothesis closed. The binary flags remain in the MO_25 parquet as audit columns in case a future model architecture needs them (e.g., neural net without tree splits).
 
 **Next:** MO_55 — portfolio cannibalization constraint (post-processing layer on MO_27 output).

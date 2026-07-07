@@ -1,0 +1,75 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "retailer_sales_forecast",
+      "timestampSpec": {
+        "column": "__time",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "upc",
+          "description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "geography_display",
+          "geography_level",
+          "anchor_date",
+          "anchor_base_units",
+          "anchor_arp",
+          "elasticity_band",
+          "max_donor_cannibal_prob",
+          "arp_fallback",
+          "forecast_week_number",
+          "forecast_units_low",
+          "forecast_units_base",
+          "forecast_units_high",
+          "forecast_dollars_low",
+          "forecast_dollars_base",
+          "forecast_dollars_high",
+          "forecast_total_units_low",
+          "forecast_total_units_base",
+          "forecast_total_units_high",
+          "weeks_since_launch",
+          "model_version",
+          "scored_at"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/retailer_sales_forecast/2026-07-02/retailer_sales_forecast.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

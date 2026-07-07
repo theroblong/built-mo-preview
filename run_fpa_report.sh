@@ -62,6 +62,7 @@ DATA_PHASE1=(
   MO_25_retailer_sales_actuals
   MO_26_retailer_sales_train
   MO_27_retailer_sales_forecast
+  MO_55_portfolio_constraint       # post-forecast: zero-sum BUILT portfolio adjustment
 )
 DATA_PHASE2=(
   MO_32B_quarterly_rollforward
