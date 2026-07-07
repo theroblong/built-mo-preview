@@ -79,13 +79,14 @@ DATA_PHASE4=(
   MO_47_event_validation
 )
 HTML_CHAIN=(
-  MO_36_report             # base HTML
-  MO_40_explainability     # §14 SHAP
-  MO_41_feature_diagnostic # §15
-  MO_42_quantile_forecast  # §16
-  MO_43_causal_impact      # §17a
-  MO_45_gru_benchmark      # §18
-  MO_44_dag_analysis       # §17b DAG / elasticity
+  MO_36_report                    # base HTML
+  MO_40_explainability            # §14 SHAP
+  MO_41_feature_diagnostic        # §15
+  MO_42_quantile_forecast         # §16
+  MO_43_causal_impact             # §17a
+  MO_45_gru_benchmark             # §18
+  MO_44_dag_analysis              # §17b DAG / elasticity
+  MO_50_rolling_signal_ablation   # §19 rolling vs. static Mo
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────
