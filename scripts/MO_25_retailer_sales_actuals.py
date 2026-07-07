@@ -1,4 +1,4 @@
-"""MO_25 v4 — Build retailer_sales_weekly: historical panel for sales forecasting.
+"""MO_25 v5 — Build retailer_sales_weekly: historical panel for sales forecasting.
 
 WHY THIS EXISTS
 ---------------
@@ -29,27 +29,41 @@ v4 uses a three-tier cascade to maximise recency:
   Tier 3: post_13w_arp from built_prepost_features     arp_source = "prepost"
 The arp_source audit column documents which tier each row used.
 
-PROMO SIGNALS (v4 addition)
-----------------------------
-units_promo is present for most but not all retailer × week combinations.
-When it is present: promo_intensity = units_promo / total_units (0–1 continuous)
-When it is absent:  arp_discount_pct > 5% vs 8w baseline infers a promo week
-is_promo_week = 1 when either source detects promotion.
+PROMO SIGNALS (v5 update from v4)
+-----------------------------------
+v4 used arp_discount_pct (percentage-based: 5% of $10 = $0.50 threshold — too wide).
+v5 fixes detection to use absolute dollar discount ≥ $0.05 (nickel standard):
+  units_promo present → is_promo_units (promo_intensity > 10%)
+  units_promo absent  → is_promo_arp (arp_dollar_discount > $0.05)
+New: promo_lift_ratio = total_units / base_units − 1 (display lift independent of price)
 promo_source audit column: "units_promo" | "arp_inferred" | "none"
 
-COMPETITOR / DONOR SIGNALS (v4 addition)
------------------------------------------
-top_donor_tdp_sum   — sum TDP of top-3 cannibalization donors at same retailer/week
-top_donor_units_sum — sum base_units of top-3 donors
-top_donor_arp_wavg  — TDP-weighted ARP of top-3 donors
-competitor_price_gap — focal ARP minus top_donor_arp_wavg (+ = BUILT is premium)
-top_donor_units_wow  — WoW change in top_donor_units_sum (competitor acceleration)
-Note: NaN for focal series with no donors in scored_cannibalization.
+DONOR SIGNALS — BRAND-SPLIT (v5 addition)
+------------------------------------------
+Intra-BUILT cannibalization (own-brand donor steals from focal SKU) and competitor
+cannibalization are fundamentally different signals and tracked separately.
+Donor UPCs are classified via built_upc_set (all focal BUILT UPCs in EDW):
+  competitor_donor_count   — donors from other brands (market share dynamics)
+  competitor_donor_tdp_sum — TDP of competitor donors (external shelf pressure)
+  competitor_donor_units_sum / _arp_wavg / _units_wow
+  competitor_price_gap     — focal ARP vs competitor donor TDP-weighted ARP
+  built_donor_count        — donors that are BUILT sibling SKUs (own-brand cannibal risk)
+  built_donor_tdp_sum      — TDP of BUILT sibling donors
+  built_donor_units_wow    — sibling unit acceleration (cannibalization leading indicator)
+top_donor_* (mixed BUILT+competitor) retained for backward compatibility.
+
+TDP CHANGE SIGNALS (v5 addition)
+----------------------------------
+Raw tdp (absolute distribution level) and tdp_z8 are already in the feature set.
+Distribution *growth* is the CPG-proven leading indicator, not the level or share.
+  tdp_wow_delta    — WoW stores gained/lost (distribution expansion speed)
+  tdp_4w_momentum  — 4-week net distribution change (monthly trend direction)
+built_tdp_share (focal/category ratio) retained as audit column; not a model feature.
 
 CATEGORY / SHELF SIGNALS (v4 addition)
 ----------------------------------------
 category_tdp_sum  — total TDP of ALL brands at same channel×retailer×geo×week (audit)
-built_tdp_share   — focal TDP / category_tdp_sum (BUILT's shelf-space market share)
+built_tdp_share   — focal TDP / category_tdp_sum (audit only; not a model feature)
 
 HOLIDAY / SEASONAL FLAGS (v4 addition)
 ----------------------------------------
@@ -60,17 +74,18 @@ holiday_week — integer code; 0 = no holiday event
   4 = Labor Day (w36)
   5 = Thanksgiving / Black Friday (w47)
   6 = Christmas / Holiday (w52)
-Codifies Brian's seasonal adjustment factors as a model feature.
 
 AUDIT COLUMNS (not model features)
 ------------------------------------
-arp_source        str  — "live" | "roll13" | "prepost"
-promo_source      str  — "units_promo" | "arp_inferred" | "none"
+arp_source        str   — "live" | "roll13" | "prepost"
+promo_source      str   — "units_promo" | "arp_inferred" | "none"
+arp_discount_pct  float — % drop vs 8w baseline (audit; model uses arp_dollar_discount)
 category_tdp_sum  float — denominator for built_tdp_share
+built_tdp_share   float — BUILT shelf share (audit; model uses tdp_wow_delta / tdp_4w_momentum)
 
 OUTPUT SCHEMA (retailer_sales_weekly.parquet)
 ---------------------------------------------
-Existing columns preserved; new v4 columns appended.
+Existing columns preserved; new v5 columns appended.
 """
 
 import numpy as np
@@ -100,7 +115,7 @@ if __name__ == "__main__":
 
     # ── 1. Foundation: event_detection_weekly ───────────────────────────────
     print("=" * 70)
-    print("MO_25 v4 — Retailer Sales Actuals")
+    print("MO_25 v5 — Retailer Sales Actuals")
     print("=" * 70)
     print("\n[1] Loading event_detection_weekly …")
     edw = query_druid(f"""
@@ -149,6 +164,10 @@ if __name__ == "__main__":
             edw[c] = pd.to_numeric(edw[c], errors="coerce")
     edw = edw.drop_duplicates(subset=["__time"] + GROUP_COLS)
     edw["__time"] = pd.to_datetime(edw["__time"], utc=True)
+
+    # Capture BUILT UPC universe — used in step 8 to classify donors as own-brand vs competitor
+    built_upc_set = set(edw["upc"].unique())
+    print(f"  BUILT focal UPCs: {len(built_upc_set):,}")
 
     # ── 2. Focal brand weekly ARP + promo units ──────────────────────────────
     print("\n[2] Loading focal ARP + promo units from built_filtered_weekly …")
@@ -279,16 +298,47 @@ if __name__ == "__main__":
 
     focal_group = ["focal_upc", "channel_outlet", "retail_account", "geography_raw"]
 
-    # 8a. Static aggregate signals (unchanged from v3)
+    # 8a. Static aggregate signals — split by own-brand vs competitor donors
+    # Intra-BUILT cannibalization (own SKU → own SKU) ≠ competitor market share dynamics
+    can_full["_donor_is_built"] = can_full["donor_upc"].isin(built_upc_set)
+
     can_agg = can_full.groupby(focal_group).agg(
         max_donor_cannibal_prob=("cannibal_prob", "max"),
         donor_count=("donor_upc", "count"),
     ).reset_index().rename(columns={"focal_upc": "upc"})
-    can_agg["max_donor_cannibal_prob"] = can_agg["max_donor_cannibal_prob"].fillna(0)
-    can_agg["donor_count"]             = can_agg["donor_count"].fillna(0).astype(int)
+
+    _comp_donors = can_full[~can_full["_donor_is_built"]]
+    _comp_agg = (
+        _comp_donors.groupby(focal_group)
+        .agg(competitor_donor_count=("donor_upc", "count"))
+        .reset_index().rename(columns={"focal_upc": "upc"})
+    )
+
+    _built_donors_pool = can_full[can_full["_donor_is_built"]]
+    _built_agg = (
+        _built_donors_pool.groupby(focal_group)
+        .agg(built_donor_count=("donor_upc", "count"))
+        .reset_index().rename(columns={"focal_upc": "upc"})
+    )
+
+    can_agg = (
+        can_agg
+        .merge(_comp_agg,  on=GROUP_COLS, how="left")
+        .merge(_built_agg, on=GROUP_COLS, how="left")
+    )
+    can_agg["max_donor_cannibal_prob"]  = can_agg["max_donor_cannibal_prob"].fillna(0)
+    can_agg["donor_count"]              = can_agg["donor_count"].fillna(0).astype(int)
+    can_agg["competitor_donor_count"]   = can_agg["competitor_donor_count"].fillna(0).astype(int)
+    can_agg["built_donor_count"]        = can_agg["built_donor_count"].fillna(0).astype(int)
+
     df = df.merge(can_agg, on=GROUP_COLS, how="left")
-    df["max_donor_cannibal_prob"] = df["max_donor_cannibal_prob"].fillna(0)
-    df["donor_count"]             = df["donor_count"].fillna(0).astype(int)
+    df["max_donor_cannibal_prob"]  = df["max_donor_cannibal_prob"].fillna(0)
+    df["donor_count"]              = df["donor_count"].fillna(0).astype(int)
+    df["competitor_donor_count"]   = df["competitor_donor_count"].fillna(0).astype(int)
+    df["built_donor_count"]        = df["built_donor_count"].fillna(0).astype(int)
+    print(f"  Donor split: "
+          f"competitor_donors avg={df['competitor_donor_count'].mean():.2f}  "
+          f"built_donors avg={df['built_donor_count'].mean():.2f}")
 
     # 8b. Top-N donor identities (for competitor weekly signals in step 9)
     can_full["_rank"] = can_full.groupby(focal_group)["cannibal_prob"].rank(
@@ -333,6 +383,9 @@ if __name__ == "__main__":
             how="inner",
         )
 
+        # Brand-split: classify each donor as BUILT sibling or competitor
+        donor_weekly["_is_built_donor"] = donor_weekly["upc"].isin(built_upc_set)
+
         def _tdp_weighted_arp(grp):
             total_tdp = grp["tdp"].sum()
             if total_tdp < 1e-9 or grp["arp"].isna().all():
@@ -340,10 +393,12 @@ if __name__ == "__main__":
             valid = grp.dropna(subset=["arp"])
             return (valid["arp"] * valid["tdp"]).sum() / valid["tdp"].sum()
 
-        # Aggregate to focal level per week
+        _agg_key = ["__time", "upc_focal", "channel_outlet", "retail_account", "geography_raw"]
+
+        # All donors combined (backward compat)
         donor_agg_weekly = (
             donor_weekly
-            .groupby(["__time", "upc_focal", "channel_outlet", "retail_account", "geography_raw"])
+            .groupby(_agg_key)
             .apply(lambda g: pd.Series({
                 "top_donor_tdp_sum":  g["tdp"].sum(),
                 "top_donor_units_sum": g["base_units"].sum(),
@@ -352,31 +407,83 @@ if __name__ == "__main__":
             .reset_index()
             .rename(columns={"upc_focal": "upc"})
         )
-        donor_agg_weekly["top_donor_tdp_sum"]  = pd.to_numeric(
-            donor_agg_weekly["top_donor_tdp_sum"],  errors="coerce")
-        donor_agg_weekly["top_donor_units_sum"] = pd.to_numeric(
-            donor_agg_weekly["top_donor_units_sum"], errors="coerce")
-        donor_agg_weekly["top_donor_arp_wavg"]  = pd.to_numeric(
-            donor_agg_weekly["top_donor_arp_wavg"],  errors="coerce")
 
-        df = df.merge(donor_agg_weekly,
-                      on=["__time"] + GROUP_COLS, how="left")
+        # Competitor donors only (cross-brand market share dynamics)
+        _comp_dw = donor_weekly[~donor_weekly["_is_built_donor"]]
+        if not _comp_dw.empty:
+            comp_agg_weekly = (
+                _comp_dw.groupby(_agg_key)
+                .apply(lambda g: pd.Series({
+                    "competitor_donor_tdp_sum":   g["tdp"].sum(),
+                    "competitor_donor_units_sum": g["base_units"].sum(),
+                    "competitor_donor_arp_wavg":  _tdp_weighted_arp(g),
+                }))
+                .reset_index()
+                .rename(columns={"upc_focal": "upc"})
+            )
+        else:
+            comp_agg_weekly = None
+
+        # BUILT sibling donors only (intra-brand cannibalization risk)
+        _built_dw = donor_weekly[donor_weekly["_is_built_donor"]]
+        if not _built_dw.empty:
+            built_agg_weekly = (
+                _built_dw.groupby(_agg_key)
+                .apply(lambda g: pd.Series({
+                    "built_donor_tdp_sum":   g["tdp"].sum(),
+                    "built_donor_units_sum": g["base_units"].sum(),
+                }))
+                .reset_index()
+                .rename(columns={"upc_focal": "upc"})
+            )
+        else:
+            built_agg_weekly = None
+
+        for col in ["top_donor_tdp_sum", "top_donor_units_sum", "top_donor_arp_wavg"]:
+            donor_agg_weekly[col] = pd.to_numeric(donor_agg_weekly[col], errors="coerce")
+
+        df = df.merge(donor_agg_weekly, on=["__time"] + GROUP_COLS, how="left")
+
+        if comp_agg_weekly is not None:
+            for col in ["competitor_donor_tdp_sum", "competitor_donor_units_sum", "competitor_donor_arp_wavg"]:
+                comp_agg_weekly[col] = pd.to_numeric(comp_agg_weekly[col], errors="coerce")
+            df = df.merge(comp_agg_weekly, on=["__time"] + GROUP_COLS, how="left")
+        else:
+            for c in ["competitor_donor_tdp_sum", "competitor_donor_units_sum", "competitor_donor_arp_wavg"]:
+                df[c] = np.nan
+
+        if built_agg_weekly is not None:
+            for col in ["built_donor_tdp_sum", "built_donor_units_sum"]:
+                built_agg_weekly[col] = pd.to_numeric(built_agg_weekly[col], errors="coerce")
+            df = df.merge(built_agg_weekly, on=["__time"] + GROUP_COLS, how="left")
+        else:
+            for c in ["built_donor_tdp_sum", "built_donor_units_sum"]:
+                df[c] = np.nan
+
         print(f"  top_donor_tdp_sum coverage: "
               f"{df['top_donor_tdp_sum'].notna().sum():,} / {len(df):,} rows "
               f"({df['top_donor_tdp_sum'].notna().mean()*100:.1f}%)")
+        print(f"  competitor_donor coverage: "
+              f"{df['competitor_donor_tdp_sum'].notna().sum():,} / {len(df):,} "
+              f"({df['competitor_donor_tdp_sum'].notna().mean()*100:.1f}%)")
+        print(f"  built_donor coverage: "
+              f"{df['built_donor_tdp_sum'].notna().sum():,} / {len(df):,} "
+              f"({df['built_donor_tdp_sum'].notna().mean()*100:.1f}%)")
     else:
-        for c in ["top_donor_tdp_sum", "top_donor_units_sum", "top_donor_arp_wavg"]:
+        for c in ["top_donor_tdp_sum", "top_donor_units_sum", "top_donor_arp_wavg",
+                  "competitor_donor_tdp_sum", "competitor_donor_units_sum", "competitor_donor_arp_wavg",
+                  "built_donor_tdp_sum", "built_donor_units_sum"]:
             df[c] = np.nan
-        print("  No donors found — competitor columns set to NaN.")
+        print("  No donors found — donor columns set to NaN.")
 
-    # Competitor price gap: focal ARP minus TDP-weighted donor ARP
-    # Positive = BUILT is priced above its primary competitors (premium)
-    # Negative = BUILT is priced below competitors (value position)
-    df["competitor_price_gap"] = df["arp"] - df["top_donor_arp_wavg"]
+    # Competitor price gap: focal ARP vs TDP-weighted *competitor* donor ARP only
+    # (v5 fix: v4 mixed BUILT siblings into this gap, diluting the competitive signal)
+    df["competitor_price_gap"] = df["arp"] - df["competitor_donor_arp_wavg"]
 
-    # Donor unit acceleration (WoW change in competitor demand)
-    # Computed after sort (already sorted in step 6)
-    df["top_donor_units_wow"] = df.groupby(GROUP_COLS)["top_donor_units_sum"].diff()
+    # Mixed-donor WoW (backward compat) + brand-split WoW signals
+    df["top_donor_units_wow"]       = df.groupby(GROUP_COLS)["top_donor_units_sum"].diff()
+    df["competitor_donor_units_wow"] = df.groupby(GROUP_COLS)["competitor_donor_units_sum"].diff()
+    df["built_donor_units_wow"]      = df.groupby(GROUP_COLS)["built_donor_units_sum"].diff()
 
     # ── 10. Category TDP — BUILT shelf share ─────────────────────────────────
     print("\n[10] Loading category TDP from built_filtered_weekly (all brands) …")
@@ -444,6 +551,12 @@ if __name__ == "__main__":
         .transform(lambda s: s.shift(1).rolling(8, min_periods=2).std())
     )
 
+    # TDP change signals — distribution expansion is a leading indicator of unit sales.
+    # The *level* (tdp, tdp_z8) is already in LAYER_DEMAND; the *change rate* adds new signal.
+    df["tdp_wow_delta"]   = df.groupby(GROUP_COLS)["tdp"].diff()
+    df["tdp_4w_momentum"] = df.groupby(GROUP_COLS)["tdp"].diff(4)
+    print(f"  tdp_wow_delta non-null: {df['tdp_wow_delta'].notna().sum():,} / {len(df):,}")
+
     # ── 12. Promo signals (after ARP rolling stats are available) ────────────
     # promo_intensity: fraction of total units that were in promo display
     df["promo_intensity"] = (
@@ -453,15 +566,27 @@ if __name__ == "__main__":
     # is_promo_units: clear signal when units_promo is present and material
     df["is_promo_units"] = (df["promo_intensity"] > 0.10).astype(float)
 
-    # arp_discount_pct: how far ARP dropped vs recent baseline
-    # Positive = ARP below 8w average (suggesting a price reduction / promo)
+    # arp_discount_pct: percentage drop vs 8w baseline — audit column only.
+    # At 5% of $10 = $0.50 threshold, this misses nickel-level TPR events.
+    # v5 replaces the detection logic with arp_dollar_discount (absolute $).
     df["arp_discount_pct"] = (
         (df["arp_roll8_avg"] - df["arp"]) / df["arp_roll8_avg"].clip(lower=0.01)
     ).clip(0, 1).fillna(0)
 
-    # is_promo_arp: inferred promo when units_promo is absent but ARP dropped >5%
+    # arp_dollar_discount: absolute dollar ARP drop vs 8w baseline (model feature).
+    # $0.05 threshold = nickel standard consistent with MO_17 price guardrail.
+    df["arp_dollar_discount"] = (df["arp_roll8_avg"] - df["arp"]).clip(lower=0).fillna(0)
+
+    # is_promo_arp: inferred promo when units_promo absent and ARP dropped > $0.05 absolute
     promo_missing = df["units_promo"].isna() | (df["units_promo"] == 0)
-    df["is_promo_arp"] = (promo_missing & (df["arp_discount_pct"] > 0.05)).astype(float)
+    df["is_promo_arp"] = (promo_missing & (df["arp_dollar_discount"] > 0.05)).astype(float)
+
+    # promo_lift_ratio: incremental unit lift from display (total vs base demand).
+    # Captures promo volume response independent of price — a $0 display event
+    # still shows promo lift; a shelf price reduction shows arp_dollar_discount.
+    df["promo_lift_ratio"] = (
+        (df["total_units"] / df["base_units"].clip(lower=1)) - 1
+    ).clip(0, 5).fillna(0)
 
     # Combined promo flag (model feature)
     df["is_promo_week"] = (
@@ -481,6 +606,9 @@ if __name__ == "__main__":
           f"none={promo_src.get('none', 0):,}")
     print(f"  is_promo_week=1: {df['is_promo_week'].sum():,} rows "
           f"({df['is_promo_week'].mean()*100:.1f}%)")
+    print(f"  arp_dollar_discount>$0.05: {(df['arp_dollar_discount']>0.05).sum():,} rows")
+    print(f"  promo_lift_ratio>0: {(df['promo_lift_ratio']>0).sum():,} rows  "
+          f"mean={df['promo_lift_ratio'].mean():.3f}")
 
     # Clean up intermediate promo flags (audit columns only need promo_source)
     df = df.drop(columns=["is_promo_units", "is_promo_arp"])
@@ -552,18 +680,25 @@ if __name__ == "__main__":
         # Seasonality
         "week_of_year", "holiday_week",
         # Promo signals (model features)
-        "is_promo_week", "promo_intensity", "arp_discount_pct",
-        # Promo audit
-        "promo_source",
+        "is_promo_week", "promo_intensity", "arp_dollar_discount", "promo_lift_ratio",
+        # Promo audit (not model features)
+        "arp_discount_pct", "promo_source",
         # Elasticity (static)
         "implied_elasticity", "elasticity_band",
-        # Cannibalization (static)
+        # Cannibalization (static) — total + brand-split
         "max_donor_cannibal_prob", "donor_count",
-        # Competitor / donor signals (time-varying; NaN when no donors)
-        "top_donor_tdp_sum", "top_donor_units_sum", "top_donor_arp_wavg",
-        "competitor_price_gap", "top_donor_units_wow",
-        # Category shelf signals
+        "competitor_donor_count", "built_donor_count",
+        # Mixed donor signals (backward compat)
+        "top_donor_tdp_sum", "top_donor_units_sum", "top_donor_arp_wavg", "top_donor_units_wow",
+        # Competitor-only donor signals (cross-brand market share dynamics)
+        "competitor_donor_tdp_sum", "competitor_donor_units_sum",
+        "competitor_donor_arp_wavg", "competitor_price_gap", "competitor_donor_units_wow",
+        # BUILT sibling donor signals (intra-brand cannibalization risk)
+        "built_donor_tdp_sum", "built_donor_units_sum", "built_donor_units_wow",
+        # Category shelf signals (audit only — not model features)
         "category_tdp_sum", "built_tdp_share",
+        # TDP change signals (model features — distribution expansion as leading indicator)
+        "tdp_wow_delta", "tdp_4w_momentum",
         # MO_46 rolling signals (NaN if MO_46 not yet run)
         "rolling_cannibal_pressure", "rolling_cannibal_trend",
         "rolling_elasticity", "rolling_elas_valid",
@@ -573,7 +708,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")
-    print("MO_25 v4 COMPLETE")
+    print("MO_25 v5 COMPLETE")
     print(f"{'='*70}")
     print(f"  Total rows:        {len(out):,}")
     print(f"  Weeks covered:     {out['__time'].nunique():,}")

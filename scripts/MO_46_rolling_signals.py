@@ -78,7 +78,7 @@ CANNIBAL_WINDOW  = 8
 CANNIBAL_WINDOW_SHORT = 4      # for trend: 4w vs 8w pressure
 ELAS_WINDOW      = 13
 MIN_VALID_WEEKS  = 5
-PRICE_GUARDRAIL  = 0.05        # $/bar — from MO_17's guardrail
+PRICE_GUARDRAIL  = 0.05        # $/bar (applied to arp / pack_count, not raw ARP)
 ELAS_CLIP        = (-5.0, 3.0)
 
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
@@ -111,24 +111,33 @@ def _add_cannibal_pressure(g: pd.DataFrame) -> pd.DataFrame:
 
 
 def _add_rolling_elasticity(g: pd.DataFrame) -> pd.DataFrame:
-    """Adds rolling_elasticity and rolling_elas_valid to a single series group."""
+    """Adds rolling_elasticity and rolling_elas_valid to a single series group.
+
+    Guardrail applied to arp_per_bar (arp / pack_count) so multi-packs require
+    the same $0.05/bar price variation as single-packs. Without this, a $10 4-pack
+    would need only $0.05 total ARP range to pass — trivially satisfied by scanner noise.
+    OLS is still estimated on raw log(arp) to preserve interpretability.
+    """
     g = g.sort_values("__time").reset_index(drop=True).copy()
     n = len(g)
     elas_vals  = np.full(n, np.nan)
     valid_flag = np.zeros(n, dtype=int)
 
     for i in range(n):
-        start = max(0, i - ELAS_WINDOW + 1)    # trailing window that includes row i
+        start = max(0, i - ELAS_WINDOW + 1)
         w = g.iloc[start : i + 1]
-        a = pd.to_numeric(w["arp"],        errors="coerce").values
-        u = pd.to_numeric(w["base_units"], errors="coerce").values
-        mask = np.isfinite(a) & np.isfinite(u) & (a > 0) & (u > 0)
+        a  = pd.to_numeric(w["arp"],         errors="coerce").values
+        pb = pd.to_numeric(w["arp_per_bar"], errors="coerce").values  # guardrail normalization
+        u  = pd.to_numeric(w["base_units"],  errors="coerce").values
+        mask = np.isfinite(a) & np.isfinite(pb) & np.isfinite(u) & (a > 0) & (u > 0)
         if mask.sum() < MIN_VALID_WEEKS:
             continue
-        arp_v = a[mask]
-        if arp_v.max() - arp_v.min() < PRICE_GUARDRAIL:
+        arp_v    = a[mask]
+        arp_bar_v = pb[mask]
+        # Guardrail: require meaningful per-bar price variation in the window
+        if arp_bar_v.max() - arp_bar_v.min() < PRICE_GUARDRAIL:
             continue
-        # np.polyfit is faster than scipy.linregress for small windows
+        # OLS on raw ARP log (interpretable as package-level elasticity)
         slope = np.polyfit(np.log1p(arp_v), np.log1p(u[mask]), 1)[0]
         elas_vals[i]  = float(np.clip(slope, *ELAS_CLIP))
         valid_flag[i] = 1
@@ -212,6 +221,22 @@ if __name__ == "__main__":
     bfw = bfw.drop_duplicates(subset=["__time"] + GROUP_COLS)
     print(f"  Rows: {len(bfw):,}")
 
+    # ── 3b. Load pack_count for per-bar ARP normalization ────────────────────
+    # The elasticity guardrail ($0.05) is specified in $/bar, not $/package.
+    # Without this, a 4-pack at $10 needs only $0.05 total ARP range to pass —
+    # trivially satisfied by scanner noise. Normalize to arp / pack_count first.
+    print(f"\nLoading pack_count from built_prepost_features for {len(all_focal_upcs)} focal UPCs …")
+    bpp = query_druid(f"""
+        SELECT
+            upc,
+            CAST(pack_count AS INT) AS pack_count
+        FROM "built_prepost_features"
+        WHERE upc IN ({_upc_sql_list(all_focal_upcs)})
+    """)
+    bpp["pack_count"] = pd.to_numeric(bpp["pack_count"], errors="coerce").clip(lower=1).fillna(1).astype(int)
+    bpp = bpp.drop_duplicates(subset=["upc"])
+    print(f"  Pack counts loaded: {len(bpp):,} UPCs")
+
     # ── 4. Build focal weekly panel ───────────────────────────────────────────
     focal_edw = edw[edw["upc"].isin(all_focal_upcs)].copy()
     df = focal_edw.merge(
@@ -219,6 +244,9 @@ if __name__ == "__main__":
         on=GROUP_COLS + ["__time"],
         how="left",
     )
+    df = df.merge(bpp[["upc", "pack_count"]], on="upc", how="left")
+    df["pack_count"] = df["pack_count"].fillna(1).astype(int)
+    df["arp_per_bar"] = df["arp"] / df["pack_count"].clip(lower=1)
     df = df.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
     print(f"\n  Focal panel: {len(df):,} rows | ARP coverage: "
           f"{df['arp'].notna().sum():,} / {len(df):,} "
