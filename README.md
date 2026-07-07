@@ -353,6 +353,29 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-07 (update 45) — Two-datasource comparison framework: what we plan to learn
+
+Two Druid datasources now exist side by side for every forecast series:
+
+| Datasource | Rows | What it is |
+|---|---|---|
+| `retailer_sales_forecast` | 32,448 | Series-blind base forecast — 2,496 series modeled independently; no inter-SKU awareness |
+| `retailer_sales_forecast_adj` | 32,448 | Portfolio-aware — zero-sum BUILT cannibalization layer on top; 3,204 adjusted rows |
+
+**Three validation questions we plan to answer once actuals arrive:**
+
+1. **Implicit encoding test:** Are DONOR rows already declining in the base forecast? If AR lags captured the cannibalization (MO_56 architectural conclusion), base and adj will be similar. Large `portfolio_adj_delta` on DONOR rows means the per-series model missed it.
+
+2. **Accuracy split:** Compute wMAPE on raw vs. adj separately for DONOR and FOCAL_LAUNCH rows. If adj is better for FOCAL_LAUNCH, the portfolio layer is adding signal LightGBM couldn't produce alone.
+
+3. **Threshold calibration:** Are the 30% `cannibal_prob` gate, 20% `MAX_TRANSFER_PCT`, and `wsl ≤ 26` launch window calibrated correctly? Accuracy gap direction reveals whether caps are too tight or too loose.
+
+**FP&A use:** `portfolio_adj_delta` + `portfolio_adj_source_upc` answer "organic growth vs. redistributed volume" — exactly what Connor/Jeff/Bracken need to trust the forecast. Mo Chat event card: "Adjusted 13w forecast +X units offset by −Y units from [donor UPCs] — reflects cannibalization, not pure demand growth."
+
+**Honest caveat:** Zero-sum assumes no category expansion; may not hold for all launches.
+
+---
+
 ### 2026-07-07 (update 44) — MO_55 adj forecast + HTML v2.1.8 ingested and shipped
 
 **MO_55 Druid ingest:** `retailer_sales_forecast_adj` datasource created (new, not a re-ingest). 32,448 rows (2,496 series × 13 weeks) with 4 portfolio columns: `portfolio_adj_delta`, `portfolio_adj_type` (NONE/DONOR/FOCAL_LAUNCH), `portfolio_adj_source_upc`, `forecast_dollars_base_adj`. Adjusted rows: 3,204 (DONOR: 2,135 + FOCAL_LAUNCH: 1,069).
