@@ -31,7 +31,7 @@
 # Phase 5 — HTML assembly + patch chain (strict order):
 #   MO_36 (base) → MO_40 (§14) → MO_41 (§15) → MO_42 (§16)
 #                → MO_43 (§17a) → MO_45 (§18) → MO_44 (§17b DAG)
-#                → MO_50 (§19) → MO_51 (§20) → MO_52 (§21) → MO_53 (§22)
+#                → MO_50 (§19) → MO_51 (§20) → MO_52 (§21) → MO_53 (§22) → MO_54 (§23)
 #
 # Final — version-stamp + copy to docs/
 # ─────────────────────────────────────────────────────────────────────────────
@@ -91,6 +91,7 @@ HTML_CHAIN=(
   MO_51_regularization_search     # §20 reg search + SHAP pruning + rolling CV
   MO_52_feature_ablation          # §21 MO_25 v4 feature group ablation
   MO_53_individual_feature_ablation  # §22 brand-split donors + TDP change + promo v2
+  MO_54_holiday_ablation             # §23 holiday binary flags vs integer code
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────

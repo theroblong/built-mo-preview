@@ -264,6 +264,30 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 38) — MO_54: holiday binary flag ablation — week_of_year sufficient, no flags promoted
+
+`scripts/MO_54_holiday_ablation.py` tested 7 candidates (6 binary holiday flags + `holiday_week` integer baseline) individually against the 28-feature MO_53 champion (avg CV 6.413%, Dec 2025 baseline 3.963%). Threshold: 0.03pp.
+
+**Result: all 7 candidates hurt the model (all positive Δ).**
+
+| Flag | wMAPE | Δ vs Champion |
+|------|-------|--------------|
+| `is_labor_day_week` | 4.108% | +0.145pp |
+| `is_new_year_week` | 4.097% | +0.135pp |
+| `is_superbowl_week` | 4.085% | +0.122pp |
+| `is_memorial_day_week` | 4.077% | +0.115pp |
+| `is_thanksgiving_week` | 4.074% | +0.112pp |
+| `is_christmas_week` | 4.029% | +0.066pp |
+| `holiday_week` (integer) | 4.009% | +0.046pp |
+
+**Why all flags hurt:** `week_of_year` (1–52 continuous) is already in the champion. The tree can split directly on weeks 1–2 for the New Year spike, weeks 47–52 for the holiday period, etc. Binary flags add redundancy without signal — they compete for feature fraction against genuinely useful features. The January protein bar spike is real and already captured; it doesn't need a dedicated column.
+
+**Conclusion:** MO_53's 28-feature set is the right stopping point for feature engineering. Holiday re-encoding hypothesis closed. The binary flags remain in the MO_25 parquet as audit columns in case a future model architecture needs them (e.g., neural net without tree splits).
+
+**Next:** MO_55 — portfolio cannibalization constraint (post-processing layer on MO_27 output).
+
+---
+
 ### 2026-07-07 (update 37) — MO_54 plan: portfolio cannibalization gap + holiday re-encoding
 
 Two architectural gaps identified from MO_53 results and CPG domain discussion. Documented in memory and wiki as MO_54 work.

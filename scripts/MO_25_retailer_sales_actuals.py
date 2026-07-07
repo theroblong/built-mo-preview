@@ -65,15 +65,24 @@ CATEGORY / SHELF SIGNALS (v4 addition)
 category_tdp_sum  — total TDP of ALL brands at same channel×retailer×geo×week (audit)
 built_tdp_share   — focal TDP / category_tdp_sum (audit only; not a model feature)
 
-HOLIDAY / SEASONAL FLAGS (v4 addition)
-----------------------------------------
-holiday_week — integer code; 0 = no holiday event
+HOLIDAY / SEASONAL FLAGS (v4 + v6 update)
+------------------------------------------
+holiday_week — integer code (audit only; ordinal encoding conflates event magnitudes)
   1 = New Year health kick (w1–2)
   2 = Super Bowl (w5)
   3 = Memorial Day (w21)
   4 = Labor Day (w36)
   5 = Thanksgiving / Black Friday (w47)
   6 = Christmas / Holiday (w52)
+
+v6 adds per-event binary flags so the model can learn each event's magnitude
+independently (New Year protein bar spike >> Super Bowl for this category):
+  is_new_year_week      — weeks 1–2 (New Year health resolution spike)
+  is_superbowl_week     — week 5
+  is_memorial_day_week  — week 21
+  is_labor_day_week     — week 36
+  is_thanksgiving_week  — week 47
+  is_christmas_week     — week 52
 
 AUDIT COLUMNS (not model features)
 ------------------------------------
@@ -524,6 +533,14 @@ if __name__ == "__main__":
     df["week_of_year"]  = df["__time"].dt.isocalendar().week.astype(int)
     df["holiday_week"]  = df["week_of_year"].map(HOLIDAY_WEEK_MAP).fillna(0).astype(int)
 
+    # v6: per-event binary flags — model learns each event magnitude independently
+    df["is_new_year_week"]      = df["week_of_year"].isin([1, 2]).astype(int)
+    df["is_superbowl_week"]     = (df["week_of_year"] == 5).astype(int)
+    df["is_memorial_day_week"]  = (df["week_of_year"] == 21).astype(int)
+    df["is_labor_day_week"]     = (df["week_of_year"] == 36).astype(int)
+    df["is_thanksgiving_week"]  = (df["week_of_year"] == 47).astype(int)
+    df["is_christmas_week"]     = (df["week_of_year"] == 52).astype(int)
+
     # Autoregressive lags on base_units
     for lag, col in [(1, "base_units_lag1"), (4, "base_units_lag4"), (13, "base_units_lag13")]:
         df[col] = df.groupby(GROUP_COLS)["base_units"].shift(lag)
@@ -677,8 +694,10 @@ if __name__ == "__main__":
         "base_units_lag52", "velocity_spm_lag52",
         # Total-units model lags
         "total_units_lag1", "total_units_lag4", "total_units_lag13", "total_units_lag52",
-        # Seasonality
+        # Seasonality — integer code (audit) + per-event binary flags (model candidates)
         "week_of_year", "holiday_week",
+        "is_new_year_week", "is_superbowl_week", "is_memorial_day_week",
+        "is_labor_day_week", "is_thanksgiving_week", "is_christmas_week",
         # Promo signals (model features)
         "is_promo_week", "promo_intensity", "arp_dollar_discount", "promo_lift_ratio",
         # Promo audit (not model features)
@@ -732,6 +751,8 @@ if __name__ == "__main__":
     print(f"                     arp_discount_pct, top_donor_tdp_sum, top_donor_units_sum,")
     print(f"                     top_donor_arp_wavg, competitor_price_gap,")
     print(f"                     top_donor_units_wow, category_tdp_sum, built_tdp_share")
+    print(f"  v6 binary flags:   is_new_year_week, is_superbowl_week, is_memorial_day_week,")
+    print(f"                     is_labor_day_week, is_thanksgiving_week, is_christmas_week")
 
     out.to_parquet("outputs/retailer_sales_weekly.parquet", index=False)
     print("\n  Saved → outputs/retailer_sales_weekly.parquet")
