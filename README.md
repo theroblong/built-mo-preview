@@ -264,6 +264,37 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 34) — MO_52: feature group ablation — strongest signals identified, group testing masks individual winners
+
+`scripts/MO_52_feature_ablation.py` ran 8 feature groups from MO_25 v4 against MO_51 champion (M1+week_of_year, 3.996% on expanded 512-series dataset). No group cleared the 0.05pp promotion threshold, but individual feature analysis tells the real story:
+
+**Dataset expansion is itself the headline win:** MO_25 v4's improved ARP cascade (rolling 13w fallback) retained 512 qualifying series vs 164 in MO_51 — a 3x expansion. The portfolio-level champion is now avg 3-cutpoint wMAPE **6.537%** (vs 7.79% in MO_51), new champion without any new features. More series = more representative, more stable model.
+
+**Individual feature signals (within groups):**
+- `donor_count` alone: **−0.081pp** — strongest new signal. The count of distinct competitors flagged as donors adds information beyond max_donor_cannibal_prob. Buried in G4 combined because `rolling_elasticity` (+0.099pp) and `implied_elasticity` (+0.022pp) hurt when added together.
+- `top_donor_units_wow` alone: **−0.037pp** — competitor unit acceleration is a real leading indicator
+- `holiday_week`: **−0.023pp** — seasonal event flags help
+- `top_donor_tdp_sum`, `top_donor_units_sum`: **−0.011pp** each — modest but consistent direction
+- `rolling_elasticity`: **+0.099pp** — consistently hurts (null coverage / noise); do not include as standalone feature
+
+**Root cause of no promotions:** Group-level testing mixed strong signals (donor_count) with noise signals (rolling_elasticity) in the same group. The group result (+0.052pp) masked the −0.081pp individual winner.
+
+**Next — MO_53:** Individual feature ablation (one feature at a time vs champion), 0.03pp threshold recalibrated for 512-series dataset. Primary candidates: donor_count + top_donor_units_wow + holiday_week.
+
+---
+
+### 2026-07-07 (update 33) — MO_25 v4 + MO_52: built prerequisites for MO_25 v4 → 512-series parquet
+
+`scripts/MO_25_retailer_sales_actuals.py` v4 adds 11 new columns to the parquet:
+- ARP fallback cascade: live → rolling 13w mean → post_13w_arp (stale fix for mature SKUs)
+- Promo signals: `is_promo_week` (units_promo primary, ARP discount >5% fallback), `promo_intensity`, `arp_discount_pct`; `promo_source` audit column
+- Competitor signals: `top_donor_tdp_sum`, `top_donor_units_sum`, `top_donor_arp_wavg`, `competitor_price_gap`, `top_donor_units_wow` (from scored_cannibalization top-3 donors → built_filtered_weekly)
+- Category shelf: `built_tdp_share` (BUILT TDP / category TDP); `category_tdp_sum` audit column
+- Holiday flags: `holiday_week` integer (0=none, 1=New Year … 6=Christmas)
+Coverage: 81% live ARP / 6% roll13 / 13% prepost; 46.7% competitor TDP coverage (53% NaN = no donors, handled by LightGBM)
+
+---
+
 ### 2026-07-07 (update 32) — SPINS data audit: what's used, what's unused, prioritized additions
 
 **Audit completed on MO_25/26/46 pipelines.** Despite having the full `built_filtered_weekly` Druid table (BUILT + all competitors), the current forecast model uses only BUILT-brand rows. Key unused signals, prioritized by ROI:
