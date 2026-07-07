@@ -264,6 +264,22 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 37) — MO_54 plan: portfolio cannibalization gap + holiday re-encoding
+
+Two architectural gaps identified from MO_53 results and CPG domain discussion. Documented in memory and wiki as MO_54 work.
+
+**Portfolio-level cannibalization — not modeled:**
+The individual SKU forecast treats each (upc, channel, retailer, geo) series in isolation. When BUILT launches a new flavor that cannibalizes an incumbent, the incumbent shows unexplained demand decline — the model has no awareness a sibling launched. Same problem for pack size migration (consumers trading from 4-count to 12-count of the same flavor). `built_donor_count` captures the number of BUILT siblings in the competitive pool, but individual series forecasts are independent and don't enforce that sum(BUILT forecasts) is portfolio-consistent.
+
+**Planned approach (MO_54):** Portfolio constraint post-processing. After individual forecasts are generated, apply a demand redistribution layer using the scored_cannibalization BUILT-to-BUILT transition matrix. Aligns individual SKU forecasts with a portfolio-level total rather than treating them as fully additive. Longer-term: top-down category forecast as anchor (Layer 1 of target architecture) provides the constraint individual SKUs get allocated against.
+
+**Holiday feature re-encoding:**
+`holiday_week` (0–6 integer code) scored −0.023pp in MO_53 — real positive direction, below 0.03pp threshold. Root cause: the integer code treats New Year (highest protein bar lift, confirmed from charts + Brian) identically to Super Bowl or Labor Day in model weighting. With only 11% of rows getting a non-zero value, the sparse signal gets diluted.
+
+**Planned fix (MO_54):** Separate binary flags per holiday type (`is_new_year_week`, `is_thanksgiving_week`, etc.) so the model learns per-event magnitude independently. New Year protein bar spike (w1–2) is the highest-signal event for this category and deserves its own column. Expected to clear the 0.03pp threshold once the signal is correctly encoded.
+
+---
+
 ### 2026-07-07 (update 36) — MO_53: individual ablation → NEW CHAMPION (28 features, avg CV 6.448%)
 
 `scripts/MO_53_individual_feature_ablation.py` tested 17 candidates one-at-a-time vs the 26-feature MO_52 champion (avg CV 6.537%, Dec 2025 baseline 3.996%). Threshold: 0.03pp (tightened from 0.05pp — justified by 3× series count).
