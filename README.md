@@ -264,6 +264,61 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 32) — SPINS data audit: what's used, what's unused, prioritized additions
+
+**Audit completed on MO_25/26/46 pipelines.** Despite having the full `built_filtered_weekly` Druid table (BUILT + all competitors), the current forecast model uses only BUILT-brand rows. Key unused signals, prioritized by ROI:
+
+**Tier 1 — in existing parquets, zero new data required:**
+- `is_promo_week` binary flag (derived from `units_promo`, already in MO_25 output but never added to FEATURE_COLS) — prevents model from conflating promo spikes with organic demand
+- Holiday week flags from `week_of_year` (New Year w1-2, Super Bowl w5, Memorial Day w21, Labor Day w36, Thanksgiving w47, Christmas w52) — codifies Brian's seasonal adjustment factors in the model
+- `pack_count` as categorical feature (already in parquet, just needs to be added to FEATURE_COLS)
+- `promo_intensity = units_promo / total_units` (zero new data)
+
+**Tier 1 — in Druid, one new query block needed:**
+- **Competitor TDP at same retailer** (top 3 donors from `scored_cannibalization`) — most valuable unused signal; competitor distribution expansion is a direct demand threat
+- **BUILT TDP share = BUILT_TDP / category_TDP** — shelf presence story, board-level sentence: "BUILT lost 3pp of category shelf presence at Kroger in Q3"
+- **Category velocity** (total category units / category TDP) — separates "category is growing" from "BUILT is growing"
+
+**Tier 2 — new queries, moderate lift:**
+- Competitor ARP rolling delta (how much is the competitive price moving?)
+- Category velocity STL decomp → Layer 1 seasonal index (MO_52 target)
+- Flavor/pack-tier categorical features for seasonal heterogeneity
+- Distribution velocity (TDP WoW delta / TDP) — new store adds = demand inflection signal
+
+**Explainability payoff:** Each Tier 1 addition maps to a specific FP&A sentence — "this week was promo-driven not organic," "January spike is seasonal," "Quest added 200 stores at Walmart — here's the projected BUILT demand impact." These are the sentences Brian/Jeff/Bracken need to trust the model.
+
+**Forward promo calendar** (Connor's team data) remains the single highest-value external signal not yet acquired.
+
+---
+
+### 2026-07-07 (update 31) — MO_51: regularization search, SHAP pruning, rolling 3-cutpoint CV
+
+`scripts/MO_51_regularization_search.py` — three experiments on the Dec 2025 cutpoint (164 qualifying series):
+
+**Exp A — Regularization grid (reg_alpha × reg_lambda × num_leaves):**
+- Best M1: **3.571%** at reg_alpha=0.3, reg_lambda=0.3, num_leaves=63 (vs 3.524% default — regularization adds stability, minor accuracy trade-off)
+- Best M5b: **3.892%** — still worse than M1; Mo rolling signals don't add portfolio-level value with current null coverage
+
+**Exp B — SHAP-guided M1+topK feature pruning:**
+SHAP ranked non-demand features (from full M5b): `tdp`, `week_of_year`, `tdp_z8`, `rolling_elasticity`, `velocity_spm_z8`, `arp_roll8_avg`
+- K=1 +tdp: 3.795% (worse)
+- K=2 +week_of_year: **3.556%** ← best (small improvement; confirms week_of_year adds signal)
+- K=3 +tdp_z8: 3.646% (worse — stops here)
+- **Best pruned set: M1 + week_of_year at 3.556%**
+
+**Exp C — Rolling 3-cutpoint CV (the definitive stability test):**
+
+| Cutpoint | n_series | MA 13wk | M1 | M5b (Rolling) | M1+topK |
+|---|---|---|---|---|---|
+| Jun 2025 | 108 | 30.2% | 15.2% | **13.9%** | **13.9%** |
+| Sep 2025 | 136 | 40.2% | **5.9%** | 6.1% | 5.9% |
+| Dec 2025 | 164 | 27.0% | **3.6%** | 3.9% | 3.6% |
+| **Avg** | — | **32.5%** | **8.2%** | **8.0%** | **7.8%** |
+
+**Key insight:** At Jun 2025 (108 series, shorter history), M5b beats M1 by 1.3pp. Rolling Mo signals are most valuable in the **low-data / early-lifecycle regime** — exactly where BUILT needs the most help (new product launches, new distribution). As data matures (Sep/Dec), demand history takes over. This is the practical Mo Intelligence story.
+
+---
+
 ### 2026-07-07 (update 30) — ML architecture roadmap: 4-layer forecast + MO_51/52/53 plan
 
 **Strategic direction post-MO_50:** M1 dominance confirms the demand foundation is doing almost all the work. The path to Mo Intelligence being *practically impactful* (not just novel) is a layered architecture where each component has a clear, isolated job and measurable contribution:

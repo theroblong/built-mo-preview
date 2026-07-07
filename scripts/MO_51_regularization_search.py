@@ -282,7 +282,8 @@ def exp_b_topk_pruning(super_tr, val_df, test_df, best_m1_params, out_path):
 
     try:
         explainer  = shap.TreeExplainer(m_full)
-        shap_vals  = explainer.shap_values(test_df[af_full])
+        shap_sample = test_df[af_full].sample(min(512, len(test_df)), random_state=42)
+        shap_vals  = explainer.shap_values(shap_sample)
         mean_shap  = np.abs(shap_vals).mean(axis=0)
         shap_df    = pd.DataFrame({"feature": af_full, "mean_abs_shap": mean_shap})
         shap_df    = shap_df.sort_values("mean_abs_shap", ascending=False)
@@ -450,10 +451,12 @@ def update_model_history(best_variant_tag, best_wmape, avg_cv_wmape, n_series, p
         "feature_set":   feats,
         "n_features":    len(feats),
         "n_series":      n_series,
-        "dec2025_wmape": best_wmape,
-        "avg_cv_wmape":  avg_cv_wmape,
-        "champion":      is_champion,
-        "params":        {k: v for k, v in params.items() if k not in ("n_jobs", "verbose", "random_state")},
+        "dec2025_wmape": float(best_wmape),
+        "avg_cv_wmape":  float(avg_cv_wmape),
+        "champion":      bool(is_champion),
+        "params":        {k: float(v) if hasattr(v, "item") else v
+                          for k, v in params.items()
+                          if k not in ("n_jobs", "verbose", "random_state")},
     }
     history.append(entry)
 
@@ -638,9 +641,9 @@ def main():
 
     # ── Model history ─────────────────────────────────────────────────────────
     best_overall = min(
-        [("M1", best_m1["wmape"], means["m1"], best_m1["params"], avail(LAYER_DEMAND, super_tr)),
-         ("M1+topK", float(best_topk_row["wmape"]), means["m1_topk"], best_m1["params"], best_topk_feats),
-         ("M5b", best_m5b["wmape"], means["m5b_rolling"], best_m5b["params"], avail(M5B_FEATS, super_tr))],
+        [("M1", best_m1["wmape"], means["m1"], n_q, best_m1["params"], avail(LAYER_DEMAND, super_tr)),
+         ("M1+topK", float(best_topk_row["wmape"]), means["m1_topk"], n_q, best_m1["params"], best_topk_feats),
+         ("M5b", best_m5b["wmape"], means["m5b_rolling"], n_q, best_m5b["params"], avail(M5B_FEATS, super_tr))],
         key=lambda x: x[2]
     )
     is_champion = update_model_history(*best_overall)
