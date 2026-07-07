@@ -308,6 +308,23 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 Output: `outputs/retailer_sales_forecast_adj.parquet` (32,448 rows). New columns: `portfolio_adj_delta`, `portfolio_adj_type` (FOCAL_LAUNCH / DONOR / NONE), `portfolio_adj_source_upc`, `forecast_dollars_base_adj`. Next step: human review → S3 upload → Druid ingest as `retailer_sales_forecast_adj`.
 
+---
+
+### 2026-07-07 (update 40) — Mo Intelligence strategy: root cause diagnosis + MO_56 path forward
+
+Deep analysis of why cannibalization and elasticity have not improved wMAPE, and the correct implementation approach.
+
+**Root cause 1 — wrong cannibalization signal:**
+`scored_cannibalization.cannibal_prob` is a one-time static score per (focal, donor) pair — identical every week in the training window. A constant-per-series feature cannot predict week-to-week variation (confirmed: ICC=1.0 in MO_41). The correct signal is `cannibalization_rate_weekly` (MO_19 output) — the actual week-by-week rate, which rises at sibling launch and decays as consumers habituate. In MO_50 we joined this as `rolling_cannibal_pressure` but got 73% null because nulls were treated as missing instead of zero (null = no active cannibalization = 0). Fix: aggregate `cannibalization_rate_weekly` to (focal, week) summing across donors; null → 0.
+
+**Root cause 2 — elasticity has no input:**
+`elasticity_coef` (ε) is also static per (upc, retailer) — same ICC problem used standalone. ε is a multiplier, not a feature: its predictive value is realized only when price changes. The correct feature is `price_elasticity_effect = arp_pct_change × elasticity_coef` — time-varying, nonzero only in price-event weeks, causally interpretable ("expected demand response given this SKU's sensitivity and this week's price move").
+
+**Root cause 3 — wrong evaluation metric:**
+Global wMAPE averages across ~2,200 stable mature series and ~300 event-context series. Mo signals add noise on stable series but should improve accuracy exactly where forecasts matter most — new launches (wsl ≤ 26) and price events (|arp_pct_change| > 5%). Conditional accuracy by segment is the right proof point. M1 remains the floor for stable series; Mo targets improvement on event-context series.
+
+**MO_56 plan:** MO_25 update adds `cannibal_rate_sum` + `price_elasticity_effect`. MO_26 ablation runs on 512-series dataset with results split by event-context vs. stable. This is the path to defensible, CFO-ready numbers.
+
 **Conclusion:** MO_53's 28-feature set is the right stopping point for feature engineering. Holiday re-encoding hypothesis closed. The binary flags remain in the MO_25 parquet as audit columns in case a future model architecture needs them (e.g., neural net without tree splits).
 
 **Next:** MO_55 — portfolio cannibalization constraint (post-processing layer on MO_27 output).
