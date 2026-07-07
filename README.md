@@ -264,6 +264,71 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 30) — ML architecture roadmap: 4-layer forecast + MO_51/52/53 plan
+
+**Strategic direction post-MO_50:** M1 dominance confirms the demand foundation is doing almost all the work. The path to Mo Intelligence being *practically impactful* (not just novel) is a layered architecture where each component has a clear, isolated job and measurable contribution:
+
+- **Layer 1 (Structural/Seasonal):** STL decomposition of category-level SPINS volume → seasonal index borrowed by all SKUs including new launches. Aligns with Brian's seasonal adjustment factors. Answers "what would this SKU sell if competitive dynamics were flat?"
+- **Layer 2 (Distribution):** TDP trajectory × velocity decomposition. Separates TDP-driven growth from velocity improvement — the FP&A question. Logistic growth prior for new product ramp using similar-launch analogs from SPINS history.
+- **Layer 3 (Mo Intelligence — competitive):** Rolling cannibalization pressure, rolling elasticity, promo lift. BUILT's unique edge: no single-source model can compute this. Answers "how is the competitive environment changing demand this week?"
+- **Layer 4 (Residual LightGBM):** Fits whatever Layers 1–3 miss. SHAP explains contribution. If Layer 4 contribution shrinks over time → Layers 1–3 are getting better.
+
+**MO_51/52/53 sequence:**
+- MO_51: Regularization grid search (reg_alpha × reg_lambda × num_leaves) on M1 + M5b; SHAP-guided M1+topK feature pruning; rolling CV across 3 cutpoints (Jun/Sep/Dec 2025)
+- MO_52: M1 + selective features + category STL seasonal index; similar-launch new product prior; category concatenation for borrowed seasonality
+- MO_53: Champion-challenger model history (model_history.json per-run); degradation monitoring (val wMAPE threshold + feature drift alerts)
+
+**Explainability/auditability:** every layer has isolated contribution measurement. SHAP for LightGBM; STL decomposition for seasonal; causal DAG (MO_44) for price attribution. Run-to-run comparability via champion-challenger log. Rolling 3-cutpoint CV as stable headline metric.
+
+---
+
+### 2026-07-07 (update 29) — MO_50 results: M1 still wins; rolling signals marginal at portfolio level
+
+**Results (Dec 2025 cutpoint, 164 qualifying series):**
+
+| Variant | Features | wMAPE | vs. M4 |
+|---|---|---|---|
+| MA 13wk baseline | 0 | 27.03% | — |
+| M1 Demand Foundation | 11 | 3.52% ★ | — |
+| M2–M4 (velocity, TDP, lifecycle) | 24 | 4.06% | — |
+| M5a Static Mo (current) | 27 | 4.21% | +0.15pp |
+| M5b Rolling Mo (MO_46) | 27 | 4.19% | +0.13pp |
+| M6 Rolling + YAGO | 29 | 4.24% | +0.18pp |
+| M7 All Mo features | 32 | 4.40% | +0.34pp |
+
+**Key findings:**
+- M1 (demand lags + rolling windows + z-scores, 11 features) is still the most accurate at portfolio level. Every group added after M1 degrades wMAPE.
+- Rolling Mo barely edges static (0.02pp) — not material. Root cause: 164 qualifying series is a small N for 27+ features; rolling_cannibal_pressure has 73% null coverage, adding noise without signal for non-donor series.
+- Value is in segments: CONVENTIONAL/FOOD shows YAGO benefit; segment charts reveal where rolling signals contribute locally even when portfolio gain is marginal.
+- More features = mild overfitting. M7 (32f) is worst branch variant.
+
+**Next directions under evaluation:** per-segment models, regularization search, SHAP-guided pruning of M1+top-K features, champion-challenger model history, rolling CV across multiple cutpoints, degradation monitoring.
+
+---
+
+### 2026-07-07 (update 28) — MO_50: Rolling vs. static Mo Intelligence feature ablation
+
+Built `scripts/MO_50_rolling_signal_ablation.py` to formally test whether MO_46 time-varying signals improve forecast accuracy over the static Mo signals identified as ICC=1.0 in MO_41.
+
+**Motivation:** MO_41 showed M1 (demand foundation, 11 features, 3.6% wMAPE) outperforms M5 (all 27 features, 4.4%) — static Mo signals are net negative because they don't vary week-to-week. MO_46 rolling signals (rolling_cannibal_pressure, rolling_cannibal_trend, rolling_elasticity) are time-varying; this study tests whether swapping them in at M5 closes or reverses the gap.
+
+**Extended ablation variants (branching from M4):**
+- M5a — Static Mo (current): implied_elasticity, max_donor_cannibal_prob, donor_count
+- M5b — Rolling Mo only: MO_46 signals (replace static entirely)
+- M6  — Rolling Mo + YAGO lags (lag52): what MO_26 v3 currently has minus static
+- M7  — All Mo: static + rolling + YAGO (maximum complexity, overfitting risk)
+
+**Segment breakdowns:**
+- Channel-level wMAPE: rolling vs. static across all channels
+- Retailer-level: top 15 by volume, Δ wMAPE rolling − static
+- SKU maturity: 5 buckets (launch 0–13w through established 2yr+); rolling signals need ≥8–13w donor/price history
+
+**SHAP on best variant:** colored by layer (teal = rolling Mo, pink = static Mo, purple = YAGO) to show real week-to-week contribution.
+
+Registered in `run_fpa_report.sh` HTML_CHAIN as §19. Neural components (Stage 3) deferred until feature set is locked from this study's results.
+
+---
+
 ### 2026-07-07 (update 27) — Per-retailer elasticity table explainer + Mo Chat grounding
 
 Added in-report explainer box directly below the Section 17.6 Per-Retailer Elasticity Table in MO_44. Explains the two direction labels in plain language:
