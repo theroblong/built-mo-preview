@@ -180,11 +180,12 @@ def chart_waterfall(mean_shap, avail, base_val, actual_mean, pred_mean,
                f"Model forecast (avg):    {pred_u:>7,} units/week\n"
                f"SPINS actual (avg):      {actual_u:>7,} units/week\n"
                f"Forecast error:          {err_pct:>6.1f}%")
-    ax.text(0.99, 0.99, summary, transform=ax.transAxes, fontsize=9,
-            ha="right", va="top", fontfamily="monospace",
-            bbox=dict(boxstyle="round,pad=0.5", facecolor="white", alpha=0.92, edgecolor="#ccc"))
+    # Place stats box below the plot area so it never masks SHAP bars
+    fig.text(0.99, 0.01, summary,
+             ha="right", va="bottom", fontsize=9, fontfamily="monospace",
+             bbox=dict(boxstyle="round,pad=0.5", facecolor="white", alpha=0.92, edgecolor="#ccc"))
 
-    plt.tight_layout(pad=2)
+    plt.tight_layout(pad=2, rect=[0, 0.18, 1, 1])  # reserve bottom 18% for stats box
     fig.savefig(out_path, dpi=150, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
     print(f"  Saved: {os.path.basename(out_path)}")
@@ -554,8 +555,20 @@ def build_html_section14(chart_paths):
   <p style="font-size:14px;line-height:1.7;color:#333;margin-bottom:8px">
     For every SKU at every retailer we can show the exact feature contributions that drove the forecast
     — in plain business terms. Bars to the right push the prediction up; bars to the left push it down.
-    The summary box shows base expectation, model forecast, and SPINS actual.
+    The stats box below each chart shows the portfolio baseline, model forecast, and SPINS actual for that series.
   </p>
+
+  <div style="background:#fffbea;border:1px solid #f0e0a0;border-radius:6px;padding:16px 20px;margin:0 0 20px;font-size:13px;line-height:1.7;color:#444">
+    <strong style="color:#92710a">How to read a SHAP waterfall chart:</strong>
+    Each bar represents one input feature — a signal the model used when building the forecast for this SKU.
+    <strong>Green bars (pointing right)</strong> push the prediction <em>above</em> the portfolio baseline.
+    <strong>Red bars (pointing left)</strong> pull the prediction <em>below</em> the baseline.
+    The x-axis value is the SHAP impact on the log-demand prediction; a bar of +1.0 roughly doubles predicted demand relative to baseline.
+    Features are ranked by absolute impact — the top bar is the single biggest driver.
+    The stats box below each chart anchors the numbers: <em>portfolio avg baseline</em> is what the model predicts if it knew nothing SKU-specific;
+    <em>model forecast</em> is what it predicts after applying all features; <em>SPINS actual</em> is what really happened;
+    <em>forecast error</em> is how far off the model was (lower = better).
+  </div>
 
   <p style="font-size:13px;font-weight:600;color:#555;margin:20px 0 6px">Brownie Batter 4pk — Mature / Stable</p>
   <img src="data:image/png;base64,{wf_bb4}" style="width:100%;max-width:900px;display:block;margin:0 auto 24px" alt="Waterfall BB4pk">

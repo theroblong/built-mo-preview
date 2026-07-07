@@ -801,8 +801,47 @@ def main():
     <div class="chart-caption">
       Figure 13 — All methods vs. actuals for Brownie Batter 4pk at Walmart, Jan–Apr 2026.
       LightGBM (5.8% wMAPE) vs. ETS trend (27%), MA 13wk (20.5%), and Naive (31.6%).
-      Dollar error box shows the weekly planning error in $ at $8.97 ARP.
+      Dollar error box below the chart shows weekly planning error in $ at $8.97 ARP.
     </div>
+  </div>
+
+  <div style="margin:20px 0 32px;background:#f8fbff;border:1px solid #dce8f5;border-radius:8px;padding:24px">
+    <h4 style="font-size:15px;font-weight:700;color:#1a1a2e;margin:0 0 14px">How to read this chart — what each method represents</h4>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr style="background:#1a3a5c;color:white">
+        <th style="padding:10px 14px;text-align:left">Method</th>
+        <th style="padding:10px 14px;text-align:left">What it does</th>
+        <th style="padding:10px 14px;text-align:left">When it works well</th>
+        <th style="padding:10px 14px;text-align:left">Watch out for</th>
+      </tr>
+      <tr style="background:#ffffff">
+        <td style="padding:10px 14px;border:1px solid #dce8f5;font-weight:700;color:#2563eb;white-space:nowrap">LightGBM q50</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Machine learning model trained on 27 features: demand lags, distribution (TDP), price, cannibalization pressure, and seasonality. q50 = the median prediction — half of model runs land above, half below.</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Established SKUs with 52+ weeks of SPINS history. Products where TDP trajectory, price moves, or competitive dynamics drive the forecast.</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">New launches (&lt;52 weeks) — model has too little history and falls back to simpler methods. Large unplanned promo events not yet in training data.</td>
+      </tr>
+      <tr style="background:#f8fbff">
+        <td style="padding:10px 14px;border:1px solid #dce8f5;font-weight:700;color:#d97706;white-space:nowrap">ETS (Holt trend)</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Exponential smoothing with a linear trend component. Weights recent weeks more heavily than older ones, then extrapolates that trend forward. No external features — purely time-series.</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Products on a clear, steady growth trajectory with no distribution inflections. Short-history series where LightGBM cannot run.</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">TDP-driven growth: ETS extrapolates the trend indefinitely, overshooting badly when distribution saturates. Also struggles with promos and seasonality.</td>
+      </tr>
+      <tr style="background:#ffffff">
+        <td style="padding:10px 14px;border:1px solid #dce8f5;font-weight:700;color:#64748b;white-space:nowrap">MA 13wk</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Simple average of the last 13 weeks of actual demand. Projects that demand will stay at its recent quarterly average — no trend, no seasonality, no features. The current Excel / spreadsheet planning baseline.</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Stable mature products with no growth trend. Useful as a sanity-check floor — if your forecast is worse than this, something is wrong.</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Any product with a trend (up or down) — will systematically under- or over-forecast. Completely blind to upcoming promos, price changes, or seasonal patterns.</td>
+      </tr>
+      <tr style="background:#f8fbff">
+        <td style="padding:10px 14px;border:1px solid #dce8f5;font-weight:700;color:#94a3b8;white-space:nowrap">Naive</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Last observed week's actual demand, repeated for all 13 forecast weeks. The simplest possible forecast — "next week will be exactly like last week."</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Very flat, low-volatility products. Sets the absolute floor for "can any model outperform doing nothing?"</td>
+        <td style="padding:10px 14px;border:1px solid #dce8f5">Any product with trend, seasonality, or promo volatility. One unusual week contaminates all 13 forecast weeks. Outperformed by MA 13wk on nearly every BUILT series.</td>
+      </tr>
+    </table>
+    <p style="font-size:12px;color:#888;margin:12px 0 0">
+      wMAPE = weighted Mean Absolute Percentage Error. Lower is better. Measured on a held-out 13-week OOS window — predictions were made before these weeks were observed.
+    </p>
   </div>
 </div>
 

@@ -492,13 +492,14 @@ def _chart2_horse_race(bb4pk_test, bb_acc, arp):
            f"  LightGBM:  ${lgb_err_wk:,.0f}/wk\n"
            f"  ETS:       ${ets_err_wk:,.0f}/wk\n"
            f"  Naive:     ${naive_err_wk:,.0f}/wk")
-    ax.text(0.98, 0.04, box,
-            transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=8.5, family="monospace",
-            bbox=dict(boxstyle="round,pad=0.5", facecolor="#e3f2fd",
-                      edgecolor=C_LGB, alpha=0.9))
+    # Place dollar error box below the plot area so it never masks data
+    fig.text(0.98, 0.01, box,
+             ha="right", va="bottom",
+             fontsize=8.5, family="monospace",
+             bbox=dict(boxstyle="round,pad=0.5", facecolor="#e3f2fd",
+                       edgecolor=C_LGB, alpha=0.9))
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.20, 1, 1])  # reserve bottom 20% for the callout
     out = os.path.join(OUTPUT_DIR, "v2_mo37_chart2_horse_race.png")
     plt.savefig(out, dpi=150, bbox_inches="tight")
     plt.close()
