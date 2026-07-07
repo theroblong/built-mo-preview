@@ -1,4 +1,4 @@
-"""MO_25 v5 — Build retailer_sales_weekly: historical panel for sales forecasting.
+"""MO_25 v7 — Build retailer_sales_weekly: historical panel for sales forecasting.
 
 WHY THIS EXISTS
 ---------------
@@ -84,6 +84,31 @@ independently (New Year protein bar spike >> Super Bowl for this category):
   is_thanksgiving_week  — week 47
   is_christmas_week     — week 52
 
+CANNIBALIZATION RATE — TIME-VARYING SIGNAL (v7 addition)
+----------------------------------------------------------
+Previous versions used `scored_cannibalization.cannibal_prob` — a one-time static score,
+identical every week per (focal, donor) pair. In a temporal model this has ICC=1.0:
+zero week-to-week predictive power (confirmed MO_41).
+
+`cannibalization_rate_weekly` (MO_19 output) is already aggregated to (focal, week):
+  cannibalization_rate = sum(cannibal_prob × max(0, -donor_wow_delta)) / focal_base_units
+
+It rises when sibling donors are accelerating at the focal's expense, fades as consumers
+habituate. This IS time-varying signal we want. The MO_50 failure (73% null) was simply
+because null = focal not in any active cannibal pair = 0 pressure — not missing data.
+Fix: join + fillna(0). New column: `cannibal_rate` (float 0–1, filled to 0 when no pair).
+
+ELASTICITY INTERACTION TERM (v7 addition)
+------------------------------------------
+`implied_elasticity` (ε) is static per (upc, retailer). Used standalone it's constant
+per series — same ICC problem. ε is a multiplier: its value is realized only when price
+actually changes. Correct feature: `price_elasticity_effect = arp_pct_change × ε`.
+  arp_pct_change = (arp − arp_lag1) / arp_lag1  (signed: negative when price drops)
+  price_elasticity_effect = arp_pct_change × implied_elasticity
+When price drops 5% and ε=−1.8 → effect=+0.09 (expected +9% demand lift).
+Time-varying, nonzero only in price-event weeks, causally interpretable.
+Null ε → 0. Clipped to [−1.5, 1.5] to suppress outliers.
+
 AUDIT COLUMNS (not model features)
 ------------------------------------
 arp_source        str   — "live" | "roll13" | "prepost"
@@ -91,6 +116,7 @@ promo_source      str   — "units_promo" | "arp_inferred" | "none"
 arp_discount_pct  float — % drop vs 8w baseline (audit; model uses arp_dollar_discount)
 category_tdp_sum  float — denominator for built_tdp_share
 built_tdp_share   float — BUILT shelf share (audit; model uses tdp_wow_delta / tdp_4w_momentum)
+arp_pct_change    float — signed % price change WoW (audit; model uses price_elasticity_effect)
 
 OUTPUT SCHEMA (retailer_sales_weekly.parquet)
 ---------------------------------------------
@@ -124,7 +150,7 @@ if __name__ == "__main__":
 
     # ── 1. Foundation: event_detection_weekly ───────────────────────────────
     print("=" * 70)
-    print("MO_25 v5 — Retailer Sales Actuals")
+    print("MO_25 v7 — Retailer Sales Actuals")
     print("=" * 70)
     print("\n[1] Loading event_detection_weekly …")
     edw = query_druid(f"""
@@ -358,6 +384,38 @@ if __name__ == "__main__":
     print(f"  Focal series: {len(can_agg):,} | "
           f"Unique top-{TOP_N_DONORS} donor UPCs: {len(donor_upcs):,}")
 
+    # ── 8c. Cannibalization rate — time-varying focal pressure ───────────────
+    # cannibalization_rate_weekly is already (focal, week) aggregated from MO_19.
+    # null = focal not in any active cannibalization pair = 0 pressure, NOT missing.
+    print("\n[8c] Loading cannibalization_rate_weekly …")
+    crw = query_druid(f"""
+        SELECT
+            __time,
+            focal_upc,
+            channel_outlet,
+            retail_account,
+            geography_raw,
+            CAST(cannibalization_rate AS DOUBLE) AS cannibal_rate
+        FROM "cannibalization_rate_weekly"
+        WHERE __time >= CURRENT_TIMESTAMP - {LOOKBACK}
+          AND retail_account IS NOT NULL
+          AND retail_account <> ''
+    """)
+    crw["__time"]       = pd.to_datetime(crw["__time"], utc=True)
+    crw["cannibal_rate"] = pd.to_numeric(crw["cannibal_rate"], errors="coerce").clip(0, 1)
+    crw = crw.drop_duplicates(
+        subset=["__time", "focal_upc", "channel_outlet", "retail_account", "geography_raw"]
+    ).rename(columns={"focal_upc": "upc"})
+
+    df = df.merge(
+        crw[["__time", "upc", "channel_outlet", "retail_account", "geography_raw", "cannibal_rate"]],
+        on=["__time"] + GROUP_COLS, how="left"
+    )
+    df["cannibal_rate"] = df["cannibal_rate"].fillna(0)
+    cannibal_active = (df["cannibal_rate"] > 0).sum()
+    print(f"  cannibal_rate > 0: {cannibal_active:,} / {len(df):,} rows "
+          f"({cannibal_active / len(df) * 100:.1f}%)")
+
     # ── 9. Competitor / donor weekly signals ─────────────────────────────────
     print(f"\n[9] Loading top-{TOP_N_DONORS} donor weekly data from built_filtered_weekly …")
     if donor_upcs:
@@ -558,7 +616,13 @@ if __name__ == "__main__":
     for lag, col in [(1, "arp_lag1"), (4, "arp_lag4")]:
         df[col] = df.groupby(GROUP_COLS)["arp"].shift(lag)
 
-    df["arp_wow_delta"] = df["arp"] - df["arp_lag1"]
+    df["arp_wow_delta"]  = df["arp"] - df["arp_lag1"]
+    # Signed pct change: negative when price drops (promotional), positive when price rises.
+    # Audit column — the model feature is price_elasticity_effect (interaction with ε).
+    df["arp_pct_change"] = (
+        df["arp_wow_delta"] / df["arp_lag1"].clip(lower=0.01)
+    ).clip(-0.5, 0.5).fillna(0)
+
     df["arp_roll8_avg"] = (
         df.groupby(GROUP_COLS)["arp"]
         .transform(lambda s: s.shift(1).rolling(8, min_periods=2).mean())
@@ -573,6 +637,15 @@ if __name__ == "__main__":
     df["tdp_wow_delta"]   = df.groupby(GROUP_COLS)["tdp"].diff()
     df["tdp_4w_momentum"] = df.groupby(GROUP_COLS)["tdp"].diff(4)
     print(f"  tdp_wow_delta non-null: {df['tdp_wow_delta'].notna().sum():,} / {len(df):,}")
+
+    # Elasticity interaction — expected demand response given this SKU's sensitivity and
+    # this week's actual price move. Zero when price is flat or elasticity is unknown.
+    df["price_elasticity_effect"] = (
+        df["arp_pct_change"] * df["implied_elasticity"].fillna(0)
+    ).clip(-1.5, 1.5).fillna(0)
+    pe_active = (df["price_elasticity_effect"].abs() > 0.001).sum()
+    print(f"  price_elasticity_effect nonzero: {pe_active:,} / {len(df):,} rows "
+          f"({pe_active / len(df) * 100:.1f}%)")
 
     # ── 12. Promo signals (after ARP rolling stats are available) ────────────
     # promo_intensity: fraction of total units that were in promo display
@@ -702,9 +775,12 @@ if __name__ == "__main__":
         "is_promo_week", "promo_intensity", "arp_dollar_discount", "promo_lift_ratio",
         # Promo audit (not model features)
         "arp_discount_pct", "promo_source",
-        # Elasticity (static)
+        # Elasticity — static coefficient + time-varying interaction term (v7)
         "implied_elasticity", "elasticity_band",
-        # Cannibalization (static) — total + brand-split
+        "arp_pct_change",           # audit: signed WoW price change
+        "price_elasticity_effect",  # model candidate: arp_pct_change × implied_elasticity
+        # Cannibalization — static signals + time-varying rate (v7)
+        "cannibal_rate",            # model candidate: time-varying focal pressure (null→0)
         "max_donor_cannibal_prob", "donor_count",
         "competitor_donor_count", "built_donor_count",
         # Mixed donor signals (backward compat)
@@ -727,7 +803,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")
-    print("MO_25 v5 COMPLETE")
+    print("MO_25 v7 COMPLETE")
     print(f"{'='*70}")
     print(f"  Total rows:        {len(out):,}")
     print(f"  Weeks covered:     {out['__time'].nunique():,}")
@@ -747,13 +823,22 @@ if __name__ == "__main__":
           f"Avg: {out['built_tdp_share'].mean():.3f}")
     print(f"  ARP range:         ${out['arp'].min():.2f} – ${out['arp'].max():.2f}")
     print(f"  Base units range:  {out['base_units'].min():.0f} – {out['base_units'].max():.0f}")
+    print(f"  cannibal_rate>0:   {(out['cannibal_rate']>0).sum():,} rows "
+          f"({(out['cannibal_rate']>0).mean()*100:.1f}%) | "
+          f"mean(nonzero)={out.loc[out['cannibal_rate']>0,'cannibal_rate'].mean():.4f}")
+    print(f"  price_elas_eff≠0:  {(out['price_elasticity_effect'].abs()>0.001).sum():,} rows "
+          f"({(out['price_elasticity_effect'].abs()>0.001).mean()*100:.1f}%) | "
+          f"range [{out['price_elasticity_effect'].min():.3f}, {out['price_elasticity_effect'].max():.3f}]")
     print(f"  New columns vs v3: holiday_week, is_promo_week, promo_intensity,")
     print(f"                     arp_discount_pct, top_donor_tdp_sum, top_donor_units_sum,")
     print(f"                     top_donor_arp_wavg, competitor_price_gap,")
     print(f"                     top_donor_units_wow, category_tdp_sum, built_tdp_share")
     print(f"  v6 binary flags:   is_new_year_week, is_superbowl_week, is_memorial_day_week,")
     print(f"                     is_labor_day_week, is_thanksgiving_week, is_christmas_week")
+    print(f"  v7 time-varying:   cannibal_rate (from cannibalization_rate_weekly, null→0)")
+    print(f"                     arp_pct_change (audit), price_elasticity_effect (arp_pct×ε)")
 
     out.to_parquet("outputs/retailer_sales_weekly.parquet", index=False)
     print("\n  Saved → outputs/retailer_sales_weekly.parquet")
-    print("\nNext: run MO_52_feature_ablation.py to test each new feature against M1+topK champion.")
+    print("\nNext: run MO_56 ablation — test cannibal_rate + price_elasticity_effect")
+    print("      on event-context series (wsl≤26 or |arp_pct_change|>5%) vs stable series.")
