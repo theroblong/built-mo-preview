@@ -74,6 +74,10 @@ FEATURE_COLS = [
     "channel_outlet",
     # Removed by ablation (hurt or below threshold): implied_elasticity, max_donor_cannibal_prob,
     # rolling_cannibal_pressure, rolling_cannibal_trend, rolling_elasticity (MO_50–MO_53)
+    # MO_56: cannibal_rate (−0.104pp global, −0.073pp event) and price_elasticity_effect
+    # (−0.092pp) also rejected. AR lags already encode cannibalization damage via lagged outcomes;
+    # ARP pct changes too small (mean 0.33%) for elasticity interaction to carry signal.
+    # MO_53 28-feature set is the CONFIRMED stopping point for feature engineering.
 ]
 
 # Total-units model swaps base_units AR lags for total_units lags; same demand-driver features

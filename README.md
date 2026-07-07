@@ -351,7 +351,37 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 `arp_pct_change` saved as audit column. Both signals ready for MO_56 conditional ablation.
 
-**Next:** MO_55 — portfolio cannibalization constraint (post-processing layer on MO_27 output).
+---
+
+### 2026-07-07 (update 42) — MO_56: time-varying Mo signals correctly implemented — still rejected; MO_53 confirmed as final feature engineering stopping point
+
+`scripts/MO_56_time_varying_ablation.py` ran `cannibal_rate` + `price_elasticity_effect` individually and combined against MO_53 28-feature champion. First experiment with full conditional split (event-context vs stable).
+
+**Champion baseline (Dec 2025, conditional):**
+
+| Subset | wMAPE | Share |
+|--------|-------|-------|
+| Global | 3.961% | 100% |
+| Event-context (wsl≤26 or \|Δprice\|≥5%) | 2.657% | 23.9% |
+| Stable | 4.184% | 76.1% |
+
+**Candidate results:**
+
+| Candidate | Δ Global | Δ Event | Δ Stable |
+|-----------|----------|---------|----------|
+| `cannibal_rate` | +0.104pp | +0.073pp | +0.109pp |
+| `price_elasticity_effect` | +0.092pp | +0.082pp | +0.093pp |
+| Both combined | +0.082pp | +0.178pp | +0.065pp |
+
+**0 promoted. Feature engineering loop closed.**
+
+**Why the signals failed:**
+- `cannibal_rate`: AR lags already encode cannibalization damage via lagged outcomes — adding the rate signal provides no information the model can't infer from the training target history.
+- `price_elasticity_effect`: `mean(nonzero) = 0.0003` — near-zero variance. Protein bar ARP changes average 0.33% WoW; even promo events are small in % terms. For series with null elasticity, interaction forced to 0.
+
+**Key unexpected finding:** The champion already predicts event-context rows *better* (2.657%) than stable rows (4.184%). AR lags and `weeks_since_launch` handle launch ramp and price events well — there is no accuracy gap for Mo signals to fill.
+
+**Architecture conclusion:** Mo Intelligence's value is **explainability + scenario planning**, not wMAPE improvement. The MO_53 28-feature set is the confirmed stopping point. Mo signals (cannibal_rate, elasticity ε) belong in the explanation layer (event cards, SHAP attribution, scenario drawers), not the prediction layer.
 
 ---
 
