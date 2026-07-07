@@ -264,6 +264,42 @@ q10/q50/q90    *= blend_mult                       # band shape preserved; blend
 
 ---
 
+### 2026-07-07 (update 36) — MO_53: individual ablation → NEW CHAMPION (28 features, avg CV 6.448%)
+
+`scripts/MO_53_individual_feature_ablation.py` tested 17 candidates one-at-a-time vs the 26-feature MO_52 champion (avg CV 6.537%, Dec 2025 baseline 3.996%). Threshold: 0.03pp (tightened from 0.05pp — justified by 3× series count).
+
+**Two features promoted — new champion avg CV 6.448% (+0.089pp improvement):**
+- **`donor_count` (−0.081pp → 3.915%):** Total competitive pool size (BUILT + competitor donors combined) is the stable signal. The model uses it as a competitive complexity indicator — how many SKUs compete for the same shelf space and demand.
+- **`tdp_wow_delta` (−0.045pp → 3.951%):** Week-over-week distribution change. Confirms the CPG research finding that distribution *growth rate* predicts unit sales beyond the static level (`tdp`, `tdp_z8` already in champion). Biggest gain in Jun 2025 low-data regime (12.643% → 12.311%, −0.332pp).
+
+**Key negative findings:**
+- `competitor_donor_count` HURT (+0.090pp): Splitting total donor count by brand loses stability — total pool size is what the model needs, not the brand breakdown. The brand-split is valuable for Mo Chat explanations but hurts the forecast signal.
+- `tdp_4w_momentum` HURT (+0.105pp): 4-week TDP trend is redundant with rolling demand stats already in the champion.
+- `rolling_elasticity` still HURTS (+0.037pp) even after MO_46 $/bar guardrail fix: too few qualifying price events in 13w windows at this grain.
+- `arp_dollar_discount` (−0.052pp): Still covered by arp/arp_wow_delta in champion. The detection fix matters for promo classification, not for the forecast feature directly.
+
+**MO_26 FEATURE_COLS updated to 28-feature champion:**
+Added: `tdp_wow_delta`. Removed as validated neutral/harmful: `implied_elasticity`, `max_donor_cannibal_prob`, `rolling_cannibal_pressure`, `rolling_cannibal_trend`, `rolling_elasticity` (confirmed across MO_50–MO_53).
+
+**Next:** Run MO_26→MO_27 to regenerate forecasts with the 28-feature champion configuration.
+
+---
+
+### 2026-07-07 (update 35) — MO_25 v5 + MO_46 fix: brand-split donors, TDP change, promo absolute $, elasticity guardrail
+
+**MO_25 v5** added 9 net-new feature columns to `retailer_sales_weekly.parquet`:
+- Brand-split donor signals: `competitor_donor_count` / `built_donor_count` (intra-BUILT cannibalization vs. competitor market share dynamics must be tracked separately)
+- `competitor_donor_tdp_sum/units_sum/arp_wavg/units_wow` + `built_donor_tdp_sum/units_sum/units_wow`
+- `competitor_price_gap` fixed: now uses competitor donors only (v4 mixed BUILT siblings)
+- `tdp_wow_delta` + `tdp_4w_momentum`: distribution change rate (the CPG leading indicator)
+- `arp_dollar_discount`: absolute dollar ARP drop (nickel standard — fixes v4's 5% = $0.50 threshold for $10 4-packs)
+- `promo_lift_ratio`: display lift independent of price (total_units/base_units − 1)
+- `built_tdp_share` demoted to audit (ablation confirmed +0.052pp hurt)
+
+**MO_46 guardrail fix:** Rolling elasticity `PRICE_GUARDRAIL = $0.05` now applied to `arp / pack_count` ($/bar), not raw ARP. Multi-packs previously needed only $0.06 total ARP range to pass — trivially satisfied by scanner noise. Fixed: load pack_count from built_prepost_features, compute arp_per_bar. Coverage: 68% → 59.7% (correctly stricter, fewer spurious estimates).
+
+---
+
 ### 2026-07-07 (update 34) — MO_52: feature group ablation — strongest signals identified, group testing masks individual winners
 
 `scripts/MO_52_feature_ablation.py` ran 8 feature groups from MO_25 v4 against MO_51 champion (M1+week_of_year, 3.996% on expanded 512-series dataset). No group cleared the 0.05pp promotion threshold, but individual feature analysis tells the real story:

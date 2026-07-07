@@ -53,28 +53,27 @@ FEATURE_COLS = [
     # Velocity
     "velocity_spm_roll8_avg", "velocity_spm_roll13_avg",
     "velocity_spm_z8", "velocity_spm_z13",
-    # Distribution
+    # Distribution (level + week-over-week change — MO_53 champion: tdp_wow_delta promoted)
     "tdp", "tdp_z8",
+    "tdp_wow_delta",
     # Price trend (from built_filtered_weekly — the spins_full lineage)
     "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
     # Lifecycle
     "weeks_since_launch",
-    # External signals
-    "implied_elasticity",
-    "max_donor_cannibal_prob", "donor_count",
+    # Competitive pool size (MO_53 champion: donor_count promoted at −0.081pp)
+    # Total pool count (BUILT + competitor donors) = competitive complexity signal
+    # Note: competitor_donor_count alone HURT (+0.090pp) — aggregate pool size is what matters
+    "donor_count",
     # Seasonality
     "week_of_year",
     # Autoregressive lags (lagged at time T — no leakage)
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
     # YAGO — year-ago lags (Bracken: "are 3 years of data comparable?")
     "base_units_lag52", "velocity_spm_lag52",
-    # MO_46 rolling signals — time-varying competitive dynamics
-    # rolling_cannibal_pressure: -pearsonr(focal_8w, donor_sum_8w); +1 = max zero-sum tension
-    # rolling_cannibal_trend:     4w_pressure minus 8w_pressure; positive = accelerating
-    # rolling_elasticity:         13w trailing OLS ε; NaN when price guardrail fails
-    "rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity",
     # Categorical
     "channel_outlet",
+    # Removed by ablation (hurt or below threshold): implied_elasticity, max_donor_cannibal_prob,
+    # rolling_cannibal_pressure, rolling_cannibal_trend, rolling_elasticity (MO_50–MO_53)
 ]
 
 # Total-units model swaps base_units AR lags for total_units lags; same demand-driver features
