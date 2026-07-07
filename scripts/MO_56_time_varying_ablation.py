@@ -492,6 +492,43 @@ if __name__ == "__main__":
     print("MO_56 — Time-Varying Mo Signal Ablation")
     print("=" * 70)
 
+    # ── Cache-skip: if prior results exist, patch HTML and exit early ─────────
+    _ABLATION_CSV  = Path(OUTPUT_DIR) / "mo56_individual_ablation.csv"
+    _CHAMP_CV_CSV  = Path(OUTPUT_DIR) / "mo56_champion_cv.csv"
+    _PROM_CV_CSV   = Path(OUTPUT_DIR) / "mo56_rolling_cv_results.csv"
+    _COND_CSV      = Path(OUTPUT_DIR) / "mo56_champion_conditional.csv"
+    _PNG_MAIN      = Path(OUTPUT_DIR) / "v2_mo56_results.png"
+    if all(p.exists() for p in [_ABLATION_CSV, _CHAMP_CV_CSV, _PROM_CV_CSV, _COND_CSV, _PNG_MAIN]):
+        print("[CACHED] Prior results found — skipping ablation; regenerating HTML only …")
+        import sys
+        results_df = pd.read_csv(_ABLATION_CSV)
+        cv_champ   = pd.read_csv(_CHAMP_CV_CSV)
+        cv_prom    = pd.read_csv(_PROM_CV_CSV)
+        cond_df    = pd.read_csv(_COND_CSV).set_index("subset")
+        _champ_global = float(cond_df.loc["global",  "wmape"])
+        _champ_event  = float(cond_df.loc["event",   "wmape"])
+        _champ_stable = float(cond_df.loc["stable",  "wmape"])
+        _avg_cv_champ = float(cv_champ["wmape"].mean())
+        _avg_cv_prom  = float(cv_prom["wmape"].mean())
+        _is_new = bool(_avg_cv_prom < _avg_cv_champ - PROMOTE_THRESHOLD)
+        _best_label = "Champion (no promotion)"
+        _best_feats = CHAMPION_FEATS
+        _chart_paths = {k: str(Path(OUTPUT_DIR) / v) for k, v in {
+            "global_results": "v2_mo56_results.png",
+            "conditional":    "v2_mo56_conditional.png",
+            "rolling_cv":     "v2_mo56_rolling_cv.png",
+            "shap":           "v2_mo56_shap.png",
+        }.items() if (Path(OUTPUT_DIR) / v).exists()}
+        _valid_results = results_df.to_dict("records")
+        _sec = build_html_section24(
+            _valid_results, _chart_paths, cv_champ, cv_prom,
+            _best_label, _champ_global, _champ_event, _champ_stable,
+            _best_feats, _avg_cv_champ, _avg_cv_prom, _is_new,
+        )
+        patch_html(_sec)
+        print("MO_56 COMPLETE (cached)")
+        sys.exit(0)
+
     # ── 1. Load dataset ──────────────────────────────────────────────────────
     parquet_path = Path(OUTPUT_DIR) / "retailer_sales_weekly.parquet"
     print(f"\n[1] Loading {parquet_path} …")

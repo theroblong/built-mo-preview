@@ -329,10 +329,50 @@ def build_html_section21(chart_paths, ablation_df, cv_df, champion_feats,
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+def _patch_html_inline(section_html):
+    if not os.path.exists(HTML_IN):
+        print(f"  HTML not found at {HTML_IN} — skipping patch.")
+        return
+    with open(HTML_IN, "r", encoding="utf-8") as f:
+        html = f.read()
+    ANCHOR = "<!-- END SECTIONS -->"
+    html = html.replace(ANCHOR, section_html + "\n" + ANCHOR) if ANCHOR in html \
+           else html.replace("</body>", section_html + "\n</body>")
+    with open(HTML_OUT, "w", encoding="utf-8") as f:
+        f.write(html)
+    size_mb = os.path.getsize(HTML_OUT) / 1_048_576
+    print(f"HTML patched → {HTML_OUT}  ({size_mb:.1f} MB)")
+
+
 def main():
     print("=" * 70)
     print("MO_52 — Feature Ablation: MO_25 v4 New Signals")
     print("=" * 70)
+
+    # ── Cache-skip: if prior results exist, patch HTML and return early ────────
+    _ABLATION_CSV = os.path.join(OUTPUT_DIR, "mo52_ablation_results.csv")
+    _CV_CSV       = os.path.join(OUTPUT_DIR, "mo52_rolling_cv_results.csv")
+    _PNG_MAIN     = os.path.join(OUTPUT_DIR, "v2_mo52_group_ablation.png")
+    if all(os.path.exists(p) for p in [_ABLATION_CSV, _CV_CSV, _PNG_MAIN]):
+        print("[CACHED] Prior results found — skipping ablation; regenerating HTML only …")
+        df_abl = pd.read_csv(_ABLATION_CSV)
+        df_cv  = pd.read_csv(_CV_CSV)
+        champ_row = df_abl[df_abl["variant"].str.startswith("Champion")]
+        _champ_wmape = float(champ_row["wmape"].iloc[0]) if not champ_row.empty \
+                       else float(df_cv.loc[df_cv["cutpoint"] == "Dec 2025", "champion_wmape"].iloc[0])
+        _is_new = bool(df_cv["new_wmape"].mean() < df_cv["champion_wmape"].mean() - PROMOTE_THRESHOLD)
+        _chart_paths = {k: os.path.join(OUTPUT_DIR, v) for k, v in {
+            "group_ablation": "v2_mo52_group_ablation.png",
+            "cannibal_pe":    "v2_mo52_cannibal_pe.png",
+            "competitor":     "v2_mo52_competitor.png",
+            "rolling_cv":     "v2_mo52_rolling_cv.png",
+        }.items() if os.path.exists(os.path.join(OUTPUT_DIR, v))}
+        _feats = CHAMPION_TOPK  # no groups promoted
+        section21 = build_html_section21(_chart_paths, df_abl, df_cv, _feats, _champ_wmape, _is_new)
+        print("Patching HTML report …")
+        _patch_html_inline(section21)
+        print("MO_52 COMPLETE (cached)")
+        return
 
     # Load parquet (must be MO_25 v4 output)
     parquet_path = os.path.join(OUTPUT_DIR, "retailer_sales_weekly.parquet")

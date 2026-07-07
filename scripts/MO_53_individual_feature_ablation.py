@@ -484,6 +484,40 @@ if __name__ == "__main__":
     print("MO_53 — Individual Feature Ablation + Brand-Split Donor Signals")
     print("=" * 70)
 
+    # ── Cache-skip: if prior results exist, patch HTML and exit early ─────────
+    _ABLATION_CSV = Path(OUTPUT_DIR) / "mo53_individual_ablation.csv"
+    _CHAMP_CV_CSV = Path(OUTPUT_DIR) / "mo53_champion_cv.csv"
+    _PROM_CV_CSV  = Path(OUTPUT_DIR) / "mo53_rolling_cv_results.csv"
+    _PNG_MAIN     = Path(OUTPUT_DIR) / "v2_mo53_individual_results.png"
+    if all(p.exists() for p in [_ABLATION_CSV, _CHAMP_CV_CSV, _PROM_CV_CSV, _PNG_MAIN]):
+        print("[CACHED] Prior results found — skipping ablation; regenerating HTML only …")
+        results_df     = pd.read_csv(_ABLATION_CSV)
+        cv_df_champion = pd.read_csv(_CHAMP_CV_CSV)
+        cv_df_promoted = pd.read_csv(_PROM_CV_CSV)
+        _champ_wmape = float(
+            cv_df_champion.loc[cv_df_champion["cutpoint"] == "Dec 2025", "wmape"].iloc[0]
+        )
+        _prom_wmape = float(
+            cv_df_promoted.loc[cv_df_promoted["cutpoint"] == "Dec 2025", "wmape"].iloc[0]
+        )
+        _promoted_candidates = results_df.loc[results_df["delta"] < -PROMOTE_THRESHOLD, "feature"].tolist()
+        _promoted_feats = CHAMPION_FEATS + _promoted_candidates
+        _is_new_champ = _prom_wmape < _champ_wmape - PROMOTE_THRESHOLD
+        _chart_paths = {k: str(Path(OUTPUT_DIR) / v) for k, v in {
+            "individual":    "v2_mo53_individual_results.png",
+            "brand_split":   "v2_mo53_brand_split_detail.png",
+            "tdp_promo":     "v2_mo53_tdp_promo_detail.png",
+            "rolling_cv":    "v2_mo53_rolling_cv.png",
+            "shap":          "v2_mo53_shap.png",
+        }.items() if (Path(OUTPUT_DIR) / v).exists()}
+        _sec = build_html_section22(
+            _chart_paths, results_df, cv_df_champion, cv_df_promoted,
+            _promoted_feats, _champ_wmape, _prom_wmape, _is_new_champ,
+        )
+        patch_html(_sec)
+        print("MO_53 COMPLETE (cached)")
+        import sys; sys.exit(0)
+
     # ── 1. Load dataset ──────────────────────────────────────────────────────
     parquet_path = Path(OUTPUT_DIR) / "retailer_sales_weekly.parquet"
     print(f"\n[1] Loading {parquet_path} …")
