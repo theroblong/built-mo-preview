@@ -33,6 +33,7 @@
 #                → MO_43 (§17a) → MO_45 (§18) → MO_44 (§17b DAG)
 #                → MO_50 (§19) → MO_51 (§20) → MO_52 (§21) → MO_53 (§22) → MO_54 (§23)
 #                → MO_56 (§24) → MO_57 (§25) → MO_58 (§26) → MO_49 (§27)
+#                → MO_59 (§28) → MO_60 (§29) → MO_61 (§30)
 #
 # Final — version-stamp + copy to docs/
 # ─────────────────────────────────────────────────────────────────────────────
@@ -98,6 +99,9 @@ HTML_CHAIN=(
   MO_57_fourier_lag_ablation         # §25 Fourier week encoding + lag2/3 + price bins
   MO_58_base_promo_validation        # §26 base/promo/total coherence audit
   MO_49_promo_gap_chart              # §27 base vs. total units promo gap chart (actuals + forecast)
+  MO_59_stl_changepoints             # §28 STL decomposition + PELT changepoint detection
+  MO_60_synthetic_control            # §29 synthetic control + DiD causal sensitivity analysis
+  MO_61_hte_elasticity               # §30 heterogeneous treatment effects (EconML LinearDML)
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────
