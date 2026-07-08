@@ -353,6 +353,65 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-08 (update 54) — MO_59/60/61: signal decomposition + causal sensitivity + heterogeneous elasticity (§28–30)
+
+Three new analytical layers added to the HTML report, completing the trust-building roadmap.
+
+**MO_59 — STL Decomposition + PELT Changepoint Detection (§28):**
+- 203 series decomposed into Trend / Seasonal / Remainder via `statsmodels.tsa.seasonal.STL` (period=52, robust=True)
+- Portfolio seasonal index computed from top-20 high-volume series — shows Jan health spike and summer trough explicitly
+- `ruptures` PELT (rbf kernel, pen=8) detects structural breaks in STL remainder per series
+- Examples: Sam's Variety Pack breaks at Jun 2024 + Dec 2025; Walmart BB4pk at Aug 2024 / Apr 2025 / Oct 2025
+- **Layer 1 of the layered forecast architecture is now implemented** (seasonal index is the category baseline)
+- Ruptures note: NASA JPL / ESA scientific computing library; alternative for production = BOCPD or z-score thresholding on STL remainder
+
+**MO_60 — Synthetic Control + Difference-in-Differences (§29):**
+- Same Kroger BB 4pk Dec 2025 price event as MO_43 CausalImpact (§17); re-analyzed with two additional methods
+- Synthetic control: scipy SLSQP simplex optimization over 96 correlated donor series (r>0.4 pre-period)
+- DiD: panel OLS `units ~ post + treated + post×treated`; single Walmart control; p=0.479 (not significant at α=0.05)
+- **Methods diverge — this is the finding:** CausalImpact +28.6% vs. synthetic −33.4% vs. DiD +10.2K units/wk
+- Root cause: Jan 2026 New Year's health spike confounds the 8-week post-period; synthetic control captures the portfolio-wide January effect and finds the Kroger-specific price contribution is hard to isolate
+- Recommendation documented in §29: use Dec-only post-period for a cleaner price estimate
+
+**MO_61 — EconML LinearDML Heterogeneous Treatment Effects (§30):**
+- Portfolio-average ε=−0.34 (MO_44) upgraded to context-specific elasticity via Double Machine Learning
+- GradientBoosting nuisance models partial out confounders (TDP, week_of_year, promo_intensity, log_base_units)
+- Key findings (90% CI all exclude zero):
+  - **Q3 (summer) least elastic: ε=−0.23** vs Q1 ε=−0.32, Q2 ε=−0.34, Q4 ε=−0.33 → price increase least damaging in summer
+  - **Mature SKUs barely respond: ε=−0.15** vs early-launch ε=−0.37 → new products punish price increases hard
+  - **Mid-cannibalization extreme: ε=−1.04** (n=790) → when portfolio is moderately cannibalistic, price cuts trigger aggressive demand reallocation between SKUs
+  - **Multipacks 2.5-3× more elastic than singles:** 4pk ε=−0.52, 12pk ε=−0.67 vs single ε=−0.20
+- EconML note: Microsoft Research (Apache 2.0); alternative for non-MS ecosystem = PyWhy DoubleML (sklearn-based)
+- `run_fpa_report.sh` updated: §28/29/30 added to HTML_CHAIN
+
+---
+
+### 2026-07-08 (update 53) — Internal marketing notes: `docs/aevah_marketing_notes_internal.md`
+
+New document for Rob, Sherry, and AI marketing agents working on Aevah positioning.
+
+**Coverage:**
+- Buyer profiles (CFO, CIO/CTO, CEO, VP Sales, VP Finance/FP&A) with pain points and what each needs to hear
+- 5 core value propositions: Explainability / Natural Language Interrogation / Domain-Intelligent CPG Signals / Forecast Accuracy / Security & Configurability
+- Differentiators vs. Excel, BI tools, generic ML platforms, DIY builds
+- Use cases for FP&A, Account Management, Marketing/Brand
+- Objections and responses
+- Tone guidance: "complement and supercharge" not "replace"; cite SPINS-defined baseline not "true non-promo demand"
+- Real production numbers table (4.3% wMAPE, ε=−0.35, 25.6% promo share, 63% event accuracy, 78 retailers, 104 SKUs)
+- Honest gaps section (temporal holdout, YAGO depth, real-time promo calendar, cross-retailer correlation)
+
+---
+
+### 2026-07-08 (update 52) — MO_44: business summary chart layout fixed
+
+- KPI tiles were rendering without visible values (white text on white background)
+- Root cause: `ax.set_facecolor(color)` + `ax.axis("off")` — `axis("off")` suppresses facecolor rendering
+- Fix: replaced with `plt.Rectangle` patch at `zorder=0`; all value text moved inside axes via `ax.text()`; removed `ax.set_title()` (was placing label outside axes bounds)
+- Auto-sized bar chart height: `chart_h = max(5.0, n_bars * 0.30)` with adaptive label fontsize `lbl_fs = max(5.5, min(8.5, 200 / n_bars))`
+- Dynamic font sizing on KPI tile values: `val_fs = max(14, 30 - max(0, len(value) - 5) * 2)` prevents long retailer names from overflowing
+
+---
+
 ### 2026-07-08 (update 51) — MO_49 Section 27 + MO_58 v4: promo gap chart in main report; coherence violations = 0
 
 **MO_49 — promo gap chart added to main HTML report (Section 27):**
