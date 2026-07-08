@@ -1,4 +1,4 @@
-"""MO_25 v7 — Build retailer_sales_weekly: historical panel for sales forecasting.
+"""MO_25 v8 — Build retailer_sales_weekly: historical panel for sales forecasting.
 
 WHY THIS EXISTS
 ---------------
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     # ── 1. Foundation: event_detection_weekly ───────────────────────────────
     print("=" * 70)
-    print("MO_25 v7 — Retailer Sales Actuals")
+    print("MO_25 v8 — Retailer Sales Actuals")
     print("=" * 70)
     print("\n[1] Loading event_detection_weekly …")
     edw = query_druid(f"""
@@ -591,6 +591,11 @@ if __name__ == "__main__":
     df["week_of_year"]  = df["__time"].dt.isocalendar().week.astype(int)
     df["holiday_week"]  = df["week_of_year"].map(HOLIDAY_WEEK_MAP).fillna(0).astype(int)
 
+    # v8: Fourier encoding — sin/cos correctly represents week 52 → week 1 adjacency.
+    # Raw integer week_of_year implies week 52 is far from week 1; Fourier fixes this.
+    df["week_sin"] = np.sin(2 * np.pi * df["week_of_year"] / 52.178)
+    df["week_cos"] = np.cos(2 * np.pi * df["week_of_year"] / 52.178)
+
     # v6: per-event binary flags — model learns each event magnitude independently
     df["is_new_year_week"]      = df["week_of_year"].isin([1, 2]).astype(int)
     df["is_superbowl_week"]     = (df["week_of_year"] == 5).astype(int)
@@ -600,7 +605,11 @@ if __name__ == "__main__":
     df["is_christmas_week"]     = (df["week_of_year"] == 52).astype(int)
 
     # Autoregressive lags on base_units
-    for lag, col in [(1, "base_units_lag1"), (4, "base_units_lag4"), (13, "base_units_lag13")]:
+    # v8: add lag2 + lag3 — fills gap between lag1 (adjacent) and lag4 (monthly)
+    for lag, col in [
+        (1, "base_units_lag1"), (2, "base_units_lag2"), (3, "base_units_lag3"),
+        (4, "base_units_lag4"), (13, "base_units_lag13"),
+    ]:
         df[col] = df.groupby(GROUP_COLS)["base_units"].shift(lag)
 
     # YAGO
@@ -622,6 +631,23 @@ if __name__ == "__main__":
     df["arp_pct_change"] = (
         df["arp_wow_delta"] / df["arp_lag1"].clip(lower=0.01)
     ).clip(-0.5, 0.5).fillna(0)
+
+    # v8: price_change_bin — 4-level categorical capturing price regime semantics.
+    # Bins aligned with existing thresholds ($0.05 nickel standard, 5% event threshold).
+    # Most rows (~90-95%) land in stable(0); minority bins capture TPR/clearance events.
+    # Encoded as signed int, cast to LightGBM category in MO_57 ablation.
+    _abs_drop = (-df["arp_wow_delta"]).clip(lower=0)  # positive when price falls
+    _pct_abs  = df["arp_pct_change"].abs()
+    df["price_change_bin"] = pd.cut(
+        _abs_drop,
+        bins=[-np.inf, 0.05, 0.25, np.inf],
+        labels=[0, 1, 2],
+    ).astype(float)
+    # Price increases override with -1
+    df.loc[df["arp_wow_delta"] > 0.05, "price_change_bin"] = -1
+    # Stable override: if pct change also < 2%, force to 0 regardless of dollar amount
+    df.loc[_pct_abs < 0.02, "price_change_bin"] = 0
+    df["price_change_bin"] = df["price_change_bin"].fillna(0).astype(int)
 
     df["arp_roll8_avg"] = (
         df.groupby(GROUP_COLS)["arp"]
@@ -761,14 +787,15 @@ if __name__ == "__main__":
         "velocity_spm_z8", "velocity_spm_z13", "tdp_z8",
         # Price lags + rolling (computed in Python)
         "arp_lag1", "arp_lag4", "arp_roll8_avg", "arp_roll8_std", "arp_wow_delta",
-        # Demand AR lags
-        "base_units_lag1", "base_units_lag4", "base_units_lag13",
+        # Demand AR lags (v8: lag2 + lag3 added)
+        "base_units_lag1", "base_units_lag2", "base_units_lag3",
+        "base_units_lag4", "base_units_lag13",
         # YAGO
         "base_units_lag52", "velocity_spm_lag52",
         # Total-units model lags
         "total_units_lag1", "total_units_lag4", "total_units_lag13", "total_units_lag52",
-        # Seasonality — integer code (audit) + per-event binary flags (model candidates)
-        "week_of_year", "holiday_week",
+        # Seasonality — integer + Fourier encoding (v8) + per-event binary flags
+        "week_of_year", "week_sin", "week_cos", "holiday_week",
         "is_new_year_week", "is_superbowl_week", "is_memorial_day_week",
         "is_labor_day_week", "is_thanksgiving_week", "is_christmas_week",
         # Promo signals (model features)
@@ -778,6 +805,7 @@ if __name__ == "__main__":
         # Elasticity — static coefficient + time-varying interaction term (v7)
         "implied_elasticity", "elasticity_band",
         "arp_pct_change",           # audit: signed WoW price change
+        "price_change_bin",         # model candidate (v8): 4-level categorical (-1/0/1/2)
         "price_elasticity_effect",  # model candidate: arp_pct_change × implied_elasticity
         # Cannibalization — static signals + time-varying rate (v7)
         "cannibal_rate",            # model candidate: time-varying focal pressure (null→0)
@@ -803,7 +831,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")
-    print("MO_25 v7 COMPLETE")
+    print("MO_25 v8 COMPLETE")
     print(f"{'='*70}")
     print(f"  Total rows:        {len(out):,}")
     print(f"  Weeks covered:     {out['__time'].nunique():,}")

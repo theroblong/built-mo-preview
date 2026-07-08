@@ -353,6 +353,21 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-07 (update 46) — MO_57: Fourier + lag2/3 + price bin — 0 promoted; MO_53 confirmed as definitive champion
+
+MO_25 v8 added 5 new columns (`week_sin`, `week_cos`, `base_units_lag2`, `base_units_lag3`, `price_change_bin`). MO_57 ablation tested all 4 candidates individually at 0.03pp threshold:
+
+| Candidate | Δ Global | Δ Event | Δ Stable | Promoted |
+|---|---|---|---|---|
+| Fourier (week_sin+week_cos) | +0.162pp | +0.214pp | +0.153pp | No |
+| +lag2 | +0.065pp | −0.064pp | +0.088pp | No |
+| +lag3 | +0.087pp | +0.093pp | +0.086pp | No |
+| +price_change_bin(cat) | +0.154pp | +0.020pp | +0.177pp | No |
+
+**0 promoted.** Key learning: LightGBM already captures the week_of_year cyclical boundary from training data — Fourier encoding is redundant, not additive. The lag1→lag4 gap is handled: the model doesn't need intermediate lags. Price regime semantics (bins) are no more useful than continuous price features (all rejected since MO_52). MO_53 28-feature set is the **definitively confirmed stopping point** for feature engineering on this architecture. HTML v2.1.9 (Section 25 added).
+
+---
+
 ### 2026-07-07 (update 45) — Two-datasource comparison framework: what we plan to learn
 
 Two Druid datasources now exist side by side for every forecast series:
