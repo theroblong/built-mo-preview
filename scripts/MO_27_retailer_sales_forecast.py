@@ -327,6 +327,10 @@ if __name__ == "__main__":
                     total_low  = max(0.0, total_low  * bm_t)
                     total_base = max(0.0, total_base * bm_t)
                     total_high = max(0.0, total_high * bm_t)
+                # Coherence clamp: total_units >= base_units (promo units cannot be negative)
+                if total_low  is not None: total_low  = max(total_low,  units_low)
+                if total_base is not None: total_base = max(total_base, units_base)
+                if total_high is not None: total_high = max(total_high, units_high)
                 total_history.append(total_base)
 
             all_rows.append({

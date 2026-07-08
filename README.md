@@ -353,6 +353,81 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-08 (update 49) — Druid confirmed: units_promo ≠ Incr Units; MO_25 v8 formula wrong for 67% of rows
+
+**Query 1 against `built_filtered_weekly` (53,383,257 rows):**
+
+| Test | Result | Meaning |
+|---|---|---|
+| `units_promo + units_non_promo = units` | **53,383,257 / 53,383,257 (100%)** | `units_promo` is raw scanner at promo stores — NOT incremental |
+| `base_units + incr_units = units` | **53,383,257 / 53,383,257 (100%)** | SPINS identity holds exactly |
+| `base_units + units_promo = units` (MO_25 v8) | **17,635,864 / 53,383,257 (33%)** | MO_25 formula wrong for 67% of rows |
+
+`units_promo` is never NULL in `built_filtered_weekly` — it is zero on non-promo weeks, not absent. The 53.6% NULL values in our MO_25 parquet reflect rows in `event_detection_weekly` that have no corresponding row in `built_filtered_weekly` (different coverage), not zero-promo observations.
+
+Error on promoted rows: `(base + units_promo) − units = base − units_non_promo` = the full SPINS baseline demand attributed to promo stores, double-counted. Systematically inflates `total_units` for every promoted observation.
+
+**Champion model unaffected.** `model_base_units_q{10,50,90}_v3.pkl` trains on SPINS `base_units` (MRM baseline) — correct and uncontaminated. `promo_lift_ratio` was dropped in MO_53 ablation and never enters the 28-feature champion set. **`model_total_units_q{10,50,90}_v3.pkl` demoted to experimental-incorrect** — do not serve in FP&A view until retrained on `units` after MO_25 v9.
+
+---
+
+### 2026-07-08 (update 48) — SPINS units field audit: units_promo ≠ Incr Units; total_units model demoted; MO_25 v9 planned
+
+**Critical data architecture finding confirmed from Q0 query register (`mo_druid_query_register.md` line 1287–1317).**
+
+Three SPINS unit fields exist in `built_filtered_weekly` (all sourced from `spins_full` via Q0):
+
+| Q0 → built_filtered_weekly | Source SPINS field | Type | Calculation |
+|---|---|---|---|
+| `units` | `"Units"` | **Raw scanner (ground truth)** | `Sum(Units)` — total POS scanner units |
+| `units_promo` | `"Units Promo"` | **Raw scanner — promo stores** | `Sum(Units) with any promotion` — ALL units at stores running a promo |
+| `units_non_promo` | `"Units Non-Promo"` | **Raw scanner — non-promo stores** | `Sum(Units) with no promotion` |
+| `incr_units` | `"Incr Units"` | **SPINS MRM derived** | `Units − Base Units` — TRUE promo incremental |
+| `base_units` | `"Base Units"` | **SPINS MRM model** | Estimated non-promo demand — what would have sold without any promo |
+
+**SPINS identities (always true):** `Units, Promo + Units, Non-Promo = Units`. And `Base Units + Incr Units = Units`.
+
+**MO_25 v8 bug:** `total_units = base_units + units_promo` is computed as `SPINS MRM baseline + raw promo-store units`. This is NOT raw scanner total. It is inflated for promo rows because it adds two overlapping quantities (base demand for all stores + all units at promo stores, double-counting base at promo stores). The correct `total_units = units` (pull `units` directly from `built_filtered_weekly`, which MO_25 never does).
+
+**Current model status:**
+- `model_base_units_q{10,50,90}_v3.pkl` — ✓ VALID, trained on SPINS MRM baseline; 4.3% wMAPE champion; **PRIMARY forecast**
+- `model_total_units_q{10,50,90}_v3.pkl` — ⚠️ WRONG training target (`base + units_promo`); **demoted to experimental-incorrect**; do not serve in primary FP&A view
+
+**Revenue forecast (interim, pre-MO_25 v9):**
+```
+Baseline revenue forecast = forecast_base_units × ARP     ← defensible, SPINS-grounded
+Promo uplift context     = historical incr_units/base_units ratio by retailer/season (SPINS actuals)
+Total ≠ independent model forecast until MO_25 v9 fix
+```
+
+**MO_25 v9 (planned):** Add `units` + `incr_units` to the `bfw` query in step 2; set `total_units = units.fillna(base_units)`; update `promo_lift_ratio = incr_units / base_units` (capped at 5.0). Retrain total-units model on correct target after v9 parquet.
+
+**Also from this session:** `forecast_units_base` naming ambiguity documented. Column means "q50 scenario of the base-units model" — not to be confused with "baseline scenario" in FP&A parlance. Future rename: `forecast_base_units_mid`.
+
+---
+
+### 2026-07-08 (update 47) — MO_58: base/promo/total coherence audit complete; MO_27 coherence clamp applied
+
+End-to-end audit confirming whether base, promo, and total units can be shown as three reliable numbers to FP&A.
+
+**SPINS field clarification (client communication):**
+- `base_units` = SPINS Market Response Model (MRM) baseline — a smoothed, continuous curve, not raw non-promoted weeks. SPINS estimates what base demand would be even during a promoted week.
+- `promo_lift_ratio` = total / base − 1 (capped at 5.0). It is promo/base, not promo/total.
+- Always say "SPINS-defined baseline" — not "non-promo units" — in client conversations. SPINS and NielsenIQ can differ by 30+ pp for the same promotional event.
+
+**Source integrity: CLEAN.** 0 rows where base_units > total_units in actuals. Promo coverage: 37.2% SPINS-native (`units_promo`), 9.2% ARP-inferred, 53.6% no promo data (`total_units = base_units`).
+
+**Critical issue found and fixed — MO_27 forecast coherence violation (24.24%):** Two independent models (base_units and total_units) had no joint constraint, producing 7,864 of 32,448 rows where `forecast_total_units < forecast_units` — physically impossible (implied promo < 0). **Fix applied in MO_27:** 3-line coherence clamp after YAGO blend enforces `total = max(total, base)` for all three quantile levels. MO_27 must be re-run and forecast re-ingested into Druid.
+
+**Design recommendations from MO_58:**
+1. **Re-run MO_27** with coherence clamp → re-ingest Druid (`appendToExisting:false`)
+2. For "none" promo_source series (53.6%), copy base forecast directly to total — total model adds noise, not signal, on these series
+3. Rename `forecast_units_base` → `forecast_base_units_mid` (or document clearly) to resolve "base" ambiguity: currently means both "q50 scenario" AND "non-promo domain concept" — confusing for FP&A dashboards
+
+**HTML §26 added.** `run_fpa_report.sh` updated with MO_58 in HTML_CHAIN.
+
+---
+
 ### 2026-07-07 (update 46) — MO_57: Fourier + lag2/3 + price bin — 0 promoted; MO_53 confirmed as definitive champion
 
 MO_25 v8 added 5 new columns (`week_sin`, `week_cos`, `base_units_lag2`, `base_units_lag3`, `price_change_bin`). MO_57 ablation tested all 4 candidates individually at 0.03pp threshold:
