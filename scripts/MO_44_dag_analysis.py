@@ -553,69 +553,104 @@ def chart_scatter(df: pd.DataFrame, lr_coef: float, out_path: str) -> None:
 # ── 12. Chart: business summary ────────────────────────────────────────────
 def chart_business_summary(lr_coef: float, account_elasticity: dict,
                             refutations: dict, out_path: str) -> None:
-    fig = plt.figure(figsize=(14, 8))
-    fig.patch.set_facecolor("white")
-    gs = GridSpec(2, 3, figure=fig, hspace=0.45, wspace=0.4)
+    # Pre-compute retailer list so we can size the figure correctly
+    sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1]) if account_elasticity else []
+    positives = [(a, e) for a, e in sorted_items if e > 0]
+    negatives = [(a, e) for a, e in sorted_items if e <= 0]
+    show   = negatives[-20:] + positives
+    n_bars = max(len(show), 1)
 
-    # ── KPI tiles ──────────────────────────────────────────────────────────
+    # Auto-size: 0.30 inches per bar for the chart row, 2.8 inches for KPI row
+    kpi_h   = 2.8
+    chart_h = max(5.0, n_bars * 0.30)
+    fig = plt.figure(figsize=(16, kpi_h + chart_h + 1.2))
+    fig.patch.set_facecolor("white")
+    gs = GridSpec(2, 3, figure=fig,
+                  height_ratios=[kpi_h, chart_h],
+                  hspace=0.25, wspace=0.35)
+
+    # ── KPI tiles — all text inside axes; no ax.set_title ──────────────────
+    n_pass = sum(
+        1 for n, r in refutations.items()
+        if not np.isnan(r["new_effect"])
+        and (abs(r["new_effect"] - lr_coef) < 0.1
+             if n != "Placebo treatment"
+             else abs(r["new_effect"]) < 0.05)
+    )
+    _sens_acct = min(account_elasticity, key=account_elasticity.get) if account_elasticity else "N/A"
+    _sens_val  = min(account_elasticity.values()) if account_elasticity else 0.0
+    _sens_label = (_sens_acct[:13] + "…") if len(_sens_acct) > 13 else _sens_acct
     tiles = [
         ("Portfolio Price\nElasticity",
          f"{lr_coef:.2f}",
-         f"log–log; {lr_coef*100:.0f}% demand change\nper 1% price change",
+         f"log–log · {lr_coef*100:.0f}% demand Δ\nper 1% price change",
          PALETTE["blue"]),
         ("Refutation Tests\nPassed",
-         f"{sum(1 for n,r in refutations.items() if not np.isnan(r['new_effect']) and (abs(r['new_effect'] - lr_coef) < 0.1 if n != 'Placebo treatment' else abs(r['new_effect']) < 0.05))}/{len(refutations)}",
+         f"{n_pass}/{len(refutations)}",
          "random cause · placebo\nsubset · bootstrap",
          PALETTE["green"]),
         ("Most Price-Sensitive\nRetailer",
-         min(account_elasticity, key=account_elasticity.get) if account_elasticity else "N/A",
-         f"ε = {min(account_elasticity.values()):.2f}" if account_elasticity else "",
+         _sens_label,
+         f"ε = {_sens_val:.2f}  ·  full name below",
          PALETTE["amber"]),
     ]
 
     for i, (label, value, sub, color) in enumerate(tiles):
         ax = fig.add_subplot(gs[0, i])
-        ax.set_facecolor(color)
-        ax.text(0.5, 0.62, value, transform=ax.transAxes,
-                ha="center", va="center", fontsize=28, fontweight="bold", color="white")
-        ax.text(0.5, 0.25, sub, transform=ax.transAxes,
-                ha="center", va="center", fontsize=9, color="white", alpha=0.9)
-        ax.set_title(label, fontsize=11, fontweight="bold",
-                     color="white", pad=6, backgroundcolor=color)
-        ax.axis("off")
+        ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+        # Draw colored background as a patch (axis("off") can suppress facecolor)
+        ax.add_patch(plt.Rectangle((0, 0), 1, 1, transform=ax.transAxes,
+                                   facecolor=color, edgecolor="none", zorder=0))
+        # Label at top
+        ax.text(0.5, 0.82, label, transform=ax.transAxes,
+                ha="center", va="center", fontsize=12, fontweight="bold",
+                color="white", linespacing=1.5, zorder=2)
+        # Large metric value in middle — scale font down for long strings
+        val_fs = max(14, 30 - max(0, len(value) - 5) * 2)
+        ax.text(0.5, 0.48, value, transform=ax.transAxes,
+                ha="center", va="center", fontsize=val_fs, fontweight="bold",
+                color="white", zorder=2, clip_on=False)
+        # Sub-label at bottom
+        ax.text(0.5, 0.14, sub, transform=ax.transAxes,
+                ha="center", va="center", fontsize=8.5, color="white",
+                alpha=0.92, linespacing=1.4, zorder=2)
+        ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
 
-    # ── Elasticity heat by account — show 20 most negative + all positives ───
+    # ── Elasticity heat by account ──────────────────────────────────────────
     ax4 = fig.add_subplot(gs[1, :])
-    if account_elasticity:
-        sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1])
-        positives = [(a, e) for a, e in sorted_items if e > 0]
-        negatives = [(a, e) for a, e in sorted_items if e <= 0]
-        show = negatives[-20:] + positives
-        accts = [a for a, _ in show]
-        evals = [e for _, e in show]
+    if show:
+        accts  = [a for a, _ in show]
+        evals  = [e for _, e in show]
         colors = [PALETTE["red"] if e > 0 else PALETTE["blue"] for e in evals]
-        ya = np.arange(len(accts))
-        ax4.barh(ya, evals, color=colors, alpha=0.85, height=0.6)
-        ax4.axvline(lr_coef, color=PALETTE["dark"], linewidth=2.5,
+        ya     = np.arange(len(accts))
+        ax4.barh(ya, evals, color=colors, alpha=0.85, height=0.65)
+        ax4.axvline(lr_coef, color=PALETTE["dark"], linewidth=2.0,
                     linestyle="--", label=f"Portfolio ATE ({lr_coef:.3f})")
-        ax4.axvline(0, color="gray", linewidth=0.8)
+        ax4.axvline(0, color="gray", linewidth=0.7)
         ax4.set_yticks(ya)
-        ax4.set_yticklabels(accts, fontsize=8)
+        # Fit font size to number of bars: never smaller than 5.5pt
+        lbl_fs = max(5.5, min(8.5, 200 / n_bars))
+        ax4.set_yticklabels(accts, fontsize=lbl_fs)
         ax4.set_xlabel("Price Elasticity (log–log OLS, confounders controlled)", fontsize=10)
         n_hid = len(account_elasticity) - len(show)
-        ax4.set_title(f"Price Elasticity by Retailer  ·  20 most negative + anomalies"
-                      + (f" ({n_hid} mid-range hidden)" if n_hid else "")
-                      + "  ·  Negative = expected",
-                      fontsize=11, fontweight="bold")
+        ax4.set_title(
+            f"Price Elasticity by Retailer  ·  20 most negative + anomalies"
+            + (f" ({n_hid} mid-range hidden)" if n_hid else "")
+            + "  ·  Negative = expected",
+            fontsize=11, fontweight="bold", pad=8)
         ax4.legend(fontsize=9)
         ax4.set_facecolor(PALETTE["light"])
-        for i, v in enumerate(evals):
-            ax4.text(v + 0.003 if v <= 0 else v - 0.003, i,
-                     f"{v:.2f}", va="center",
-                     ha="left" if v <= 0 else "right", fontsize=7.5)
+        ax4.tick_params(axis="y", pad=3)
+        for idx, v in enumerate(evals):
+            offset = 0.03 if v <= 0 else -0.03
+            ha     = "left" if v <= 0 else "right"
+            ax4.text(v + offset, idx, f"{v:.2f}", va="center",
+                     ha=ha, fontsize=6.5, color=PALETTE["dark"])
 
     fig.suptitle("MO_44 · Causal Price→Demand Analysis  |  DoWhy Backdoor Identification",
-                 fontsize=14, fontweight="bold", y=1.01)
+                 fontsize=13, fontweight="bold")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  saved: {os.path.basename(out_path)}")
