@@ -353,6 +353,32 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-08 (update 55) — MO_62: foundation model zero-shot benchmark (§31)
+
+Head-to-head accuracy test: LightGBM + Mo Signals vs. four zero-shot foundation models from the world's largest AI labs, on the same Oct 2025 holdout (100 series, 13-week horizon). All models run fully local — no data leaves the machine. Apache 2.0 licenses throughout.
+
+**Results (median wMAPE — lower is better):**
+- LightGBM + Mo Signals: **6.1%** (champion)
+- Chronos (Amazon T5-Small): 26.2% — gap +20.1pp
+- Granite TTM (IBM): 27.7% — gap +21.5pp
+- Moirai 1.1-R (Salesforce): 34.2% — gap +28.0pp
+- TimesFM 2.5 (Google): 38.3% — gap +32.1pp
+- Foundation model average: **31.6%** (5.1× worse than Aevah)
+
+**Key finding:** The gap is not model architecture — it is CPG domain knowledge (TDP trajectory, price elasticity, cannibalization pressure) that no general-purpose foundation model can infer from sales history alone. TimesFM (Google) effectively ties the naïve last-value baseline on growth-stage CPG data.
+
+**Artifacts:**
+- `scripts/MO_62_foundation_benchmark.py` — benchmark script, all four runners
+- `outputs/mo62_foundation_benchmark.png` — horserace bar chart + domain gap visual
+- `outputs/mo62_benchmark_results.csv` — per-model results
+- `docs/aevah_marketing_notes_internal.md` — "Foundation Model Gap" section added with non-technical framing, horserace visual spec, objection handling, and updated numbers table
+- `docs/built_demand_intelligence_report_v*.html` — §31 appended
+- `run_fpa_report.sh` — MO_62 added to Phase 5 HTML chain
+
+**Note on mean vs. median:** Mean wMAPE is severely inflated for TimesFM (4353%) and Granite TTM (740%) by a small number of growth-trajectory series where the model predicts near-zero. Median (26–38%) is the appropriate headline metric for this dataset.
+
+---
+
 ### 2026-07-08 (update 54) — MO_59/60/61: signal decomposition + causal sensitivity + heterogeneous elasticity (§28–30)
 
 Three new analytical layers added to the HTML report, completing the trust-building roadmap.
