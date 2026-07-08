@@ -355,15 +355,15 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ### 2026-07-08 (update 55) — MO_62: foundation model zero-shot benchmark (§31)
 
-Head-to-head accuracy test: LightGBM + Mo Signals vs. four zero-shot foundation models from the world's largest AI labs, on the same Oct 2025 holdout (100 series, 13-week horizon). All models run fully local — no data leaves the machine. Apache 2.0 licenses throughout.
+Head-to-head accuracy test: Aevah vs. four zero-shot foundation models from the world's largest AI labs, on the same Oct 2025 holdout (100 series, 13-week horizon). All models run fully local — no data leaves the machine. Apache 2.0 licenses throughout.
 
 **Results (median wMAPE — lower is better):**
-- LightGBM + Mo Signals: **6.1%** (champion)
-- Chronos (Amazon T5-Small): 26.2% — gap +20.1pp
+- Aevah: **6.1%** (champion)
+- Chronos (Amazon T5-Small): 27.7% — gap +21.6pp
 - Granite TTM (IBM): 27.7% — gap +21.5pp
-- Moirai 1.1-R (Salesforce): 34.2% — gap +28.0pp
-- TimesFM 2.5 (Google): 38.3% — gap +32.1pp
-- Foundation model average: **31.6%** (5.1× worse than Aevah)
+- Moirai 1.1-R (Salesforce): 32.3% — gap +26.1pp
+- TimesFM 2.5 (Google): 38.1% — gap +32.0pp
+- Foundation model average: **31.5%** (5.1× worse than Aevah)
 
 **Key finding:** The gap is not model architecture — it is CPG domain knowledge (TDP trajectory, price elasticity, cannibalization pressure) that no general-purpose foundation model can infer from sales history alone. TimesFM (Google) effectively ties the naïve last-value baseline on growth-stage CPG data.
 
