@@ -1,4 +1,4 @@
-"""MO_25 v8 — Build retailer_sales_weekly: historical panel for sales forecasting.
+"""MO_25 v9 — Build retailer_sales_weekly: historical panel for sales forecasting.
 
 WHY THIS EXISTS
 ---------------
@@ -35,7 +35,7 @@ v4 used arp_discount_pct (percentage-based: 5% of $10 = $0.50 threshold — too 
 v5 fixes detection to use absolute dollar discount ≥ $0.05 (nickel standard):
   units_promo present → is_promo_units (promo_intensity > 10%)
   units_promo absent  → is_promo_arp (arp_dollar_discount > $0.05)
-New: promo_lift_ratio = total_units / base_units − 1 (display lift independent of price)
+New: promo_lift_ratio = incr_units / base_units (true SPINS promo lift, capped at 5.0)
 promo_source audit column: "units_promo" | "arp_inferred" | "none"
 
 DONOR SIGNALS — BRAND-SPLIT (v5 addition)
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     # ── 1. Foundation: event_detection_weekly ───────────────────────────────
     print("=" * 70)
-    print("MO_25 v8 — Retailer Sales Actuals")
+    print("MO_25 v9 — Retailer Sales Actuals")
     print("=" * 70)
     print("\n[1] Loading event_detection_weekly …")
     edw = query_druid(f"""
@@ -214,8 +214,10 @@ if __name__ == "__main__":
             retail_account,
             geography_raw,
             arp,
+            units,
             units_promo,
-            units_non_promo
+            units_non_promo,
+            incr_units
         FROM "built_filtered_weekly"
         WHERE __time >= CURRENT_TIMESTAMP - {LOOKBACK}
           AND retail_account IS NOT NULL
@@ -223,7 +225,7 @@ if __name__ == "__main__":
           AND arp > 0
     """)
     print(f"  Rows: {len(bfw):,} | ARP coverage: {bfw['arp'].notna().sum():,}")
-    for c in ["arp", "units_promo", "units_non_promo"]:
+    for c in ["arp", "units", "units_promo", "units_non_promo", "incr_units"]:
         bfw[c] = pd.to_numeric(bfw[c], errors="coerce")
     bfw = bfw.drop_duplicates(subset=["__time"] + GROUP_COLS)
     bfw["__time"] = pd.to_datetime(bfw["__time"], utc=True)
@@ -233,7 +235,7 @@ if __name__ == "__main__":
     df = edw.merge(bfw, on=["__time"] + GROUP_COLS, how="left")
     df["arp_fallback"] = 0
     df["arp_source"]   = "live"
-    df["total_units"]  = df["base_units"] + df["units_promo"].fillna(0)
+    df["total_units"]  = df["units"].fillna(df["base_units"])
     print(f"  Rows after merge: {len(df):,} | "
           f"Live ARP: {df['arp'].notna().sum():,} / {len(df):,} "
           f"({df['arp'].notna().mean()*100:.1f}%) | "
@@ -697,11 +699,11 @@ if __name__ == "__main__":
     promo_missing = df["units_promo"].isna() | (df["units_promo"] == 0)
     df["is_promo_arp"] = (promo_missing & (df["arp_dollar_discount"] > 0.05)).astype(float)
 
-    # promo_lift_ratio: incremental unit lift from display (total vs base demand).
-    # Captures promo volume response independent of price — a $0 display event
-    # still shows promo lift; a shelf price reduction shows arp_dollar_discount.
+    # promo_lift_ratio: true SPINS promotional lift = Incr Units / Base Units.
+    # Incr Units = Units - Base Units (SPINS MRM derived, always ≥ 0).
+    # This is the SPINS standard lift ratio, not units_promo / base (Units,Promo / Base).
     df["promo_lift_ratio"] = (
-        (df["total_units"] / df["base_units"].clip(lower=1)) - 1
+        df["incr_units"].fillna(0) / df["base_units"].clip(lower=1)
     ).clip(0, 5).fillna(0)
 
     # Combined promo flag (model feature)
@@ -775,7 +777,7 @@ if __name__ == "__main__":
         # Lifecycle
         "first_week_selling", "weeks_since_launch", "pack_count",
         # Demand — raw
-        "base_units", "total_units", "units_promo", "avg_weekly_units_spm", "tdp", "arp",
+        "base_units", "total_units", "units", "incr_units", "units_promo", "avg_weekly_units_spm", "tdp", "arp",
         # ARP audit
         "arp_fallback", "arp_source",
         # Demand — pre-computed rolling (from event_detection_weekly)
@@ -831,7 +833,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")
-    print("MO_25 v8 COMPLETE")
+    print("MO_25 v9 COMPLETE")
     print(f"{'='*70}")
     print(f"  Total rows:        {len(out):,}")
     print(f"  Weeks covered:     {out['__time'].nunique():,}")
