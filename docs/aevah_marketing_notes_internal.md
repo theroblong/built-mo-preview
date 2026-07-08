@@ -151,11 +151,11 @@ We forecast 100 SKU-retailer combinations over a 13-week holdout period that non
 
 | | Forecast error (lower = better) |
 |---|---|
-| **Aevah (LightGBM + CPG signals)** | **6.1%** |
-| Chronos (Amazon) | 26.2% |
+| **Aevah** | **6.1%** |
+| Chronos (Amazon) | 27.7% |
 | Granite TTM (IBM) | 27.7% |
-| Moirai (Salesforce) | 34.2% |
-| TimesFM (Google) | 38.3% |
+| Moirai (Salesforce) | 32.3% |
+| TimesFM (Google) | 38.1% |
 | Naïve baseline (last known value) | 37.1% |
 
 Aevah is **5× more accurate** than the average of the four foundation models — and actually beats Google's model by more than the naïve "just repeat last week" approach.
@@ -287,9 +287,9 @@ These are real production numbers from the BUILT deployment. Use carefully — a
 | Base units forecast accuracy | 4.3% wMAPE | 104 SKUs × 78 retailers, 13-week horizon, LightGBM 28-feature model |
 | Total units forecast accuracy | 9.47% wMAPE | Includes promo lift component — inherently more variable |
 | Improvement over YAGO-only baseline | 20–25 pp | Varies by SKU maturity and retailer data quality |
-| **Foundation model benchmark — Aevah vs. Amazon Chronos** | **6.1% vs. 26.2%** | Same 13-week holdout, 100 series; Aevah 4.3× better |
-| **Foundation model benchmark — Aevah vs. Google TimesFM** | **6.1% vs. 38.3%** | Aevah 6.3× better; Google model tied with naïve baseline |
-| **Foundation model benchmark — Aevah vs. Salesforce Moirai** | **6.1% vs. 34.2%** | Aevah 5.6× better |
+| **Foundation model benchmark — Aevah vs. Amazon Chronos** | **6.1% vs. 27.7%** | Same 13-week holdout, 100 series; Aevah 4.5× better |
+| **Foundation model benchmark — Aevah vs. Google TimesFM** | **6.1% vs. 38.1%** | Aevah 6.2× better; Google model tied with naïve baseline |
+| **Foundation model benchmark — Aevah vs. Salesforce Moirai** | **6.1% vs. 32.3%** | Aevah 5.3× better |
 | **Foundation model benchmark — Aevah vs. IBM Granite TTM** | **6.1% vs. 27.7%** | Aevah 4.5× better |
 | Foundation model average (all 4) | 31.6% wMAPE | 5.1× worse than Aevah; gap = CPG domain signals |
 | Portfolio price elasticity | ε = −0.35 | Log-log OLS, DoWhy backdoor adjustment, 78 retailers |

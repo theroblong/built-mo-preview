@@ -1,7 +1,7 @@
 """
 MO_62 — Foundation Model Zero-Shot Benchmark (§31)
 
-Compares LightGBM + Mo Signals against four zero-shot foundation models
+Compares Aevah against four zero-shot foundation models
 on the same Oct 2025 backtest holdout used in MO_38.
 
 Models (all local inference — no data leaves this machine):
@@ -291,7 +291,7 @@ def build_chart(results):
         ax.set_facecolor("#1e293b")
 
     all_results = results + [
-        {"label": "LightGBM\n+ Mo Signals", "wmape": LGBM_WMAPE, "is_foundation": False},
+        {"label": "Aevah", "wmape": LGBM_WMAPE, "is_foundation": False},
         {"label": "Naïve\n(Last Value)",     "wmape": NAIVE_WMAPE, "is_foundation": False},
     ]
 
@@ -327,7 +327,7 @@ def build_chart(results):
     found_wmape = float(np.mean([r["wmape"] for r in results if r.get("is_foundation")]))
     gap = found_wmape - LGBM_WMAPE
 
-    cats  = ["Foundation\nModels\n(avg zero-shot)", "LightGBM\n+ Mo Signals\n(domain-intelligent)"]
+    cats  = ["Foundation\nModels\n(avg zero-shot)", "Aevah\n(domain-intelligent)"]
     vals  = [found_wmape, LGBM_WMAPE]
     bcols = ["#f97316", "#22c55e"]
     bars2 = ax2.bar(cats, vals, color=bcols, width=0.45, edgecolor="none")
@@ -389,7 +389,7 @@ def build_html_section(results):
       Four foundation models from Amazon, Google, Salesforce, and IBM — trained on
       billions of time-series observations — achieve a median wMAPE of
       <strong style="color:#f97316;">{avg_fm:.1f}%</strong> on the BUILT holdout.
-      LightGBM + Mo Signals achieves <strong style="color:#22c55e;">{LGBM_WMAPE}%</strong> —
+      Aevah achieves <strong style="color:#22c55e;">{LGBM_WMAPE}%</strong> —
       a <strong style="color:#f8fafc;">{gap:.0f}pp gap ({mult:.1f}×)</strong>.
       The difference is not model architecture; it is CPG domain knowledge
       (TDP trajectory, price elasticity, cannibalization pressure) that no
@@ -417,7 +417,7 @@ def build_html_section(results):
       </thead>
       <tbody>
         <tr style="background:#0f2537;">
-          <td style="padding:8px 16px;color:#22c55e;font-weight:700;">LightGBM + Mo Signals</td>
+          <td style="padding:8px 16px;color:#22c55e;font-weight:700;">Aevah</td>
           <td style="padding:8px 16px;text-align:center;color:#22c55e;font-weight:700;">{LGBM_WMAPE}%</td>
           <td style="padding:8px 16px;text-align:center;color:#22c55e;">—</td>
           <td style="padding:8px 16px;text-align:center;color:#22c55e;">206</td>
@@ -490,7 +490,7 @@ def build_html_section(results):
   <!-- Best foundation model note -->
   <p style="color:#94a3b8;font-size:0.85rem;">
     <strong style="color:#e2e8f0;">Best foundation model: {best_fm['label'].replace(chr(10),' ')}</strong>
-    at {best_fm['wmape']:.1f}% — still {best_fm['wmape'] - LGBM_WMAPE:.0f}pp behind LightGBM + Mo Signals.
+    at {best_fm['wmape']:.1f}% — still {best_fm['wmape'] - LGBM_WMAPE:.0f}pp behind Aevah.
     Moirai (Salesforce) is the most promising candidate for future covariate-augmented
     evaluation, as it natively supports external regressors via its patch-attention
     architecture. Wiring TDP as a dynamic covariate is a planned Phase 3 experiment.
@@ -553,7 +553,7 @@ def main():
     print(f"\nResults saved: {RESULTS_PATH}")
 
     print("\nSummary:")
-    print(f"  LightGBM + Mo Signals  {LGBM_WMAPE:.1f}%  (champion)")
+    print(f"  Aevah  {LGBM_WMAPE:.1f}%  (champion)")
     for r in results:
         label = r['label'].replace('\n', ' ')
         print(f"  {label:<28} {r['wmape']:.1f}%  (gap +{r['wmape']-LGBM_WMAPE:.1f}pp)")
