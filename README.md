@@ -353,6 +353,28 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-08 (update 50) — MO_25 v9 + MO_26 v4 + MO_27 v4: full fix for total_units bug; forecast table ready for re-ingest
+
+**MO_25 v9** (code + parquet):
+- `bfw` query now selects `units` (raw scanner ground truth) and `incr_units` (= Units − Base Units) from `built_filtered_weekly`
+- `total_units = units.fillna(base_units)` — replaces `base + units_promo` (wrong for 67% of 53M rows)
+- `promo_lift_ratio = incr_units / base_units` clipped at 5.0 — true SPINS lift ratio, not `Units,Promo / Base`
+- Both `units` and `incr_units` added to `output_cols` for downstream use
+- Result: 147,882 rows, 104 UPCs, 2,496 series; `promo_lift_ratio` mean=0.649 (more realistic than inflated v8)
+
+**MO_26 v4** (models retrained on correct target):
+- `MODEL_VERSION` bumped v3 → v4; new PKLs saved as `model_*_v4.pkl` (v3 PKLs preserved)
+- base_units model: MAE=175 units, RMSE=1192, Pinball q50=0.0122 (unchanged — correct target all along)
+- total_units model: MAE=480 units, RMSE=2367 — higher variance expected (raw scanner includes promo spikes that SPINS MRM smooths away)
+
+**MO_27** (forecast regenerated with v4 models):
+- `MODEL_VERSION` bumped v3 → v4
+- `elasticity_band` and `max_donor_cannibal_prob` removed from output (stale pipeline snapshots; API already reads these from live scoring tables)
+- 32,448 forecast rows uploaded to S3; ingest spec set to `appendToExisting: false`
+- **ACTION REQUIRED:** Submit `outputs/retailer_sales_forecast_ingest_spec.json` to Druid to replace stale v3 forecast
+
+---
+
 ### 2026-07-08 (update 49) — Druid confirmed: units_promo ≠ Incr Units; MO_25 v8 formula wrong for 67% of rows
 
 **Query 1 against `built_filtered_weekly` (53,383,257 rows):**

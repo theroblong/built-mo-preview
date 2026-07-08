@@ -25,7 +25,8 @@ training for any series.
 
 OUTPUT
 ------
-  outputs/model_retailer_sales_q{10,50,90}_v3.pkl
+  outputs/model_retailer_sales_q{10,50,90}_v4.pkl
+  outputs/model_total_units_q{10,50,90}_v4.pkl  (trained on correct SPINS units target)
   outputs/retailer_sales_train_metrics.json
 """
 
@@ -37,7 +38,7 @@ import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v3"
+MODEL_VERSION = "v4"  # v4: total_units model retrained on correct SPINS units (not base+units_promo)
 QUANTILES     = [0.10, 0.50, 0.90]
 Q_TAGS        = ["q10", "q50", "q90"]
 

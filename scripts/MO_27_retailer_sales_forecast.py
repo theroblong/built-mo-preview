@@ -41,8 +41,6 @@ forecast_total_units_low  float — q10 total scan volume (base + promo); null i
 forecast_total_units_base float — q50 total
 forecast_total_units_high float — q90 total
 weeks_since_launch      int  — at the forecast week (increments per step)
-elasticity_band         str
-max_donor_cannibal_prob float
 arp_fallback            int  — 1 if ARP came from post_13w_arp fallback
 model_version           str
 scored_at               str  ISO
@@ -56,7 +54,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v3"
+MODEL_VERSION  = "v4"
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
@@ -198,8 +196,6 @@ if __name__ == "__main__":
             "anchor_date":          latest["__time"].isoformat(),
             "anchor_base_units":    float(latest["base_units"]) if pd.notna(latest["base_units"]) else 0.0,
             "anchor_arp":           float(latest["arp"]) if pd.notna(latest["arp"]) else 0.0,
-            "elasticity_band":      latest.get("elasticity_band"),
-            "max_donor_cannibal_prob": float(latest.get("max_donor_cannibal_prob") or 0),
             "arp_fallback":         int(latest.get("arp_fallback") or 0),
         }
 
