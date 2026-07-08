@@ -1,14 +1,18 @@
 """MO_49 — Promo gap chart: base units vs. total units, actuals + 13-week forecast.
 
 Reads:
-  outputs/retailer_sales_weekly.parquet   (MO_25 — actuals; needs total_units col)
-  outputs/retailer_sales_forecast.parquet (MO_27 — needs forecast_total_units_* cols)
+  outputs/retailer_sales_weekly.parquet   (MO_25 v9 — actuals)
+  outputs/retailer_sales_forecast.parquet (MO_27 v4 — needs forecast_total_units_* cols)
+
+As of MO_25 v9, total_units = raw SPINS POS scanner units (directly observed ground truth),
+NOT base_units + units_promo. The promo gap (shaded area) = incr_units = Units − Base Units
+= true SPINS-defined incremental lift, confirmed by Druid Query 1 on 53M rows (2026-07-08).
 
 For each of the top N series by trailing volume, generates a panel showing:
   • Trailing 52-week actuals:
-      – Dark line  = total units (base + promo)
-      – Light line = base units (non-promo demand)
-      – Shaded gap = historical promo contribution
+      – Dark line  = total units (raw SPINS POS scanner — ground truth)
+      – Light line = base units (SPINS MRM baseline — non-promo demand estimate)
+      – Shaded gap = historical promo contribution (= incr_units, true SPINS lift)
   • 13-week forecast (right of dashed boundary):
       – Dual q50 lines (dashed) + q10/q90 bands
       – Shaded projected promo gap between the two q50 lines
@@ -18,6 +22,7 @@ OUTPUT
 ------
   outputs/mo49_promo_gap_chart.png   — multi-panel PNG (150 dpi)
   outputs/mo49_promo_gap.html        — standalone HTML with embedded chart + framing copy
+  Section 27 patched into outputs/built_demand_intelligence_report.html
 """
 
 import base64
@@ -33,6 +38,8 @@ from pathlib import Path
 
 ACTUALS_PARQUET  = Path("outputs/retailer_sales_weekly.parquet")
 FORECAST_PARQUET = Path("outputs/retailer_sales_forecast.parquet")
+HTML_IN  = Path("outputs/built_demand_intelligence_report.html")
+HTML_OUT = Path("outputs/built_demand_intelligence_report.html")
 
 ACTUALS_WEEKS  = 52
 TOP_N          = 6
@@ -59,6 +66,79 @@ def _fig_to_base64(fig: plt.Figure) -> str:
 
 def _format_k(v, _):
     return f"{v/1000:.0f}K" if v >= 1000 else f"{v:.0f}"
+
+
+def build_html_section27(img_b64, has_total_actuals, has_total_forecast, promo_share_pct,
+                          top_n, actuals_weeks):
+    status_text = (
+        "Full data — actuals + forecast" if has_total_actuals and has_total_forecast
+        else "Actuals only — re-run MO_26/27 for forecast" if has_total_actuals
+        else "Base units only — re-run MO_25→26→27"
+    )
+    status_color = (
+        "#27ae60" if has_total_actuals and has_total_forecast
+        else "#f39c12" if has_total_actuals
+        else "#e74c3c"
+    )
+    promo_line = (
+        f"Portfolio-wide historical promo share: <strong>{promo_share_pct:.1f}%</strong> "
+        f"of total scan volume (SPINS-defined incremental lift / total units)."
+        if has_total_actuals else ""
+    )
+    return f"""
+<section style='font-family:sans-serif;max-width:1100px;margin:3rem auto;padding:0 1rem'>
+  <h2 style='font-size:1.4rem;border-bottom:2px solid #2c3e50;padding-bottom:.5rem'>
+    Section 27 — MO_49: Base Units vs. Total Units — Promo Contribution Chart
+    <span style='display:inline-block;margin-left:.8rem;font-size:.75rem;font-weight:600;
+                 background:{status_color}1a;color:{status_color};border:1px solid {status_color}55;
+                 border-radius:20px;padding:2px 10px'>{status_text}</span>
+  </h2>
+  <p style='color:#555;font-size:.9rem'>
+    Top {top_n} series by trailing {actuals_weeks}-week volume. Each panel shows
+    {actuals_weeks} weeks of actuals (left of dashed line) and a 13-week q10/q50/q90 forecast
+    (right). The shaded gap is the SPINS-defined promo contribution
+    (<code>incr_units = units − base_units</code>) — correctly derived as of MO_25 v9.
+  </p>
+  <div style='background:#eaf4fb;border-left:4px solid #2980b9;padding:.7rem 1rem;
+              font-size:.88rem;margin-bottom:1rem'>
+    <strong>How to read:</strong>
+    The <strong style='color:{C_TOTAL}'>dark line</strong> is raw SPINS POS scanner volume (total units
+    — ground truth, directly observed). The <strong style='color:{C_BASE}'>lighter line</strong> is the
+    SPINS MRM baseline — everyday demand with promotional mechanics removed.
+    The <span style='background:{C_PROMO_ACT};padding:2px 6px;border-radius:3px'>blue shaded gap</span>
+    is historical promo lift (<code>incr_units</code>). In the forecast region the gap is
+    <span style='background:{C_PROMO_FC};padding:2px 6px;border-radius:3px'>orange-shaded</span>
+    and represents the projected promo contribution based on the total-units model — not a
+    planned trade calendar. A widening gap = growing promo dependence.
+    A narrowing gap = everyday demand strengthening.
+    {("<br><br>" + promo_line) if promo_line else ""}
+  </div>
+  <img src='data:image/png;base64,{img_b64}' style='width:100%;border-radius:6px;
+       border:1px solid #dde1e7;box-shadow:0 2px 8px rgba(0,0,0,0.06)'>
+  <p style='font-size:.78rem;color:#8e8e93;margin-top:.4rem;text-align:center'>
+    Each panel: {actuals_weeks}-week actuals + 13-week forecast (q50 median; bands = q10–q90).
+    MO_25 v9: <code>total_units = units</code> (raw scanner). MO_26 v4 models.
+    Promo gap = <code>incr_units = units − base_units</code> (SPINS MRM definition).
+    See Section 26 for full architecture validation.
+  </p>
+</section>"""
+
+
+def patch_html_section27(section_html):
+    if not HTML_IN.exists():
+        print(f"  Main report not found at {HTML_IN} — skipping patch.")
+        return
+    html = HTML_IN.read_text(encoding="utf-8")
+    marker = "<!-- MO_49_SECTION_27 -->"
+    if marker in html:
+        start = html.index(marker)
+        end   = html.index(marker, start + 1) + len(marker)
+        html  = html[:start] + marker + section_html + marker + html[end:]
+        print("  Section 27 replaced in main report.")
+    else:
+        html = html + marker + section_html + marker
+        print("  Section 27 appended to main report.")
+    HTML_OUT.write_text(html, encoding="utf-8")
 
 
 if __name__ == "__main__":
@@ -350,8 +430,8 @@ if __name__ == "__main__":
 <p class="caption">
   Each panel: 52-week actuals (left of dashed line) + 13-week forecast (right).
   Forecast lines are q50 medians; shaded bands are q10–q90.
-  Base units model: <code>model_retailer_sales_q*_v3.pkl</code>.
-  Total units model: <code>model_total_units_q*_v3.pkl</code>.
+  Base units model: <code>model_retailer_sales_q*_v4.pkl</code>.
+  Total units model: <code>model_total_units_q*_v4.pkl</code> (retrained on raw scanner units — MO_25 v9).
 </p>
 
 </body>
@@ -360,6 +440,18 @@ if __name__ == "__main__":
     out_html = Path("outputs/mo49_promo_gap.html")
     out_html.write_text(html, encoding="utf-8")
     print(f"  Saved HTML → {out_html}")
+
+    # ── 7. Patch main report (Section 27) ─────────────────────────────────────
+    overall_share = (
+        (df_act["total_units"] - df_act["base_units"]).clip(lower=0).sum()
+        / df_act["total_units"].fillna(df_act["base_units"]).sum()
+        * 100
+    ) if has_total_actuals else 0.0
+    sec27 = build_html_section27(
+        img_b64, has_total_actuals, has_total_forecast,
+        overall_share, TOP_N, ACTUALS_WEEKS,
+    )
+    patch_html_section27(sec27)
 
     print("\nDone.")
     print(f"  Open in browser: outputs/mo49_promo_gap.html")

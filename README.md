@@ -353,6 +353,25 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-08 (update 51) — MO_49 Section 27 + MO_58 v4: promo gap chart in main report; coherence violations = 0
+
+**MO_49 — promo gap chart added to main HTML report (Section 27):**
+- Added `build_html_section27()` + `patch_html_section27()` to embed chart in main report
+- Portfolio promo share: **25.6%** of total scan volume (now correctly = `incr_units / units`, not `units_promo / total`)
+- Total units coverage: 98.0%; 2% null = BFW coverage gaps, correctly falls back to base
+- `run_fpa_report.sh` HTML_CHAIN updated: MO_58 (§26) → MO_49 (§27)
+
+**MO_58 updated for v4 models and v9 data:**
+- `MODEL_VERSION` bumped v3 → v4
+- `encode_cat` fix: native `category` dtype (not `.cat.codes` integers) — matches MO_26 training format
+- Section 26 table updated: `total_units` and `promo_lift_ratio` descriptions reflect v9 fix
+- **0 coherence violations** (down from 24.24%) — MO_27 clamp confirmed working
+- base wMAPE: 4.87%, total wMAPE: 9.47% (v4, correct targets)
+
+**Druid re-ingest submitted** (`appendToExisting: false`) — 32,448 rows replacing stale v3 forecast.
+
+---
+
 ### 2026-07-08 (update 50) — MO_25 v9 + MO_26 v4 + MO_27 v4: full fix for total_units bug; forecast table ready for re-ingest
 
 **MO_25 v9** (code + parquet):

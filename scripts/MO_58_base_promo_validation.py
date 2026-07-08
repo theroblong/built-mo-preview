@@ -14,16 +14,19 @@ SPINS FIELD DEFINITIONS (externally validated)
                   SPINS. The methodology is proprietary and can differ from NielsenIQ/Circana
                   by 30+ percentage points for the same event.
 
-  units_promo   — SPINS-provided incremental units: actual volume above the MRM baseline
-                  attributed to trade promotion (TPR, display, feature). From built_filtered_weekly.
-                  Present for ~37% of rows; zero/null for retailers with data gaps (e.g., Ahold).
+  units_promo   — Raw SPINS scanner units at stores/weeks where any promotion ran (Units,Promo).
+                  NOT incremental lift. Present for ~37% of rows in built_filtered_weekly;
+                  zero (not null) for non-promo weeks. Used for promo_intensity signal only.
 
-  total_units   — Computed in MO_25: base_units + units_promo.fillna(0). For rows where
-                  units_promo is null (promo_source="none"), total_units = base_units exactly.
+  incr_units    — True SPINS promotional lift = Units − Base Units. Derived by SPINS MRM.
+                  This is the correct promo lift measure (not units_promo). From built_filtered_weekly.
 
-  promo_lift_ratio — Computed in MO_25: total_units / base_units − 1. Measures the
-                  proportional promo lift above baseline. Capped at 5.0 (500%). Tells you
-                  how much promo multiplies base demand — e.g., 0.30 = promo adds 30% on top.
+  total_units   — MO_25 v9: units (raw SPINS POS scanner total — ground truth, directly observed).
+                  Falls back to base_units only when units is null (BFW coverage gaps).
+                  Prior (v8 bug): base_units + units_promo — wrong for 67% of 53M rows (Druid confirmed).
+
+  promo_lift_ratio — MO_25 v9: incr_units / base_units. True SPINS lift ratio, capped at 5.0 (500%).
+                  Prior (v8 bug): total_units / base_units − 1 ≈ Units,Promo / Base Units (not lift).
 
   IMPORTANT DISTINCTION: "Base units" (non-promo demand) ≠ "non-promoted weeks."
   In a promoted week, SPINS still estimates what base demand would be. The base line
@@ -78,7 +81,7 @@ HTML_OUT   = os.path.join(OUTPUT_DIR, "built_demand_intelligence_report.html")
 
 GROUP_COLS    = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 DEC2025_CUT   = pd.Timestamp("2026-01-01", tz="UTC")
-MODEL_VERSION = "v3"
+MODEL_VERSION = "v4"
 
 # MO_26 champion feature sets (Jul 7 retrain)
 BASE_FEATS = [
@@ -117,7 +120,7 @@ def encode_cat(df, feats):
     avail = [f for f in feats if f in df.columns]
     X = df[avail].copy()
     for c in X.select_dtypes("object").columns:
-        X[c] = X[c].astype("category").cat.codes
+        X[c] = X[c].astype("category")   # native category — matches MO_26 training format
     return X, avail
 
 
@@ -247,13 +250,15 @@ def build_html_section26(integrity, accuracy_rows, coh_summary, chart_paths,
           Present for {integrity['spins_rows']:,} rows ({integrity['spins_pct']:.1f}%). Zero/null at retailers with SPINS feed gaps (e.g., Ahold FOOD).</td>
           <td style='padding:.4rem .7rem'>SPINS native field (built_filtered_weekly)</td></tr>
       <tr><td style='padding:.4rem .7rem'><code>total_units</code></td>
-          <td style='padding:.4rem .7rem'>Computed: base_units + units_promo.fillna(0). For rows where units_promo is null (promo_source="none"),
-          total_units = base_units exactly — no promo signal available.</td>
-          <td style='padding:.4rem .7rem'>MO_25 computed field</td></tr>
+          <td style='padding:.4rem .7rem'><strong>MO_25 v9 (corrected):</strong> Raw SPINS POS scanner units — the directly observed ground truth.
+          Falls back to base_units only when units is null (BFW coverage gaps).
+          <em>Prior v8 bug (fixed 2026-07-08):</em> was base_units + units_promo, wrong for 67% of 53M rows.</td>
+          <td style='padding:.4rem .7rem'>SPINS native field via MO_25 v9</td></tr>
       <tr style='background:#f8f8f8'><td style='padding:.4rem .7rem'><code>promo_lift_ratio</code></td>
-          <td style='padding:.4rem .7rem'>total_units / base_units − 1. Proportional promo lift above baseline. Capped at 5.0 (500%).
-          A value of 0.30 = promo adds 30% above non-promo demand. Not the same as promo/total — it is promo/base.</td>
-          <td style='padding:.4rem .7rem'>MO_25 computed field</td></tr>
+          <td style='padding:.4rem .7rem'><strong>MO_25 v9 (corrected):</strong> incr_units / base_units — true SPINS promotional lift, capped at 5.0.
+          incr_units = Units − Base Units (SPINS MRM derived). A value of 0.30 = promo added 30% above baseline.
+          <em>Prior v8:</em> used units_promo / base_units (Units,Promo / Base — not the SPINS standard lift).</td>
+          <td style='padding:.4rem .7rem'>MO_25 v9 computed field</td></tr>
     </tbody>
   </table>
 
@@ -316,9 +321,10 @@ def build_html_section26(integrity, accuracy_rows, coh_summary, chart_paths,
 
   <h3 style='margin-top:1.5rem'>26.4 Model Accuracy: Base vs Total Units</h3>
   <p style='color:#555;font-size:.88rem'>
-    Both models evaluated at Dec 2025 holdout cutpoint using the Jul 7 v3 production models.
-    "Total harder than base" is expected — promo lift is inherently more variable than baseline demand.
-    The "none" split confirms that the total_units model adds noise on series with no promo data.
+    Both models evaluated at Dec 2025 holdout cutpoint using v4 production models (MO_26 v4, 2026-07-08).
+    Total units model now trains on raw scanner units (MO_25 v9 fix). "Total harder than base" is expected —
+    promo lift is inherently more variable than the SPINS MRM baseline.
+    The "none" split confirms the total_units model adds noise on series with no promo data.
   </p>
   <table style='width:100%;border-collapse:collapse;font-size:.85rem'>
     <thead><tr style='background:#2c3e50;color:#fff'>
@@ -512,7 +518,7 @@ if __name__ == "__main__":
     _, te_df, n_series = qualify_cutpoint(df, DEC2025_CUT)
     print(f"  Test rows: {len(te_df):,}  Series: {n_series:,}")
 
-    print("  Loading v3 production models …")
+    print(f"  Loading {MODEL_VERSION} production models …")
     m_base_q50  = load_model("retailer_sales_q50")
     m_total_q50 = load_model("total_units_q50")
 
@@ -623,7 +629,8 @@ if __name__ == "__main__":
     print(f"  Source integrity:  CLEAN — 0 base > total violations in actuals")
     print(f"  Promo coverage:    {spins_rows/n*100:.1f}% SPINS-native, {arp_rows/n*100:.1f}% ARP-inferred, {none_rows/n*100:.1f}% no promo data")
     print(f"  Model accuracy:    base={global_bw:.2f}%  total={global_tw:.2f}%  (total is {global_tw/global_bw:.1f}x harder)")
-    print(f"  Forecast coherence: {viol_base:,} violations ({viol_base/total_rows*100:.1f}%) — NEEDS FIX in MO_27")
+    viol_status = "✓ CLEAN — clamp applied in MO_27" if viol_base == 0 else f"⚠ NEEDS FIX — apply coherence clamp in MO_27"
+    print(f"  Forecast coherence: {viol_base:,} violations ({viol_base/total_rows*100:.1f}%) — {viol_status}")
     print(f"\nNext steps:")
     print(f"  1. Apply coherence clamp in MO_27 (3-line fix)")
     print(f"  2. Handle 'none' series: copy base forecast to total")

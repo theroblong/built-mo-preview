@@ -32,7 +32,7 @@
 #   MO_36 (base) → MO_40 (§14) → MO_41 (§15) → MO_42 (§16)
 #                → MO_43 (§17a) → MO_45 (§18) → MO_44 (§17b DAG)
 #                → MO_50 (§19) → MO_51 (§20) → MO_52 (§21) → MO_53 (§22) → MO_54 (§23)
-#                → MO_56 (§24) → MO_57 (§25) → MO_58 (§26)
+#                → MO_56 (§24) → MO_57 (§25) → MO_58 (§26) → MO_49 (§27)
 #
 # Final — version-stamp + copy to docs/
 # ─────────────────────────────────────────────────────────────────────────────
@@ -97,6 +97,7 @@ HTML_CHAIN=(
   MO_56_time_varying_ablation        # §24 time-varying cannibal_rate + elasticity effect
   MO_57_fourier_lag_ablation         # §25 Fourier week encoding + lag2/3 + price bins
   MO_58_base_promo_validation        # §26 base/promo/total coherence audit
+  MO_49_promo_gap_chart              # §27 base vs. total units promo gap chart (actuals + forecast)
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────
