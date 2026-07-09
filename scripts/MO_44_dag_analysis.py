@@ -341,11 +341,8 @@ print(f"  saved: v2_mo44_account_elasticity.json  ({len(account_elasticity)} ret
 # ── 9. Chart: effect estimates comparison ─────────────────────────────────
 def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,
                     account_elasticity, out_path: str) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    fig.patch.set_facecolor("white")
-
-    # Left: DoWhy estimates
-    ax = axes[0]
+    # Left panel: 1–2 estimators. Right panel: up to 25+ accounts.
+    # Figure height is driven by the right panel's row count so labels never overlap.
     methods = ["Backdoor\nLinear Regression"]
     vals    = [lr_coef]
     los     = [lr_lo]
@@ -358,17 +355,35 @@ def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,
         his.append(ipw_coef * 1.15)
         colors.append(PALETTE["amber"])
 
+    # Build account list first so we can size the figure correctly
+    show = []
+    if account_elasticity:
+        sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1])
+        positives = [(a, e) for a, e in sorted_items if e > 0]
+        negatives = [(a, e) for a, e in sorted_items if e <= 0]
+        show = negatives[-25:] + positives
+    n_accts = max(len(show), 1)
+
+    # Dynamic height: 0.32 in per account row, minimum 7 in, cap at 18 in
+    fig_h = min(18, max(7, n_accts * 0.32 + 1.5))
+    # Give the bar chart 2.5× the width of the estimator panel
+    fig, axes = plt.subplots(1, 2, figsize=(15, fig_h),
+                             gridspec_kw={"width_ratios": [1, 2.5]})
+    fig.patch.set_facecolor("white")
+
+    # Left: DoWhy estimates — bound y-axis tightly so the dot isn't floating
+    ax = axes[0]
     y = np.arange(len(methods))
-    # Plot as scatter + CI whiskers (not barh) to avoid solid-block rendering
     ax.scatter(vals, y, color=colors, s=160, zorder=5)
     ax.errorbar(vals, y,
                 xerr=[np.array(vals) - np.array(los),
                       np.array(his) - np.array(vals)],
                 fmt="none", color="black", capsize=8, linewidth=2, zorder=4)
     ax.axvline(0, color="black", linewidth=0.8, linestyle="--")
-    # Explicit xlim: a little beyond the CI range
     x_margin = 0.05
     ax.set_xlim(min(los) - x_margin, max(his) + x_margin)
+    # Pin y-axis so the single point doesn't float in empty space
+    ax.set_ylim(-0.6, len(methods) - 0.4)
     ax.set_yticks(y)
     ax.set_yticklabels(methods, fontsize=11)
     ax.set_xlabel("Causal Estimate (log–log coefficient = elasticity)", fontsize=10)
@@ -377,28 +392,24 @@ def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,
     ax.set_facecolor(PALETTE["light"])
     ax.grid(axis="x", alpha=0.3)
     for i, (v, lo, hi) in enumerate(zip(vals, los, his)):
-        ax.text(v, i + 0.18, f"ε = {v:.3f}\n95% CI [{lo:.3f}, {hi:.3f}]",
+        ax.text(v, i + 0.12, f"ε = {v:.3f}\n95% CI [{lo:.3f}, {hi:.3f}]",
                 ha="center", va="bottom", fontsize=9, color=PALETTE["dark"])
 
-    # Right: per-account OLS elasticity — limit to 30 most negative + all positives
+    # Right: per-account OLS elasticity
     ax2 = axes[1]
-    if account_elasticity:
-        sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1])
-        # Keep extreme ends: all positive anomalies + bottom 25 most negative
-        positives = [(a, e) for a, e in sorted_items if e > 0]
-        negatives = [(a, e) for a, e in sorted_items if e <= 0]
-        show = negatives[-25:] + positives  # most negative 25 + all anomalies
+    if show:
         accts = [a for a, _ in show]
         evals = [e for _, e in show]
         bar_colors = [PALETTE["red"] if e > 0 else PALETTE["blue"] for e in evals]
         ya = np.arange(len(accts))
-        row_h = max(0.4, min(0.7, 12 / max(len(accts), 1)))
-        ax2.barh(ya, evals, color=bar_colors, alpha=0.85, height=row_h)
+        ax2.barh(ya, evals, color=bar_colors, alpha=0.85, height=0.75)
         ax2.axvline(0, color="black", linewidth=0.8, linestyle="--")
         ax2.axvline(lr_coef, color=PALETTE["green"], linewidth=2,
                     linestyle="-.", label=f"Portfolio ATE ({lr_coef:.3f})")
         ax2.set_yticks(ya)
-        ax2.set_yticklabels(accts, fontsize=7.5)
+        # Auto-scale label font so they never overlap: target ~10 pt-per-row minimum
+        lbl_fs = max(5.5, min(8.5, fig_h * 10 / max(n_accts, 1)))
+        ax2.set_yticklabels(accts, fontsize=lbl_fs)
         ax2.set_xlabel("OLS Elasticity (log ARP → log Units, backdoor controlled)", fontsize=9)
         n_hidden = len(account_elasticity) - len(show)
         title_note = f" (+{n_hidden} mid-range hidden)" if n_hidden > 0 else ""
@@ -407,7 +418,7 @@ def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,
         ax2.legend(fontsize=9)
         ax2.set_facecolor(PALETTE["light"])
 
-    plt.tight_layout()
+    plt.tight_layout(pad=1.5)
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"  saved: {os.path.basename(out_path)}")
