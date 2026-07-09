@@ -35,6 +35,7 @@
 #                → MO_56 (§24) → MO_57 (§25) → MO_58 (§26) → MO_49 (§27)
 #                → MO_59 (§28) → MO_60 (§29) → MO_61 (§30) → MO_62 (§31) → MO_63 (§32)
 #
+# Phase 5b — fix_report_toc.py: TOC dedup + sticky sidebar injection
 # Final — version-stamp + copy to docs/
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -152,6 +153,10 @@ for s in "${HTML_CHAIN[@]}"; do
   echo "  → ${s}.py"
   python "${s}.py"
 done
+
+# ── Phase 5b: TOC sidebar injection ──────────────────────────────────────────
+log "Phase 5b: TOC sidebar injection"
+python fix_report_toc.py
 
 # ── Final: version-stamp + copy to docs/ ─────────────────────────────────────
 log "Versioning → v${VERSION}"
