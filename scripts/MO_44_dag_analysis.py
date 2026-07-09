@@ -361,7 +361,7 @@ def chart_estimates(lr_coef, lr_lo, lr_hi, ipw_coef,
         sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1])
         positives = [(a, e) for a, e in sorted_items if e > 0]
         negatives = [(a, e) for a, e in sorted_items if e <= 0]
-        show = negatives[-25:] + positives
+        show = negatives[:25] + positives  # 25 most negative (most elastic) + all anomalies
     n_accts = max(len(show), 1)
 
     # Dynamic height: 0.32 in per account row, minimum 7 in, cap at 18 in
@@ -568,7 +568,7 @@ def chart_business_summary(lr_coef: float, account_elasticity: dict,
     sorted_items = sorted(account_elasticity.items(), key=lambda x: x[1]) if account_elasticity else []
     positives = [(a, e) for a, e in sorted_items if e > 0]
     negatives = [(a, e) for a, e in sorted_items if e <= 0]
-    show   = negatives[-20:] + positives
+    show   = negatives[:20] + positives  # 20 most negative (most elastic) + all anomalies
     n_bars = max(len(show), 1)
 
     # Auto-size: 0.30 inches per bar for the chart row, 2.8 inches for KPI row
@@ -602,7 +602,7 @@ def chart_business_summary(lr_coef: float, account_elasticity: dict,
          PALETTE["green"]),
         ("Most Price-Sensitive\nRetailer",
          _sens_label,
-         f"ε = {_sens_val:.2f}  ·  full name below",
+         f"ε = {_sens_val:.2f}  ·  see chart below",
          PALETTE["amber"]),
     ]
 
