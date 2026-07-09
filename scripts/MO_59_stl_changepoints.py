@@ -111,7 +111,7 @@ def extract_series(df: pd.DataFrame, acct: str, upc: str) -> pd.Series:
         .sum()
         .sort_index()
     )
-    s = s.asfreq("W-SUN", fill_value=np.nan).fillna(method="ffill").fillna(0)
+    s = s.asfreq("W-SUN", fill_value=np.nan).ffill().fillna(0)
     return s
 
 

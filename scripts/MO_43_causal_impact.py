@@ -186,7 +186,7 @@ def run_causal_impact(series, pre_start=None):
 
     # Align all series on the focal index
     data = pd.concat([u, wm, cd], axis=1).sort_index()
-    data = data.fillna(method="ffill").fillna(0)
+    data = data.ffill().fillna(0)
 
     # Window
     start = pre_start or PRE_START
