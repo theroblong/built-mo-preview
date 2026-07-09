@@ -409,7 +409,7 @@ def build_html_section28(b64_seasonal: str, b64_decomp: str,
 {MARKER}
 <div style="margin:40px 0;padding:32px;background:#fff;border-radius:12px;
             box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-  <h2 style="color:#1E293B;font-size:1.4rem;margin-bottom:6px;">
+  <h2 style="color:#1E293B;font-size:1.4rem;margin-bottom:6px;" id="toc-s28">
     §28 — Signal Decomposition: Seasonal Structure &amp; Structural Breaks
   </h2>
   <p style="color:#64748B;font-size:0.88rem;margin-bottom:20px;">
