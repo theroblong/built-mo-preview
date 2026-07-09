@@ -398,6 +398,18 @@ Forecast drawer now has a "Show promo uplift" checkbox (default off, units mode 
 
 ---
 
+### 2026-07-09 (update 61) — §28.1 seasonal chart: raw monthly demand index replaces STL seasonal
+
+**Root cause identified and fixed:** `MO_59_stl_changepoints.py` was feeding the STL seasonal component (52-week array, week_of_year indexed) directly to the §28.1 client chart. On a short fast-growing series starting July 2023, STL's positional subseries 0 = July data, making the July launch phase appear as the "seasonal peak" — contradicted by raw SPINS data showing March as the actual demand peak (+30% above avg) and December as the trough (−28%).
+
+**Fix:** Added `compute_monthly_demand_index()` to MO_59 — groups actual base_units by calendar month across top-20 series, normalizes as deviation from each series's mean, averages across series. Both the bar chart (`chart_seasonal_index`) and polar chart (`chart_seasonal_polar`) now accept a 12-row monthly DataFrame instead of the 52-row STL output. The STL computation (`compute_seasonal_index`) is unchanged — it still saves `mo59_seasonal_index.csv` for MO_27's post-forecast seasonal multiplier (forecasting model only; never used for client charts).
+
+**Verified seasonal pattern (raw SPINS):** Jan +1% / Feb +17% / **Mar +30% (peak)** / Apr +20% / May +9% / Jun +1% / Jul −7% / Sep −15% / Oct −15% / Nov −14% / **Dec −28% (trough)**. Q1 high season confirmed; summer soft; December trough. Consistent with New Year health spike and Q4 retail pullback across protein bar category.
+
+**Also fixed:** §28 TOC anchor (`id="toc-s28"` added to h2, both in HTML and MO_59 template) — was causing TOC to gray out the entry.
+
+---
+
 ### 2026-07-09 (update 60) — Layer 1 STL seasonal index wired into MO_27 (post-forecast multiplier)
 
 `stl_seasonal_index` (MO_59 portfolio STL decomposition, 52-week lookup) applied as a post-prediction multiplicative adjustment in MO_27's autoregressive forecast loop. Applied **only** when lag52 is unavailable (new SKUs, <52w history) — YAGO blend continues unchanged for mature series. Result: two independent, complementary seasonal signals covering the full portfolio.
