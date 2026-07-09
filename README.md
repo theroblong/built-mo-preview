@@ -353,6 +353,18 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 56) — Marketing notes: Build vs. Buy positioning + LightGBM redaction
+
+Two additions to `docs/aevah_marketing_notes_internal.md`:
+
+**Build vs. Buy section** — Aevah explicitly positioned as both a turnkey solution and an extensibility harness for builders. Three paths documented: (1) Turnkey: plug in SPINS, Mo live in weeks, no ML engineers required; (2) Extensibility harness: scored outputs (forecasts, elasticity, cannibalization) available as Druid tables and API endpoints for teams with internal data science capability; (3) Middle path: start turnkey, grow into customization without re-platforming. Includes signature talking point and objection handler for "we want to own our own models."
+
+**CIO/CTO buyer profile updated** — added explicit build vs. buy concern and key message pointing to extensibility harness framing.
+
+**LightGBM references removed** — all four occurrences replaced with "Aevah demand model" or "Aevah" to protect implementation details from appearing in externally shareable materials. Tone rule updated: no model names or internal implementation details in executive conversations.
+
+---
+
 ### 2026-07-08 (update 55) — MO_62: foundation model zero-shot benchmark (§31)
 
 Head-to-head accuracy test: Aevah vs. four zero-shot foundation models from the world's largest AI labs, on the same Oct 2025 holdout (100 series, 13-week horizon). All models run fully local — no data leaves the machine. Apache 2.0 licenses throughout.
