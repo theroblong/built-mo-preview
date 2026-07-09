@@ -186,6 +186,14 @@ _MONTHS = [
 ]
 
 
+def _week_to_month(week: int) -> str:
+    """Return the calendar month name for a given ISO week number."""
+    for name, w_start, w_end in _MONTHS:
+        if w_start <= week <= w_end:
+            return name
+    return f"wk {week}"
+
+
 def chart_seasonal_index(index_df: pd.DataFrame, n_series: int) -> str:
     """Bar chart of portfolio seasonal pattern with month bands. Returns base64 PNG."""
     fig, ax = plt.subplots(figsize=(14, 4.5), facecolor=BG)
@@ -200,27 +208,26 @@ def chart_seasonal_index(index_df: pd.DataFrame, n_series: int) -> str:
     for i, (name, w_start, w_end) in enumerate(_MONTHS):
         band_color = "#EFF6FF" if i % 2 == 0 else BG
         ax.axvspan(w_start - 0.5, w_end + 0.5, facecolor=band_color, alpha=0.7, zorder=0)
-        ax.text((w_start + w_end) / 2, y_lo * 0.88, name,
-                ha="center", va="top", fontsize=7.5, color="#94A3B8",
-                fontweight="bold", zorder=1)
 
     ax.bar(weeks, vals, color=colors, width=0.8, linewidth=0, zorder=2)
     ax.axhline(0, color="#94A3B8", linewidth=0.8, linestyle="--", zorder=3)
 
-    # Annotate peak and trough
+    # Annotate peak and trough — derive month from data, no hardcoded assumptions
     peak_idx   = int(np.argmax(vals))
     trough_idx = int(np.argmin(vals))
+    peak_month   = _week_to_month(weeks[peak_idx])
+    trough_month = _week_to_month(weeks[trough_idx])
     ax.annotate(
-        f"Peak: wk {weeks[peak_idx]}\n(New Year / Jan health spike)",
+        f"STL peak: wk {weeks[peak_idx]} ({peak_month})\n{vals[peak_idx]:+.0%} vs trend",
         xy=(weeks[peak_idx], vals[peak_idx]),
         xytext=(weeks[peak_idx] + 3, vals[peak_idx] * 0.85),
         fontsize=8, color="#1E293B",
         arrowprops=dict(arrowstyle="->", color="#64748B", lw=0.8), zorder=4,
     )
     ax.annotate(
-        f"Trough: wk {weeks[trough_idx]}\n(Summer softness)",
+        f"STL trough: wk {weeks[trough_idx]} ({trough_month})\n{vals[trough_idx]:+.0%} vs trend",
         xy=(weeks[trough_idx], vals[trough_idx]),
-        xytext=(weeks[trough_idx] + 3, vals[trough_idx] * 1.1),
+        xytext=(max(1, weeks[trough_idx] - 10), vals[trough_idx] * 1.1),
         fontsize=8, color="#1E293B",
         arrowprops=dict(arrowstyle="->", color="#64748B", lw=0.8), zorder=4,
     )
@@ -230,7 +237,7 @@ def chart_seasonal_index(index_df: pd.DataFrame, n_series: int) -> str:
     ax.set_xticks(month_starts)
     ax.set_xticklabels([m[0] for m in _MONTHS], fontsize=8.5, color="#475569")
     ax.set_xlabel("Month (4-4-5 retail calendar · 52 weeks)", fontsize=8, color="#94A3B8")
-    ax.set_ylabel("Seasonal deviation\n(fraction of avg demand)", fontsize=9, color="#475569")
+    ax.set_ylabel("STL seasonal deviation\n(fraction of trend)", fontsize=9, color="#475569")
     ax.set_title(
         f"Portfolio Seasonal Pattern — Protein Bar Category ({n_series} series)",
         fontsize=11, fontweight="bold", color="#1E293B", pad=10,
@@ -303,8 +310,8 @@ def chart_seasonal_polar(index_df: pd.DataFrame, n_series: int) -> str:
     ax.spines["polar"].set_visible(False)
 
     ax.set_title(
-        f"Seasonal Cycle — Protein Bar Category\n({n_series} series · green = above avg · red = below avg)",
-        fontsize=10, fontweight="bold", color="#1E293B", pad=18,
+        f"Seasonal Cycle — Protein Bar Category\n({n_series} series · green = above trend · red = below trend)",
+        fontsize=10, fontweight="bold", color="#1E293B", pad=30,
     )
 
     buf = _fig_to_b64(fig)
@@ -428,13 +435,14 @@ def build_html_section28(b64_seasonal: str, b64_decomp: str,
     28.1 — Portfolio Seasonal Pattern
   </h3>
   <p style="color:#475569;font-size:0.87rem;margin-bottom:14px;">
-    Seasonal deviation averaged across {n_series} high-volume series.
-    Green bars = demand above average; red bars = below average.
-    The January health spike is clearly visible; summer softness (weeks 24–32)
-    reflects the protein bar category's known seasonal trough.
-    This curve is the foundation of Layer 1 forecasting — any model that
-    ignores it will systematically over-forecast summers and under-forecast
-    January.
+    STL seasonal deviation averaged across {n_series} high-volume series.
+    Green bars = above the growth trend for that week; red bars = below trend.
+    <strong>Important:</strong> this chart shows deviation from the estimated growth trend,
+    not absolute demand level. Raw weekly demand actually peaks in Q1 (January–March)
+    and is softest in December — consistent with the New Year health spike and
+    year-end retail pullback seen across the protein bar category.
+    The STL seasonal curve is what the forecasting model uses to adjust week-by-week;
+    a model that ignores it will systematically mis-time the Q1 surge and Q4 softness.
   </p>
   <img src="data:image/png;base64,{b64_seasonal}"
        style="width:100%;border-radius:8px;margin-bottom:16px;" />
@@ -444,11 +452,12 @@ def build_html_section28(b64_seasonal: str, b64_decomp: str,
     28.1b — Seasonal Cycle View (Polar)
   </h3>
   <p style="color:#475569;font-size:0.87rem;margin-bottom:14px;">
-    The same data as the bar chart above, wrapped into a circular calendar.
-    Jan at 12 o'clock, running clockwise. Green bars radiate outward (above-average demand);
-    red bars shrink inward (below-average). The shape makes the annual demand cycle — the
-    January spike, the summer trough, the autumn recovery — immediately visible as a pattern
-    rather than a sequence of numbers.
+    The same STL seasonal deviation data as the bar chart above, wrapped into a
+    circular calendar. Jan at 12 o'clock, running clockwise. Green bars radiate
+    outward (above growth trend); red bars shrink inward (below trend). The shape
+    makes the annual deviation cycle — the Q1 health-spike uplift, the December
+    softness, the summer moderation — immediately visible as a pattern rather than
+    a sequence of numbers.
   </p>
   <div style="display:flex;justify-content:center;margin-bottom:24px;">
     <img src="data:image/png;base64,{b64_polar}"
