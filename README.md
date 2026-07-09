@@ -127,6 +127,24 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-09 — STL Seasonal Forecast, Promo Uplift Toggle, MO_62 Foundation Model Benchmark, MO_64 TDP×Velocity Decomposition; Druid Schema Safety Fix
+
+**STL seasonal adjustment (Layer 1 — new SKUs):** Post-forecast seasonal multiplier derived from portfolio-wide STL decomposition. Applied to SKUs with fewer than 52 weeks of history that lack a reliable lag-52 year-ago signal. 50.6% of series use STL path; 49.4% use YAGO. Result: summer/winter curves now visible in the 13-week forecast horizon instead of flat lines for new items. Seasonal blend weight: 40% YAGO / 60% STL for new SKUs.
+
+**Promo uplift toggle (Forecast Drawer — Units mode):** "Show promo uplift" checkbox (default off) overlays an amber dashed line showing total units (base + promo) behind the three quantile scenario bands. Historical actuals source: `built_filtered_weekly.units` (total scan units including promo). Forecast source: `forecast_total_units_low/base/high` from MO_27 (new columns). Approximately 30% of the portfolio has meaningful promo history. When `total_units_base == units_base`, the SKU has no promo record — correct behavior, not a bug. Sales $ mode promo uplift deferred.
+
+**MO_62 Foundation model benchmark:** Local CPU inference comparison — Chronos 27.7%, IBM Granite TTM 27.7%, Moirai 32.3%, TimesFM 38.1% wMAPE vs. Mo LightGBM 6.1% (5× gap). All models run fully local — no data transmitted. Zero-shot generalist models vs. domain-trained specialist; result validates the SPINS feature engineering investment. Added to Mo Chat `_DATA_GLOSSARY` and FP&A HTML report §31.
+
+**MO_63 Rolling cross-validation accuracy:** 6 expanding-window cutpoints Sep 2024 – Dec 2025; median wMAPE 2.02–5.71% across cutpoints vs. MA 13-week baseline ~24.6%. Added to Mo Chat `_DATA_GLOSSARY`.
+
+**MO_64 TDP×velocity decomposition (`scripts/MO_64_tdp_velocity_decomp.py`):** Decomposes demand change into two independent drivers: distribution (TDP) and velocity (units per TDP point). Mid-point Laspeyres: `Δunits = Δtdp × v_mid + Δvel × t_mid`. Historical attribution uses recent 13w vs. 52w-ago; forward attribution uses 13w forecast vs. anchor + 4w TDP momentum projection. Direction-aware labels: TDP_EXPANSION, VELOCITY_GROWTH, MIXED_GROWTH, DISTRIBUTION_LOSS, VELOCITY_EROSION, MIXED_DECLINE, STABLE. Output: `retailer_sales_tdp_velocity` Druid datasource, 1,788 rows. Parquet uploaded to MinIO; Druid ingest spec at `outputs/retailer_sales_tdp_velocity_ingest_spec.json` (pending submission).
+
+**Druid schema safety fix (critical — `retailer.py _q_forecast()`):** When MO_27 was re-run with STL changes, the new parquet omitted `elasticity_band` and `max_donor_cannibal_prob` (pipeline snapshots that the API already overrides from live `scored_price_elasticity` and `scored_cannibalization`). The `appendToExisting: false` Druid ingest removed these columns entirely. `_q_forecast()` SELECTed them → Druid HTTP 400 → `except Exception: return []` caught silently → all forecast dotted lines disappeared for every series. Fix: removed the two stale snapshot columns from the SELECT — architecturally correct per the live-scoring-tables-always-win rule. Prevention: before any MO_27 re-ingest, verify parquet column list matches canonical column set in `04-api-reference.md` wiki. Log Druid query errors as `log.error()` before returning `[]` so failures are never silent.
+
+**Mo Chat `_DATA_GLOSSARY` additions:** Layer 1 STL seasonal (new SKU path), total units / promo uplift toggle, MO_63 rolling CV accuracy story, MO_62 foundation model benchmark (5× gap).
+
+**Port consolidation:** Killed duplicate vite dev server on 5174; all UI work runs on 5173 with hot reload.
+
 ### 2026-06-30 (v2.0.6) — Quantile Forecast + BSTS CausalImpact (MO_42, MO_43)
 
 **MO_42 — LightGBM Quantile Forecast (`scripts/MO_42_quantile_forecast.py`)**
