@@ -177,44 +177,67 @@ def short_label(desc: str, acct: str) -> str:
     return f"{a} — {d}"
 
 
+# 4-4-5 retail calendar: month name → (first_week, last_week)
+_MONTHS = [
+    ("Jan", 1,  4),  ("Feb", 5,  8),  ("Mar", 9,  13),
+    ("Apr", 14, 17), ("May", 18, 22), ("Jun", 23, 26),
+    ("Jul", 27, 31), ("Aug", 32, 35), ("Sep", 36, 39),
+    ("Oct", 40, 44), ("Nov", 45, 48), ("Dec", 49, 52),
+]
+
+
 def chart_seasonal_index(index_df: pd.DataFrame, n_series: int) -> str:
-    """Bar chart of portfolio seasonal pattern. Returns base64 PNG."""
-    fig, ax = plt.subplots(figsize=(14, 4), facecolor=BG)
+    """Bar chart of portfolio seasonal pattern with month bands. Returns base64 PNG."""
+    fig, ax = plt.subplots(figsize=(14, 4.5), facecolor=BG)
     ax.set_facecolor(BG)
 
     weeks = index_df["week_of_year"].values
     vals  = index_df["seasonal_index"].values
     colors = [C_IDX if v >= 0 else C_CPT for v in vals]
 
-    ax.bar(weeks, vals, color=colors, width=0.8, linewidth=0)
-    ax.axhline(0, color="#94A3B8", linewidth=0.8, linestyle="--")
+    # Month bands — drawn before bars so they sit behind
+    y_lo, y_hi = min(vals) * 1.25, max(vals) * 1.25
+    for i, (name, w_start, w_end) in enumerate(_MONTHS):
+        band_color = "#EFF6FF" if i % 2 == 0 else BG
+        ax.axvspan(w_start - 0.5, w_end + 0.5, facecolor=band_color, alpha=0.7, zorder=0)
+        ax.text((w_start + w_end) / 2, y_lo * 0.88, name,
+                ha="center", va="top", fontsize=7.5, color="#94A3B8",
+                fontweight="bold", zorder=1)
 
-    # Annotate peaks
-    peak_idx = np.argmax(vals)
-    trough_idx = np.argmin(vals)
+    ax.bar(weeks, vals, color=colors, width=0.8, linewidth=0, zorder=2)
+    ax.axhline(0, color="#94A3B8", linewidth=0.8, linestyle="--", zorder=3)
+
+    # Annotate peak and trough
+    peak_idx   = int(np.argmax(vals))
+    trough_idx = int(np.argmin(vals))
     ax.annotate(
         f"Peak: wk {weeks[peak_idx]}\n(New Year / Jan health spike)",
         xy=(weeks[peak_idx], vals[peak_idx]),
-        xytext=(weeks[peak_idx] + 3, vals[peak_idx] * 0.9),
+        xytext=(weeks[peak_idx] + 3, vals[peak_idx] * 0.85),
         fontsize=8, color="#1E293B",
-        arrowprops=dict(arrowstyle="->", color="#64748B", lw=0.8),
+        arrowprops=dict(arrowstyle="->", color="#64748B", lw=0.8), zorder=4,
     )
     ax.annotate(
         f"Trough: wk {weeks[trough_idx]}\n(Summer softness)",
         xy=(weeks[trough_idx], vals[trough_idx]),
         xytext=(weeks[trough_idx] + 3, vals[trough_idx] * 1.1),
         fontsize=8, color="#1E293B",
-        arrowprops=dict(arrowstyle="->", color="#64748B", lw=0.8),
+        arrowprops=dict(arrowstyle="->", color="#64748B", lw=0.8), zorder=4,
     )
 
-    ax.set_xlabel("Week of Year", fontsize=9, color="#475569")
+    # Month boundary ticks on x-axis; remove default week-number ticks
+    month_starts = [m[1] for m in _MONTHS]
+    ax.set_xticks(month_starts)
+    ax.set_xticklabels([m[0] for m in _MONTHS], fontsize=8.5, color="#475569")
+    ax.set_xlabel("Month (4-4-5 retail calendar · 52 weeks)", fontsize=8, color="#94A3B8")
     ax.set_ylabel("Seasonal deviation\n(fraction of avg demand)", fontsize=9, color="#475569")
     ax.set_title(
         f"Portfolio Seasonal Pattern — Protein Bar Category ({n_series} series)",
         fontsize=11, fontweight="bold", color="#1E293B", pad=10,
     )
     ax.set_xlim(0.5, 52.5)
-    ax.tick_params(labelsize=8, colors="#64748B")
+    ax.set_ylim(y_lo, y_hi)
+    ax.tick_params(labelsize=8.5, colors="#64748B")
     for spine in ax.spines.values():
         spine.set_edgecolor("#E2E8F0")
 
@@ -222,6 +245,70 @@ def chart_seasonal_index(index_df: pd.DataFrame, n_series: int) -> str:
     buf = _fig_to_b64(fig)
     plt.close(fig)
     fig.savefig(OUT_SEAS, dpi=150, bbox_inches="tight", facecolor=BG)
+    return buf
+
+
+def chart_seasonal_polar(index_df: pd.DataFrame, n_series: int) -> str:
+    """Rose / polar bar chart of the same seasonal index. Returns base64 PNG."""
+    weeks = index_df["week_of_year"].values
+    vals  = index_df["seasonal_index"].values
+
+    fig, ax = plt.subplots(figsize=(7, 7), subplot_kw={"projection": "polar"},
+                           facecolor=BG)
+    ax.set_facecolor(BG)
+
+    # Jan at top (North), running clockwise
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+
+    bar_w = 2 * np.pi / 52
+    thetas = 2 * np.pi * (weeks - 1) / 52
+
+    # Donut: bars start at inner radius 0.35, positive bars grow outward,
+    # negative bars grow inward (flip sign, plot from reduced bottom)
+    inner = 0.35
+    scale = 0.55 / max(np.abs(vals))  # normalize so max bar reaches radius ~0.9
+    bar_heights = np.abs(vals) * scale
+    bottoms = np.where(vals >= 0, inner, inner - np.abs(vals) * scale)
+    bar_colors = [C_IDX if v >= 0 else C_CPT for v in vals]
+
+    ax.bar(thetas, bar_heights, width=bar_w * 0.9, bottom=bottoms,
+           color=bar_colors, alpha=0.85, linewidth=0)
+
+    # Inner circle guide
+    theta_ring = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(theta_ring, [inner] * 200, color="#CBD5E1", linewidth=0.8, linestyle="--")
+
+    # Month labels at outer edge
+    for name, w_start, w_end in _MONTHS:
+        mid_week = (w_start + w_end) / 2
+        theta_mid = 2 * np.pi * (mid_week - 1) / 52
+        ax.text(theta_mid, inner + max(bar_heights) + 0.12, name,
+                ha="center", va="center", fontsize=9, fontweight="bold",
+                color="#475569")
+
+    # Peak / trough labels inside chart
+    peak_idx   = int(np.argmax(vals))
+    trough_idx = int(np.argmin(vals))
+    ax.text(thetas[peak_idx], bottoms[peak_idx] + bar_heights[peak_idx] + 0.04,
+            f"+{vals[peak_idx]:.0%}", ha="center", va="bottom",
+            fontsize=7, color=C_IDX, fontweight="bold")
+    ax.text(thetas[trough_idx], bottoms[trough_idx] - 0.04,
+            f"{vals[trough_idx]:.0%}", ha="center", va="top",
+            fontsize=7, color=C_CPT, fontweight="bold")
+
+    # Clean up polar frame
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.spines["polar"].set_visible(False)
+
+    ax.set_title(
+        f"Seasonal Cycle — Protein Bar Category\n({n_series} series · green = above avg · red = below avg)",
+        fontsize=10, fontweight="bold", color="#1E293B", pad=18,
+    )
+
+    buf = _fig_to_b64(fig)
+    plt.close(fig)
     return buf
 
 
@@ -309,7 +396,8 @@ MARKER = "<!-- MO_59_SECTION_28 -->"
 
 
 def build_html_section28(b64_seasonal: str, b64_decomp: str,
-                          n_series: int, n_qualifying: int) -> str:
+                          n_series: int, n_qualifying: int,
+                          b64_polar: str = "") -> str:
     return f"""
 {MARKER}
 <div style="margin:40px 0;padding:32px;background:#fff;border-radius:12px;
@@ -349,7 +437,24 @@ def build_html_section28(b64_seasonal: str, b64_decomp: str,
     January.
   </p>
   <img src="data:image/png;base64,{b64_seasonal}"
-       style="width:100%;border-radius:8px;margin-bottom:24px;" />
+       style="width:100%;border-radius:8px;margin-bottom:16px;" />
+
+  {"" if not b64_polar else f'''
+  <h3 style="color:#1E293B;font-size:1.05rem;margin:20px 0 10px;">
+    28.1b — Seasonal Cycle View (Polar)
+  </h3>
+  <p style="color:#475569;font-size:0.87rem;margin-bottom:14px;">
+    The same data as the bar chart above, wrapped into a circular calendar.
+    Jan at 12 o'clock, running clockwise. Green bars radiate outward (above-average demand);
+    red bars shrink inward (below-average). The shape makes the annual demand cycle — the
+    January spike, the summer trough, the autumn recovery — immediately visible as a pattern
+    rather than a sequence of numbers.
+  </p>
+  <div style="display:flex;justify-content:center;margin-bottom:24px;">
+    <img src="data:image/png;base64,{b64_polar}"
+         style="width:min(480px,100%);border-radius:8px;" />
+  </div>
+  '''}
 
   <h3 style="color:#1E293B;font-size:1.05rem;margin:20px 0 10px;">
     28.2 — STL Decomposition: Top {n_series} Series
@@ -440,12 +545,16 @@ if __name__ == "__main__":
     print("Rendering seasonal index chart …")
     b64_seasonal = chart_seasonal_index(index_df, len(qualifying[:20]))
 
+    print("Rendering seasonal polar chart …")
+    b64_polar = chart_seasonal_polar(index_df, len(qualifying[:20]))
+
     print("\nRendering STL decomposition grid …")
     b64_decomp = chart_decomp_grid(df, top_series)
 
     print("\nPatching HTML §28 …")
     section = build_html_section28(b64_seasonal, b64_decomp,
-                                   len(qualifying[:20]), len(qualifying))
+                                   len(qualifying[:20]), len(qualifying),
+                                   b64_polar=b64_polar)
     patch_html(section)
 
     print(f"\nOutputs:")
