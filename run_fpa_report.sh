@@ -33,7 +33,7 @@
 #                → MO_43 (§17a) → MO_45 (§18) → MO_44 (§17b DAG)
 #                → MO_50 (§19) → MO_51 (§20) → MO_52 (§21) → MO_53 (§22) → MO_54 (§23)
 #                → MO_56 (§24) → MO_57 (§25) → MO_58 (§26) → MO_49 (§27)
-#                → MO_59 (§28) → MO_60 (§29) → MO_61 (§30) → MO_62 (§31)
+#                → MO_59 (§28) → MO_60 (§29) → MO_61 (§30) → MO_62 (§31) → MO_63 (§32)
 #
 # Final — version-stamp + copy to docs/
 # ─────────────────────────────────────────────────────────────────────────────
@@ -103,6 +103,7 @@ HTML_CHAIN=(
   MO_60_synthetic_control            # §29 synthetic control + DiD causal sensitivity analysis
   MO_61_hte_elasticity               # §30 heterogeneous treatment effects (EconML LinearDML)
   MO_62_foundation_benchmark         # §31 foundation model zero-shot benchmark (Chronos/TimesFM/Moirai/TTM)
+  MO_63_rolling_cross_validation     # §32 rolling CV: accuracy stability across 6 cutpoints (Sep 2024–Dec 2025)
 )
 
 # ─── VALIDATION ──────────────────────────────────────────────────────────────

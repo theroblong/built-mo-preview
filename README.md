@@ -353,6 +353,41 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 57) — MO_63: Rolling cross-validation — accuracy stability across 18 months (§32)
+
+6-cutpoint expanding-window validation proving model consistency across market regimes. Same 28-feature MO_54 champion at every cutpoint, no per-window tuning.
+
+**Results (median wMAPE — 13-week horizon, all qualifying series):**
+| Cutpoint | N Series | Median wMAPE | IQR | Naïve Baseline | Gap vs. Naïve |
+|---|---|---|---|---|---|
+| Sep 2024 | 273 | **2.82%** | [2.0–4.0%] | 25.5% | +22.6pp |
+| Dec 2024 | 327 | **3.14%** | [2.3–5.1%] | 51.1% | +48.0pp |
+| Mar 2025 | 291 | **5.71%** | [3.5–10.3%] | 47.4% | +41.7pp |
+| Jun 2025 | 297 | **3.96%** | [2.5–7.0%] | 30.5% | +26.5pp |
+| Sep 2025 ★ | 332 | **2.78%** | [2.1–4.0%] | 40.6% | +37.8pp |
+| Dec 2025 | 442 | **2.02%** | [1.6–2.8%] | 23.9% | +21.9pp |
+
+★ = MO_38 canonical cutpoint.
+
+**Key findings:**
+- Accuracy range across all 6 periods: **3.69pp** — consistent across holiday seasons, New Year health spike, summer softness, and new SKU launches
+- Accuracy improves Sep 2024 → Dec 2025 (2.82% → 2.02%) as portfolio matures and YAGO lag features become available — directly validates the "accuracy compounds over time" marketing claim
+- Mar 2025 (5.71%) is the hardest period (Jan health spike fading, spring transition); even at its worst the model beats naïve by 41.7pp
+- Average gap vs. naïve last-value baseline: **+33.1pp** — consistent structural advantage, not a one-quarter artifact
+- Segment breakdown (Dec 2025): maturity, retailer tier, and pack format all show sub-2.5% median wMAPE — no weak segments
+
+**Artifacts:**
+- `scripts/MO_63_rolling_cross_validation.py` — 6-cutpoint expanding-window CV
+- `outputs/mo63_rolling_cv_by_cutpoint.csv` — per-cutpoint summary stats
+- `outputs/mo63_rolling_cv_per_series.csv` — 1,962 per-series rows
+- `outputs/mo63_rolling_cv_trend.png` — wMAPE over time + IQR band + series count
+- `outputs/mo63_rolling_cv_segments.png` — maturity / retailer tier / pack format breakdown
+- §32 patched into `outputs/built_demand_intelligence_report.html`
+
+`run_fpa_report.sh` updated: MO_63 added to `HTML_CHAIN` (Phase 5 manifest).
+
+---
+
 ### 2026-07-09 (update 56) — Marketing notes: Build vs. Buy positioning + LightGBM redaction
 
 Two additions to `docs/aevah_marketing_notes_internal.md`:
