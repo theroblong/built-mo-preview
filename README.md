@@ -353,6 +353,17 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 61) — Total units forecast in drawer: "Show promo uplift" checkbox
+
+Forecast drawer now has a "Show promo uplift" checkbox (default off, units mode only). When checked, adds an amber dashed line for total scan units (base + promo) alongside the existing base-units q10/q50/q90 lines. The gap between q50 and total = promo contribution (~30% portfolio average). 100% coverage across all 32,422 forecast rows.
+
+3-file change:
+- `retailer.py`: `forecast_total_units_low/base/high` added to SELECT + ForecastPoint assembly
+- `types.ts`: `total_units_low/base/high` added to `ForecastPoint` interface
+- `SkuRetailerView.tsx`: `showPromoUplift` state (default false); amber `#d97706` dashed Line conditional on checkbox + units mode; legend entry auto-shows; checkbox hidden in dollars mode
+
+---
+
 ### 2026-07-09 (update 60) — Layer 1 STL seasonal index wired into MO_27 (post-forecast multiplier)
 
 `stl_seasonal_index` (MO_59 portfolio STL decomposition, 52-week lookup) applied as a post-prediction multiplicative adjustment in MO_27's autoregressive forecast loop. Applied **only** when lag52 is unavailable (new SKUs, <52w history) — YAGO blend continues unchanged for mature series. Result: two independent, complementary seasonal signals covering the full portfolio.
