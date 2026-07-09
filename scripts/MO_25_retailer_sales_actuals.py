@@ -593,6 +593,19 @@ if __name__ == "__main__":
     df["week_of_year"]  = df["__time"].dt.isocalendar().week.astype(int)
     df["holiday_week"]  = df["week_of_year"].map(HOLIDAY_WEEK_MAP).fillna(0).astype(int)
 
+    # Layer 1: STL seasonal index from MO_59 (portfolio-level, week_of_year lookup)
+    _seas_path = Path("outputs/mo59_seasonal_index.csv")
+    if _seas_path.exists():
+        _seas = pd.read_csv(_seas_path)[["week_of_year", "seasonal_index"]].rename(
+            columns={"seasonal_index": "stl_seasonal_index"}
+        )
+        df = df.merge(_seas, on="week_of_year", how="left")
+        df["stl_seasonal_index"] = df["stl_seasonal_index"].fillna(0.0)
+        print(f"  stl_seasonal_index merged (coverage: {df['stl_seasonal_index'].notna().mean():.1%})")
+    else:
+        df["stl_seasonal_index"] = 0.0
+        print("  stl_seasonal_index: MO_59 CSV not found — defaulting to 0.0")
+
     # v8: Fourier encoding — sin/cos correctly represents week 52 → week 1 adjacency.
     # Raw integer week_of_year implies week 52 is far from week 1; Fourier fixes this.
     df["week_sin"] = np.sin(2 * np.pi * df["week_of_year"] / 52.178)

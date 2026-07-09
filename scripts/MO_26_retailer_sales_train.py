@@ -67,6 +67,9 @@ FEATURE_COLS = [
     "donor_count",
     # Seasonality
     "week_of_year",
+    # Note: stl_seasonal_index (MO_59) is NOT a LightGBM feature — it is redundant
+    # alongside week_of_year (zero importance in ablation). Applied instead as a
+    # Layer 1 post-prediction multiplier in MO_27 for new SKUs lacking lag52.
     # Autoregressive lags (lagged at time T — no leakage)
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
     # YAGO — year-ago lags (Bracken: "are 3 years of data comparable?")

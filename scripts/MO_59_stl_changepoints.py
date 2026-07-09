@@ -56,8 +56,9 @@ SCRIPT_DIR = Path(__file__).parent
 ROOT       = SCRIPT_DIR.parent
 PARQUET    = SCRIPT_DIR / "outputs" / "retailer_sales_weekly.parquet"
 HTML_PATH  = SCRIPT_DIR / "outputs" / "built_demand_intelligence_report.html"
-OUT_SEAS   = SCRIPT_DIR / "outputs" / "mo59_seasonal_index.png"
-OUT_DECOMP = SCRIPT_DIR / "outputs" / "mo59_stl_decomp.png"
+OUT_SEAS      = SCRIPT_DIR / "outputs" / "mo59_seasonal_index.png"
+OUT_DECOMP    = SCRIPT_DIR / "outputs" / "mo59_stl_decomp.png"
+OUT_INDEX_CSV = SCRIPT_DIR / "outputs" / "mo59_seasonal_index.csv"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 STL_PERIOD       = 52    # annual seasonality
@@ -432,6 +433,9 @@ if __name__ == "__main__":
 
     print("\nComputing portfolio seasonal index …")
     index_df = compute_seasonal_index(df, qualifying[:20])  # use top-20 for index
+
+    index_df.to_csv(OUT_INDEX_CSV, index=False)
+    print(f"  Saved seasonal index CSV → {OUT_INDEX_CSV.name}")
 
     print("Rendering seasonal index chart …")
     b64_seasonal = chart_seasonal_index(index_df, len(qualifying[:20]))

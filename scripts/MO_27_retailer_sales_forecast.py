@@ -105,6 +105,18 @@ if __name__ == "__main__":
     features_used_total = meta.get("total_units_features_used", [])
     forecast_total      = bool(models_total)
 
+    # ── 1b. Load MO_59 seasonal index (week_of_year → stl_seasonal_index) ───
+    _seas_path = Path("outputs/mo59_seasonal_index.csv")
+    if _seas_path.exists():
+        _seas_df = pd.read_csv(_seas_path)
+        seasonal_lookup: dict[int, float] = dict(
+            zip(_seas_df["week_of_year"].astype(int), _seas_df["seasonal_index"])
+        )
+        print(f"  Loaded STL seasonal index ({len(seasonal_lookup)} weeks)")
+    else:
+        seasonal_lookup = {}
+        print("  STL seasonal index not found — stl_seasonal_index will be 0.0")
+
     # ── 2. Load actuals panel (seed data) ────────────────────────────────────
     print("\nLoading retailer_sales_weekly.parquet …")
     df_actual = pd.read_parquet("outputs/retailer_sales_weekly.parquet")
@@ -302,6 +314,20 @@ if __name__ == "__main__":
                 units_low  = max(0.0, units_low  * blend_mult)
                 units_base = max(0.0, units_base * blend_mult)
                 units_high = max(0.0, units_high * blend_mult)
+
+            # Layer 1 — STL seasonal index (portfolio-level pattern from MO_59).
+            # Applied ONLY when the YAGO blend above did not fire (lag52 unavailable).
+            # For new SKUs without a year-ago reference, this borrows the portfolio
+            # seasonal curve as the sole seasonal signal — complementary to YAGO,
+            # not a replacement.
+            elif seasonal_lookup and units_base > 0:
+                woy = int(forecast_date.isocalendar().week)
+                stl_idx = seasonal_lookup.get(woy, 0.0)
+                if stl_idx != 0.0:
+                    stl_mult = max(0.1, 1.0 + stl_idx)
+                    units_low  = max(0.0, units_low  * stl_mult)
+                    units_base = max(0.0, units_base * stl_mult)
+                    units_high = max(0.0, units_high * stl_mult)
 
             # Feed blended q50 back as next step's lag seed (keeps AR and
             # seasonal blend consistent across the full 13-step horizon)

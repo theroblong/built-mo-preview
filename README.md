@@ -353,6 +353,20 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 60) — Layer 1 STL seasonal index wired into MO_27 (post-forecast multiplier)
+
+`stl_seasonal_index` (MO_59 portfolio STL decomposition, 52-week lookup) applied as a post-prediction multiplicative adjustment in MO_27's autoregressive forecast loop. Applied **only** when lag52 is unavailable (new SKUs, <52w history) — YAGO blend continues unchanged for mature series. Result: two independent, complementary seasonal signals covering the full portfolio.
+
+- **50.6% of series (1,264)** lack lag52 → STL Layer 1 now their sole seasonal reference
+- **49.4% of series (1,232)** have lag52 → YAGO blend unchanged
+- `stl_seasonal_index` ablated as LightGBM feature (zero importance alongside `week_of_year`); correctly placed as post-processing Layer 1 step instead
+- MO_59 now saves `outputs/mo59_seasonal_index.csv` (52-row week_of_year → seasonal_index lookup)
+- MO_25 merges `stl_seasonal_index` into parquet for audit/future comparison
+- MO_26 FEATURE_COLS unchanged — 28-feature MO_53 champion preserved
+- Seasonal blend multiplier clamped to minimum 0.1× to prevent zeroing-out edge cases
+
+---
+
 ### 2026-07-09 (update 59) — HTML report TOC sidebar + automation smoke test
 
 `fix_report_toc.py` added as Phase 5b in `run_fpa_report.sh`. Injects a sticky JS sidebar TOC into `built_demand_intelligence_report.html` after every pipeline run. Uses start+end marker pair — idempotent across re-runs; §26/§27 (and any other sections appended after the TOC) are preserved.
