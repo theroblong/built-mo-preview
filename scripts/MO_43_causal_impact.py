@@ -506,6 +506,16 @@ def build_html_section17(chart_paths, summary_stats):
   <h3 style="font-size:17px;font-weight:600;color:#1a1a2e;margin:0 0 12px">Business Summary — FP&A Interpretation</h3>
   <img src="data:image/png;base64,{imgs['summary']}" style="width:100%;max-width:1100px;display:block;margin:0 auto 32px" alt="Business summary">
 
+  <p style="font-size:13px;color:#555;border-left:3px solid #ccc;padding:8px 14px;margin:0 0 20px;line-height:1.7">
+    <strong>Stress test (§29):</strong> The same event is re-examined in
+    <a href="#toc-s29" style="color:#1976d2">§29 — Causal Sensitivity Analysis</a>
+    using two additional methods (synthetic control across 497 donor series; Difference-in-Differences).
+    The three methods diverge — CausalImpact's +28.6% is upward-biased relative to the synthetic control
+    because the 8-week post-period overlaps the January 2026 New Year health spike, which lifted the
+    entire BUILT portfolio regardless of price. §29 documents the confound and recommends a
+    pre-January-only window for cleaner attribution.
+  </p>
+
   <div style="background:#e3f2fd;border-left:4px solid #1976d2;padding:16px 20px;border-radius:4px">
     <strong style="color:#0d47a1">What this enables for BUILT's trade planning process:</strong>
     <span style="font-size:14px;color:#333"> Every trade promotion and price change BUILT runs is currently evaluated retrospectively using Excel sum-ifs on raw unit totals — with no counterfactual, no seasonal adjustment, and no way to separate the price effect from distribution changes or concurrent market-wide demand trends. CausalImpact runs automatically on every eligible event and produces a statistically defensible lift estimate with confidence intervals. Connor can use this to build a promotion ROI database. Chase can justify trade spend budgets with causal evidence rather than correlated growth. Bracken can see the dollar impact of pricing decisions with appropriate uncertainty ranges.</span>

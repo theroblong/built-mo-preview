@@ -573,9 +573,12 @@ def build_html_section29(b64_pt: str, b64_sc: str, b64_did: str, b64_comp: str,
   <p style="color:#94A3B8;font-size:0.78rem;margin-top:16px;">
     Synthetic control: scipy SLSQP, {n_donors} correlated donors (r&gt;0.4 pre-period),
     stable-ARP filter (CV&lt;0.08). DiD: statsmodels OLS.
-    CausalImpact reference (§17): +28.6% lift, +8,443 units, +$85,569 revenue
+    CausalImpact reference (<a href="#toc-s17" style="color:#64B5F6">§17</a>): +28.6% lift, +8,443 units, +$85,569 revenue
     (Walmart BB4pk + Kroger CD4pk as pre-specified controls).
     Post-period: {INTERVENTION.date()} → {POST_END.date()} (8 weeks, includes Jan 2026 health spike).
+    The divergence between §17 and this section is expected and informative: §17's pre-specified controls
+    track the focal series closely but do not fully absorb the portfolio-wide January demand surge.
+    A cleaner estimate would restrict the post-period to Dec 7 – Dec 28, 2025 (before the January spike).
   </p>
 </div>
 {MARKER}

@@ -353,6 +353,12 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 62) — §17 ↔ §29 cross-reference: CausalImpact ↔ sensitivity divergence
+
+Added bidirectional cross-references between §17 (CausalImpact, +28.6% BSTS estimate) and §29 (synthetic control + DiD sensitivity). §17 now contains a shaded note explaining that the estimate is stress-tested in §29 and that the Jan 2026 health spike confounds the 8-week post-period. §29 footnote links back to §17 and adds the actionable recommendation: restrict post-period to pre-January weeks for cleaner price-only attribution.
+
+---
+
 ### 2026-07-09 (update 61) — Total units forecast in drawer: "Show promo uplift" checkbox
 
 Forecast drawer now has a "Show promo uplift" checkbox (default off, units mode only). When checked, adds an amber dashed line for total scan units (base + promo) alongside the existing base-units q10/q50/q90 lines. The gap between q50 and total = promo contribution (~30% portfolio average). 100% coverage across all 32,422 forecast rows.
