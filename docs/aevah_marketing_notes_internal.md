@@ -46,8 +46,10 @@ The platform flexes to both contexts using the same data pipeline and the same M
 - "Can this run on our existing data infrastructure?"
 - "Is our SPINS feed going into a third-party model we don't control?"
 - "Can we swap the LLM provider if OpenAI pricing changes or if legal has concerns?"
-- **Pain:** AI tools that require wholesale data migration, vendor lock-in on LLM providers, or "trust us" black boxes that can't be audited.
-- **What they need:** Configurable provider stack, data stays in their environment, explainable models with audit logs.
+- "Do we have to rip and replace what our data science team already built?"
+- **Pain:** AI tools that require wholesale data migration, vendor lock-in on LLM providers, or "trust us" black boxes that can't be audited. Also: fear of buying a tool that boxes out their internal team.
+- **What they need:** Configurable provider stack, data stays in their environment, explainable models with audit logs — and a clear answer on build vs. buy flexibility.
+- **Key message for this buyer:** Aevah is an extensibility harness, not a walled garden. Scored outputs (forecasts, elasticity, cannibalization) are available as structured data your team can query, extend, or feed into internal tools. You're not locked out of your own models.
 
 ### CEO / General Manager
 - "How do I know our pricing is right vs. competitors?"
@@ -223,6 +225,40 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 - Time to value: 12–18 months to replicate what's already production-ready on Aevah.
 - Domain knowledge: CPG-specific features (promo lift decomposition, SPINS MRM integration, retailer-level elasticity) take years to get right.
 - Maintenance: Aevah handles model refresh on each SPINS data delivery. Internal builds require ongoing engineering headcount.
+
+---
+
+## Build vs. Buy — Aevah Serves Both
+
+Most enterprise software forces a binary choice: buy a vendor's black box or build your own from scratch. Aevah is designed to support both paths — and the path in between.
+
+### Turnkey (Buy)
+
+For teams that want fast time-to-value without internal data science investment:
+
+- Connect your SPINS feed. Aevah ingests, validates, enriches, and models it.
+- Mo is live within weeks — SKU forecasts, price elasticity, cannibalization scores, competitive event alerts, natural language Q&A.
+- No ML engineers required on the client side. The platform handles model refresh on each SPINS delivery.
+- **Best for:** Brands whose competitive edge is in sales, marketing, and trade — not in building data infrastructure. Teams that want the answers, not the engineering project.
+
+### Extensibility Harness (Build on Top)
+
+For teams with existing data science capability that want to integrate Aevah's CPG intelligence into their own workflows and tools:
+
+- Aevah's scored outputs (elasticity, cannibalization, event queue, forecasts) are available as Druid tables and API endpoints — queryable from any BI tool, notebook, or internal app.
+- Mo's natural language layer is configurable: LLM provider, system prompt, tool definitions, and screen logic are all accessible for customization.
+- New models and signals can be plugged into the pipeline alongside Aevah's core models.
+- **Best for:** Teams with data science or engineering resources who want to move fast on the CPG foundation (avoiding years of domain feature work) while owning the last-mile integration and customization.
+
+### The Middle Path
+
+Many clients start turnkey and evolve toward customization as they grow into the platform. Aevah's architecture supports this progression without re-platforming — the same data, the same models, the same API, with progressively more surface area exposed for client-side extension.
+
+**Talking point:** *"We're not asking you to choose between a black box you can't touch and a ground-up build that takes two years. Aevah is the CPG intelligence foundation — you decide how much you want to customize on top of it."*
+
+### Objection: "We want to own our own models"
+
+> You can. Aevah's scored outputs are exposed as structured data — your data science team can train on them, extend them, or use them as features in your own models. What you don't have to rebuild is the CPG domain feature pipeline underneath: the promo decomposition, the cannibalization detection, the TDP velocity signals. Those take years. Start there, own the rest.
 
 ---
 
