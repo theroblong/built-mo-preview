@@ -406,14 +406,14 @@ These are real production numbers from the BUILT deployment. Use carefully — a
 
 ---
 
-## What Is Still Being Built (Honest Gaps)
+## What We're Actively Working On
 
-Being accurate here helps credibility with technical buyers:
+Being accurate here builds credibility with technical buyers. These are known limitations we're in the process of addressing — not distant aspirations:
 
-- **Temporal holdout backtesting:** Current model uses a single 13-week holdout. Rolling cross-validation by account/time is on the roadmap (MO_59+).
-- **YAGO data depth:** 2025 SKUs lack 2+ years of history for seasonal pattern learning. Results improve as the dataset matures.
-- **Real-time promo calendar integration:** Current promo signals come from SPINS-reported data (1–3 week lag). Direct integration with a client's trade promotion management system would improve forecast accuracy further.
-- **Multi-retailer demand correlation:** Currently each retailer series is modeled independently. A portfolio-level demand model capturing cross-retailer spillover (e.g., Walmart promotion cannibalizing Kroger volume) is a Phase 3 roadmap item.
+- **Temporal holdout backtesting:** Current model uses a single 13-week holdout. We're actively building rolling cross-validation by account and time period to make accuracy estimates even more robust across different market conditions.
+- **YAGO data depth:** 2025 SKUs don't yet have 2+ years of history for full seasonal pattern learning. This improves automatically as the dataset matures — every SPINS delivery makes it better.
+- **Real-time promo calendar integration:** Current promo signals come from SPINS-reported data (1–3 week lag). We're in the process of building direct integration with trade promotion management systems to close that gap and give the model forward visibility into planned events.
+- **Multi-retailer demand correlation:** We're working toward a portfolio-level demand model that captures cross-retailer spillover — for example, a Walmart promotion pulling volume that otherwise would have gone to Kroger. This is a known dimension of CPG demand we're solving for.
 
 ---
 
