@@ -353,6 +353,19 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 59) — HTML report TOC sidebar + automation smoke test
+
+`fix_report_toc.py` added as Phase 5b in `run_fpa_report.sh`. Injects a sticky JS sidebar TOC into `built_demand_intelligence_report.html` after every pipeline run. Uses start+end marker pair — idempotent across re-runs; §26/§27 (and any other sections appended after the TOC) are preserved.
+
+Full smoke test (`./run_fpa_report.sh 2.2.0 --skip-training`) surfaced 3 environment bugs fixed:
+1. **pytensor 3.0.7 / numpy 1.x mismatch** — pytensor 3.x requires numpy 2.x; pinned `numpy==2.4.0` (numba ceiling) + upgraded `scipy` to 1.18.
+2. **pandas 3.x `fillna(method=)` removed** — replaced with `.ffill()` in `MO_43_causal_impact.py` and `MO_59_stl_changepoints.py`.
+3. **causalimpact integer Series indexing** — `data_mu[0]` → `data_mu.iloc[0]` patched in installed `causalimpact/misc.py`.
+
+Smoke test result: `docs/built_demand_intelligence_report_v2.2.0.html` — 15.8 MB, §1–§32 complete, TOC sidebar with 33 h2 anchors. Exit code 0. Full HTML chain now clean end-to-end.
+
+---
+
 ### 2026-07-09 (update 58) — Next steps planning + Rob Teams update drafted
 
 Rob update drafted: 6-window validation framing for non-technical audience. Emphasizes "accuracy gets better over time" story (YAGO lag becomes available as portfolio ages), 33pp structural gap vs. naïve, and hardest-period result (Mar 2025 = 5.7%, still 42pp ahead of naïve). Connects to Bracken's "data comparability" skepticism — the model holds up across all 6 market regimes, not just one favorable quarter.
