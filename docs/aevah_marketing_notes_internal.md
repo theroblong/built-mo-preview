@@ -128,6 +128,20 @@ From the BUILT production pipeline (104 SKUs × 78 retailers, 2.5+ years of week
 - **Explainable audit trail:** Every model prediction is traceable to a specific feature set, training run, and data version. Appropriate for finance teams with SOX or audit requirements.
 - **No vendor lock-in:** The platform is data-source agnostic. SPINS today, NielsenIQ or IRI tomorrow.
 
+### 6. Continuous Improvement — Value That Compounds Over Time
+
+Most software delivers its value on day one and stays static until the next paid upgrade. Aevah is different: the longer it runs on your data, the more accurate and useful it becomes.
+
+- **You get improvements today.** The models are production-ready at launch — not a proof of concept that needs months of tuning before it's useful. Clients see accurate forecasts from the first SPINS delivery.
+- **Retraining on every data delivery.** Each time a new SPINS file arrives, models retrain on the expanded dataset. A SKU that was too new to forecast reliably six months ago now has enough history to model well. A retailer that just rolled out your product gains a properly calibrated baseline automatically.
+- **Backtesting before anything goes live.** Every retrained model is validated against a held-out historical period before it replaces the prior version. If the new model is worse, the previous champion stays in production. Clients never unknowingly receive a degraded forecast.
+- **Accuracy improves as your portfolio matures.** New SKUs gain seasonal patterns, YAGO comparisons become available, and competitive context deepens. The model learns the shape of your business over time — not just the level.
+- **Platform-level refinements flow to all clients.** Signal improvements, new CPG domain features, and calibration updates developed across the platform are available to every deployment — not just the clients who requested them.
+
+**Contrast with an internal build:** A model built in-house starts degrading the moment the data scientist who built it moves on. Without dedicated retraining infrastructure and backtesting pipelines, most internal ML projects are stale within 12 months of launch. Aevah handles this as a core part of the platform, not as an afterthought.
+
+**Talking point:** *"You're not buying a snapshot. You're buying a system that keeps getting better on your data — automatically, with backtesting guardrails so you always know the model that's running is the best one we've seen."*
+
 ---
 
 ## Foundation Model Benchmark — The "Domain Knowledge Gap" Story
@@ -224,7 +238,8 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 ### vs. "We'll have our data science team build it"
 - Time to value: 12–18 months to replicate what's already production-ready on Aevah.
 - Domain knowledge: CPG-specific features (promo lift decomposition, SPINS MRM integration, retailer-level elasticity) take years to get right.
-- Maintenance: Aevah handles model refresh on each SPINS data delivery. Internal builds require ongoing engineering headcount.
+- Maintenance: Aevah handles model refresh, retraining, and backtesting on each SPINS data delivery. Internal builds require ongoing engineering headcount — and most go stale within 12 months when the original builder moves on.
+- Continuous improvement: Aevah's accuracy compounds over time as SKUs mature and history deepens. An internal build requires active investment to improve; Aevah improves by design.
 
 ---
 
