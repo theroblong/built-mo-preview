@@ -111,7 +111,7 @@ A generic tool trained on revenue data misses all of this. Aevah is trained on d
 
 From the BUILT production pipeline (104 SKUs × 78 retailers, 2.5+ years of weekly SPINS data):
 
-- **Base units model (SPINS MRM baseline):** wMAPE = **4.3%** (MO_53, 28-feature LightGBM champion)
+- **Base units model (SPINS MRM baseline):** wMAPE = **4.3%** (Aevah demand model, 28 CPG-domain features)
 - **Comparison baseline (YAGO-only, no ML):** wMAPE ≈ 30–118% depending on SKU maturity
 - **The gap:** 20+ percentage points of improvement attributable to domain-specific signals (cannibalization, price elasticity, TDP momentum)
 
@@ -134,7 +134,7 @@ From the BUILT production pipeline (104 SKUs × 78 retailers, 2.5+ years of week
 
 ### What We Tested
 
-We ran a head-to-head accuracy test: our LightGBM model (trained with CPG domain signals) vs. four general-purpose AI forecasting models from the world's largest AI labs — all running on the same real data, same time period, same evaluation rules.
+We ran a head-to-head accuracy test: Aevah (trained with CPG domain signals) vs. four general-purpose AI forecasting models from the world's largest AI labs — all running on the same real data, same time period, same evaluation rules.
 
 | Model | Organization | Training data |
 |---|---|---|
@@ -274,7 +274,7 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 - **Don't:** Say "our AI is better." Say "here is a specific question your team asks today, and here is exactly how fast and how accurately we answer it."
 - **Don't:** Compare unfavorably to BUILT's existing process or any client's current tools. Frame as additive.
 - **Don't:** Overstate certainty. SPINS baseline methodology is SPINS' proprietary model — it can differ from NielsenIQ by 30+ pp for the same event. Always say "SPINS-defined baseline" not "true non-promo demand."
-- **Don't:** Lead with model names (LightGBM, DoWhy, SHAP) in executive conversations. Lead with outcomes. Model names belong in technical appendices.
+- **Don't:** Lead with model names or internal implementation details in executive conversations. Lead with outcomes. Technical specifics belong in separate conversations with data science buyers only.
 
 ---
 
@@ -284,7 +284,7 @@ These are real production numbers from the BUILT deployment. Use carefully — a
 
 | Metric | Value | Context |
 |---|---|---|
-| Base units forecast accuracy | 4.3% wMAPE | 104 SKUs × 78 retailers, 13-week horizon, LightGBM 28-feature model |
+| Base units forecast accuracy | 4.3% wMAPE | 104 SKUs × 78 retailers, 13-week horizon, Aevah demand model |
 | Total units forecast accuracy | 9.47% wMAPE | Includes promo lift component — inherently more variable |
 | Improvement over YAGO-only baseline | 20–25 pp | Varies by SKU maturity and retailer data quality |
 | **Foundation model benchmark — Aevah vs. Amazon Chronos** | **6.1% vs. 27.7%** | Same 13-week holdout, 100 series; Aevah 4.5× better |
