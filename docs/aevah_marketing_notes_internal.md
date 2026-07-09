@@ -217,6 +217,47 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 
 ---
 
+## "How Is This Different From Just Using Claude or ChatGPT?"
+
+This question will come up in almost every technical or executive conversation. The short answer: **frontier LLMs are the language layer — Aevah is the intelligence layer. They work together.** Mo Chat is already powered by Claude and GPT-4o. The question isn't Claude vs. Aevah; it's what Claude can do without Aevah vs. what it can do with it.
+
+### What a Frontier LLM Can and Can't Do With Your SPINS Data
+
+A frontier model like Claude is a remarkable generalist. It can reason about CPG concepts, explain what a TDP is, and help draft a retail QBR narrative. What it cannot do:
+
+- **Train on your data.** Claude doesn't know what your Walmart BB 4-pack sold last Tuesday. It knows what protein bars are. Those are entirely different things. Without a purpose-built data pipeline connecting your specific SPINS feed to structured model outputs, every answer it gives about your business is a plausible guess — not a grounded fact.
+- **Produce calibrated quantitative forecasts.** Ask Claude "what will our Kroger velocity be in Q4?" and you'll get a thoughtful non-answer or a hallucinated number. Aevah runs a statistical demand model on 2.5 years of your weekly SPINS history and returns a quantile forecast (q10/q50/q90) with a documented error rate. Those are fundamentally different outputs.
+- **Control for confounders.** Price elasticity isn't "sales go up when price goes down." It requires controlling for distribution changes, promotional activity, seasonality, and launch phase simultaneously. Claude knows this conceptually. Aevah's causal model actually does it — with an audit trail showing which confounders were adjusted.
+- **Detect cannibalization.** Identifying that your new cookie dough SKU is stealing 18% of your brownie bar's volume requires cross-SKU modeling across retailers and time. Claude can define cannibalization. Aevah measures it.
+- **Hold 53 million rows in context.** LLMs have finite context windows. Even with retrieval-augmented generation (RAG), a generic wrapper can only surface fragments of your SPINS data at a time — not run models across the full dataset. Aevah processes the entire feed on every training run.
+
+### Why a Wrapper Around a Frontier LLM Falls Short
+
+Some teams try to solve this with a custom GPT or an LLM wrapper connected to their data warehouse. This gives you natural language query capability — which is valuable. But it still doesn't give you:
+
+- **Quantitative models.** Querying a database in natural language is not the same as running demand forecasts, elasticity estimation, or cannibalization scoring. A wrapper can retrieve your sales history; it can't model it.
+- **Validated accuracy.** A wrapper gives you plausible-sounding answers. Aevah gives you answers with documented error rates, backtested against held-out data. The difference matters when a CFO asks "how confident are you?"
+- **CPG domain features.** The signals that make forecasting accurate — TDP velocity, promo lift decomposition, rolling cannibalization pressure, retailer-level elasticity — don't emerge from an LLM reading your data. They have to be engineered by someone who understands how CPG retail data actually works. That work is already done in Aevah.
+- **Grounded citations.** Mo Chat cites the specific SPINS table, retailer, and time range behind every claim. A generic wrapper hallucinates confidently when the data doesn't support a clean answer. Aevah's architecture forces the LLM to work from query results, not from its training priors.
+
+### The Right Mental Model
+
+Think of it this way: a frontier LLM is a brilliant analyst who has read every book about CPG. Aevah is the same analyst — but one who has also spent three years studying your specific brand's data, built proprietary models on it, validated those models against real outcomes, and can now answer questions about your business with both expertise and evidence.
+
+Mo Chat uses Claude and GPT-4o as the conversational interface on top of those models. The LLM explains what the models found, in your language, tailored to your question. Without the models underneath, the LLM is just talking about CPG in general. With them, it's talking about your brand, your retailers, your SKUs — grounded in your data, cited, and auditable.
+
+**Talking point:** *"Claude and ChatGPT are already inside Aevah — that's how Mo talks to you. The question is what they have to work with. A frontier LLM without a purpose-built data pipeline is a brilliant analyst with no access to your files. Aevah is what gives them your files — modeled, validated, and queryable."*
+
+### Objection: "We could build our own wrapper around the API"
+
+> You could, and it would give you natural language SQL queries — useful. But it wouldn't give you a demand forecast, a price elasticity estimate, a cannibalization score, or a causal event analysis. Those require quantitative models, not just language models. Building those models on SPINS data, with CPG-specific domain features and proper backtesting, is 12–18 months of work. Aevah has already done it.
+
+### Objection: "Can't the LLM just figure out the patterns from the data?"
+
+> Not at the accuracy level your finance team needs. LLMs generate plausible outputs — they're optimized for coherence, not calibration. When Aevah says forecast accuracy is 6.1% error, that's a validated number from a held-out backtest. When a frontier LLM estimates your Q4 velocity, there's no equivalent validation behind it. For exploratory questions, LLM reasoning is valuable. For a demand plan you're presenting to your board, you need statistical models with documented error rates.
+
+---
+
 ## Key Differentiators vs. Alternatives
 
 ### vs. Excel / Manual Planning
@@ -234,6 +275,13 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 - Those platforms are general-purpose supply chain tools requiring multi-year implementations.
 - Aevah is CPG-data-native — built around SPINS' specific field definitions, retail account structures, and promo mechanics.
 - Mo Chat is the differentiator: no other platform lets you interrogate your demand model in natural language with cited, grounded answers.
+
+### vs. "Why Not Just Use Claude / ChatGPT Directly?"
+- Frontier LLMs are already inside Aevah — Mo Chat runs on Claude and GPT-4o. This is not an either/or question.
+- A frontier LLM without Aevah underneath is a brilliant analyst with no access to your files. It knows what CPG is; it doesn't know what your Walmart 4-pack sold last Tuesday.
+- LLMs generate plausible outputs. Aevah generates validated outputs — backtested, with documented error rates. A CFO can defend a 6.1% error rate; they cannot defend "the AI sounded confident."
+- Building the quantitative layer (demand forecasts, elasticity estimation, cannibalization scoring) on top of a raw LLM API requires the same 12–18 months of domain engineering as building it from scratch. Aevah has already done it.
+- See the full treatment in the "How Is This Different From Just Using Claude or ChatGPT?" section above.
 
 ### vs. "We'll have our data science team build it"
 - Time to value: 12–18 months to replicate what's already production-ready on Aevah.
