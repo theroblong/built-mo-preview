@@ -127,6 +127,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-09 (update 2) — Causal intelligence roadmap saved; SCHEMA_REGISTRY pipeline guard; MO_64 ingest complete
+
+**SCHEMA_REGISTRY pipeline guard (`scripts/mo_writeback.py`):** `write_back()` now calls `_validate_schema()` before any MinIO upload. Maps each Druid datasource → columns the API SELECTs. If the pipeline output DataFrame is missing required columns, the script raises immediately with a named list of what's missing and why — nothing is uploaded, Druid schema is unchanged. Covers `retailer_sales_forecast` and `retailer_sales_tdp_velocity`. Update `SCHEMA_REGISTRY` whenever a pipeline output schema or API SELECT changes. This prevents the silent failure mode where `appendToExisting: false` drops API-required columns from Druid and the UI goes dark with no error.
+
+**MO_64 `retailer_sales_tdp_velocity` ingest complete:** STATUS: SUCCESS — 1,788 rows, 6.9 seconds. Task `index_parallel_retailer_sales_tdp_velocity_koooekih_2026-07-09T19:24:51.418Z`. Growth driver distribution now queryable in Druid: TDP_EXPANSION / VELOCITY_GROWTH / MIXED_GROWTH / DISTRIBUTION_LOSS / VELOCITY_EROSION / MIXED_DECLINE / STABLE per (upc, retailer, channel, geo).
+
+**Causal intelligence roadmap captured (backlog — discuss with Rob 2026-07-10):** Four capability additions ranked by FP&A demo value: (1) MO_65 automated per-event CausalImpact — BSTS counterfactual for every qualified price event in the queue, serve in Event Detail Modal; (2) cross-retailer price Granger correlation — is this price move isolated or a cascade?; (3) DAG documentation + do-calculus Mo Chat ("what if TDP +10% and price holds?"); (4) synthetic control / DiD for cleaner promo lift estimates. Full specs in `wiki/08-roadmap.md` and project memory.
+
+**Sales $ promo uplift toggle:** Deferred — added to wiki backlog. Easy 3-file change when ready.
+
 ### 2026-07-09 — STL Seasonal Forecast, Promo Uplift Toggle, MO_62 Foundation Model Benchmark, MO_64 TDP×Velocity Decomposition; Druid Schema Safety Fix
 
 **STL seasonal adjustment (Layer 1 — new SKUs):** Post-forecast seasonal multiplier derived from portfolio-wide STL decomposition. Applied to SKUs with fewer than 52 weeks of history that lack a reliable lag-52 year-ago signal. 50.6% of series use STL path; 49.4% use YAGO. Result: summer/winter curves now visible in the 13-week forecast horizon instead of flat lines for new items. Seasonal blend weight: 40% YAGO / 60% STL for new SKUs.
