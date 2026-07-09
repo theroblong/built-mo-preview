@@ -9,6 +9,23 @@ Required env vars (in addition to mo_druid_client vars):
   MINIO_ACCESS_KEY
   MINIO_SECRET_KEY
   MINIO_BUCKET      e.g. mo-ml
+
+SCHEMA SAFETY
+-------------
+SCHEMA_REGISTRY maps each Druid datasource → columns the API SELECTs from it.
+write_back() validates the output DataFrame against this registry before uploading.
+If required columns are missing the script raises immediately — nothing is uploaded,
+nothing is ingested, and Druid is never poisoned with a schema change.
+
+When appendToExisting=false is used for a full segment replacement, Druid permanently
+drops any column not present in the new parquet. API queries for dropped columns return
+HTTP 400, which the API catches as an empty list — causing silent total UI failure
+(e.g., all forecast lines disappear). The registry prevents this at source.
+
+Update SCHEMA_REGISTRY whenever:
+  - A new column is added to a pipeline script's output
+  - A column is removed from a pipeline script's output
+  - The API SELECT for a datasource changes
 """
 
 import json
@@ -24,6 +41,53 @@ from dotenv import load_dotenv
 load_dotenv()
 
 os.makedirs("outputs", exist_ok=True)
+
+# ---------------------------------------------------------------------------
+# Schema registry — columns the API SELECTs from each Druid datasource.
+# write_back() checks the output DataFrame against this before any upload.
+# ---------------------------------------------------------------------------
+SCHEMA_REGISTRY: dict[str, list[str]] = {
+    "retailer_sales_forecast": [
+        # retailer.py _q_forecast() SELECT — update if either side changes
+        "upc", "description", "retail_account", "channel_outlet",
+        "geography_raw", "geography_display",
+        "anchor_date", "anchor_base_units", "anchor_arp", "arp_fallback",
+        "forecast_week_number",
+        "forecast_units_low", "forecast_units_base", "forecast_units_high",
+        "forecast_dollars_low", "forecast_dollars_base", "forecast_dollars_high",
+        "forecast_total_units_low", "forecast_total_units_base", "forecast_total_units_high",
+    ],
+    "retailer_sales_tdp_velocity": [
+        # retailer.py (future /sku-tdp-velocity endpoint) — MO_64 output
+        "upc", "description", "retail_account", "channel_outlet",
+        "geography_raw", "geography_display", "geography_level",
+        "hist_delta_units", "hist_tdp_contrib", "hist_vel_contrib",
+        "hist_tdp_contrib_pct", "hist_vel_contrib_pct",
+        "fwd_delta_units", "fwd_tdp_contrib", "fwd_vel_contrib",
+        "fwd_tdp_contrib_pct", "fwd_vel_contrib_pct",
+        "growth_driver", "growth_driver_detail",
+        "hist_tdp_last13w_avg", "hist_vel_last13w_avg",
+        "anchor_units", "forecast_units_base",
+    ],
+}
+
+
+def _validate_schema(df: pd.DataFrame, datasource: str) -> None:
+    """Raise if df is missing columns required by the API for this datasource."""
+    required = SCHEMA_REGISTRY.get(datasource)
+    if required is None:
+        return  # no registry entry → no check (new datasource, opt-in)
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise ValueError(
+            f"\nSCHEMA GUARD — '{datasource}' output is missing required columns:\n"
+            f"  {missing}\n"
+            f"The API SELECTs these columns from Druid. If this column was intentionally\n"
+            f"removed from the pipeline output, also remove it from the API SELECT and\n"
+            f"update SCHEMA_REGISTRY in mo_writeback.py before re-running.\n"
+            f"Nothing was uploaded. Druid schema is unchanged."
+        )
+
 
 MINIO_ENDPOINT   = os.environ["MINIO_ENDPOINT"]
 MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
@@ -132,6 +196,7 @@ def write_back(
         minio_key = f"{datasource}/{date_str}/{datasource}.parquet"
 
     print(f"\nWrite-back: {datasource}")
+    _validate_schema(df, datasource)  # raises before upload if API columns are missing
     uri = upload_parquet(df, minio_key, timestamp_col=timestamp_col)
     spec = build_ingest_spec(datasource, uri, timestamp_col, list(df.columns))
 
