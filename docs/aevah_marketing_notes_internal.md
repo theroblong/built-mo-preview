@@ -9,7 +9,7 @@
 
 Aevah is a **CPG demand intelligence platform** that turns existing retail scanner data (SPINS, NielsenIQ) into forward-looking decisions — with models that explain themselves in plain English and can be interrogated by anyone on the team, not just data scientists.
 
-The client-facing application built on Aevah is called **Mo**. Mo is not a chatbot bolted onto a dashboard. It is an AI analyst that has read every line of your data and can answer the question behind the question.
+The client-facing application built on Aevah is called **Mo**. Mo's conversational interface — **Aevah AI Assist** (also called AI Avatars) — is not a chatbot bolted onto a dashboard. It is an AI analyst that has read every line of your data and can answer the question behind the question, using your business's own language and context.
 
 ### Who We Serve — Growth-Stage and Established Brands
 
@@ -84,15 +84,17 @@ Most ML forecasting tools output a number. Aevah outputs a number **and an expla
 
 **Talking point:** "When your demand planner leaves the company, the knowledge leaves with them. With Aevah, the logic is in the model — visible, auditable, and transferable."
 
-### 2. Natural Language Data Interrogation — Anyone Can Ask
+### 2. Natural Language Data Interrogation — Anyone Can Ask, No Training Required
 
-Mo Chat is the conversational interface on top of all of this data. It is grounded in live SPINS data, not static training data.
+**Aevah AI Assist** (also referred to as AI Avatars) is the conversational interface on top of all of this data. It is grounded in live SPINS data and your business's own enterprise language — not static training data or generic CPG knowledge.
 
 - An account manager can ask: *"Why is Walmart trending down for our 4-pack vs. last quarter?"* and get a specific answer citing distribution loss, a competitor price cut, or promo gap — with the supporting numbers.
 - A CFO can ask: *"If we ran a 10% TPR at Kroger next quarter, what's the incremental revenue projection?"* and get a scenario with confidence bands.
-- Mo cites its sources. It doesn't hallucinate. When it doesn't know something (because the data isn't there), it says so.
+- Aevah AI Assist cites its sources. It doesn't hallucinate. When it doesn't know something (because the data isn't there), it says so.
 
-**Talking point:** "You already pay for SPINS data. Aevah makes it work for everyone on the team, not just the three people who know how to pull a report."
+**Usability advantage:** Unlike traditional enterprise software that requires weeks of onboarding and role-specific training, Aevah AI Assist is intuitive by design. If a user can describe their question in plain English — the way they'd ask a colleague — they can use it immediately. There is no query language to learn, no report template to configure, no dashboard to navigate. The interface meets users where they are, in the language they already use to talk about their business.
+
+**Talking point:** "You already pay for SPINS data. Aevah AI Assist makes it work for everyone on the team — not just the three people who know how to pull a report, and without a training program to get there."
 
 ### 3. Domain-Intelligent Signals — CPG-Specific, Not Generic ML
 
@@ -124,7 +126,7 @@ From the BUILT production pipeline (104 SKUs × 78 retailers, 2.5+ years of week
 ### 5. Security and Configurability — Enterprise-Ready
 
 - **Data sovereignty:** SPINS data and client sales data live in the client's Druid cluster. Nothing is sent to a third-party LLM training pipeline.
-- **Configurable LLM provider:** Mo can run on Anthropic Claude (default), OpenAI GPT-4o, or any OpenAI-compatible endpoint (Azure, Mistral, Llama 4, MS Copilot). One environment variable switch. No re-engineering required.
+- **Configurable LLM provider:** Aevah AI Assist can run on Anthropic Claude (default), OpenAI GPT-4o, or any OpenAI-compatible endpoint (Azure, Mistral, Llama 4, MS Copilot). One environment variable switch. No re-engineering required.
 - **Explainable audit trail:** Every model prediction is traceable to a specific feature set, training run, and data version. Appropriate for finance teams with SOX or audit requirements.
 - **No vendor lock-in:** The platform is data-source agnostic. SPINS today, NielsenIQ or IRI tomorrow.
 
@@ -219,7 +221,7 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 
 ## "How Is This Different From Just Using Claude or ChatGPT?"
 
-This question will come up in almost every technical or executive conversation. The short answer: **frontier LLMs are the language layer — Aevah is the intelligence layer. They work together.** Mo Chat is already powered by Claude and GPT-4o. The question isn't Claude vs. Aevah; it's what Claude can do without Aevah vs. what it can do with it.
+This question will come up in almost every technical or executive conversation. The short answer: **frontier LLMs are the language layer — Aevah is the intelligence layer. They work together.** Aevah AI Assist is already powered by Claude and GPT-4o. The question isn't Claude vs. Aevah; it's what Claude can do without Aevah vs. what it can do with it.
 
 ### What a Frontier LLM Can and Can't Do With Your SPINS Data
 
@@ -238,13 +240,13 @@ Some teams try to solve this with a custom GPT or an LLM wrapper connected to th
 - **Quantitative models.** Querying a database in natural language is not the same as running demand forecasts, elasticity estimation, or cannibalization scoring. A wrapper can retrieve your sales history; it can't model it.
 - **Validated accuracy.** A wrapper gives you plausible-sounding answers. Aevah gives you answers with documented error rates, backtested against held-out data. The difference matters when a CFO asks "how confident are you?"
 - **CPG domain features.** The signals that make forecasting accurate — TDP velocity, promo lift decomposition, rolling cannibalization pressure, retailer-level elasticity — don't emerge from an LLM reading your data. They have to be engineered by someone who understands how CPG retail data actually works. That work is already done in Aevah.
-- **Grounded citations.** Mo Chat cites the specific SPINS table, retailer, and time range behind every claim. A generic wrapper hallucinates confidently when the data doesn't support a clean answer. Aevah's architecture forces the LLM to work from query results, not from its training priors.
+- **Grounded citations.** Aevah AI Assist cites the specific SPINS table, retailer, and time range behind every claim. A generic wrapper hallucinates confidently when the data doesn't support a clean answer. Aevah's architecture forces the LLM to work from query results, not from its training priors.
 
 ### The Right Mental Model
 
 Think of it this way: a frontier LLM is a brilliant analyst who has read every book about CPG. Aevah is the same analyst — but one who has also spent three years studying your specific brand's data, built proprietary models on it, validated those models against real outcomes, and can now answer questions about your business with both expertise and evidence.
 
-Mo Chat uses Claude and GPT-4o as the conversational interface on top of those models. The LLM explains what the models found, in your language, tailored to your question. Without the models underneath, the LLM is just talking about CPG in general. With them, it's talking about your brand, your retailers, your SKUs — grounded in your data, cited, and auditable.
+Aevah AI Assist uses Claude and GPT-4o as the conversational interface on top of those models. The LLM explains what the models found, in your language and your business's terminology, tailored to your question. Without the models underneath, the LLM is just talking about CPG in general. With them, it's talking about your brand, your retailers, your SKUs — grounded in your data, cited, and auditable. This is what makes it feel like a frontier LLM while actually being grounded in your enterprise data.
 
 **Talking point:** *"Claude and ChatGPT are already inside Aevah — that's how Mo talks to you. The question is what they have to work with. A frontier LLM without a purpose-built data pipeline is a brilliant analyst with no access to your files. Aevah is what gives them your files — modeled, validated, and queryable."*
 
@@ -268,16 +270,16 @@ Mo Chat uses Claude and GPT-4o as the conversational interface on top of those m
 
 ### vs. Generic BI (Tableau, Power BI, Looker)
 - BI shows what happened. Aevah predicts what will happen and explains why.
-- BI requires a data analyst to build each view. Mo lets non-technical users ask questions in English.
+- BI requires a data analyst to build each view. Aevah AI Assist lets non-technical users ask questions in plain English — no training program required.
 - BI doesn't have domain models. Aevah's cannibalization and elasticity models are CPG-specific.
 
 ### vs. Other ML Forecasting Platforms (e.g., o9, Anaplan, Palantir)
 - Those platforms are general-purpose supply chain tools requiring multi-year implementations.
 - Aevah is CPG-data-native — built around SPINS' specific field definitions, retail account structures, and promo mechanics.
-- Mo Chat is the differentiator: no other platform lets you interrogate your demand model in natural language with cited, grounded answers.
+- Aevah AI Assist is the differentiator: no other platform lets you interrogate your demand model in natural language with cited, grounded answers — in your enterprise language, with no system training required.
 
 ### vs. "Why Not Just Use Claude / ChatGPT Directly?"
-- Frontier LLMs are already inside Aevah — Mo Chat runs on Claude and GPT-4o. This is not an either/or question.
+- Frontier LLMs are already inside Aevah — Aevah AI Assist runs on Claude and GPT-4o. This is not an either/or question.
 - A frontier LLM without Aevah underneath is a brilliant analyst with no access to your files. It knows what CPG is; it doesn't know what your Walmart 4-pack sold last Tuesday.
 - LLMs generate plausible outputs. Aevah generates validated outputs — backtested, with documented error rates. A CFO can defend a 6.1% error rate; they cannot defend "the AI sounded confident."
 - Building the quantitative layer (demand forecasts, elasticity estimation, cannibalization scoring) on top of a raw LLM API requires the same 12–18 months of domain engineering as building it from scratch. Aevah has already done it.
@@ -300,7 +302,7 @@ Most enterprise software forces a binary choice: buy a vendor's black box or bui
 For teams that want fast time-to-value without internal data science investment:
 
 - Connect your SPINS feed. Aevah ingests, validates, enriches, and models it.
-- Mo is live within weeks — SKU forecasts, price elasticity, cannibalization scores, competitive event alerts, natural language Q&A.
+- Aevah is live within weeks — SKU forecasts, price elasticity, cannibalization scores, competitive event alerts, and Aevah AI Assist for natural language Q&A.
 - No ML engineers required on the client side. The platform handles model refresh on each SPINS delivery.
 - **Best for:** Brands whose competitive edge is in sales, marketing, and trade — not in building data infrastructure. Teams that want the answers, not the engineering project.
 
@@ -309,7 +311,7 @@ For teams that want fast time-to-value without internal data science investment:
 For teams with existing data science capability that want to integrate Aevah's CPG intelligence into their own workflows and tools:
 
 - Aevah's scored outputs (elasticity, cannibalization, event queue, forecasts) are available as Druid tables and API endpoints — queryable from any BI tool, notebook, or internal app.
-- Mo's natural language layer is configurable: LLM provider, system prompt, tool definitions, and screen logic are all accessible for customization.
+- Aevah AI Assist's natural language layer is configurable: LLM provider, system prompt, tool definitions, and screen logic are all accessible for customization.
 - New models and signals can be plugged into the pipeline alongside Aevah's core models.
 - **Best for:** Teams with data science or engineering resources who want to move fast on the CPG foundation (avoiding years of domain feature work) while owning the last-mile integration and customization.
 
@@ -354,7 +356,7 @@ Many clients start turnkey and evolve toward customization as they grow into the
 > They probably can — but it will take 12–18 months to replicate what's running in production here. And CPG-specific domain knowledge (SPINS field definitions, retailer-level elasticity, promo decomposition) is hard-won. You'd be starting from scratch on problems we've already solved.
 
 **"How do we know the AI isn't making things up?"**
-> Mo only answers from grounded data — it cites the specific SPINS table, retailer, and time range for every claim. When the data doesn't support an answer, Mo says so rather than fabricating a number. The models are transparent: SHAP values show which signals drove each prediction. A CFO can follow the logic.
+> Aevah AI Assist only answers from grounded data — it cites the specific SPINS table, retailer, and time range for every claim. When the data doesn't support an answer, it says so rather than fabricating a number. The models are transparent: every prediction traces back to specific signals a CFO can follow.
 
 **"What happens to our data?"**
 > Your SPINS data lives in your Druid cluster. It doesn't go into any model training pipeline. The LLM only receives query results — not raw data — and the LLM provider is configurable if your legal team requires a specific vendor.
