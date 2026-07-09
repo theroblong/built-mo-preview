@@ -353,6 +353,19 @@ Global wMAPE averages across ~2,200 stable mature series and ~300 event-context 
 
 ---
 
+### 2026-07-09 (update 58) — Next steps planning + Rob Teams update drafted
+
+Rob update drafted: 6-window validation framing for non-technical audience. Emphasizes "accuracy gets better over time" story (YAGO lag becomes available as portfolio ages), 33pp structural gap vs. naïve, and hardest-period result (Mar 2025 = 5.7%, still 42pp ahead of naïve). Connects to Bracken's "data comparability" skepticism — the model holds up across all 6 market regimes, not just one favorable quarter.
+
+**Immediate next steps (ranked):**
+1. HTML TOC fix — §28-32 missing from table of contents (navigation dead-end for new sections)
+2. Wire MO_59 seasonal index as a training feature in MO_26 (Layer 1 architecture completion)
+3. Total units (low/base/high) in forecast drawer — 3-file change, Connor's explicit ask
+4. §17 → §29 cross-reference (CausalImpact + sensitivity finding linkage)
+5. PE model retrain with TDP (MO_16) before Druid ingest of scored_price_elasticity v3
+
+---
+
 ### 2026-07-09 (update 57) — MO_63: Rolling cross-validation — accuracy stability across 18 months (§32)
 
 6-cutpoint expanding-window validation proving model consistency across market regimes. Same 28-feature MO_54 champion at every cutpoint, no per-window tuning.
