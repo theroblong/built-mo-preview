@@ -45,11 +45,12 @@ The platform flexes to both contexts using the same data pipeline and the same M
 ### CIO / CTO
 - "Can this run on our existing data infrastructure?"
 - "Is our SPINS feed going into a third-party model we don't control?"
-- "Can we swap the LLM provider if OpenAI pricing changes or if legal has concerns?"
+- "Can we swap the LLM provider if pricing changes or if legal has concerns?"
 - "Do we have to rip and replace what our data science team already built?"
-- **Pain:** AI tools that require wholesale data migration, vendor lock-in on LLM providers, or "trust us" black boxes that can't be audited. Also: fear of buying a tool that boxes out their internal team.
-- **What they need:** Configurable provider stack, data stays in their environment, explainable models with audit logs — and a clear answer on build vs. buy flexibility.
-- **Key message for this buyer:** Aevah is an extensibility harness, not a walled garden. Scored outputs (forecasts, elasticity, cannibalization) are available as structured data your team can query, extend, or feed into internal tools. You're not locked out of your own models.
+- "Can this run on-prem or on private hosted hardware? We can't send data to public GPU clouds."
+- **Pain:** AI tools that require wholesale data migration, vendor lock-in on LLM providers, or "trust us" black boxes that can't be audited. Also: fear of buying a tool that boxes out their internal team, or that forces public cloud data exposure.
+- **What they need:** Configurable provider stack, data stays in their environment, explainable models with audit logs, a clear answer on build vs. buy flexibility — and a sovereign AI path if their policy requires it.
+- **Key message for this buyer:** Aevah is model-agnostic and infrastructure-flexible. It connects to whatever LLM or SLM they already have licensed. It supports on-prem and private hosted hardware for organizations that can't use public GPU clouds. And its scored outputs are available as structured data their team can query, extend, or feed into internal tools. They're not locked out of their own models or their own infrastructure.
 
 ### CEO / General Manager
 - "How do I know our pricing is right vs. competitors?"
@@ -123,10 +124,11 @@ From the BUILT production pipeline (104 SKUs × 78 retailers, 2.5+ years of week
 
 *Note: Use these directional numbers carefully. Actual ROI depends on the client's revenue base, inventory turns, and planning cycle. Always validate with client's own finance team rather than leading with a specific dollar figure.*
 
-### 5. Security and Configurability — Enterprise-Ready
+### 5. Security, Sovereignty, and Configurability — Enterprise-Ready
 
 - **Data sovereignty:** SPINS data and client sales data live in the client's Druid cluster. Nothing is sent to a third-party LLM training pipeline.
-- **Configurable LLM provider:** Aevah AI Assist can run on Anthropic Claude (default), OpenAI GPT-4o, or any OpenAI-compatible endpoint (Azure, Mistral, Llama 4, MS Copilot). One environment variable switch. No re-engineering required.
+- **LLM/SLM flexibility — bring your preferred model:** Aevah AI Assist is model-agnostic. It works with GPT-4o (OpenAI), Anthropic SDK, Azure LLMs, open-source and open-weights models, Microsoft Copilot, and any OpenAI-compatible endpoint. One configuration switch. No re-engineering required. Clients who have existing enterprise AI agreements, data residency requirements, or preferred vendors are not blocked — Aevah connects to what they already have.
+- **Local inference and sovereign AI:** For organizations that cannot or will not send data to GPU cloud providers, Aevah supports on-premises deployment and hosted private hardware — full sovereign AI configurations. The same forecasting models, the same Aevah AI Assist interface, running entirely within the client's own infrastructure. This includes open-weights LLMs and SLMs that run locally, so even the language model inference stays inside the firewall. Ideal for government contractors, regulated industries, or enterprises with strict data residency requirements.
 - **Explainable audit trail:** Every model prediction is traceable to a specific feature set, training run, and data version. Appropriate for finance teams with SOX or audit requirements.
 - **No vendor lock-in:** The platform is data-source agnostic. SPINS today, NielsenIQ or IRI tomorrow.
 
@@ -148,7 +150,7 @@ Most software delivers its value on day one and stays static until the next paid
 
 ## Foundation Model Benchmark — The "Domain Knowledge Gap" Story
 
-*Added 2026-07-08 after MO_62 live benchmark. Use this section when a buyer asks "why not just use ChatGPT/Google/Amazon for forecasting?" or when showcasing AI credibility.*
+*Added 2026-07-08 after MO_62 live benchmark. Use this section when a buyer asks "why not just use an AI assistant / frontier model for forecasting?" or when showcasing AI credibility.*
 
 ### What We Tested
 
@@ -219,18 +221,18 @@ This gap is most pronounced for **growth-stage brands** (the hardest forecasting
 
 ---
 
-## "How Is This Different From Just Using Claude or ChatGPT?"
+## "How Is This Different From Just Using a Frontier LLM or AI Assistant?"
 
-This question will come up in almost every technical or executive conversation. The short answer: **frontier LLMs are the language layer — Aevah is the intelligence layer. They work together.** Aevah AI Assist is already powered by Claude and GPT-4o. The question isn't Claude vs. Aevah; it's what Claude can do without Aevah vs. what it can do with it.
+This question will come up in almost every technical or executive conversation. The short answer: **frontier LLMs and SLMs are the language layer — Aevah is the intelligence layer. They work together.** Aevah AI Assist connects to your preferred LLM or SLM — GPT-4o, Anthropic SDK, Azure LLMs, open-source and open-weights models, Microsoft Copilot, and more. The question isn't "their LLM vs. Aevah" — it's what any LLM can do without Aevah underneath vs. what it can do with it.
 
 ### What a Frontier LLM Can and Can't Do With Your SPINS Data
 
-A frontier model like Claude is a remarkable generalist. It can reason about CPG concepts, explain what a TDP is, and help draft a retail QBR narrative. What it cannot do:
+A frontier LLM or AI assistant is a remarkable generalist. It can reason about CPG concepts, explain what a TDP is, and help draft a retail QBR narrative. What it cannot do — regardless of which model you use:
 
-- **Train on your data.** Claude doesn't know what your Walmart BB 4-pack sold last Tuesday. It knows what protein bars are. Those are entirely different things. Without a purpose-built data pipeline connecting your specific SPINS feed to structured model outputs, every answer it gives about your business is a plausible guess — not a grounded fact.
-- **Produce calibrated quantitative forecasts.** Ask Claude "what will our Kroger velocity be in Q4?" and you'll get a thoughtful non-answer or a hallucinated number. Aevah runs a statistical demand model on 2.5 years of your weekly SPINS history and returns a quantile forecast (q10/q50/q90) with a documented error rate. Those are fundamentally different outputs.
-- **Control for confounders.** Price elasticity isn't "sales go up when price goes down." It requires controlling for distribution changes, promotional activity, seasonality, and launch phase simultaneously. Claude knows this conceptually. Aevah's causal model actually does it — with an audit trail showing which confounders were adjusted.
-- **Detect cannibalization.** Identifying that your new cookie dough SKU is stealing 18% of your brownie bar's volume requires cross-SKU modeling across retailers and time. Claude can define cannibalization. Aevah measures it.
+- **Train on your data.** Any LLM, out of the box, doesn't know what your Walmart BB 4-pack sold last Tuesday. It knows what protein bars are. Those are entirely different things. Without a purpose-built data pipeline connecting your specific SPINS feed to structured model outputs, every answer it gives about your business is a plausible guess — not a grounded fact.
+- **Produce calibrated quantitative forecasts.** Ask any AI assistant "what will our Kroger velocity be in Q4?" and you'll get a thoughtful non-answer or a hallucinated number. Aevah runs a statistical demand model on 2.5 years of your weekly SPINS history and returns a quantile forecast (q10/q50/q90) with a documented error rate. Those are fundamentally different outputs.
+- **Control for confounders.** Price elasticity isn't "sales go up when price goes down." It requires controlling for distribution changes, promotional activity, seasonality, and launch phase simultaneously. Any LLM knows this conceptually. Aevah's causal model actually does it — with an audit trail showing which confounders were adjusted.
+- **Detect cannibalization.** Identifying that your new cookie dough SKU is stealing 18% of your brownie bar's volume requires cross-SKU modeling across retailers and time. Any LLM can define cannibalization. Aevah measures it.
 - **Hold 53 million rows in context.** LLMs have finite context windows. Even with retrieval-augmented generation (RAG), a generic wrapper can only surface fragments of your SPINS data at a time — not run models across the full dataset. Aevah processes the entire feed on every training run.
 
 ### Why a Wrapper Around a Frontier LLM Falls Short
@@ -246,9 +248,9 @@ Some teams try to solve this with a custom GPT or an LLM wrapper connected to th
 
 Think of it this way: a frontier LLM is a brilliant analyst who has read every book about CPG. Aevah is the same analyst — but one who has also spent three years studying your specific brand's data, built proprietary models on it, validated those models against real outcomes, and can now answer questions about your business with both expertise and evidence.
 
-Aevah AI Assist uses Claude and GPT-4o as the conversational interface on top of those models. The LLM explains what the models found, in your language and your business's terminology, tailored to your question. Without the models underneath, the LLM is just talking about CPG in general. With them, it's talking about your brand, your retailers, your SKUs — grounded in your data, cited, and auditable. This is what makes it feel like a frontier LLM while actually being grounded in your enterprise data.
+Aevah AI Assist connects to your preferred LLM or SLM as the conversational interface on top of those models. The language model explains what the models found, in your language and your business's terminology, tailored to your question. Without the models underneath, the LLM is just talking about CPG in general. With them, it's talking about your brand, your retailers, your SKUs — grounded in your data, cited, and auditable. This is what makes it feel like a frontier AI assistant while actually being grounded in your enterprise data.
 
-**Talking point:** *"Claude and ChatGPT are already inside Aevah — that's how Mo talks to you. The question is what they have to work with. A frontier LLM without a purpose-built data pipeline is a brilliant analyst with no access to your files. Aevah is what gives them your files — modeled, validated, and queryable."*
+**Talking point:** *"Aevah AI Assist connects to whatever LLM or SLM you prefer — GPT-4o, Azure, open-source models, Copilot, whatever your team already uses or your IT policy requires. The question isn't which AI model you pick. It's what that model has to work with. A frontier LLM without a purpose-built data pipeline is a brilliant analyst with no access to your files. Aevah is what gives them your files — modeled, validated, and queryable."*
 
 ### Objection: "We could build our own wrapper around the API"
 
@@ -278,12 +280,12 @@ Aevah AI Assist uses Claude and GPT-4o as the conversational interface on top of
 - Aevah is CPG-data-native — built around SPINS' specific field definitions, retail account structures, and promo mechanics.
 - Aevah AI Assist is the differentiator: no other platform lets you interrogate your demand model in natural language with cited, grounded answers — in your enterprise language, with no system training required.
 
-### vs. "Why Not Just Use Claude / ChatGPT Directly?"
-- Frontier LLMs are already inside Aevah — Aevah AI Assist runs on Claude and GPT-4o. This is not an either/or question.
-- A frontier LLM without Aevah underneath is a brilliant analyst with no access to your files. It knows what CPG is; it doesn't know what your Walmart 4-pack sold last Tuesday.
+### vs. "Why Not Just Use a Frontier LLM or AI Assistant Directly?"
+- Aevah AI Assist is LLM/SLM agnostic — it connects to GPT-4o, Azure LLMs, open-source and open-weights models, Microsoft Copilot, Anthropic SDK, and more. This is not an either/or question; Aevah works with whatever model the client prefers or already has licensed.
+- Any LLM without Aevah underneath is a brilliant analyst with no access to your files. It knows what CPG is; it doesn't know what your Walmart 4-pack sold last Tuesday.
 - LLMs generate plausible outputs. Aevah generates validated outputs — backtested, with documented error rates. A CFO can defend a 6.1% error rate; they cannot defend "the AI sounded confident."
-- Building the quantitative layer (demand forecasts, elasticity estimation, cannibalization scoring) on top of a raw LLM API requires the same 12–18 months of domain engineering as building it from scratch. Aevah has already done it.
-- See the full treatment in the "How Is This Different From Just Using Claude or ChatGPT?" section above.
+- Building the quantitative layer (demand forecasts, elasticity estimation, cannibalization scoring) on top of any LLM API requires the same 12–18 months of domain engineering as building it from scratch. Aevah has already done it.
+- See the full treatment in the "How Is This Different From Just Using a Frontier LLM?" section above.
 
 ### vs. "We'll have our data science team build it"
 - Time to value: 12–18 months to replicate what's already production-ready on Aevah.
@@ -400,7 +402,7 @@ These are real production numbers from the BUILT deployment. Use carefully — a
 | SPINS data scale | 53M+ rows | built_filtered_weekly, 145 weeks, 104 UPCs |
 | Retailers covered | 78 | Includes major chains, regional grocery, specialty, mass |
 | SKUs modeled | 104 | Full BUILT portfolio, all channels |
-| LLM providers supported | 2 live | Anthropic Claude (default), OpenAI GPT-4o; others roadmapped |
+| LLM/SLM flexibility | Fully configurable | GPT-4o, Anthropic SDK, Azure LLMs, open-source/open-weights models, Microsoft Copilot, any OpenAI-compatible endpoint; one config switch; on-prem/private hardware sovereign AI path also supported |
 
 ---
 
