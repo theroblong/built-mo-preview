@@ -183,6 +183,36 @@ The question is not "LLM or model?" The question is: do you want a generic answe
 
 ---
 
+### What the rest of the industry is saying
+
+These are not Aevah's claims — they are independent statements from enterprise AI's most prominent voices.
+
+**Alex Karp, CEO of Palantir** (Forbes, July 2026):
+
+> "I'm going to chillax and waste my time with tokens, I'm going to get no value, and they're going to get my IP."
+
+> Frontier AI models have been "completely, irresponsibly oversold."
+
+Karp's position: enterprises feeding proprietary data to frontier labs are paying a "wealth tax" — token costs that generate no durable value while their competitive edge is absorbed by a third party. Palantir's entire enterprise business is built on the premise that companies must own and control their AI deployment rather than outsource it.
+
+**Satya Nadella, CEO of Microsoft** (Forbes, July 2026):
+
+> Entire industries risk finding their knowledge "commoditized" underneath them if they rely on the same general AI platforms as their competitors.
+
+The CEO of Microsoft — which distributes OpenAI's models through Azure — is warning that generic AI creates commodity outcomes. Proprietary, domain-specific deployment is the hedge against that.
+
+**Gartner** (April 2025 press release):
+
+> By 2027, organizations will use small, task-specific AI models **three times more** than general-purpose large language models.
+
+> By 2027, more than **half of all enterprise GenAI models** will be domain-specific — up from just 1% in 2024.
+
+Gartner projects the domain-specific AI market to reach $11.3 billion by 2028. The direction is unambiguous: the enterprise shift from general frontier APIs to purpose-trained models is already underway.
+
+**The pattern:** The CEO of the company that supplies AI infrastructure (Huang/NVIDIA), the CEO of the enterprise AI platform that competes with frontier labs (Karp/Palantir), the CEO of the company that distributes OpenAI (Nadella/Microsoft), and the leading enterprise research firm (Gartner) are all saying the same thing — general models are the starting point, not the destination. Domain-specific systems are where enterprise value gets created and protected.
+
+---
+
 ### On Palantir — if it comes up
 
 Palantir is the nearest established competitor in enterprise AI operationalization and the right reference point for a sophisticated buyer. Their AIP platform does something real: it wraps LLMs in a structured business context layer (their "Ontology") so that a general model can reason about your specific operations with governance and security controls. That is a meaningful advance over raw LLM access.
