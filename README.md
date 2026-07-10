@@ -127,6 +127,37 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 (update 3) — Mistral 7B as 4th provider; 4-provider performance benchmark; Mo Chat speed optimizations
+
+**Mistral 7B (Ollama) added as 4th provider:** Mo Chat now has four selectable providers in the panel header dropdown — Claude (blue), GPT-4o (green), Gemma 4 (orange), Mistral 7B (purple). All four run the full tool-use loop. Mistral is routed via the existing Ollama path using a dedicated `mistral-mo` Modelfile (`num_ctx 8192`, `temperature 0.3`). Runtime switch via `POST /api/mo/provider {"provider": "mistral"}` — no restart required.
+
+**4-provider performance benchmark (no UPC, Mac M1):**
+
+| Provider | Warm | Cold | Notes |
+|---|---|---|---|
+| Claude | 17–79s | ~25s | Highly variable; Anthropic server load; no code fix possible |
+| GPT-4o | 34–42s | ~42s | More consistent than Claude |
+| Gemma 4 | 28s | 45s | Local, predictable; 9.6 GB model |
+| Mistral 7B | 10–15s | 60–90s | Fastest warm; 4.4 GB model |
+
+**Mac memory constraint:** Gemma 4 (9.6 GB) + Mistral (4.4 GB) = 14 GB combined, which exceeds unified memory available to Ollama. Running both in sequence causes swap, producing empty or corrupted responses. On Mac: test one Ollama model at a time; restart API to evict the other. For simultaneous multi-model production, use GPU server (A10G 24 GB+ handles both).
+
+**Mo Chat speed optimizations shipped this session:**
+
+| Optimization | Savings |
+|---|---|
+| Screen-aware tool filtering (`_filter_tools_for_screen`) | 25 tools → 5–8 per call; ~4,600 tokens saved |
+| Compact system prompt for no-UPC (`_build_system_compact`) | 42,950 chars → ~1,526 tokens; used all providers |
+| No-UPC tool restriction (`navigate_to` + `update_filters` only) | Prevents `get_channel_list` / `get_account_list` Druid explore loops |
+| Skip `_fetch_discovery_context()` on tool-use paths when no UPC | Eliminates 3 unbounded Druid scans (28k+ rows) |
+| Anthropic client singleton (`_get_anthropic_client`) | Reuses httpx connection pool; no re-handshake per call |
+
+**Plain text instruction in compact system:** Added "Plain text only — no markdown, no bullets, no bold" to `_build_system_compact` — fixes Gemma 4's raw `**bold**` asterisk rendering in the browser.
+
+**Demo recommendation:** Default to Claude. Switch to Mistral for fastest local response. Switch to Gemma 4 for the "no data egress" talking point. For production sovereign AI: vLLM on A10G (~$0.69/hr) gives 6–10s regardless of model — change only `MO_OLLAMA_ENDPOINT`, no other code changes needed.
+
+---
+
 ### 2026-07-10 (update 2) — Gemma 4 context window bug fix; sovereign AI speed analysis; UI provider toggle
 
 **Critical bug fix — Ollama context window overflow:** The MO_TOOLS schema is ~5,800 tokens. Ollama's default context window is 4,096 tokens. On every Gemma 4 call, the tool definitions were silently truncated before the system prompt or conversation was even counted. Gemma had to re-reason over a broken, incomplete schema on each call, causing 60+ second stalls. **Fix:** `_call_openai_with_tools()` now passes `extra_body={"options": {"num_ctx": 32768}}` when `base_url` is set (Ollama/vLLM path only). Claude and GPT-4o paths are unaffected.
