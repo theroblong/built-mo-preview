@@ -115,6 +115,46 @@ Good instinct — and we tested those too. Chronos, TimesFM, Moirai, Granite TTM
 
 ---
 
+### Straight from the source — Jensen Huang, CEO of NVIDIA
+
+Jensen Huang made the same case in a public conversation with LangChain's CEO. His framing is worth quoting directly, because it comes from the person who builds the infrastructure every frontier AI model runs on.
+
+**On why a general AI cannot solve domain-specific hard problems:**
+
+> "These optimization problems are insanely hard. And so you're not going to just have a general AI go off and crunch on it and think that you're going to find a great answer."
+
+This was specifically in the context of NVIDIA's own supply chain and chip design optimization — the hardest internal problems they have. General intelligence is the starting point, not the answer.
+
+**On building specialized super sub-agents as crown jewels:**
+
+> "We create super sub-agents... that thing is built for one job. That super agent is not trying to book me travel appointments. It's just trying to optimize our supply chain."
+>
+> "Are we also going to create specialized super agents... that in fact arguably could be your crown jewels? And the answer is absolutely true."
+
+**On company intelligence as identity — and why you can't outsource it:**
+
+> "Every company is built fundamentally on domain-specific or some specialized intellectual property... your company's intelligence is who you are. You can't possibly not continue to control it, improve it, make it better."
+>
+> "Somehow, outsourcing that intelligence — whether you're a person, company, country — makes no sense to me."
+
+**On the proprietary flywheel:**
+
+> "We believe that AI becomes ultimately great — becomes a super agent — when we put it into a flywheel where we use it, it gets smarter, it becomes more useful. We use it even more, it gets even smarter. Kind of like humans, learns over time."
+
+**On the future of every company:**
+
+> "Today, most companies are built on business processes. In the future, most companies will be built on harnesses."
+
+And on the harness being what converts a capable model into a useful one:
+
+> "In order to turn it into a useful product, you have to surround it with what is now known as a harness. There's so much more."
+>
+> "You adjust the environment, not just the model."
+
+**The frame this gives us:** The CEO of NVIDIA — whose company powers every major frontier model — is telling enterprises to start with general frontier models for general work, and then build proprietary specialized sub-agents with domain-specific data and tools for the problems that actually define them as a company. That is precisely what Aevah does for CPG demand intelligence. The general LLM handles natural language. Our ensemble — trained on your scan history, grounded in CPG domain signals — handles the forecast.
+
+---
+
 ### Exploration vs. operation — the distinction that matters
 
 LLMs are extraordinary exploration tools. You can ask them anything, brainstorm scenarios, draft documents, synthesize research. That value is real.
