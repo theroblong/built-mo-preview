@@ -127,6 +127,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 (update 5) — Streaming SSE shipped; UX fixes; provider routing fix
+
+**Streaming SSE complete across all 4 providers.** `_stream_anthropic_with_tools()` and `_stream_openai_with_tools()` generators yield SSE events (`tok` / `status` / `done` / `err`). `ChatRequest` gains `stream: bool = False`; the UI always sends `stream: true`. The sync path remains as a fallback but is no longer used.
+
+**UX: bubble appears on first token, not on send.** Initial implementation added an empty placeholder bubble immediately — this was worse than the "..." indicator alone. Users can't tell what an empty bubble is; "..." is the familiar "thinking" pattern. Fixed: `bubbleStarted` flag, bubble added to history only when the first `tok` event arrives. Single clean bubble. Error surfaces in ~1s via `err` event instead of hanging.
+
+**Status event between tool calls.** `{"t":"status","v":"Checking your data…"}` emitted before each Druid tool execution. Visible in the loading state — users see activity during multi-step tool loops.
+
+**Provider routing fix.** `MO_OLLAMA_ENDPOINT` in `.env` was silently overriding the runtime provider switch, defaulting to Gemma 4 even when Claude was selected. Fixed: env var now only supplies the Ollama server URL; `_active_provider` runtime switch always wins. Claude resets on every page load (UI POSTs `{"provider":"anthropic"}` on mount).
+
+**Benchmark caveat — don't design around bad API days.** 2026-07-10 first-token times (38s Claude, 31s GPT-4o, 25s Gemma 4) were measured on a confirmed Anthropic bad day. Normal Claude Haiku: first token in 1–2s, total 4–8s. Streaming on a normal day: "..." for 1–2s → text flows in. Design and benchmark against normal conditions.
+
+---
+
 ### 2026-07-10 (update 4) — Mo Chat UX strategy; streaming SSE decision; demo reliability framework
 
 **Streaming SSE confirmed as #1 next priority.** Tested Block 1 (no-UPC baseline) on Claude: 70s for a clean response. Functionally correct but unacceptably slow for demo use. Root cause is not the code — it's the synchronous response pattern. Mo waits for the full LLM response before returning anything. Streaming changes this: first token in ~1–2s on Claude Haiku, text flows from there. Total generation time doesn't change; UX perception transforms from "frozen app" to "responsive chat."
