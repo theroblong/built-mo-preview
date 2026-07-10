@@ -127,6 +127,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 (update 7) — Navigation suite defaults fix; Gemma 4 context overflow fix; hardware tradeoff note
+
+**Suite-level navigation now works.** "Take me to Price Elasticity" was prompting Mo to ask a clarifying question instead of navigating — the suite name is not a tab, and neither system prompt had a default tab to land on. Fixed: explicit suite defaults added to both `_build_system` and `_build_system_compact`: "Price Elasticity" → `price::determine::events`, "Cannibalization" → `cannibalization::determine::events`, "SKU View" → `sku-retailer::sku-retailer::summary`, "Retailer Summary" → `retailer::retailer::summary`. Commit `a4167a9`.
+
+**Gemma 4 context overflow on data-rich UPCs fixed.** `_fetch_context()` loads all screens' data in one call. Data-rich combos (e.g. Cookies N Cream at CVS: 5 price events + 13 forecast records + 4 ramp records) produced 23K-char / ~5,700-token system prompts. At `num_ctx=8192` Gemma 4 silently truncated and returned garbled 3-token responses ("ToIThe", "ToYouThe") or nothing at all. Fix: `_SCREEN_CTX_KEYS` dict in `_build_system_compact` limits context to the 2–3 keys each screen actually needs, ≤5 records per array. Every screen now stays under ~2K input tokens regardless of UPC. Commit `73ace00`.
+
+**num_ctx tradeoff documented.** Increasing `num_ctx` to 32,768 would handle full context without slimming — but requires ~2 GB extra KV cache on top of the 9 GB Gemma 4 model. On a 16 GB Mac there is no headroom (triggers swap, slower than 8K). On a RunPod A10G 24 GB (~$0.69/hr) or A100 with vLLM, `num_ctx=32768` is viable and would allow richer multi-screen context delivery. The slimming approach is the right solution for Mac demo environments; the GPU path is the production upgrade.
+
+---
+
 ### 2026-07-10 (update 6) — Mistral tool-calling investigation; Ollama architecture clarified; MO_CHAT_MODEL fix
 
 **MO_CHAT_MODEL env bleed-through fixed.** When `MO_CHAT_MODEL=gemma4-mo` was set in `.env` for Ollama, it was bleeding into Claude and GPT-4o model selection, causing HTTP 404 from Anthropic. Fixed: cloud provider model IDs are now hardcoded (`claude-haiku-4-5-20251001`, `gpt-4o`); only the Ollama/vLLM path reads `MO_CHAT_MODEL` from env.
