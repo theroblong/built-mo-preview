@@ -127,6 +127,25 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 (update 4) — Mo Chat UX strategy; streaming SSE decision; demo reliability framework
+
+**Streaming SSE confirmed as #1 next priority.** Tested Block 1 (no-UPC baseline) on Claude: 70s for a clean response. Functionally correct but unacceptably slow for demo use. Root cause is not the code — it's the synchronous response pattern. Mo waits for the full LLM response before returning anything. Streaming changes this: first token in ~1–2s on Claude Haiku, text flows from there. Total generation time doesn't change; UX perception transforms from "frozen app" to "responsive chat."
+
+**User expectation baseline:** Claude.ai and ChatGPT users expect streaming. In a focused operational tool like Mo — narrower questions, known context, live data — the bar is the same or higher, not lower. 70s silence before text appears reads as broken.
+
+**Demo reliability priority stack:**
+
+| Priority | Item | Status |
+|---|---|---|
+| 1 | Streaming SSE (Claude + GPT-4o first, Ollama second) | Next build |
+| 2 | Status indicator during tool calls ("Mo is checking your data…") | Next build |
+| 3 | Canned FAQ responses for no-UPC questions (zero LLM cost, always instant) | Backlog |
+| 4 | Provider health check on startup | Backlog |
+
+**Provider redundancy confirmed as the right insurance policy.** 4 providers = no single point of failure. Anthropic had issues today (70s). OpenAI outage prior week. Production fallback chain: Claude → GPT-4o → Mistral 7B (local, 10–15s warm, never goes down). Gemma 4 reserved for the "no data egress" sovereign AI talking point.
+
+---
+
 ### 2026-07-10 (update 3) — Mistral 7B as 4th provider; 4-provider performance benchmark; Mo Chat speed optimizations
 
 **Mistral 7B (Ollama) added as 4th provider:** Mo Chat now has four selectable providers in the panel header dropdown — Claude (blue), GPT-4o (green), Gemma 4 (orange), Mistral 7B (purple). All four run the full tool-use loop. Mistral is routed via the existing Ollama path using a dedicated `mistral-mo` Modelfile (`num_ctx 8192`, `temperature 0.3`). Runtime switch via `POST /api/mo/provider {"provider": "mistral"}` — no restart required.
