@@ -127,6 +127,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 (update 6) — Mistral tool-calling investigation; Ollama architecture clarified; MO_CHAT_MODEL fix
+
+**MO_CHAT_MODEL env bleed-through fixed.** When `MO_CHAT_MODEL=gemma4-mo` was set in `.env` for Ollama, it was bleeding into Claude and GPT-4o model selection, causing HTTP 404 from Anthropic. Fixed: cloud provider model IDs are now hardcoded (`claude-haiku-4-5-20251001`, `gpt-4o`); only the Ollama/vLLM path reads `MO_CHAT_MODEL` from env.
+
+**Mistral 7B tool-calling investigation — exhaustive.** Mistral 7B (Q4_K_M via `mistral-mo`) has a hard limit: reliable tool invocation in streaming mode only with exactly 1 tool. At ≥2 tools it outputs the function call as plain text (`finish_reason="stop"`) instead of invoking it. Tested across: OpenAI-compat streaming, Ollama native `/api/chat`, non-streaming with 7 tools — all fail at ≥2 tools. Not an API format issue; fundamental to the 7B model size.
+
+**Ollama tool architecture clarified.** The Ollama path (`_build_system_compact` + `_fetch_context`) pre-loads all Druid data into the system prompt before calling the model. Local models answer data questions from this pre-loaded context — they do not need to call data tools. Only `navigate_to` and `update_filters` are action tools needed for the Ollama path. `_stream_openai_with_tools` now limits Ollama to those two tools only. Cloud models (Claude, GPT-4o) use the full tool set since their path does not pre-load data.
+
+**Mistral kept as 4th provider for now.** Data Q&A works via pre-loaded context. Navigation reliability is limited by the 1-tool constraint but data answers are accurate.
+
+**Next session:** Evaluate local model replacements for Mistral 4th slot. Top candidates: `mistral-nemo` (12B, better function calling), `llama3.1:8b`, `qwen2.5:7b`. Evaluation criteria: streaming tool calling with ≥2 tools, fits in 16GB Mac RAM alongside OS, response quality on CPG data questions.
+
+---
+
 ### 2026-07-10 (update 5) — Streaming SSE shipped; UX fixes; provider routing fix
 
 **Streaming SSE complete across all 4 providers.** `_stream_anthropic_with_tools()` and `_stream_openai_with_tools()` generators yield SSE events (`tok` / `status` / `done` / `err`). `ChatRequest` gains `stream: bool = False`; the UI always sends `stream: true`. The sync path remains as a fallback but is no longer used.
