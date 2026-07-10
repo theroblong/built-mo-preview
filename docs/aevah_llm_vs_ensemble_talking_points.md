@@ -68,6 +68,47 @@ This is not a criticism of LLMs — it is an accurate description of what they a
 
 ---
 
+### The enterprise cost reality — confirmed by a competing AI
+
+When asked directly how much it would cost for 100 users to forecast over a 300-million-row × 300-column table joined with 10 other enterprise tables, Google Gemini gave this answer:
+
+> "Directly feeding a table with 300 million rows and 300 columns into Claude or ChatGPT to run forecasts is **mathematically and technically impossible.**"
+>
+> "A single dataset of that size represents roughly 90 billion individual data cells. Converted into text format for an AI to read, this translates to **over 180 billion tokens.** The maximum capacity of the largest LLM context windows is 1 million tokens — trying to process this directly would require a context window **180,000 times larger** than what current technology allows."
+
+This is the data access problem stated in hard numbers. A frontier LLM cannot see your dataset — not in principle, not in practice, not with any current or near-term architecture.
+
+**What actually happens instead (per Gemini's own description):**
+
+```
+[100 Users] ──> [Claude / ChatGPT] ──> Generates SQL ──> [Data Warehouse]
+                                                                 │
+[User Interface] <── Synthesized text <── Aggregated results (KB) ─┘
+```
+
+The LLM translates natural language into SQL. The warehouse runs the heavy join. The aggregated result — a few kilobytes — comes back to the LLM to summarize in prose. **The LLM is not forecasting. It is writing SQL and narrating summaries.** That is a fundamentally different capability from a model that has actually learned your demand patterns.
+
+**What Gemini estimated for 100 enterprise users:**
+
+| Component | Monthly cost |
+|-----------|-------------|
+| LLM seats (Claude Enterprise ~$20/seat, ChatGPT ~$60/seat) | $2,000–$6,000 |
+| LLM token API overages (queries + summaries) | $500–$1,500 |
+| Data warehouse compute (Snowflake/Databricks, 300M-row joins) | $4,000–$12,000 |
+| **Total** | **$6,500–$19,500/month** |
+
+And Gemini's caveat on Claude Enterprise specifically:
+
+> "If your 100 users are power analysts constantly generating massive forecasting reports, token costs can push your true Claude cost up to **$60 to $250+ per user/month.**"
+
+So the tool that "can't do the forecasting" still costs $78K–$234K per year at the high end — before you have a single trained forecast model. The warehouse compute is the real exposure, because every unoptimized LLM-generated SQL query risks a full-table scan on a 300-million-row dataset.
+
+**The summary:** A third competing AI, given a direct question about enterprise forecasting at your scale, confirmed: (1) direct data ingestion is impossible, (2) the LLM's actual role is SQL generation and text synthesis, (3) the real cost driver is the warehouse, not the LLM. None of this is our framing — it is what the systems themselves say about their own limitations.
+
+Our ensemble model sidesteps this entirely. The demand patterns are learned once, at training time, from your complete scan history. Inference is a fast lookup, not a 300-million-row join. And the output is a calibrated quantile forecast — not a prose summary of a database query.
+
+---
+
 ### "What about AI models built specifically for forecasting?"
 
 Good instinct — and we tested those too. Chronos, TimesFM, Moirai, Granite TTM: foundation models purpose-built for time-series forecasting, trained on millions of series. Our ensemble model beat the average of all four by **5.1×** on error rate. The reason: they are general-purpose. We are not. Every signal in our model — distribution momentum, price elasticity, cannibalization pressure, promotional lift — was engineered specifically for CPG sell-through at retail, and learned from your own scan history, not the public internet.
