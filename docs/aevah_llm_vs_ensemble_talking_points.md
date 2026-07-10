@@ -45,6 +45,29 @@ Finance needs low / base / high scenario bands with defined confidence. LLMs gen
 
 ---
 
+### Straight from the source — Claude's own buying agent
+
+When asked directly: *"If I wanted to use Claude over batch ingestion data and multiple tables — one of them 300 million rows and 300 columns — how much might it cost to forecast and detect events that are accurate and repeatable and deterministic?"*
+
+Claude's official buying agent gave three answers that matter:
+
+**1. You cannot feed a 300-million-row table to Claude.**
+> "The model works on the text you send it, so a table that size gets processed in whatever slices your pipeline extracts and passes in, not all at once."
+
+The cost driver is tokens sent and returned — not the intelligence derived from the full dataset. You would be paying per query, per slice, with no model that has actually learned from your complete demand history.
+
+**2. Claude is not deterministic or repeatable.**
+> "Claude is a generative model, so identical inputs won't always produce byte-identical outputs."
+
+A CFO's planning process cannot run on a model that gives a different answer each time the same question is asked. Finance requires auditability. LLMs structurally cannot provide it.
+
+**3. Claude itself recommends using statistical models to do the actual forecasting.**
+> "Teams that need accurate, repeatable forecasting typically pair the model with deterministic code and statistical models, using Claude to orchestrate or interpret rather than to compute the forecast itself."
+
+This is not a criticism of LLMs — it is an accurate description of what they are for. Claude is excellent at orchestrating and interpreting. The statistical model that actually computes the forecast — trained on your specific scan data, with domain-specific signals, producing quantile outputs — that is what Aevah builds. The two are not in competition. One answers questions; the other runs your business.
+
+---
+
 ### "What about AI models built specifically for forecasting?"
 
 Good instinct — and we tested those too. Chronos, TimesFM, Moirai, Granite TTM: foundation models purpose-built for time-series forecasting, trained on millions of series. Our ensemble model beat the average of all four by **5.1×** on error rate. The reason: they are general-purpose. We are not. Every signal in our model — distribution momentum, price elasticity, cannibalization pressure, promotional lift — was engineered specifically for CPG sell-through at retail, and learned from your own scan history, not the public internet.
