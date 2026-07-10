@@ -127,6 +127,26 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 (update 2) — Gemma 4 context window bug fix; sovereign AI speed analysis; UI provider toggle
+
+**Critical bug fix — Ollama context window overflow:** The MO_TOOLS schema is ~5,800 tokens. Ollama's default context window is 4,096 tokens. On every Gemma 4 call, the tool definitions were silently truncated before the system prompt or conversation was even counted. Gemma had to re-reason over a broken, incomplete schema on each call, causing 60+ second stalls. **Fix:** `_call_openai_with_tools()` now passes `extra_body={"options": {"num_ctx": 32768}}` when `base_url` is set (Ollama/vLLM path only). Claude and GPT-4o paths are unaffected.
+
+**UI provider toggle extended:** Mo Chat provider badge now includes "Gemma 4 (Ollama)" as a third option (orange badge) alongside Claude (blue) and GPT-4o (green). All three selectable at runtime from the panel header — no restart required.
+
+**Sovereign AI speed analysis for Rob:** Even with the bug fixed, Mac-local inference is 30–45 seconds per response (prefill cost on a 10k-token payload). The right production path is a cloud GPU Aevah controls:
+
+| Setup | Response time | Cost |
+|---|---|---|
+| Mac local Ollama (fixed) | 30–45 sec | $0 |
+| RunPod A10G 24GB + vLLM | 6–10 sec | ~$0.69/hr |
+| RunPod A100 80GB + vLLM | 3–5 sec | ~$2.49/hr |
+
+**Recommendation for Rob:** Demo Mo Chat sovereign AI on Claude or GPT-4o normally. Switch to Gemma 4 specifically to make the "no data leaves your infrastructure" point. For a client who needs sovereign AI in production, spin up a single A10G GPU on RunPod/Lambda (~$0.69/hr). Responses become fast enough to use. Data stays on infrastructure Aevah or the client controls — never touches Anthropic or OpenAI.
+
+**Next optimization (backlog):** Screen-aware tool filtering — send only 6–8 tools relevant to the current screen instead of all 25. Cuts prefill from ~10k to ~3k tokens. Biggest remaining latency win without hardware. Estimated 1–2 hours.
+
+---
+
 ### 2026-07-10 — Sovereign AI / Gemma 4 path for Mo Chat; Ollama full tool-use integration
 
 **Sovereign AI provider path (`MO_OLLAMA_ENDPOINT`):** Mo Chat now supports any Ollama or vLLM endpoint with full tool use — all 20+ Mo tools (navigate_to, get_*, update_filters) work identically to Claude and GPT-4o. BUILT data never reaches an external API on this path. Set `MO_OLLAMA_ENDPOINT=http://localhost:11434/v1` (or any remote Ollama/vLLM server URL) to activate. Switchable at runtime via `POST /api/mo/provider {"provider": "ollama"}` — no restart required.
