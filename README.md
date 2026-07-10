@@ -127,6 +127,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-10 — Sovereign AI / Gemma 4 path for Mo Chat; Ollama full tool-use integration
+
+**Sovereign AI provider path (`MO_OLLAMA_ENDPOINT`):** Mo Chat now supports any Ollama or vLLM endpoint with full tool use — all 20+ Mo tools (navigate_to, get_*, update_filters) work identically to Claude and GPT-4o. BUILT data never reaches an external API on this path. Set `MO_OLLAMA_ENDPOINT=http://localhost:11434/v1` (or any remote Ollama/vLLM server URL) to activate. Switchable at runtime via `POST /api/mo/provider {"provider": "ollama"}` — no restart required.
+
+**Model-agnostic:** The path works with any model tag available in Ollama. Default is `gemma4`; set `MO_CHAT_MODEL` to override (e.g., `gemma4:12b`, `llama4`, `mistral`, `qwen2.5:14b`). Recommended: **Gemma 4 12B** — runs on a 16 GB Mac, handles all tool schemas reliably, multimodal.
+
+**Deployment modes:** Demo on laptop (Ollama local) → client self-hosted (client's Ollama server) → Aevah-hosted GPU (vLLM for multi-user prod). vLLM is the upgrade path when sovereign GPU hardware is available.
+
+**Code changes (`customer-built-mo-api/app/routers/mo_chat.py`):**
+- `_call_openai_with_tools()` gains `base_url` param — creates `openai.OpenAI(base_url=..., api_key="ollama")` when set; existing OpenAI/Anthropic paths unchanged
+- New Ollama branch in `mo_chat()` route handler; priority above `MO_CHAT_ENDPOINT` legacy path
+- Provider switch endpoint now accepts `"ollama"` as a valid value
+- Legacy `MO_CHAT_ENDPOINT` no-tools path preserved for backward compatibility
+
+**CFO one-pager + LLM vs ensemble talking points:** `docs/aevah_cfo_one_pager.html` (print-ready, 4 industry voices: Karp/Palantir, Jensen Huang/NVIDIA, Gartner, Nadella/Microsoft). Full talking points at `docs/aevah_llm_vs_ensemble_talking_points.md` with sourced quotes, Gemini cost analysis, Jensen Huang video transcript, and enterprise cost reality section.
+
 ### 2026-07-09 (update 2) — Causal intelligence roadmap saved; SCHEMA_REGISTRY pipeline guard; MO_64 ingest complete
 
 **SCHEMA_REGISTRY pipeline guard (`scripts/mo_writeback.py`):** `write_back()` now calls `_validate_schema()` before any MinIO upload. Maps each Druid datasource → columns the API SELECTs. If the pipeline output DataFrame is missing required columns, the script raises immediately with a named list of what's missing and why — nothing is uploaded, Druid schema is unchanged. Covers `retailer_sales_forecast` and `retailer_sales_tdp_velocity`. Update `SCHEMA_REGISTRY` whenever a pipeline output schema or API SELECT changes. This prevents the silent failure mode where `appendToExisting: false` drops API-required columns from Druid and the UI goes dark with no error.
