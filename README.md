@@ -127,6 +127,18 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-13 (update 10) — Lean 4 formal verification potential use case documented
+
+**Potential evaluation study: formally prove the $0.05 elasticity guardrail.** The current guardrail is justified empirically (35.9% of rows produced garbage values below the threshold). A formal proof would replace that claim with a mathematical guarantee: given protein bar prices bounded in [0.50, 10.00] $/bar and |ΔP| ≥ $0.05, the log-price-change denominator is proven bounded away from zero by a computable δ. Lean 4's `grind` / `linarith` tactics can close this automatically — pure real arithmetic, no empirical data needed.
+
+**Adjacent use cases via `bv_decide`.** `bv_decide` is Lean 4's SAT-backed tactic for **bounded integer / bit-vector proofs** — distinct from `grind` (reals). Natural candidates in Mo: data maturity gate (≥8 post-launch weeks AND week_index ≤ 52 — provable by bv_decide over bounded integers); 64-bit overflow check on annual unit sums; price-bin boundary correctness if prices are stored as integer cents. The two tactics are complementary: `grind`/`linarith` for the continuous formula, `bv_decide` for the discrete data-quality gates.
+
+**Python integration.** LeanDojo (`pip install lean-dojo`, MIT, 1,000+ stars, NeurIPS paper) or simpler subprocess approach (`lean MyProof.lean`, exit 0 = proof holds). SPINS data never enters Lean — only formulas, bounds, and thresholds are expressed in Lean code. Completely local and secure.
+
+**Status:** Not yet started. Documented as a future evaluation study. See `scripts/MO_lean_guardrail_proof/` (proposed location) and `wiki/08-roadmap.md` for proof sketch and file structure.
+
+---
+
 ### 2026-07-13 (update 9) — llama3.2:3b evaluated and disqualified; minimum viable model size confirmed at 7–9B
 
 **Test method:** Modelfile swap — `gemma4-mo` recreated pointing to `llama3.2:3b` (2.0 GB). Zero code or UI changes. Smoke tested via direct API curl on BB 4pk at CVS, `cannibalization::determine::events`. Reverted to Gemma 4 after test.
