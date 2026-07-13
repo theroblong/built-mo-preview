@@ -127,6 +127,21 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-13 (update 9) — llama3.2:3b evaluated and disqualified; minimum viable model size confirmed at 7–9B
+
+**Test method:** Modelfile swap — `gemma4-mo` recreated pointing to `llama3.2:3b` (2.0 GB). Zero code or UI changes. Smoke tested via direct API curl on BB 4pk at CVS, `cannibalization::determine::events`. Reverted to Gemma 4 after test.
+
+**Results:**
+- Navigation trigger ("Take me to Price Elasticity") — ✅ Fired correct `navigate_to` call
+- Data question ("What's the top event?") — ❌ Hallucinated a non-existent tool name (`get_top_cannibalization_event`) and embedded raw context JSON as its parameters
+- Intent gate ("Explain price elasticity") — ❌ Still navigated; emitted an invalid phase (`explain`) in the `navigate_to` call; 3B cannot follow a multi-rule system prompt reliably
+
+**Verdict:** 3B is below the minimum viable size for Mo Chat. Tool hallucination and instruction-gate failure are fundamental model-size limitations — no prompt fix resolves them. Minimum viable size confirmed at 7–9B (Gemma 4 9B passes all three tests). `llama3.2:3b` remains installed in Ollama. Gemma 4 restored as the `gemma4-mo` Modelfile.
+
+**Next candidates for Mistral 4th-slot replacement (must run alongside Gemma 4's 9.6 GB):** `qwen2.5:7b` (~4.5 GB, best RAM fit) and `llama3.1:8b` (~5 GB).
+
+---
+
 ### 2026-07-13 (update 8) — Gemma 4 navigation intent gate; asterisk strip; tool definition improvements
 
 **Navigation over-eager fix.** Gemma 4 was calling `navigate_to` on informational requests — "Explain price elasticity" navigated to the Price Elasticity screen; "summarize pack crossover" jumped to Pack Ladder. Root cause: `_build_system_compact` said "Call navigate_to to move screens" with no intent guard. Fixed: explicit trigger-word list added ("take me to / go to / navigate to / open / show me"). For explain/summarize/what is/describe requests Mo now answers from pre-loaded context and offers navigation as a follow-up. Commit `4c08ca7`.
