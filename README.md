@@ -127,6 +127,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-13 (update 8) — Gemma 4 navigation intent gate; asterisk strip; tool definition improvements
+
+**Navigation over-eager fix.** Gemma 4 was calling `navigate_to` on informational requests — "Explain price elasticity" navigated to the Price Elasticity screen; "summarize pack crossover" jumped to Pack Ladder. Root cause: `_build_system_compact` said "Call navigate_to to move screens" with no intent guard. Fixed: explicit trigger-word list added ("take me to / go to / navigate to / open / show me"). For explain/summarize/what is/describe requests Mo now answers from pre-loaded context and offers navigation as a follow-up. Commit `4c08ca7`.
+
+**Markdown asterisk strip.** Gemma 4 ignores the "Plain text only — no markdown" prompt instruction and emits `**bold**` markers that render as literal asterisks in the Mo panel. Prompt-level fixes are unreliable for local models; added a code-level `replace("**", "")` on every streaming chunk in the Ollama path. GPT-4o path unchanged. Commit `38aad4e`.
+
+**Tool definition improvements.** Audited all 25 `MO_TOOLS` definitions: (1) `navigate_to` suite and phase enums were missing `sku-retailer` and `retailer`, actively biasing the model away from SKU View and Retailer Summary navigation. (2) All 12 data fetch tools had descriptions that listed return columns but gave no guidance on when to call them — model had to guess from the tool name alone. Added "Use when..." sentences to every data tool and documented SKU View / Retailer Summary paths in `navigate_to`. Commit `9e8288a`.
+
+---
+
 ### 2026-07-10 (update 7) — Navigation suite defaults fix; Gemma 4 context overflow fix; hardware tradeoff note
 
 **Suite-level navigation now works.** "Take me to Price Elasticity" was prompting Mo to ask a clarifying question instead of navigating — the suite name is not a tab, and neither system prompt had a default tab to land on. Fixed: explicit suite defaults added to both `_build_system` and `_build_system_compact`: "Price Elasticity" → `price::determine::events`, "Cannibalization" → `cannibalization::determine::events`, "SKU View" → `sku-retailer::sku-retailer::summary`, "Retailer Summary" → `retailer::retailer::summary`. Commit `a4167a9`.
