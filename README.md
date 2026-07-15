@@ -127,6 +127,26 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-15 (update 11) — MLX-LM as faster Ollama alternative; Gemma 4 Apache 2.0 confirmed; tool-calling blocked pending PR #1142
+
+**MLX-LM vs Ollama speed.** MLX is Apple's own ML framework built specifically for Apple Silicon's unified memory architecture. It bypasses the llama.cpp abstraction layer Ollama uses and drives the M-series GPU/Neural Engine directly — estimated 20–40% faster token generation on the same Mac hardware. For Mo Chat this matters: Ollama currently gives 30–45s responses on a 16GB Mac; MLX-LM should reduce that meaningfully at zero hardware cost.
+
+**Best model for 16GB Mac:** `mlx-community/gemma-4-12B-it-OptiQ-4bit` (8.3 GB on disk). Closest match to the current Ollama `gemma4-mo` (9.6 GB). OptiQ quantization is sensitivity-aware mixed precision — 156 layers at 8-bit, 172 at 4-bit — scoring ~6 points higher than stock uniform 4-bit on benchmarks. Also available: `gemma-4-e4b-it-OptiQ-4bit` (~6.1 GB) for tighter RAM budgets.
+
+**License: Apache 2.0 — confirmed clean.** Gemma 4 switched from Google's custom Gemma license to Apache 2.0 in March 2026 (all sizes, all variants). Unrestricted commercial use, no royalties, explicit patent grant. mlx-community quantizations are open-source derivatives of the Apache 2.0 base. Local inference is fully on-device — no prompts, no SPINS data, no responses leave the machine. Same privacy posture as Ollama.
+
+**Integration would be a 2-line env var change** — no code changes to `mo_chat.py`:
+```bash
+mlx_lm.server --model mlx-community/gemma-4-12B-it-OptiQ-4bit --port 8080
+MO_OLLAMA_ENDPOINT=http://localhost:8080
+MO_CHAT_MODEL=mlx-community/gemma-4-12B-it-OptiQ-4bit
+```
+No Modelfile needed. The custom system prompt injected via Modelfile in Ollama is irrelevant — Mo Chat sends its own system message through the API.
+
+**⚠️ Blocked: Gemma 4 tool calling broken in mlx-lm.** Gemma 4 emits tool calls with `<|tool_call>` / `<tool_call|>` delimiters; mlx-lm's parser has no matching branch — the `tool_calls` field returns empty. Issues #1096 and #1125 open on ml-explore/mlx-lm; PR #1142 in review. The 7 Mo tools would not work today. **Revisit when PR #1142 merges.**
+
+---
+
 ### 2026-07-13 (update 10) — Lean 4 formal verification potential use case documented
 
 **Potential evaluation study: formally prove the $0.05 elasticity guardrail.** The current guardrail is justified empirically (35.9% of rows produced garbage values below the threshold). A formal proof would replace that claim with a mathematical guarantee: given protein bar prices bounded in [0.50, 10.00] $/bar and |ΔP| ≥ $0.05, the log-price-change denominator is proven bounded away from zero by a computable δ. Lean 4's `grind` / `linarith` tactics can close this automatically — pure real arithmetic, no empirical data needed.
