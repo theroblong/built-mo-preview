@@ -127,6 +127,31 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-15 (update 13) — Browser evaluation: Qwen3 navigation, intent gate, think-tag stripping, asterisk regex fix
+
+**Full browser evaluation of Qwen3 8B — all checks passed.**
+
+Four browser tests run after integration, confirming production readiness:
+
+| Test | Result |
+|---|---|
+| Explicit navigation trigger ("take me to pack ladder") | ✅ navigated immediately, no confirmation prompt |
+| Intent gate ("tell me about the pack ladder for this product") | ✅ answered from context, screen unchanged |
+| No `<think>` / `</think>` tags in rendered response | ✅ state-machine stripper confirmed working |
+| No `**` markdown asterisks in response | ✅ regex fix confirmed |
+| Response accuracy (pack size gap, direction) | ✅ correct: −21.95% gap, trade-down available |
+
+**Speed profile (warm Mac M-series, 16GB):**
+- No-UPC context (compact system prompt): **~4 seconds**
+- Full focal UPC + Price Elasticity context: **~15–25 seconds** (Druid fetch + larger prompt prefill — still faster than Gemma 4 on Ollama at 30–45s)
+- Cold start / first request: **~40 seconds** (model loading + full prefill)
+
+**Asterisk regex fix.** The original `replace("**", "")` applied per streaming chunk was silently broken: when a bold delimiter like `**word**` is split across two chunks as `*` + `*word**`, each single-asterisk passes the replace and renders visible. Fixed by switching to `re.sub(r'\*+', '')` via a module-level `_re_strip_ast` lambda — catches any contiguous run of asterisks regardless of chunk boundary position. Applied in both streaming (`raw` chunk before yield) and sync path (full text after `split("</think>")`).
+
+**Failsafe flush.** If `/no_think` fully suppresses thinking content and `</think>` never appears in the stream (the tags are dropped entirely), the state machine's `think_buf` was never flushed. Added: at `finish_reason=stop`, if `think_done` is still False and `think_buf` is non-empty, flush it as normal content. Prevents silent empty Mo responses on Qwen3 with fully-suppressed thinking.
+
+---
+
 ### 2026-07-15 (update 12) — Qwen3 8B (vllm-mlx) replaces Mistral 7B as 4th Mo Chat provider
 
 **Mistral 7B retired.** Its hard 1-tool streaming limit made it a non-functional 4th provider. Replaced by Qwen3 8B via vllm-mlx (Apache 2.0, fully local).
