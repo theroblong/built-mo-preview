@@ -127,6 +127,36 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-15 (update 12) — Qwen3 8B (vllm-mlx) replaces Mistral 7B as 4th Mo Chat provider
+
+**Mistral 7B retired.** Its hard 1-tool streaming limit made it a non-functional 4th provider. Replaced by Qwen3 8B via vllm-mlx (Apache 2.0, fully local).
+
+**Smoke test results (all 3 passed):**
+- Navigation trigger ("Take me to Price Elasticity") → ✅ `navigate_to` fired with `suite=price, phase=determine`
+- Intent gate ("Explain price elasticity") → ✅ answered from context, no navigation
+- Multi-tool data question → ✅ correct data tool selected and called
+
+**Confirmed live in browser at 4:15pm.** Cold start ~40s (model loading). Warm responses **~4 seconds** — fastest local provider by a wide margin vs Gemma 4 on Ollama (30–45s) and Mistral (25s).
+
+**Qwen3 thinking-mode handling.** Qwen3 8B emits `<think>…</think>` tokens even with the `/no_think` prefix. Fixed in both code paths: streaming uses a state machine that buffers until `</think>` is seen then switches to normal streaming; sync path uses `split("</think>", 1)[1]`. Tags are completely hidden from the Mo Chat UI.
+
+**Architecture: two local servers coexist, zero restarts to switch.**
+- Ollama port 11434 → Gemma 4 (orange badge)
+- vllm-mlx port 8080 → Qwen3 8B (purple badge, replaces Mistral)
+- `MO_MLX_ENDPOINT` env var added (defaults to `http://localhost:8080/v1`)
+- UI provider dropdown: Claude / GPT-4o / Gemma 4 (Ollama) / **Qwen3 8B (MLX)**
+
+**Head-to-head vs Mistral:**
+
+| | Qwen3 8B (MLX) | Mistral 7B (Ollama) |
+|---|---|---|
+| Multi-tool calling | ✅ | ❌ 1-tool hard limit |
+| Warm speed | ~4s | ~25s |
+| Quality | 2025 model, 128K context | 2023-era, 8K context |
+| RAM | ~4.35 GB | ~4.4 GB |
+
+---
+
 ### 2026-07-15 (update 11) — MLX-LM as faster Ollama alternative; Gemma 4 Apache 2.0 confirmed; tool-calling blocked pending PR #1142
 
 **MLX-LM vs Ollama speed.** MLX is Apple's own ML framework built specifically for Apple Silicon's unified memory architecture. It bypasses the llama.cpp abstraction layer Ollama uses and drives the M-series GPU/Neural Engine directly — estimated 20–40% faster token generation on the same Mac hardware. For Mo Chat this matters: Ollama currently gives 30–45s responses on a 16GB Mac; MLX-LM should reduce that meaningfully at zero hardware cost.
