@@ -127,6 +127,31 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-17 (update 15) — mo_fpa_team_brief.docx: native Word generation script
+
+Added `docs/mo_fpa_team_brief.docx` and `scripts/generate_fpa_brief_docx.py` — a python-docx script that builds the FP&A brief as a native, fully editable Word document.
+
+**Why python-docx over pandoc or HTML→Word import:**
+- pandoc converts HTML to docx but loses all CSS styling (colors, borders, card grids)
+- Word's HTML importer preserves more but still fails on Canvas charts and complex layouts
+- python-docx builds the document from source, giving full control over every element
+
+**What the generated docx includes:**
+- Cover with eyebrow, title, subtitle, meta line
+- KPI strip as a 5-column table with cell shading (white / amber / green)
+- Value breakdown table ($9–22M decomposed into 3 components with visible math)
+- Capacity callout box (80 actual hrs vs. 250–535 hrs analysis) with bold accent border
+- All 6 sections with colored section-label pills, H2 headings with bottom rule, body text, callout boxes, data tables, and 2-column card grids
+- Go Forward Plan role table (5 roles × 4 columns)
+- Closing panel with dark background and two-column bullet layout
+- Footer
+
+**Charts:** Canvas elements cannot render in docx. Each chart position holds a labeled italic placeholder (e.g., "[Chart: Figure 1 — Retailer-level 13-week forward projection...]") that Rob can replace with a screenshot or remove.
+
+**Regenerating:** If brief content changes, run `python3 scripts/generate_fpa_brief_docx.py` and commit the updated docx. The script is self-contained and fast (~1s).
+
+---
+
 ### 2026-07-17 (update 14) — mo_fpa_team_brief.html: Brian feedback revision pass
 
 Revised `docs/mo_fpa_team_brief.html` to address all items from Brian's post-review feedback email. No structural sections removed — all changes are reframes, additions, and label cleanup.
