@@ -127,6 +127,32 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-17 (update 14) — mo_fpa_team_brief.html: Brian feedback revision pass
+
+Revised `docs/mo_fpa_team_brief.html` to address all items from Brian's post-review feedback email. No structural sections removed — all changes are reframes, additions, and label cleanup.
+
+**Changes implemented:**
+
+1. **Section labels de-numbered** — "Section 1/4/5/6" and "Primary Use Case 1/2 of 2" removed. Labels now descriptive only: Forecasting Foundation, Cannibalization Intelligence, Price Elasticity & Trade Spend, Explainability, Growth Intelligence, Finance Operations.
+
+2. **$22M KPI decomposed** — KPI strip now shows `$9–22M+`; a new "Value Estimate: How the $9–22M Is Built" table immediately below breaks it into three auditable components:
+   - Forecast accuracy improvement (BUILT 7–10% → Mo 4.4% = 2.6–5.6pp × $1M/pp): $2.6M–$5.6M
+   - Trade spend optimization (elasticity-guided reallocation, Walmart ε=−0.25 → Ahold ε=−1.26): $3M–$8M
+   - Cannibalization avoidance (3–5 launch events/year, early detection): $3M–$8M
+   - Total: $8.6M–$21.6M; footnote explains the $1M/pp benchmark and notes estimates are directional pending BUILT actuals.
+
+3. **Capacity callout added** — standalone block after the KPI strip: Brian's team (40 hrs) + FP&A (40 hrs) = 80 actual hrs/cycle; Mo's equivalent = 250–535 hrs/cycle; framed as "analysis that is structurally out of reach without headcount expansion" — augmentation, not replacement.
+
+4. **Future Capabilities Roadmap added to Section 3** — four cards: Trade Spend Analytics (automated promo ROI), Assortment Intelligence (pack/variant winners by account), Promo Calendar Integration (forward events as direct model input), Velocity Benchmarking (per-store vs. category avg).
+
+5. **"The 90-Day Trust Path" → "Go Forward Plan: How Your Team Uses Mo"** — five-column table by role (FP&A Analyst, Brian/Analytics Lead, Trade/Sales Finance, CFO/Finance Leadership, All Roles) showing which screen, when in the workflow, and what they walk away with.
+
+6. **Analyst Capacity card updated** — now cites the specific numbers (80 actual hrs / 250–535 hrs Mo equivalent) rather than the original generic language.
+
+7. **Date updated** — July 2 → July 17, 2026 in cover and footer.
+
+---
+
 ### 2026-07-15 (update 13) — Browser evaluation: Qwen3 navigation, intent gate, think-tag stripping, asterisk regex fix
 
 **Full browser evaluation of Qwen3 8B — all checks passed.**
