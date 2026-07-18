@@ -127,6 +127,24 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-18 (update 17) — 6 additional ML validation gaps + LLM pre-warming strategy
+
+**6 additional validation gaps identified (reliability + trust focus):**
+
+| Gap | Why it matters |
+|---|---|
+| Quantile calibration | P10 should contain the true value ~10% of the time; uncalibrated bands undermine inventory floor/ceiling planning even when P50 wMAPE looks good |
+| Input distribution shift detection | Detect when features drift structurally (BUILT reprices, TDP expands) *before* accuracy degrades; different from per-series accuracy drift |
+| Residual structure analysis | Random errors = acceptable; errors clustering by retailer / maturity / season = systematic bias that won't surface in aggregate wMAPE |
+| BSTS lift magnitude validation | Direction accuracy is 63% (MO_43/44); magnitude still unvalidated; direction right + magnitude wrong still produces bad trade ROI decisions |
+| Cold-start / OOD confidence flagging | New SKUs (<8 weeks history) have no reliability indicator; launch forecasts are exactly when planning teams most need a confidence flag |
+| SHAP stability across retrains | Sudden rank flips in feature importance between cycles signal model instability even when aggregate accuracy holds |
+
+**LLM pre-warming strategy (Mo Chat):**
+Local models (Qwen3 8B via vllm-mlx) have ~30–45s cold-start vs ~4s warm. Pre-warming: fire a hidden no-op prompt to the LLM when the Mo Chat panel first opens. By the time the user types, the model is already warm and no cold-start delay is incurred. Implementation: `useEffect` on first `MoPanel` mount fires a minimal `POST /api/mo/warm` (or a 1-token chat request) and discards the response. Guard: trigger only on first open per session. Most relevant for local model deployments; remote Claude/GPT-4o already fast enough.
+
+---
+
 ### 2026-07-18 (update 16) — ML model improvement philosophy + validation roadmap gaps
 
 Research and strategic framing session on continuous model accuracy improvement. Key findings:
