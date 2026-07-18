@@ -127,6 +127,34 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-18 (update 16) — ML model improvement philosophy + validation roadmap gaps
+
+Research and strategic framing session on continuous model accuracy improvement. Key findings:
+
+**skforecast-ai evaluated (Apache 2.0, commercial-safe):**
+- LLM-assisted forecasting workflow: profiles time series → selects model (LightGBM, XGBoost, statistical, or foundation model) → runs validation → returns forecast + reproducible code
+- Not a competitive product to Mo — it's a Python library for data scientists; Mo is a finished CPG intelligence system with domain-specific feature engineering, UI, and live SPINS retraining
+- Worth watching for items 3 + 4 below (automated model selection + hyperparameter tuning)
+
+**TabFM evaluated (Google, released 2026-06-30):**
+- Tabular classification/regression foundation model — NOT time series; wrong benchmark for MO_62
+- Model weights are non-commercial licensed; code Apache 2.0; BigQuery enterprise path coming
+- TimesFM 2.5 (Sep 2025, covariate support + LoRA) is the correct MO_62 update candidate
+
+**ML improvement philosophy established:**
+SPINS data arrives ~13×/year (~4-week cadence). Accuracy compounds with retrains but must be actively managed against overtraining, plateauing, and per-series backtracking. Feature engineering ceiling already reached (MO_53 28-feature set is DEFINITIVE — MO_54/56/57 all promoted 0 features). Further gains come from better inputs, not more model complexity. Validation must happen at both macro (portfolio wMAPE) and micro (per-series) levels.
+
+**4 open gaps flagged for next session:**
+
+| Gap | Priority |
+|---|---|
+| Per-series accuracy drift detection — automated flag when a specific SKU × retailer degrades across retrains while portfolio average holds | Highest |
+| Segment holdout by account / maturity stage — systematic per-retrain tracking (MO_41 heatmap was one-time) | Medium |
+| Automated model selection — skforecast-ai's profiling → model choice → validation loop as reference | Medium |
+| Hyperparameter tuning automation — currently manual per-experiment; should run constrained search each retrain cycle | Medium |
+
+---
+
 ### 2026-07-17 (update 15) — mo_fpa_team_brief.docx: native Word generation script
 
 Added `docs/mo_fpa_team_brief.docx` and `scripts/generate_fpa_brief_docx.py` — a python-docx script that builds the FP&A brief as a native, fully editable Word document.
