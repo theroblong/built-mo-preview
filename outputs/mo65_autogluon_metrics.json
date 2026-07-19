@@ -1,0 +1,101 @@
+{
+  "script": "MO_65",
+  "preset": "medium_quality",
+  "prediction_length": 13,
+  "min_train_rows": 52,
+  "horse_race_reference_wmape": {
+    "LightGBM\n(Aevah)": [
+      28.7,
+      7.0,
+      4.3
+    ],
+    "MA 13wk": [
+      50.4,
+      40.2,
+      24.6
+    ],
+    "Naive": [
+      56.9,
+      37.5,
+      42.1
+    ],
+    "N-BEATS": [
+      55.6,
+      117.9,
+      46.4
+    ]
+  },
+  "autogluon_results": {
+    "dec2024": {
+      "label": "Dec 2024",
+      "preset": "medium_quality",
+      "n_series": 564,
+      "n_matched": 6467,
+      "wmape": 52.22
+    },
+    "oct2025": {
+      "label": "Oct 2025",
+      "preset": "medium_quality",
+      "n_series": 815,
+      "n_matched": 6757,
+      "wmape": 20.55
+    },
+    "dec2025": {
+      "label": "Dec 2025",
+      "preset": "medium_quality",
+      "n_series": 920,
+      "n_matched": 7806,
+      "wmape": 34.92
+    }
+  },
+  "leaderboard_dec2025": [
+    {
+      "model": "WeightedEnsemble",
+      "score_val": -3.383657780769004,
+      "pred_time_val": 0.9877452644286677,
+      "fit_time_marginal": 0.23234358298941515,
+      "fit_order": 6,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "SeasonalNaive",
+      "score_val": -3.689365199249298,
+      "pred_time_val": 0.18271207809448242,
+      "fit_time_marginal": 0.042886972427368164,
+      "fit_order": 1,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "Theta",
+      "score_val": -3.9151213547399477,
+      "pred_time_val": 0.5617640018463135,
+      "fit_time_marginal": 0.058743953704833984,
+      "fit_order": 5,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "ETS",
+      "score_val": -4.062551969664958,
+      "pred_time_val": 0.5144340991973877,
+      "fit_time_marginal": 0.06515097618103027,
+      "fit_order": 4,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "RecursiveTabular",
+      "score_val": -4.1796513517417155,
+      "pred_time_val": 0.1266307830810547,
+      "fit_time_marginal": 0.7794013023376465,
+      "fit_order": 2,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "DirectTabular",
+      "score_val": -4.272134653246815,
+      "pred_time_val": 0.28714704513549805,
+      "fit_time_marginal": 2.3919968605041504,
+      "fit_order": 3,
+      "cutpoint": "dec2025"
+    }
+  ]
+}

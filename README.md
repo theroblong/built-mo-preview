@@ -127,6 +127,46 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-19 (update 19) — Cold-start proxy overlay design for new SKU forecasts
+
+Designed a dual-layer forecast drawer UX for new SKUs with insufficient history (gap #9 from the ML validation roadmap). Instead of a low-confidence flag alone, the drawer shows two overlapping layers:
+
+- **ETS forecast (primary):** dashed line, wide confidence band, badge "based on N weeks of history — high uncertainty" — the cold-start model's honest estimate
+- **Proxy SKU overlay (context):** secondary color, showing a nearest-neighbor product's actual ramp + mature forecast, x-axis aligned to launch week 0 so both products are comparable regardless of calendar date
+
+ETS is the forecast. The proxy is context — never substituted in place of the new product. Planners can see whether the new SKU is tracking above or below where a comparable product was at the same lifecycle stage, and make inventory commitments accordingly.
+
+**Similarity matching (ranked):** pack_count format match → channel + retailer → TDP trajectory Pearson correlation (weeks 1–N) → $/bar ARP band. Top-3 candidates selectable. Auto-promotes to LightGBM forecast once history threshold is reached.
+
+**Implementation:** 3-file change when ready — ForecastDrawer component, `get_proxy_forecast` API tool, similarity scoring query against donor pool.
+
+---
+
+### 2026-07-19 (update 18) — MO_65 AutoGluon-TimeSeries benchmark
+
+AutoGluon-TimeSeries (Apache 2.0, v1.5.0) benchmarked against the existing LightGBM horse race. Run A: raw time series only, no domain features.
+
+| Model | Dec 2024 | Oct 2025 | Dec 2025 |
+|---|---|---|---|
+| **LightGBM (Aevah)** | **28.7%** | **7.0%** | **4.3%** |
+| AutoGluon (medium, no features) | 52.2% | 20.6% | 34.9% |
+| MA 13wk | 50.4% | 40.2% | 24.6% |
+| Naive | 56.9% | 37.5% | 42.1% |
+
+**Key findings:**
+- **8× gap at Dec 2025 (34.9% vs. 4.3%)** — directly quantifies the value of Mo's domain feature engineering (TDP, velocity, ARP, lag52, donor_count)
+- Oct 2025 best showing: 20.6% — AutoGluon's seasonal ensemble genuinely outperforms MA 13wk and Naive with 2.5yr of data
+- Ensemble = WeightedEnsemble of SeasonalNaive + Theta + ETS + RecursiveTabular (LightGBM with auto-generated lags)
+- Chronos2 and TFT failed due to torchvision version conflict in this env — true medium_quality with neural models pending clean env
+- **Explainability:** leaderboard is transparent (developer-readable model ranking); SHAP waterfall remains the business-facing tool for per-prediction driver attribution
+
+**MO_66 (AutoGluon Run B with Mo domain features as covariates) queued but deprioritized** — top-3 validation gaps and CausalImpact automation take priority first.
+
+Script: `scripts/MO_65_autogluon_benchmark.py`
+Usage: `python scripts/MO_65_autogluon_benchmark.py` (medium_quality) or `--fast --cutpoint dec2025` for quick test.
+
+---
+
 ### 2026-07-18 (update 17) — 6 additional ML validation gaps + LLM pre-warming strategy
 
 **6 additional validation gaps identified (reliability + trust focus):**
