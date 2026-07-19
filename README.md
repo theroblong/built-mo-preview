@@ -127,6 +127,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-19 (update 20) — Stakeholder communication framework: AI Foundations talking points
+
+Extracted and saved 10 business-facing talking points from Shaw Talebi's "AI Foundations for Business" video, mapped to Aevah's CFO/stakeholder value narrative. Saved to project memory (`memory/reference_shaw_ai_foundations.md`) and wiki (`customer-built-doc/wiki/07-demo-guide.md`).
+
+**Key hooks:**
+
+- **"A model is something that lets you make predictions"** — the cleanest non-technical anchor. Reframes Aevah as a prediction system, not a dashboard.
+- **Domain knowledge = the accuracy gap** — the TPS/Kaizen example from the video directly maps to the 8× wMAPE difference (AutoGluon zero-shot 34.9% vs. Aevah 4.3%). Generic models don't know what TDP or cannibalization means. This is the answer to "why can't we just use ChatGPT?"
+- **The harness is the defensible IP** — anyone can call the Claude API; what Aevah built is the harness: SPINS connectors, Druid queries tuned to CPG semantics, 21 screen tools, product hierarchy, and guardrails. Harder to replicate than swapping in a newer model.
+- **Shifting from executing to steering** — before: FP&A analyst builds demand models in Excel. After: analyst steers Mo, spending time on judgment calls. The mechanical work moves to Mo; human expertise moves up the value chain. This is the CFO's ROI narrative.
+- **Coaching interns, not clicking a button** — sets the right expectation before demos and pilots. Mo needs good context; Aevah pre-loads the CPG domain context so it walks in trained.
+
+**Boundary rule:** Don't lead with AI foundations framing — lead with the business problem, explain the mechanism if asked. Never compare against BUILT's existing process ("complement and supercharge"). The 8× gap belongs in the proof section, not the opener.
+
+---
+
 ### 2026-07-19 (update 19) — Cold-start proxy overlay design for new SKU forecasts
 
 Designed a dual-layer forecast drawer UX for new SKUs with insufficient history (gap #9 from the ML validation roadmap). Instead of a low-confidence flag alone, the drawer shows two overlapping layers:
