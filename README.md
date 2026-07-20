@@ -127,6 +127,24 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 27) — MO_71 distribution shift: FAIL (retrain signal, not urgent) — Phase B complete
+
+9/10 Tier 1 features shifted materially between v3 training data (through Jan 2026) and the current validation window.
+
+**What shifted and why:**
+- **TDP +209.5%** (median 6.3 → 19.5): BUILT's distribution is expanding. The training set accumulates many early-launch low-TDP rows; the current SPINS state reflects a higher-distribution reality. The model is being asked to predict at TDP levels it has seen in training but that are underrepresented relative to the current average.
+- **ARP +6.3%**: modest across-the-board price increase over 3 months, within the model's seen range.
+- **Base units rolling averages +62–75%**: combination of seasonal peak (Jan–Apr is high season for protein bars) and business growth.
+- **week_of_year KS=0.73**: structural artifact — the val window is only Jan–Apr (weeks 4–17), which looks very different from the full-year training distribution. Unavoidable for any temporal holdout; the model has been trained on all 52 weeks.
+
+**What this means:** v3 is aging. It was last trained through Jan 2026 and is now 3+ months old against a SPINS state that has shifted — particularly on TDP, which is the model's strongest domain signal. This is not alarming drift; it's expected model aging. The MO_69 PASS (no residual bias) and MO_68 findings (two small regional segments) confirm accuracy is still holding. But TDP shift of 2× is the primary indicator that v4 should be trained against the current SPINS pull soon.
+
+**Fix:** Schedule v4 retrain. Not urgent; prioritize after the July BUILT close milestone.
+
+**Phase B complete:** MO_70 FAIL→UI disclosure (lift magnitude 2× understated for promo planning), MO_71 FAIL→v4 retrain queued.
+
+---
+
 ### 2026-07-20 (update 26) — MO_70 lift magnitude: FAIL (UI disclosure fix, no model retrain)
 
 1,633 clean (TDP-unconfounded) price events from MO_47 evaluated for lift magnitude accuracy. Portfolio mean signed error: −95% — far exceeds the ±10% threshold.
