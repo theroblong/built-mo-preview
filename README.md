@@ -127,6 +127,21 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 24) — MO_68 learning: data maturity drives bulk-SKU forecast accuracy, not model failure
+
+The most instructive finding from MO_68 is not the 2 drifting segments — it's what the Walmart/Sams/Walgreens/CVS Bulk-Growing segments reveal about how the model learns.
+
+These segments showed a 14× relative error in Dec 2024 and had improved to ~1.9× by Dec 2025. That improvement happened with no model architecture changes. It happened because lag52, velocity z-scores, and rolling standards — the model's most powerful features — are noise or zero during a SKU's first year of distribution. Once 52 weeks of data exist, the model locks onto the seasonal pattern and accuracy jumps. The Dec 2024 → Dec 2025 arc is data maturity in action.
+
+**What this means in practice:**
+
+- A threshold-only drift check would have flagged these segments as permanently broken and triggered a fix effort. Always look at slope/direction, not just level. "14× but declining at −3.0/quarter" is a completely different situation from "1.5× and rising."
+- New bulk SKU launches at mass retail will always look hard to forecast in year 1. This is expected — not a red flag. By year 2 they converge toward the portfolio average as the model accumulates history.
+- This is the data-side evidence that validates the cold-start proxy overlay design. The accuracy gap peaks in the pre-lag52 window. A proxy ramp trajectory from a similar established product directly fills that gap before the model has enough history to stand on its own.
+- For Connor/Chase/Brian conversations: frame year-1 accuracy on new bulk SKUs proactively — "here's what the model knows today vs. what it will know after 52 weeks" — rather than waiting for someone to notice a wider confidence band.
+
+---
+
 ### 2026-07-20 (update 23) — MO_67 + MO_68 audit results: q90 recalibrated; drift is a watch-list item
 
 **MO_67 — Quantile calibration (gap #5): FAIL → fixed**
