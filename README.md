@@ -127,6 +127,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 21) — Cold-start proxy overlay: ramp trajectory matching + freeform picker + cross-filter
+
+Refined the cold-start proxy overlay design (gap #9) based on Rob's input:
+
+**Ramp trajectory shape matching (new primary signal):** Use DTW (Dynamic Time Warping) on normalized ramp curves (weeks 1–N, normalized to peak=1.0) to find established products whose early trajectory most closely resembles the new SKU's so far. Outperforms static attribute matching because it captures the actual demand pattern, not just format/price. Match sharpens each retrain cycle as the new SKU accumulates weeks. Replaces TDP trajectory Pearson as the top similarity signal.
+
+**Freeform product picker (new UX capability):** Planners can override the algorithmic top-3 and manually select any BUILT portfolio SKU as the overlay — search by name or UPC. Use case: planner knows from experience that Cookie Dough Chunk 4pk is the right analog for the new Cookie Flavor 4pk, regardless of what the similarity score says.
+
+**Cross-filter overlay (new flexibility):** The proxy SKU does not need to be at the same retailer, channel, or geography as the cold-start product. Example: new 4pk at Walmart overlaid against an established 4pk at Kroger. The weeks-since-launch x-axis makes trajectory shapes comparable regardless of where the analog launched. When retailer differs, the drawer surfaces it explicitly: *"Reference: [SKU] at KROGER — similar format + ARP. Note: different retailer."*
+
+Updated similarity matching stack (ranked): ramp shape DTW → pack_count format → $/bar ARP band → channel+retailer tier → flavor family.
+
+---
+
 ### 2026-07-19 (update 20) — Stakeholder communication framework: AI Foundations talking points
 
 Extracted and saved 10 business-facing talking points from Shaw Talebi's "AI Foundations for Business" video, mapped to Aevah's CFO/stakeholder value narrative. Saved to project memory (`memory/reference_shaw_ai_foundations.md`) and wiki (`customer-built-doc/wiki/07-demo-guide.md`).
