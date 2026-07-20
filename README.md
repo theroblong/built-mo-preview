@@ -127,6 +127,47 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 29) — MO_60 causal sensitivity + MO_61 HTE elasticity: explainable causal ML layer complete
+
+Two causal analysis scripts completed and committed, forming an explainability-first causal ML layer on top of the MO_72 BSTS foundation.
+
+**MO_60 — Causal Sensitivity Analysis (VA7):**
+
+Stress-tested all 140 SIGNIFICANT events from MO_72 across 9 parameter variants (3 Pearson thresholds × 3 ARP tolerances). The question: do the causal estimates hold regardless of which comparison stores are selected?
+
+| Verdict | Count | % | Business meaning |
+|---|---|---|---|
+| ROBUST (≥7/9 variants) | 40 | 29% | Safe to cite to BUILT |
+| MODERATE (4–6/9) | 13 | 9% | Cite with caveat |
+| FRAGILE (≤3/9 or n=1) | 87 | 62% | Do not surface in UI |
+
+Of the 40 ROBUST events: 26 have correct direction (price↓→demand↑ or price↑→demand↓) — these are the clean signals. 14 are ROBUST but atypical direction — flagged in plain-English narratives for investigation. **BJS Double Chocolate 4pk: 9/9 ROBUST** (−35.6% price → +215.5% demand) — the primary demo anchor.
+
+Why 62% FRAGILE is a feature, not a bug: proactively disclosing that most initial signals don't hold under scrutiny is exactly the kind of honest calibration that builds trust with Bracken and Jeff.
+
+Output: `scripts/outputs/causal_impact_sensitivity.parquet` — 140 rows, one per SIGNIFICANT event, with `robust_verdict`, `stability_score`, `direction_consistent`, `narrative`.
+
+**MO_61 — Heterogeneous Treatment Effect Elasticity (VA8):**
+
+Double Machine Learning (LinearDML, econML 0.16.0) on 48,160 weeks of BUILT price-demand history (BUILT UPCs only). Models elasticity as a linear function of 5 context features, after removing retailer and channel effects via gradient-boosted nuisance models. Coefficient table with standard errors — not a black box.
+
+| Dimension | Most elastic | Least elastic |
+|---|---|---|
+| Pack format | **12-pack: ε=−0.63** | Single: ε=−0.18 (3.5× gap) |
+| SKU maturity | Early-launch: ε=−0.35 | Mature: ε=−0.11 (CI crosses zero) |
+| Quarter | Q2 spring: ε=−0.31 | Q3 summer: ε=−0.24 |
+| Cannibalization pressure | Mid (5–15%): ε=−1.01* | Low/High: ε≈−0.30 |
+
+*Mid-pressure result has only 790 obs; wide CI — treat with caution.
+
+Portfolio average ε=−0.34 (MO_44 reference) shown in all four chart subplots — the HTE findings explain where the average comes from.
+
+FP&A punchline: "The same 10% price cut has 3.5× the demand impact on a 12-pack in Q2 as on a single-count in a mature SKU in Q3." Knowing this shapes when and where to run promotions.
+
+Output: `scripts/outputs/mo61_hte_combined.png` (2×2 chart grid with 90% CIs) + §30 patched in `built_demand_intelligence_report.html`.
+
+---
+
 ### 2026-07-20 (update 28) — SPINS Ingest Runbook + HTML register: full end-to-end data refresh procedure documented
 
 Documented the complete Layer 0 pipeline — from Brian's SPINS export through Rob's Druid ingest, the full Q-series and P-series retrain, FP&A rebuild, and post-ingest validation audit.
