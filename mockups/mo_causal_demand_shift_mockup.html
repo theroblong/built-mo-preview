@@ -1,0 +1,580 @@
+<title>Mo — Three Demand-Shift Data Stories</title>
+<style>
+:root {
+  --bg:         #0b1220;
+  --surface:    #111b2e;
+  --surface-hi: #182238;
+  --border:     #1f2f48;
+  --border-hi:  #2a3f5e;
+  --accent:     #3b82f6;
+  --accent-dim: rgba(59,130,246,0.10);
+  --green:      #22c55e;
+  --green-dim:  rgba(34,197,94,0.09);
+  --amber:      #f59e0b;
+  --amber-dim:  rgba(245,158,11,0.09);
+  --red:        #ef4444;
+  --red-dim:    rgba(239,68,68,0.09);
+  --text:       #dde6f5;
+  --text-muted: #7a90b0;
+  --text-dim:   #3d5070;
+  --cf:         #5c728a;
+  --tdp:        #a78bfa;
+}
+@media (prefers-color-scheme: light) { :root {
+  --bg:#f0f4fa;--surface:#ffffff;--surface-hi:#f6f9ff;--border:#dce5f0;--border-hi:#c5d4e8;
+  --text:#0e1a2e;--text-muted:#5a6e8a;--text-dim:#9aaccb;--cf:#8099b8;--tdp:#7c3aed;
+}}
+:root[data-theme="light"]{--bg:#f0f4fa;--surface:#ffffff;--surface-hi:#f6f9ff;--border:#dce5f0;--border-hi:#c5d4e8;--text:#0e1a2e;--text-muted:#5a6e8a;--text-dim:#9aaccb;--cf:#8099b8;--tdp:#7c3aed}
+:root[data-theme="dark"]{--bg:#0b1220;--surface:#111b2e;--surface-hi:#182238;--border:#1f2f48;--border-hi:#2a3f5e;--text:#dde6f5;--text-muted:#7a90b0;--text-dim:#3d5070;--cf:#5c728a;--tdp:#a78bfa}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* Nav */
+.nav{display:flex;align-items:stretch;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;padding:0 24px;gap:2px}
+.nav-btn{padding:13px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:12.5px;font-weight:500;cursor:pointer;letter-spacing:0.01em;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tag{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.tag-price{background:rgba(59,130,246,0.15);color:var(--accent)}
+.tag-pack{background:rgba(245,158,11,0.15);color:var(--amber)}
+.tag-flavor{background:rgba(167,139,250,0.15);color:var(--tdp)}
+
+.pane{display:none}.pane.active{display:block}
+.frame{padding:24px;max-width:1100px;margin:0 auto}
+
+/* Story header */
+.story-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.story-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.story-sub{font-size:12px;color:var(--text-muted)}
+.verdict-box{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap}
+.ch-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.22)}
+.ch-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,0.22)}
+.ch-red  {background:var(--red-dim);  color:var(--red);  border:1px solid rgba(239,68,68,0.22)}
+.ch-blue {background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,130,246,0.22)}
+.ch-slate{background:rgba(94,120,148,0.12);color:var(--text-muted);border:1px solid var(--border)}
+.ch-tdp  {background:rgba(167,139,250,0.12);color:var(--tdp);border:1px solid rgba(167,139,250,0.22)}
+
+/* Stat row */
+.stats{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px}
+.stat{background:var(--surface);padding:12px 16px}
+.stat-l{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
+.stat-v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat-s{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* Panel label */
+.plabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-dim);margin-bottom:6px}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px}
+
+/* Insight box */
+.insight{border-radius:5px;padding:12px 14px;font-size:13px;line-height:1.7;margin-top:18px}
+.insight-green{background:var(--green-dim);border:1px solid rgba(34,197,94,0.2);border-left:3px solid var(--green)}
+.insight-amber{background:var(--amber-dim);border:1px solid rgba(245,158,11,0.2);border-left:3px solid var(--amber)}
+.insight-tdp  {background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-left:3px solid var(--tdp)}
+
+/* Divider */
+.div-panel{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;font-size:13px}
+tr:last-child td{border-bottom:none}
+
+.green{color:var(--green)} .amber{color:var(--amber)} .red{color:var(--red)} .tdp-c{color:var(--tdp)} .muted{color:var(--text-muted)}
+</style>
+
+<!-- Navigation -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(this,'s1')">
+    Story 1 — Clean Price Lift <span class="nav-tag tag-price">Price</span>
+  </button>
+  <button class="nav-btn" onclick="show(this,'s2')">
+    Story 2 — Pack-Mix Shifting <span class="nav-tag tag-pack">Price + Cannib.</span>
+  </button>
+  <button class="nav-btn" onclick="show(this,'s3')">
+    Story 3 — Flavor-Family Cannibalization <span class="nav-tag tag-flavor">Distribution</span>
+  </button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     STORY 1 — CLEAN PRICE LIFT
+═══════════════════════════════════════════════ -->
+<div id="s1" class="pane active">
+<div class="frame">
+
+  <div class="story-head">
+    <div>
+      <div class="story-title">BJS · Blueberry 4pk · Price cut −35.6%</div>
+      <div class="story-sub">08-40229-30378 · FOOD · Price event 2025-09-21 · 13w pre / 13w post</div>
+    </div>
+    <div class="verdict-box">
+      <span class="chip ch-green" style="font-size:12px;padding:5px 12px">● SIGNIFICANT</span>
+      <span style="font-size:11px;color:var(--text-muted)">p &lt; 0.0001 · 3 cross-account controls</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat">
+      <div class="stat-l">Causal Lift</div>
+      <div class="stat-v green">+215%</div>
+      <div class="stat-s">vs. BSTS counterfactual</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Unit Impact</div>
+      <div class="stat-v green">+5,122</div>
+      <div class="stat-s">cumulative 13w post-period</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">TDP change</div>
+      <div class="stat-v" style="color:var(--text)">+0.3</div>
+      <div class="stat-s">stores · distribution stable</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Price change</div>
+      <div class="stat-v amber">−35.6%</div>
+      <div class="stat-s">$2.15 → $1.38 /bar</div>
+    </div>
+  </div>
+
+  <!-- Chart 1: Units causal -->
+  <div class="plabel">Units — Actual vs. BSTS Counterfactual</div>
+  <svg id="ch1a" width="100%" viewBox="0 0 700 130" style="display:block;margin-bottom:18px"></svg>
+
+  <!-- Chart 2: TDP panel (the proof) -->
+  <div class="plabel">TDP (Total Distribution Points) — held stable throughout</div>
+  <svg id="ch1b" width="100%" viewBox="0 0 700 70" style="display:block;margin-bottom:4px"></svg>
+  <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">
+    Scale 0 – 60 stores &nbsp;·&nbsp; Same 26-week window
+  </div>
+
+  <div class="insight insight-green">
+    <strong style="color:var(--green)">Price was the cause. TDP rules out distribution.</strong>
+    BJS Blueberry 4pk demand increased +215% (BSTS posterior, p&lt;0.0001) after a −35.6% price reduction.
+    TDP remained flat at ~39 stores throughout — distribution did not expand.
+    This is a clean price-elasticity event: the lift came from demand response to price, not from gaining new shelf space.
+    Net new bars sold — no sibling SKU cannibalizing.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     STORY 2 — PACK-MIX SHIFTING
+═══════════════════════════════════════════════ -->
+<div id="s2" class="pane">
+<div class="frame">
+
+  <div class="story-head">
+    <div>
+      <div class="story-title">Wakefern · 12-pack price cut −31% → 4-pack cannibalized</div>
+      <div class="story-sub">08-40229-30432 (12pk) &amp; 08-40229-30333 (4pk) · FOOD · Price event 2025-10-12</div>
+    </div>
+    <div class="verdict-box">
+      <span class="chip ch-amber" style="font-size:12px;padding:5px 12px">FORMAT TRADE-UP</span>
+      <span style="font-size:11px;color:var(--text-muted)">Pack-mix shift · Not net new demand</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" style="grid-template-columns:repeat(5,1fr)">
+    <div class="stat">
+      <div class="stat-l">12pk units</div>
+      <div class="stat-v green">+46%</div>
+      <div class="stat-s">520 → 760 /week</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">4pk units</div>
+      <div class="stat-v red">−18%</div>
+      <div class="stat-s">840 → 690 /week</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Net portfolio</div>
+      <div class="stat-v" style="font-size:18px;color:var(--text)">+6.6%</div>
+      <div class="stat-s">1,360 → 1,450 /week</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">12pk $/bar</div>
+      <div class="stat-v amber">−31%</div>
+      <div class="stat-s">$3.18 → $2.19</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">4pk $/bar</div>
+      <div class="stat-v muted">—</div>
+      <div class="stat-s">$2.87 unchanged</div>
+    </div>
+  </div>
+
+  <!-- Two side-by-side charts -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+    <div>
+      <div class="plabel">12-pack units (focal — price cut)</div>
+      <svg id="ch2a" width="100%" viewBox="0 0 340 110" style="display:block"></svg>
+    </div>
+    <div>
+      <div class="plabel">4-pack units (sibling — no price change)</div>
+      <svg id="ch2b" width="100%" viewBox="0 0 340 110" style="display:block"></svg>
+    </div>
+  </div>
+
+  <!-- Net portfolio bar -->
+  <div class="plabel">Net portfolio bars/week — same account, same window</div>
+  <svg id="ch2c" width="100%" viewBox="0 0 700 60" style="display:block;margin-bottom:4px"></svg>
+
+  <div class="insight insight-amber">
+    <strong style="color:var(--amber)">Consumers traded up to the larger format. Net new bars sold was modest.</strong>
+    The 12-pack price cut lowered cost-per-bar by 31%, making it the better value vs. the 4-pack.
+    Existing BUILT buyers switched format — they did not buy more bars total.
+    Net portfolio increase was +6.6% (+90 units/week), not +46%.
+    For FP&A: model the portfolio row, not the focal SKU. Revenue impact depends on margin difference between formats.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     STORY 3 — FLAVOR-FAMILY CANNIBALIZATION
+═══════════════════════════════════════════════ -->
+<div id="s3" class="pane">
+<div class="frame">
+
+  <div class="story-head">
+    <div>
+      <div class="story-title">Double Chocolate 4pk launch → Fudge + Choc Milkshake cannibalized</div>
+      <div class="story-sub">08-40229-30571 (new) cannibalizes 08-40229-30034 + 08-40229-30130 · KROGER · FOOD · Launch wk 2025-08-10</div>
+    </div>
+    <div class="verdict-box">
+      <span class="chip ch-tdp" style="font-size:12px;padding:5px 12px">FLAVOR CANNIB.</span>
+      <span style="font-size:11px;color:var(--text-muted)">Distribution-driven · Not price-driven</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat">
+      <div class="stat-l">New SKU (Dbl Choc)</div>
+      <div class="stat-v tdp-c">+580 u/wk</div>
+      <div class="stat-s">0 → 580 units/week by wk 13</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Fudge 4pk donated</div>
+      <div class="stat-v red">−135 u/wk</div>
+      <div class="stat-s">Cannib. rate: 24%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Choc Milkshake donated</div>
+      <div class="stat-v red">−102 u/wk</div>
+      <div class="stat-s">Cannib. rate: 17%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Net new bars</div>
+      <div class="stat-v green">+343 u/wk</div>
+      <div class="stat-s">59% of new SKU = franchise growth</div>
+    </div>
+  </div>
+
+  <!-- TDP chart (the driver) -->
+  <div class="plabel">TDP — the engine. Distribution expansion drove the shift, not price.</div>
+  <svg id="ch3a" width="100%" viewBox="0 0 700 110" style="display:block;margin-bottom:18px"></svg>
+
+  <!-- Units chart -->
+  <div class="plabel">Units — donor SKUs declining as new SKU ramps TDP</div>
+  <svg id="ch3b" width="100%" viewBox="0 0 700 110" style="display:block;margin-bottom:18px"></svg>
+
+  <!-- Donor table -->
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:4px">
+    <table>
+      <thead><tr>
+        <th>SKU</th><th>Flavor family</th><th>Cannib. prob</th><th>Cannib. rate (wk 13)</th><th>Donor units/wk</th><th>TDP change</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><div style="font-weight:500">Fudge 4pk</div><div style="font-size:11px;color:var(--text-muted)">08-40229-30034</div></td>
+          <td><span class="chip ch-tdp">Chocolate</span></td>
+          <td style="color:var(--red);font-weight:600">0.94</td>
+          <td style="color:var(--red)">24.3%</td>
+          <td class="red">−135 /wk</td>
+          <td class="muted">28 → 27 (stable)</td>
+        </tr>
+        <tr>
+          <td><div style="font-weight:500">Choc Milkshake 4pk</div><div style="font-size:11px;color:var(--text-muted)">08-40229-30130</div></td>
+          <td><span class="chip ch-tdp">Chocolate</span></td>
+          <td style="color:var(--red);font-weight:600">0.87</td>
+          <td style="color:var(--amber)">17.1%</td>
+          <td class="red">−102 /wk</td>
+          <td class="muted">24 → 24 (stable)</td>
+        </tr>
+        <tr>
+          <td><div style="font-weight:500">Peanut Butter 4pk</div><div style="font-size:11px;color:var(--text-muted)">08-40229-30378</div></td>
+          <td><span class="chip ch-slate">Nut/Protein</span></td>
+          <td style="color:var(--text-muted)">0.21</td>
+          <td class="muted">3.8%</td>
+          <td class="muted">−22 /wk</td>
+          <td class="muted">38 → 38 (stable)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight insight-tdp">
+    <strong style="color:var(--tdp)">Distribution drove this — not price. Flavor similarity determined the donors.</strong>
+    The new Double Chocolate SKU gained 42 TDP points over 13 weeks. Fudge (cannibal_prob 0.94) and Choc Milkshake (0.87) lost units proportional to flavor proximity — their TDP held stable, so the unit loss is genuine substitution, not shelf-space loss.
+    59% of new SKU volume (343 u/wk) is net franchise growth — new chocolate occasions. 41% (237 u/wk) was cannibalized from siblings.
+    Action: this is healthy cannibalization. Do not cut new SKU — monitor Fudge + Choc Milkshake velocity for distress signals in weeks 14–26.
+  </div>
+
+</div>
+</div>
+
+
+<script>
+function show(btn, id) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if (!_drawn[id]) {
+    if (id==='s1') drawS1();
+    else if (id==='s2') drawS2();
+    else if (id==='s3') drawS3();
+    _drawn[id]=true;
+  }
+}
+const _drawn = {s1:false, s2:false, s3:false};
+
+/* ── drawing helpers ── */
+const BG='var(--border)';
+const GRID_W=0.5;
+
+function svgLine(x1,y1,x2,y2,col,w=1.5,dash=''){
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`
+}
+function svgPoly(pts,col,w=2,dash=''){
+  const s=pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ');
+  return `<polyline points="${s}" fill="none" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`
+}
+function svgArea(pts,fill){
+  const s=pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ');
+  return `<polygon points="${s}" fill="${fill}"/>`
+}
+function svgTxt(x,y,txt,fs=8.5,fill='var(--text-dim)',anchor='end'){
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="${fs}" fill="${fill}">${txt}</text>`
+}
+function svgRect(x,y,w,h,fill,op=1,rx=1){
+  return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${fill}" opacity="${op}" rx="${rx}"/>`
+}
+
+function makeGrid(W,H,pL,pR,pT,pB,yVals,yMax){
+  let h='';
+  const cW=W-pL-pR, cH=H-pT-pB;
+  yVals.forEach(v=>{
+    const y=pT+cH*(1-v/yMax);
+    h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+    h+=svgTxt(pL-4,y+3,String(v),8.5,'var(--text-dim)','end');
+  });
+  return h;
+}
+
+/* ── Story 1 charts ── */
+function drawS1(){
+  // Chart 1a: Units actual vs counterfactual
+  const W=700,H=130,pL=50,pR=16,pT=16,pB=28;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const yMax=700, weeks=26;
+  const xOf=i=>pL+(i/(weeks-1))*cW;
+  const yOf=v=>pT+cH*(1-v/yMax);
+
+  // Data: pre units ~175-195, post actual ~450-630, counterfactual ~178-185
+  const actual=[178,182,170,188,191,175,184,179,187,174,192,180,185,
+                480,560,540,620,575,605,550,590,545,570,610,555,580];
+  const cf=    [178,182,170,188,191,175,184,179,187,174,192,180,185,
+                183,184,185,184,183,184,183,184,183,184,183,184,183];
+  const cfHi=  [null,null,null,null,null,null,null,null,null,null,null,null,null,
+                230,231,232,231,230,231,230,231,230,231,230,231,230];
+  const cfLo=  [null,null,null,null,null,null,null,null,null,null,null,null,null,
+                136,137,138,137,136,137,136,137,136,137,136,137,136];
+
+  let h='<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--cf)" stop-opacity="0.18"/><stop offset="100%" stop-color="var(--cf)" stop-opacity="0.03"/></linearGradient></defs>';
+  h+=makeGrid(W,H,pL,pR,pT,pB,[0,200,400,600],yMax);
+
+  // Pre/post divider
+  const dx=xOf(12.5);
+  h+=svgLine(dx,pT,dx,pT+cH,'var(--amber)',1,'3 2');
+  h+=svgTxt(dx/2+pL/2,pT-2,'Pre-period (13 weeks)',8,'var(--text-dim)','middle');
+  h+=svgTxt(dx+(W-pR-dx)/2,pT-2,'Post-period (13 weeks)',8,'var(--amber)','middle');
+
+  // CF band (post only)
+  const bandF=cfHi.map((v,i)=>v!==null?[xOf(i),yOf(v)]:null).filter(Boolean);
+  const bandB=cfLo.map((v,i)=>v!==null?[xOf(i),yOf(v)]:null).filter(Boolean).reverse();
+  h+=svgArea([...bandF,...bandB],'url(#g1)');
+
+  // CF line
+  h+=svgPoly(cf.map((v,i)=>[xOf(i),yOf(v)]),'var(--cf)',1.5,'5 3');
+  // Actual line
+  h+=svgPoly(actual.map((v,i)=>[xOf(i),yOf(v)]),'var(--accent)',2.2);
+
+  // Legend
+  h+=svgLine(pL,H-8,pL+20,H-8,'var(--accent)',2.2);
+  h+=svgTxt(pL+24,H-5,'Actual',8.5,'var(--text-muted)','start');
+  h+=svgLine(pL+80,H-8,pL+100,H-8,'var(--cf)',1.5,'5 3');
+  h+=svgTxt(pL+104,H-5,'Counterfactual + 95% band',8.5,'var(--text-muted)','start');
+
+  document.getElementById('ch1a').innerHTML=h;
+
+  // Chart 1b: TDP (stable)
+  const H2=70,pB2=18;
+  const cH2=H2-pT-pB2;
+  const yOf2=v=>pT+cH2*(1-v/60);
+  const tdp=[39,40,38,41,39,40,39,38,40,41,39,40,39,
+             39,40,39,41,38,40,39,40,39,38,41,39,40];
+  let h2='';
+  h2+=makeGrid(W,H2,pL,pR,pT,pB2,[0,20,40,60],60);
+  h2+=svgLine(dx,pT,dx,pT+cH2,'var(--amber)',1,'3 2');
+
+  // TDP as dots + line
+  h2+=svgPoly(tdp.map((v,i)=>[xOf(i),yOf2(v)]),'var(--tdp)',1.8,'2 2');
+  tdp.forEach((v,i)=>{h2+=`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf2(v).toFixed(1)}" r="2.5" fill="var(--tdp)" opacity="0.7"/>`;});
+
+  // annotation
+  h2+=svgTxt(W-pR,yOf2(39)-4,'~39 stores (stable)',9,'var(--tdp)','end');
+  document.getElementById('ch1b').innerHTML=h2;
+}
+
+/* ── Story 2 charts ── */
+function drawS2(){
+  const W=340,H=110,pL=44,pR=10,pT=14,pB=24;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const weeks=26, dx=(pL+(12.5/(weeks-1))*cW);
+  const xOf=i=>pL+(i/(weeks-1))*cW;
+
+  // 12pk: pre ~520, post ~760
+  const u12=[518,525,512,530,520,515,525,518,522,516,528,520,518,
+              695,740,760,750,775,755,765,748,760,755,770,748,762];
+  // 4pk: pre ~840, post ~690
+  const u4= [842,835,848,830,845,838,842,835,845,838,840,842,836,
+              715,700,688,695,680,692,685,698,688,695,682,690,686];
+
+  function miniChart(svgId, data, col, yMax, yTicks){
+    const yOf=v=>pT+cH*(1-v/yMax);
+    let h='';
+    yTicks.forEach(v=>{
+      const y=yOf(v);
+      h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+      h+=svgTxt(pL-4,y+3,String(v),8,'var(--text-dim)','end');
+    });
+    h+=svgLine(dx,pT,dx,pT+cH,'var(--amber)',1,'3 2');
+    h+=svgPoly(data.map((v,i)=>[xOf(i),yOf(v)]),col,2);
+    // week label
+    h+=svgTxt(pL,pT+cH+16,'Wk 1',8,'var(--text-dim)','start');
+    h+=svgTxt(W-pR,pT+cH+16,'Wk 26',8,'var(--text-dim)','end');
+    h+=svgTxt(dx+2,pT+cH+16,'Price cut',8,'var(--amber)','start');
+    document.getElementById(svgId).innerHTML=h;
+  }
+  miniChart('ch2a',u12,'var(--green)',900,[0,300,600,900]);
+  miniChart('ch2b',u4,'var(--red)',1050,[0,350,700,1050]);
+
+  // Net portfolio bar
+  const W3=700,H3=60,pL3=50,pR3=16,pT3=10,pB3=18;
+  const cW3=W3-pL3-pR3, cH3=H3-pT3-pB3;
+  const net=[1360,1360,1360,1360,1365,1353,1367,1353,1367,1354,1368,1362,1354,
+             1410,1440,1448,1445,1455,1447,1450,1446,1448,1450,1452,1430,1448];
+  const yOf3=v=>pT3+cH3*(1-v/1700);
+  const xOf3=i=>pL3+(i/(weeks-1))*cW3;
+  const dx3=pL3+(12.5/(weeks-1))*cW3;
+  let h3='';
+  [0,500,1000,1500].forEach(v=>{
+    const y=yOf3(v);
+    h3+=svgLine(pL3,y,W3-pR3,y,'var(--border)',0.5);
+    h3+=svgTxt(pL3-4,y+3,String(v),8,'var(--text-dim)','end');
+  });
+  h3+=svgLine(dx3,pT3,dx3,pT3+cH3,'var(--amber)',1,'3 2');
+  h3+=svgPoly(net.map((v,i)=>[xOf3(i),yOf3(v)]),'var(--text-muted)',2);
+  // label
+  const lastY=yOf3(net[25]);
+  h3+=svgTxt(W3-pR3,lastY-4,'1,448 u/wk',9,'var(--text)','end');
+  h3+=svgTxt(pL3+2,yOf3(1360)+12,'1,360 pre',9,'var(--text-muted)','start');
+  document.getElementById('ch2c').innerHTML=h3;
+}
+
+/* ── Story 3 charts ── */
+function drawS3(){
+  const W=700,H=110,pL=50,pR=16,pT=16,pB=24;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const weeks=26;
+  const xOf=i=>pL+(i/(weeks-1))*cW;
+
+  // TDP: DblChoc rising, Fudge stable, ChocMilk stable
+  const tdpDC=[0,3,6,10,14,18,22,26,30,33,36,38,40,42,42,43,42,43,42,43,43,42,43,42,43,42];
+  const tdpFu=[28,28,29,28,27,28,28,27,28,28,27,28,28,27,27,28,27,27,28,27,27,28,27,27,28,27];
+  const tdpCM=[24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,23];
+
+  const yOf60=v=>pT+cH*(1-v/60);
+
+  let h='';
+  [0,20,40,60].forEach(v=>{
+    const y=yOf60(v);
+    h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+    h+=svgTxt(pL-4,y+3,String(v),8,'var(--text-dim)','end');
+  });
+  // launch line
+  h+=svgLine(xOf(0),pT,xOf(0),pT+cH,'var(--tdp)',1,'3 2');
+  h+=svgTxt(xOf(0)+3,pT+8,'LAUNCH',7.5,'var(--tdp)','start');
+
+  h+=svgPoly(tdpDC.map((v,i)=>[xOf(i),yOf60(v)]),'var(--tdp)',2.2);
+  h+=svgPoly(tdpFu.map((v,i)=>[xOf(i),yOf60(v)]),'var(--red)',1.5,'4 2');
+  h+=svgPoly(tdpCM.map((v,i)=>[xOf(i),yOf60(v)]),'var(--amber)',1.5,'4 2');
+
+  // labels
+  h+=svgTxt(W-pR,yOf60(42)-4,'Dbl Choc (new)',8.5,'var(--tdp)','end');
+  h+=svgTxt(W-pR,yOf60(27)+10,'Fudge (donor)',8.5,'var(--red)','end');
+  h+=svgTxt(W-pR,yOf60(23)-4,'Choc Milkshake (donor)',8.5,'var(--amber)','end');
+
+  // Legend
+  h+=svgLine(pL,H-8,pL+18,H-8,'var(--tdp)',2.2);
+  h+=svgTxt(pL+22,H-5,'New SKU TDP expanding',8.5,'var(--text-muted)','start');
+  h+=svgLine(pL+185,H-8,pL+203,H-8,'var(--red)',1.5,'4 2');
+  h+=svgTxt(pL+207,H-5,'Donor TDP stable (unit loss is substitution, not shelf loss)',8.5,'var(--text-muted)','start');
+
+  document.getElementById('ch3a').innerHTML=h;
+
+  // Units chart
+  const uDC=[0, 8,22,45,72,110,155,205,260,320,390,460,520,555,565,575,570,578,572,580,576,582,574,580,576,580];
+  const uFu=[380,375,372,365,358,350,342,335,325,315,308,298,290,280,272,265,258,252,248,245,244,245,246,245,244,245];
+  const uCM=[310,305,300,294,288,282,276,268,262,256,250,244,238,230,224,218,214,210,208,208,208,209,208,208,209,208];
+  const yOf7=v=>pT+cH*(1-v/650);
+
+  let h2='';
+  [0,200,400,600].forEach(v=>{
+    const y=yOf7(v);
+    h2+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+    h2+=svgTxt(pL-4,y+3,String(v),8,'var(--text-dim)','end');
+  });
+  h2+=svgLine(xOf(0),pT,xOf(0),pT+cH,'var(--tdp)',1,'3 2');
+  h2+=svgPoly(uDC.map((v,i)=>[xOf(i),yOf7(v)]),'var(--tdp)',2.2);
+  h2+=svgPoly(uFu.map((v,i)=>[xOf(i),yOf7(v)]),'var(--red)',1.5,'4 2');
+  h2+=svgPoly(uCM.map((v,i)=>[xOf(i),yOf7(v)]),'var(--amber)',1.5,'4 2');
+
+  h2+=svgTxt(W-pR,yOf7(580)-4,'Dbl Choc 580/wk',8.5,'var(--tdp)','end');
+  h2+=svgTxt(W-pR,yOf7(245)+10,'Fudge 245/wk (was 380)',8.5,'var(--red)','end');
+  h2+=svgTxt(W-pR,yOf7(208)-4,'Choc Milk 208/wk (was 310)',8.5,'var(--amber)','end');
+
+  h2+=svgLine(pL,H-8,pL+18,H-8,'var(--tdp)',2.2);
+  h2+=svgTxt(pL+22,H-5,'New SKU',8.5,'var(--text-muted)','start');
+  h2+=svgLine(pL+90,H-8,pL+108,H-8,'var(--red)',1.5,'4 2');
+  h2+=svgTxt(pL+112,H-5,'Donor SKUs',8.5,'var(--text-muted)','start');
+
+  document.getElementById('ch3b').innerHTML=h2;
+}
+
+// Draw story 1 immediately (it's active)
+drawS1(); _drawn.s1=true;
+</script>
