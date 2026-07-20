@@ -127,6 +127,26 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 22) — ML validation gap audit plan: evidence-gated, test-first execution
+
+Approved execution plan for working through the 10 ML validation gaps. Core rule: each gap gets an audit script first; only gaps confirmed as material by the audit receive a fix; no Mo pipeline or UI changes until improvement is proven in holdout.
+
+**Phase A — Tier 1 (in order):**
+
+| Script | Gap | Method | Material threshold |
+|---|---|---|---|
+| MO_67 | #5 Quantile calibration | Coverage test: % holdout actuals below q10/q50/q90 | Any quantile >±5pp off target |
+| MO_68 | #1 Per-series drift detection | wMAPE per SKU×retailer across 3 cutpoints; flag consistent degraders | Any series >2× median across 2+ cutpoints |
+| MO_69 | #7 Residual structure analysis | Segment holdout residuals by retailer / maturity / quarter / promo week; test mean bias per segment | Any segment mean bias >±5% of actual |
+
+**Phase B — Tier 2** (after Tier 1 resolved): MO_70 BSTS magnitude validation + MO_71 distribution shift detection.
+
+**Phase C — Tier 3:** Gaps #2/#3/#4/#10 are automation work — defer until Tier 1+2 are clean.
+
+If an audit doesn't clear its threshold → documented as "gap not confirmed" → no fix attempted. Proceeding with MO_67 (quantile calibration) first.
+
+---
+
 ### 2026-07-20 (update 21) — Cold-start proxy overlay: ramp trajectory matching + freeform picker + cross-filter
 
 Refined the cold-start proxy overlay design (gap #9) based on Rob's input:
