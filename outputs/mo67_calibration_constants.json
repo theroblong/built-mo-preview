@@ -1,0 +1,35 @@
+{
+  "calibration_type": "multiplicative",
+  "q90_constant": 1.012387,
+  "uncalibrated_coverage": 0.8215,
+  "calibrated_coverage": 0.8981,
+  "holdout_B_coverage": 0.8974,
+  "val_rows": 21803,
+  "calibration_rows": 10901,
+  "verification_rows": 10902,
+  "computed_on": "2026-01-18",
+  "verdict": "PASS",
+  "maturity_breakdown": {
+    "new (<13w)": {
+      "n": 2597,
+      "before": 83.9,
+      "after": 91.5
+    },
+    "growing (13\u201351w)": {
+      "n": 8663,
+      "before": 83.4,
+      "after": 90.8
+    },
+    "mature (52w+)": {
+      "n": 10543,
+      "before": 80.7,
+      "after": 88.6
+    }
+  },
+  "interval_width": {
+    "median_before": 4.4,
+    "median_after": 5.9,
+    "pct_increase": 33.1
+  },
+  "note": "Applied in MO_27 after seasonal blend, before writing parquet. Formula: forecast_units_high = max(0, forecast_units_high * q90_constant)"
+}

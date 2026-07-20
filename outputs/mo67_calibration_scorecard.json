@@ -1,0 +1,100 @@
+{
+  "overall_verdict": "FAIL",
+  "material_threshold_pp": 5.0,
+  "val_rows": 21803,
+  "portfolio": {
+    "q10": {
+      "target": 0.1,
+      "actual_coverage": 0.1185,
+      "error_pp": 1.85,
+      "verdict": "PASS"
+    },
+    "q50": {
+      "target": 0.5,
+      "actual_coverage": 0.5356,
+      "error_pp": 3.56,
+      "verdict": "PASS"
+    },
+    "q90": {
+      "target": 0.9,
+      "actual_coverage": 0.8215,
+      "error_pp": -7.85,
+      "verdict": "FAIL"
+    }
+  },
+  "maturity_breakdown": {
+    "new (<13w)": {
+      "n": 2597,
+      "q10": 12.7,
+      "q50": 51.3,
+      "q90": 83.9
+    },
+    "growing (13\u201351w)": {
+      "n": 8663,
+      "q10": 11.5,
+      "q50": 52.0,
+      "q90": 83.4
+    },
+    "mature (52w+)": {
+      "n": 10543,
+      "q10": 11.9,
+      "q50": 55.4,
+      "q90": 80.7
+    }
+  },
+  "channel_breakdown": {
+    "CONVENTIONAL|CONVENIENCE": {
+      "n": 1212,
+      "q10": 9.8,
+      "q50": 66.2,
+      "q90": 91.6
+    },
+    "CONVENTIONAL|DRUG": {
+      "n": 182,
+      "q10": 5.5,
+      "q50": 70.3,
+      "q90": 83.5
+    },
+    "CONVENTIONAL|FOOD": {
+      "n": 3813,
+      "q10": 10.0,
+      "q50": 55.6,
+      "q90": 84.7
+    },
+    "CONVENTIONAL|MASS MERCH": {
+      "n": 630,
+      "q10": 8.4,
+      "q50": 57.8,
+      "q90": 85.6
+    },
+    "CONVENTIONAL|MULTI OUTLET": {
+      "n": 8609,
+      "q10": 11.4,
+      "q50": 55.9,
+      "q90": 78.7
+    },
+    "NATURAL EXPANDED": {
+      "n": 2727,
+      "q10": 14.2,
+      "q50": 47.1,
+      "q90": 82.3
+    },
+    "REGIONAL & INDEP GROCERY": {
+      "n": 4291,
+      "q10": 14.1,
+      "q50": 46.1,
+      "q90": 83.1
+    },
+    "VITAMINS & SUPPLEMENTS": {
+      "n": 218,
+      "q10": 14.2,
+      "q50": 49.1,
+      "q90": 87.2
+    }
+  },
+  "interval_width": {
+    "median_width_pct_of_actual": 7.2,
+    "pct_rows_q10_exceeds_actual": 11.8,
+    "pct_rows_q90_below_actual": 17.9
+  }
+}

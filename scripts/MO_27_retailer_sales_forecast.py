@@ -105,7 +105,28 @@ if __name__ == "__main__":
     features_used_total = meta.get("total_units_features_used", [])
     forecast_total      = bool(models_total)
 
-    # ── 1b. Load MO_59 seasonal index (week_of_year → stl_seasonal_index) ───
+    # ── 1b. Load MO_67 q90 calibration constant (conformal post-hoc) ────────
+    # MO_67 found q90 coverage = 82.1% on the Jan–Apr 2026 val set (target 90%).
+    # MO_67b computed a multiplicative constant (1.0124×) that restores coverage
+    # to 89.8%. Applied to units_high after seasonal blend, before writing parquet.
+    _cal_path = Path("outputs/mo67_calibration_constants.json")
+    _q90_cal_factor = 1.0
+    if _cal_path.exists():
+        with open(_cal_path) as _f:
+            _cal = json.load(_f)
+        if _cal.get("calibration_type") == "multiplicative":
+            _q90_cal_factor = float(_cal.get("q90_constant", 1.0))
+        elif _cal.get("calibration_type") == "additive":
+            _q90_cal_factor = None  # handled separately below
+            _q90_cal_offset = float(_cal.get("q90_constant", 0.0))
+        print(f"  q90 calibration: {_cal['calibration_type']} "
+              f"constant={_cal['q90_constant']:.4f}  "
+              f"(coverage {_cal['uncalibrated_coverage']*100:.1f}% → "
+              f"{_cal['calibrated_coverage']*100:.1f}%)")
+    else:
+        print("  q90 calibration constants not found — applying raw q90 predictions")
+
+    # ── 1c. Load MO_59 seasonal index (week_of_year → stl_seasonal_index) ───
     _seas_path = Path("outputs/mo59_seasonal_index.csv")
     if _seas_path.exists():
         _seas_df = pd.read_csv(_seas_path)
@@ -328,6 +349,13 @@ if __name__ == "__main__":
                     units_low  = max(0.0, units_low  * stl_mult)
                     units_base = max(0.0, units_base * stl_mult)
                     units_high = max(0.0, units_high * stl_mult)
+
+            # MO_67b: apply q90 conformal calibration constant (after all blending).
+            # Coverage without this: 82.1%; with: 89.8% on Jan–Apr 2026 holdout.
+            if _q90_cal_factor and _q90_cal_factor != 1.0:
+                units_high = max(0.0, units_high * _q90_cal_factor)
+            elif not _q90_cal_factor:  # additive path (unlikely to be selected)
+                units_high = max(0.0, units_high + _q90_cal_offset)
 
             # Feed blended q50 back as next step's lag seed (keeps AR and
             # seasonal blend consistent across the full 13-step horizon)
