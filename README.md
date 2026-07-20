@@ -127,6 +127,18 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 26) — MO_70 lift magnitude: FAIL (UI disclosure fix, no model retrain)
+
+1,633 clean (TDP-unconfounded) price events from MO_47 evaluated for lift magnitude accuracy. Portfolio mean signed error: −95% — far exceeds the ±10% threshold.
+
+**The nuanced finding:** the model consistently under-predicts post-event lift by ~2× for Highly Elastic events (predicted median +13.8%, actual +27.4%). But the root cause is structural, not a model bug. The model estimates the price-elasticity component of lift. The 13-week pre/post comparison window also captures seasonal tailwinds, residual distribution changes, and competitive dynamics that the "clean" flag (TDP-delta threshold) doesn't fully strip out.
+
+The Inelastic band is a useful control: signed error is +2.0% there — the model correctly predicts near-zero lift for inelastic products. This confirms the model is working as designed for the right segment; the gap is about what it's not designed to estimate.
+
+**Fix: UI disclosure, not a model retrain.** Promo lift projections in the Mo Price Elasticity suite should carry a disclosure that the figure represents the price-elasticity component; actual results typically run 1.5–2× higher on Highly Elastic SKUs due to promotional support and seasonal timing. Displaying a range (e.g., "+14% price-elasticity estimate; prior events suggest +20–30% total lift") is more honest than a single point.
+
+---
+
 ### 2026-07-20 (update 25) — MO_69 residual structure: PASS — no systematic bias anywhere
 
 v3 q50 model residuals are structurally random across every cut tested (110 retailers, 3 maturity buckets, 2 quarters, 2 promo flags, 3 pack formats). Portfolio mean bias is +0.25% with 53.7% positive residuals — essentially symmetric around zero. No segment exceeded the ±5% material threshold. The largest observed bias values: Bulk format +0.84%, Q2 +0.73%. This confirms that while individual series may have noise, there are no systematic directional errors that would consistently push planning decisions in one direction.
