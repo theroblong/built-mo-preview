@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPINS Ingest Runbook — Mo ML Pipeline</title>
+<style>
+  :root {
+    --bg: #f5f9ff;
+    --surface: #ffffff;
+    --surface-2: #eef3fb;
+    --ink: #0d1733;
+    --muted: #526078;
+    --border: #d6deeb;
+    --blue: #2357ad;
+    --blue-light: #dce8f7;
+    --green: #2a7a4b;
+    --green-light: #d6f0e2;
+    --amber: #b45309;
+    --amber-light: #fef3c7;
+    --red: #b91c1c;
+    --red-light: #fee2e2;
+    --code-bg: #0d1733;
+    --code-fg: #eef6ff;
+    --sidebar-w: 260px;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a0f1e;
+      --surface: #111827;
+      --surface-2: #1a2540;
+      --ink: #e8edf7;
+      --muted: #8fa3c0;
+      --border: #253352;
+      --blue: #5b93e5;
+      --blue-light: #1a2e52;
+      --green: #4ade80;
+      --green-light: #0f2e1f;
+      --amber: #fbbf24;
+      --amber-light: #2d1f04;
+      --red: #f87171;
+      --red-light: #2d0a0a;
+      --code-bg: #050c1a;
+      --code-fg: #c8dffa;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface-2: #1a2540;
+    --ink: #e8edf7;
+    --muted: #8fa3c0;
+    --border: #253352;
+    --blue: #5b93e5;
+    --blue-light: #1a2e52;
+    --green: #4ade80;
+    --green-light: #0f2e1f;
+    --amber: #fbbf24;
+    --amber-light: #2d1f04;
+    --red: #f87171;
+    --red-light: #2d0a0a;
+    --code-bg: #050c1a;
+    --code-fg: #c8dffa;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f9ff;
+    --surface: #ffffff;
+    --surface-2: #eef3fb;
+    --ink: #0d1733;
+    --muted: #526078;
+    --border: #d6deeb;
+    --blue: #2357ad;
+    --blue-light: #dce8f7;
+    --green: #2a7a4b;
+    --green-light: #d6f0e2;
+    --amber: #b45309;
+    --amber-light: #fef3c7;
+    --red: #b91c1c;
+    --red-light: #fee2e2;
+    --code-bg: #0d1733;
+    --code-fg: #eef6ff;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+    display: flex;
+    min-height: 100vh;
+  }
+  /* Sidebar */
+  nav#sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+  }
+  .nav-header {
+    padding: 0 18px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .nav-header .logo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .nav-header h1 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  nav#sidebar ul { list-style: none; }
+  nav#sidebar ul li a {
+    display: block;
+    padding: 5px 18px;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  nav#sidebar ul li a:hover,
+  nav#sidebar ul li a.active {
+    color: var(--blue);
+    border-left-color: var(--blue);
+    background: var(--surface-2);
+  }
+  .nav-section-label {
+    padding: 10px 18px 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Main */
+  main {
+    flex: 1;
+    padding: 36px 48px 80px 48px;
+    max-width: 900px;
+  }
+  .page-header {
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .page-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .page-header .meta {
+    font-size: 12.5px;
+    color: var(--muted);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .pipeline-overview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 36px;
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+    overflow-x: auto;
+  }
+  .pipeline-overview .arrow { color: var(--blue); font-weight: 700; }
+  /* Sections */
+  section {
+    margin-bottom: 48px;
+    scroll-margin-top: 24px;
+  }
+  section h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .owner-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 100px;
+    border: 1px solid currentColor;
+  }
+  .owner-brian { color: var(--amber); border-color: var(--amber); background: var(--amber-light); }
+  .owner-rob { color: var(--blue); border-color: var(--blue); background: var(--blue-light); }
+  .owner-jason { color: var(--green); border-color: var(--green); background: var(--green-light); }
+  section .section-desc {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    margin-top: 6px;
+  }
+  section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 20px 0 10px;
+  }
+  section p {
+    font-size: 13.5px;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  section ul, section ol {
+    padding-left: 18px;
+    margin-bottom: 12px;
+  }
+  section li {
+    font-size: 13.5px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  /* Query cards */
+  .query-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .query-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .query-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+    font-family: ui-monospace, monospace;
+  }
+  .query-label.green { color: var(--green); }
+  .query-desc {
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+  }
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { background: var(--surface); color: var(--ink); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre.query-body {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 0;
+    white-space: pre;
+  }
+  pre.query-body .comment { color: #6b8db8; }
+  pre.query-body .keyword { color: #88bdf7; font-weight: 600; }
+  pre.query-body .string { color: #b9e5b4; }
+  /* Alert callouts */
+  .callout {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .callout-icon { flex-shrink: 0; font-size: 16px; line-height: 1.4; }
+  .callout-body { flex: 1; }
+  .callout-body strong { display: block; margin-bottom: 2px; }
+  .callout.warn { background: var(--amber-light); border: 1px solid var(--amber); color: var(--amber); }
+  .callout.danger { background: var(--red-light); border: 1px solid var(--red); color: var(--red); }
+  .callout.info { background: var(--blue-light); border: 1px solid var(--blue); color: var(--blue); }
+  .callout.success { background: var(--green-light); border: 1px solid var(--green); color: var(--green); }
+  .callout p { margin: 0; font-size: 13px; color: inherit; }
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin-bottom: 16px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12.5px;
+  }
+  th {
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  code {
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+    font-size: 11.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+  /* Run order grid */
+  .run-order {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .run-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .run-item .run-id {
+    font-family: ui-monospace, monospace;
+    font-weight: 700;
+    color: var(--blue);
+    font-size: 11.5px;
+  }
+  .run-item .run-id.green { color: var(--green); }
+  .run-item .run-target {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin: 2px 0;
+  }
+  .run-item .run-strategy {
+    font-size: 10.5px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  /* Validation checklist */
+  .checklist { list-style: none; padding: 0; margin-bottom: 16px; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  /* Brian section */
+  #brian-extract {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 48px;
+  }
+  #brian-extract .brian-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  #brian-extract .brian-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    border: none;
+  }
+  #brian-extract .brian-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .field-group {
+    margin-bottom: 20px;
+  }
+  .field-group label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field-group .field-value {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .column-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 4px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 14px;
+  }
+  .column-grid .col-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 3px 0;
+    color: var(--ink);
+    font-family: ui-monospace, monospace;
+  }
+  .col-num {
+    font-size: 10px;
+    color: var(--muted);
+    width: 20px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .col-asterisk { color: var(--amber); font-weight: 700; font-style: normal; }
+  .scope-note {
+    background: var(--amber-light);
+    border: 1px solid var(--amber);
+    border-radius: 5px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--amber);
+    margin-top: 12px;
+  }
+  /* Contacts table */
+  .contact-table td:first-child { font-weight: 600; }
+  .contact-table td:nth-child(2) { color: var(--blue); }
+  /* Footer */
+  footer {
+    padding: 24px 0 0;
+    margin-top: 48px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    cursor: pointer;
+    color: var(--muted);
+    z-index: 100;
+  }
+  @media (max-width: 700px) {
+    body { flex-direction: column; }
+    nav#sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 24px 20px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">Toggle theme</button>
+
+<nav id="sidebar">
+  <div class="nav-header">
+    <div class="logo">Mo ML Pipeline</div>
+    <h1>SPINS Ingest Runbook</h1>
+  </div>
+  <ul>
+    <li><span class="nav-section-label">Overview</span></li>
+    <li><a href="#overview">Pipeline overview</a></li>
+    <li><a href="#brian-extract">Brian extract request</a></li>
+    <li><span class="nav-section-label">Runbook</span></li>
+    <li><a href="#part0">Part 0 — SPINS Export (Brian)</a></li>
+    <li><a href="#part1-baseline">Part 1a — Pre-Ingest Baseline</a></li>
+    <li><a href="#part1-ingest">Part 1b — Druid Ingest (Rob)</a></li>
+    <li><a href="#part2">Part 2 — New UPC Check</a></li>
+    <li><a href="#part3">Part 3 — Q-Series (Druid)</a></li>
+    <li><a href="#part4">Part 4 — P-Series (Python ML)</a></li>
+    <li><a href="#part5">Part 5 — FP&amp;A Report</a></li>
+    <li><a href="#part6">Part 6 — Post-Ingest Audit</a></li>
+    <li><span class="nav-section-label">Reference</span></li>
+    <li><a href="#contacts">Contacts &amp; access</a></li>
+    <li><a href="#constraints">Known constraints</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div class="page-header">
+    <div class="eyebrow">Mo · SPINS Pipeline</div>
+    <h1>SPINS Data Ingest Runbook</h1>
+    <div class="meta">
+      <span>Last validated: 2026-07-20</span>
+      <span>Extract reference: <code>All_items_extract_41926-h100.csv</code></span>
+      <span>Total estimated time: 3–5 hours</span>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <section id="overview">
+    <h2>Pipeline Overview</h2>
+    <p class="section-desc">End-to-end flow from SPINS export to Mo UI refresh. Each layer depends on the previous.</p>
+    <div class="pipeline-overview">
+      Brian exports SPINS CSV
+        <span class="arrow"> → </span> MinIO deposit
+        <span class="arrow"> → </span> Rob ingests → <strong>spins_full</strong>
+        <span class="arrow"> → </span> Jason runs Q-series (Druid SQL)
+        <span class="arrow"> → </span> Jason runs P-series (Python ML)
+        <span class="arrow"> → </span> FP&amp;A report rebuild
+        <span class="arrow"> → </span> Mo UI reflects new data
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠</span>
+      <div class="callout-body">
+        <strong>Extract format warning</strong>
+        <p>The 214-column format (<code>All_items_extract_41926-h100.csv</code>) is required. The older 167-column file (<code>All_items_extract_100.csv</code>) is missing 18 Q0 required fields and cannot be used. Always verify column count = 214 before depositing to MinIO.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Brian Extract Request — standalone, shareable section -->
+  <section id="brian-extract">
+    <div class="brian-header">
+      <span class="owner-badge owner-brian">Brian</span>
+      <h2>SPINS Extract Request</h2>
+    </div>
+    <p class="brian-subtitle">What to select when exporting from SPINS. If the April 2026 report template is still saved, open it, update the date range below, and re-export — all 214 columns are already selected.</p>
+
+    <div class="field-group">
+      <label>Report template to use</label>
+      <div class="field-value">April 2026 "All items extract" — 214-column configuration (same template as <code>All_items_extract_41926.csv</code>)</div>
+    </div>
+
+    <div class="field-group">
+      <label>Date range for next export</label>
+      <div class="field-value">
+        <strong>Start:</strong> &nbsp;April 20, 2026 &nbsp;(one week after current data end — April 19, 2026)<br>
+        <strong>End:</strong> &nbsp;&nbsp;&nbsp;[most recent available week] &nbsp;— select the latest date SPINS shows<br>
+        <em style="font-size:11.5px;color:var(--muted)">If doing a full replacement run: use January 8, 2023 as start date instead.</em>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Product scope</label>
+      <div class="field-value">
+        Brand = <strong>BUILT</strong> (all BUILT brand lines) + Subcategory = <strong>WELLNESS &amp; NUTRITION BARS</strong> and <strong>GRANOLA &amp; SNACK BARS</strong>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Geography / channels</label>
+      <div class="field-value">All channels: CONVENTIONAL|FOOD, CONVENTIONAL|MASS MERCH, CONVENTIONAL|MULTI OUTLET, CONVENTIONAL|MILITARY, CONVENTIONAL|CONVENIENCE. Include both CRMA and RMA geography levels — do not filter these out.</div>
+    </div>
+
+    <div class="field-group">
+      <label>File format &amp; naming</label>
+      <div class="field-value">CSV export. Filename convention: <code>All_items_extract_MMDDYY.csv</code> where MMDDYY is the export end date.<br>Example: export ending July 20, 2026 → <code>All_items_extract_72026.csv</code></div>
+    </div>
+
+    <div class="field-group">
+      <label>55 required columns (critical — must all be present)</label>
+      <div class="column-grid">
+        <div class="col-item"><span class="col-num">1</span>Channel/Outlet</div>
+        <div class="col-item"><span class="col-num">2</span>Geography Level</div>
+        <div class="col-item"><span class="col-num">3</span>Retail Account</div>
+        <div class="col-item"><span class="col-num">4</span>Retail Account Level</div>
+        <div class="col-item"><span class="col-num">5</span>Geography</div>
+        <div class="col-item"><span class="col-num">6</span>Time Period End Date</div>
+        <div class="col-item"><span class="col-num">7</span>Department</div>
+        <div class="col-item"><span class="col-num">8</span>Category</div>
+        <div class="col-item"><span class="col-num">9</span>Subcategory</div>
+        <div class="col-item"><span class="col-num">10</span>Brand</div>
+        <div class="col-item"><span class="col-num">11</span>UPC</div>
+        <div class="col-item"><span class="col-num">12</span>Description</div>
+        <div class="col-item"><span class="col-num">13</span>PACK COUNT</div>
+        <div class="col-item"><span class="col-num">14</span>FLAVOR</div>
+        <div class="col-item"><span class="col-num">15</span>NFP - PROTEIN</div>
+        <div class="col-item"><span class="col-num">16</span>NFP RANGES - PROTEIN VALUE</div>
+        <div class="col-item"><span class="col-num">17</span>NFP - SUGARS</div>
+        <div class="col-item"><span class="col-num">18</span>NFP - CALORIES</div>
+        <div class="col-item"><span class="col-num">19</span>STORAGE</div>
+        <div class="col-item"><span class="col-num">20</span>UNIT OF MEASURE</div>
+        <div class="col-item"><span class="col-num">21</span>Units</div>
+        <div class="col-item"><span class="col-num">22</span>Units, Yago</div>
+        <div class="col-item"><span class="col-num">23</span>Base Units</div>
+        <div class="col-item"><span class="col-num">24</span>Base Units, Yago</div>
+        <div class="col-item"><span class="col-num">25</span>Dollars</div>
+        <div class="col-item"><span class="col-num">26</span>Base Dollars</div>
+        <div class="col-item"><span class="col-num">27</span>TDP</div>
+        <div class="col-item"><span class="col-num">28</span>TDP, Yago</div>
+        <div class="col-item"><span class="col-num">29</span>Average Weekly TDP</div>
+        <div class="col-item"><span class="col-num">30</span>Max % ACV</div>
+        <div class="col-item"><span class="col-num">31</span>Avg % ACV</div>
+        <div class="col-item"><span class="col-num">32</span># of Stores</div>
+        <div class="col-item"><span class="col-num">33</span># of Stores Selling</div>
+        <div class="col-item"><span class="col-num">34</span>% of Stores Selling</div>
+        <div class="col-item"><span class="col-num">35</span>Average Weekly Units SPM</div>
+        <div class="col-item"><span class="col-num">36</span>Average Weekly Units Per Store Selling Per Item</div>
+        <div class="col-item"><span class="col-num">37</span>Units SPM Per Item</div>
+        <div class="col-item"><span class="col-num">38</span>Average Weekly Units per Store Selling</div>
+        <div class="col-item"><span class="col-num">39</span>ARP</div>
+        <div class="col-item"><span class="col-num">40</span>ARP, Yago</div>
+        <div class="col-item"><span class="col-num">41</span>Base ARP</div>
+        <div class="col-item"><span class="col-num">42</span>ARP % Discount, Any Promo</div>
+        <div class="col-item"><span class="col-num">43</span>Units, Promo</div>
+        <div class="col-item"><span class="col-num">44</span>Units, Non-Promo</div>
+        <div class="col-item"><span class="col-num">45</span>Units, % Promo</div>
+        <div class="col-item"><span class="col-num">46</span>TDP, Any Promo</div>
+        <div class="col-item"><span class="col-num">47</span>TDP, Non-Promo</div>
+        <div class="col-item"><span class="col-num">48</span>Promo Weeks</div>
+        <div class="col-item"><span class="col-num">49</span>Incr Units</div>
+        <div class="col-item"><span class="col-num">50</span>Incr Dollars</div>
+        <div class="col-item"><span class="col-num">51</span>Units ,% Lift, TPR</div>
+        <div class="col-item"><span class="col-num">52</span>Units ,% Lift, Any Display</div>
+        <div class="col-item"><span class="col-num">53</span>Units ,% Lift, Any Feature</div>
+        <div class="col-item"><span class="col-num">54</span>First Week Selling</div>
+        <div class="col-item"><span class="col-num">55</span>Number of Weeks Selling</div>
+      </div>
+      <div class="scope-note">
+        ⚠ These 55 are the minimum required. All 214 columns should be present. If the saved template is used, all 214 are already selected — just verify the column count in the downloaded file before uploading to MinIO.
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Deposit</label>
+      <div class="field-value">Upload the CSV to the MinIO bucket. Coordinate with Rob for the exact bucket path and credentials.</div>
+    </div>
+  </section>
+
+  <!-- Part 0 -->
+  <section id="part0">
+    <h2>Part 0 — SPINS Export <span class="owner-badge owner-brian">Brian</span></h2>
+    <p class="section-desc">Export from SPINS platform using the 214-column configuration and deposit to MinIO. See the Brian Extract Request section above for the detailed column list and scope settings.</p>
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">
+        <strong>Save the template</strong>
+        <p>If the SPINS report template from the April 2026 extract is still saved, open it, update the end date, and re-export. This avoids re-selecting all 214 columns manually. Verify the downloaded file has exactly 214 columns before uploading.</p>
+      </div>
+    </div>
+    <h3>Deposit to MinIO</h3>
+    <p>Upload the CSV using the naming convention <code>All_items_extract_MMDDYY.csv</code> where MMDDYY is the export end date (e.g., a July 20 export → <code>All_items_extract_72026.csv</code>). Coordinate with Rob for the bucket path and credentials.</p>
+  </section>
+
+  <!-- Part 1a: Baseline -->
+  <section id="part1-baseline">
+    <h2>Part 1a — Pre-Ingest Baseline Check <span class="owner-badge owner-rob">Rob</span></h2>
+    <p class="section-desc">Before touching <code>spins_full</code>, record the current state. These numbers are your rollback reference.</p>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Baseline check — run before any ingest</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">-- 1. Record current high-water mark
+SELECT MIN(__time), MAX(__time) FROM "spins_full";
+-- Current state: 2023-01-08 → 2026-04-19
+
+-- 2. Row count per year — compare after ingest
+SELECT FLOOR(__time TO YEAR) AS yr, COUNT(*) AS rows
+FROM "spins_full"
+GROUP BY 1
+ORDER BY 1;
+
+-- 3. BUILT UPC count — spot new items after ingest
+SELECT COUNT(DISTINCT "UPC") FROM "spins_full" WHERE "Brand" LIKE 'BUILT%';</pre>
+    </div>
+    <p>Save these numbers. 2023/2024/2025 row counts must match exactly after ingest. The BUILT UPC count should only grow or stay flat — never shrink.</p>
+  </section>
+
+  <!-- Part 1b: Ingest -->
+  <section id="part1-ingest">
+    <h2>Part 1b — Druid Ingest: New Weeks Only <span class="owner-badge owner-rob">Rob</span></h2>
+    <p class="section-desc">Ingest Brian's new file into <code>spins_full</code> using a safe incremental pattern.</p>
+
+    <div class="callout danger">
+      <span class="callout-icon">✕</span>
+      <div class="callout-body">
+        <strong>Do NOT use OVERWRITE ALL or INSERT INTO</strong>
+        <p><code>OVERWRITE ALL</code> times out — the cluster's task duration limit is ~1.5h; <code>spins_full</code> at 97M+ rows always fails (E03). <code>INSERT INTO</code> creates duplicate rows if re-run. Only <code>REPLACE INTO … OVERWRITE WHERE</code> is safe.</p>
+      </div>
+    </div>
+
+    <h3>Step 1 — Confirm the gap boundary</h3>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Gap boundary check</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT MAX(__time) AS current_max FROM "spins_full";
+-- Example: 2026-04-19T00:00:00.000Z</pre>
+    </div>
+    <p>Brian's new file must start at or before this date. One week of overlap is fine — the OVERWRITE handles the boundary cleanly. If there is a gap (e.g., current max is April 19 but Brian's file starts June 1), <strong>stop and resolve with Brian</strong> — a gap in <code>spins_full</code> breaks all rolling-window features at that boundary.</p>
+
+    <h3>Step 2 — Ingest via REPLACE INTO OVERWRITE WHERE</h3>
+    <div class="callout info">
+      <span class="callout-icon">ℹ</span>
+      <div class="callout-body">
+        <strong>Column name mapping (E01)</strong>
+        <p>The CSV has commas in some column names (<code>"Units, Yago"</code>). Druid stores them without the comma (<code>"Units Yago"</code>). Rob's original ingest spec already maps these — use the same spec, just update the MinIO URI and the OVERWRITE WHERE bounds.</p>
+      </div>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Incremental ingest — replace new period only</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">-- Replace only the new period. Start 1 week before current MAX to
+-- handle the boundary cleanly. Future upper bound must be explicit
+-- and DAY-aligned (E20).
+
+REPLACE INTO "spins_full"
+OVERWRITE WHERE __time >= TIMESTAMP '2026-04-12'   -- one week before current MAX
+            AND __time &lt;  TIMESTAMP '2028-01-01'   -- explicit future bound (E20)
+SELECT
+  __time,
+  "Channel/Outlet"     AS channel_outlet,
+  -- ... all column mappings from original ingest spec
+FROM EXTERN(
+  '{"type":"s3","uris":["s3://mo-ml/spins/All_items_extract_MMDDYY.csv"],...}',
+  '{"type":"csv","findColumnsFromHeader":true}'
+)
+WHERE __time >= TIMESTAMP '2026-04-12'
+  AND __time &lt;  TIMESTAMP '2028-01-01'
+PARTITIONED BY DAY
+CLUSTERED BY "UPC", "Channel/Outlet", "Retail Account", "Geography";</pre>
+    </div>
+
+    <h3>Step 3 — Post-ingest validation (all 6 must pass)</h3>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">A — New high-water mark</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT MIN(__time), MAX(__time) FROM "spins_full";
+-- MAX should reflect the new end date from Brian's export</pre>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">B — Historical data intact (2023/2024/2025 counts must not change)</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT FLOOR(__time TO YEAR) AS yr, COUNT(*) AS rows
+FROM "spins_full"
+GROUP BY 1
+ORDER BY 1;
+-- 2023, 2024, 2025 must match pre-ingest baseline exactly</pre>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">C — No duplicate weeks in boundary zone</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT __time, COUNT(*) AS row_count
+FROM "spins_full"
+WHERE __time >= TIMESTAMP '2026-04-01'
+GROUP BY __time
+ORDER BY __time;
+-- Each date should appear exactly as many times as before
+-- Double counts = segment not fully replaced; escalate to Rob</pre>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">D — No gap in weekly cadence</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT __time
+FROM "spins_full"
+WHERE __time >= TIMESTAMP '2026-01-01'
+GROUP BY __time
+ORDER BY __time;
+-- Dates must be consecutive week-end days with no missing weeks</pre>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">E — BUILT UPC count (compare to baseline)</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT COUNT(DISTINCT "UPC") FROM "spins_full" WHERE "Brand" LIKE 'BUILT%';
+-- Should be ≥ pre-ingest count; unexpected shrink = ingest error</pre>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">F — Row count in new period is plausible</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT COUNT(*) FROM "spins_full"
+WHERE __time > TIMESTAMP '2026-04-19';
+-- Should be: (new weeks) × (prior avg weekly row count ± 20%)</pre>
+    </div>
+  </section>
+
+  <!-- Part 2 -->
+  <section id="part2">
+    <h2>Part 2 — New UPC Check <span class="owner-badge owner-jason">Jason</span></h2>
+    <p class="section-desc">Run before QS1. New BUILT UPCs will appear with NULL flavor, pack count, and size unless QS1 is updated first.</p>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Find BUILT UPCs not yet mapped in flavor_mapping</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT DISTINCT s."UPC", s."Description", s."PACK COUNT", s."FLAVOR"
+FROM "spins_full" s
+LEFT JOIN "flavor_mapping" fm ON s."UPC" = fm.upc
+WHERE s."Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
+  AND fm.upc IS NULL
+ORDER BY s."UPC"</pre>
+    </div>
+    <p><strong>If rows returned:</strong> add a <code>WHEN '&lt;new_upc&gt;' THEN ...</code> block in QS1 for each new UPC covering: <code>brand</code>, <code>flavor_family</code>, <code>specific_flavor_raw</code>, <code>specific_flavor_normalized</code>, <code>pack_count</code>, and <code>size</code>. Then re-run QS1.</p>
+    <p><strong>If 0 rows returned:</strong> skip ahead to QS1 re-run — no edits needed.</p>
+  </section>
+
+  <!-- Part 3 -->
+  <section id="part3">
+    <h2>Part 3 — Q-Series: Druid Derived Tables <span class="owner-badge owner-jason">Jason</span></h2>
+    <p class="section-desc">Run in exact order. All SQL blocks are in <code>docs/mo_druid_query_register.md</code>. Estimated time: 60–120 minutes total.</p>
+
+    <h3>Lookup seeds</h3>
+    <div class="run-order">
+      <div class="run-item">
+        <div class="run-id">QS1</div>
+        <div class="run-target">→ flavor_mapping</div>
+        <div class="run-strategy">OVERWRITE ALL (update CASE blocks first if new UPCs found)</div>
+      </div>
+      <div class="run-item">
+        <div class="run-id">QS1v</div>
+        <div class="run-target">→ validation</div>
+        <div class="run-strategy">Expect 0 rows</div>
+      </div>
+      <div class="run-item">
+        <div class="run-id">QS2</div>
+        <div class="run-target">→ flavor_canonical_overrides</div>
+        <div class="run-strategy">OVERWRITE ALL</div>
+      </div>
+      <div class="run-item">
+        <div class="run-id">QS3</div>
+        <div class="run-target">→ item_catalog</div>
+        <div class="run-strategy">OVERWRITE ALL</div>
+      </div>
+    </div>
+
+    <h3>Q0 / Q1 — passthrough (incremental WHERE)</h3>
+    <p>Pure passthrough — no rolling windows. Run only the new period (same OVERWRITE WHERE pattern as spins_full). Historical 2023–2025 segments remain untouched.</p>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Q0 — built_filtered_weekly (incremental)</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">REPLACE INTO "built_filtered_weekly"
+OVERWRITE WHERE __time >= TIMESTAMP '2026-04-12'
+            AND __time &lt;  TIMESTAMP '2028-01-01'
+SELECT __time, channel_outlet, retail_account, ...
+FROM "spins_full"
+WHERE __time >= TIMESTAMP '2026-04-12'
+  AND __time &lt;  TIMESTAMP '2028-01-01'
+  AND ("Brand" LIKE 'BUILT%' OR "Subcategory" = 'WELLNESS &amp; NUTRITION BARS')
+PARTITIONED BY DAY
+CLUSTERED BY upc, channel_outlet, retail_account, geography_raw;</pre>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">ℹ</span>
+      <div class="callout-body">
+        <strong>Q0 batch size note</strong>
+        <p>If the new period spans more than one year, run Q0 in annual OVERWRITE WHERE batches — single-year batches take ~10–25 minutes each.</p>
+      </div>
+    </div>
+    <p>Run the same OVERWRITE WHERE incremental pattern for <strong>Q1</strong> (built_enriched_weekly).</p>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Q0 post-run verification</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT MAX(__time) FROM "built_filtered_weekly";
+-- Must match new end date from Brian's export
+
+SELECT FLOOR(__time TO YEAR) AS yr, COUNT(*) AS rows
+FROM "built_filtered_weekly" GROUP BY 1 ORDER BY 1;
+-- 2023/2024/2025 counts must be unchanged</pre>
+    </div>
+
+    <h3>Q2 — comparison pool (OVERWRITE ALL in annual batches)</h3>
+    <p>Q2 self-joins <code>built_enriched_weekly</code> on flavor/brand to build all focal/candidate pairs. Must be re-run in full because new UPCs enter the pair set.</p>
+    <div class="callout warn">
+      <span class="callout-icon">⚠</span>
+      <div class="callout-body">
+        <strong>Requires special SET commands (E10, E13, E14, E16)</strong>
+        <p>Without these, the self-join fails with OOM or broadcast-limit errors. Annual batches required — never run as a single OVERWRITE ALL.</p>
+      </div>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Q2 — annual batch pattern (run once per year range)</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SET sqlJoinAlgorithm = 'sortMerge';
+SET maxNumTasks = 16;
+SET rowsPerSegment = 5000000;
+-- SET durableShuffleStorage = 'true';  -- uncomment when Rob completes MSQ S3 config (E14)
+
+-- Batch 1: 2023
+REPLACE INTO "comparison_pool_weekly"
+OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01' AND __time &lt; TIMESTAMP '2024-01-01'
+SELECT ...
+FROM "built_enriched_weekly" c
+JOIN "built_enriched_weekly" f ON ...
+WHERE c.__time >= TIMESTAMP '2023-01-01' AND c.__time &lt; TIMESTAMP '2024-01-01'
+  AND f.__time >= TIMESTAMP '2023-01-01' AND f.__time &lt; TIMESTAMP '2024-01-01'
+  -- ^ both-side time filters required (E17) — sort-merge planner does NOT infer from one side
+...
+PARTITIONED BY DAY
+CLUSTERED BY focal_upc, candidate_upc, retail_account, channel_outlet;
+
+-- Batch 2: 2024-01-01 → 2025-01-01
+-- Batch 3: 2025-01-01 → 2026-01-01
+-- Batch 4: 2026-01-01 → 2028-01-01  (adjust upper bound annually)</pre>
+    </div>
+
+    <h3>Q3 / Q4 / Q5 — pre/post + ML training features (OVERWRITE ALL)</h3>
+    <p>These compute rolling windows and pre/post aggregates anchored to <code>first_week_selling</code>. A new week of data can change the post-window aggregate for any SKU — re-run in full.</p>
+    <div class="run-order">
+      <div class="run-item">
+        <div class="run-id">Q3</div>
+        <div class="run-target">→ built_prepost_features</div>
+        <div class="run-strategy">OVERWRITE ALL</div>
+      </div>
+      <div class="run-item">
+        <div class="run-id">Q4</div>
+        <div class="run-target">→ donor_prepost_features</div>
+        <div class="run-strategy">OVERWRITE ALL + sortMerge</div>
+      </div>
+      <div class="run-item">
+        <div class="run-id">Q5</div>
+        <div class="run-target">→ ml_training_features</div>
+        <div class="run-strategy">OVERWRITE ALL + sortMerge</div>
+      </div>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label">SQL</span>
+        <span class="query-desc">Q5 post-run spot-check</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT COUNT(*) FROM "ml_training_features";
+-- Baseline: ~60,695 rows (2026-06-08)
+-- Will grow with new launch events and new weeks</pre>
+    </div>
+
+    <h3>Q6–Q22 — event detection and price tables (OVERWRITE ALL)</h3>
+    <div class="run-order">
+      <div class="run-item"><div class="run-id">Q6</div><div class="run-target">→ event_detection_weekly</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q7</div><div class="run-target">→ new_upc_candidates</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q8</div><div class="run-target">→ new_upc_classifications</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q9</div><div class="run-target">→ new_product_ramp_monitor</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q14</div><div class="run-target">→ price_elasticity_weekly_features</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q15</div><div class="run-target">→ price_pack_ladder_weekly</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q16</div><div class="run-target">→ price_competitive_weekly</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q17</div><div class="run-target">→ price_elasticity_training_features</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q20</div><div class="run-target">→ mulo_food_pack_size_norms</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q21</div><div class="run-target">→ flavor_protein_driver_features</div><div class="run-strategy">OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q22a</div><div class="run-target">→ price_event_queue (COMP_PRICE_GAP)</div><div class="run-strategy">REPLACE INTO OVERWRITE ALL</div></div>
+      <div class="run-item"><div class="run-id">Q22b</div><div class="run-target">→ price_event_queue (PACK_LADDER_COMP)</div><div class="run-strategy">INSERT INTO (append to Q22a — E26)</div></div>
+    </div>
+  </section>
+
+  <!-- Part 4 -->
+  <section id="part4">
+    <h2>Part 4 — P-Series: Python ML Retrain &amp; Score <span class="owner-badge owner-jason">Jason</span></h2>
+    <p class="section-desc">All scripts in <code>scripts/</code>. Run in this exact order. Each write-back goes through <code>mo_writeback.py</code> — review the printed ingest spec and POST to Druid.</p>
+    <div class="run-order">
+      <div class="run-item"><div class="run-id green">MO_10</div><div class="run-target">→ model_cannibal_vN.pkl</div><div class="run-strategy">retrain cannibalization classifier</div></div>
+      <div class="run-item"><div class="run-id green">MO_11</div><div class="run-target">→ model_donor_ranker_vN.pkl</div><div class="run-strategy">retrain donor ranker</div></div>
+      <div class="run-item"><div class="run-id green">MO_12</div><div class="run-target">→ model_event_detector_vN.pkl</div><div class="run-strategy">retrain event detector</div></div>
+      <div class="run-item"><div class="run-id green">MO_13</div><div class="run-target">→ scored_cannibalization</div><div class="run-strategy">score → Druid write-back</div></div>
+      <div class="run-item"><div class="run-id green">MO_14</div><div class="run-target">→ event_queue</div><div class="run-strategy">assemble events</div></div>
+      <div class="run-item"><div class="run-id green">MO_15</div><div class="run-target">→ event_queue</div><div class="run-strategy">new pack enrollment</div></div>
+      <div class="run-item"><div class="run-id green">MO_16</div><div class="run-target">→ pe_training_features</div><div class="run-strategy">build regression features</div></div>
+      <div class="run-item"><div class="run-id green">MO_17</div><div class="run-target">→ scored_price_elasticity</div><div class="run-strategy">score → Druid write-back</div></div>
+      <div class="run-item"><div class="run-id green">MO_18</div><div class="run-target">→ pe_forecast_weekly</div><div class="run-strategy">→ Druid write-back</div></div>
+      <div class="run-item"><div class="run-id green">MO_14.7</div><div class="run-target">→ price_event_queue</div><div class="run-strategy">price events → write-back</div></div>
+      <div class="run-item"><div class="run-id green">MO_19</div><div class="run-target">→ cannibalization_rate_weekly</div><div class="run-strategy">→ Druid write-back</div></div>
+      <div class="run-item"><div class="run-id green">MO_20</div><div class="run-target">→ model_cannibal_rate_vN.pkl</div><div class="run-strategy">retrain cannib rate model</div></div>
+      <div class="run-item"><div class="run-id green">MO_21</div><div class="run-target">→ cannibal_rate_forecast_weekly</div><div class="run-strategy">→ Druid write-back</div></div>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">ℹ</span>
+      <div class="callout-body">
+        <strong>Write-back note</strong>
+        <p>All MO_xx ingest specs use <code>appendToExisting: true</code>. Never override this — <code>false</code> silently drops columns, causing the API to return empty arrays.</p>
+      </div>
+    </div>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label green">SQL</span>
+        <span class="query-desc">MO_13 coverage check</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">SELECT COUNT(*) FROM "scored_cannibalization";
+-- Baseline: ~60,695 rows covering ~48% of focal/donor pairs
+-- New SKUs under 8 weeks history will not appear (Q5 maturity gate — by design)</pre>
+    </div>
+  </section>
+
+  <!-- Part 5 -->
+  <section id="part5">
+    <h2>Part 5 — FP&amp;A Report Rebuild <span class="owner-badge owner-jason">Jason</span></h2>
+    <p class="section-desc">Run only after ML scores are updated in Druid. Requires authorization before running.</p>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label green">Bash</span>
+        <span class="query-desc">Full FP&amp;A report rebuild + quantile recalibration</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body"># Requires authorization from Jason, Rob, or Brian before running
+bash run_fpa_report.sh
+
+# Refresh quantile calibration constants after new forecasts
+python scripts/MO_67_quantile_calibration_audit.py
+python scripts/MO_67b_q90_recalibration.py
+# Updated constants → outputs/mo67_calibration_constants.json
+# Picked up by MO_27 on the next report run</pre>
+    </div>
+  </section>
+
+  <!-- Part 6 -->
+  <section id="part6">
+    <h2>Part 6 — Post-Ingest Validation <span class="owner-badge owner-jason">Jason</span></h2>
+    <p class="section-desc">Run Phase A/B audit scripts to confirm the new model version is not drifting or biased. Any FAIL verdict warrants investigation before releasing to users.</p>
+    <div class="query-card">
+      <div class="query-card-header">
+        <span class="query-label green">Bash</span>
+        <span class="query-desc">Validation audit scripts</span>
+        <button class="copy-btn" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <pre class="query-body">python scripts/MO_68_per_series_drift_detection.py   # drift scorecard
+python scripts/MO_69_residual_structure_audit.py      # bias audit
+python scripts/MO_71_distribution_shift_detection.py  # feature shift audit
+
+# Outputs:
+#   outputs/mo68_*.json — per-series wMAPE trends
+#   outputs/mo69_*.json — residual bias by segment
+#   outputs/mo71_*.json — KS test feature shift report</pre>
+    </div>
+  </section>
+
+  <!-- Contacts -->
+  <section id="contacts">
+    <h2>Contacts &amp; Access</h2>
+    <div class="table-wrap">
+      <table class="contact-table">
+        <thead>
+          <tr><th>Step</th><th>Owner</th><th>Access needed</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>SPINS export</td><td>Brian</td><td>SPINS platform credentials</td></tr>
+          <tr><td>MinIO deposit</td><td>Brian (or Rob)</td><td>MinIO bucket write access</td></tr>
+          <tr><td>Druid ingest (spins_full)</td><td>Rob</td><td>Druid cluster admin + MinIO read</td></tr>
+          <tr><td>Q-series SQL</td><td>Jason</td><td>Druid cluster write (REPLACE INTO)</td></tr>
+          <tr><td>P-series Python + write-backs</td><td>Jason</td><td>Druid read/write + MinIO write</td></tr>
+          <tr><td>FP&amp;A report rebuild</td><td>Jason (authorized)</td><td>Druid read + MinIO write</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Known Constraints -->
+  <section id="constraints">
+    <h2>Known Constraints &amp; Risks</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Risk</th><th>Detail</th><th>Mitigation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>OVERWRITE ALL</code> timeout</td>
+            <td>Cluster task limit ~1.5h; <code>spins_full</code> at 97M+ rows always fails (E03)</td>
+            <td>Use <code>REPLACE INTO … OVERWRITE WHERE</code> with year-range batches — never <code>OVERWRITE ALL</code> for spins_full</td>
+          </tr>
+          <tr>
+            <td><code>INSERT INTO</code> duplicates</td>
+            <td>Not idempotent — re-running doubles every row in the period</td>
+            <td>Use <code>REPLACE INTO … OVERWRITE WHERE</code> for all spins_full updates</td>
+          </tr>
+          <tr>
+            <td>Data gap in Brian's file</td>
+            <td>Export start doesn't connect to current <code>MAX(__time)</code></td>
+            <td>Run gap boundary check before ingest; stop and resolve if gap found</td>
+          </tr>
+          <tr>
+            <td>Column names (E01)</td>
+            <td>CSV: <code>"Units, Yago"</code> → Druid: <code>"Units Yago"</code> (13 columns affected)</td>
+            <td>Rob's original ingest spec already maps these; use the same spec</td>
+          </tr>
+          <tr>
+            <td>Wrong extract format</td>
+            <td>167-column file missing 18 Q0 required fields</td>
+            <td>Always use 214-column format; verify count before depositing</td>
+          </tr>
+          <tr>
+            <td>New BUILT UPCs</td>
+            <td>Appear as NULL in <code>flavor_mapping</code> if QS1 not updated</td>
+            <td>Run new-UPC check (Part 2) before QS1</td>
+          </tr>
+          <tr>
+            <td>New competitor brands</td>
+            <td>New brand won't have a tier in <code>item_catalog</code></td>
+            <td>Compare <code>SELECT DISTINCT source_brand FROM built_filtered_weekly</code> after Q0 against current QS3 list</td>
+          </tr>
+          <tr>
+            <td>Q2 sort-merge OOM (E13–E14)</td>
+            <td>Self-join on 62M+ rows; worker pods OOM-evicted without durable shuffle</td>
+            <td><code>SET sqlJoinAlgorithm='sortMerge'; SET maxNumTasks=16;</code> + annual batches; Rob to complete MSQ S3 shuffle config (E14)</td>
+          </tr>
+          <tr>
+            <td>Q2 OVERWRITE WHERE alignment (E20)</td>
+            <td>Open-ended upper bound → INVALID_INPUT</td>
+            <td>Always use explicit future bound: <code>AND __time &lt; TIMESTAMP '2028-01-01'</code></td>
+          </tr>
+          <tr>
+            <td>Q2 both-side filter (E17)</td>
+            <td>Time filter on one join side not inferred by sort-merge planner</td>
+            <td>Add explicit <code>c.__time</code> AND <code>f.__time</code> bounds in WHERE</td>
+          </tr>
+          <tr>
+            <td><code>appendToExisting: false</code></td>
+            <td>Silently drops columns → UI returns empty arrays</td>
+            <td>All MO_xx write-backs use <code>appendToExisting: true</code>; never override</td>
+          </tr>
+          <tr>
+            <td>Data maturity gate</td>
+            <td>Q5 requires <code>focal_post_weeks_count ≥ 8</code>; new SKUs absent from scoring until threshold</td>
+            <td>Expected behavior; new SKUs enter scoring automatically on next refresh</td>
+          </tr>
+          <tr>
+            <td>Q22 UNION ALL blocked (E26)</td>
+            <td>MSQ doesn't support UNION ALL between aggregated CTEs</td>
+            <td>Q22a (REPLACE) + Q22b (INSERT) — already implemented</td>
+          </tr>
+          <tr>
+            <td>v4 retrain trigger</td>
+            <td>No new SPINS data → retraining produces same rows, collapsed holdout</td>
+            <td>Only retrain when new data extends the date range in <code>spins_full</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      <span>SPINS Ingest Runbook · Mo ML Pipeline</span>
+      <span>Full SQL: <code>docs/mo_druid_query_register.md</code> · Runbook: <code>docs/SPINS_INGEST_RUNBOOK.md</code></span>
+    </footer>
+  </section>
+</main>
+
+<script>
+  function copyQuery(btn) {
+    const pre = btn.closest('.query-card').querySelector('pre.query-body');
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  function toggleTheme() {
+    const root = document.documentElement;
+    const cur = root.getAttribute('data-theme');
+    root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  }
+
+  // Active TOC highlighting
+  const sections = document.querySelectorAll('section[id], div[id="brian-extract"]');
+  const navLinks = document.querySelectorAll('nav#sidebar a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector('nav#sidebar a[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

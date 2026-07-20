@@ -127,6 +127,25 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 28) — SPINS Ingest Runbook + HTML register: full end-to-end data refresh procedure documented
+
+Documented the complete Layer 0 pipeline — from Brian's SPINS export through Rob's Druid ingest, the full Q-series and P-series retrain, FP&A rebuild, and post-ingest validation audit.
+
+**What was created:**
+
+- `docs/SPINS_INGEST_RUNBOOK.md` — 6-part runbook covering: (0) SPINS export procedure, (1a) pre-ingest baseline check, (1b) Druid ingest via `REPLACE INTO OVERWRITE WHERE`, (2) new UPC gate before QS1, (3) full Q-series run order with per-table OVERWRITE strategy, (4) MO_10–MO_21 Python ML retrain, (5) FP&A rebuild + quantile recalibration, (6) post-ingest drift/bias/shift audit.
+
+- `mockups/spins_ingest_runbook.html` — browser-friendly register with sticky TOC, copy buttons, owner badges (Brian/Rob/Jason), and a standalone "Brian Extract Request" section with the 55-column checklist and date range field — ready to share with Rob.
+
+**Key design decisions encoded in the runbook:**
+- `OVERWRITE ALL` is explicitly forbidden for `spins_full` (E03: times out at 97M rows); `INSERT INTO` is forbidden (creates duplicates). Only `REPLACE INTO … OVERWRITE WHERE` with explicit future upper bound (E20) is safe.
+- 6 post-ingest validation queries (A–F) must all pass before proceeding to Q-series.
+- Q2 requires `SET sqlJoinAlgorithm='sortMerge'; SET maxNumTasks=16;` plus annual batches with both-side `__time` filters (E17).
+- New BUILT UPC check (Part 2) must run before QS1 — otherwise new SKUs appear with NULL flavor throughout the pipeline.
+- Validated against `All_items_extract_41926-h100.csv`: 214-column format confirmed; older 167-column format disqualified (18 Q0 fields missing).
+
+---
+
 ### 2026-07-20 (update 27) — MO_71 distribution shift: FAIL (retrain signal, not urgent) — Phase B complete
 
 9/10 Tier 1 features shifted materially between v3 training data (through Jan 2026) and the current validation window.
