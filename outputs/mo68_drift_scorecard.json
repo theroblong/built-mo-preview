@@ -1,0 +1,53 @@
+{
+  "verdict": "FAIL",
+  "total_segments": 269,
+  "segments_evaluated_min3_cutpoints": 122,
+  "drifting_segments": 2,
+  "drift_threshold": {
+    "relative_ratio": 2.0,
+    "min_cutpoints": 2
+  },
+  "portfolio_median_by_cutpoint": {
+    "Sep 2024": 2.8164,
+    "Dec 2024": 3.1437,
+    "Mar 2025": 5.7073,
+    "Jun 2025": 3.9565,
+    "Sep 2025": 2.7753,
+    "Dec 2025": 2.02,
+    "Jan 2026": 2.1036
+  },
+  "top_drifting_segments": [
+    {
+      "seg": "MCCAFFREYS|Growing (27-78w)|Single (1ct)",
+      "retail_account": "MCCAFFREYS",
+      "maturity": "Growing (27-78w)",
+      "pack_format": "Single (1ct)",
+      "drift_score": 1.628,
+      "slope": 0.3542,
+      "final_wmape_pct": 3.74,
+      "rel_ratios": {
+        "Mar 2025": 0.52,
+        "Jun 2025": 1.255,
+        "Sep 2025": 1.483,
+        "Dec 2025": 1.624,
+        "Jan 2026": 1.778
+      }
+    },
+    {
+      "seg": "MCKEEVERS|Growing (27-78w)|Single (1ct)",
+      "retail_account": "MCKEEVERS",
+      "maturity": "Growing (27-78w)",
+      "pack_format": "Single (1ct)",
+      "drift_score": 1.533,
+      "slope": 0.592,
+      "final_wmape_pct": 2.41,
+      "rel_ratios": {
+        "Mar 2025": 0.402,
+        "Jun 2025": 0.804,
+        "Sep 2025": 1.217,
+        "Dec 2025": 2.237,
+        "Jan 2026": 1.144
+      }
+    }
+  ]
+}

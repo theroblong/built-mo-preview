@@ -127,6 +127,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 23) — MO_67 + MO_68 audit results: q90 recalibrated; drift is a watch-list item
+
+**MO_67 — Quantile calibration (gap #5): FAIL → fixed**
+
+- q10 and q50 pass. **q90 failed**: only 82.1% of actuals fell below the predicted upper band (target 90%, gap = −7.9pp, exceeds ±5pp threshold).
+- Fix: split-conformal recalibration — multiplicative constant 1.0124× restores q90 coverage to 89.8% on hold-out B.
+- Constants saved to `outputs/mo67_calibration_constants.json`. Applied in MO_27 after seasonal blend, before writing the forecast parquet. Interval width widens by +33% at median (4.4 → 5.9 units).
+
+**MO_68 — Per-series drift detection (gap #1): FAIL (monitoring only, no model fix)**
+
+- 269 segments evaluated (7 cutpoints: MO_63 Sep 2024–Dec 2025 + v3 Jan 2026).
+- **2 truly drifting segments** (slope-based detection): MCCAFFREYS Growing Single (slope +0.35, final ratio 1.78×) and MCKEEVERS Growing Single (slope +0.59, final ratio 1.14×). Both have acceptable absolute wMAPE (<4%) — added to quarterly retrain watch list; no model change.
+- **Key finding:** Walmart / Sams / Walgreens / CVS Bulk-Growing segments initially flagged by the threshold criterion but have strongly *negative* slopes (−3.0). They were 14× harder than the portfolio median in Dec 2024 and have improved to ~1.9× by Dec 2025. Not drift — structural hard segments getting easier over time as the model accumulates data.
+
+---
+
 ### 2026-07-20 (update 22) — ML validation gap audit plan: evidence-gated, test-first execution
 
 Approved execution plan for working through the 10 ML validation gaps. Core rule: each gap gets an audit script first; only gaps confirmed as material by the audit receive a fix; no Mo pipeline or UI changes until improvement is proven in holdout.
