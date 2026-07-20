@@ -884,6 +884,48 @@ if __name__ == "__main__":
 
 ---
 
+<a id="p8b"></a>
+
+### P8b — `MO_16b_pe_temporal_backtest.py`
+
+**Purpose:** Validate whether the MO_16 v2 elasticity model generalizes across time, not just within a random cross-section. Addresses the PE backtesting gap identified after MO_16 v1: the original 80/20 `train_test_split` with `random_state=42` is a random cross-section — not an out-of-sample time period or account.
+
+**Approach:** Each row in `price_elasticity_training_features` has a `window_end_date` (`__time` = end of the 13-week post window). Splitting on this column tests: "can the model predict elasticity for more recent post-windows when trained only on older ones?"
+
+- **Train:** `window_end_date < 2025-10-01` (older windows)
+- **Test:** `window_end_date >= 2025-10-01` (~26 weeks of recent post-windows through Apr 2026)
+
+**Two evaluations on the temporal test set:**
+1. Pre-trained v2 model (`outputs/model_own_price_elasticity_v2.pkl`) — tests real-world generalization without retraining
+2. Model retrained on temporal train only — upper bound achievable with purely temporal training data
+
+**Key metrics reported:**
+- `r2`, `mae`, `direction_accuracy` (sign match between predicted and actual `log_unit_change`)
+- Generalization gap = random-split R² minus temporal-test R²
+- Per-account breakdown on temporal test (bottom 5 / top 5 by R²)
+- Verdict: PASS (R² ≥ 0.90) / MARGINAL (0.80–0.90) / FAIL (< 0.80)
+
+**Input Druid datasource:** `price_elasticity_training_features`
+
+**Input artifacts:** `outputs/model_own_price_elasticity_v2.pkl`, `outputs/price_elasticity_train_metrics.json`
+
+**Output artifacts:**
+- `outputs/pe_backtest_results.json` — summary metrics + gap analysis
+- `outputs/pe_backtest_per_account.json` — per-account R² and direction accuracy on temporal test
+
+**Dependencies:** P7 (`MO_16 v2`) must have run and saved `model_own_price_elasticity_v2.pkl`
+
+**Status:** ⏳ PENDING — script written 2026-07-20; awaiting Druid run
+
+**Notes:**
+- Same $0.05 price-move guardrail applied as in MO_16/MO_17 — training rows with near-zero price change are excluded
+- Same `OWN_PRICE_FEATURES` as v2 (includes TDP: `pre_13w_tdp`, `post_13w_tdp`, `tdp_pct_chg`)
+- Direction accuracy is the most FP&A-interpretable metric: "does the model predict demand falls when price rises?"
+- If temporal R² is close to random-split R² → model is not overfitting to the historical period; v4 retrain is the right next step once new SPINS data arrives
+- If large gap → investigate per-account breakdown; consider whether CRMA-level geographic aggregation is the root cause (diluted price signals at MULO/CRMA = near-zero log_price_change even after guardrail)
+
+---
+
 <a id="p9"></a>
 
 ### P9 — `MO_18_price_elasticity_forecast.py`
