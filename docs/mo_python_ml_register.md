@@ -1303,6 +1303,39 @@ Phase A (accuracy structure) and Phase B (magnitude + distribution) validation a
 
 ---
 
+### VA7 — `MO_60_causal_sensitivity.py`
+
+**Purpose:** Stress-test MO_72's 140 SIGNIFICANT events across 9 parameter variants (3 control-similarity thresholds × 3 price-stability thresholds). Produces a plain-English `narrative` + `robust_verdict` per event for trust-building with BUILT — explicitly surfaces which results hold up regardless of methodology choices vs. which ones depend on exactly which comparison stores were selected.
+
+**Explainability principle:** Two plain-English questions being varied:
+1. *"How similar must comparison stores be?"* — Pearson threshold: 0.30 / 0.40 (baseline) / 0.50
+2. *"How stable must comparison-store prices be?"* — ARP tolerance: ±3% / ±5% (baseline) / ±10%
+
+Note: ARP stability checks the *control store's own* first-to-last price change, NOT a comparison of the control's price level to the focal's (which would always fail on price-cut events).
+
+**Scoping:** Only events with n_control_series ≥ 2 from MO_72 are re-run (92 events × 9 variants = 828 runs). Events with n_control = 1 are pre-flagged FRAGILE without re-running — a single comparison store cannot be stress-tested.
+
+**Output schema (`causal_impact_sensitivity.parquet`):**
+All MO_72 baseline fields plus: `stability_score` (0–9), `n_variants_run`, `robust_verdict` (ROBUST/MODERATE/FRAGILE), `direction_consistent` (True = price and demand moved in expected directions), `narrative` (plain English 2-sentence explanation), `variant_detail` (JSON array of 9 variant results)
+
+**Verdicts:**
+- ROBUST: significant + correct direction in ≥ 7/9 variants — safe to cite to BUILT
+- MODERATE: 4–6/9 — cite with confidence caveat
+- FRAGILE: ≤ 3/9, or n_control = 1 — do not surface in UI
+
+**Key findings (2026-07-20):**
+- 40 ROBUST (29%), 13 MODERATE (9%), 87 FRAGILE (62%)
+- 26 ROBUST + correct direction (price↓ → demand↑ or price↑ → demand↓): clean causal signals
+- 14 ROBUST + wrong direction: robust but atypical — possible confounders; flagged in narrative
+- **BJS Double Chocolate 4pk: 9/9 ROBUST** — −35.6% price cut → +215.5% demand lift across ALL parameter variants. This is the primary demo anchor.
+- Honesty finding: 62% of initial SIGNIFICANT events are FRAGILE — validates why we need the stress-test before surfacing results to BUILT
+
+**Next step:** Merge `robust_verdict` + `direction_consistent` into `causal_impact_scores` Druid table so the Mo UI Event Detail drawer can filter to ROBUST + direction_consistent events only.
+
+**Status:** ✅ COMPLETE 2026-07-20
+
+---
+
 ## Azure Deployment Notes
 
 When running on Azure instead of a laptop:
