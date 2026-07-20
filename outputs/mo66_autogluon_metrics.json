@@ -1,0 +1,137 @@
+{
+  "script": "MO_66",
+  "preset": "medium_quality",
+  "prediction_length": 13,
+  "min_train_rows": 52,
+  "past_covariates": [
+    "base_units_roll4_avg",
+    "base_units_roll8_avg",
+    "base_units_roll8_std",
+    "base_units_roll13_avg",
+    "base_units_roll13_std",
+    "base_units_wow_delta",
+    "base_units_z8",
+    "base_units_z13",
+    "velocity_spm_roll8_avg",
+    "velocity_spm_roll13_avg",
+    "velocity_spm_z8",
+    "velocity_spm_z13",
+    "tdp",
+    "tdp_z8",
+    "tdp_wow_delta",
+    "arp",
+    "arp_wow_delta",
+    "arp_roll8_avg",
+    "arp_roll8_std",
+    "donor_count",
+    "base_units_lag1",
+    "base_units_lag4",
+    "base_units_lag13",
+    "base_units_lag52",
+    "velocity_spm_lag52"
+  ],
+  "known_covariates": [
+    "week_of_year",
+    "weeks_since_launch"
+  ],
+  "horse_race_reference": {
+    "LightGBM\n(Aevah)": [
+      28.7,
+      7.0,
+      4.3
+    ],
+    "MA 13wk": [
+      50.4,
+      40.2,
+      24.6
+    ],
+    "Naive": [
+      56.9,
+      37.5,
+      42.1
+    ],
+    "N-BEATS": [
+      55.6,
+      117.9,
+      46.4
+    ]
+  },
+  "mo65_run_a_wmape": {
+    "dec2024": 52.22,
+    "oct2025": 20.55,
+    "dec2025": 34.92
+  },
+  "autogluon_results": {
+    "dec2024": {
+      "label": "Dec 2024",
+      "preset": "medium_quality",
+      "n_series": 564,
+      "n_matched": 6467,
+      "wmape": 52.02
+    },
+    "oct2025": {
+      "label": "Oct 2025",
+      "preset": "medium_quality",
+      "n_series": 815,
+      "n_matched": 6757,
+      "wmape": 20.94
+    },
+    "dec2025": {
+      "label": "Dec 2025",
+      "preset": "medium_quality",
+      "n_series": 920,
+      "n_matched": 7806,
+      "wmape": 37.8
+    }
+  },
+  "leaderboard_dec2025": [
+    {
+      "model": "WeightedEnsemble",
+      "score_val": -3.540624251489532,
+      "pred_time_val": 0.5776016768795671,
+      "fit_time_marginal": 0.23085125000216067,
+      "fit_order": 6,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "SeasonalNaive",
+      "score_val": -3.689365199249298,
+      "pred_time_val": 0.2167530059814453,
+      "fit_time_marginal": 0.06578707695007324,
+      "fit_order": 1,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "Theta",
+      "score_val": -3.9151213547399477,
+      "pred_time_val": 0.5579912662506104,
+      "fit_time_marginal": 0.1095428466796875,
+      "fit_order": 5,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "ETS",
+      "score_val": -4.062551969664958,
+      "pred_time_val": 0.5596108436584473,
+      "fit_time_marginal": 0.1058359146118164,
+      "fit_order": 4,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "RecursiveTabular",
+      "score_val": -4.207859302254633,
+      "pred_time_val": 0.17072796821594238,
+      "fit_time_marginal": 1.0065629482269287,
+      "fit_order": 2,
+      "cutpoint": "dec2025"
+    },
+    {
+      "model": "DirectTabular",
+      "score_val": -4.792185236280943,
+      "pred_time_val": 0.35894775390625,
+      "fit_time_marginal": 2.6509273052215576,
+      "fit_order": 3,
+      "cutpoint": "dec2025"
+    }
+  ]
+}
