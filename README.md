@@ -127,6 +127,14 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-20 (update 25) — MO_69 residual structure: PASS — no systematic bias anywhere
+
+v3 q50 model residuals are structurally random across every cut tested (110 retailers, 3 maturity buckets, 2 quarters, 2 promo flags, 3 pack formats). Portfolio mean bias is +0.25% with 53.7% positive residuals — essentially symmetric around zero. No segment exceeded the ±5% material threshold. The largest observed bias values: Bulk format +0.84%, Q2 +0.73%. This confirms that while individual series may have noise, there are no systematic directional errors that would consistently push planning decisions in one direction.
+
+**Phase A (Tier 1) is complete:** MO_67 q90 recalibrated (+33% interval width, coverage restored to 89.8%), MO_68 drift monitoring active (2 small regional retailers), MO_69 clean pass. Proceeding to Phase B.
+
+---
+
 ### 2026-07-20 (update 24) — MO_68 learning: data maturity drives bulk-SKU forecast accuracy, not model failure
 
 The most instructive finding from MO_68 is not the 2 drifting segments — it's what the Walmart/Sams/Walgreens/CVS Bulk-Growing segments reveal about how the model learns.

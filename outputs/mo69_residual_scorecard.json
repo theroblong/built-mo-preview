@@ -1,0 +1,1226 @@
+{
+  "verdict": "PASS",
+  "bias_threshold_pct": 5.0,
+  "p_threshold": 0.05,
+  "val_rows": 21803,
+  "nonzero_rows": 18848,
+  "portfolio": {
+    "mean_bias_pct": 0.25,
+    "p_value": 0.0,
+    "pct_positive_residual": 53.7,
+    "material": false
+  },
+  "cuts": {
+    "Retailer": [
+      {
+        "cut": "Retailer",
+        "level": "AHOLD DELHAIZE",
+        "n": 815,
+        "mean_bias_pct": -0.12,
+        "t_stat": -0.562,
+        "p_value": 0.5743,
+        "pct_positive_residual": 50.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ALBERTSONS COMPANIES",
+        "n": 796,
+        "mean_bias_pct": 0.19,
+        "t_stat": 0.931,
+        "p_value": 0.3521,
+        "pct_positive_residual": 52.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ALEX LEE",
+        "n": 61,
+        "mean_bias_pct": 0.14,
+        "t_stat": 0.604,
+        "p_value": 0.5484,
+        "pct_positive_residual": 57.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ALLEGIANCE RETAIL SERVICES",
+        "n": 129,
+        "mean_bias_pct": 0.24,
+        "t_stat": 0.942,
+        "p_value": 0.3481,
+        "pct_positive_residual": 49.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "AMERICAS FOOD BASKET",
+        "n": 12,
+        "mean_bias_pct": 1.44,
+        "t_stat": 1.492,
+        "p_value": 0.1638,
+        "pct_positive_residual": 50.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ANDRONICOS COMMUNITY MARKETS",
+        "n": 55,
+        "mean_bias_pct": 0.58,
+        "t_stat": 0.578,
+        "p_value": 0.5658,
+        "pct_positive_residual": 65.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ASSOCIATED FOOD STORES",
+        "n": 263,
+        "mean_bias_pct": -0.02,
+        "t_stat": -0.112,
+        "p_value": 0.9111,
+        "pct_positive_residual": 52.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ASSOCIATED GROCERS OF NEW ENGLAND",
+        "n": 37,
+        "mean_bias_pct": -0.34,
+        "t_stat": -0.397,
+        "p_value": 0.6939,
+        "pct_positive_residual": 48.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ASSOCIATED WHOLESALE GROCERS",
+        "n": 284,
+        "mean_bias_pct": 0.26,
+        "t_stat": 1.325,
+        "p_value": 0.1863,
+        "pct_positive_residual": 52.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "B AND R STORES",
+        "n": 103,
+        "mean_bias_pct": -0.09,
+        "t_stat": -0.228,
+        "p_value": 0.8199,
+        "pct_positive_residual": 48.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BALLS FOODS",
+        "n": 117,
+        "mean_bias_pct": -0.06,
+        "t_stat": -0.226,
+        "p_value": 0.8216,
+        "pct_positive_residual": 53.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BIG Y",
+        "n": 52,
+        "mean_bias_pct": 0.2,
+        "t_stat": 0.874,
+        "p_value": 0.3862,
+        "pct_positive_residual": 51.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BJS",
+        "n": 537,
+        "mean_bias_pct": 0.02,
+        "t_stat": 0.117,
+        "p_value": 0.9069,
+        "pct_positive_residual": 50.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BROOKSHIRE BROTHERS",
+        "n": 52,
+        "mean_bias_pct": -0.04,
+        "t_stat": -0.09,
+        "p_value": 0.9283,
+        "pct_positive_residual": 51.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BROOKSHIRE GROCERY",
+        "n": 143,
+        "mean_bias_pct": 0.22,
+        "t_stat": 1.066,
+        "p_value": 0.2884,
+        "pct_positive_residual": 52.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BRUCES FOODLAND",
+        "n": 37,
+        "mean_bias_pct": -0.16,
+        "t_stat": -0.377,
+        "p_value": 0.708,
+        "pct_positive_residual": 62.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "BUEHLERS",
+        "n": 116,
+        "mean_bias_pct": 0.23,
+        "t_stat": 0.726,
+        "p_value": 0.4693,
+        "pct_positive_residual": 53.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "C AND K MARKET",
+        "n": 39,
+        "mean_bias_pct": 0.1,
+        "t_stat": 0.194,
+        "p_value": 0.8475,
+        "pct_positive_residual": 46.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "CIRCLE K",
+        "n": 156,
+        "mean_bias_pct": -0.08,
+        "t_stat": -0.363,
+        "p_value": 0.7169,
+        "pct_positive_residual": 46.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "CLARKS MARKET",
+        "n": 106,
+        "mean_bias_pct": -1.31,
+        "t_stat": -2.628,
+        "p_value": 0.0099,
+        "pct_positive_residual": 37.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "COBORNS",
+        "n": 143,
+        "mean_bias_pct": -0.08,
+        "t_stat": -0.344,
+        "p_value": 0.7311,
+        "pct_positive_residual": 49.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "COHN WHOLESALE",
+        "n": 69,
+        "mean_bias_pct": -0.62,
+        "t_stat": -1.049,
+        "p_value": 0.298,
+        "pct_positive_residual": 46.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "COSENTINOS",
+        "n": 181,
+        "mean_bias_pct": 0.18,
+        "t_stat": 0.672,
+        "p_value": 0.5026,
+        "pct_positive_residual": 49.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "CVS",
+        "n": 661,
+        "mean_bias_pct": 1.72,
+        "t_stat": 6.599,
+        "p_value": 0.0,
+        "pct_positive_residual": 59.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "DECICCO AND SONS",
+        "n": 101,
+        "mean_bias_pct": -0.97,
+        "t_stat": -1.08,
+        "p_value": 0.2829,
+        "pct_positive_residual": 46.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "DEMOULAS",
+        "n": 165,
+        "mean_bias_pct": 0.85,
+        "t_stat": 2.559,
+        "p_value": 0.0114,
+        "pct_positive_residual": 59.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "DIERBERGS",
+        "n": 183,
+        "mean_bias_pct": 0.48,
+        "t_stat": 2.489,
+        "p_value": 0.0137,
+        "pct_positive_residual": 56.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "EG GROUP",
+        "n": 39,
+        "mean_bias_pct": 0.05,
+        "t_stat": 0.177,
+        "p_value": 0.8601,
+        "pct_positive_residual": 46.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "EXTRAMILE",
+        "n": 39,
+        "mean_bias_pct": 0.33,
+        "t_stat": 1.165,
+        "p_value": 0.2514,
+        "pct_positive_residual": 53.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "FAREWAY",
+        "n": 39,
+        "mean_bias_pct": 0.12,
+        "t_stat": 0.505,
+        "p_value": 0.6167,
+        "pct_positive_residual": 64.1,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "FOOD CITY MARKET",
+        "n": 16,
+        "mean_bias_pct": 0.11,
+        "t_stat": 0.145,
+        "p_value": 0.8863,
+        "pct_positive_residual": 37.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "FRESH THYME",
+        "n": 65,
+        "mean_bias_pct": 0.55,
+        "t_stat": 2.069,
+        "p_value": 0.0426,
+        "pct_positive_residual": 49.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GEISSLERS SUPERMARKETS",
+        "n": 41,
+        "mean_bias_pct": -0.55,
+        "t_stat": -0.985,
+        "p_value": 0.3305,
+        "pct_positive_residual": 39.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GELSONS MARKET",
+        "n": 130,
+        "mean_bias_pct": 0.38,
+        "t_stat": 1.787,
+        "p_value": 0.0764,
+        "pct_positive_residual": 52.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GIANT EAGLE",
+        "n": 653,
+        "mean_bias_pct": -0.53,
+        "t_stat": -1.65,
+        "p_value": 0.0993,
+        "pct_positive_residual": 51.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GOLDEN PANTRY",
+        "n": 25,
+        "mean_bias_pct": -0.76,
+        "t_stat": -1.103,
+        "p_value": 0.2809,
+        "pct_positive_residual": 44.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GOMART",
+        "n": 12,
+        "mean_bias_pct": 0.96,
+        "t_stat": 0.984,
+        "p_value": 0.3462,
+        "pct_positive_residual": 58.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GOOD FOOD HOLDINGS",
+        "n": 91,
+        "mean_bias_pct": -0.01,
+        "t_stat": -0.05,
+        "p_value": 0.9603,
+        "pct_positive_residual": 48.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "GPM INVEST",
+        "n": 16,
+        "mean_bias_pct": -0.91,
+        "t_stat": -0.863,
+        "p_value": 0.4019,
+        "pct_positive_residual": 43.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HAC INC",
+        "n": 76,
+        "mean_bias_pct": 1.12,
+        "t_stat": 1.844,
+        "p_value": 0.0691,
+        "pct_positive_residual": 63.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HARDINGS MARKETS",
+        "n": 110,
+        "mean_bias_pct": 0.1,
+        "t_stat": 0.297,
+        "p_value": 0.7673,
+        "pct_positive_residual": 55.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HARMONS NEIGHBORHOOD GROCER",
+        "n": 233,
+        "mean_bias_pct": -1.16,
+        "t_stat": -0.836,
+        "p_value": 0.4041,
+        "pct_positive_residual": 59.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HARPS FOOD STORES",
+        "n": 104,
+        "mean_bias_pct": 0.95,
+        "t_stat": 3.446,
+        "p_value": 0.0008,
+        "pct_positive_residual": 63.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HIGHLAND PARK MARKET",
+        "n": 94,
+        "mean_bias_pct": 0.72,
+        "t_stat": 1.869,
+        "p_value": 0.0647,
+        "pct_positive_residual": 59.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HOUCHENS FOOD GROUP",
+        "n": 147,
+        "mean_bias_pct": 0.43,
+        "t_stat": 1.302,
+        "p_value": 0.195,
+        "pct_positive_residual": 52.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HUCKS",
+        "n": 26,
+        "mean_bias_pct": 0.04,
+        "t_stat": 0.059,
+        "p_value": 0.9534,
+        "pct_positive_residual": 42.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HUGOS FAMILY MARKETPLACE",
+        "n": 72,
+        "mean_bias_pct": 1.19,
+        "t_stat": 2.244,
+        "p_value": 0.0279,
+        "pct_positive_residual": 56.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "HY-VEE",
+        "n": 484,
+        "mean_bias_pct": -0.17,
+        "t_stat": -0.585,
+        "p_value": 0.5587,
+        "pct_positive_residual": 51.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "INFRA",
+        "n": 314,
+        "mean_bias_pct": -0.09,
+        "t_stat": -0.403,
+        "p_value": 0.6869,
+        "pct_positive_residual": 49.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "K-VA-T",
+        "n": 39,
+        "mean_bias_pct": 2.54,
+        "t_stat": 3.009,
+        "p_value": 0.0046,
+        "pct_positive_residual": 64.1,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "KINGS FOOD MARKETS",
+        "n": 78,
+        "mean_bias_pct": 0.46,
+        "t_stat": 1.207,
+        "p_value": 0.2312,
+        "pct_positive_residual": 62.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "KROGER",
+        "n": 859,
+        "mean_bias_pct": -0.28,
+        "t_stat": -0.648,
+        "p_value": 0.517,
+        "pct_positive_residual": 54.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "LUNDS & BYERLYS",
+        "n": 52,
+        "mean_bias_pct": 0.34,
+        "t_stat": 0.912,
+        "p_value": 0.3659,
+        "pct_positive_residual": 59.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MAPCO",
+        "n": 26,
+        "mean_bias_pct": 0.66,
+        "t_stat": 1.184,
+        "p_value": 0.2476,
+        "pct_positive_residual": 42.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MARKET DISTRICT",
+        "n": 104,
+        "mean_bias_pct": 0.06,
+        "t_stat": 0.155,
+        "p_value": 0.8768,
+        "pct_positive_residual": 53.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MAVERIK",
+        "n": 56,
+        "mean_bias_pct": -0.53,
+        "t_stat": -2.132,
+        "p_value": 0.0375,
+        "pct_positive_residual": 35.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MCCAFFREYS",
+        "n": 52,
+        "mean_bias_pct": -1.31,
+        "t_stat": -1.36,
+        "p_value": 0.1799,
+        "pct_positive_residual": 46.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MCKAYS",
+        "n": 40,
+        "mean_bias_pct": -1.24,
+        "t_stat": -2.287,
+        "p_value": 0.0277,
+        "pct_positive_residual": 47.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MCKEEVERS",
+        "n": 154,
+        "mean_bias_pct": 0.46,
+        "t_stat": 1.237,
+        "p_value": 0.2179,
+        "pct_positive_residual": 53.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MEIJER",
+        "n": 463,
+        "mean_bias_pct": -0.49,
+        "t_stat": -1.722,
+        "p_value": 0.0858,
+        "pct_positive_residual": 51.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MORTON WILLIAMS",
+        "n": 91,
+        "mean_bias_pct": 0.25,
+        "t_stat": 0.587,
+        "p_value": 0.5584,
+        "pct_positive_residual": 51.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MOTOMART",
+        "n": 39,
+        "mean_bias_pct": 0.87,
+        "t_stat": 2.167,
+        "p_value": 0.0366,
+        "pct_positive_residual": 56.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "MURPHY USA",
+        "n": 39,
+        "mean_bias_pct": 0.12,
+        "t_stat": 0.335,
+        "p_value": 0.7395,
+        "pct_positive_residual": 53.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NCG",
+        "n": 99,
+        "mean_bias_pct": -1.87,
+        "t_stat": -0.9,
+        "p_value": 0.3705,
+        "pct_positive_residual": 55.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NEW SEASONS MARKET",
+        "n": 115,
+        "mean_bias_pct": -1.05,
+        "t_stat": -0.737,
+        "p_value": 0.4624,
+        "pct_positive_residual": 51.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NIEMANN FOODS",
+        "n": 139,
+        "mean_bias_pct": 0.41,
+        "t_stat": 1.374,
+        "p_value": 0.1718,
+        "pct_positive_residual": 51.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NILSSENS",
+        "n": 66,
+        "mean_bias_pct": 0.4,
+        "t_stat": 0.661,
+        "p_value": 0.5107,
+        "pct_positive_residual": 56.1,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NORTH STATE GROCERY",
+        "n": 39,
+        "mean_bias_pct": -0.89,
+        "t_stat": -1.868,
+        "p_value": 0.0694,
+        "pct_positive_residual": 33.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NORTHEAST GROCERY",
+        "n": 39,
+        "mean_bias_pct": 0.15,
+        "t_stat": 0.583,
+        "p_value": 0.5632,
+        "pct_positive_residual": 51.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NORTHWEST GROCERS",
+        "n": 160,
+        "mean_bias_pct": -0.17,
+        "t_stat": -0.748,
+        "p_value": 0.4558,
+        "pct_positive_residual": 46.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NORTHWEST SUPERMARKETS",
+        "n": 48,
+        "mean_bias_pct": 0.87,
+        "t_stat": 1.461,
+        "p_value": 0.1506,
+        "pct_positive_residual": 60.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "NUGGET MARKET",
+        "n": 65,
+        "mean_bias_pct": 0.05,
+        "t_stat": 0.14,
+        "p_value": 0.8888,
+        "pct_positive_residual": 43.1,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "PIGGLY WIGGLY MIDWEST",
+        "n": 7,
+        "mean_bias_pct": -0.25,
+        "t_stat": -0.203,
+        "p_value": 0.846,
+        "pct_positive_residual": 42.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "PLAID PANTRY",
+        "n": 52,
+        "mean_bias_pct": 0.58,
+        "t_stat": 1.598,
+        "p_value": 0.1163,
+        "pct_positive_residual": 57.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "PUBLIX",
+        "n": 683,
+        "mean_bias_pct": -0.02,
+        "t_stat": -0.099,
+        "p_value": 0.9213,
+        "pct_positive_residual": 52.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "PYRAMID FOODS",
+        "n": 128,
+        "mean_bias_pct": -0.61,
+        "t_stat": -0.906,
+        "p_value": 0.3669,
+        "pct_positive_residual": 53.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "QUEENS PRICE CHOPPER",
+        "n": 128,
+        "mean_bias_pct": 0.31,
+        "t_stat": 0.835,
+        "p_value": 0.4053,
+        "pct_positive_residual": 51.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "RALEYS",
+        "n": 78,
+        "mean_bias_pct": 0.34,
+        "t_stat": 1.636,
+        "p_value": 0.1059,
+        "pct_positive_residual": 57.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "REASORS",
+        "n": 126,
+        "mean_bias_pct": 0.18,
+        "t_stat": 0.654,
+        "p_value": 0.5145,
+        "pct_positive_residual": 48.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "REDNERS MARKETS",
+        "n": 45,
+        "mean_bias_pct": 0.02,
+        "t_stat": 0.017,
+        "p_value": 0.9865,
+        "pct_positive_residual": 62.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "REYNOLDS MARKET",
+        "n": 208,
+        "mean_bias_pct": 0.21,
+        "t_stat": 0.89,
+        "p_value": 0.3745,
+        "pct_positive_residual": 49.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ROSAUERS SUPERMARKETS",
+        "n": 78,
+        "mean_bias_pct": 0.61,
+        "t_stat": 1.824,
+        "p_value": 0.0721,
+        "pct_positive_residual": 59.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ROTHS FRESH MARKETS",
+        "n": 29,
+        "mean_bias_pct": -1.02,
+        "t_stat": -0.987,
+        "p_value": 0.3321,
+        "pct_positive_residual": 48.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ROUSES MARKET",
+        "n": 43,
+        "mean_bias_pct": -19.11,
+        "t_stat": -1.63,
+        "p_value": 0.1105,
+        "pct_positive_residual": 39.5,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "ROYAL FARMS",
+        "n": 52,
+        "mean_bias_pct": 0.14,
+        "t_stat": 0.465,
+        "p_value": 0.644,
+        "pct_positive_residual": 57.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SAMS",
+        "n": 646,
+        "mean_bias_pct": 1.92,
+        "t_stat": 5.516,
+        "p_value": 0.0,
+        "pct_positive_residual": 58.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SAVE MART",
+        "n": 65,
+        "mean_bias_pct": -0.67,
+        "t_stat": -1.882,
+        "p_value": 0.0644,
+        "pct_positive_residual": 44.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SCHNUCKS",
+        "n": 258,
+        "mean_bias_pct": 0.91,
+        "t_stat": 4.489,
+        "p_value": 0.0,
+        "pct_positive_residual": 62.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SENDIKS",
+        "n": 143,
+        "mean_bias_pct": 0.81,
+        "t_stat": 3.412,
+        "p_value": 0.0008,
+        "pct_positive_residual": 62.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SKOGENS FOODLINER",
+        "n": 208,
+        "mean_bias_pct": 0.12,
+        "t_stat": 0.56,
+        "p_value": 0.5759,
+        "pct_positive_residual": 52.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SOUTHEASTERN GROCERS",
+        "n": 386,
+        "mean_bias_pct": 0.04,
+        "t_stat": 0.151,
+        "p_value": 0.8801,
+        "pct_positive_residual": 55.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SPARTANNASH",
+        "n": 117,
+        "mean_bias_pct": 0.41,
+        "t_stat": 2.659,
+        "p_value": 0.0089,
+        "pct_positive_residual": 59.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SPROUTS FARMERS MARKET",
+        "n": 129,
+        "mean_bias_pct": 0.65,
+        "t_stat": 1.86,
+        "p_value": 0.0652,
+        "pct_positive_residual": 57.4,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "STRACK AND VAN TIL",
+        "n": 208,
+        "mean_bias_pct": 0.42,
+        "t_stat": 1.814,
+        "p_value": 0.0711,
+        "pct_positive_residual": 56.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "SUNSET FOODS",
+        "n": 69,
+        "mean_bias_pct": -2.74,
+        "t_stat": -1.412,
+        "p_value": 0.1625,
+        "pct_positive_residual": 47.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "TARGET",
+        "n": 185,
+        "mean_bias_pct": -1.39,
+        "t_stat": -1.61,
+        "p_value": 0.109,
+        "pct_positive_residual": 53.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "THE FRESH MARKET",
+        "n": 52,
+        "mean_bias_pct": 1.11,
+        "t_stat": 2.046,
+        "p_value": 0.0459,
+        "pct_positive_residual": 57.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "TOMS FOOD MARKETS",
+        "n": 105,
+        "mean_bias_pct": -0.1,
+        "t_stat": -0.263,
+        "p_value": 0.7934,
+        "pct_positive_residual": 54.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "TONYS FINER FOODS",
+        "n": 129,
+        "mean_bias_pct": 1.23,
+        "t_stat": 3.882,
+        "p_value": 0.0002,
+        "pct_positive_residual": 62.0,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "TOWN AND COUNTRY",
+        "n": 52,
+        "mean_bias_pct": 0.61,
+        "t_stat": 1.379,
+        "p_value": 0.1739,
+        "pct_positive_residual": 57.7,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "UNCLE GIUSEPPES MARKETPLACE",
+        "n": 67,
+        "mean_bias_pct": -0.82,
+        "t_stat": -1.167,
+        "p_value": 0.2473,
+        "pct_positive_residual": 49.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "UNFI",
+        "n": 999,
+        "mean_bias_pct": 0.0,
+        "t_stat": 0.021,
+        "p_value": 0.9835,
+        "pct_positive_residual": 51.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "VITAMIN SHOPPE",
+        "n": 218,
+        "mean_bias_pct": 0.09,
+        "t_stat": 0.166,
+        "p_value": 0.8684,
+        "pct_positive_residual": 50.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "WAKEFERN",
+        "n": 153,
+        "mean_bias_pct": -0.08,
+        "t_stat": -0.226,
+        "p_value": 0.8213,
+        "pct_positive_residual": 53.6,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "WALGREENS BOOTS ALLIANCE",
+        "n": 659,
+        "mean_bias_pct": 1.95,
+        "t_stat": 6.051,
+        "p_value": 0.0,
+        "pct_positive_residual": 58.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "WALMART",
+        "n": 880,
+        "mean_bias_pct": 2.34,
+        "t_stat": 9.441,
+        "p_value": 0.0,
+        "pct_positive_residual": 60.8,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "WAWA",
+        "n": 39,
+        "mean_bias_pct": 0.21,
+        "t_stat": 0.324,
+        "p_value": 0.7477,
+        "pct_positive_residual": 51.3,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "WEGMANS",
+        "n": 187,
+        "mean_bias_pct": -0.05,
+        "t_stat": -0.209,
+        "p_value": 0.8349,
+        "pct_positive_residual": 43.9,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "WEIS",
+        "n": 91,
+        "mean_bias_pct": 0.57,
+        "t_stat": 3.45,
+        "p_value": 0.0009,
+        "pct_positive_residual": 69.2,
+        "material": false
+      },
+      {
+        "cut": "Retailer",
+        "level": "YESWAY/ALLSUPS",
+        "n": 45,
+        "mean_bias_pct": 0.25,
+        "t_stat": 0.868,
+        "p_value": 0.3901,
+        "pct_positive_residual": 64.4,
+        "material": false
+      }
+    ],
+    "Maturity": [
+      {
+        "cut": "Maturity",
+        "level": "Growing (13\u201351w)",
+        "n": 7405,
+        "mean_bias_pct": 0.18,
+        "t_stat": 1.605,
+        "p_value": 0.1086,
+        "pct_positive_residual": 56.2,
+        "material": false
+      },
+      {
+        "cut": "Maturity",
+        "level": "Mature (52w+)",
+        "n": 9137,
+        "mean_bias_pct": 0.36,
+        "t_stat": 5.536,
+        "p_value": 0.0,
+        "pct_positive_residual": 51.5,
+        "material": false
+      },
+      {
+        "cut": "Maturity",
+        "level": "New (<13w)",
+        "n": 2306,
+        "mean_bias_pct": 0.08,
+        "t_stat": 0.507,
+        "p_value": 0.6126,
+        "pct_positive_residual": 54.8,
+        "material": false
+      }
+    ],
+    "Quarter": [
+      {
+        "cut": "Quarter",
+        "level": "Q1",
+        "n": 14488,
+        "mean_bias_pct": 0.11,
+        "t_stat": 1.606,
+        "p_value": 0.1084,
+        "pct_positive_residual": 52.8,
+        "material": false
+      },
+      {
+        "cut": "Quarter",
+        "level": "Q2",
+        "n": 4360,
+        "mean_bias_pct": 0.73,
+        "t_stat": 7.629,
+        "p_value": 0.0,
+        "pct_positive_residual": 56.7,
+        "material": false
+      }
+    ],
+    "Promo flag": [
+      {
+        "cut": "Promo flag",
+        "level": "Non-promo",
+        "n": 6047,
+        "mean_bias_pct": -0.12,
+        "t_stat": -0.827,
+        "p_value": 0.4082,
+        "pct_positive_residual": 53.9,
+        "material": false
+      },
+      {
+        "cut": "Promo flag",
+        "level": "Promo week",
+        "n": 12801,
+        "mean_bias_pct": 0.43,
+        "t_stat": 8.654,
+        "p_value": 0.0,
+        "pct_positive_residual": 53.6,
+        "material": false
+      }
+    ],
+    "Pack format": [
+      {
+        "cut": "Pack format",
+        "level": "Bulk (13ct+)",
+        "n": 554,
+        "mean_bias_pct": 0.84,
+        "t_stat": 1.886,
+        "p_value": 0.0599,
+        "pct_positive_residual": 60.3,
+        "material": false
+      },
+      {
+        "cut": "Pack format",
+        "level": "Multipack (2-12ct)",
+        "n": 6727,
+        "mean_bias_pct": 0.41,
+        "t_stat": 6.115,
+        "p_value": 0.0,
+        "pct_positive_residual": 53.3,
+        "material": false
+      },
+      {
+        "cut": "Pack format",
+        "level": "Single (1ct)",
+        "n": 11567,
+        "mean_bias_pct": 0.13,
+        "t_stat": 1.638,
+        "p_value": 0.1014,
+        "pct_positive_residual": 53.6,
+        "material": false
+      }
+    ]
+  },
+  "biased_segments": 0
+}
