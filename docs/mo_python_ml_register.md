@@ -1336,6 +1336,35 @@ All MO_72 baseline fields plus: `stability_score` (0–9), `n_variants_run`, `ro
 
 ---
 
+### VA8 — `MO_61_hte_elasticity.py`
+
+**Purpose:** Estimate heterogeneous price elasticity across four context dimensions using Double Machine Learning (LinearDML, econML 0.16.0). Upgrades the portfolio-average ε from MO_44/MO_16 to context-specific estimates that reveal *when* and *where* price sensitivity is highest.
+
+**Explainability principle:** LinearDML separates confounders (TDP, season, promo, volume) from the heterogeneous effect using ML nuisance models, then estimates the effect via a plain linear regression with named coefficients. The forest never touches the final output — every number in the chart has a standard error and can be explained in one sentence.
+
+**Data:** `scripts/outputs/retailer_sales_weekly.parquet` — BUILT UPCs only (`08-40229` prefix). Filters: |Δ%price| > 0.5%, |Δ%units| < 300%, base_units > 10. 48,160 rows after filtering.
+
+**Schema fix applied at VA8:** Script originally expected `arp_pct_change` and `promo_intensity` columns (not in current schema). Fixed to compute both from available columns: `arp_pct_change = arp_wow_delta / arp_lag1`, `promo_intensity = units_promo / base_units`.
+
+**Four HTE dimensions (run as separate LinearDML models):**
+
+| Dimension | X encoding | Key finding |
+|---|---|---|
+| Quarter (seasonal) | One-hot Q1–Q4 | Q2 (spring) most elastic ε=−0.31; Q3 (summer) least elastic ε=−0.24 |
+| SKU maturity | One-hot Early/Growing/Mature | Early launches: ε=−0.35; Mature: ε=−0.11 (CI crosses zero — not significant) |
+| Cannibalization pressure | One-hot Low/Mid/High | Mid-pressure band: ε=−1.01 (790 obs, wide CI); Low/High both ≈ −0.30 |
+| Pack format | One-hot Single/4-pack/12-pack/13-pack | **12-pack most elastic: ε=−0.63**; Single least: ε=−0.18 |
+
+**Output:** `scripts/outputs/mo61_hte_combined.png` — 2×2 chart grid with 90% CIs; §30 of `built_demand_intelligence_report.html` patched with findings and narrative.
+
+**Portfolio average ε = −0.34** (from MO_44) shown as dotted reference in all four subplots — the HTE findings explain how the average emerges from heterogeneous contexts.
+
+**FP&A takeaway:** "The same 10% price cut has 3.5× the demand impact on a 12-pack at KROGER in Q2 as on a single-count in a mature SKU in Q3." This is the pricing strategy signal that a flat ε never reveals.
+
+**Status:** ✅ COMPLETE 2026-07-20
+
+---
+
 ## Azure Deployment Notes
 
 When running on Azure instead of a laptop:

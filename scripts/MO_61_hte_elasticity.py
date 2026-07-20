@@ -78,10 +78,22 @@ FORMAT_COLORS   = ["#64748B", "#2563EB", "#7C3AED", "#F59E0B"]
 def load_and_prepare() -> pd.DataFrame:
     df = pd.read_parquet(PARQUET)
     df["__time"] = pd.to_datetime(df["__time"], utc=True)
+
+    # BUILT-only: competitor UPCs start with 00-40962; BUILT with 08-40229
+    df = df[df["upc"].astype(str).str.contains("08-40229")].copy()
+
     df["base_units"]    = pd.to_numeric(df["base_units"],    errors="coerce")
-    df["arp_pct_change"] = pd.to_numeric(df["arp_pct_change"], errors="coerce")
     df["tdp"]           = pd.to_numeric(df["tdp"],           errors="coerce").fillna(1)
-    df["promo_intensity"] = pd.to_numeric(df["promo_intensity"], errors="coerce").fillna(0)
+
+    # arp_pct_change not in current schema — compute from available columns
+    arp_lag  = pd.to_numeric(df["arp_lag1"],      errors="coerce").clip(lower=0.01)
+    arp_delta = pd.to_numeric(df["arp_wow_delta"], errors="coerce").fillna(0)
+    df["arp_pct_change"] = arp_delta / arp_lag
+
+    # promo_intensity not in current schema — use fraction of units sold on promo
+    units_promo = pd.to_numeric(df["units_promo"], errors="coerce").fillna(0)
+    df["promo_intensity"] = (units_promo / df["base_units"].clip(lower=1)).clip(0, 1).fillna(0)
+
     df["rolling_cannibal_pressure"] = pd.to_numeric(
         df["rolling_cannibal_pressure"], errors="coerce").fillna(0)
     df["weeks_since_launch"] = pd.to_numeric(df["weeks_since_launch"], errors="coerce").fillna(52)
