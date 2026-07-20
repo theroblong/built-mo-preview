@@ -1,0 +1,68 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "causal_impact_scores",
+      "timestampSpec": {
+        "column": "__time",
+        "format": "auto"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "upc",
+          "description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "causal_verdict",
+          "control_accounts",
+          "scored_at"
+        ]
+      },
+      "metricsSpec": [
+        { "type": "doubleFirst", "name": "price_pct_chg",       "fieldName": "price_pct_chg" },
+        { "type": "doubleFirst", "name": "causal_impact_pct",   "fieldName": "causal_impact_pct" },
+        { "type": "doubleFirst", "name": "causal_impact_units", "fieldName": "causal_impact_units" },
+        { "type": "doubleFirst", "name": "causal_impact_low",   "fieldName": "causal_impact_low" },
+        { "type": "doubleFirst", "name": "causal_impact_high",  "fieldName": "causal_impact_high" },
+        { "type": "doubleFirst", "name": "causal_p_value",      "fieldName": "causal_p_value" },
+        { "type": "longFirst",   "name": "n_control_series",    "fieldName": "n_control_series" },
+        { "type": "longFirst",   "name": "pre_weeks_used",      "fieldName": "pre_weeks_used" },
+        { "type": "longFirst",   "name": "post_weeks_used",     "fieldName": "post_weeks_used" }
+      ],
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "YEAR",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/causal_impact_scores/2026-07-20/causal_impact_scores.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": false
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}
