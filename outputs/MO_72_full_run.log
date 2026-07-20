@@ -1,0 +1,88 @@
+=================================================================
+MO_72 — Automated Per-Event CausalImpact
+  Min |Δprice/bar|  : 5%
+  Min pre/post weeks: 8/8
+  Parallel workers  : 6
+=================================================================
+
+Querying price_elasticity_training_features …
+  Total eligible rows: 32,257
+  After dedup (1 per series): 1,417
+
+Scoring 1,417 events with 6 workers …
+  (45s timeout per event; errors logged as SKIPPED)
+
+/opt/anaconda3/envs/mo-ml/lib/python3.12/site-packages/statsmodels/base/model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+/opt/anaconda3/envs/mo-ml/lib/python3.12/site-packages/statsmodels/base/model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+/opt/anaconda3/envs/mo-ml/lib/python3.12/site-packages/statsmodels/base/model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+/opt/anaconda3/envs/mo-ml/lib/python3.12/site-packages/statsmodels/base/model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+     50/1417  success=6  skipped=44  err=0  rate=10.6/s  ETA=2min
+    100/1417  success=12  skipped=88  err=0  rate=20.7/s  ETA=1min
+    150/1417  success=18  skipped=132  err=0  rate=30.2/s  ETA=1min
+    200/1417  success=40  skipped=160  err=0  rate=38.5/s  ETA=1min
+    250/1417  success=53  skipped=197  err=0  rate=47.1/s  ETA=0min
+    300/1417  success=63  skipped=237  err=0  rate=55.6/s  ETA=0min
+    350/1417  success=83  skipped=267  err=0  rate=62.9/s  ETA=0min
+    400/1417  success=108  skipped=292  err=0  rate=68.1/s  ETA=0min
+    450/1417  success=122  skipped=328  err=0  rate=74.5/s  ETA=0min
+    500/1417  success=146  skipped=354  err=0  rate=80.3/s  ETA=0min
+    550/1417  success=168  skipped=382  err=0  rate=86.0/s  ETA=0min
+    600/1417  success=186  skipped=414  err=0  rate=91.1/s  ETA=0min
+    650/1417  success=198  skipped=452  err=0  rate=95.8/s  ETA=0min
+    700/1417  success=214  skipped=486  err=0  rate=100.5/s  ETA=0min
+    750/1417  success=238  skipped=512  err=0  rate=105.1/s  ETA=0min
+    800/1417  success=261  skipped=539  err=0  rate=109.0/s  ETA=0min
+    850/1417  success=284  skipped=566  err=0  rate=113.1/s  ETA=0min
+    900/1417  success=300  skipped=600  err=0  rate=117.9/s  ETA=0min
+    950/1417  success=313  skipped=637  err=0  rate=122.8/s  ETA=0min
+   1000/1417  success=332  skipped=668  err=0  rate=126.5/s  ETA=0min
+   1050/1417  success=350  skipped=700  err=0  rate=130.4/s  ETA=0min
+   1100/1417  success=374  skipped=726  err=0  rate=133.4/s  ETA=0min
+   1150/1417  success=399  skipped=751  err=0  rate=136.6/s  ETA=0min
+   1200/1417  success=416  skipped=784  err=0  rate=140.1/s  ETA=0min
+   1250/1417  success=436  skipped=814  err=0  rate=143.0/s  ETA=0min
+   1300/1417  success=458  skipped=842  err=0  rate=146.1/s  ETA=0min
+   1350/1417  success=473  skipped=877  err=0  rate=149.8/s  ETA=0min
+   1400/1417  success=493  skipped=907  err=0  rate=153.1/s  ETA=0min
+   1417/1417  success=500  skipped=917  err=0  rate=153.5/s  ETA=0min
+
+  Total elapsed: 0.2 min
+
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/causal_impact_scores.parquet  (500 rows)
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/mo72_causal_impact_summary.json
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/mo72_causal_impact_chart.png
+
+=================================================================
+SUMMARY
+=================================================================
+  Events scored      : 500
+  SIGNIFICANT (p<.05): 140  (28%)
+  MARGINAL (p<.10)   : 30  (6%)
+  INCONCLUSIVE       : 330  (66%)
+
+  Significant events:
+    Median impact   : +23.8%
+    Median p-value  : 0.0000
+    % price down    : 65%
+    % demand up     : 61%
+
+  Top 10 significant events by |impact %|:
+              retail_account            upc  price_pct_chg  causal_impact_pct  causal_p_value  n_control_series
+                        UNFI 08-40229-30034           30.2             2881.4          0.0000                 1
+                   MCKEEVERS 08-40229-30050          -20.7             1712.4          0.0149                 2
+               PYRAMID FOODS 08-40229-30362           13.7             1284.2          0.0000                 2
+ASSOCIATED WHOLESALE GROCERS 08-40229-30050          -19.5             1076.8          0.0000                 1
+                      HY-VEE 08-40229-30573           11.6             1043.2          0.0000                 1
+                      PUBLIX 08-40229-30550           -9.8              940.1          0.0000                 3
+         HOUCHENS FOOD GROUP 08-40229-30550          -20.6              841.1          0.0000                 1
+           NORTHWEST GROCERS 08-40229-30432          -13.9              663.5          0.0000                 3
+           NORTHEAST GROCERY 08-40229-30333           -9.4              647.3          0.0000                 1
+                     COBORNS 08-40229-30034          -21.8              575.4          0.0000                 1
+
+Next step: ingest causal_impact_scores.parquet → Druid (Rob)
+  Then wire causal_impact_pct + causal_p_value into Event Detail Modal
+=================================================================

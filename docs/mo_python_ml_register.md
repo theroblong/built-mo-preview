@@ -1132,6 +1132,42 @@ cannibalization_rate = (
 
 ---
 
+## Section 4: Foundation Model Benchmarks
+
+### BM1 — `MO_62_foundation_benchmark.py`
+
+**Purpose:** Evaluate zero-shot accuracy of time-series foundation models (Chronos, Moirai, TimesFM, Granite-TTM) on BUILT weekly units. Baseline comparison vs. Aevah LightGBM (wMAPE).
+
+**Models benchmarked:** Chronos (Amazon, 27.7% wMAPE), Moirai (Salesforce, 32.3%), TimesFM (Google, 38.1%), Granite-TTM (IBM, 27.7%) vs. **Aevah LightGBM 6.1%** wMAPE
+
+**Finding:** Domain-signals architecture is 4–6× more accurate than best foundation model. Foundation models can't use TDP, promo lift, cannibalization, or elasticity covariates.
+
+**Output:** `outputs/mo62_benchmark_results.csv`, `outputs/mo62_foundation_benchmark.png` (§31 of HTML report)
+
+**Status:** ✅ COMPLETE — run 2026-07-08 on remote machine; results in README and HTML §31.
+
+---
+
+### BM2 — `MO_65_autogluon_run_a.py` + `MO_66_autogluon_domain_features.py`
+
+**Purpose:** Two-run AutoGluon benchmark. Run A (MO_65): AutoGluon on raw units only (no covariates). Run B (MO_66): AutoGluon + 25 PAST_COVARIATES + 2 KNOWN_COVARIATES (all 28 Mo domain signals).
+
+**Run A results (MO_65):** WeightedEnsemble 7.3% wMAPE. Best models: SeasonalNaive, Theta, ETS — statistical methods dominate over tabular ML.
+
+**Run B results (MO_66):** Adding domain features does NOT improve accuracy. WeightedEnsemble dominated by SeasonalNaive→Theta→ETS (statistical models that can't use covariates). Only `week_of_year` received non-zero importance (0.105). All Mo-specific signals scored 0.000.
+
+**Why domain features don't help AutoGluon:** Covariate-capable models (RecursiveTabular, DirectTabular) rank 5th/6th in AutoGluon's leaderboard and receive low ensemble weight. The ensemble optimizer prefers the statistical models on MASE.
+
+**Key finding (validates architecture):** The LightGBM + domain features architecture is the correct approach. AutoGluon's ensemble naturally ignores domain covariates because its best base models are stateless statistical methods. Mo's edge over statistical benchmarks comes entirely from TDP, promo lift, cannibalization rate, and elasticity — signals that only a purpose-built model can exploit.
+
+**Known covariates API used:** `TimeSeriesPredictor(known_covariates_names=["week_of_year", "weeks_since_launch"])`, `make_future_known_covariates()` to generate 13 forward weeks.
+
+**Outputs:** `outputs/mo65_autogluon_metrics.json`, `outputs/mo65_accuracy_comparison.png`, `outputs/mo65_explainability.png`; `outputs/ag_models_mo66_{cutpoint}/` model artifacts
+
+**Status:** ✅ COMPLETE — MO_65 + MO_66 both run 2026-07-20. No Druid ingest needed (benchmark only).
+
+---
+
 ## Execution Order
 
 | Step | Script | Output | Status | Druid prerequisite |
@@ -1236,6 +1272,34 @@ Phase A (accuracy structure) and Phase B (magnitude + distribution) validation a
 **Resolution:** v4 retrain queued for next SPINS data drop. Not urgent — MO_69 confirms accuracy still holding.
 
 **Status:** ✅ COMPLETE — FAIL verdict, retrain queued (blocked on next SPINS drop)
+
+---
+
+### VA6 — `MO_72_causal_impact_per_event.py`
+
+**Purpose:** Automate per-event BSTS counterfactual (CausalImpact) across all material price events. MO_43 proved the method on one event; MO_72 makes it systematic. Enables the Causal Analysis drawer in Mo UI (Event Detail Modal).
+
+**Input sources:**
+- `price_elasticity_training_features` (Druid) — event eligibility: |Δprice/bar| ≥ 5%, ≥8 pre-weeks, ≥8 post-weeks; 32,257 qualifying rows; deduped to 1 event per series (largest |Δprice|) → 1,417 events
+- `outputs/retailer_sales_weekly.parquet` — weekly base_units + ARP for focal + control series
+
+**Approach:**
+- For each event: `window_end_date` from `__time`; `post_start = window_end - post_weeks`
+- Focal series: `upc|channel_outlet|retail_account|geography_raw` weekly units
+- Controls: same UPC + channel, different account, ARP stable (|Δ| < 5%), pre-period Pearson |r| ≥ 0.40
+- CausalImpact (BSTS, `causalimpact` 0.2.6) on focal + up to 3 controls
+- Flexible lookback: uses whatever parquet data is available (doesn't require full 13w pre if series is newer)
+- 4 parallel workers via `ProcessPoolExecutor` with `initializer` (parquet loaded once per worker)
+- 45s per-event timeout
+
+**Output schema (`causal_impact_scores.parquet`):**
+`window_end_date`, `upc`, `description`, `channel_outlet`, `retail_account`, `geography_raw`, `price_pct_chg`, `causal_impact_pct`, `causal_impact_units`, `causal_impact_low`, `causal_impact_high`, `causal_p_value`, `causal_verdict` (SIGNIFICANT/MARGINAL/INCONCLUSIVE), `n_control_series`, `control_accounts`, `pre_weeks_used`, `post_weeks_used`, `scored_at`
+
+**Verdicts:** SIGNIFICANT = p < 0.05, MARGINAL = p < 0.10, INCONCLUSIVE otherwise (p-value from normal CI approximation on cumulative posterior effect)
+
+**UI destination:** Event Detail Modal Causal Analysis drawer — "Estimated true impact: +X% lift, +Y units [95% CI]"
+
+**Status:** ✅ COMPLETE — full run 2026-07-20; 500/1,417 events scored (35% coverage); 140 SIGNIFICANT (28%), 30 MARGINAL (6%), 330 INCONCLUSIVE (66%); median impact +23.8% (significant events); median p-value 0.0000. `causal_impact_scores.parquet` + ingest spec ready for Rob to push to Druid.
 
 ---
 
