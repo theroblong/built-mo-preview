@@ -477,6 +477,31 @@ No Modelfile needed. The custom system prompt injected via Modelfile in Ollama i
 
 ---
 
+### 2026-07-20 (update 11) — MO_72 automated CausalImpact live; demand-shift taxonomy codified
+
+**MO_72: automated per-event BSTS counterfactual at scale.** 1,417 price events queried from `price_elasticity_training_features`; 500 scored (35% coverage — skip rate driven by cross-account control availability, not a data bug); 140 SIGNIFICANT (28%), 30 MARGINAL (6%), 330 INCONCLUSIVE (66%). Median causal impact +23.8% for significant events; median p-value essentially zero. Druid datasource `causal_impact_scores` (500 rows) is live as of 2026-07-20. MO_43 proved the method on one event; MO_72 makes it systematic.
+
+**Key design principle confirmed:** The TDP panel is what makes a causal price chart convincing. Showing actual vs. counterfactual units alone invites the objection "maybe they just added more shelf space." Adding a TDP panel that holds flat over the same window closes that objection analytically — distribution was not the explanation, price was. This pattern (units causal + TDP context, stacked) matches §17 of the HTML report and should be the standard for any causal price story in the Mo UI.
+
+**Demand-shift taxonomy codified (three distinct scenarios, different drivers, different FP&A implications):**
+
+| Scenario | Trigger | Primary driver | Net portfolio effect | Mo signal |
+|---|---|---|---|---|
+| Clean price lift | Price drop on focal SKU | Elasticity ε | Meaningful lift in total bars sold | `causal_impact_scores`, BSTS counterfactual, TDP flat |
+| Pack-mix shifting | Price drop (or new format) creates relative value gap | Relative price advantage | Often modest — consumers trade up, not new buyers | `cannibal_rate_sum`, pack-size donor pairs, BSTS shows 12pk↑ + 4pk↓ |
+| Flavor-family cannibalization | New SKU added to flavor family (Double Choc → Fudge, Choc Milkshake at risk) | TDP/distribution of new SKU | Depends on franchise growth vs. internal shuffle | `scored_cannibalization`, `flavor_family`, `cannibal_prob` |
+
+**Causal Analysis drawer design direction (event-type-aware donor panel):**
+- Flavor-family event → show flavor siblings as donors (Double Choc cannibalizing from Fudge at 24%, Choc Milkshake at 17%)
+- Pack-size price event → show pack-size siblings as donors (12pk +46%, 4pk −18%, net portfolio +6.6%)
+- Clean price elasticity → TDP stability panel (rules out distribution) + competitor check (confirms market share steal vs. category growth)
+
+The net portfolio bars row — not just the focal SKU lift — is always the FP&A punchline.
+
+**AutoGluon benchmark (MO_65 + MO_66) completed:** Domain features do NOT help AutoGluon's WeightedEnsemble because the ensemble optimizer routes weight to SeasonalNaive/Theta/ETS (stateless statistical methods that cannot use covariates). Only `week_of_year` received non-zero importance (0.105); all Mo-specific signals (TDP, elasticity, cannibalization rate) scored 0.000. This validates the LightGBM + domain features architecture: the statistical baseline ignores the signals that matter; LightGBM exploits them, producing 6.1% wMAPE vs. 7.3% baseline and 27–38% for foundation models.
+
+---
+
 ### 2026-07-13 (update 10) — Lean 4 formal verification potential use case documented
 
 **Potential evaluation study: formally prove the $0.05 elasticity guardrail.** The current guardrail is justified empirically (35.9% of rows produced garbage values below the threshold). A formal proof would replace that claim with a mathematical guarantee: given protein bar prices bounded in [0.50, 10.00] $/bar and |ΔP| ≥ $0.05, the log-price-change denominator is proven bounded away from zero by a computable δ. Lean 4's `grind` / `linarith` tactics can close this automatically — pure real arithmetic, no empirical data needed.
