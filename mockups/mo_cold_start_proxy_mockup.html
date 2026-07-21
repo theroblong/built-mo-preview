@@ -1,0 +1,567 @@
+<!-- Mo · Cold-Start Proxy Overlay — Forecast Drawer Mockup -->
+<title>Cold-Start Proxy Overlay · Mo Forecast Drawer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #070c14;
+    --bg-dim:     #040810;
+    --surf:       #0e1623;
+    --surf2:      #162032;
+    --surf3:      #1d2c42;
+    --border:     #1e3251;
+    --border-dim: #122038;
+    --accent:     #3b82f6;
+    --accent-dim: rgba(59,130,246,0.10);
+    --accent-hi:  rgba(59,130,246,0.18);
+    --green:      #22c55e;
+    --green-dim:  rgba(34,197,94,0.10);
+    --amber:      #f59e0b;
+    --amber-dim:  rgba(245,158,11,0.12);
+    --proxy:      #a855f7;
+    --proxy-dim:  rgba(168,85,247,0.10);
+    --proxy-hi:   rgba(168,85,247,0.18);
+    --red:        #ef4444;
+    --txt:        #dde6f0;
+    --txt2:       #8fa8c0;
+    --txt3:       #4d6680;
+    --txt4:       #2d4055;
+    --mono:       'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans:       -apple-system, 'Segoe UI', system-ui, sans-serif;
+    --r:          6px;
+    --r2:         10px;
+    --r3:         14px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg-dim);
+    color: var(--txt);
+    min-height: 100vh;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Mo nav ──────────────────────────────────────── */
+  .mo-nav {
+    height: 44px;
+    background: var(--surf);
+    border-bottom: 1px solid var(--border-dim);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .mo-logo { font-weight: 700; font-size: 14px; letter-spacing: .04em; color: var(--txt); margin-right: 24px; }
+  .mo-logo span { color: var(--accent); }
+  .nav-tabs { display: flex; gap: 2px; flex: 1; }
+  .nav-tab {
+    padding: 5px 12px;
+    border-radius: var(--r);
+    font-size: 12px;
+    color: var(--txt3);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .nav-tab.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .nav-label { font-size: 11px; color: var(--txt3); }
+
+  /* ── page wrapper ────────────────────────────────── */
+  .page { display: flex; align-items: flex-start; gap: 0; min-height: calc(100vh - 44px); }
+
+  /* ── dim sidebar (simulates Mo app in background) ── */
+  .sidebar-bg {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--bg-dim);
+    min-height: calc(100vh - 44px);
+    border-right: 1px solid var(--border-dim);
+    padding: 16px 0;
+    opacity: 0.35;
+  }
+  .sb-section { padding: 4px 16px; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--txt4); text-transform: uppercase; margin-bottom: 4px; margin-top: 12px; }
+  .sb-item { padding: 6px 16px; font-size: 12px; color: var(--txt3); display: flex; align-items: center; gap: 8px; }
+  .sb-item.hi { background: var(--accent-dim); color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; }
+  .sb-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; }
+
+  /* ── drawer panel ────────────────────────────────── */
+  .drawer {
+    flex: 1;
+    min-height: calc(100vh - 44px);
+    background: var(--surf);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .drawer-header {
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid var(--border-dim);
+    background: var(--surf);
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--txt3); margin-bottom: 10px; }
+  .breadcrumb a { color: var(--txt3); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--accent); }
+  .bc-sep { opacity: .4; }
+
+  .sku-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .sku-title-block {}
+  .cold-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--amber-dim); border: 1px solid rgba(245,158,11,.25);
+    color: var(--amber); font-size: 10px; font-weight: 700; letter-spacing: .04em;
+    padding: 2px 8px; border-radius: 20px; margin-bottom: 6px;
+  }
+  .cold-badge::before { content: '⚡'; }
+  .sku-name { font-size: 17px; font-weight: 700; color: var(--txt); line-height: 1.2; }
+  .sku-sub { font-size: 12px; color: var(--txt2); margin-top: 3px; }
+  .upc-badge {
+    font-family: var(--mono); font-size: 10px; color: var(--txt3);
+    background: var(--surf3); border: 1px solid var(--border-dim);
+    padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+  }
+
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surf3); border: 1px solid var(--border-dim);
+    border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--txt2);
+  }
+  .chip b { color: var(--txt); }
+  .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+  .chip-dot.amber { background: var(--amber); }
+
+  /* ── chart section ───────────────────────────────── */
+  .chart-section { padding: 20px 24px 0; }
+  .chart-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .chart-title { font-size: 12px; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: .06em; }
+  .chart-legend { display: flex; align-items: center; gap: 14px; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--txt3); }
+  .leg-line { height: 2px; width: 20px; border-radius: 1px; }
+  .leg-dash { height: 0; width: 20px; border-bottom: 2px dashed; }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .leg-area { width: 18px; height: 10px; border-radius: 3px; opacity: .35; }
+
+  .chart-wrap { position: relative; }
+  svg.chart { width: 100%; max-width: 720px; display: block; overflow: visible; }
+
+  /* ── stats bar ───────────────────────────────────── */
+  .stats-row { display: flex; gap: 1px; margin: 0 24px; border-top: 1px solid var(--border-dim); }
+  .stat-card {
+    flex: 1; padding: 12px 14px;
+    background: var(--surf2);
+    border-right: 1px solid var(--border-dim);
+  }
+  .stat-card:last-child { border-right: none; }
+  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--txt3); text-transform: uppercase; margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 700; color: var(--txt); font-family: var(--mono); line-height: 1; }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.green { color: var(--green); }
+  .stat-sub { font-size: 10.5px; color: var(--txt3); margin-top: 4px; }
+  .stat-sub b { color: var(--txt2); }
+
+  /* ── proxy panel ─────────────────────────────────── */
+  .proxy-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    height: 44px;
+    border-top: 1px solid var(--border-dim);
+    background: var(--surf2);
+    cursor: pointer;
+  }
+  .proxy-toggle-left { display: flex; align-items: center; gap: 10px; }
+  .proxy-label {
+    font-size: 11.5px; font-weight: 700; color: var(--proxy); letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+  .proxy-auto { font-size: 11px; color: var(--txt2); }
+  .proxy-auto b { color: var(--txt); }
+  .chevron { color: var(--txt3); font-size: 11px; }
+  .expand-badge {
+    font-size: 10px; background: var(--proxy-dim); border: 1px solid rgba(168,85,247,.3);
+    color: var(--proxy); padding: 1px 6px; border-radius: 10px; font-weight: 600;
+  }
+
+  .proxy-panel {
+    padding: 16px 24px 20px;
+    background: var(--surf2);
+    border-top: 1px solid var(--border-dim);
+  }
+
+  .proxy-top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+  .proxy-sku-block { flex: 1; }
+  .proxy-sku-name { font-size: 13px; font-weight: 700; color: var(--txt); margin-bottom: 4px; }
+  .proxy-sku-sub { font-size: 11px; color: var(--txt2); }
+  .proxy-sim-block { flex-shrink: 0; text-align: right; }
+  .sim-score { font-size: 22px; font-weight: 800; color: var(--proxy); font-family: var(--mono); line-height: 1; }
+  .sim-label { font-size: 10px; color: var(--txt3); margin-top: 2px; text-align: right; }
+
+  .sim-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .sim-chip {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10.5px; padding: 3px 9px; border-radius: 20px;
+    background: var(--proxy-dim); border: 1px solid rgba(168,85,247,.2);
+    color: var(--proxy);
+  }
+  .sim-chip.pass::before { content: '✓ '; }
+  .sim-chip.metric { background: var(--surf3); border-color: var(--border-dim); color: var(--txt2); }
+
+  .proxy-override { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .override-label { font-size: 11px; color: var(--txt3); white-space: nowrap; }
+  .override-select {
+    flex: 1; background: var(--surf3); border: 1px solid var(--border);
+    color: var(--txt); padding: 5px 10px; border-radius: var(--r); font-size: 12px;
+    font-family: var(--sans); cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234d6680'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: calc(100% - 10px) center;
+    padding-right: 28px;
+  }
+  .override-select:focus { outline: 1px solid var(--accent); }
+
+  .proxy-mini-chart { margin-bottom: 14px; }
+  .proxy-chart-label { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--txt3); text-transform: uppercase; margin-bottom: 6px; }
+
+  .proxy-note {
+    font-size: 11px; line-height: 1.55; color: var(--txt3);
+    padding: 10px 12px;
+    background: rgba(168,85,247,0.05);
+    border: 1px solid rgba(168,85,247,0.12);
+    border-radius: var(--r);
+  }
+  .proxy-note b { color: var(--txt2); }
+  .proxy-note .druid { font-family: var(--mono); font-size: 10px; color: var(--txt4); display: block; margin-top: 4px; }
+
+  /* ── ETS insight box ─────────────────────────────── */
+  .ets-insight {
+    margin: 0 24px 16px;
+    padding: 10px 14px;
+    background: var(--amber-dim);
+    border: 1px solid rgba(245,158,11,.2);
+    border-radius: var(--r);
+    font-size: 11.5px; line-height: 1.5; color: var(--txt2);
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .ets-icon { color: var(--amber); flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+  .ets-insight b { color: var(--amber); }
+
+  /* ── footer ──────────────────────────────────────── */
+  .drawer-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border-dim);
+    font-size: 10px; color: var(--txt4); line-height: 1.6;
+  }
+  .drawer-footer code { font-family: var(--mono); font-size: 9.5px; color: var(--txt3); }
+  .drawer-footer .tag { color: var(--accent); }
+
+  /* ── schematic watermark ─────────────────────────── */
+  .schematic-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 9px; font-weight: 700; letter-spacing: .07em;
+    background: rgba(168,85,247,0.08); border: 1px dashed rgba(168,85,247,0.3);
+    color: var(--proxy); padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase;
+  }
+</style>
+
+<!-- ── Mo nav ───────────────────────────────────────────────────── -->
+<div class="mo-nav">
+  <div class="mo-logo">M<span>o</span></div>
+  <div class="nav-tabs">
+    <div class="nav-tab">Trends</div>
+    <div class="nav-tab active">Cannibalization</div>
+    <div class="nav-tab">Price Elasticity</div>
+    <div class="nav-tab">Rate Forecast</div>
+    <div class="nav-tab">Retailer Summary</div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-dot"></div>
+    <div class="nav-label">BUILT · Circle K</div>
+  </div>
+</div>
+
+<!-- ── page body ────────────────────────────────────────────────── -->
+<div class="page">
+
+  <!-- dimmed sidebar (simulates Mo background) -->
+  <div class="sidebar-bg">
+    <div class="sb-section">BUILT SKUs</div>
+    <div class="sb-item">Brownie Batter 4pk</div>
+    <div class="sb-item">C&amp;C 4pk</div>
+    <div class="sb-item">C&amp;C Puff Single</div>
+    <div class="sb-item hi"><div class="sb-dot"></div>Cookie Dough Chunk</div>
+    <div class="sb-item">Coconut Puff</div>
+    <div class="sb-section">Accounts</div>
+    <div class="sb-item">Circle K Total Corp</div>
+    <div class="sb-item">MULO Food</div>
+    <div class="sb-item">Walmart</div>
+    <div class="sb-item">Kroger</div>
+  </div>
+
+  <!-- ── Forecast Drawer ──────────────────────────────────────── -->
+  <div class="drawer">
+
+    <!-- header -->
+    <div class="drawer-header">
+      <div class="breadcrumb">
+        <a href="#">Cannibalization Suite</a>
+        <span class="bc-sep">›</span>
+        <a href="#">SKU Summary</a>
+        <span class="bc-sep">›</span>
+        <span>Forecast Drawer</span>
+      </div>
+      <div class="sku-row">
+        <div class="sku-title-block">
+          <div class="cold-badge">7 weeks post-launch · Cold-start mode</div>
+          <div class="sku-name">BUILT Puff Cookie Dough Chunk</div>
+          <div class="sku-sub">Circle K · TOTAL CORPORATE <span class="upc-badge">08-40229-30333</span></div>
+          <div class="meta-chips">
+            <div class="chip"><div class="chip-dot amber"></div> $3.34/bar</div>
+            <div class="chip">Single pack · 1.41 oz</div>
+            <div class="chip">TDP 2.2 stores (Wk 7)</div>
+            <div class="chip">Launch Dec 7 2025</div>
+            <div class="chip">ETS primary · LGB pending ≥52 wk</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- chart -->
+    <div class="chart-section">
+      <div class="chart-label-row">
+        <div class="chart-title">Weekly Units · Weeks since launch</div>
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Confirmed actuals</div>
+          <div class="leg-item"><div class="leg-area" style="background:var(--accent)"></div> ETS 90% band</div>
+          <div class="leg-item"><div class="leg-dash" style="border-color:var(--accent)"></div> ETS q50 forecast</div>
+          <div class="leg-item"><div class="leg-line" style="background:var(--proxy);opacity:.7"></div> Proxy ramp</div>
+          <div class="leg-item"><div class="leg-dash" style="border-color:var(--green);opacity:.3"></div> Actual (future)</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bandGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity=".22"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity=".06"/>
+            </linearGradient>
+            <linearGradient id="proxyGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#a855f7" stop-opacity=".12"/>
+              <stop offset="100%" stop-color="#a855f7" stop-opacity=".04"/>
+            </linearGradient>
+            <!-- clip to chart area -->
+            <clipPath id="chartClip">
+              <rect x="65" y="28" width="635" height="218"/>
+            </clipPath>
+          </defs>
+
+          <!-- grid lines -->
+          <line x1="65" y1="246" x2="700" y2="246" stroke="#1e3251" stroke-width=".8"/>
+          <line x1="65" y1="192" x2="700" y2="192" stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
+          <line x1="65" y1="138" x2="700" y2="138" stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
+          <line x1="65" y1="84"  x2="700" y2="84"  stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
+          <line x1="65" y1="30"  x2="700" y2="30"  stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
+
+          <!-- y-axis labels -->
+          <text x="60" y="249" text-anchor="end" font-size="9.5" fill="#4d6680">0</text>
+          <text x="60" y="195" text-anchor="end" font-size="9.5" fill="#4d6680">1K</text>
+          <text x="60" y="141" text-anchor="end" font-size="9.5" fill="#4d6680">2K</text>
+          <text x="60" y="87"  text-anchor="end" font-size="9.5" fill="#4d6680">3K</text>
+          <text x="60" y="33"  text-anchor="end" font-size="9.5" fill="#4d6680">4K</text>
+
+          <!-- vertical divider: last actual / forecast boundary -->
+          <line x1="265.5" y1="28" x2="265.5" y2="246" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" opacity=".5"/>
+          <text x="266" y="22" font-size="9" fill="#f59e0b" opacity=".8">Wk 7 · last actual →</text>
+
+          <!-- ETS band (weeks 7–20) -->
+          <polygon
+            points="265.5,235 298.9,195 332.4,175 365.8,159 399.2,146 432.6,134 466.1,123 499.5,113 532.9,103 566.3,94 599.7,85 633.2,77 666.6,69 700.0,61
+                    700.0,246 666.6,246 633.2,246 599.7,246 566.3,246 532.9,246 499.5,246 466.1,246 432.6,246 399.2,246 365.8,246 332.4,246 298.9,246 265.5,235"
+            fill="url(#bandGrad)"
+            clip-path="url(#chartClip)"/>
+
+          <!-- proxy ramp fill area -->
+          <polygon
+            points="65,246 98.4,246 131.8,246 165.3,245 198.7,243 232.1,238 265.5,225 298.9,207 332.4,186 365.8,159 399.2,129 432.6,102 466.1,83 499.5,69 532.9,61 566.3,56 599.7,52 633.2,51 666.6,50 700,50
+                    700,246"
+            fill="url(#proxyGrad)"
+            clip-path="url(#chartClip)"/>
+
+          <!-- future actuals (faint, reveals week-by-week in production) -->
+          <polyline
+            points="265.5,235 298.9,216 332.4,195 365.8,188 399.2,185 432.6,174 466.1,169 499.5,154 532.9,138 566.3,99 599.7,87 633.2,95 666.6,72 700.0,51"
+            fill="none" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3,4" opacity=".25"
+            clip-path="url(#chartClip)"/>
+
+          <!-- proxy ramp line -->
+          <polyline
+            points="65,246 98.4,246 131.8,246 165.3,245 198.7,243 232.1,238 265.5,225 298.9,207 332.4,186 365.8,159 399.2,129 432.6,102 466.1,83 499.5,69 532.9,61 566.3,56 599.7,52 633.2,51 666.6,50 700,50"
+            fill="none" stroke="#a855f7" stroke-width="1.6" opacity=".65"
+            clip-path="url(#chartClip)"/>
+
+          <!-- ETS median forecast (dashed, weeks 7–20) -->
+          <polyline
+            points="265.5,235 298.9,238 332.4,236 365.8,235 399.2,233 432.6,231 466.1,230 499.5,228 532.9,226 566.3,224 599.7,223 633.2,221 666.6,219 700.0,218"
+            fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="6,4"
+            clip-path="url(#chartClip)"/>
+
+          <!-- confirmed actuals line (weeks 1–7) -->
+          <polyline
+            points="65,246 98.4,246 131.8,246 165.3,245 198.7,246 232.1,243 265.5,235"
+            fill="none" stroke="#22c55e" stroke-width="2.2"
+            clip-path="url(#chartClip)"/>
+
+          <!-- actual data points (circles) -->
+          <circle cx="65"   cy="246" r="3" fill="#22c55e"/>
+          <circle cx="98.4" cy="246" r="3" fill="#22c55e"/>
+          <circle cx="131.8" cy="246" r="3" fill="#22c55e"/>
+          <circle cx="165.3" cy="245" r="3" fill="#22c55e"/>
+          <circle cx="198.7" cy="246" r="3" fill="#22c55e"/>
+          <circle cx="232.1" cy="243" r="3" fill="#22c55e"/>
+          <circle cx="265.5" cy="235" r="4" fill="#22c55e" stroke="#0e1623" stroke-width="1.5"/>
+
+          <!-- ETS terminal label -->
+          <text x="703" y="221" font-size="9" fill="#3b82f6" opacity=".8">q50</text>
+          <text x="703" y="64" font-size="9" fill="#3b82f6" opacity=".5">q90</text>
+          <!-- Proxy terminal label -->
+          <text x="703" y="53" font-size="9" fill="#a855f7" opacity=".7">prxy</text>
+          <!-- future actual terminal -->
+          <text x="703" y="43" font-size="9" fill="#22c55e" opacity=".3">act</text>
+
+          <!-- x-axis labels -->
+          <text x="65"   y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 1</text>
+          <text x="165.3" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 4</text>
+          <text x="265.5" y="270" text-anchor="middle" font-size="9.5" fill="#f59e0b" opacity=".8">Wk 7†</text>
+          <text x="365.8" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 10</text>
+          <text x="466.1" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 13</text>
+          <text x="566.3" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 16</text>
+          <text x="700"   y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 20</text>
+
+          <!-- "Forecast" region label -->
+          <text x="483" y="43" text-anchor="middle" font-size="9" fill="#3b82f6" opacity=".5" letter-spacing=".05em">ETS FORECAST REGION</text>
+
+          <!-- y-axis line -->
+          <line x1="65" y1="28" x2="65" y2="246" stroke="#1e3251" stroke-width="1"/>
+          <!-- x-axis line -->
+          <line x1="65" y1="246" x2="700" y2="246" stroke="#1e3251" stroke-width="1"/>
+
+          <!-- actual unit callouts for key points -->
+          <text x="268" y="229" font-size="8.5" fill="#22c55e">195</text>
+          <text x="236" y="237" font-size="8.5" fill="#22c55e" opacity=".7">47</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ETS limitation insight -->
+    <div class="ets-insight">
+      <div class="ets-icon">⚠</div>
+      <div>
+        <b>ETS forecast uncertainty is high at 7 observations.</b>
+        Linear trend extrapolation from sparse early data systematically underestimates
+        explosive ramp-up. The 90% confidence band is intentionally wide.
+        Use the Proxy Reference below for ramp context from a comparable launch.
+        LightGBM activates automatically once ≥52 weeks of history accumulate.
+      </div>
+    </div>
+
+    <!-- stats row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Wk 7 Run Rate</div>
+        <div class="stat-value green">195</div>
+        <div class="stat-sub">units/week · confirmed actual</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ETS 13-wk Total (q50)</div>
+        <div class="stat-value amber">4,332</div>
+        <div class="stat-sub">units · <b>wide uncertainty band applies</b></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Model Status</div>
+        <div class="stat-value" style="font-size:13px;padding-top:3px;color:var(--amber)">ETS Active</div>
+        <div class="stat-sub">LGB eligible in <b>45 weeks</b> · 7/52</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TDP · Wk 7</div>
+        <div class="stat-value">2.2</div>
+        <div class="stat-sub">stores · TDP trajectory: early ramp</div>
+      </div>
+    </div>
+
+    <!-- ── Proxy Reference toggle & panel ──────────────────────── -->
+    <div class="proxy-toggle-row">
+      <div class="proxy-toggle-left">
+        <div class="proxy-label">Proxy Reference</div>
+        <div class="proxy-auto">Auto-selected: <b>BUILT Puff BB Single · Circle K</b></div>
+        <div class="expand-badge">Expanded</div>
+      </div>
+      <div class="chevron">▲ collapse</div>
+    </div>
+
+    <div class="proxy-panel">
+
+      <!-- proxy SKU + similarity score -->
+      <div class="proxy-top">
+        <div class="proxy-sku-block">
+          <div class="proxy-sku-name">BUILT Puff Brownie Batter Single</div>
+          <div class="proxy-sku-sub">Circle K · TOTAL CORPORATE · $2.72/bar · 1.41 oz · Single (1ct)</div>
+        </div>
+        <div class="proxy-sim-block">
+          <div class="sim-score">93%</div>
+          <div class="sim-label">similarity score</div>
+        </div>
+      </div>
+
+      <!-- similarity chips -->
+      <div class="sim-chips">
+        <div class="sim-chip pass">Same channel (CK)</div>
+        <div class="sim-chip pass">Same format (1ct · 1.41 oz)</div>
+        <div class="sim-chip pass">Same brand (BUILT Puff)</div>
+        <div class="sim-chip metric">ARP Δ: +$0.62/bar</div>
+        <div class="sim-chip metric">TDP trajectory r = 0.88</div>
+        <div class="sim-chip metric">Launch pattern: gradual ramp</div>
+      </div>
+
+      <!-- override picker -->
+      <div class="proxy-override">
+        <div class="override-label">Override proxy:</div>
+        <select class="override-select">
+          <option selected>BUILT Puff BB Single (auto · 93% match)</option>
+          <option>BUILT Puff C&amp;C Single (81% match)</option>
+          <option>BUILT Puff Coconut Puff Single (76% match)</option>
+          <option>Manual entry (custom SKU)</option>
+        </select>
+      </div>
+
+      <!-- proxy chart label -->
+      <div class="proxy-mini-chart">
+        <div class="proxy-chart-label">
+          Proxy ramp overlay (purple line in chart above)
+          <span class="schematic-badge">Schematic · Druid at build</span>
+        </div>
+      </div>
+
+      <!-- interpretation note -->
+      <div class="proxy-note">
+        <b>How to read this:</b> The purple ramp line shows how a comparable BUILT single-puff SKU
+        (same channel, format, brand) ramped in its first 20 launch weeks, aligned to launch week 0.
+        This is <b>context only</b> — the ETS forecast (blue dashed) is the primary projection.
+        If CDc is tracking above the proxy by week 10, velocity is outperforming the analog.
+        If tracking below, distribution may need acceleration (check TDP tab).
+        <span class="druid">Proxy ramp query: built_filtered_weekly WHERE retail_account='CIRCLE K' AND retail_account_level='TOTAL CORPORATE' · aligned to min(week) per UPC</span>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="drawer-footer">
+      <b class="tag">Data:</b> Actuals from <code>built_filtered_weekly</code> · <code>retail_account='CIRCLE K'</code> · <code>retail_account_level='TOTAL CORPORATE'</code> · Dec 7 2025–Jan 24 2026 (Wks 1–7, real SPINS data).
+      ETS forecast: Holt's linear exponential smoothing, α=0.5 β=0.3, anchored at Wk 7 actual (195 units). 90% confidence band widens as √h per step.
+      Proxy ramp line is schematic for this mockup — values from <code>built_filtered_weekly</code> at feature implementation.
+      LightGBM activates at ≥52 weeks history (currently 7/52). · <b>Mo v12 · Cold-Start Overlay — Feature Design Mockup 2026-07-21</b>
+    </div>
+
+  </div><!-- /drawer -->
+</div><!-- /page -->

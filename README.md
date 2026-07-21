@@ -127,6 +127,14 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-21 (update 31) — Cold-start proxy overlay mockup; Connor FP&A meeting prep
+
+`mockups/mo_cold_start_proxy_mockup.html` — static HTML mockup of the forecast drawer cold-start proxy reference sub-panel. Demonstrates the complete UX for new SKUs with <8 weeks post-launch history.
+
+**Mockup contents:** Shows BUILT Puff Cookie Dough Chunk at Circle K (Wk 7, 195 units/wk — real SPINS data from `built_filtered_weekly`). Three chart layers: (1) green confirmed actuals Wks 1–7, (2) ETS q50 dashed forecast with wide confidence band widening as √h per horizon step (l=113.3, b=31.4, α=0.5, β=0.3), (3) purple proxy reference ramp (schematic — real values from Druid at implementation time). Stats row shows Wk 7 run rate · ETS 13-wk total (4,332 units, high uncertainty) · model status (ETS active, LGB in 45 weeks) · TDP (2.2 stores). Proxy panel shows: auto-selected proxy SKU (BUILT Puff BB Single, 93% similarity), sim chips (same channel/format/brand, ARP Δ, TDP trajectory r=0.88), one manual override picker, Druid query note. Amber insight box explains why ETS systematically underestimates rapid ramp-up and when LightGBM activates.
+
+**Connor FP&A meeting prep documented.** Connor Lain (Director Strategy/Finance, BUILT) does all retail forecasting by account × SKU in Excel. Meeting strategy: open with "walk us through your process for one SKU at one retailer," surface pain on each step, then map Mo to each. Three things to show: (1) Forecast drawer with a real Walmart BB 4pk projection he can react to, (2) MO_32B rolling accuracy chart (stale model degrades 18pp, retrained holds at 4.4%) to surface his baseline question, (3) this cold-start proxy mockup. One closing ask: "Give us 3–5 SKU × retailer combos where last quarter was materially off — we'll run Mo against the same period." That moves the conversation from demo to pilot.
+
 ### 2026-07-21 (update 30) — Data stories mockup: Story 5 expanded with Cookie Dough Chunk, protein callout, and competitive shelf context
 
 `mockups/mo_causal_demand_shift_mockup.html` — 5-tab annotated SVG data stories (all data from Druid `built_filtered_weekly`). Story 5 updated with three additions:
