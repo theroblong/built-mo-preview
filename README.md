@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-21 (update 32) — MO_60 Druid merge complete; MO_61 clarified as research-only
+
+`causal_impact_scores` in Druid re-ingested with MO_60 sensitivity fields (2026-07-21). Merged `robust_verdict`, `direction_consistent`, `narrative`, `stability_score`, and `n_variants_run` from `causal_impact_sensitivity.parquet` (140 SIGNIFICANT events) into the 500-row base table. Left-joined so non-SIGNIFICANT rows carry null — breakdown: 40 ROBUST, 13 MODERATE, 87 FRAGILE, 360 null. Re-ingested from `s3://mo-ml/causal_impact_scores/2026-07-21/causal_impact_scores_v2.parquet` with `appendToExisting:false`. Updated ingest spec saved. UI Event drawer wiring deferred — data is ready when UI work resumes.
+
+MO_61 (HTE elasticity, §30) clarified: research-only output — chart (`mo61_hte_combined.png`) and HTML section only; no Druid ingest was ever planned or needed. Standup item #3 (MO_60/61 sign-off) is fully complete and off the list.
+
 ### 2026-07-21 (update 31) — Cold-start proxy overlay mockup; Connor FP&A meeting prep
 
 `mockups/mo_cold_start_proxy_mockup.html` — static HTML mockup of the forecast drawer cold-start proxy reference sub-panel. Demonstrates the complete UX for new SKUs with <8 weeks post-launch history.
