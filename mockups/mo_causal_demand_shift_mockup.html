@@ -1,580 +1,1000 @@
 <title>Mo — Three Demand-Shift Data Stories</title>
 <style>
 :root {
-  --bg:         #0b1220;
-  --surface:    #111b2e;
-  --surface-hi: #182238;
-  --border:     #1f2f48;
-  --border-hi:  #2a3f5e;
-  --accent:     #3b82f6;
-  --accent-dim: rgba(59,130,246,0.10);
-  --green:      #22c55e;
-  --green-dim:  rgba(34,197,94,0.09);
-  --amber:      #f59e0b;
-  --amber-dim:  rgba(245,158,11,0.09);
-  --red:        #ef4444;
-  --red-dim:    rgba(239,68,68,0.09);
-  --text:       #dde6f5;
-  --text-muted: #7a90b0;
-  --text-dim:   #3d5070;
-  --cf:         #5c728a;
-  --tdp:        #a78bfa;
+  --bg:#0b1220;--surface:#111b2e;--surface-hi:#182238;--border:#1f2f48;--border-hi:#2a3f5e;
+  --accent:#3b82f6;--accent-dim:rgba(59,130,246,0.10);
+  --green:#22c55e;--green-dim:rgba(34,197,94,0.09);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.09);
+  --red:#ef4444;--red-dim:rgba(239,68,68,0.09);
+  --text:#dde6f5;--text-muted:#7a90b0;--text-dim:#3d5070;
+  --cf:#5c728a;--tdp:#a78bfa;
 }
-@media (prefers-color-scheme: light) { :root {
-  --bg:#f0f4fa;--surface:#ffffff;--surface-hi:#f6f9ff;--border:#dce5f0;--border-hi:#c5d4e8;
+@media(prefers-color-scheme:light){:root{
+  --bg:#f0f4fa;--surface:#fff;--surface-hi:#f6f9ff;--border:#dce5f0;--border-hi:#c5d4e8;
   --text:#0e1a2e;--text-muted:#5a6e8a;--text-dim:#9aaccb;--cf:#8099b8;--tdp:#7c3aed;
 }}
-:root[data-theme="light"]{--bg:#f0f4fa;--surface:#ffffff;--surface-hi:#f6f9ff;--border:#dce5f0;--border-hi:#c5d4e8;--text:#0e1a2e;--text-muted:#5a6e8a;--text-dim:#9aaccb;--cf:#8099b8;--tdp:#7c3aed}
+:root[data-theme="light"]{--bg:#f0f4fa;--surface:#fff;--surface-hi:#f6f9ff;--border:#dce5f0;--border-hi:#c5d4e8;--text:#0e1a2e;--text-muted:#5a6e8a;--text-dim:#9aaccb;--cf:#8099b8;--tdp:#7c3aed}
 :root[data-theme="dark"]{--bg:#0b1220;--surface:#111b2e;--surface-hi:#182238;--border:#1f2f48;--border-hi:#2a3f5e;--text:#dde6f5;--text-muted:#7a90b0;--text-dim:#3d5070;--cf:#5c728a;--tdp:#a78bfa}
-
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
-
-/* Nav */
 .nav{display:flex;align-items:stretch;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;padding:0 24px;gap:2px}
-.nav-btn{padding:13px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:12.5px;font-weight:500;cursor:pointer;letter-spacing:0.01em;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap}
-.nav-btn:hover{color:var(--text)}
-.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
-.nav-tag{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle}
-.tag-price{background:rgba(59,130,246,0.15);color:var(--accent)}
-.tag-pack{background:rgba(245,158,11,0.15);color:var(--amber)}
-.tag-flavor{background:rgba(167,139,250,0.15);color:var(--tdp)}
-
+.nav-btn{padding:13px 20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-size:12.5px;font-weight:500;cursor:pointer;letter-spacing:.01em;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap}
+.nav-btn:hover{color:var(--text)}.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tag{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.tag-price{background:rgba(59,130,246,.15);color:var(--accent)}
+.tag-port{background:rgba(245,158,11,.15);color:var(--amber)}
+.tag-cannib{background:rgba(167,139,250,.15);color:var(--tdp)}
 .pane{display:none}.pane.active{display:block}
 .frame{padding:24px;max-width:1100px;margin:0 auto}
-
-/* Story header */
 .story-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:16px;flex-wrap:wrap}
-.story-title{font-size:18px;font-weight:700;margin-bottom:4px}
-.story-sub{font-size:12px;color:var(--text-muted)}
+.story-title{font-size:18px;font-weight:700;margin-bottom:4px}.story-sub{font-size:12px;color:var(--text-muted)}
 .verdict-box{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-
-/* Chips */
-.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap}
-.ch-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.22)}
-.ch-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,0.22)}
-.ch-red  {background:var(--red-dim);  color:var(--red);  border:1px solid rgba(239,68,68,0.22)}
-.ch-blue {background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,130,246,0.22)}
-.ch-slate{background:rgba(94,120,148,0.12);color:var(--text-muted);border:1px solid var(--border)}
-.ch-tdp  {background:rgba(167,139,250,0.12);color:var(--tdp);border:1px solid rgba(167,139,250,0.22)}
-
-/* Stat row */
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ch-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.22)}
+.ch-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.22)}
+.ch-blue{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,130,246,.22)}
+.ch-slate{background:rgba(94,120,148,.12);color:var(--text-muted);border:1px solid var(--border)}
+.ch-tdp{background:rgba(167,139,250,.12);color:var(--tdp);border:1px solid rgba(167,139,250,.22)}
 .stats{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px}
 .stat{background:var(--surface);padding:12px 16px}
-.stat-l{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
+.stat-l{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
 .stat-v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .stat-s{font-size:11px;color:var(--text-muted);margin-top:2px}
-
-/* Panel label */
-.plabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-dim);margin-bottom:6px}
-
-/* Card */
+.plabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-dim);margin-bottom:6px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px}
-
-/* Insight box */
 .insight{border-radius:5px;padding:12px 14px;font-size:13px;line-height:1.7;margin-top:18px}
-.insight-green{background:var(--green-dim);border:1px solid rgba(34,197,94,0.2);border-left:3px solid var(--green)}
-.insight-amber{background:var(--amber-dim);border:1px solid rgba(245,158,11,0.2);border-left:3px solid var(--amber)}
-.insight-tdp  {background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-left:3px solid var(--tdp)}
-
-/* Divider */
+.insight-green{background:var(--green-dim);border:1px solid rgba(34,197,94,.2);border-left:3px solid var(--green)}
+.insight-amber{background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);border-left:3px solid var(--amber)}
+.insight-tdp{background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-left:3px solid var(--tdp)}
 .div-panel{border:none;border-top:1px solid var(--border);margin:18px 0}
-
-/* Table */
 table{width:100%;border-collapse:collapse}
-th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
+th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);padding:8px 12px;border-bottom:1px solid var(--border);text-align:left}
 td{padding:9px 12px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;font-size:13px}
 tr:last-child td{border-bottom:none}
-
-.green{color:var(--green)} .amber{color:var(--amber)} .red{color:var(--red)} .tdp-c{color:var(--tdp)} .muted{color:var(--text-muted)}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:#ef4444}.tdp-c{color:var(--tdp)}.muted{color:var(--text-muted)}
+.data-note{font-size:10px;color:var(--text-dim);margin-top:4px}
 </style>
 
-<!-- Navigation -->
 <div class="nav">
   <button class="nav-btn active" onclick="show(this,'s1')">
-    Story 1 — Clean Price Lift <span class="nav-tag tag-price">Price</span>
+    Story 1 — Price Lift <span class="nav-tag tag-price">Price Suite</span>
   </button>
   <button class="nav-btn" onclick="show(this,'s2')">
-    Story 2 — Pack-Mix Shifting <span class="nav-tag tag-pack">Price + Cannib.</span>
+    Story 2 — Portfolio Promo View <span class="nav-tag tag-port">Mo Intelligence</span>
   </button>
   <button class="nav-btn" onclick="show(this,'s3')">
-    Story 3 — Flavor-Family Cannibalization <span class="nav-tag tag-flavor">Distribution</span>
+    Story 3 — Format Cannibalization <span class="nav-tag tag-cannib">Cannib. Suite</span>
+  </button>
+  <button class="nav-btn" onclick="show(this,'s4')">
+    Story 4 — Own-Brand Pack Migration <span class="nav-tag tag-cannib">Cannib. Suite</span>
+  </button>
+  <button class="nav-btn" onclick="show(this,'s5')">
+    Story 5 — Competitor New Entry <span class="nav-tag" style="background:rgba(239,68,68,.15);color:var(--red)">Competitive</span>
   </button>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
-     STORY 1 — CLEAN PRICE LIFT
-═══════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════
+     STORY 1 — BJS Salted Caramel 12pk
+════════════════════════════════════════ -->
 <div id="s1" class="pane active">
 <div class="frame">
 
   <div class="story-head">
     <div>
-      <div class="story-title">BJS · Blueberry 4pk · Price cut −35.6%</div>
-      <div class="story-sub">08-40229-30378 · FOOD · Price event 2025-09-21 · 13w pre / 13w post</div>
+      <div class="story-title">BJS · Salted Caramel Bar 12pk · Promo −27% ARP</div>
+      <div class="story-sub">08-40229-30258 · CONVENTIONAL|MULTI OUTLET · Oct 2024 – Mar 2025 (26 weeks) · Source: SPINS retailer_sales_weekly</div>
     </div>
     <div class="verdict-box">
-      <span class="chip ch-green" style="font-size:12px;padding:5px 12px">● SIGNIFICANT</span>
-      <span style="font-size:11px;color:var(--text-muted)">p &lt; 0.0001 · 3 cross-account controls</span>
+      <span class="chip ch-green" style="font-size:12px;padding:5px 12px">● PROMO CONFIRMED</span>
+      <span style="font-size:11px;color:var(--text-muted)">units_promo ≈ total_units during event weeks</span>
     </div>
   </div>
 
-  <!-- Stats -->
   <div class="stats" style="grid-template-columns:repeat(4,1fr)">
     <div class="stat">
-      <div class="stat-l">Causal Lift</div>
-      <div class="stat-v green">+215%</div>
-      <div class="stat-s">vs. BSTS counterfactual</div>
+      <div class="stat-l">Promo price</div>
+      <div class="stat-v amber">−26.9%</div>
+      <div class="stat-s">$27.99 → $20.47 avg ARP</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Unit Impact</div>
-      <div class="stat-v green">+5,122</div>
-      <div class="stat-s">cumulative 13w post-period</div>
+      <div class="stat-l">Volume lift</div>
+      <div class="stat-v green">+337%</div>
+      <div class="stat-s">82 → 358 units/wk avg</div>
     </div>
     <div class="stat">
-      <div class="stat-l">TDP change</div>
-      <div class="stat-v" style="color:var(--text)">+0.3</div>
-      <div class="stat-s">stores · distribution stable</div>
+      <div class="stat-l">Peak week</div>
+      <div class="stat-v green">454 units</div>
+      <div class="stat-s">Week of Feb 16, 2025</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Price change</div>
-      <div class="stat-v amber">−35.6%</div>
-      <div class="stat-s">$2.15 → $1.38 /bar</div>
+      <div class="stat-l">Per-bar price</div>
+      <div class="stat-v amber">$1.71</div>
+      <div class="stat-s">Down from $2.33 (12-count club)</div>
     </div>
   </div>
 
-  <!-- Chart 1: Units causal -->
-  <div class="plabel">Units — Actual vs. BSTS Counterfactual</div>
-  <svg id="ch1a" width="100%" viewBox="0 0 700 130" style="display:block;margin-bottom:18px"></svg>
+  <div class="plabel">Units/week — Actual (SPINS total_units)</div>
+  <svg id="ch1a" width="100%" viewBox="0 0 700 140" style="display:block;margin-bottom:6px"></svg>
 
-  <!-- Chart 2: TDP panel (the proof) -->
-  <div class="plabel">TDP (Total Distribution Points) — held stable throughout</div>
-  <svg id="ch1b" width="100%" viewBox="0 0 700 70" style="display:block;margin-bottom:4px"></svg>
-  <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">
-    Scale 0 – 60 stores &nbsp;·&nbsp; Same 26-week window
-  </div>
+  <div class="plabel" style="margin-top:14px">ARP (avg retail price) and TDP (total distribution points)</div>
+  <svg id="ch1b" width="100%" viewBox="0 0 700 80" style="display:block;margin-bottom:4px"></svg>
+  <div class="data-note">TDP scale 0–4 (BJS has 2 club locations in SPINS reporting). ARP scale $0–$35. Pre-promo TDP ~1.8; BJS feature placement raised TDP to 2.4–3.0 during event.</div>
 
   <div class="insight insight-green">
-    <strong style="color:var(--green)">Price was the cause. TDP rules out distribution.</strong>
-    BJS Blueberry 4pk demand increased +215% (BSTS posterior, p&lt;0.0001) after a −35.6% price reduction.
-    TDP remained flat at ~39 stores throughout — distribution did not expand.
-    This is a clean price-elasticity event: the lift came from demand response to price, not from gaining new shelf space.
-    Net new bars sold — no sibling SKU cannibalizing.
+    <strong style="color:var(--green)">SPINS-confirmed promotional response at BJS club channel.</strong>
+    Built Salted Caramel Bar 1.69oz (12pk, UPC 08-40229-30258) ran a 6-week featured price event at BJS (Jan 12 – Feb 16, 2025), dropping ARP from $27.99 to ~$20.47 (−26.9%).
+    SPINS <code>units_promo</code> field confirms all weeks were promo-priced — nearly all units sold were feature-priced (246–441 promo units out of 256–454 total).
+    Volume averaged 358 units/week during the event vs. 82-unit pre-period baseline (+337%).
+    TDP nudged from 1.8 to 2.4–3.0 stores, consistent with BJS end-cap feature placement.
+    Post-event: volume settled at ~135 units/week, above baseline — some sustained lift.
   </div>
 
 </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
-     STORY 2 — PACK-MIX SHIFTING
-═══════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════
+     STORY 2 — Save Mart 4-variety Puff
+════════════════════════════════════════ -->
 <div id="s2" class="pane">
 <div class="frame">
 
   <div class="story-head">
     <div>
-      <div class="story-title">Wakefern · 12-pack price cut −31% → 4-pack cannibalized</div>
-      <div class="story-sub">08-40229-30432 (12pk) &amp; 08-40229-30333 (4pk) · FOOD · Price event 2025-10-12</div>
+      <div class="story-title">Save Mart · Four Puff Singles · Coordinated Feb–Apr 2026 Promo</div>
+      <div class="story-sub">Mint Chip (30432) · Cookie Dough (30333) · Coconut (30037) · Churro (30050) · CONVENTIONAL|FOOD · Source: SPINS + MO_60 causal sensitivity</div>
     </div>
     <div class="verdict-box">
-      <span class="chip ch-amber" style="font-size:12px;padding:5px 12px">FORMAT TRADE-UP</span>
-      <span style="font-size:11px;color:var(--text-muted)">Pack-mix shift · Not net new demand</span>
+      <span class="chip ch-amber" style="font-size:12px;padding:5px 12px">4× ROBUST EVENTS</span>
+      <span style="font-size:11px;color:var(--text-muted)">All 4 scored ROBUST in 9/9 sensitivity variants</span>
     </div>
   </div>
 
-  <!-- Stats -->
-  <div class="stats" style="grid-template-columns:repeat(5,1fr)">
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
     <div class="stat">
-      <div class="stat-l">12pk units</div>
-      <div class="stat-v green">+46%</div>
-      <div class="stat-s">520 → 760 /week</div>
+      <div class="stat-l">Portfolio baseline</div>
+      <div class="stat-v" style="color:var(--text)">~1,000 u/wk</div>
+      <div class="stat-s">Dec 2025 avg · 4 varieties combined</div>
     </div>
     <div class="stat">
-      <div class="stat-l">4pk units</div>
-      <div class="stat-v red">−18%</div>
-      <div class="stat-s">840 → 690 /week</div>
+      <div class="stat-l">Portfolio peak</div>
+      <div class="stat-v green">8,392 u/wk</div>
+      <div class="stat-s">Week of Mar 22, 2026</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Net portfolio</div>
-      <div class="stat-v" style="font-size:18px;color:var(--text)">+6.6%</div>
-      <div class="stat-s">1,360 → 1,450 /week</div>
+      <div class="stat-l">Price drop</div>
+      <div class="stat-v amber">−33%</div>
+      <div class="stat-s">~$3.25 → ~$2.15 per bar (avg)</div>
     </div>
     <div class="stat">
-      <div class="stat-l">12pk $/bar</div>
-      <div class="stat-v amber">−31%</div>
-      <div class="stat-s">$3.18 → $2.19</div>
-    </div>
-    <div class="stat">
-      <div class="stat-l">4pk $/bar</div>
-      <div class="stat-v muted">—</div>
-      <div class="stat-s">$2.87 unchanged</div>
+      <div class="stat-l">Focal-only miss</div>
+      <div class="stat-v red">−78%</div>
+      <div class="stat-s">Mint Chip alone = 22% of impact</div>
     </div>
   </div>
 
-  <!-- Two side-by-side charts -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
-    <div>
-      <div class="plabel">12-pack units (focal — price cut)</div>
-      <svg id="ch2a" width="100%" viewBox="0 0 340 110" style="display:block"></svg>
-    </div>
-    <div>
-      <div class="plabel">4-pack units (sibling — no price change)</div>
-      <svg id="ch2b" width="100%" viewBox="0 0 340 110" style="display:block"></svg>
-    </div>
-  </div>
+  <div class="plabel">Portfolio units/week — total vs. each variety (SPINS total_units, Save Mart)</div>
+  <svg id="ch2a" width="100%" viewBox="0 0 700 193" style="display:block;margin-bottom:6px"></svg>
 
-  <!-- Net portfolio bar -->
-  <div class="plabel">Net portfolio bars/week — same account, same window</div>
-  <svg id="ch2c" width="100%" viewBox="0 0 700 60" style="display:block;margin-bottom:4px"></svg>
+  <div class="data-note">TDP also expanded during this event (single-variety TDP roughly doubled, e.g. Mint Chip 36→75 stores). This is a combined price + shelf-expansion event, not a pure price event. All four BSTS causal scores were scored ROBUST across 9 sensitivity variants in MO_60, meaning the demand response holds even controlling for normal seasonality.</div>
+
+  <div class="plabel" style="margin-top:14px">Per-SKU breakdown — peak week (Mar 22, 2026)</div>
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:4px">
+    <table>
+      <thead><tr>
+        <th>SKU</th><th>UPC</th><th>Pre-promo avg</th><th>Peak units</th><th>Lift</th><th>MO_60 verdict</th><th>Causal ε</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Puff Mint Chip 1.41oz</td>
+          <td class="muted">08-40229-30432</td>
+          <td>188</td><td class="green">1,882</td><td class="green">+900%</td>
+          <td><span class="chip ch-green">ROBUST 9/9</span></td>
+          <td class="muted">+151% causal</td>
+        </tr>
+        <tr>
+          <td>Puff Cookie Dough Chunk 1.55oz</td>
+          <td class="muted">08-40229-30333</td>
+          <td>325</td><td class="green">2,177</td><td class="green">+570%</td>
+          <td><span class="chip ch-green">ROBUST 9/9</span></td>
+          <td class="muted">+106% causal</td>
+        </tr>
+        <tr>
+          <td>Puff Coconut 1.41oz</td>
+          <td class="muted">08-40229-30037</td>
+          <td>309</td><td class="green">2,084</td><td class="green">+574%</td>
+          <td><span class="chip ch-green">ROBUST 9/9</span></td>
+          <td class="muted">+92% causal</td>
+        </tr>
+        <tr>
+          <td>Puff Churro 1.41oz</td>
+          <td class="muted">08-40229-30050</td>
+          <td>184</td><td class="green">2,249</td><td class="green">+1,122%</td>
+          <td><span class="chip ch-green">ROBUST 9/9</span></td>
+          <td class="muted">+86% causal</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="insight insight-amber">
-    <strong style="color:var(--amber)">Consumers traded up to the larger format. Net new bars sold was modest.</strong>
-    The 12-pack price cut lowered cost-per-bar by 31%, making it the better value vs. the 4-pack.
-    Existing BUILT buyers switched format — they did not buy more bars total.
-    Net portfolio increase was +6.6% (+90 units/week), not +46%.
-    For FP&A: model the portfolio row, not the focal SKU. Revenue impact depends on margin difference between formats.
+    <strong style="color:var(--amber)">FP&A sees one SKU. Mo sees the whole category.</strong>
+    Save Mart ran a coordinated price + shelf expansion across four Puff varieties simultaneously (Feb–Apr 2026). Each individual BSTS causal event was scored ROBUST across all 9 sensitivity tests in MO_60 — meaning none of the demand response is explained by seasonal baseline alone.
+    If FP&A tracked only Mint Chip (+1,882 units/wk), they'd miss 78% of the total portfolio impact (+8,392 units/wk).
+    Note: TDP also expanded alongside price (single-variety TDP roughly doubled), so this is a combined distribution expansion + promotional price event. Mo surfaces both signals.
   </div>
 
 </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
-     STORY 3 — FLAVOR-FAMILY CANNIBALIZATION
-═══════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════
+     STORY 3 — Kroger CNC Puff vs C&C Bar
+════════════════════════════════════════ -->
 <div id="s3" class="pane">
 <div class="frame">
 
   <div class="story-head">
     <div>
-      <div class="story-title">Double Chocolate 4pk launch → Fudge + Choc Milkshake cannibalized</div>
-      <div class="story-sub">08-40229-30571 (new) cannibalizes 08-40229-30034 + 08-40229-30130 · KROGER · FOOD · Launch wk 2025-08-10</div>
+      <div class="story-title">Kroger · Cookies N Cream Puff launched → Cookies &amp; Cream Bar displaced</div>
+      <div class="story-sub">30550 (Puff, new Sep 2024) vs 30130 (Bar, established) · KROGER · CONVENTIONAL|FOOD · 42-week window Sep 2024–Jul 2025 · Source: SPINS + scored_cannibalization</div>
     </div>
     <div class="verdict-box">
-      <span class="chip ch-tdp" style="font-size:12px;padding:5px 12px">FLAVOR CANNIB.</span>
-      <span style="font-size:11px;color:var(--text-muted)">Distribution-driven · Not price-driven</span>
+      <span class="chip ch-tdp" style="font-size:12px;padding:5px 12px">FORMAT CANNIB.</span>
+      <span style="font-size:11px;color:var(--text-muted)">cannibal_prob: 0.9999 · rel_distance: 3</span>
     </div>
   </div>
 
-  <!-- Stats -->
   <div class="stats" style="grid-template-columns:repeat(4,1fr)">
     <div class="stat">
-      <div class="stat-l">New SKU (Dbl Choc)</div>
-      <div class="stat-v tdp-c">+580 u/wk</div>
-      <div class="stat-s">0 → 580 units/week by wk 13</div>
+      <div class="stat-l">Puff peak (Jul 13)</div>
+      <div class="stat-v tdp-c">15,215 u/wk</div>
+      <div class="stat-s">TDP 6.8 stores · Wk 42</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Fudge 4pk donated</div>
-      <div class="stat-v red">−135 u/wk</div>
-      <div class="stat-s">Cannib. rate: 24%</div>
+      <div class="stat-l">Bar baseline</div>
+      <div class="stat-v" style="color:var(--text)">~3,500 u/wk</div>
+      <div class="stat-s">Pre-launch avg · TDP ~11 stores</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Choc Milkshake donated</div>
-      <div class="stat-v red">−102 u/wk</div>
-      <div class="stat-s">Cannib. rate: 17%</div>
+      <div class="stat-l">Bar end-state</div>
+      <div class="stat-v red">21 u/wk</div>
+      <div class="stat-s">TDP 0.2 · effectively delisted</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Net new bars</div>
-      <div class="stat-v green">+343 u/wk</div>
-      <div class="stat-s">59% of new SKU = franchise growth</div>
+      <div class="stat-l">Net new franchise</div>
+      <div class="stat-v green">~77%</div>
+      <div class="stat-s">of Puff volume = new to Kroger</div>
     </div>
   </div>
 
-  <!-- TDP chart (the driver) -->
-  <div class="plabel">TDP — the engine. Distribution expansion drove the shift, not price.</div>
-  <svg id="ch3a" width="100%" viewBox="0 0 700 110" style="display:block;margin-bottom:18px"></svg>
+  <div class="plabel">Units/week — CNC Puff (new) vs C&amp;C Bar (legacy) at Kroger</div>
+  <svg id="ch3a" width="100%" viewBox="0 0 700 175" style="display:block;margin-bottom:18px"></svg>
 
-  <!-- Units chart -->
-  <div class="plabel">Units — donor SKUs declining as new SKU ramps TDP</div>
-  <svg id="ch3b" width="100%" viewBox="0 0 700 110" style="display:block;margin-bottom:18px"></svg>
+  <div class="plabel">TDP (distribution) — Puff gaining shelf space as Bar loses it</div>
+  <svg id="ch3b" width="100%" viewBox="0 0 700 95" style="display:block;margin-bottom:6px"></svg>
+  <div class="data-note">TDP scale 0–14 stores. The inverse TDP pattern confirms this is a Kroger assortment decision (shelf replacement), not just consumer preference. Price held steady on both SKUs throughout — this is not elasticity-driven.</div>
 
-  <!-- Donor table -->
+  <div class="div-panel"></div>
+
+  <div class="plabel">Donor scoring — scored_cannibalization output</div>
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:4px">
     <table>
       <thead><tr>
-        <th>SKU</th><th>Flavor family</th><th>Cannib. prob</th><th>Cannib. rate (wk 13)</th><th>Donor units/wk</th><th>TDP change</th>
+        <th>Role</th><th>SKU</th><th>UPC</th><th>Cannibal prob</th><th>Rel. distance</th><th>Peak units</th><th>TDP trajectory</th>
       </tr></thead>
       <tbody>
         <tr>
-          <td><div style="font-weight:500">Fudge 4pk</div><div style="font-size:11px;color:var(--text-muted)">08-40229-30034</div></td>
-          <td><span class="chip ch-tdp">Chocolate</span></td>
-          <td style="color:var(--red);font-weight:600">0.94</td>
-          <td style="color:var(--red)">24.3%</td>
-          <td class="red">−135 /wk</td>
-          <td class="muted">28 → 27 (stable)</td>
+          <td><span class="chip ch-tdp">Focal (new)</span></td>
+          <td>Built Puff Cookies N Cream 1.41oz</td>
+          <td class="muted">08-40229-30550</td>
+          <td class="muted">—</td>
+          <td class="muted">—</td>
+          <td class="tdp-c">15,215 u/wk</td>
+          <td class="tdp-c">0.1 → 6.8 stores</td>
         </tr>
         <tr>
-          <td><div style="font-weight:500">Choc Milkshake 4pk</div><div style="font-size:11px;color:var(--text-muted)">08-40229-30130</div></td>
-          <td><span class="chip ch-tdp">Chocolate</span></td>
-          <td style="color:var(--red);font-weight:600">0.87</td>
-          <td style="color:var(--amber)">17.1%</td>
-          <td class="red">−102 /wk</td>
-          <td class="muted">24 → 24 (stable)</td>
-        </tr>
-        <tr>
-          <td><div style="font-weight:500">Peanut Butter 4pk</div><div style="font-size:11px;color:var(--text-muted)">08-40229-30378</div></td>
-          <td><span class="chip ch-slate">Nut/Protein</span></td>
-          <td style="color:var(--text-muted)">0.21</td>
-          <td class="muted">3.8%</td>
-          <td class="muted">−22 /wk</td>
-          <td class="muted">38 → 38 (stable)</td>
+          <td><span class="chip" style="background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.22)">Donor (legacy)</span></td>
+          <td>Built Cookies &amp; Cream Bar 1.69oz</td>
+          <td class="muted">08-40229-30130</td>
+          <td style="color:#ef4444;font-weight:600">0.9999</td>
+          <td class="muted">3 (same flavor family)</td>
+          <td class="red">21 u/wk (from 4,827)</td>
+          <td class="red">11.7 → 0.2 stores</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <div class="insight insight-tdp">
-    <strong style="color:var(--tdp)">Distribution drove this — not price. Flavor similarity determined the donors.</strong>
-    The new Double Chocolate SKU gained 42 TDP points over 13 weeks. Fudge (cannibal_prob 0.94) and Choc Milkshake (0.87) lost units proportional to flavor proximity — their TDP held stable, so the unit loss is genuine substitution, not shelf-space loss.
-    59% of new SKU volume (343 u/wk) is net franchise growth — new chocolate occasions. 41% (237 u/wk) was cannibalized from siblings.
-    Action: this is healthy cannibalization. Do not cut new SKU — monitor Fudge + Choc Milkshake velocity for distress signals in weeks 14–26.
+    <strong style="color:var(--tdp)">Kroger replaced the Bar format with the Puff — not a price event.</strong>
+    Built Puff Cookies N Cream (30550) first appeared at Kroger Sep 29, 2024 with minimal TDP (0.1 stores).
+    As Puff TDP grew to 6.8 stores by July 2025, the Cookies &amp; Cream Bar (30130) TDP declined from a stable 11–12 stores to near zero — a textbook assortment replacement.
+    Price held steady on both SKUs throughout; this is a distribution-driven cannibalization event, not an elasticity event.
+    Mo's scored cannibalization model rated the Bar as the Puff's primary donor (prob 0.9999, relationship_distance 3 = same flavor family).
+    Net new to Kroger: Bar peak was ~4,827 u/wk (Nov 2024). Puff grew to 15,215 u/wk — approximately 77% is genuine franchise growth (new consumers buying Cookies N Cream BUILT at Kroger). Approximately 23% displaced the Bar's former volume.
+    Action: monitor Bar velocity at accounts where Puff has NOT yet been introduced — those accounts are next in the assortment cycle.
   </div>
 
 </div>
 </div>
 
 
+<!-- ════════════════════════════════════════
+     STORY 4 — Giant Eagle Brownie Batter 4pk vs Single
+════════════════════════════════════════ -->
+<div id="s4" class="pane">
+<div class="frame">
+
+  <div class="story-head">
+    <div>
+      <div class="story-title">Giant Eagle · Brownie Batter Puff · 4pk overtook single in January 2026</div>
+      <div class="story-sub">30380 (4pk) vs 30362 (single) · Giant Eagle · CONVENTIONAL|FOOD · 30 weeks Sep 2025–Apr 2026 · Source: SPINS retailer_sales_weekly + scored_cannibalization</div>
+    </div>
+    <div class="verdict-box">
+      <span class="chip ch-tdp" style="font-size:12px;padding:5px 12px">OWN-BRAND CANNIB.</span>
+      <span style="font-size:11px;color:var(--text-muted)">cannibal_prob: 0.9999 · same flavor, different pack</span>
+    </div>
+  </div>
+
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat">
+      <div class="stat-l">4pk per-bar price</div>
+      <div class="stat-v tdp-c">$2.25</div>
+      <div class="stat-s">$9.00/4 bars · 21% below single ($2.84)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">4pk velocity vs. single</div>
+      <div class="stat-v tdp-c">+86%</div>
+      <div class="stat-s">4pk 28.7 u/store/wk vs single 15.4</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Crossover date</div>
+      <div class="stat-v green">Jan 4, 2026</div>
+      <div class="stat-s">4pk first outsells single in total units</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Recent units gap</div>
+      <div class="stat-v tdp-c">4pk +36%</div>
+      <div class="stat-s">3,704 vs 2,719 · Apr 12 2026</div>
+    </div>
+  </div>
+
+  <div class="plabel">Units/week — 4pk (30380) vs single (30362) at Giant Eagle</div>
+  <svg id="ch4a" width="100%" viewBox="0 0 700 190" style="display:block;margin-bottom:6px"></svg>
+
+  <div class="plabel" style="margin-top:14px">TDP (stores) — 4pk gaining shelf as single holds steady</div>
+  <svg id="ch4b" width="100%" viewBox="0 0 700 75" style="display:block;margin-bottom:6px"></svg>
+  <div class="data-note">4pk TDP grew from 41 stores (Sep 2025) to 136 stores (Mar 2026) via two expansion events: one in Oct 2025 (+10 stores) and a major reset in Nov 2025 (+43 stores). Single TDP remained stable at 175–191 stores — the 4pk did not replace the single on shelf, it was added alongside it. The per-bar price gap ($2.25 vs $2.84) is driving format migration.</div>
+
+  <div class="div-panel"></div>
+
+  <div class="plabel">Pack format comparison — scored from scored_cannibalization + retailer_sales_weekly</div>
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:4px">
+    <table>
+      <thead><tr>
+        <th>Format</th><th>UPC</th><th>Pack count</th><th>ARP</th><th>$/bar</th><th>TDP (Apr 12)</th><th>Units/wk (Apr 12)</th><th>Velocity/store</th><th>Cannibal prob</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="chip ch-tdp">4-Pack</span> Brownie Batter Puff</td>
+          <td class="muted">08-40229-30380</td>
+          <td>4 bars</td>
+          <td class="tdp-c">$8.69</td>
+          <td class="tdp-c">$2.17</td>
+          <td class="tdp-c">129.2</td>
+          <td class="tdp-c">3,704</td>
+          <td class="tdp-c">28.7</td>
+          <td class="muted">—</td>
+        </tr>
+        <tr>
+          <td><span class="chip ch-amber">Single</span> Brownie Batter Puff</td>
+          <td class="muted">08-40229-30362</td>
+          <td>1 bar</td>
+          <td class="amber">$2.82</td>
+          <td class="amber">$2.82</td>
+          <td class="amber">176.2</td>
+          <td class="amber">2,719</td>
+          <td class="amber">15.4</td>
+          <td class="red">0.9999</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight insight-tdp">
+    <strong style="color:var(--tdp)">Giant Eagle's 4pk shelf expansion shifted Brownie Batter volume toward a lower per-bar price point.</strong>
+    Mo's scored cannibalization model rates the Brownie Batter 4pk (30380) as a direct donor drain on the single (30362) with cannibal_prob 0.9999. The 4pk was added alongside the single — not in place of it — but the 21% per-bar price discount ($2.25 vs $2.84) is redirecting consumer spend.
+    Two Giant Eagle expansion events drove this: a 10-store add in Oct 2025 (TDP 42→51) and a category reset in Nov 2025 (TDP 48→89). By Jan 4, 2026, the 4pk crossed over the single in total weekly units despite having 47 fewer store locations.
+    As of Apr 2026: 4pk moves 28.7 units/store/week vs 15.4 for the single — nearly 2× the per-store velocity.
+    <br><br>
+    <strong>Action for BUILT:</strong> Monitor whether the per-bar price gap on 4pk is eroding average revenue per unit. The 4pk generates more volume, but at $2.25/bar vs $2.84/bar for the single — a 21% revenue discount per bar. If Giant Eagle continues expanding 4pk distribution, BUILT's blended ARP at this account will compress.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     STORY 5 — Circle K · Barebells Cookies & Caramel new entry
+════════════════════════════════════════ -->
+<div id="s5" class="pane">
+<div class="frame">
+
+  <div class="story-head">
+    <div>
+      <div class="story-title">Circle K · Barebells Cookies &amp; Caramel entered Jan 2026 — matched BUILT per-store velocity in 15 weeks</div>
+      <div class="story-sub">08-50054-10854 (new) · Circle K · CONVENIENCE|MULTI OUTLET · 20 weeks Dec 2025–Apr 2026 · Source: SPINS built_filtered_weekly (Druid)</div>
+    </div>
+    <div class="verdict-box">
+      <span class="chip" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.22);font-size:12px;padding:5px 12px">NEW COMPETITOR ENTRY</span>
+      <span style="font-size:11px;color:var(--text-muted)">Mo flagged Jan 11, 2026 · 50 stores in 15 wks</span>
+    </div>
+  </div>
+
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat">
+      <div class="stat-l">Barebells C&amp;Caramel velocity (Apr 19)</div>
+      <div class="stat-v red">145 u/store/wk</div>
+      <div class="stat-s">7,365 units across 50.7 stores · $3.91/bar</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">BUILT Brownie Batter velocity (Apr 19)</div>
+      <div class="stat-v amber">151 u/store/wk</div>
+      <div class="stat-s">18,530 units across 122.9 stores · $2.97/bar</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">Barebells ARP premium over BUILT</div>
+      <div class="stat-v red">+$0.94/bar</div>
+      <div class="stat-s">$3.91 vs $2.97 · +32% premium · no price concession taken</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">BUILT Mar 2026 price cut</div>
+      <div class="stat-v amber">−17.5%</div>
+      <div class="stat-s">ARP $3.59 → $2.97 on Mar 8 · Barebells held $3.89–3.91</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="plabel">Weekly units — last 20 weeks (Dec 7, 2025 – Apr 19, 2026)</div>
+    <svg id="ch5a" width="100%" viewBox="0 0 700 248" style="display:block"></svg>
+    <div class="data-note">Source: Druid built_filtered_weekly · retail_account_level = 'TOTAL CORPORATE' · source_pack_count = '1'</div>
+  </div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="plabel">TDP (store count) trajectory — same 20 weeks</div>
+    <svg id="ch5b" width="100%" viewBox="0 0 700 135" style="display:block"></svg>
+    <div class="data-note">Source: Druid built_filtered_weekly · avg weekly TDP per SKU</div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="plabel">Circle K single-bar shelf context (Apr 19, 2026) — all brands, 1-ct format</div>
+    <svg id="ch5c" width="100%" viewBox="0 0 720 155" style="display:block"></svg>
+    <div class="data-note">Avg weekly units (last 4 weeks). Source: Druid built_filtered_weekly · source_pack_count = '1'</div>
+  </div>
+
+  <hr class="div-panel">
+
+  <div class="plabel">C-store competitive shelf snapshot</div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Brand / SKU</th>
+          <th>UPC</th>
+          <th>Status</th>
+          <th>ARP (Apr 2026)</th>
+          <th>TDP (stores)</th>
+          <th>Units / wk (Apr 19)</th>
+          <th>Vel / store</th>
+          <th>ARP trend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="chip" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.22)">NEW</span> Barebells Cookies &amp; Caramel</td>
+          <td class="muted">08-50054-10854</td>
+          <td class="red">Entered Jan 11, 2026</td>
+          <td class="red">$3.91</td>
+          <td class="red">50.7</td>
+          <td class="red">7,365</td>
+          <td class="red">145</td>
+          <td class="muted">Flat $3.85–3.91</td>
+        </tr>
+        <tr>
+          <td><span class="chip ch-slate">ESTAB.</span> Barebells Cookies &amp; Cream</td>
+          <td class="muted">08-50000-42911</td>
+          <td class="muted">169+ weeks at C.K.</td>
+          <td>$4.01</td>
+          <td>69.3</td>
+          <td>10,870</td>
+          <td>157</td>
+          <td class="muted">Flat</td>
+        </tr>
+        <tr>
+          <td><span class="chip ch-slate">ESTAB.</span> Barebells Caramel Cashew</td>
+          <td class="muted">08-50000-42909</td>
+          <td class="muted">Long-standing SKU</td>
+          <td>$3.95</td>
+          <td>64.0</td>
+          <td>8,929</td>
+          <td>139</td>
+          <td class="muted">Flat</td>
+        </tr>
+        <tr>
+          <td><span class="chip ch-amber">BUILT</span> Brownie Batter Puff</td>
+          <td class="muted">08-40229-30362</td>
+          <td class="amber">Rapid TDP expansion</td>
+          <td class="amber">$2.97</td>
+          <td class="amber">122.9</td>
+          <td class="amber">18,530</td>
+          <td class="amber">151</td>
+          <td class="red">−17.5% Mar 8</td>
+        </tr>
+        <tr>
+          <td><span class="chip ch-amber">BUILT</span> Coconut Puff</td>
+          <td class="muted">08-40229-30037</td>
+          <td class="amber">Rapid TDP expansion</td>
+          <td class="amber">$2.96</td>
+          <td class="amber">114.2</td>
+          <td class="amber">15,366</td>
+          <td class="amber">135</td>
+          <td class="red">−17.2% Mar 8</td>
+        </tr>
+        <tr>
+          <td><span class="chip ch-amber">BUILT</span> Cookie Dough Chunk Puff</td>
+          <td class="muted">08-40229-30333</td>
+          <td style="color:#22d3ee">Expanding — 28.4 stores</td>
+          <td>$3.34</td>
+          <td>28.4</td>
+          <td>3,576</td>
+          <td>126</td>
+          <td class="muted">Flat</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight insight-amber">
+    <strong style="color:var(--amber)">Barebells Cookies &amp; Caramel reached BUILT's per-store velocity in 15 weeks — without a price cut.</strong>
+    Mo detected Barebells adding a third Circle K SKU on January 11, 2026. By April 19, it had rolled to 50.7 stores and was running at 145 units/store/week. BUILT Brownie Batter runs at 151 units/store/week after a March 2026 price concession (ARP $3.59 → $2.97, −17.5%). Barebells took comparable velocity at full $3.91 ARP. Combined, the three Barebells 1ct SKUs now move ~27,164 units/week at Circle K vs ~37,472 for three BUILT singles (Brownie Batter, Coconut, Cookie Dough Chunk) — Barebells totals 73% of BUILT's volume at 33% higher per-bar price.
+    <br><br>
+    <strong>Nutrition context:</strong> The $0.62–0.94/bar Barebells premium aligns with bar size and protein: Barebells bars are 1.94oz (200 cal, 20g protein) vs BUILT Puffs at 1.41–1.55oz (140–160 cal, 15–17g protein). On a per-bar basis Barebells delivers more protein at a higher price; on a per-oz basis BUILT Puffs are slightly denser (12.1g/oz vs 10.3g/oz). Both formats are winning shelf space at Circle K.
+    <br><br>
+    <strong>Cookie Dough Chunk trajectory:</strong> BUILT's third single-bar Circle K SKU (08-40229-30333, $3.34/bar) entered January 2026 alongside Barebells C&amp;Caramel and has ramped to 28.4 stores by April 19, running at 126 units/store/week. At $3.34/bar it sits between Brownie Batter ($2.97) and Barebells ($3.91), occupying a natural mid-point in the shelf price architecture.
+    <br><br>
+    <strong>Action for BUILT:</strong> Track whether Barebells Cookies &amp; Caramel stabilizes or continues expanding past 50 stores. At 80+ stores (matching established Barebells C&amp;C) it becomes a direct shelf-slot competitor. The $0.94/bar price gap is the strategic question: BUILT's March price cut drove TDP expansion; Barebells is proving premium-priced SKUs also earn shelf at Circle K.
+    <br><br>
+    <em style="color:var(--text-muted);font-size:11px">SKUs excluded from this story: BUILT Cookies N Cream Puff (08-40229-30550) averaged 1.4 TDP stores (~2,350 units over 20 weeks) — negligible Circle K presence. BUILT Salted Caramel Puff has no Circle K distribution in this period.</em>
+  </div>
+
+</div>
+</div>
+
 <script>
-function show(btn, id) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+function show(btn,id){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(id).classList.add('active');
-  if (!_drawn[id]) {
-    if (id==='s1') drawS1();
-    else if (id==='s2') drawS2();
-    else if (id==='s3') drawS3();
+  if(!_drawn[id]){
+    if(id==='s1')drawS1();
+    else if(id==='s2')drawS2();
+    else if(id==='s3')drawS3();
+    else if(id==='s4')drawS4();
+    else if(id==='s5')drawS5();
     _drawn[id]=true;
   }
 }
-const _drawn = {s1:false, s2:false, s3:false};
+const _drawn={s1:false,s2:false,s3:false,s4:false,s5:false};
 
-/* ── drawing helpers ── */
-const BG='var(--border)';
-const GRID_W=0.5;
-
+/* helpers */
 function svgLine(x1,y1,x2,y2,col,w=1.5,dash=''){
-  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
 }
 function svgPoly(pts,col,w=2,dash=''){
   const s=pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ');
-  return `<polyline points="${s}" fill="none" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`
+  return `<polyline points="${s}" fill="none" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
 }
 function svgArea(pts,fill){
   const s=pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ');
-  return `<polygon points="${s}" fill="${fill}"/>`
+  return `<polygon points="${s}" fill="${fill}"/>`;
 }
-function svgTxt(x,y,txt,fs=8.5,fill='var(--text-dim)',anchor='end'){
-  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="${fs}" fill="${fill}">${txt}</text>`
-}
-function svgRect(x,y,w,h,fill,op=1,rx=1){
-  return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${fill}" opacity="${op}" rx="${rx}"/>`
+function svgTxt(x,y,t,fs=8.5,fill='var(--text-dim)',anchor='end'){
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" font-size="${fs}" fill="${fill}">${t}</text>`;
 }
 
-function makeGrid(W,H,pL,pR,pT,pB,yVals,yMax){
-  let h='';
-  const cW=W-pL-pR, cH=H-pT-pB;
-  yVals.forEach(v=>{
-    const y=pT+cH*(1-v/yMax);
-    h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
-    h+=svgTxt(pL-4,y+3,String(v),8.5,'var(--text-dim)','end');
-  });
-  return h;
-}
-
-/* ── Story 1 charts ── */
+/* ── Story 1 ── */
 function drawS1(){
-  // Chart 1a: Units actual vs counterfactual
-  const W=700,H=130,pL=50,pR=16,pT=16,pB=28;
-  const cW=W-pL-pR, cH=H-pT-pB;
-  const yMax=700, weeks=26;
-  const xOf=i=>pL+(i/(weeks-1))*cW;
-  const yOf=v=>pT+cH*(1-v/yMax);
+  // 26 weeks Oct 6 2024 – Mar 30 2025
+  // Event boundary: between index 13 (Jan 5) and 14 (Jan 12) = 13.5
+  // Promo end: between index 19 (Feb 16) and 20 (Feb 23) = 19.5
+  const units=[72,83,72,69,80,82,95,92,87,83,82,95,55,101,
+               405,441,274,256,315,454,
+               164,146,188,66,66,178];
+  const arp=[27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,27.99,
+             20.55,20.47,20.55,20.46,20.26,20.56,
+             27.88,27.99,27.90,27.99,27.99,27.99];
+  const tdp=[1.5,1.9,1.8,1.6,1.6,1.9,1.8,1.9,2.0,1.8,1.7,2.1,1.3,1.9,
+             3.0,3.1,2.4,2.8,2.5,2.9,
+             2.3,2.5,2.6,1.1,1.1,2.6];
+  const n=units.length;
+  const W=700,H=140,pL=48,pR=16,pT=18,pB=28;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const xOf=i=>pL+((i/(n-1))*cW);
+  const yMax=480,yOf=v=>pT+cH*(1-v/yMax);
+  const dx1=xOf(13.5),dx2=xOf(19.5);
 
-  // Data: pre units ~175-195, post actual ~450-630, counterfactual ~178-185
-  const actual=[178,182,170,188,191,175,184,179,187,174,192,180,185,
-                480,560,540,620,575,605,550,590,545,570,610,555,580];
-  const cf=    [178,182,170,188,191,175,184,179,187,174,192,180,185,
-                183,184,185,184,183,184,183,184,183,184,183,184,183];
-  const cfHi=  [null,null,null,null,null,null,null,null,null,null,null,null,null,
-                230,231,232,231,230,231,230,231,230,231,230,231,230];
-  const cfLo=  [null,null,null,null,null,null,null,null,null,null,null,null,null,
-                136,137,138,137,136,137,136,137,136,137,136,137,136];
-
-  let h='<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--cf)" stop-opacity="0.18"/><stop offset="100%" stop-color="var(--cf)" stop-opacity="0.03"/></linearGradient></defs>';
-  h+=makeGrid(W,H,pL,pR,pT,pB,[0,200,400,600],yMax);
-
-  // Pre/post divider
-  const dx=xOf(12.5);
-  h+=svgLine(dx,pT,dx,pT+cH,'var(--amber)',1,'3 2');
-  h+=svgTxt(dx/2+pL/2,pT-2,'Pre-period (13 weeks)',8,'var(--text-dim)','middle');
-  h+=svgTxt(dx+(W-pR-dx)/2,pT-2,'Post-period (13 weeks)',8,'var(--amber)','middle');
-
-  // CF band (post only)
-  const bandF=cfHi.map((v,i)=>v!==null?[xOf(i),yOf(v)]:null).filter(Boolean);
-  const bandB=cfLo.map((v,i)=>v!==null?[xOf(i),yOf(v)]:null).filter(Boolean).reverse();
-  h+=svgArea([...bandF,...bandB],'url(#g1)');
-
-  // CF line
-  h+=svgPoly(cf.map((v,i)=>[xOf(i),yOf(v)]),'var(--cf)',1.5,'5 3');
-  // Actual line
-  h+=svgPoly(actual.map((v,i)=>[xOf(i),yOf(v)]),'var(--accent)',2.2);
-
-  // Legend
-  h+=svgLine(pL,H-8,pL+20,H-8,'var(--accent)',2.2);
-  h+=svgTxt(pL+24,H-5,'Actual',8.5,'var(--text-muted)','start');
-  h+=svgLine(pL+80,H-8,pL+100,H-8,'var(--cf)',1.5,'5 3');
-  h+=svgTxt(pL+104,H-5,'Counterfactual + 95% band',8.5,'var(--text-muted)','start');
-
+  let h='<defs><linearGradient id="ga1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/></linearGradient></defs>';
+  [0,100,200,300,400].forEach(v=>{
+    const y=yOf(v);
+    h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+    h+=svgTxt(pL-4,y+3,String(v));
+  });
+  // event regions
+  h+=`<rect x="${dx1.toFixed(1)}" y="${pT}" width="${(dx2-dx1).toFixed(1)}" height="${cH}" fill="var(--amber-dim)"/>`;
+  h+=svgLine(dx1,pT,dx1,pT+cH,'var(--amber)',1,'4 2');
+  h+=svgLine(dx2,pT,dx2,pT+cH,'var(--amber)',1,'4 2');
+  h+=svgTxt((pL+dx1)/2,pT-2,'Pre (13w)',8,'var(--text-dim)','middle');
+  h+=svgTxt((dx1+dx2)/2,pT-2,'Promo (6w)',8,'var(--amber)','middle');
+  h+=svgTxt((dx2+W-pR)/2,pT-2,'Post',8,'var(--text-dim)','middle');
+  // area fill
+  const pts=units.map((v,i)=>[xOf(i),yOf(v)]);
+  const areaBot=[[W-pR,pT+cH],[pL,pT+cH]];
+  h+=svgArea([...pts,...areaBot],'url(#ga1)');
+  // line
+  h+=svgPoly(pts,'var(--accent)',2.2);
+  // dots for promo
+  for(let i=14;i<=19;i++){h+=`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(units[i]).toFixed(1)}" r="3.5" fill="var(--accent)" opacity="0.9"/>"`;}
+  // x-axis labels
+  const xlabels={0:'Oct 6',4:'Nov 3',8:'Dec 1',13:'Jan 5',14:'Jan 12',19:'Feb 16',20:'Feb 23',25:'Mar 30'};
+  Object.entries(xlabels).forEach(([i,l])=>{h+=svgTxt(xOf(Number(i)),H-4,l,7.5,'var(--text-dim)','middle');});
   document.getElementById('ch1a').innerHTML=h;
 
-  // Chart 1b: TDP (stable)
-  const H2=70,pB2=18;
+  // Chart 1b: ARP + TDP
+  const H2=80,pB2=20;
   const cH2=H2-pT-pB2;
-  const yOf2=v=>pT+cH2*(1-v/60);
-  const tdp=[39,40,38,41,39,40,39,38,40,41,39,40,39,
-             39,40,39,41,38,40,39,40,39,38,41,39,40];
+  const yArpOf=v=>pT+cH2*(1-(v/35));
+  const yTdpOf=v=>pT+cH2*(1-(v/4));
   let h2='';
-  h2+=makeGrid(W,H2,pL,pR,pT,pB2,[0,20,40,60],60);
-  h2+=svgLine(dx,pT,dx,pT+cH2,'var(--amber)',1,'3 2');
-
-  // TDP as dots + line
-  h2+=svgPoly(tdp.map((v,i)=>[xOf(i),yOf2(v)]),'var(--tdp)',1.8,'2 2');
-  tdp.forEach((v,i)=>{h2+=`<circle cx="${xOf(i).toFixed(1)}" cy="${yOf2(v).toFixed(1)}" r="2.5" fill="var(--tdp)" opacity="0.7"/>`;});
-
-  // annotation
-  h2+=svgTxt(W-pR,yOf2(39)-4,'~39 stores (stable)',9,'var(--tdp)','end');
+  [0,10,20,30].forEach(v=>{
+    const y=yArpOf(v);
+    h2+=svgLine(pL,y,W-pR,y,'var(--border)',0.4);
+    h2+=svgTxt(pL-4,y+3,'$'+v,7.5);
+  });
+  h2+=`<rect x="${dx1.toFixed(1)}" y="${pT}" width="${(dx2-dx1).toFixed(1)}" height="${cH2}" fill="var(--amber-dim)"/>`;
+  h2+=svgLine(dx1,pT,dx1,pT+cH2,'var(--amber)',1,'4 2');
+  h2+=svgLine(dx2,pT,dx2,pT+cH2,'var(--amber)',1,'4 2');
+  h2+=svgPoly(arp.map((v,i)=>[xOf(i),yArpOf(v)]),'var(--amber)',2);
+  h2+=svgPoly(tdp.map((v,i)=>[xOf(i),yTdpOf(v)]),'var(--tdp)',1.5,'3 2');
+  h2+=svgTxt(W-pR,yArpOf(27.99)-4,'ARP $27.99→$20.47→$27.99',8,'var(--amber)','end');
+  h2+=svgTxt(W-pR,yTdpOf(2.6)+10,'TDP 1.8→2.8→2.6',8,'var(--tdp)','end');
   document.getElementById('ch1b').innerHTML=h2;
 }
 
-/* ── Story 2 charts ── */
+/* ── Story 2 ── */
 function drawS2(){
-  const W=340,H=110,pL=44,pR=10,pT=14,pB=24;
-  const cW=W-pL-pR, cH=H-pT-pB;
-  const weeks=26, dx=(pL+(12.5/(weeks-1))*cW);
-  const xOf=i=>pL+(i/(weeks-1))*cW;
+  // 29 weeks Oct 5 2025 – Apr 19 2026
+  // Promo starts week 17 (Feb 1), promo ends week 27 (Apr 12)
+  const mint=[357,468,509,474,377,338,258,278,236,200,188,157,114,175,201,205,297,525,448,512,545,662,729,1661,1882,1759,1573,523,399];
+  const cdough=[469,598,711,633,548,441,416,387,284,336,325,328,243,273,392,462,422,702,765,703,869,942,1077,1944,2177,2054,2025,953,881];
+  const cocon=[414,552,590,619,560,498,403,379,272,356,361,309,258,290,388,406,466,630,625,718,769,879,1156,2046,2084,1868,1989,927,804];
+  const churro=[401,482,473,503,344,247,159,145,141,190,158,184,136,241,320,321,312,534,589,518,665,774,1190,2184,2249,2111,1817,712,550];
+  const total=mint.map((_,i)=>mint[i]+cdough[i]+cocon[i]+churro[i]);
+  const n=total.length;
+  const W=700,H=193,pL=52,pR=16,pT=18,pB=43;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const xOf=i=>pL+((i/(n-1))*cW);
+  const yMax=9500,yOf=v=>pT+cH*(1-v/yMax);
+  const dx1=xOf(16.5),dx2=xOf(26.5);
 
-  // 12pk: pre ~520, post ~760
-  const u12=[518,525,512,530,520,515,525,518,522,516,528,520,518,
-              695,740,760,750,775,755,765,748,760,755,770,748,762];
-  // 4pk: pre ~840, post ~690
-  const u4= [842,835,848,830,845,838,842,835,845,838,840,842,836,
-              715,700,688,695,680,692,685,698,688,695,682,690,686];
-
-  function miniChart(svgId, data, col, yMax, yTicks){
-    const yOf=v=>pT+cH*(1-v/yMax);
-    let h='';
-    yTicks.forEach(v=>{
-      const y=yOf(v);
-      h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
-      h+=svgTxt(pL-4,y+3,String(v),8,'var(--text-dim)','end');
-    });
-    h+=svgLine(dx,pT,dx,pT+cH,'var(--amber)',1,'3 2');
-    h+=svgPoly(data.map((v,i)=>[xOf(i),yOf(v)]),col,2);
-    // week label
-    h+=svgTxt(pL,pT+cH+16,'Wk 1',8,'var(--text-dim)','start');
-    h+=svgTxt(W-pR,pT+cH+16,'Wk 26',8,'var(--text-dim)','end');
-    h+=svgTxt(dx+2,pT+cH+16,'Price cut',8,'var(--amber)','start');
-    document.getElementById(svgId).innerHTML=h;
-  }
-  miniChart('ch2a',u12,'var(--green)',900,[0,300,600,900]);
-  miniChart('ch2b',u4,'var(--red)',1050,[0,350,700,1050]);
-
-  // Net portfolio bar
-  const W3=700,H3=60,pL3=50,pR3=16,pT3=10,pB3=18;
-  const cW3=W3-pL3-pR3, cH3=H3-pT3-pB3;
-  const net=[1360,1360,1360,1360,1365,1353,1367,1353,1367,1354,1368,1362,1354,
-             1410,1440,1448,1445,1455,1447,1450,1446,1448,1450,1452,1430,1448];
-  const yOf3=v=>pT3+cH3*(1-v/1700);
-  const xOf3=i=>pL3+(i/(weeks-1))*cW3;
-  const dx3=pL3+(12.5/(weeks-1))*cW3;
-  let h3='';
-  [0,500,1000,1500].forEach(v=>{
-    const y=yOf3(v);
-    h3+=svgLine(pL3,y,W3-pR3,y,'var(--border)',0.5);
-    h3+=svgTxt(pL3-4,y+3,String(v),8,'var(--text-dim)','end');
+  let h='<defs><linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--amber)" stop-opacity="0.18"/><stop offset="100%" stop-color="var(--amber)" stop-opacity="0.02"/></linearGradient></defs>';
+  [0,2000,4000,6000,8000].forEach(v=>{
+    const y=yOf(v);
+    h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+    h+=svgTxt(pL-4,y+3,v===0?'0':v>=1000?(v/1000).toFixed(0)+'k':String(v));
   });
-  h3+=svgLine(dx3,pT3,dx3,pT3+cH3,'var(--amber)',1,'3 2');
-  h3+=svgPoly(net.map((v,i)=>[xOf3(i),yOf3(v)]),'var(--text-muted)',2);
-  // label
-  const lastY=yOf3(net[25]);
-  h3+=svgTxt(W3-pR3,lastY-4,'1,448 u/wk',9,'var(--text)','end');
-  h3+=svgTxt(pL3+2,yOf3(1360)+12,'1,360 pre',9,'var(--text-muted)','start');
-  document.getElementById('ch2c').innerHTML=h3;
+  h+=`<rect x="${dx1.toFixed(1)}" y="${pT}" width="${(dx2-dx1).toFixed(1)}" height="${cH}" fill="var(--amber-dim)"/>`;
+  h+=svgLine(dx1,pT,dx1,pT+cH,'var(--amber)',1,'4 2');
+  h+=svgLine(dx2,pT,dx2,pT+cH,'var(--amber)',1,'4 2');
+  h+=svgTxt((pL+dx1)/2,pT-2,'Pre-promo',8,'var(--text-dim)','middle');
+  h+=svgTxt((dx1+dx2)/2,pT-2,'Promo (Feb 1 – Apr 5)',8,'var(--amber)','middle');
+  h+=svgTxt((dx2+W-pR)/2,pT-2,'Post',8,'var(--text-dim)','middle');
+  // area for total
+  const tpts=total.map((v,i)=>[xOf(i),yOf(v)]);
+  h+=svgArea([...tpts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga2)');
+  h+=svgPoly(tpts,'var(--amber)',2.5);
+  // individual lines (thin)
+  const cols=['#3b82f6','#22c55e','#a78bfa','#f59e0b'];
+  [mint,cdough,cocon,churro].forEach((arr,ci)=>{
+    h+=svgPoly(arr.map((v,i)=>[xOf(i),yOf(v)]),cols[ci],1,'4 2');
+  });
+  // x labels
+  const xlabels={0:'Oct 5',8:'Nov 30',12:'Dec 28',17:'Feb 1',23:'Mar 15',28:'Apr 19'};
+  Object.entries(xlabels).forEach(([i,l])=>h+=svgTxt(xOf(Number(i)),H-20,l,7.5,'var(--text-dim)','middle'));
+  // legend
+  h+=svgLine(pL,H-10,pL+20,H-10,'var(--amber)',2.5);
+  h+=svgTxt(pL+24,H-7,'Portfolio total',8.5,'var(--text-muted)','start');
+  ['Mint Chip','Cookie Dough','Coconut','Churro'].forEach((name,ci)=>{
+    const lx=pL+140+ci*105;
+    h+=svgLine(lx,H-10,lx+14,H-10,cols[ci],1.5,'4 2');
+    h+=svgTxt(lx+18,H-7,name,8.5,'var(--text-muted)','start');
+  });
+  document.getElementById('ch2a').innerHTML=h;
 }
 
-/* ── Story 3 charts ── */
+/* ── Story 3 ── */
 function drawS3(){
-  const W=700,H=110,pL=50,pR=16,pT=16,pB=24;
-  const cW=W-pL-pR, cH=H-pT-pB;
-  const weeks=26;
-  const xOf=i=>pL+(i/(weeks-1))*cW;
+  // 42 weeks Sep 29 2024 – Jul 13 2025
+  const puffU=[428,280,314,491,211,490,767,639,645,698,798,817,909,750,1473,2092,1797,3512,3415,2828,1964,2370,2015,1665,1431,1061,1512,5612,9414,10226,9915,9034,4913,4326,4453,6068,5182,8281,11021,11885,14652,15215];
+  const barU=[2912,4531,4072,3741,3231,3109,3872,4827,4101,3208,3595,3282,4130,3557,4319,4488,3964,3742,5250,3873,3504,3407,3166,2820,2097,1511,1182,1237,883,700,498,455,375,515,537,285,332,271,85,136,47,21];
+  const puffT=[0.1,0.1,0.1,0.1,0.1,0.3,0.4,0.3,0.3,0.5,0.4,0.4,0.4,0.4,0.5,0.5,0.4,0.7,3.1,3.1,2.3,1.7,1.7,1.7,1.6,1.1,1.0,2.0,2.7,2.9,4.2,5.4,4.2,3.3,8.6,9.5,6.6,8.7,8.2,7.2,7.0,6.8];
+  const barT=[9.8,11.1,11.6,11.7,11.3,10.8,11.2,11.7,12.0,11.1,11.4,10.8,11.4,10.7,11.5,11.5,10.9,10.6,10.3,10.1,10.1,9.9,8.7,7.4,5.7,3.9,3.0,2.9,2.6,2.3,2.0,1.7,1.7,1.3,1.3,0.7,0.7,0.7,0.5,0.3,0.3,0.2];
+  const n=puffU.length;
+  const W=700,H=175,pL=52,pR=16,pT=18,pB=43;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const xOf=i=>pL+((i/(n-1))*cW);
+  const yMax=16000,yOf=v=>pT+cH*(1-v/yMax);
 
-  // TDP: DblChoc rising, Fudge stable, ChocMilk stable
-  const tdpDC=[0,3,6,10,14,18,22,26,30,33,36,38,40,42,42,43,42,43,42,43,43,42,43,42,43,42];
-  const tdpFu=[28,28,29,28,27,28,28,27,28,28,27,28,28,27,27,28,27,27,28,27,27,28,27,27,28,27];
-  const tdpCM=[24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,24,23,24,23];
-
-  const yOf60=v=>pT+cH*(1-v/60);
-
-  let h='';
-  [0,20,40,60].forEach(v=>{
-    const y=yOf60(v);
+  let h='<defs><linearGradient id="ga3a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--tdp)" stop-opacity="0.18"/><stop offset="100%" stop-color="var(--tdp)" stop-opacity="0.02"/></linearGradient>'
+       +'<linearGradient id="ga3b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--red)" stop-opacity="0.12"/><stop offset="100%" stop-color="var(--red)" stop-opacity="0.02"/></linearGradient></defs>';
+  [0,4000,8000,12000,16000].forEach(v=>{
+    const y=yOf(v);
     h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
-    h+=svgTxt(pL-4,y+3,String(v),8,'var(--text-dim)','end');
+    h+=svgTxt(pL-4,y+3,v===0?'0':(v/1000).toFixed(0)+'k');
   });
-  // launch line
-  h+=svgLine(xOf(0),pT,xOf(0),pT+cH,'var(--tdp)',1,'3 2');
-  h+=svgTxt(xOf(0)+3,pT+8,'LAUNCH',7.5,'var(--tdp)','start');
-
-  h+=svgPoly(tdpDC.map((v,i)=>[xOf(i),yOf60(v)]),'var(--tdp)',2.2);
-  h+=svgPoly(tdpFu.map((v,i)=>[xOf(i),yOf60(v)]),'var(--red)',1.5,'4 2');
-  h+=svgPoly(tdpCM.map((v,i)=>[xOf(i),yOf60(v)]),'var(--amber)',1.5,'4 2');
-
-  // labels
-  h+=svgTxt(W-pR,yOf60(42)-4,'Dbl Choc (new)',8.5,'var(--tdp)','end');
-  h+=svgTxt(W-pR,yOf60(27)+10,'Fudge (donor)',8.5,'var(--red)','end');
-  h+=svgTxt(W-pR,yOf60(23)-4,'Choc Milkshake (donor)',8.5,'var(--amber)','end');
-
-  // Legend
-  h+=svgLine(pL,H-8,pL+18,H-8,'var(--tdp)',2.2);
-  h+=svgTxt(pL+22,H-5,'New SKU TDP expanding',8.5,'var(--text-muted)','start');
-  h+=svgLine(pL+185,H-8,pL+203,H-8,'var(--red)',1.5,'4 2');
-  h+=svgTxt(pL+207,H-5,'Donor TDP stable (unit loss is substitution, not shelf loss)',8.5,'var(--text-muted)','start');
-
+  // bar area (fading red)
+  const barPts=barU.map((v,i)=>[xOf(i),yOf(v)]);
+  h+=svgArea([...barPts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga3b)');
+  // puff area
+  const pufPts=puffU.map((v,i)=>[xOf(i),yOf(v)]);
+  h+=svgArea([...pufPts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga3a)');
+  // lines
+  h+=svgPoly(barPts,'var(--red)',2,'4 2');
+  h+=svgPoly(pufPts,'var(--tdp)',2);
+  // crossover annotation ~ week 17-18 (Feb 2025)
+  const cx=xOf(17);
+  h+=svgLine(cx,pT,cx,pT+cH,'var(--text-dim)',0.5,'2 2');
+  h+=svgTxt(cx+2,pT+10,'Puff overtakes',7.5,'var(--text-dim)','start');
+  h+=svgTxt(cx+2,pT+20,'Bar (Jan 26)',7.5,'var(--text-dim)','start');
+  // x labels
+  const xlabels={0:'Sep 29',6:'Nov 10',13:'Dec 29',17:'Jan 26',26:'Mar 30',35:'Jun 1',41:'Jul 13'};
+  Object.entries(xlabels).forEach(([i,l])=>h+=svgTxt(xOf(Number(i)),H-20,l,7.5,'var(--text-dim)','middle'));
+  // end labels
+  h+=svgTxt(W-pR,yOf(puffU[n-1])-5,'CNC Puff 15,215',9,'var(--tdp)','end');
+  h+=svgTxt(W-pR,yOf(barU[n-1])-5,'C&C Bar 21',9,'var(--red)','end');
+  // legend
+  h+=svgLine(pL,H-10,pL+18,H-10,'var(--tdp)',2);
+  h+=svgTxt(pL+22,H-7,'Puff Cookies N Cream (30550) — new SKU',8.5,'var(--text-muted)','start');
+  h+=svgLine(pL+295,H-10,pL+313,H-10,'var(--red)',2,'4 2');
+  h+=svgTxt(pL+317,H-7,'Cookies & Cream Bar (30130) — legacy donor',8.5,'var(--text-muted)','start');
   document.getElementById('ch3a').innerHTML=h;
 
-  // Units chart
-  const uDC=[0, 8,22,45,72,110,155,205,260,320,390,460,520,555,565,575,570,578,572,580,576,582,574,580,576,580];
-  const uFu=[380,375,372,365,358,350,342,335,325,315,308,298,290,280,272,265,258,252,248,245,244,245,246,245,244,245];
-  const uCM=[310,305,300,294,288,282,276,268,262,256,250,244,238,230,224,218,214,210,208,208,208,209,208,208,209,208];
-  const yOf7=v=>pT+cH*(1-v/650);
-
+  // TDP chart
+  const H2=95,pB2=20,cH2=H2-pT-pB2;
+  const yTMax=14,yTOf=v=>pT+cH2*(1-v/yTMax);
   let h2='';
-  [0,200,400,600].forEach(v=>{
-    const y=yOf7(v);
+  [0,4,8,12].forEach(v=>{
+    const y=yTOf(v);
     h2+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
-    h2+=svgTxt(pL-4,y+3,String(v),8,'var(--text-dim)','end');
+    h2+=svgTxt(pL-4,y+3,String(v));
   });
-  h2+=svgLine(xOf(0),pT,xOf(0),pT+cH,'var(--tdp)',1,'3 2');
-  h2+=svgPoly(uDC.map((v,i)=>[xOf(i),yOf7(v)]),'var(--tdp)',2.2);
-  h2+=svgPoly(uFu.map((v,i)=>[xOf(i),yOf7(v)]),'var(--red)',1.5,'4 2');
-  h2+=svgPoly(uCM.map((v,i)=>[xOf(i),yOf7(v)]),'var(--amber)',1.5,'4 2');
-
-  h2+=svgTxt(W-pR,yOf7(580)-4,'Dbl Choc 580/wk',8.5,'var(--tdp)','end');
-  h2+=svgTxt(W-pR,yOf7(245)+10,'Fudge 245/wk (was 380)',8.5,'var(--red)','end');
-  h2+=svgTxt(W-pR,yOf7(208)-4,'Choc Milk 208/wk (was 310)',8.5,'var(--amber)','end');
-
-  h2+=svgLine(pL,H-8,pL+18,H-8,'var(--tdp)',2.2);
-  h2+=svgTxt(pL+22,H-5,'New SKU',8.5,'var(--text-muted)','start');
-  h2+=svgLine(pL+90,H-8,pL+108,H-8,'var(--red)',1.5,'4 2');
-  h2+=svgTxt(pL+112,H-5,'Donor SKUs',8.5,'var(--text-muted)','start');
-
+  h2+=svgLine(cx,pT,cx,pT+cH2,'var(--text-dim)',0.5,'2 2');
+  h2+=svgPoly(barT.map((v,i)=>[xOf(i),yTOf(v)]),'var(--red)',1.8,'4 2');
+  h2+=svgPoly(puffT.map((v,i)=>[xOf(i),yTOf(v)]),'var(--tdp)',1.8);
+  h2+=svgTxt(W-pR,yTOf(6.8)-4,'Puff TDP 0.1→6.8',8.5,'var(--tdp)','end');
+  h2+=svgTxt(W-pR,yTOf(0.2)-8,'Bar TDP 12→0.2',8.5,'var(--red)','end');
+  Object.entries(xlabels).forEach(([i,l])=>h2+=svgTxt(xOf(Number(i)),H2-4,l,7.5,'var(--text-dim)','middle'));
   document.getElementById('ch3b').innerHTML=h2;
 }
 
-// Draw story 1 immediately (it's active)
 drawS1(); _drawn.s1=true;
+
+/* ── Story 4 ── */
+function drawS4(){
+  // 30 weeks Sep 21 2025 – Apr 12 2026 · Giant Eagle · Brownie Batter 4pk (30380) vs single (30362)
+  const pk4U=[2577,3210,3452,3540,3429,3340,3008,3080,2876,3193,2481,3144,3229,2842,2437,3289,4510,4764,5244,3779,4616,4405,3931,4011,4559,4555,4093,4450,4187,3704];
+  const pk4T=[41.1,46.1,50.7,50.8,47.7,46.5,44.6,45.3,48.8,88.8,91.8,100.6,109.0,108.2,106.6,105.0,106.0,109.0,118.9,109.8,117.3,107.4,107.4,120.1,133.6,135.6,135.4,136.2,136.0,129.2];
+  const singU=[4170,3973,3833,3897,3927,4259,4460,5033,4810,4406,3675,3809,3423,3091,2468,2250,2929,2879,3597,3513,5251,5190,5564,4695,3397,3370,3169,3062,3028,2719];
+  const singT=[180.6,182.6,186.1,181.9,186.8,182.3,185.7,183.6,178.7,172.7,166.9,171.5,165.2,163.7,152.3,158.5,168.9,165.0,171.1,171.9,187.4,188.6,187.9,183.1,179.9,173.7,184.0,182.6,189.0,176.2];
+  const n=pk4U.length;
+  const W=700,H=190,pL=52,pR=16,pT=18,pB=43;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const xOf=i=>pL+((i/(n-1))*cW);
+  const yMax=6000,yOf=v=>pT+cH*(1-v/yMax);
+  // crossover at index 15 (Jan 4, between wk 14 and 15)
+  const cx=xOf(15.5);
+
+  let h='<defs>'
+    +'<linearGradient id="ga4a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--tdp)" stop-opacity="0.15"/><stop offset="100%" stop-color="var(--tdp)" stop-opacity="0.02"/></linearGradient>'
+    +'<linearGradient id="ga4b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity="0.10"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0.02"/></linearGradient>'
+    +'</defs>';
+  [0,1500,3000,4500,6000].forEach(v=>{
+    const y=yOf(v);
+    h+=svgLine(pL,y,W-pR,y,'var(--border)',0.5);
+    h+=svgTxt(pL-4,y+3,v===0?'0':(v/1000).toFixed(1)+'k');
+  });
+  // crossover annotation
+  h+=svgLine(cx,pT,cx,pT+cH,'var(--green)',1,'3 2');
+  h+=svgTxt(cx+2,pT+9,'4pk takes over',7.5,'var(--green)','start');
+  h+=svgTxt(cx+2,pT+19,'(Jan 4, 2026)',7.5,'var(--green)','start');
+
+  // TDP expansion callout for 4pk (wk 9: Nov 23, TDP 41→88)
+  const tdpCx=xOf(9);
+  h+=svgLine(tdpCx,pT,tdpCx,pT+cH,'var(--tdp)',0.8,'2 2');
+  h+=svgTxt(tdpCx+2,pT+6,'4pk +43 stores',7.5,'var(--tdp)','start');
+  h+=svgTxt(tdpCx+2,pT+16,'(Nov 23 reset)',7.5,'var(--tdp)','start');
+
+  // areas
+  const s4pts=pk4U.map((v,i)=>[xOf(i),yOf(v)]);
+  const sgpts=singU.map((v,i)=>[xOf(i),yOf(v)]);
+  h+=svgArea([...s4pts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga4a)');
+  h+=svgArea([...sgpts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga4b)');
+  // lines
+  h+=svgPoly(s4pts,'var(--tdp)',2.2);
+  h+=svgPoly(sgpts,'#f59e0b',2,'6 3');
+  // endpoint labels
+  h+=svgTxt(W-pR,yOf(pk4U[n-1])-5,'4pk 3,704',9,'var(--tdp)','end');
+  h+=svgTxt(W-pR,yOf(singU[n-1])+13,'Single 2,719',9,'#f59e0b','end');
+  // x labels
+  const xlabels={0:'Sep 21',4:'Oct 19',9:'Nov 23',15:'Jan 4',21:'Feb 15',25:'Mar 22',29:'Apr 12'};
+  Object.entries(xlabels).forEach(([i,l])=>h+=svgTxt(xOf(Number(i)),H-20,l,7.5,'var(--text-dim)','middle'));
+  // legend
+  h+=svgLine(pL,H-10,pL+18,H-10,'var(--tdp)',2);
+  h+=svgTxt(pL+22,H-7,'4pk (30380) — $9.00 / 4 bars = $2.25/bar',8.5,'var(--text-muted)','start');
+  h+=svgLine(pL+320,H-10,pL+338,H-10,'#f59e0b',2,'6 3');
+  h+=svgTxt(pL+342,H-7,'Single (30362) — $2.84/bar avg',8.5,'var(--text-muted)','start');
+  document.getElementById('ch4a').innerHTML=h;
+
+  // TDP chart
+  const H2=75,pB2=18,cH2=H2-pT-pB2;
+  const yTMax=200,yTOf=v=>pT+cH2*(1-v/yTMax);
+  let h2='';
+  [0,50,100,150,200].forEach(v=>{
+    h2+=svgLine(pL,yTOf(v),W-pR,yTOf(v),'var(--border)',0.5);
+    h2+=svgTxt(pL-4,yTOf(v)+3,String(v));
+  });
+  h2+=svgLine(cx,pT,cx,pT+cH2,'var(--green)',0.8,'3 2');
+  h2+=svgLine(tdpCx,pT,tdpCx,pT+cH2,'var(--tdp)',0.8,'2 2');
+  h2+=svgPoly(pk4T.map((v,i)=>[xOf(i),yTOf(v)]),'var(--tdp)',2);
+  h2+=svgPoly(singT.map((v,i)=>[xOf(i),yTOf(v)]),'#f59e0b',1.5,'6 3');
+  h2+=svgTxt(W-pR,yTOf(pk4T[n-1])+12,'4pk TDP 129',8.5,'var(--tdp)','end');
+  h2+=svgTxt(W-pR,yTOf(singT[n-1])-5,'Single TDP 176',8.5,'#f59e0b','end');
+  Object.entries(xlabels).forEach(([i,l])=>h2+=svgTxt(xOf(Number(i)),H2-3,l,7.5,'var(--text-dim)','middle'));
+  document.getElementById('ch4b').innerHTML=h2;
+}
+
+function drawS5(){
+  const weeks5=['Dec 7','Dec 14','Dec 21','Dec 28','Jan 4','Jan 11','Jan 18','Jan 25','Feb 1','Feb 8','Feb 15','Feb 22','Mar 1','Mar 8','Mar 15','Mar 22','Mar 29','Apr 5','Apr 12','Apr 19'];
+  const bbNew=[0,0,14,16,49,469,1343,2071,2720,3383,4177,4944,5591,6221,6298,6486,6693,6746,7167,7365];
+  const bbNewTdp=[0,0,0.3,0.3,1.0,4.7,11.2,17.2,21.2,26.1,32.1,35.9,39.6,42.3,44.0,44.1,46.2,45.1,46.5,50.7];
+  const bbCC=[9915,9763,9735,7727,8309,10217,10020,9113,8988,9633,9756,9672,9875,9557,9878,10077,10511,10314,10970,10870];
+  const bbCCTdp=[70.4,71.3,72.1,64.9,66.7,72.6,70.2,67.0,65.9,68.0,69.4,67.8,69.1,67.2,68.1,68.6,70.0,69.1,70.0,69.3];
+  const builtU=[5467,5571,5411,4237,4967,6381,7010,7948,9306,10819,11673,12103,13711,17077,18181,17599,18359,18014,18789,18530];
+  const builtTdp=[49.4,49.6,49.0,44.4,46.5,56.7,61.0,71.8,82.6,92.5,98.3,102.3,110.4,118.7,119.5,117.8,119.8,120.5,123.5,122.9];
+  // Cookie Dough Chunk (30333) — Druid built_filtered_weekly · CIRCLE K TOTAL CORPORATE · Dec 7 2025–Apr 19 2026
+  const cdcU=[1,0,2,4,1,47,195,555,929,1063,1129,1315,1417,1696,1978,2694,2922,2783,3189,3576];
+  const cdcTdp=[0.0,0.0,0.0,0.1,0.0,0.5,2.2,5.6,9.0,9.8,10.8,11.9,12.1,13.7,15.8,20.9,22.5,22.4,24.7,28.4];
+  const n=weeks5.length;
+  const xShow=[0,5,9,13,17,19];
+
+  // ── Units chart — W=700, viewBox H=248, pT=16, cH=148, legend 4 rows ──
+  const W=700,pL=52,pR=14,pT=16,cH=148;
+  const cW=W-pL-pR;
+  const xOf=i=>pL+i/(n-1)*cW;
+  const uMax=Math.max(...bbNew,...bbCC,...builtU,...cdcU)*1.05;
+  const yOf=v=>pT+cH*(1-v/uMax);
+
+  let h='<defs>'
+    +'<linearGradient id="ga5a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444" stop-opacity="0.18"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0.01"/></linearGradient>'
+    +'<linearGradient id="ga5b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity="0.18"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0.01"/></linearGradient>'
+    +'<linearGradient id="ga5c" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.10"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0.01"/></linearGradient>'
+    +'<linearGradient id="ga5d" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22d3ee" stop-opacity="0.12"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0.01"/></linearGradient>'
+    +'</defs>';
+
+  [0,5000,10000,15000,20000].forEach(v=>{
+    h+=svgLine(pL,yOf(v),W-pR,yOf(v),'var(--border)',0.5);
+    h+=svgTxt(pL-4,yOf(v)+3,v===0?'0':(v/1000).toFixed(0)+'k',7.5,'var(--text-dim)','end');
+  });
+
+  // launch annotation (Jan 11 = index 5)
+  const lx=xOf(5);
+  h+=svgLine(lx,pT,lx,pT+cH,'var(--red)',0.8,'3 2');
+  h+=svgTxt(lx+3,pT+9,'BB C&Caramel',7.5,'var(--red)','start');
+  h+=svgTxt(lx+3,pT+18,'launch Jan 11',7.5,'var(--red)','start');
+
+  // price cut annotation (Mar 8 = index 13)
+  const pcx=xOf(13);
+  h+=svgLine(pcx,pT,pcx,pT+cH,'var(--amber)',0.8,'2 2');
+  h+=svgTxt(pcx-3,pT+50,'BUILT −17.5% ARP',7.5,'var(--amber)','end');
+  h+=svgTxt(pcx-3,pT+60,'Mar 8, 2026',7.5,'var(--amber)','end');
+
+  // protein callout — open space between BUILT line (near top) and BB C&C (mid-chart)
+  h+=svgTxt(W-pR-2,pT+18,'Nutrition context (per bar):',6.5,'var(--text-dim)','end');
+  h+=svgTxt(W-pR-2,pT+28,'Barebells: 20g protein · 1.94oz · 200 cal',7,'#f59e0b','end');
+  h+=svgTxt(W-pR-2,pT+38,'BUILT Puff: 17g protein · 1.41oz · 140–160 cal',7,'var(--accent)','end');
+  h+=svgTxt(W-pR-2,pT+48,'→ +$0.62/bar premium reflects larger, higher-protein bar',6.5,'var(--text-dim)','end');
+
+  const bbNewPts=bbNew.map((v,i)=>[xOf(i),yOf(v)]);
+  const bbCCPts=bbCC.map((v,i)=>[xOf(i),yOf(v)]);
+  const builtPts=builtU.map((v,i)=>[xOf(i),yOf(v)]);
+  const cdcPts=cdcU.map((v,i)=>[xOf(i),yOf(v)]);
+  h+=svgArea([...bbCCPts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga5b)');
+  h+=svgArea([...builtPts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga5c)');
+  h+=svgArea([...bbNewPts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga5a)');
+  h+=svgArea([...cdcPts,[W-pR,pT+cH],[pL,pT+cH]],'url(#ga5d)');
+  h+=svgPoly(bbCCPts,'#f59e0b',1.8,'4 3');
+  h+=svgPoly(builtPts,'var(--accent)',2.2);
+  h+=svgPoly(bbNewPts,'var(--red)',2.4);
+  h+=svgPoly(cdcPts,'#22d3ee',1.8);
+
+  // endpoint labels
+  h+=svgTxt(W-pR-2,yOf(builtU[n-1])-5,'BUILT Brownie Batter 18,530',8.5,'var(--accent)','end');
+  h+=svgTxt(W-pR-2,yOf(bbCC[n-1])-5,'BB C&Cream (est.) 10,870',8.5,'#f59e0b','end');
+  h+=svgTxt(W-pR-2,yOf(bbNew[n-1])+8,'BB C&Caramel (new) 7,365',8.5,'var(--red)','end');
+  h+=svgTxt(W-pR-2,yOf(cdcU[n-1])+12,'CDChunk 3,576',8.5,'#22d3ee','end');
+
+  xShow.forEach(i=>h+=svgTxt(xOf(i),pT+cH+22,weeks5[i],7.5,'var(--text-dim)','middle'));
+
+  // legend — 4 rows
+  const ly=pT+cH+34;
+  h+=svgLine(pL,ly,pL+16,ly,'var(--accent)',2);
+  h+=svgTxt(pL+20,ly+3,'BUILT Brownie Batter (08-40229-30362)',7.5,'var(--text-muted)','start');
+  h+=svgLine(pL,ly+12,pL+16,ly+12,'#22d3ee',1.8);
+  h+=svgTxt(pL+20,ly+15,'BUILT Cookie Dough Chunk (08-40229-30333)',7.5,'var(--text-muted)','start');
+  h+=svgLine(pL,ly+24,pL+16,ly+24,'#f59e0b',1.8,'4 3');
+  h+=svgTxt(pL+20,ly+27,'Barebells Cookies & Cream — established (08-50000-42911)',7.5,'var(--text-muted)','start');
+  h+=svgLine(pL,ly+36,pL+16,ly+36,'var(--red)',2);
+  h+=svgTxt(pL+20,ly+39,'Barebells Cookies & Caramel — new entry Jan 2026 (08-50054-10854)',7.5,'var(--text-muted)','start');
+  document.getElementById('ch5a').innerHTML=h;
+
+  // ── TDP chart — W=700, H=135, pT=16, cH=91 ──
+  const H2=135,cH2=91;
+  const tdpMax=140,yTOf=v=>pT+cH2*(1-v/tdpMax);
+  let h2='<defs><linearGradient id="gt5a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444" stop-opacity="0.12"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>';
+  [0,25,50,75,100,125].forEach(v=>{
+    h2+=svgLine(pL,yTOf(v),W-pR,yTOf(v),'var(--border)',0.5);
+    h2+=svgTxt(pL-4,yTOf(v)+3,String(v),7.5,'var(--text-dim)','end');
+  });
+  const bbNewTpts=bbNewTdp.map((v,i)=>[xOf(i),yTOf(v)]);
+  const bbCCTpts=bbCCTdp.map((v,i)=>[xOf(i),yTOf(v)]);
+  const builtTpts=builtTdp.map((v,i)=>[xOf(i),yTOf(v)]);
+  const cdcTpts=cdcTdp.map((v,i)=>[xOf(i),yTOf(v)]);
+  h2+=svgArea([...bbNewTpts,[W-pR,pT+cH2],[pL,pT+cH2]],'url(#gt5a)');
+  h2+=svgPoly(bbCCTpts,'#f59e0b',1.5,'4 3');
+  h2+=svgPoly(builtTpts,'var(--accent)',2);
+  h2+=svgPoly(bbNewTpts,'var(--red)',2.2);
+  h2+=svgPoly(cdcTpts,'#22d3ee',1.6);
+  h2+=svgLine(lx,pT,lx,pT+cH2,'var(--red)',0.7,'3 2');
+  // TDP endpoint labels — adjusted offsets to accommodate 4th series
+  h2+=svgTxt(W-pR-2,yTOf(builtTdp[n-1])-5,'BUILT 122.9',8.5,'var(--accent)','end');
+  h2+=svgTxt(W-pR-2,yTOf(bbCCTdp[n-1])-5,'BB C&Cream 69.3',8.5,'#f59e0b','end');
+  h2+=svgTxt(W-pR-2,yTOf(bbNewTdp[n-1])+5,'BB C&Caramel 50.7',8.5,'var(--red)','end');
+  h2+=svgTxt(W-pR-2,yTOf(cdcTdp[n-1])+18,'CDChunk 28.4',8.5,'#22d3ee','end');
+  xShow.forEach(i=>h2+=svgTxt(xOf(i),H2-8,weeks5[i],7.5,'var(--text-dim)','middle'));
+  document.getElementById('ch5b').innerHTML=h2;
+
+  // ── Shelf context bar chart ──
+  const shelf=[
+    {label:'Barebells C&Cream',units:10870,arp:4.01,color:'#f59e0b'},
+    {label:'BUILT Brownie Batter',units:18530,arp:2.97,color:'var(--accent)'},
+    {label:'BUILT Coconut',units:15366,arp:2.96,color:'#60a5fa'},
+    {label:'Barebells Caramel Cashew',units:8929,arp:3.95,color:'#fcd34d'},
+    {label:'Barebells C&Caramel (NEW)',units:7365,arp:3.91,color:'var(--red)'},
+    {label:'BUILT Cookie Dough Chunk',units:3576,arp:3.34,color:'#22d3ee'},
+  ];
+  const W3=720,H3=155,pL3=160,pR3=80,pT3=12,barH=14,barGap=7;
+  const uMax3=Math.max(...shelf.map(s=>s.units))*1.08;
+  const bW=v=>(W3-pL3-pR3)*v/uMax3;
+  let h3='';
+  shelf.forEach((s,i)=>{
+    const y=pT3+i*(barH+barGap);
+    const bw=bW(s.units);
+    h3+=`<rect x="${pL3}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${barH}" fill="${s.color}" opacity="0.8" rx="2"/>`;
+    h3+=svgTxt(pL3-6,y+barH/2+3,s.label,9,'var(--text-muted)','end');
+    h3+=svgTxt(pL3+bw+6,y+barH/2+3,`${(s.units/1000).toFixed(1)}k u · $${s.arp}/bar`,9,'var(--text)','start');
+  });
+  h3+=`<line x1="${pL3}" y1="${pT3}" x2="${pL3}" y2="${H3-20}" stroke="var(--border)" stroke-width="1"/>`;
+  document.getElementById('ch5c').innerHTML=h3;
+}
 </script>

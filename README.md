@@ -127,6 +127,24 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-21 (update 30) — Data stories mockup: Story 5 expanded with Cookie Dough Chunk, protein callout, and competitive shelf context
+
+`mockups/mo_causal_demand_shift_mockup.html` — 5-tab annotated SVG data stories (all data from Druid `built_filtered_weekly`). Story 5 updated with three additions:
+
+**BUILT Cookie Dough Chunk (08-40229-30333) added as a tracked series.** The SKU entered Circle K in January 2026 alongside Barebells C&Caramel and has ramped to 28.4 stores by April 19, running at 126 units/store/week at $3.34/bar. Weekly units and TDP series from Druid (Dec 7, 2025 – Apr 19, 2026) now appear in both the units chart (ch5a, cyan line) and TDP chart (ch5b), plus the shelf context bar chart (ch5c) and the competitive shelf table. At $3.34/bar it sits between Brownie Batter ($2.97) and Barebells ($3.91), occupying a natural mid-point in the shelf price architecture.
+
+**Protein/nutrition callout annotation added to units chart.** Placed in the open space between the BUILT line (near chart top) and Barebells C&C (mid-chart): Barebells 20g protein / 1.94oz / 200 cal vs. BUILT Puff 15–17g protein / 1.41–1.55oz / 140–160 cal. The $0.62–0.94/bar Barebells premium reflects a larger, higher-protein bar. On a per-oz basis BUILT Puffs are slightly denser (12.1g/oz vs. 10.3g/oz).
+
+**Coverage note added for absent SKUs.** BUILT Cookies N Cream Puff (08-40229-30550) has only 1.4 avg TDP stores (~2,350 units over 20 weeks) — negligible Circle K presence. BUILT Salted Caramel Puff has no Circle K distribution in this period. Both are explicitly called out in the insight box.
+
+**Volume totals updated:** BUILT 3-SKU total is now ~37,472 units/week (Brownie Batter + Coconut + Cookie Dough Chunk); Barebells 3-SKU total ~27,164 units/week — Barebells is 73% of BUILT's volume at 33% higher ARP (previously stated as 80% before Cookie Dough Chunk was included).
+
+**Product name correction:** Story 5 table previously listed "Coconut Almond Puff" for UPC 08-40229-30037. Corrected to "Coconut Puff" matching the actual SPINS description "Built Puff Coconut Protein Bar 1.41 Oz."
+
+Wiki (`10-use-cases.md`) updated: demand-shift taxonomy table now references the mockup stories; Story 5 Circle K data added as a sub-section with SKU tables, nutrition context, and exclusion notes.
+
+---
+
 ### 2026-07-20 (update 29) — MO_60 causal sensitivity + MO_61 HTE elasticity: explainable causal ML layer complete
 
 Two causal analysis scripts completed and committed, forming an explainability-first causal ML layer on top of the MO_72 BSTS foundation.
