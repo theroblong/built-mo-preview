@@ -127,6 +127,16 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-21 (update 33) — SPINS column inventory: 55 required of 214 in extract
+
+Audited every `built_filtered_weekly` SELECT statement across the full pipeline (MO_20–MO_58, MO_46, MO_49) and API layer (`retailer.py`, `trends.py`, `filters.py`). Three-tier finding:
+
+- **55 Q0-critical columns** — the pipeline depends on all 55; any missing causes nulls or failures downstream. Covers: identity/geo dims (9), volume/distribution (8), dollars (3), price (2), promo breakdown (4), yago comparisons (4), ACV/store metrics (5), additional velocity (2), promo TDP (3), lifecycle (2), product attributes (NFP, storage, etc.) (9), geo metadata (2), ARP discount flag (1).
+- **26 columns** — directly queried by the API layer (what UI screens actually `SELECT` from `built_filtered_weekly`). Subset of the 55.
+- **159 columns** — in the 214-col extract but unused by Mo.
+
+**Planning / storage-sizing number: 55 required.** Wiki (`02-data-architecture.md`) updated with column breakdown table.
+
 ### 2026-07-21 (update 32) — MO_60 Druid merge complete; MO_61 clarified as research-only
 
 `causal_impact_scores` in Druid re-ingested with MO_60 sensitivity fields (2026-07-21). Merged `robust_verdict`, `direction_consistent`, `narrative`, `stability_score`, and `n_variants_run` from `causal_impact_sensitivity.parquet` (140 SIGNIFICANT events) into the 500-row base table. Left-joined so non-SIGNIFICANT rows carry null — breakdown: 40 ROBUST, 13 MODERATE, 87 FRAGILE, 360 null. Re-ingested from `s3://mo-ml/causal_impact_scores/2026-07-21/causal_impact_scores_v2.parquet` with `appendToExisting:false`. Updated ingest spec saved. UI Event drawer wiring deferred — data is ready when UI work resumes.
