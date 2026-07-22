@@ -4,3 +4,8 @@ __pycache__/
 .gh-config/
 scripts/.env
 scripts/outputs/
+outputs/*.csv
+outputs/*.parquet
+outputs/*.pkl
+outputs/*.log
+outputs/*.png

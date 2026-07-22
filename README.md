@@ -127,6 +127,17 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-22 (update 34) — MO_70: retailer × SKU velocity extract for Brian (BUILT + category)
+
+`scripts/MO_70_velocity_extract.py` — generates two CSVs and an interactive HTML from live Druid data.
+
+**Outputs:**
+- `outputs/velocity_extract_built.csv` (71,109 rows) — BUILT only: 52wk weekly actuals (39,831 rows, 116 UPCs, 130 retailers) + 13wk forward forecast (31,278 rows, including `forecast_vel_low/base/high` computed as `forecast_units / last_known_tdp`). Column `type` = `actual` or `forecast`.
+- `outputs/velocity_extract_category.csv` (55,890 rows) — 13wk avg velocity for the full competitive set (361 brands, 3,441 UPCs, 142 retailers). One row per SKU × retailer × channel.
+- `mockups/velocity_extract.html` (17MB) — two-tab interactive HTML. BUILT tab: sortable/filterable table with 52wk+forecast sparklines (solid blue = actual, dashed amber = forecast). Category tab: full competitive set with velocity bar and filters by brand/channel/retailer/search.
+
+**Design notes:** MULO (`CONVENTIONAL|MULTI OUTLET`, geographies `MULO/W/ AK/HI/MULO W/ C-STORES/W/ C-STORES`) excluded. Geography rows aggregated at query time (one row per upc × retailer × channel × week). Forecast velocity uses last-known TDP as denominator. Category date window anchored off data max (2026-04-13) not `CURRENT_TIMESTAMP` — critical for avoiding empty result when server clock is ahead of data.
+
 ### 2026-07-21 (update 33) — SPINS column inventory: 55 required of 214 in extract
 
 Audited every `built_filtered_weekly` SELECT statement across the full pipeline (MO_20–MO_58, MO_46, MO_49) and API layer (`retailer.py`, `trends.py`, `filters.py`). Three-tier finding:
