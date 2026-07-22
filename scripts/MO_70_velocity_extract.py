@@ -230,21 +230,47 @@ for key, g in df_act.groupby(["upc", "retailer", "channel"]):
     else:
         spark_map[f"{upc}|{retailer}|{channel}"] = {"actual": pts, "forecast": []}
 
-# 13wk summary for BUILT (for the BUILT summary table)
-built_summary = (
+# 13wk summary for BUILT
+built_13w = (
     df_act[df_act["__time"] >= df_act["__time"].max() - pd.Timedelta(weeks=13)]
     .groupby(["upc","description","brand","channel","retailer"])
-    .agg(avg_velocity_spm=("velocity_spm","mean"),
+    .agg(vel_13w_avg=("velocity_spm","mean"),
          avg_base_units=("base_units","mean"),
          avg_tdp=("tdp","mean"),
          avg_pct_stores=("pct_stores_selling","mean"),
          avg_arp=("arp","mean"),
-         weeks_present=("week","count"))
+         weeks_13=("week","count"))
     .reset_index()
-    .sort_values("avg_velocity_spm", ascending=False)
 )
-for c in ["avg_velocity_spm","avg_arp"]:
-    built_summary[c] = built_summary[c].round(2)
+
+# 52wk stats per series
+_g52 = df_act.groupby(["upc","channel","retailer"])["velocity_spm"]
+built_52w = pd.DataFrame({
+    "vel_52w_avg": _g52.mean(),
+    "vel_52w_min": _g52.min(),
+    "vel_52w_max": _g52.max(),
+    "vel_52w_med": _g52.median(),
+}).reset_index()
+
+# 13wk forecast avg velocity
+if not df_fct.empty:
+    fct_avg = (
+        df_fct.groupby(["upc","channel","retailer"])["forecast_vel_base"]
+        .mean().reset_index()
+        .rename(columns={"forecast_vel_base": "fct_vel_avg"})
+    )
+else:
+    fct_avg = pd.DataFrame(columns=["upc","channel","retailer","fct_vel_avg"])
+
+built_summary = (
+    built_13w
+    .merge(built_52w, on=["upc","channel","retailer"], how="left")
+    .merge(fct_avg,   on=["upc","channel","retailer"], how="left")
+    .sort_values("vel_13w_avg", ascending=False)
+)
+for c in ["vel_13w_avg","vel_52w_avg","vel_52w_min","vel_52w_max","vel_52w_med","fct_vel_avg","avg_arp"]:
+    if c in built_summary.columns:
+        built_summary[c] = built_summary[c].round(2)
 built_summary["avg_base_units"] = built_summary["avg_base_units"].round(1)
 built_summary["avg_tdp"]        = built_summary["avg_tdp"].round(1)
 
@@ -362,20 +388,31 @@ html = f"""<title>Velocity Extract — BUILT + Category</title>
       <input type="text" id="b-f-q" placeholder="UPC or description…"
              oninput="bFilter()" style="width:180px"></div>
     <button class="reset" onclick="bReset()">Reset</button>
+    <button class="reset" onclick="bExport()" style="border-color:var(--green);color:var(--green)">⬇ Export CSV</button>
   </div>
   <div id="b-count"></div>
   <div class="tbl-wrap"><table id="b-tbl">
-    <thead><tr>
+    <thead>
+    <tr>
+      <th colspan="4" style="border-right:1px solid var(--border)"></th>
+      <th colspan="6" style="color:var(--accent);text-align:center;border-right:1px solid var(--border)">Velocity SPM (units / store / week)</th>
+      <th colspan="4"></th>
+    </tr>
+    <tr>
       <th onclick="bSort('description')" data-col="description">Description</th>
       <th onclick="bSort('upc')" data-col="upc">UPC</th>
       <th onclick="bSort('channel')" data-col="channel">Channel</th>
-      <th onclick="bSort('retailer')" data-col="retailer">Retailer</th>
-      <th onclick="bSort('avg_velocity_spm')" data-col="avg_velocity_spm" class="sort-desc">Velocity SPM (13wk)</th>
+      <th onclick="bSort('retailer')" data-col="retailer" style="border-right:1px solid var(--border)">Retailer</th>
+      <th onclick="bSort('vel_13w_avg')" data-col="vel_13w_avg" class="sort-desc">13wk Avg</th>
+      <th onclick="bSort('vel_52w_avg')" data-col="vel_52w_avg">52wk Avg</th>
+      <th onclick="bSort('vel_52w_min')" data-col="vel_52w_min">52wk Min</th>
+      <th onclick="bSort('vel_52w_max')" data-col="vel_52w_max">52wk Max</th>
+      <th onclick="bSort('vel_52w_med')" data-col="vel_52w_med">52wk Med</th>
+      <th onclick="bSort('fct_vel_avg')" data-col="fct_vel_avg" style="border-right:1px solid var(--border)">13wk Fct Avg</th>
       <th onclick="bSort('avg_base_units')" data-col="avg_base_units">Base Units/wk</th>
       <th onclick="bSort('avg_tdp')" data-col="avg_tdp">Avg TDP</th>
-      <th onclick="bSort('avg_pct_stores')" data-col="avg_pct_stores">% Stores</th>
       <th onclick="bSort('avg_arp')" data-col="avg_arp">ARP</th>
-      <th>52wk + 13wk forecast</th>
+      <th>Trend</th>
     </tr></thead>
     <tbody id="b-tbody"></tbody>
   </table></div>
@@ -404,6 +441,7 @@ html = f"""<title>Velocity Extract — BUILT + Category</title>
       <input type="text" id="c-f-q" placeholder="UPC, brand, or description…"
              oninput="cFilter()" style="width:180px"></div>
     <button class="reset" onclick="cReset()">Reset</button>
+    <button class="reset" onclick="cExport()" style="border-color:var(--green);color:var(--green)">⬇ Export CSV</button>
   </div>
   <div id="c-count"></div>
   <div class="tbl-wrap"><table id="c-tbl">
@@ -436,19 +474,19 @@ const fmtPct = n => n==null||isNaN(n) ? "—" : (n*100).toFixed(1)+"%";
 const fmtARP = n => n==null||isNaN(n) ? "—" : "$"+n.toFixed(2);
 
 // ── BUILT tab ──────────────────────────────────────────────────────────────
-let bFiltered=[...BUILT_DATA], bSortCol="avg_velocity_spm", bSortAsc=false;
-const bMaxVel = Math.max(...BUILT_DATA.map(r=>r.avg_velocity_spm||0));
+let bFiltered=[...BUILT_DATA], bSortCol="vel_13w_avg", bSortAsc=false;
+const bMaxVel = Math.max(...BUILT_DATA.map(r=>r.vel_13w_avg||0));
 
 function bStatsStrip(){{
   const rtl=new Set(bFiltered.map(r=>r.retailer));
-  const med=[...bFiltered].sort((a,b)=>(a.avg_velocity_spm||0)-(b.avg_velocity_spm||0));
-  const mv=med.length?med[Math.floor(med.length/2)].avg_velocity_spm:0;
+  const med=[...bFiltered].sort((a,b)=>(a.vel_13w_avg||0)-(b.vel_13w_avg||0));
+  const mv=med.length?med[Math.floor(med.length/2)].vel_13w_avg:0;
   const top=bFiltered[0]||{{}};
   document.getElementById("b-strip").innerHTML=`
     <div class="stat"><div class="val">${{bFiltered.length.toLocaleString()}}</div><div class="lbl">SKU × Retailer series</div></div>
     <div class="stat"><div class="val">${{rtl.size}}</div><div class="lbl">Retailers</div></div>
-    <div class="stat"><div class="val">${{fmt2(top.avg_velocity_spm)}}</div><div class="lbl">Highest velocity SPM</div></div>
-    <div class="stat"><div class="val">${{fmt2(mv)}}</div><div class="lbl">Median velocity SPM</div></div>
+    <div class="stat"><div class="val">${{fmt2(top.vel_13w_avg)}}</div><div class="lbl">Highest 13wk velocity</div></div>
+    <div class="stat"><div class="val">${{fmt2(mv)}}</div><div class="lbl">Median 13wk velocity</div></div>
   `;
 }}
 
@@ -457,23 +495,26 @@ function bRenderTable(){{
   tbody.innerHTML="";
   const visible=bFiltered.slice(0,500);
   document.getElementById("b-count").textContent=
-    `Showing ${{visible.length.toLocaleString()}} of ${{bFiltered.length.toLocaleString()}} series (13wk avg)`;
+    `Showing ${{visible.length.toLocaleString()}} of ${{bFiltered.length.toLocaleString()}} series`;
   for(const r of visible){{
-    const vel=r.avg_velocity_spm||0;
+    const vel=r.vel_13w_avg||0;
     const bar=bMaxVel>0?(vel/bMaxVel*100):0;
     const sk=`${{r.upc}}|${{r.retailer}}|${{r.channel}}`;
     const tr=document.createElement("tr");
     tr.innerHTML=`
-      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-          title="${{r.description||''}}">${{r.description||'—'}}</td>
-      <td style="font-size:11px;color:var(--muted)">${{r.upc||'—'}}</td>
-      <td style="font-size:11px">${{r.channel||'—'}}</td>
-      <td>${{r.retailer||'—'}}</td>
-      <td class="num"><div class="vel-cell">${{fmt2(r.avg_velocity_spm)}}
+      <td style="min-width:180px">${{r.description||'—'}}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap">${{r.upc||'—'}}</td>
+      <td style="font-size:11px;white-space:nowrap">${{r.channel||'—'}}</td>
+      <td style="border-right:1px solid var(--border);white-space:nowrap">${{r.retailer||'—'}}</td>
+      <td class="num"><div class="vel-cell">${{fmt2(r.vel_13w_avg)}}
         <div class="vel-bar" style="width:${{Math.max(2,bar)}}px"></div></div></td>
+      <td class="num">${{fmt2(r.vel_52w_avg)}}</td>
+      <td class="num">${{fmt2(r.vel_52w_min)}}</td>
+      <td class="num">${{fmt2(r.vel_52w_max)}}</td>
+      <td class="num">${{fmt2(r.vel_52w_med)}}</td>
+      <td class="num" style="border-right:1px solid var(--border);color:var(--amber)">${{fmt2(r.fct_vel_avg)}}</td>
       <td class="num">${{fmt0(r.avg_base_units)}}</td>
       <td class="num">${{fmt1(r.avg_tdp)}}</td>
-      <td class="num">${{fmtPct(r.avg_pct_stores)}}</td>
       <td class="num">${{fmtARP(r.avg_arp)}}</td>
       <td><canvas class="spark" width="100" height="24" data-key="${{sk}}"></canvas></td>
     `;
@@ -542,8 +583,19 @@ function bSortAndRender(){{
 function bReset(){{
   ["b-f-ch","b-f-rt"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("b-f-q").value="";
-  bFiltered=[...BUILT_DATA];bSortAsc=false;bSortCol="avg_velocity_spm";
+  bFiltered=[...BUILT_DATA];bSortAsc=false;bSortCol="vel_13w_avg";
   bSortAndRender();
+}}
+
+function bExport(){{
+  const cols=["description","upc","brand","channel","retailer",
+              "vel_13w_avg","vel_52w_avg","vel_52w_min","vel_52w_max","vel_52w_med","fct_vel_avg",
+              "avg_base_units","avg_tdp","avg_pct_stores","avg_arp"];
+  const hdr=["Description","UPC","Brand","Channel","Retailer",
+             "Velocity SPM 13wk Avg","Velocity SPM 52wk Avg","Velocity SPM 52wk Min",
+             "Velocity SPM 52wk Max","Velocity SPM 52wk Med","Forecast Velocity SPM 13wk Avg",
+             "Base Units/wk","Avg TDP","% Stores Selling","ARP"];
+  _downloadCSV(bFiltered,cols,hdr,"velocity_built.csv");
 }}
 
 // ── Category tab ───────────────────────────────────────────────────────────
@@ -576,8 +628,7 @@ function cRenderTable(){{
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td><span class="chip ${{isBuilt?'built':''}}">${{r.brand||'—'}}</span></td>
-      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-          title="${{r.description||''}}">${{r.description||'—'}}</td>
+      <td style="min-width:180px">${{r.description||'—'}}</td>
       <td style="font-size:11px;color:var(--muted)">${{r.upc||'—'}}</td>
       <td style="font-size:11px">${{r.channel||'—'}}</td>
       <td>${{r.retailer||'—'}}</td>
@@ -625,6 +676,26 @@ function cReset(){{
   document.getElementById("c-f-q").value="";
   cFiltered=[...CAT_DATA];cSortAsc=false;cSortCol="avg_velocity_spm";
   cSortAndRender();
+}}
+
+function cExport(){{
+  const cols=["brand","description","upc","channel","retailer",
+              "avg_velocity_spm","base_units_13w","avg_tdp","avg_pct_stores","avg_arp"];
+  const hdr=["Brand","Description","UPC","Channel","Retailer",
+             "Velocity SPM 13wk Avg","Base Units 13wk Total","Avg TDP","% Stores Selling","ARP"];
+  _downloadCSV(cFiltered,cols,hdr,"velocity_category.csv");
+}}
+
+function _downloadCSV(data,cols,hdr,filename){{
+  const esc=v=>{{
+    if(v==null)return "";
+    const s=String(v);
+    return s.includes(",")||s.includes('"')||s.includes("\n") ? `"${{s.replace(/"/g,'""')}}"` : s;
+  }};
+  const rows=[hdr.join(","),...data.map(r=>cols.map(c=>esc(r[c])).join(","))];
+  const blob=new Blob(["﻿"+rows.join("\n")],{{type:"text/csv;charset=utf-8"}});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=filename;a.click();
 }}
 
 function switchTab(name,el){{
