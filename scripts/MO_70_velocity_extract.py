@@ -82,14 +82,15 @@ df_act = df_act.rename(columns={"channel_outlet": "channel", "retail_account": "
 
 
 # ── 1b. BUILT last-known TDP per (upc, retailer, channel) ────────────────────
-# Used to compute implied forecast velocity = forecast_units / last_tdp
+# Use rolling 13-week average of non-zero TDP as anchor — much more stable than
+# last() which swings wildly when a product is entering/exiting distribution.
 print("2/4  BUILT forecast (13wk) …")
 tdp_anchor = (
-    df_act.sort_values("__time")
+    df_act[df_act["tdp"] > 0]
     .groupby(["upc", "retailer", "channel"])["tdp"]
-    .last()
+    .mean()
     .reset_index()
-    .rename(columns={"tdp": "last_tdp"})
+    .rename(columns={"tdp": "avg_tdp_anchor"})
 )
 
 
@@ -120,11 +121,17 @@ if not df_fct.empty:
     for col in ["forecast_units_low", "forecast_units_base", "forecast_units_high"]:
         df_fct[col] = pd.to_numeric(df_fct[col], errors="coerce")
     df_fct = df_fct.rename(columns={"channel_outlet": "channel", "retail_account": "retailer"})
-    # attach last-known TDP for implied velocity
+    # Compute implied forecast velocity = forecast_units / avg_tdp_anchor.
+    # Null out any series where the anchor TDP is too thin (< 0.5 store-weeks) —
+    # those divisions produce unstable/huge velocities that are not meaningful.
     df_fct = df_fct.merge(tdp_anchor, on=["upc", "retailer", "channel"], how="left")
-    df_fct["forecast_vel_low"]  = (df_fct["forecast_units_low"]  / df_fct["last_tdp"]).round(2)
-    df_fct["forecast_vel_base"] = (df_fct["forecast_units_base"] / df_fct["last_tdp"]).round(2)
-    df_fct["forecast_vel_high"] = (df_fct["forecast_units_high"] / df_fct["last_tdp"]).round(2)
+    anchor = df_fct["avg_tdp_anchor"].where(df_fct["avg_tdp_anchor"] >= 0.5, other=float("nan"))
+    df_fct["forecast_vel_low"]  = (df_fct["forecast_units_low"]  / anchor).round(2)
+    df_fct["forecast_vel_base"] = (df_fct["forecast_units_base"] / anchor).round(2)
+    df_fct["forecast_vel_high"] = (df_fct["forecast_units_high"] / anchor).round(2)
+    # Replace inf (zero TDP edge case) with NaN so it serialises as null
+    for col in ["forecast_vel_low", "forecast_vel_base", "forecast_vel_high"]:
+        df_fct[col] = df_fct[col].replace([float("inf"), float("-inf")], float("nan"))
 
 
 # ── 2. Category 13-week summary ───────────────────────────────────────────────
@@ -252,13 +259,20 @@ built_52w = pd.DataFrame({
     "vel_52w_med": _g52.median(),
 }).reset_index()
 
-# 13wk forecast avg velocity
+# 13wk forecast avg velocity — null out any series where the forecast exceeds
+# 5× the 52wk actual max (thin-distribution series with unstable TDP anchors).
 if not df_fct.empty:
     fct_avg = (
         df_fct.groupby(["upc","channel","retailer"])["forecast_vel_base"]
         .mean().reset_index()
         .rename(columns={"forecast_vel_base": "fct_vel_avg"})
     )
+    fct_avg = fct_avg.merge(
+        built_52w[["upc","channel","retailer","vel_52w_max"]], on=["upc","channel","retailer"], how="left"
+    )
+    bad = (fct_avg["fct_vel_avg"] > fct_avg["vel_52w_max"] * 5) | fct_avg["fct_vel_avg"].isna()
+    fct_avg.loc[bad, "fct_vel_avg"] = float("nan")
+    fct_avg = fct_avg.drop(columns=["vel_52w_max"])
 else:
     fct_avg = pd.DataFrame(columns=["upc","channel","retailer","fct_vel_avg"])
 
@@ -282,8 +296,18 @@ brands_cat    = sorted(df_cat["brand"].dropna().unique().tolist()) if not df_cat
 channels_cat  = sorted(df_cat["channel"].dropna().unique().tolist()) if not df_cat.empty else []
 retailers_cat = sorted(df_cat["retailer"].dropna().unique().tolist()) if not df_cat.empty else []
 
-built_rows_json = built_summary.to_dict(orient="records")
-cat_rows_json   = df_cat.to_dict(orient="records") if not df_cat.empty else []
+def _nan_to_none(obj):
+    """Replace float NaN/inf with None so json.dumps emits null (valid JSON)."""
+    if isinstance(obj, list):
+        return [_nan_to_none(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: _nan_to_none(v) for k, v in obj.items()}
+    if isinstance(obj, float) and (obj != obj or obj == float("inf") or obj == float("-inf")):
+        return None
+    return obj
+
+built_rows_json = _nan_to_none(built_summary.to_dict(orient="records"))
+cat_rows_json   = _nan_to_none(df_cat.to_dict(orient="records")) if not df_cat.empty else []
 spark_json      = spark_map
 
 html = f"""<title>Velocity Extract — BUILT + Category</title>
@@ -304,7 +328,7 @@ html = f"""<title>Velocity Extract — BUILT + Category</title>
   .tabs{{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}}
   .tab{{padding:8px 20px;cursor:pointer;color:var(--muted);font-size:13px;
         border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}}
-  .tab.active{{color:#fff;border-bottom-color:var(--built)}}
+  .tab.active{{color:var(--text);border-bottom-color:var(--built);font-weight:600}}
   .tab:hover:not(.active){{color:var(--text)}}
   .panel{{display:none}}.panel.active{{display:block}}
 
@@ -416,6 +440,13 @@ html = f"""<title>Velocity Extract — BUILT + Category</title>
     </tr></thead>
     <tbody id="b-tbody"></tbody>
   </table></div>
+  <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6">
+    <strong style="color:var(--muted)">13WK FCT AVG</strong> — LightGBM q50 forecast (units/store/week).
+    <em>"no fcst"</em> means either the series was not scored by the forecast model,
+    or its average weekly TDP was below 0.5 store-weeks — too thin to produce a reliable velocity estimate
+    (dividing small unit volumes by near-zero distribution inflates the metric).
+    Hover a "no fcst" cell for details.
+  </p>
 </div>
 
 <!-- ── CATEGORY PANEL ─────────────────────────────────────────────────────── -->
@@ -512,7 +543,8 @@ function bRenderTable(){{
       <td class="num">${{fmt2(r.vel_52w_min)}}</td>
       <td class="num">${{fmt2(r.vel_52w_max)}}</td>
       <td class="num">${{fmt2(r.vel_52w_med)}}</td>
-      <td class="num" style="border-right:1px solid var(--border);color:var(--amber)">${{fmt2(r.fct_vel_avg)}}</td>
+      <td class="num" style="border-right:1px solid var(--border);color:var(--amber)" title="${{r.fct_vel_avg==null?'No forecast: series not scored or distribution too thin to compute reliable velocity':''}}">
+        ${{r.fct_vel_avg==null?'<span style="color:var(--muted);font-size:11px" title="No forecast: series not scored, or avg TDP < 0.5 store-weeks (distribution too thin for a reliable velocity estimate)">— no fcst</span>':fmt2(r.fct_vel_avg)}}</td>
       <td class="num">${{fmt0(r.avg_base_units)}}</td>
       <td class="num">${{fmt1(r.avg_tdp)}}</td>
       <td class="num">${{fmtARP(r.avg_arp)}}</td>
