@@ -127,6 +127,20 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-22 (update 35) — MO_70 bug fixes: empty table, forecast velocity inflation, UI polish
+
+Three bugs found and fixed in `mockups/velocity_extract.html` after initial delivery:
+
+1. **Empty table (root cause: JS syntax error)** — Python f-string emitted `"\n"` as a literal newline inside two JS string literals in `_downloadCSV`. This produced a `SyntaxError` that killed the entire 17MB script block; HTML headers rendered but zero data rows appeared. Fixed: `"\n"` → `"\\n"` in both locations inside the f-string.
+
+2. **Forecast velocity inflation** — `last()` TDP anchor was unstable when a product was entering or exiting distribution. Example: INFRA Birthday Cake Puff had TDP = 0.3 in its final week → `20 units / 0.3 TDP = 67`, vs. actual velocity of 4.95. Fixed: replaced `last()` with 13-week average of non-zero TDP weeks. Series with `avg_tdp_anchor < 0.5` or forecast velocity `> 5× 52wk actual max` are nulled and display as **"no fcst"** with a hover tooltip.
+
+3. **NaN/null hygiene** — Python `json.dumps` emits literal `NaN` (not valid JSON) for `float('nan')`. Fixed: `_nan_to_none()` serializer converts all NaN/inf to `None` before dump, producing `null` in the embedded JSON.
+
+4. **UI text invisible in light mode** — `.stat .val` and `.tab.active` had `color:#fff` (white on white surface). Fixed: `color:var(--text)` for theme-aware contrast.
+
+Footnote added below BUILT table explaining LightGBM q50 source and both no-forecast conditions.
+
 ### 2026-07-22 (update 34) — MO_70: retailer × SKU velocity extract for Brian (BUILT + category)
 
 `scripts/MO_70_velocity_extract.py` — generates two CSVs and an interactive HTML from live Druid data.
@@ -136,7 +150,7 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 - `outputs/velocity_extract_category.csv` (55,890 rows) — 13wk avg velocity for the full competitive set (361 brands, 3,441 UPCs, 142 retailers). One row per SKU × retailer × channel.
 - `mockups/velocity_extract.html` (17MB) — two-tab interactive HTML. BUILT tab: sortable/filterable table with 52wk+forecast sparklines (solid blue = actual, dashed amber = forecast). Category tab: full competitive set with velocity bar and filters by brand/channel/retailer/search.
 
-**Design notes:** MULO (`CONVENTIONAL|MULTI OUTLET`, geographies `MULO/W/ AK/HI/MULO W/ C-STORES/W/ C-STORES`) excluded. Geography rows aggregated at query time (one row per upc × retailer × channel × week). Forecast velocity uses last-known TDP as denominator. Category date window anchored off data max (2026-04-13) not `CURRENT_TIMESTAMP` — critical for avoiding empty result when server clock is ahead of data.
+**Design notes:** MULO (`CONVENTIONAL|MULTI OUTLET`, geographies `MULO/W/ AK/HI/MULO W/ C-STORES/W/ C-STORES`) excluded. Geography rows aggregated at query time (one row per upc × retailer × channel × week). Forecast velocity = `forecast_units_base / avg_tdp_anchor` where `avg_tdp_anchor` = 13-week rolling average of non-zero TDP weeks (more stable than `last()`). Series with anchor < 0.5 store-weeks or forecast velocity > 5× actual 52wk max shown as "no fcst". Category date window anchored off data max (2026-04-13) not `CURRENT_TIMESTAMP` — critical for avoiding empty result when server clock is ahead of data. Both forecast models are LightGBM quantile regression: velocity forecast (MO_26, q10/q50/q90) and cannibalization rate forecast (MO_20, same architecture).
 
 ### 2026-07-21 (update 33) — SPINS column inventory: 55 required of 214 in extract
 
