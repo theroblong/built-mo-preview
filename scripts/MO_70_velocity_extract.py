@@ -575,8 +575,9 @@ function bSort(col){{
 }}
 function bSortAndRender(){{
   bFiltered.sort((a,b)=>{{
-    const av=a[bSortCol]??"",bv=b[bSortCol]??"";
-    return typeof av==="number"?(bSortAsc?av-bv:bv-av):(bSortAsc?String(av).localeCompare(bv):String(bv).localeCompare(av));
+    const av=a[bSortCol]!=null&&!Number.isNaN(a[bSortCol])?a[bSortCol]:(typeof a[bSortCol]==="string"?a[bSortCol]:0);
+    const bv=b[bSortCol]!=null&&!Number.isNaN(b[bSortCol])?b[bSortCol]:(typeof b[bSortCol]==="string"?b[bSortCol]:0);
+    return typeof av==="number"?(bSortAsc?av-bv:bv-av):(bSortAsc?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av)));
   }});
   bStatsStrip();bRenderTable();
 }}
@@ -666,8 +667,9 @@ function cSort(col){{
 }}
 function cSortAndRender(){{
   cFiltered.sort((a,b)=>{{
-    const av=a[cSortCol]??"",bv=b[cSortCol]??"";
-    return typeof av==="number"?(cSortAsc?av-bv:bv-av):(cSortAsc?String(av).localeCompare(bv):String(bv).localeCompare(av));
+    const av=a[cSortCol]!=null&&!Number.isNaN(a[cSortCol])?a[cSortCol]:(typeof a[cSortCol]==="string"?a[cSortCol]:0);
+    const bv=b[cSortCol]!=null&&!Number.isNaN(b[cSortCol])?b[cSortCol]:(typeof b[cSortCol]==="string"?b[cSortCol]:0);
+    return typeof av==="number"?(cSortAsc?av-bv:bv-av):(cSortAsc?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av)));
   }});
   cStatsStrip();cRenderTable();
 }}
@@ -690,10 +692,10 @@ function _downloadCSV(data,cols,hdr,filename){{
   const esc=v=>{{
     if(v==null)return "";
     const s=String(v);
-    return s.includes(",")||s.includes('"')||s.includes("\n") ? `"${{s.replace(/"/g,'""')}}"` : s;
+    return s.includes(",")||s.includes('"')||s.includes("\\n") ? `"${{s.replace(/"/g,'""')}}"` : s;
   }};
   const rows=[hdr.join(","),...data.map(r=>cols.map(c=>esc(r[c])).join(","))];
-  const blob=new Blob(["﻿"+rows.join("\n")],{{type:"text/csv;charset=utf-8"}});
+  const blob=new Blob(["﻿"+rows.join("\\n")],{{type:"text/csv;charset=utf-8"}});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);a.download=filename;a.click();
 }}
