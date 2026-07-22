@@ -312,7 +312,7 @@ html = f"""<title>Velocity Extract — BUILT + Category</title>
   .strip{{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}}
   .stat{{background:var(--surface);border:1px solid var(--border);border-radius:6px;
          padding:10px 14px;min-width:120px}}
-  .stat .val{{font-size:20px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}}
+  .stat .val{{font-size:20px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}}
   .stat .lbl{{color:var(--muted);font-size:11px;margin-top:2px}}
 
   /* filters */
