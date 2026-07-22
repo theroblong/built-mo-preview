@@ -1,0 +1,718 @@
+<title>Aevah × BUILT — Connor Process Review &amp; Value Map</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f1f5f9;
+  --surface:#ffffff;
+  --surface2:#f8fafc;
+  --border:#e2e8f0;
+  --border2:#cbd5e1;
+  --text:#0f172a;
+  --muted:#64748b;
+  --subtle:#94a3b8;
+  --navy:#0f1f35;
+  --navy2:#1a2e4a;
+  --accent:#2563eb;
+  --accent-light:#eff6ff;
+  --accent-mid:#bfdbfe;
+  --green:#15803d;
+  --green-bg:#f0fdf4;
+  --green-border:#86efac;
+  --amber:#b45309;
+  --amber-bg:#fffbeb;
+  --amber-border:#fcd34d;
+  --red:#b91c1c;
+  --red-bg:#fef2f2;
+  --red-border:#fca5a5;
+  --purple:#6d28d9;
+  --purple-bg:#f5f3ff;
+}
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0f172a;
+    --surface:#1e293b;
+    --surface2:#1a2540;
+    --border:#334155;
+    --border2:#475569;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --subtle:#64748b;
+    --green:#4ade80;
+    --green-bg:#052e16;
+    --green-border:#166534;
+    --amber:#fbbf24;
+    --amber-bg:#1c1204;
+    --amber-border:#92400e;
+    --red:#f87171;
+    --red-bg:#1f0b0b;
+    --red-border:#7f1d1d;
+    --accent-light:#1e3a5f;
+    --accent-mid:#1d4ed8;
+    --purple:#a78bfa;
+    --purple-bg:#1e1a3d;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f1f5f9;--surface:#ffffff;--surface2:#f8fafc;--border:#e2e8f0;--border2:#cbd5e1;
+  --text:#0f172a;--muted:#64748b;--subtle:#94a3b8;
+  --green:#15803d;--green-bg:#f0fdf4;--green-border:#86efac;
+  --amber:#b45309;--amber-bg:#fffbeb;--amber-border:#fcd34d;
+  --red:#b91c1c;--red-bg:#fef2f2;--red-border:#fca5a5;
+  --accent-light:#eff6ff;--accent-mid:#bfdbfe;--purple:#6d28d9;--purple-bg:#f5f3ff;
+}
+:root[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#1a2540;--border:#334155;--border2:#475569;
+  --text:#e2e8f0;--muted:#94a3b8;--subtle:#64748b;
+  --green:#4ade80;--green-bg:#052e16;--green-border:#166534;
+  --amber:#fbbf24;--amber-bg:#1c1204;--amber-border:#92400e;
+  --red:#f87171;--red-bg:#1f0b0b;--red-border:#7f1d1d;
+  --accent-light:#1e3a5f;--accent-mid:#1d4ed8;--purple:#a78bfa;--purple-bg:#1e1a3d;
+}
+
+body{
+  font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+  font-size:14px;line-height:1.65;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Page wrapper ─── */
+.page{max-width:900px;margin:0 auto;padding:0 0 60px}
+
+/* ── Masthead ─── */
+.masthead{
+  background:var(--navy);color:#e2e8f0;
+  padding:36px 40px 32px;
+}
+.masthead-eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:#60a5fa;margin-bottom:10px;
+}
+.masthead-title{font-size:24px;font-weight:700;line-height:1.2;color:#f1f5f9;margin-bottom:6px}
+.masthead-sub{font-size:13px;color:#94a3b8;line-height:1.5}
+.masthead-meta{
+  display:flex;gap:24px;margin-top:20px;flex-wrap:wrap;
+  border-top:1px solid rgba(255,255,255,.1);padding-top:16px;
+}
+.meta-item{font-size:11.5px;color:#94a3b8}
+.meta-item b{color:#cbd5e1;font-weight:600}
+
+/* ── Section headers ─── */
+.sec-head{
+  background:var(--navy2);color:#cbd5e1;
+  padding:10px 40px;
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  border-top:3px solid var(--accent);
+  margin-top:0;
+}
+.sec-head.green{border-top-color:#22c55e}
+.sec-head.amber{border-top-color:#f59e0b}
+.sec-head.red{border-top-color:#ef4444}
+.sec-head.purple{border-top-color:#a78bfa}
+
+/* ── Section body ─── */
+.sec-body{padding:28px 40px;background:var(--surface);border-bottom:1px solid var(--border)}
+
+/* ── Intro prose ─── */
+.intro{font-size:14.5px;line-height:1.75;color:var(--text);margin-bottom:0}
+.intro strong{color:var(--text)}
+
+/* ── Flow diagram (Connor's process) ─── */
+.flow{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.flow-node{
+  flex:1;min-width:130px;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+  padding:12px 14px;
+}
+.fn-label{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.fn-val{font-size:13px;font-weight:600;color:var(--text)}
+.fn-sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.flow-arrow{align-self:center;font-size:18px;color:var(--subtle);flex-shrink:0}
+
+/* ── Data sources grid ─── */
+.ds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:16px}
+.ds-card{
+  border:1px solid var(--border);border-radius:7px;padding:12px 14px;background:var(--surface2);
+}
+.ds-name{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:3px}
+.ds-sub{font-size:11px;color:var(--muted);line-height:1.45}
+.ds-status{
+  display:inline-block;margin-top:6px;font-size:9.5px;font-weight:700;letter-spacing:.05em;
+  padding:1px 7px;border-radius:10px;
+}
+.status-live{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.status-partial{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.status-dark{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ── Pain points ─── */
+.pain-list{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.pain-item{
+  display:flex;gap:14px;padding:14px 0;
+  border-bottom:1px solid var(--border);
+  align-items:flex-start;
+}
+.pain-item:last-child{border-bottom:none}
+.pain-num{
+  flex-shrink:0;width:24px;height:24px;border-radius:50%;
+  background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+.pain-body{}
+.pain-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:3px}
+.pain-desc{font-size:12.5px;color:var(--muted);line-height:1.55}
+.pain-quote{
+  margin-top:7px;padding:7px 11px;border-left:3px solid var(--border2);
+  font-size:11.5px;font-style:italic;color:var(--muted);background:var(--surface2);border-radius:0 4px 4px 0;
+  line-height:1.5;
+}
+.pain-quote cite{font-style:normal;font-weight:600;color:var(--text)}
+
+/* ── Capability map table ─── */
+.cap-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.cap-table th{
+  background:var(--surface2);border-bottom:2px solid var(--border2);
+  padding:9px 12px;text-align:left;font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  white-space:nowrap;
+}
+.cap-table td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.cap-table tr:last-child td{border-bottom:none}
+.cap-table tr:hover td{background:var(--surface2)}
+.pain-ref{font-weight:700;color:var(--red);margin-right:4px;font-variant-numeric:tabular-nums}
+.cap-name{font-weight:600;color:var(--text)}
+.cap-sub{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10px;font-weight:700;letter-spacing:.04em;
+  padding:2px 8px;border-radius:10px;white-space:nowrap;
+}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid #c4b5fd}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ── ROI callout boxes ─── */
+.roi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:8px}
+.roi-card{
+  border:1px solid var(--border);border-radius:8px;padding:16px;background:var(--surface2);
+  border-left:4px solid var(--accent);
+}
+.roi-card.green{border-left-color:#22c55e}
+.roi-card.amber{border-left-color:#f59e0b}
+.roi-card.red{border-left-color:#ef4444}
+.roi-card.purple{border-left-color:#a78bfa}
+.roi-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.roi-body{font-size:13px;color:var(--text);line-height:1.55}
+.roi-body strong{color:var(--text)}
+
+/* ── Lenses (four evaluation questions) ─── */
+.lens{margin-top:24px;padding:20px 22px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)}
+.lens:first-child{margin-top:0}
+.lens-q{
+  font-size:12px;font-weight:700;letter-spacing:.03em;color:var(--accent);
+  margin-bottom:10px;display:flex;align-items:flex-start;gap:8px;
+}
+.lens-q-num{
+  flex-shrink:0;font-size:10px;font-weight:700;
+  background:var(--accent);color:#fff;
+  width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+.lens-body{font-size:13px;color:var(--text);line-height:1.65}
+.lens-body ul{margin:8px 0 0 16px}
+.lens-body li{margin-bottom:5px}
+.lens-body strong{color:var(--text)}
+
+/* ── Scope bullets ─── */
+.scope-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:4px}
+@media(max-width:640px){.scope-grid{grid-template-columns:1fr}}
+.scope-col-head{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding:10px 0 8px;border-bottom:2px solid var(--border2);margin-bottom:12px;
+}
+.scope-list{list-style:none;padding:0}
+.scope-list li{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);
+}
+.scope-list li:last-child{border-bottom:none}
+.scope-icon{flex-shrink:0;font-size:13px;width:18px;text-align:center}
+.scope-right{border-left:1px solid var(--border);padding-left:20px;margin-left:8px}
+
+/* ── Footer ─── */
+.doc-footer{
+  padding:18px 40px;background:var(--surface);border-top:1px solid var(--border);
+  font-size:11px;color:var(--subtle);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+}
+.doc-footer a{color:var(--accent)}
+</style>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+<!-- Masthead -->
+<div class="masthead">
+  <div class="masthead-eyebrow">Aevah × BUILT — Strategic Analysis</div>
+  <div class="masthead-title">Connor Process Review &amp; Aevah Value Map</div>
+  <div class="masthead-sub">Mapping the BUILT FP&amp;A forecasting process to Aevah capabilities — what's real today, what to build next, and the supply chain ROI case.</div>
+  <div class="masthead-meta">
+    <div class="meta-item"><b>Meeting</b> July 22, 2026 · 55 min</div>
+    <div class="meta-item"><b>Participants</b> Connor Lain (FP&amp;A), Brian Cluster, Rob Long, Jason Brazeal</div>
+    <div class="meta-item"><b>Follow-up</b> Friday July 25 · Rob × Brian × Jason · 1 PM CT</div>
+    <div class="meta-item"><b>Ask</b> Scope deck for Bracken</div>
+  </div>
+</div>
+
+<!-- ── Section 1: Connor's Process ─────────────────────────── -->
+<div class="sec-head">1 · What Connor Actually Does</div>
+<div class="sec-body">
+  <p class="intro">Connor runs a <strong>single master Excel file</strong> covering ~100 retailers and ~156 SKUs with a monthly update cadence. The file drives all downstream operations — not just revenue reporting, but production scheduling, ingredient procurement, and line staffing. This is the highest-leverage artifact in BUILT's planning stack.</p>
+
+  <!-- Process flow -->
+  <div class="flow" style="margin-top:24px">
+    <div class="flow-node">
+      <div class="fn-label">Input sources</div>
+      <div class="fn-val">4 data classes</div>
+      <div class="fn-sub">SPINS, Circana (partial), retailer portals, data-dark (~20% of retailers)</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">
+      <div class="fn-label">Manual assembly</div>
+      <div class="fn-val">100 Excel planners</div>
+      <div class="fn-sub">Sales team promo calendars, lift estimates, store count updates — opened one-by-one</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">
+      <div class="fn-label">Velocity build</div>
+      <div class="fn-val">5 revenue tabs</div>
+      <div class="fn-sub">SPINS base × seasonality × promo lift × shopper mktg × cannibalization × store count</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">
+      <div class="fn-label">Output</div>
+      <div class="fn-val">Gross → Net Rev</div>
+      <div class="fn-sub">Drives production plan, raw materials, line staffing — month prior to selling month</div>
+    </div>
+  </div>
+
+  <!-- Data sources -->
+  <p style="margin-top:24px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Data Sources Connor Pulls From</p>
+  <div class="ds-grid">
+    <div class="ds-card">
+      <div class="ds-name">SPINS (~50 retailers)</div>
+      <div class="ds-sub">L12-week base velocity, seasonality index, ~50K rows copy-pasted monthly</div>
+      <div class="ds-status status-live">In Aevah</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">Circana (Costco + a few)</div>
+      <div class="ds-sub">Historical by warehouse, SKU; pallet shipment patterns; promotion data</div>
+      <div class="ds-status status-partial">Not yet integrated</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">NetSuite (trial balance)</div>
+      <div class="ds-sub">Monthly historical actuals and MTD shipped — the ground truth vs. forecast</div>
+      <div class="ds-status status-partial">Not yet integrated</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">Sales team planners (100)</div>
+      <div class="ds-sub">Promo calendar, lift %, days, costs, store count updates — individual Excel files</div>
+      <div class="ds-status status-partial">Structured capture needed</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">Retailer portals (ACS, etc.)</div>
+      <div class="ds-sub">A few retailers provide own-portal data only; not SPINS / Circana compatible</div>
+      <div class="ds-status status-dark">Data dark</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">Winco / HEB / Trader Joe's</div>
+      <div class="ds-sub">Major retailers with no category data; only shipment visibility. "Flying blind."</div>
+      <div class="ds-status status-dark">Data dark</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">Macro signals</div>
+      <div class="ds-sub">Gas prices, U of M consumer sentiment, unemployment — currently zero; manual to track</div>
+      <div class="ds-status status-dark">Not in model</div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-name">Broker tribal knowledge</div>
+      <div class="ds-sub">Lift estimates and category guidance from reps; not structured or recorded</div>
+      <div class="ds-status status-dark">Unstructured</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Section 2: Pain Points ────────────────────────────────── -->
+<div class="sec-head red">2 · Pain Points (Direct from Transcript)</div>
+<div class="sec-body">
+
+  <div class="pain-list">
+
+    <div class="pain-item">
+      <div class="pain-num">1</div>
+      <div class="pain-body">
+        <div class="pain-title">Promo lift assumptions are guesswork</div>
+        <div class="pain-desc">Sales team lift estimates come from historical feel, broker guidance, or buyer conversation — not modeled from data. Environmental factors (competitor on promo same week, recency of prior promo) compound the error and are invisible to Connor's model.</div>
+        <div class="pain-quote">"I don't think they always have the greatest lift assumptions on their promotions. There's definitely a lot of room for improvement on forecasting these lifts." <cite>— Connor</cite></div>
+        <div class="pain-quote">"Was there another brand promoted at the same time? Was there a competitor promoted immediately before us? How many weeks prior did we last promote? Those are some things that can throw off the lift too." <cite>— Brian</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">2</div>
+      <div class="pain-body">
+        <div class="pain-title">100 Excel planners opened manually each month</div>
+        <div class="pain-desc">Each of 6–7 sales reps maintains 10–20 retailer planner files. Connor opens every one, extracts promo data, and copies it into the master file. Not automated. Reps often haven't updated because they're traveling. Version control prevents shared access.</div>
+        <div class="pain-quote">"I open up 100 of those Excel files, bring some of that data in pretty manually. It's not very efficient." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">3</div>
+      <div class="pain-body">
+        <div class="pain-title">New SKU / cold-start ramp prediction is a guess</div>
+        <div class="pain-desc">When a new flavor launches at a retailer with no history, the team defaults to sales team estimates and eyeballs how "other items performed." The ramp-up curve is assumed to max out at 12 weeks — but it varies significantly by retailer and format.</div>
+        <div class="pain-quote">"Where we're adding a SKU and we don't have this historical data, we default to the sales team estimate... we have a lot of manual overrides where we don't have data or we're like guessing what the steady state is." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">4</div>
+      <div class="pain-body">
+        <div class="pain-title">Data-dark retailers (Winco, HEB, TJ's) — flying blind</div>
+        <div class="pain-desc">Major volume retailers with zero category visibility. Winco is the most problematic: high volatility, competitor assortment changing constantly, and no data to detect the shift. Forecast assumptions go stale quickly and corrections come too late.</div>
+        <div class="pain-quote">"Winco is probably the number one retailer where we struggle the most with forecasting... we don't act quickly enough because it's just hard to — this is one of 100 customers." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">5</div>
+      <div class="pain-body">
+        <div class="pain-title">No new distribution signal in the model</div>
+        <div class="pain-desc">If BUILT is adding 500 stores in October for a new flavor, Connor has no data-driven way to project the ramp. All store expansion knowledge lives only in the sales team's heads and planners.</div>
+        <div class="pain-quote">"How would it predict the forecast without pulling another data source on, hey, we're going to add this flavor in October in 500 stores? Do you just have to pull from another source then to kind of add to the forecast?" <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">6</div>
+      <div class="pain-body">
+        <div class="pain-title">Zero macro signal integration</div>
+        <div class="pain-desc">No model driver for gas prices, consumer sentiment, unemployment, or any external demand factor. Connor manually monitors these (U of M index, etc.) but can't incorporate them into the forecast systematically. "Too hard to manually track."</div>
+        <div class="pain-quote">"We don't have a macro like impact driver on this model right now because it's too hard for us to manually track, and AI would be super helpful in that area." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">7</div>
+      <div class="pain-body">
+        <div class="pain-title">Scale has outgrown the process</div>
+        <div class="pain-desc">Started at 20 customers, now 100+, continuously adding. Adding SKUs requires manual row insertions and formula maintenance. The file is "unwieldy." The process was built for a smaller business and hasn't been redesigned — it's been stretched.</div>
+        <div class="pain-quote">"We've just gotten so big that this file is becoming just unwieldy to update every month. We're probably not doing really well at tracking just because of our scale and because of the amount of SKUs we're adding." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">8</div>
+      <div class="pain-body">
+        <div class="pain-title">No independent sanity check on the forecast</div>
+        <div class="pain-desc">Connor's model is the only forecast. There's no second model to compare against, no backtesting against actuals, no confidence scoring per retailer-SKU. When the model is wrong, they usually find out from NetSuite actuals after the fact.</div>
+        <div class="pain-quote">"Could we just feed it last three years spins data and then last three years actual sales data from NetSuite, and ask it to draw a curve forward-looking... We just compare it against what this model is showing. That would be really helpful, just as another source to check this against." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">9</div>
+      <div class="pain-body">
+        <div class="pain-title">Weekly S&amp;OP meetings consume Connor all-day every Monday</div>
+        <div class="pain-desc">Every Monday = 30-min session per sales rep × 6–7 reps + Connor + Director of Planning + VP Finance Jeff. The number gets flashed from Excel, then discussed. Jeff keeps it weekly because it holds the team accountable. Ambition is to go monthly but growth won't allow it yet.</div>
+        <div class="pain-quote">"It's every Monday, typically all day, 30 minutes per salesperson... pretty much all day for myself, our director of planning, our VP in finance. So they're pretty time consuming." <cite>— Connor</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">10</div>
+      <div class="pain-body">
+        <div class="pain-title">No quantified competitive/category intelligence at scale</div>
+        <div class="pain-desc">Brian's team runs a scorecard but doing it across 100 retailers × multiple geographies × pricing/promo/assortment/cannibalization dimensions is genuinely intractable manually. 5,000+ SKUs, 300+ competitors, 500+ brands.</div>
+        <div class="pain-quote">"We look across all 100 retailers, it's a lot of big data to really see what's driving change and what we can learn." <cite>— Brian</cite></div>
+      </div>
+    </div>
+
+    <div class="pain-item">
+      <div class="pain-num">11</div>
+      <div class="pain-body">
+        <div class="pain-title">Cannibalization is acknowledged but not modeled</div>
+        <div class="pain-desc">Connor's model has a cannibalization column — but it's manually estimated. Neither the rate nor the donor-impact direction is computed from data. Connor and Brian both named it unprompted as a key signal they're missing.</div>
+        <div class="pain-quote">"What one thing I'd be curious about... cannibalization prediction. Yeah, and like ramp up — how has the ramp performed at other retailers? We kind of just guess on that." <cite>— Connor &amp; Brian</cite></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Section 3: Four-Lens Evaluation ─────────────────────── -->
+<div class="sec-head green">3 · Four-Lens Evaluation</div>
+<div class="sec-body">
+
+  <div class="lens">
+    <div class="lens-q"><div class="lens-q-num">1</div>What can / does Aevah do to help Connor right now?</div>
+    <div class="lens-body">
+      <ul>
+        <li><strong>Velocity extract (MO_70):</strong> Every SPINS cycle, a fresh retailer × SKU table of 52-week actuals, 13-week LightGBM forecast, and category benchmarks. This is exactly the "extract per SPINS update" Bracken mentioned. Connor can feed it directly into his base velocity column instead of doing the L12-week SPINS copy-paste manually.</li>
+        <li><strong>Seasonality index:</strong> The 12-month demand index Aevah already computes from SPINS replaces the seasonality tab Connor manually maintains. Auto-refreshed each cycle.</li>
+        <li><strong>Cannibalization rates:</strong> <code>scored_cannibalization</code> table has computed rates for ~48% of BUILT's SKU pairs. For any retailer-SKU where a new flavor is being added, Aevah can provide the expected cannibalization coefficient — replacing Connor's manual column.</li>
+        <li><strong>Price elasticity scores:</strong> MO_16/17 price response by retailer-SKU. When promo involves a price reduction, elasticity translates the cut to a predicted unit lift — more rigorous than the sales team's gut estimate.</li>
+        <li><strong>Proxy ramp reference:</strong> New SKU cold-start overlay (just demoed in meeting). Comparable past BUILT launches at the same channel and format give a data-grounded ramp trajectory vs. ETS uncertainty band.</li>
+        <li><strong>Competitive intelligence (Mo Trends):</strong> Who's taking share, which competitors raised price, competitor promo timing. Connor said "super valuable" in the meeting.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="lens" style="margin-top:12px">
+    <div class="lens-q"><div class="lens-q-num">2</div>Is it real? How does it specifically help Connor?</div>
+    <div class="lens-body">
+      <p>All core capabilities above are built on <strong>live SPINS data already ingested in Druid</strong> — not prototypes or mocks. The LightGBM models (MO_26 for velocity, MO_20 for cannibalization rate) are trained and scoring today. The velocity extract was delivered this morning with real SPINS figures. What's real, specific, and grounded:</p>
+      <ul>
+        <li><strong>Base velocity column:</strong> Connor currently copies L12-week SPINS manually. Our table gives him a LightGBM-calibrated q50 (plus q10/q90 band) — same data, model-improved, auto-updated. He keeps override control; Aevah provides the starting point.</li>
+        <li><strong>Promo lift:</strong> MO_72 causal analysis measures actual lift from past promotions — not predicted by ML yet, but the historical lift-rate-by-retailer-SKU is computable now. The gap is: wrapping it into a query ("at Winco, 2-for-$6, what lift?") with Mo Chat. The underlying signal already exists.</li>
+        <li><strong>Cannibalization column:</strong> Connor has a column; we have a score. The handoff is a CSV extract by retailer-SKU pair. This is a one-API-call integration.</li>
+        <li><strong>Independent sanity check:</strong> Connor asked explicitly for "another source to check against." Our LightGBM 13-week forecast IS that second model. We can produce a side-by-side: Connor's model vs. Aevah's ML vs. NetSuite actuals.</li>
+      </ul>
+      <p style="margin-top:10px"><strong>The honest answer on data-dark retailers (Winco, HEB):</strong> We can't see their category data either. But we can proxy from SPINS retailers in the same channel/region. This is an inference, not a measurement — and Connor should know the difference. Framing it as a proxy confidence interval (not a prediction) maintains trust.</p>
+    </div>
+  </div>
+
+  <div class="lens" style="margin-top:12px">
+    <div class="lens-q"><div class="lens-q-num">3</div>What additional data model inputs make this better and more scalable?</div>
+    <div class="lens-body">
+      <ul>
+        <li><strong>NetSuite actuals integration:</strong> The single most high-value data add. Connor already pulls this manually for historicals and MTD. If Aevah ingests NetSuite, we can: (a) auto-backtest Connor's forecast vs. actuals per retailer-SKU, (b) compute forecast bias by rep/account, (c) close the loop on model improvement.</li>
+        <li><strong>Sales team planner digitization:</strong> The 100 Excel planners are the biggest manual bottleneck. Near-term: a lightweight structured input (a shared sheet or simple form) that reps fill in once — consumed by both Aevah and Connor's model. This eliminates the 100-file open cycle entirely.</li>
+        <li><strong>Macro signals (FRED API):</strong> Gas prices, U of M consumer sentiment index, unemployment — all freely available weekly/monthly via FRED. Connor asked for this explicitly. Adding 3–5 macro features to LightGBM is one sprint of feature engineering work. Seasonality already partially captures this; macro features improve the residual.</li>
+        <li><strong>Circana integration:</strong> Covers Costco and a few others not in SPINS. Circana data is structurally similar to SPINS. Ingest pipeline would follow the same pattern as SPINS.</li>
+        <li><strong>New distribution calendar:</strong> Sales team knows future store expansion dates. Even a simple CSV input of "SKU × retailer × stores × launch date" lets the model project forward-looking TDP ramp — currently completely missing from Aevah's forward forecast.</li>
+        <li><strong>Competitor promo calendar (SPINS-derived):</strong> We already detect competitor promotions from SPINS base vs. incr units signals. Surfacing this as a feature in the promo lift model directly addresses Brian's "was a competitor on promo the same week?" variable.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="lens" style="margin-top:12px">
+    <div class="lens-q"><div class="lens-q-num">4</div>For everything Connor does, how does Aevah make it better?</div>
+    <div class="lens-body">
+      <p>Walk through Connor's monthly cycle step by step:</p>
+      <ul>
+        <li><strong>Pull SPINS data (copy-paste 50K rows):</strong> → Aevah ingests automatically. Connor queries what he needs.</li>
+        <li><strong>Update seasonality curve:</strong> → Aevah's compute_monthly_demand_index() refreshes automatically each cycle. Connor references a static output.</li>
+        <li><strong>Open 100 sales planner files, extract promo data:</strong> → Replace with a structured promo input (shared sheet or Mo interface). Reps enter once; Connor and Aevah both consume.</li>
+        <li><strong>Set base velocity per retailer-SKU:</strong> → Aevah extracts L12-week + LightGBM q50. Connor's override column still exists; Aevah's number is the starting point, not the override.</li>
+        <li><strong>Apply promo lift estimates:</strong> → Aevah provides historical lift rates per retailer-SKU-promo-type as the default. Sales team overrides where they have additional context.</li>
+        <li><strong>Estimate cannibalization:</strong> → Aevah's scored_cannibalization table provides the coefficient. Connor's model multiplies it in.</li>
+        <li><strong>Handle new SKU / no-data retailers:</strong> → Proxy ramp from comparable BUILT launches (just demoed). For data-dark retailers, proxy from channel-matched SPINS retailers with confidence notation.</li>
+        <li><strong>Build Monday flash:</strong> → Standard Aevah report: Mo forecast vs. Connor's forecast vs. MTD NetSuite. Pre-built, auto-updated, consistent format. Jeff and the sales team can review async; the Monday meeting becomes exception-driven rather than assembly-driven.</li>
+        <li><strong>Ask "what will this promotion do?":</strong> → Mo Chat natural language: "Winco, CDc single, 2-for-$6, July. What lift?" — grounded in historical causal data, not a hallucination.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Section 4: Capability Map ─────────────────────────────── -->
+<div class="sec-head green">4 · Capability Map</div>
+<div class="sec-body">
+  <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Pain point numbers reference Section 2. Status reflects current state as of July 22, 2026.</p>
+  <div style="overflow-x:auto">
+  <table class="cap-table">
+    <thead>
+      <tr>
+        <th>Connor Pain Point</th>
+        <th>Aevah Capability</th>
+        <th>Deliverable for Connor</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pain-ref">#1</span>Promo lift guesswork</td>
+        <td>
+          <div class="cap-name">Causal lift analysis (MO_72)</div>
+          <div class="cap-sub">Historical lift-rate per retailer-SKU-promo-type from SPINS base vs. incr units</div>
+        </td>
+        <td>Default lift % per account in extract; Mo Chat query interface</td>
+        <td><span class="badge badge-amber">Signal ready · UI Q3</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#2</span>100 planner files</td>
+        <td>
+          <div class="cap-name">Sales planner structured input</div>
+          <div class="cap-sub">Shared sheet or Mo interface replaces individual Excel files</div>
+        </td>
+        <td>Promo calendar consumed by both Aevah and Connor's model automatically</td>
+        <td><span class="badge badge-amber">Design needed</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#3</span>New SKU ramp prediction</td>
+        <td>
+          <div class="cap-name">Cold-start proxy overlay</div>
+          <div class="cap-sub">Top-3 matched past BUILT launches at same channel; toggleable multi-proxy chart</div>
+        </td>
+        <td>Ramp curve with proxy confidence band vs. ETS — demoed in today's meeting</td>
+        <td><span class="badge badge-green">Mockup live · wire UI</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#4</span>Winco / data-dark retailers</td>
+        <td>
+          <div class="cap-name">Channel-proxy inference</div>
+          <div class="cap-sub">Use SPINS c-store retailers in matching region/demographics as surrogate signal</div>
+        </td>
+        <td>Proxy estimate with explicit confidence notation (inference, not measurement)</td>
+        <td><span class="badge badge-amber">Design needed</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#5</span>No new distribution signal</td>
+        <td>
+          <div class="cap-name">Distribution calendar input</div>
+          <div class="cap-sub">Simple CSV: SKU × retailer × planned stores × launch date → feeds TDP ramp projection</div>
+        </td>
+        <td>Forward-looking TDP curve for new launches; ramp model already built (MO_26)</td>
+        <td><span class="badge badge-amber">Input pipeline needed</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#6</span>Zero macro signals</td>
+        <td>
+          <div class="cap-name">Macro feature engineering</div>
+          <div class="cap-sub">FRED API: gas prices, U of M sentiment, unemployment → LightGBM feature set</div>
+        </td>
+        <td>Elasticity coefficients for macro factors in export; seasonality residual improvement</td>
+        <td><span class="badge badge-purple">1 sprint · high ask value</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#7</span>File scale / unwieldy</td>
+        <td>
+          <div class="cap-name">Velocity extract (MO_70)</div>
+          <div class="cap-sub">All 156 SKUs × 100 retailers with actuals + forecast; Connor imports one CSV instead of managing one Excel</div>
+        </td>
+        <td>CSV delivered; HTML filterable report as companion</td>
+        <td><span class="badge badge-green">Live — delivered today</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#8</span>No sanity check / backtesting</td>
+        <td>
+          <div class="cap-name">Temporal backtest report</div>
+          <div class="cap-sub">Train on years 1–2, predict year 3, gauge against NetSuite actuals — already done in validation; surface per-retailer MAPE</div>
+        </td>
+        <td>Side-by-side: Connor model vs. Aevah ML vs. actuals, per retailer-SKU</td>
+        <td><span class="badge badge-amber">NetSuite data needed</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#9</span>All-day Monday S&amp;OP meetings</td>
+        <td>
+          <div class="cap-name">S&amp;OP flash report</div>
+          <div class="cap-sub">Auto-generated standard format per retailer: Aevah forecast, Connor override, MTD pace, confidence band</div>
+        </td>
+        <td>Connor presents a pre-built report; meeting shifts from assembly to exception discussion</td>
+        <td><span class="badge badge-amber">NetSuite + planner data needed</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#10</span>Category/competitive at scale</td>
+        <td>
+          <div class="cap-name">Mo Trends (live)</div>
+          <div class="cap-sub">6-tile competitive dashboard: share, price, TDP, velocity — all 5K+ SPINS SKUs; filterable by retailer, brand, channel</div>
+        </td>
+        <td>Brian's scorecard fully automated; 100 retailers × competitive dimensions in one view</td>
+        <td><span class="badge badge-green">Live in Mo v12</span></td>
+      </tr>
+      <tr>
+        <td><span class="pain-ref">#11</span>Cannibalization not modeled</td>
+        <td>
+          <div class="cap-name">scored_cannibalization (MO_20)</div>
+          <div class="cap-sub">LightGBM cannibalization rate forecast; 48% coverage today (≥8 post-launch weeks threshold)</div>
+        </td>
+        <td>Cannibalization column in Connor's extract — replaces manual estimate for all scored pairs</td>
+        <td><span class="badge badge-green">Scores exist · extract delivery Q3</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ── Section 5: Supply Chain ROI ─────────────────────────── -->
+<div class="sec-head amber">5 · The Supply Chain ROI Case</div>
+<div class="sec-body">
+  <p class="intro">Connor said it plainly: <strong>"It informs the production team how much to make the month prior. And then that informs the procurement team how much ingredients they need to source, how much packaging they need to source."</strong> The forecast doesn't just affect revenue — it ripples through the entire operating model. Forecast error is not a reporting inconvenience; it's a cost driver.</p>
+
+  <div class="roi-grid" style="margin-top:20px">
+    <div class="roi-card green">
+      <div class="roi-head">Overforecast cost</div>
+      <div class="roi-body"><strong>Excess production → waste → spoilage.</strong> Connor has spoilage listed as a gross-to-net deduction. Overordering ingredients means cash tied up and potentially written off. Line staffing costs are committed in advance.</div>
+    </div>
+    <div class="roi-card red">
+      <div class="roi-head">Underforecast cost</div>
+      <div class="roi-body"><strong>Stockouts → lost sales → retailer relationship risk.</strong> In a hyper-growth environment, being out of stock at a major account is disproportionately damaging — especially when a competitor fills the shelf space.</div>
+    </div>
+    <div class="roi-card amber">
+      <div class="roi-head">Promo planning lead time</div>
+      <div class="roi-body"><strong>Production is planned the month before the selling month.</strong> A wrong promo lift assumption isn't correctable in-month — the production decision is already locked. Better lift predictions = better inventory positioning ahead of promotional events.</div>
+    </div>
+    <div class="roi-card" style="border-left-color:#a78bfa">
+      <div class="roi-head">Scale amplification</div>
+      <div class="roi-body"><strong>100 retailers × 156 SKUs × monthly.</strong> Even a 5% accuracy improvement across the portfolio compounds into significant P&amp;L impact. At BUILT's growth rate, fixing the process now prevents this from becoming a structural problem at 200 retailers.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;padding:16px 18px;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:8px;border-left:4px solid var(--accent)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px">Key framing for Bracken</div>
+    <div style="font-size:13.5px;color:var(--text);line-height:1.65">Aevah doesn't replace Connor's model. It improves the <strong>inputs</strong> to Connor's model and provides an <strong>independent second opinion</strong>. Connor keeps oversight, override control, and judgment. The ROI is: <strong>less time assembling data, better lift assumptions, earlier signal on distribution changes, and a forecast that doesn't degrade as the business scales from 100 to 200+ retailers.</strong></div>
+  </div>
+</div>
+
+<!-- ── Section 6: Scope for the Deck ────────────────────────── -->
+<div class="sec-head purple">6 · Proposed Scope — What to Present Friday</div>
+<div class="sec-body">
+  <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Brian asked for a summary of scope going forward. Organize the deck around three horizons — what's live, what ships this quarter, and what comes next.</p>
+
+  <div class="scope-grid">
+    <div>
+      <div class="scope-col-head">Now (Live · Demo-Ready)</div>
+      <ul class="scope-list">
+        <li><div class="scope-icon">✅</div><div><strong>Velocity extract (MO_70)</strong> — retailer × SKU actuals + 13wk forecast + category. Delivered today. Connor can use immediately as base velocity replacement.</div></li>
+        <li><div class="scope-icon">✅</div><div><strong>Cannibalization scores</strong> — 48% coverage. Deliver as extract column. Connor fills his cannibalization field with model output.</div></li>
+        <li><div class="scope-icon">✅</div><div><strong>Competitive intelligence (Mo Trends)</strong> — who's taking share, competitor pricing, promo timing. Brian's scorecard automated.</div></li>
+        <li><div class="scope-icon">✅</div><div><strong>Cold-start proxy ramp</strong> — mockup demoed in today's meeting. Connor and sales team use it to anchor new-SKU assumptions instead of guessing.</div></li>
+        <li><div class="scope-icon">✅</div><div><strong>Price elasticity by retailer-SKU</strong> — promo price reduction → predicted unit lift. Supplements the sales team's lift assumption.</div></li>
+        <li><div class="scope-icon">✅</div><div><strong>Historical promo lift rates</strong> — from causal analysis. Per retailer-SKU-promo-type. Mo Chat query interface in progress.</div></li>
+      </ul>
+    </div>
+    <div class="scope-right">
+      <div class="scope-col-head">Q3 Build (Next 90 Days)</div>
+      <ul class="scope-list">
+        <li><div class="scope-icon">🔨</div><div><strong>Structured promo planner input</strong> — replaces 100 Excel file opens. Reps enter once; both Aevah and Connor's model consume. Version control solved.</div></li>
+        <li><div class="scope-icon">🔨</div><div><strong>NetSuite actuals integration</strong> — closes the loop. Forecast vs. actual by retailer-SKU. Enables per-account bias reporting and model improvement.</div></li>
+        <li><div class="scope-icon">🔨</div><div><strong>S&amp;OP flash report</strong> — standard auto-generated report for Monday meetings. Aevah ML vs. Connor override vs. MTD pace. Jeff sees it async; meeting becomes exception-driven.</div></li>
+        <li><div class="scope-icon">🔨</div><div><strong>Mo Chat promo query ("What lift at Winco?")</strong> — natural language → causal lift table → response. Grounded in real SPINS data, not generated.</div></li>
+        <li><div class="scope-icon">🔨</div><div><strong>Distribution calendar input</strong> — simple CSV: planned SKU launches, store counts, dates → TDP ramp projection. Closes the new-distribution blind spot.</div></li>
+        <li><div class="scope-icon">🔨</div><div><strong>Data-dark retailer proxy</strong> — channel/geo-matched SPINS surrogate for Winco/HEB. Explicit confidence notation. Not a claim — a calibrated inference.</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;padding:16px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">On the Horizon (Post-Q3)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--text)">
+      <div style="flex:1;min-width:200px"><strong>Macro feature integration</strong> — FRED API: gas, sentiment, unemployment as LightGBM inputs. Connor asked for this explicitly. One sprint.</div>
+      <div style="flex:1;min-width:200px"><strong>Circana integration</strong> — Costco + additional accounts. Same ingest pattern as SPINS. Expands coverage to accounts where only Circana exists.</div>
+      <div style="flex:1;min-width:200px"><strong>Sales comp visibility</strong> — Rob's idea: forecast vs. actual by rep. Margin-aware. Requires NetSuite integration first. Enables the "pay reps on margin protection" vision.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+  <span>Aevah × BUILT · Connor Process Review · July 22, 2026 · Confidential</span>
+  <span>Follow-up: Fri July 25 · Rob × Brian × Jason · 1 PM CT · Bracken deck</span>
+</div>
+
+</div><!-- /page -->

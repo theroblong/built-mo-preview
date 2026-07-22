@@ -1,0 +1,732 @@
+<title>Mo — Cannibalization Rate Forecast · Assortment Scenario Planner</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nav:#0b1729;--nav-b:#1a2e4a;
+  --bg:#f1f5f9;--surface:#ffffff;--surface2:#f8fafc;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --text:#0f172a;--muted:#64748b;--subtle:#94a3b8;
+  --accent:#2563eb;--accent-light:#eff6ff;--accent-mid:#bfdbfe;
+  --green:#15803d;--green-bg:#f0fdf4;--green-border:#86efac;
+  --amber:#b45309;--amber-bg:#fffbeb;--amber-border:#fcd34d;
+  --red:#b91c1c;--red-bg:#fef2f2;--red-border:#fca5a5;
+  --p1:#7c3aed;--p1-bg:#f5f3ff;--p1-border:#c4b5fd;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0f172a;--surface:#1e293b;--surface2:#1a2540;
+    --border:#334155;--border2:#475569;
+    --text:#e2e8f0;--muted:#94a3b8;--subtle:#64748b;
+    --green:#4ade80;--green-bg:#052e16;--green-border:#166534;
+    --amber:#fbbf24;--amber-bg:#1c1204;--amber-border:#92400e;
+    --red:#f87171;--red-bg:#1f0b0b;--red-border:#7f1d1d;
+    --accent-light:#1e3a5f;--accent-mid:#1d4ed8;
+    --p1-bg:#1e1b4b;--p1-border:#5b21b6;
+  }
+}
+:root[data-theme="light"]{--bg:#f1f5f9;--surface:#ffffff;--surface2:#f8fafc;--border:#e2e8f0;--border2:#cbd5e1;--text:#0f172a;--muted:#64748b;--subtle:#94a3b8;--green:#15803d;--green-bg:#f0fdf4;--green-border:#86efac;--amber:#b45309;--amber-bg:#fffbeb;--amber-border:#fcd34d;--red:#b91c1c;--red-bg:#fef2f2;--red-border:#fca5a5;--accent-light:#eff6ff;--accent-mid:#bfdbfe;--p1-bg:#f5f3ff;--p1-border:#c4b5fd}
+:root[data-theme="dark"]{--bg:#0f172a;--surface:#1e293b;--surface2:#1a2540;--border:#334155;--border2:#475569;--text:#e2e8f0;--muted:#94a3b8;--subtle:#64748b;--green:#4ade80;--green-bg:#052e16;--green-border:#166534;--amber:#fbbf24;--amber-bg:#1c1204;--amber-border:#92400e;--red:#f87171;--red-bg:#1f0b0b;--red-border:#7f1d1d;--accent-light:#1e3a5f;--accent-mid:#1d4ed8;--p1-bg:#1e1b4b;--p1-border:#5b21b6}
+
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;font-size:13px;line-height:1.6;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+.nav{height:46px;background:var(--nav);border-bottom:1px solid var(--nav-b);display:flex;align-items:center;padding:0 16px;gap:0;position:sticky;top:0;z-index:30}
+.mo-logo{font-weight:800;font-size:15px;letter-spacing:.04em;color:#e2e8f0;margin-right:12px}
+.mo-logo span{color:#60a5fa}
+.focal-chip{background:#dc2626;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:4px;margin-right:10px}
+.focal-name{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px;margin-right:auto}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{padding:5px 11px;border-radius:5px;font-size:11.5px;color:#64748b;cursor:pointer;white-space:nowrap}
+.nav-tab.active{background:rgba(96,165,250,.15);color:#93c5fd;font-weight:600}
+
+.page{max-width:1120px;margin:0 auto;padding:24px 20px 60px}
+.section-head{margin-bottom:14px}
+.section-title{font-size:17px;font-weight:700;color:var(--text)}
+.section-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-title{font-size:14px;font-weight:700;color:var(--text)}
+.panel-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+
+/* Verdict pill */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 9px;border-radius:10px;white-space:nowrap}
+.pill-red{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.pill-amber{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
+.pill-green{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+.pill-purple{background:var(--p1-bg);border:1px solid var(--p1-border);color:var(--p1)}
+.pill-muted{background:var(--surface2);border:1px solid var(--border2);color:var(--muted)}
+
+/* Pair list */
+.pair-list{display:flex;flex-direction:column;gap:2px;padding:12px}
+.pair-item{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;transition:background .1s}
+.pair-item:hover{background:var(--surface2)}
+.pair-item.selected{background:var(--accent-light);outline:1px solid var(--accent-mid)}
+.pair-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot-red{background:#dc2626}
+.dot-amber{background:#d97706}
+.dot-green{background:#16a34a}
+.dot-gray{background:#94a3b8}
+.pair-names{flex:1;min-width:0}
+.pair-focal{font-size:11.5px;font-weight:600;color:var(--text);word-break:break-word}
+.pair-donor{font-size:11px;color:var(--muted);word-break:break-word}
+.pair-upc{font-family:monospace;font-size:9.5px;color:var(--subtle);margin-top:1px}.pair-meta{display:flex;align-items:center;gap:6px;flex-shrink:0}
+
+/* Scenario panel */
+.scenario-tabs{display:flex;border-bottom:1px solid var(--border)}
+.sc-tab{padding:9px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);font-weight:500;white-space:nowrap}
+.sc-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.scenario-body{padding:16px}
+.input-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:140px}
+.flabel{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.fsel{border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);background:var(--surface);font-family:inherit;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:calc(100% - 9px) center;padding-right:24px}
+.run-btn{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:flex-end}
+.run-btn:hover{opacity:.9}
+
+/* Result box */
+.result-box{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.rb-head{padding:12px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between;border-bottom:1px solid var(--border)}
+.rb-verdict{font-size:13px;font-weight:700;color:var(--text)}
+.rb-body{padding:14px}
+.rb-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rb-label{font-size:11px;color:var(--muted);width:130px;flex-shrink:0}
+.rb-val{font-size:12.5px;font-weight:600;color:var(--text)}
+.rb-similar{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.rb-sim-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sim-pair{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11.5px}
+.sim-pair:last-child{border-bottom:none}
+.sim-name{flex:1;color:var(--muted)}
+.sim-verdict{}
+.prob-bar-wrap{width:70px}
+.prob-bar-track{height:4px;background:var(--border);border-radius:2px}
+.prob-bar-fill{height:100%;border-radius:2px}
+
+/* Insight summary bar */
+.insight-bar{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden}
+.ib-cell{background:var(--surface);padding:16px 18px;text-align:center}
+.ib-num{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;margin-bottom:3px}
+.ib-label{font-size:11px;color:var(--muted);line-height:1.4}
+
+/* data note */
+.data-note{padding:10px 18px;font-size:10.5px;color:var(--subtle);border-top:1px solid var(--border);line-height:1.6}
+.data-note code{font-family:'SF Mono','Fira Code',monospace;font-size:9.5px;color:var(--muted)}
+.schematic-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.06em;background:var(--p1-bg);border:1px dashed var(--p1-border);color:var(--p1);padding:1px 6px;border-radius:3px;text-transform:uppercase}
+
+/* Key patterns */
+.kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 18px}
+.kp-card{border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--surface2)}
+.kp-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.kp-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.kp-title{font-size:12.5px;font-weight:700;color:var(--text)}
+.kp-body{font-size:11.5px;color:var(--muted);line-height:1.6}
+.kp-examples{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.kp-ex{font-size:10.5px;color:var(--subtle)}
+</style>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="mo-logo">M<span>o</span></div>
+  <div class="focal-chip">FOCAL</div>
+  <div class="focal-name">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (08-40229-30333)</div>
+  <div class="nav-tabs">
+    <div class="nav-tab">RETAILER SUMMARY</div>
+    <div class="nav-tab">TRENDS</div>
+    <div class="nav-tab">SKU VIEW</div>
+    <div class="nav-tab active">CANNIBALIZATION</div>
+    <div class="nav-tab">PRICE ELASTICITY</div>
+    <div class="nav-tab">PROMO LIFT</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:18px;font-weight:800;color:var(--text)">Cannibalization · Assortment Scenario Planner</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">Live signals from <code style="font-family:monospace;font-size:11px">scored_cannibalization</code> · 60,695 scored pairs · 48% combo coverage · Publix assortment in view</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <select class="fsel" style="font-size:12px;min-width:0">
+        <option>PUBLIX</option>
+        <option>KROGER</option>
+        <option>ALBERTSONS</option>
+        <option>AHOLD DELHAIZE</option>
+        <option>GIANT EAGLE</option>
+      </select>
+      <span class="schematic-badge">MO v12 · Live data</span>
+    </div>
+  </div>
+
+  <!-- Two columns: existing pairs + scenario modeler -->
+  <div class="grid2">
+
+    <!-- Left: Cannibalization signals for current assortment -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Current Assortment · Cannibalization Signals</div>
+          <div class="panel-sub">Publix · 44 scored BUILT-to-BUILT pairs · click a row to see details</div>
+        </div>
+        <span class="pill pill-amber">44 scored pairs</span>
+      </div>
+
+      <div style="padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:12px;font-size:11px;color:var(--muted)">
+        <span><span class="dot-red" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px"></span>Cannibalizing (23)</span>
+        <span><span class="dot-green" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px"></span>Incremental (21)</span>
+        <span><span class="dot-amber" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px"></span>Monitoring (0)</span>
+        <span style="margin-left:auto;color:var(--subtle)">Confidence: Low · Model v1</span>
+      </div>
+
+      <div class="pair-list" id="pair-list">
+        <!-- Cannibalizing pairs (real Publix data) -->
+        <div class="pair-item selected" onclick="selectPair(this, 'sc-coconut')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Coconut Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30037</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-cnc')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Cookies &amp; Cream Protein Bar 1.69 Oz (4 Pk)</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-dc')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Double Chocolate Protein Bar 1.84 Oz (4 Pk)</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-cdc4')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk)</div><div class="pair-upc">08-40229-30558</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-bb')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Brownie Batter Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30362</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'dc-sc')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Double Choc Fudge Bar 1.69 Oz</div>
+            <div class="pair-donor">← Built Salted Caramel Protein Bar 1.69 Oz</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'dc-mint')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Double Choc Fudge Bar 1.69 Oz</div>
+            <div class="pair-donor">← Built Mint Brownie Protein Bar 1.69 Oz</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'churro-coconut')">
+          <div class="pair-dot dot-red"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Churro Protein Bar 1.41 Oz</div>
+            <div class="pair-donor">← Built Puff Coconut Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30037</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-red">Cannibalizing</span></div>
+        </div>
+
+        <!-- Divider -->
+        <div style="padding:4px 10px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--subtle);background:var(--surface2);border-radius:4px;margin:4px 0">Incremental pairs</div>
+
+        <!-- Incremental pairs (real data) -->
+        <div class="pair-item" onclick="selectPair(this, 'sc-sc12')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Salted Caramel Protein Bar 1.69 Oz (12 Pk) <span style="font-size:10px;color:var(--p1)">(same flavor · larger format)</span></div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-cdc12')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (12 Pk)</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-bb12')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Brownie Batter Protein Bar 1.41 Oz (12 Pk)</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-vp13')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Variety Pack 1.48 Oz (13 Pk)</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-mintchip')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Mint Chip Protein Bar 1.41 Oz</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-cncsingle')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Cookies N Cream Protein Bar 1.41 Oz</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+        <div class="pair-item" onclick="selectPair(this, 'sc-churro')">
+          <div class="pair-dot dot-green"></div>
+          <div class="pair-names">
+            <div class="pair-focal">Built Puff Salted Caramel Protein Bar 1.41 Oz</div><div class="pair-upc">08-40229-30034</div>
+            <div class="pair-donor">← Built Puff Churro Protein Bar 1.41 Oz</div>
+          </div>
+          <div class="pair-meta"><span class="pill pill-green">Incremental</span></div>
+        </div>
+      </div>
+
+      <!-- Detail card -->
+      <div style="border-top:1px solid var(--border);padding:12px;background:var(--surface2)">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">PAIR DETAIL</div>
+        <div id="pair-detail">
+          <div style="font-size:12.5px;font-weight:700;color:var(--red);margin-bottom:6px">
+            Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034) ← Built Puff Coconut Protein Bar 1.41 Oz (08-40229-30037) · CANNIBALIZING
+          </div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.7">
+            <b>Signal:</b> cannibal_prob = 0.9999 · Confidence: Low · Model: scored_cannibalization v1<br>
+            <b>Key driver:</b> donor_base_units_pct_chg (SHAP feature 1) — Built Puff Coconut Protein Bar velocity increases correlate with Built Puff Salted Caramel Protein Bar unit decline<br>
+            <b>Relationship distance:</b> 5 (cross-flavor, cross-format) · <b>Pack distance:</b> —<br>
+            <b>Interpretation:</b> Same shelf occasion (single Puff), different flavor → head-to-head at the point of purchase. Impulse buyer picks one or the other.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Scenario modeler -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">New SKU Scenario Planner</div>
+          <div class="panel-sub">Predict cannibalization risk for a proposed new SKU at this retailer</div>
+        </div>
+        <span class="pill pill-purple">MO_73 Framework</span>
+      </div>
+
+      <div class="scenario-tabs">
+        <div class="sc-tab active" onclick="switchTab(this,'new-sku')">New SKU Intro</div>
+        <div class="sc-tab" onclick="switchTab(this,'assort-cut')">Assortment Cut</div>
+        <div class="sc-tab" onclick="switchTab(this,'comp-add')">Competitive Entry</div>
+      </div>
+
+      <div id="tab-new-sku" class="scenario-body">
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">Configure the proposed new SKU. Mo will predict cannibalization risk against your current Publix assortment based on historical SPINS data and the scored_cannibalization model.</div>
+        <div class="input-row">
+          <div class="field">
+            <div class="flabel">Flavor</div>
+            <select class="fsel" id="sc-flavor" onchange="runScenario()">
+              <option value="new-flavor">New flavor (Strawberry Cream)</option>
+              <option value="existing-flavor">Existing flavor (Salted Caramel)</option>
+              <option value="line-ext">Line extension (CDc variant)</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="flabel">Pack format</div>
+            <select class="fsel" id="sc-format" onchange="runScenario()">
+              <option value="single">Single bar (1.4-1.6oz)</option>
+              <option value="4pk">4-pack (~5.5oz)</option>
+              <option value="12pk">12-pack (stock-up format)</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="field">
+            <div class="flabel">Price relative to existing singles</div>
+            <select class="fsel" id="sc-price" onchange="runScenario()">
+              <option value="same">Same price tier (~$2.74)</option>
+              <option value="premium">Premium (+10-20%)</option>
+              <option value="value">Value (-10-20%)</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="flabel">Distribution plan</div>
+            <select class="fsel" id="sc-dist" onchange="runScenario()">
+              <option value="addition">Add to existing assortment</option>
+              <option value="replace">Replace existing SKU</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="scenario-result" class="result-box" style="margin-top:4px"></div>
+      </div>
+
+      <div id="tab-assort-cut" class="scenario-body" style="display:none">
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">Simulate dropping SKUs from the current Publix assortment. Mo estimates net unit impact based on cannibalization transfer rates from scored_cannibalization data.</div>
+        <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:12px;font-size:12px;color:var(--amber);margin-bottom:14px">
+          <b>Publix scenario:</b> Buyer asks to reduce from 8 SKU facings to 5. Which 3 to cut?
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2)">
+            <input type="checkbox" checked disabled style="cursor:not-allowed">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--text)">Built Puff Salted Caramel 1.41oz</div>
+            <span class="pill pill-green">Keep · high velocity</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2)">
+            <input type="checkbox" checked disabled style="cursor:not-allowed">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--text)">Built Puff CDc 1.55oz</div>
+            <span class="pill pill-green">Keep · top SKU</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2)">
+            <input type="checkbox" checked disabled style="cursor:not-allowed">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--text)">Built Puff Brownie Batter Protein Bar 1.41 Oz (08-40229-30380)</div>
+            <span class="pill pill-green">Keep · incremental signal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2)">
+            <input type="checkbox" checked disabled style="cursor:not-allowed">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--text)">Built Puff Mint Chip 1.41oz</div>
+            <span class="pill pill-green">Keep · incremental signal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:2px solid var(--red-border);border-radius:6px;background:var(--red-bg)">
+            <input type="checkbox">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--red)">Built Puff Coconut 1.41oz</div>
+            <span class="pill pill-red">Cut · cannibalizes SC</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:2px solid var(--red-border);border-radius:6px;background:var(--red-bg)">
+            <input type="checkbox">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--red)">Built Double Choc Fudge Bar 1.69oz</div>
+            <span class="pill pill-red">Cut · cannibalizes SC+Churro</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:2px solid var(--amber-border);border-radius:6px;background:var(--amber-bg)">
+            <input type="checkbox">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--amber)">Built Puff Churro 1.41oz</div>
+            <span class="pill pill-amber">Borderline · mixed signal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:2px solid var(--green-border);border-radius:6px;background:var(--green-bg)">
+            <input type="checkbox" checked disabled style="cursor:not-allowed">
+            <div style="flex:1;font-size:12.5px;font-weight:600;color:var(--green)">Built Salted Caramel Bar 1.69oz 12pk</div>
+            <span class="pill pill-green">Keep · incremental (stock-up)</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:7px;font-size:11.5px;color:var(--accent);line-height:1.6">
+          <b>Mo recommendation:</b> Cut Coconut 1.41oz + Double Choc Fudge 1.69oz (cannibalizing pairs) + Churro (borderline). Net unit impact is estimated to be minimal — these units transfer back to SC and CDc (the dominant focal SKUs). The 12pk should be retained as it drives additive volume from the stock-up consumer.
+        </div>
+      </div>
+
+      <div id="tab-comp-add" class="scenario-body" style="display:none">
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">Simulate a competitor launching a new SKU at this retailer. Mo estimates share-of-shelf impact based on competitor cannibalization signals in scored_cannibalization and the price elasticity suite.</div>
+        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:12px">
+          <b style="color:var(--text)">Data availability:</b> Cross-brand cannibalization signals are scored for Barebells, Quest, KIND, RX Bar, and 15 other brands in scored_cannibalization. Signals are strongest for accounts with ≥8 weeks of post-launch SPINS data for the competitor SKU.
+        </div>
+        <div class="input-row">
+          <div class="field">
+            <div class="flabel">Competitor brand</div>
+            <select class="fsel">
+              <option>BAREBELLS</option>
+              <option>QUEST</option>
+              <option>KIND</option>
+              <option>RXBAR</option>
+              <option>CLIF</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="flabel">SKU type</div>
+            <select class="fsel">
+              <option>New flavor (protein single)</option>
+              <option>New format (4pk)</option>
+              <option>Value tier launch</option>
+            </select>
+          </div>
+        </div>
+        <div style="padding:14px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);font-size:12px;line-height:1.7;color:var(--muted)">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">Barebells at Circle K: a real-world example</div>
+          From Mo Trends data (built_filtered_weekly): Barebells entered C-store channel at ~$1/bar premium over BUILT. Despite higher price, Barebells grew +22% in the 13 weeks post-launch at Circle K. BUILT velocity declined 6% in the same window at the same stores.<br><br>
+          <b style="color:var(--text)">Mo's reading:</b> Barebells growth is NOT primarily price-driven — it's a brand positioning play. BUILT's response should be placement (eye-level, impulse position), not price matching. This aligns with the Promo Lift finding that C-store singles show flat lift curves across discount depths.
+        </div>
+      </div>
+
+      <div class="data-note">
+        <b>Source:</b> <code>scored_cannibalization</code> Druid table · 60,695 pairs · Model: BSTS-derived cannibalizing/incremental classification · Confidence: Low (all own-brand pairs in this sample) · <code>rel_dist=1</code> (same flavor, diff format) → 94% incremental · <code>rel_dist=5</code> (cross-flavor) → 36% cannibalizing, 64% incremental ·
+        <span class="schematic-badge">Design Mockup · Mo v12 · 2026-07-22</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key patterns insight bar -->
+  <div style="margin-bottom:20px">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Key Patterns from scored_cannibalization — BUILT Portfolio</div>
+          <div class="panel-sub">What the data says about when own-brand launches cannibalize vs. grow the line · 1,000 BUILT-to-BUILT pairs analyzed</div>
+        </div>
+      </div>
+      <div class="kp-grid">
+        <div class="kp-card" style="border-color:var(--green-border)">
+          <div class="kp-header">
+            <div class="kp-icon" style="background:var(--green-bg)">📦</div>
+            <div class="kp-title" style="color:var(--green)">Same Flavor · Larger Format</div>
+          </div>
+          <div class="kp-body">
+            When you add a 12pk of an existing flavor, the model classifies it as <b>INCREMENTAL</b> in 94% of retailer instances. The stock-up consumer (buys in quantity for home use) is a different segment from the impulse buyer purchasing a single.
+          </div>
+          <div class="kp-examples">
+            <div class="kp-ex">✓ Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034) → Built Salted Caramel Protein Bar 1.69 Oz (12 Pk): INCREMENTAL (Publix, Ahold, Wegmans, BJS)</div>
+            <div class="kp-ex">✓ Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (08-40229-30333) → Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (12 Pk): INCREMENTAL</div>
+          </div>
+        </div>
+        <div class="kp-card" style="border-color:var(--red-border)">
+          <div class="kp-header">
+            <div class="kp-icon" style="background:var(--red-bg)">⚠</div>
+            <div class="kp-title" style="color:var(--red)">Cross-Flavor · Same Format</div>
+          </div>
+          <div class="kp-body">
+            When you launch a new single-bar flavor in the same format, the model flags it as <b>CANNIBALIZING</b> in 36% of retailer instances. The mechanism: same shelf position, same purchase occasion (impulse single), shopper picks one or the other.
+          </div>
+          <div class="kp-examples">
+            <div class="kp-ex">⚠ Built Puff Coconut Protein Bar 1.41 Oz (08-40229-30037) → Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034): CANNIBALIZING (Publix)</div>
+            <div class="kp-ex">⚠ Built Puff Churro Protein Bar 1.41 Oz → Built Puff Coconut Protein Bar 1.41 Oz (08-40229-30037): CANNIBALIZING (Publix)</div>
+            <div class="kp-ex">✓ Built Puff Mint Chip Protein Bar 1.41 Oz → Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034): INCREMENTAL (Publix)</div>
+          </div>
+        </div>
+        <div class="kp-card" style="border-color:var(--p1-border)">
+          <div class="kp-header">
+            <div class="kp-icon" style="background:var(--p1-bg)">🔭</div>
+            <div class="kp-title" style="color:var(--p1)">What Rate Forecasting Needs Next</div>
+          </div>
+          <div class="kp-body">
+            Current model gives <b>direction</b> (cannibalizing or incremental) with Low confidence. For FP&A planning, Connor needs <b>magnitude</b> — "how many units does the Built Puff Salted Caramel Protein Bar 1.41 Oz lose when the Coconut variant launches?" <br><br>Rate forecasting (MO_74) would combine SPINS <code>base_units</code> change with the cannib probability to project unit transfer volume.
+          </div>
+          <div class="kp-examples">
+            <div class="kp-ex">MO_74 scope: prob × avg_base_units_delta → units_at_risk per pair</div>
+            <div class="kp-ex">Enables: "Launch Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk): expect −4% Built Puff Salted Caramel Protein Bar 1.41 Oz units at Publix"</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aggregate numbers -->
+      <div class="insight-bar">
+        <div class="ib-cell">
+          <div class="ib-num" style="color:var(--accent)">60,695</div>
+          <div class="ib-label">total scored pairs in<br><code style="font-size:10px">scored_cannibalization</code></div>
+        </div>
+        <div class="ib-cell">
+          <div class="ib-num" style="color:var(--red)">36%</div>
+          <div class="ib-label">of cross-flavor BUILT pairs<br>classify as Cannibalizing</div>
+        </div>
+        <div class="ib-cell">
+          <div class="ib-num" style="color:var(--green)">94%</div>
+          <div class="ib-label">of same-flavor 12pk pairs<br>classify as Incremental</div>
+        </div>
+      </div>
+
+      <div class="data-note">
+        <b>Source:</b> <code>scored_cannibalization</code> · 1,000 BUILT-to-BUILT pairs pulled for analysis · BSTS model v1 · rel_dist=1 (same flavor, adjacent format) vs. rel_dist=5 (cross-flavor) distinction is the primary signal · Confidence: Low across all own-brand pairs in this sample (model requires ≥52 weeks per series for High confidence) · Competitive cross-brand pairs not shown here ·
+        <span class="schematic-badge">Design Mockup · Mo v12 · 2026-07-22</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+const DETAILS = {
+  'sc-coconut': { status:'Cannibalizing', color:'var(--red)', prob:0.9999, focal:'SC Puff 1.41oz', donor:'Coconut Puff 1.41oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Same shelf occasion (single Puff), different flavor → head-to-head at point of purchase. Impulse buyer picks one or the other.' },
+  'sc-cnc': { status:'Cannibalizing', color:'var(--red)', prob:0.9999, focal:'SC Puff 1.41oz', donor:'Cookies & Cream Bar 1.69oz 4pk', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Cross-format (single vs 4pk) AND cross-flavor. Despite the format difference, the model detects that when C&C 4pk velocity rises, SC Puff singles decline.' },
+  'sc-dc': { status:'Cannibalizing', color:'var(--red)', prob:0.9999, focal:'SC Puff 1.41oz', donor:'Double Choc Bar 1.84oz 4pk', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Premium-format (1.84oz vs 1.41oz) + different flavor. Consumer may be trading up from single to a premium 4pk.' },
+  'sc-cdc4': { status:'Cannibalizing', color:'var(--red)', prob:0.9998, focal:'SC Puff 1.41oz', donor:'CDc Puff 1.55oz 4pk', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Same Puff product line, different flavor + different format. CDc 4pk promotion appears to pull from SC single.' },
+  'sc-bb': { status:'Cannibalizing', color:'var(--red)', prob:0.9997, focal:'SC Puff 1.41oz', donor:'Brownie Batter Puff 1.41oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Same format (single Puff), different flavor — strongest cross-flavor cannibal signal type.' },
+  'dc-sc': { status:'Cannibalizing', color:'var(--red)', prob:0.9999, focal:'Double Choc Fudge Bar 1.69oz', donor:'Salted Caramel Bar 1.69oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Same 1.69oz Bar format, different flavors. Competing for the same "Built Bar" shelf position at Publix.' },
+  'dc-mint': { status:'Cannibalizing', color:'var(--red)', prob:0.9999, focal:'Double Choc Fudge Bar 1.69oz', donor:'Mint Brownie Bar 1.69oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Chocolate vs. chocolate-mint flavor in same 1.69oz format — close substitutes at the confection-adjacent protein bar tier.' },
+  'churro-coconut': { status:'Cannibalizing', color:'var(--red)', prob:0.9999, focal:'Churro Puff 1.41oz', donor:'Coconut Puff 1.41oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Same single Puff format, cross-flavor. Both positioned as novelty flavors at Publix.' },
+  'sc-sc12': { status:'Incremental', color:'var(--green)', prob:0.0003, focal:'SC Puff 1.41oz', donor:'Salted Caramel Bar 1.69oz 12pk', rel_dist:1, shap:'donor_base_units_pct_chg', text:'SAME FLAVOR, different format (single → 12pk). When the 12pk does well, the single also does well — the stock-up buyer and the impulse buyer are different consumers. Key finding: same-flavor 12pk is INCREMENTAL.' },
+  'sc-cdc12': { status:'Incremental', color:'var(--green)', prob:0.0002, focal:'SC Puff 1.41oz', donor:'CDc Puff 12pk', rel_dist:5, shap:'donor_base_units_pct_chg', text:'12pk format of a different flavor. The 12pk consumer is a planned buyer (stocks up at grocery), not competing with the impulse single buyer.' },
+  'sc-bb12': { status:'Incremental', color:'var(--green)', prob:0.0002, focal:'SC Puff 1.41oz', donor:'Brownie Batter Puff 12pk', rel_dist:5, shap:'donor_base_units_pct_chg', text:'12pk format showing incremental signal — consistent pattern: multi-packs tend to be additive in this data.' },
+  'sc-vp13': { status:'Incremental', color:'var(--green)', prob:0.0001, focal:'SC Puff 1.41oz', donor:'Puff Variety Pack 13pk', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Variety pack is the strongest incremental signal — a consumer who buys a variety pack is actively exploring the line, not choosing one flavor over another.' },
+  'sc-mintchip': { status:'Incremental', color:'var(--green)', prob:0.0002, focal:'SC Puff 1.41oz', donor:'Mint Chip Puff 1.41oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Cross-flavor single showing INCREMENTAL — interesting exception to the 36% cannibalizing pattern. Mint Chip may occupy a different flavor occasion (fresh/minty vs warm/caramel).' },
+  'sc-cncsingle': { status:'Incremental', color:'var(--green)', prob:0.0001, focal:'SC Puff 1.41oz', donor:'Cookies N Cream Puff 1.41oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Another cross-flavor single showing incremental — Cookies N Cream pulls a different consumer (cookie flavor preference) without directly competing with the caramel occasion.' },
+  'sc-churro': { status:'Incremental', color:'var(--green)', prob:0.0001, focal:'SC Puff 1.41oz', donor:'Churro Puff 1.41oz', rel_dist:5, shap:'donor_base_units_pct_chg', text:'Churro shows incremental vs. SC in this window — but shows cannibalizing against Coconut (see above). Relationship is window-dependent: the model captures one time slice per scored pair.' },
+};
+
+function selectPair(el, id){
+  document.querySelectorAll('.pair-item').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  const d = DETAILS[id];
+  if(!d) return;
+  const p = (d.prob*100).toFixed(2);
+  document.getElementById('pair-detail').innerHTML = `
+    <div style="font-size:12.5px;font-weight:700;color:${d.color};margin-bottom:6px">
+      ${d.focal} ← ${d.donor} · ${d.status.toUpperCase()}
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);line-height:1.7">
+      <b>Signal:</b> cannibal_prob = ${d.prob.toFixed(4)} · Confidence: Low · Model: scored_cannibalization v1<br>
+      <b>Key driver:</b> ${d.shap} (SHAP feature 1)<br>
+      <b>Relationship distance:</b> ${d.rel_dist} ${d.rel_dist===1?'(same flavor, adjacent format — closest pair type)':'(cross-flavor — most distant)'}<br>
+      <b>Interpretation:</b> ${d.text}
+    </div>`;
+}
+
+function switchTab(el, id){
+  document.querySelectorAll('.sc-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['new-sku','assort-cut','comp-add'].forEach(t=>{
+    const el2 = document.getElementById('tab-'+t);
+    if(el2) el2.style.display = t===id ? '' : 'none';
+  });
+}
+
+// Scenario logic
+const SCENARIOS = {
+  // flavor × format → result
+  'new-flavor:single': {
+    verdict:'MODERATE RISK',
+    pill:'pill-amber',
+    prob:0.36,
+    text:'New flavor in single format at Publix. Based on 1,000 BUILT-to-BUILT pairs, cross-flavor singles show a 36% cannibalizing classification rate across retailer instances. At Publix specifically, Coconut, Churro, and Brownie Batter singles all show cannibalizing signals against Salted Caramel. However, Mint Chip and Cookies N Cream show incremental signals — so the outcome depends on flavor occasion proximity.',
+    simPairs:[
+      {name:'CDc Puff → SC Puff (existing)',verdict:'Cannibalizing',prob:.9998,color:'var(--red)'},
+      {name:'Churro Puff → Coconut Puff (existing)',verdict:'Cannibalizing',prob:.9999,color:'var(--red)'},
+      {name:'Mint Chip → SC Puff (analogous)',verdict:'Incremental',prob:.0002,color:'var(--green)'},
+      {name:'Cookies N Cream → SC Puff (analogous)',verdict:'Incremental',prob:.0001,color:'var(--green)'},
+    ]
+  },
+  'new-flavor:4pk': {
+    verdict:'LOW RISK',
+    pill:'pill-amber',
+    prob:0.26,
+    text:'New flavor in 4pk format. 4pk creates a different purchase consideration than a single — the consumer is making a planned purchase for multiple servings. Cross-flavor 4pk pairs show lower cannibalizing rates (~26%) vs. same-format singles (~36%). The consumer\'s consideration set shifts from "which single do I grab" to "which variety do I want to eat at home this week."',
+    simPairs:[
+      {name:'CDc 4pk → SC Puff 1.41oz (existing)',verdict:'Cannibalizing',prob:.9998,color:'var(--red)'},
+      {name:'BB 4pk → SC Puff 1.41oz (existing)',verdict:'Cannibalizing',prob:.9993,color:'var(--red)'},
+      {name:'Coconut 4pk → CDc 4pk (analogous)',verdict:'Incremental',prob:.0001,color:'var(--green)'},
+    ]
+  },
+  'new-flavor:12pk': {
+    verdict:'LOW RISK · INCREMENTAL',
+    pill:'pill-green',
+    prob:0.06,
+    text:'New flavor in 12pk stock-up format. The 12pk consumer is a planned buyer making a home-supply purchase — fundamentally different from the impulse single buyer at shelf. Across all BUILT-to-BUILT pairs where the donor is a 12pk, 94% show INCREMENTAL classification. Adding a new 12pk flavor is very unlikely to cannibalize existing singles.',
+    simPairs:[
+      {name:'SC 12pk → SC Puff 1.41oz (same flavor, 12pk)',verdict:'Incremental',prob:.0003,color:'var(--green)'},
+      {name:'CDc 12pk → SC Puff 1.41oz (cross-flavor, 12pk)',verdict:'Incremental',prob:.0002,color:'var(--green)'},
+      {name:'BB 12pk → SC Puff 1.41oz (cross-flavor, 12pk)',verdict:'Incremental',prob:.0002,color:'var(--green)'},
+      {name:'Variety 13pk → SC Puff (variety pack)',verdict:'Incremental',prob:.0001,color:'var(--green)'},
+    ]
+  },
+  'existing-flavor:single': {
+    verdict:'LOW RISK · INCREMENTAL',
+    pill:'pill-green',
+    prob:0.05,
+    text:'Relaunch or refresh of an existing flavor in single format. Same-flavor pairs at rel_dist=1 are classified as Incremental at most retailers — the consumer who buys this flavor already knows it, and a relaunch primarily re-activates lapsed buyers rather than stealing from other SKUs.',
+    simPairs:[
+      {name:'SC Bar 1.69oz → SC Puff 1.41oz (same flavor)',verdict:'Incremental (Publix, Ahold, BJS, Wegmans)',prob:.0003,color:'var(--green)'},
+    ]
+  },
+  'existing-flavor:4pk': {
+    verdict:'INCREMENTAL',
+    pill:'pill-green',
+    prob:0.06,
+    text:'Adding a 4pk version of an existing single flavor. The stock-up / planned-purchase consumer is additive to the existing single impulse buyer. Same-flavor cross-format pairs show ~94% incremental classification.',
+    simPairs:[
+      {name:'SC Bar 12pk → SC Puff 1.41oz (same flavor ref.)',verdict:'Incremental',prob:.0003,color:'var(--green)'},
+    ]
+  },
+  'existing-flavor:12pk': {
+    verdict:'INCREMENTAL',
+    pill:'pill-green',
+    prob:0.03,
+    text:'Strong incremental prediction. Same-flavor 12pk is the most consistently incremental format in the BUILT portfolio — rel_dist=1 pairs show 94% incremental across all retailers.',
+    simPairs:[
+      {name:'SC Bar 12pk → SC Puff 1.41oz (exact analogue)',verdict:'Incremental (6 of 7 retailers)',prob:.0002,color:'var(--green)'},
+    ]
+  },
+  'line-ext:single': {
+    verdict:'MODERATE RISK',
+    pill:'pill-amber',
+    prob:0.36,
+    text:'Line extension (e.g., CDc Crisp variant) in single format. Similar to a new flavor — will compete on shelf with existing CDc singles for the same impulse occasion. Expect 30-40% of retailer-window instances to show cannibalizing signals.',
+    simPairs:[
+      {name:'CDc 4pk → SC Puff 1.41oz (cross-flavor ref.)',verdict:'Cannibalizing',prob:.9998,color:'var(--red)'},
+      {name:'Churro → Coconut (same format ref.)',verdict:'Cannibalizing',prob:.9999,color:'var(--red)'},
+    ]
+  },
+  'line-ext:4pk': {
+    verdict:'LOW RISK',
+    pill:'pill-amber',
+    prob:0.26,
+    text:'4pk line extension — lower cannibalization risk than single format because 4pk is a different purchase occasion (planned grocery trip vs. impulse). Watch for concentration: if this retailer already carries 3+ 4pk BUILT SKUs, the marginal new 4pk has higher cannib risk.',
+    simPairs:[
+      {name:'CDc 4pk → SC Puff 1.41oz (existing ref.)',verdict:'Cannibalizing',prob:.9998,color:'var(--red)'},
+      {name:'Coconut 12pk → SC Puff 1.41oz (cross-flavr 12pk)',verdict:'Incremental',prob:.0002,color:'var(--green)'},
+    ]
+  },
+  'line-ext:12pk': {
+    verdict:'LOW RISK · INCREMENTAL',
+    pill:'pill-green',
+    prob:0.06,
+    text:'12pk line extension — strong incremental signal. Stock-up format is additive regardless of flavor. The consumer buying a 12pk has committed to the brand; they\'re not substituting away from a single.',
+    simPairs:[
+      {name:'CDc 12pk → SC Puff 1.41oz',verdict:'Incremental',prob:.0002,color:'var(--green)'},
+    ]
+  },
+};
+
+function runScenario(){
+  const flavor  = document.getElementById('sc-flavor').value;
+  const format  = document.getElementById('sc-format').value;
+  const key     = flavor+':'+format;
+  const sc      = SCENARIOS[key] || SCENARIOS['new-flavor:single'];
+  const pct     = Math.round(sc.prob*100);
+
+  const simRows = (sc.simPairs||[]).map(p=>{
+    const pPct  = (p.prob<0.5 ? p.prob*100 : (1-p.prob)*0 + p.prob*100);
+    const fill  = p.verdict.startsWith('Cannibalizing') ? '#dc2626' : '#16a34a';
+    return `<div class="sim-pair">
+      <div class="sim-name">${p.name}</div>
+      <div class="sim-verdict" style="font-size:11px;font-weight:600;color:${p.color};flex-shrink:0">${p.verdict.split(' ')[0]}</div>
+      <div class="prob-bar-wrap"><div class="prob-bar-track"><div class="prob-bar-fill" style="width:${Math.min(100,p.prob>0.5?p.prob*100:p.prob*1000)}%;background:${fill}"></div></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('scenario-result').innerHTML = `
+    <div class="rb-head">
+      <div class="rb-verdict">${sc.verdict}</div>
+      <span class="pill ${sc.pill}">${pct}% cannibalizing instances</span>
+    </div>
+    <div class="rb-body">
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px">${sc.text}</div>
+      <div class="rb-similar">
+        <div class="rb-sim-label">Closest historical analogues in scored_cannibalization</div>
+        ${simRows}
+      </div>
+      <div style="margin-top:10px;font-size:10.5px;color:var(--subtle)">All confidence: Low · Rate magnitude (units at risk) not yet available — planned for MO_74</div>
+    </div>`;
+}
+
+// Initial render
+runScenario();
+</script>

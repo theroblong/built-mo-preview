@@ -1,567 +1,808 @@
-<!-- Mo · Cold-Start Proxy Overlay — Forecast Drawer Mockup -->
-<title>Cold-Start Proxy Overlay · Mo Forecast Drawer</title>
+<title>Mo — Cold-Start Proxy Overlay · SKU View Forecast Drawer</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  :root {
-    --bg:         #070c14;
-    --bg-dim:     #040810;
-    --surf:       #0e1623;
-    --surf2:      #162032;
-    --surf3:      #1d2c42;
-    --border:     #1e3251;
-    --border-dim: #122038;
-    --accent:     #3b82f6;
-    --accent-dim: rgba(59,130,246,0.10);
-    --accent-hi:  rgba(59,130,246,0.18);
-    --green:      #22c55e;
-    --green-dim:  rgba(34,197,94,0.10);
-    --amber:      #f59e0b;
-    --amber-dim:  rgba(245,158,11,0.12);
-    --proxy:      #a855f7;
-    --proxy-dim:  rgba(168,85,247,0.10);
-    --proxy-hi:   rgba(168,85,247,0.18);
-    --red:        #ef4444;
-    --txt:        #dde6f0;
-    --txt2:       #8fa8c0;
-    --txt3:       #4d6680;
-    --txt4:       #2d4055;
-    --mono:       'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    --sans:       -apple-system, 'Segoe UI', system-ui, sans-serif;
-    --r:          6px;
-    --r2:         10px;
-    --r3:         14px;
-  }
+:root{
+  --nav:#0b1729;
+  --nav-border:#1a2e4a;
+  --bg:#f1f5f9;
+  --surface:#ffffff;
+  --surface2:#f8fafc;
+  --border:#e2e8f0;
+  --border2:#cbd5e1;
+  --text:#0f172a;
+  --muted:#64748b;
+  --subtle:#94a3b8;
+  --accent:#2563eb;
+  --accent-light:#eff6ff;
+  --accent-mid:#bfdbfe;
+  --green:#16a34a;
+  --green-light:#f0fdf4;
+  --amber:#b45309;
+  --amber-bg:#fffbeb;
+  --amber-border:#fcd34d;
+  --red:#dc2626;
+  --red-light:#fef2f2;
+  --p1:#7c3aed; --p1-bg:#f5f3ff; --p1-border:#c4b5fd;
+  --p2:#c2410c; --p2-bg:#fff7ed; --p2-border:#fdba74;
+  --p3:#0e7490; --p3-bg:#ecfeff; --p3-border:#67e8f9;
+  --p4:#9d174d; --p4-bg:#fdf2f8; --p4-border:#f9a8d4;
+}
 
-  body {
-    font-family: var(--sans);
-    background: var(--bg-dim);
-    color: var(--txt);
-    min-height: 100vh;
-    font-size: 13px;
-    -webkit-font-smoothing: antialiased;
-  }
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;font-size:13px;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
-  /* ── Mo nav ──────────────────────────────────────── */
-  .mo-nav {
-    height: 44px;
-    background: var(--surf);
-    border-bottom: 1px solid var(--border-dim);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  .mo-logo { font-weight: 700; font-size: 14px; letter-spacing: .04em; color: var(--txt); margin-right: 24px; }
-  .mo-logo span { color: var(--accent); }
-  .nav-tabs { display: flex; gap: 2px; flex: 1; }
-  .nav-tab {
-    padding: 5px 12px;
-    border-radius: var(--r);
-    font-size: 12px;
-    color: var(--txt3);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .nav-tab.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
-  .nav-right { display: flex; align-items: center; gap: 10px; }
-  .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .nav-label { font-size: 11px; color: var(--txt3); }
+/* ── Nav ──────────────────────────────────────────────── */
+.mo-nav{
+  height:46px;background:var(--nav);border-bottom:1px solid var(--nav-border);
+  display:flex;align-items:center;padding:0 16px;gap:0;position:sticky;top:0;z-index:30;
+}
+.mo-logo{font-weight:800;font-size:15px;letter-spacing:.04em;color:#e2e8f0;margin-right:12px}
+.mo-logo span{color:#60a5fa}
+.focal-chip{
+  background:#dc2626;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;
+  padding:2px 8px;border-radius:4px;margin-right:10px;flex-shrink:0
+}
+.focal-name{
+  font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:320px;margin-right:auto;font-variant-numeric:tabular-nums;
+}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{
+  padding:5px 11px;border-radius:5px;font-size:11.5px;color:#64748b;
+  cursor:pointer;white-space:nowrap;letter-spacing:.01em;
+}
+.nav-tab.active{background:rgba(96,165,250,.15);color:#93c5fd;font-weight:600}
 
-  /* ── page wrapper ────────────────────────────────── */
-  .page { display: flex; align-items: flex-start; gap: 0; min-height: calc(100vh - 44px); }
+/* ── Page layout ──────────────────────────────────────── */
+.page{display:flex;min-height:calc(100vh - 46px);position:relative}
 
-  /* ── dim sidebar (simulates Mo app in background) ── */
-  .sidebar-bg {
-    width: 220px;
-    flex-shrink: 0;
-    background: var(--bg-dim);
-    min-height: calc(100vh - 44px);
-    border-right: 1px solid var(--border-dim);
-    padding: 16px 0;
-    opacity: 0.35;
-  }
-  .sb-section { padding: 4px 16px; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--txt4); text-transform: uppercase; margin-bottom: 4px; margin-top: 12px; }
-  .sb-item { padding: 6px 16px; font-size: 12px; color: var(--txt3); display: flex; align-items: center; gap: 8px; }
-  .sb-item.hi { background: var(--accent-dim); color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; }
-  .sb-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; }
+/* ── Left: dimmed SKU View background ───────────────────*/
+.sku-bg{
+  width:38%;flex-shrink:0;padding:20px 0 0;
+  background:var(--surface);opacity:.38;pointer-events:none;user-select:none;
+  border-right:1px solid var(--border);
+}
+.sku-bg-title{padding:0 20px 12px;font-size:15px;font-weight:700;color:var(--text)}
+.sku-bg-sub{padding:0 20px 14px;font-size:12px;color:var(--muted)}
+.filter-row{display:flex;gap:8px;padding:0 20px 14px;align-items:center}
+.filter-pill{border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11.5px;color:var(--muted);background:var(--surface)}
+.sku-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.sku-table th{
+  background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);
+  white-space:nowrap;
+}
+.sku-table td{padding:10px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle}
+.sku-table tr.hl td{background:#eff6ff}
+.ch-label{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--text)}
+.acct{font-weight:600;color:var(--text)}
+.trend-spark{width:60px;height:18px;display:inline-block;vertical-align:middle}
+.cannibal-badge{font-size:10px;font-weight:600;color:#16a34a;background:#f0fdf4;padding:1px 6px;border-radius:10px}
+.more-btn{border:1px solid var(--border2);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--muted);background:var(--surface);cursor:default}
+.more-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-  /* ── drawer panel ────────────────────────────────── */
-  .drawer {
-    flex: 1;
-    min-height: calc(100vh - 44px);
-    background: var(--surf);
-    border-left: 1px solid var(--border);
-    overflow-y: auto;
-  }
+/* ── Drawer ───────────────────────────────────────────── */
+.drawer{
+  flex:1;background:var(--surface);
+  border-left:2px solid var(--border2);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  box-shadow:-4px 0 20px rgba(0,0,0,.1);
+  position:relative;
+}
 
-  .drawer-header {
-    padding: 18px 24px 14px;
-    border-bottom: 1px solid var(--border-dim);
-    background: var(--surf);
-  }
-  .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--txt3); margin-bottom: 10px; }
-  .breadcrumb a { color: var(--txt3); text-decoration: none; }
-  .breadcrumb a:hover { color: var(--accent); }
-  .bc-sep { opacity: .4; }
+/* Header */
+.dh{
+  padding:16px 20px 14px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  background:var(--surface);position:sticky;top:0;z-index:10;
+}
+.dh-left{}
+.dh-product{font-size:16px;font-weight:700;color:var(--text);line-height:1.25;margin-bottom:2px}
+.dh-context{font-size:12px;color:var(--muted);margin-bottom:5px}
+.dh-row3{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.model-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10.5px;font-weight:700;letter-spacing:.03em;
+  background:var(--amber-bg);border:1px solid var(--amber-border);
+  color:var(--amber);padding:2px 8px;border-radius:12px;
+}
+.model-sub{font-size:11px;color:var(--muted)}
+.close-btn{
+  border:1px solid var(--border);border-radius:6px;padding:4px 10px;
+  font-size:12px;color:var(--muted);cursor:pointer;background:var(--surface);
+  white-space:nowrap;flex-shrink:0;
+}
+.close-btn:hover{background:var(--surface2)}
 
-  .sku-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .sku-title-block {}
-  .cold-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--amber-dim); border: 1px solid rgba(245,158,11,.25);
-    color: var(--amber); font-size: 10px; font-weight: 700; letter-spacing: .04em;
-    padding: 2px 8px; border-radius: 20px; margin-bottom: 6px;
-  }
-  .cold-badge::before { content: '⚡'; }
-  .sku-name { font-size: 17px; font-weight: 700; color: var(--txt); line-height: 1.2; }
-  .sku-sub { font-size: 12px; color: var(--txt2); margin-top: 3px; }
-  .upc-badge {
-    font-family: var(--mono); font-size: 10px; color: var(--txt3);
-    background: var(--surf3); border: 1px solid var(--border-dim);
-    padding: 1px 6px; border-radius: 4px; margin-left: 6px;
-  }
+/* Toggle */
+.view-toggle{
+  display:flex;align-items:center;gap:0;padding:12px 20px 0;
+}
+.vtbtn{
+  padding:5px 14px;font-size:12px;font-weight:500;cursor:pointer;
+  border:1px solid var(--border2);color:var(--muted);background:var(--surface);
+}
+.vtbtn:first-child{border-radius:6px 0 0 6px}
+.vtbtn:last-child{border-radius:0 6px 6px 0;margin-left:-1px}
+.vtbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);z-index:1;font-weight:600}
 
-  .meta-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-  .chip {
-    display: flex; align-items: center; gap: 4px;
-    background: var(--surf3); border: 1px solid var(--border-dim);
-    border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--txt2);
-  }
-  .chip b { color: var(--txt); }
-  .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
-  .chip-dot.amber { background: var(--amber); }
+/* Stat strip */
+.stat-strip{display:flex;gap:0;padding:12px 20px;border-bottom:1px solid var(--border)}
+.stat-tile{
+  flex:1;padding:10px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:0;
+}
+.stat-tile:first-child{border-radius:8px 0 0 8px}
+.stat-tile:last-child{border-radius:0 8px 8px 0;margin-left:-1px}
+.stat-tile+.stat-tile{margin-left:-1px}
+.st-label{font-size:9.5px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.st-val{font-size:20px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+.st-sub{font-size:10.5px;color:var(--subtle);margin-top:2px}
 
-  /* ── chart section ───────────────────────────────── */
-  .chart-section { padding: 20px 24px 0; }
-  .chart-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .chart-title { font-size: 12px; font-weight: 600; color: var(--txt2); text-transform: uppercase; letter-spacing: .06em; }
-  .chart-legend { display: flex; align-items: center; gap: 14px; }
-  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--txt3); }
-  .leg-line { height: 2px; width: 20px; border-radius: 1px; }
-  .leg-dash { height: 0; width: 20px; border-bottom: 2px dashed; }
-  .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .leg-area { width: 18px; height: 10px; border-radius: 3px; opacity: .35; }
+/* Model status box */
+.model-status-box{
+  margin:0 20px 14px;padding:9px 12px;
+  background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:7px;
+  display:flex;align-items:flex-start;gap:8px;font-size:11.5px;line-height:1.5;color:var(--amber);
+}
+.msb-icon{flex-shrink:0;font-size:13px;margin-top:1px}
+.msb-text b{color:var(--amber)}
 
-  .chart-wrap { position: relative; }
-  svg.chart { width: 100%; max-width: 720px; display: block; overflow: visible; }
+/* Chart area */
+.chart-area{padding:0 20px 10px}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.chart-label{font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+.chart-legend{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.leg-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
+.leg-dash{width:18px;height:0;border-bottom:2px dashed currentColor;flex-shrink:0}
+.leg-area{width:16px;height:8px;border-radius:2px;opacity:.35;flex-shrink:0}
+canvas#chart{width:100%;height:240px;display:block;border-radius:6px;border:1px solid var(--border)}
 
-  /* ── stats bar ───────────────────────────────────── */
-  .stats-row { display: flex; gap: 1px; margin: 0 24px; border-top: 1px solid var(--border-dim); }
-  .stat-card {
-    flex: 1; padding: 12px 14px;
-    background: var(--surf2);
-    border-right: 1px solid var(--border-dim);
-  }
-  .stat-card:last-child { border-right: none; }
-  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--txt3); text-transform: uppercase; margin-bottom: 4px; }
-  .stat-value { font-size: 18px; font-weight: 700; color: var(--txt); font-family: var(--mono); line-height: 1; }
-  .stat-value.amber { color: var(--amber); }
-  .stat-value.green { color: var(--green); }
-  .stat-sub { font-size: 10.5px; color: var(--txt3); margin-top: 4px; }
-  .stat-sub b { color: var(--txt2); }
+/* Promo toggle */
+.promo-toggle{display:flex;align-items:center;gap:6px;padding:6px 20px 0;font-size:11.5px;color:var(--muted)}
+.promo-toggle input{accent-color:var(--accent);cursor:pointer}
 
-  /* ── proxy panel ─────────────────────────────────── */
-  .proxy-toggle-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px;
-    height: 44px;
-    border-top: 1px solid var(--border-dim);
-    background: var(--surf2);
-    cursor: pointer;
-  }
-  .proxy-toggle-left { display: flex; align-items: center; gap: 10px; }
-  .proxy-label {
-    font-size: 11.5px; font-weight: 700; color: var(--proxy); letter-spacing: .03em;
-    text-transform: uppercase;
-  }
-  .proxy-auto { font-size: 11px; color: var(--txt2); }
-  .proxy-auto b { color: var(--txt); }
-  .chevron { color: var(--txt3); font-size: 11px; }
-  .expand-badge {
-    font-size: 10px; background: var(--proxy-dim); border: 1px solid rgba(168,85,247,.3);
-    color: var(--proxy); padding: 1px 6px; border-radius: 10px; font-weight: 600;
-  }
+/* ── Proxy section ────────────────────────────────────── */
+.proxy-section{
+  margin:16px 20px;border:1px solid var(--border2);border-radius:8px;overflow:hidden;
+}
+.proxy-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+.proxy-head-left{display:flex;align-items:center;gap:8px}
+.proxy-title{font-size:11.5px;font-weight:700;color:var(--text);letter-spacing:.02em}
+.proxy-count-badge{
+  font-size:10px;font-weight:700;background:var(--p1-bg);border:1px solid var(--p1-border);
+  color:var(--p1);padding:1px 7px;border-radius:10px;
+}
+.proxy-hint{font-size:11px;color:var(--muted)}
+.proxy-chevron{font-size:11px;color:var(--subtle)}
 
-  .proxy-panel {
-    padding: 16px 24px 20px;
-    background: var(--surf2);
-    border-top: 1px solid var(--border-dim);
-  }
+.proxy-body{padding:10px 14px 14px}
+.proxy-cards{display:flex;flex-direction:column;gap:0;margin-bottom:12px}
+.proxy-card{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 12px;border:1px solid var(--border);
+  transition:background .1s;cursor:pointer;
+}
+.proxy-card:first-child{border-radius:7px 7px 0 0}
+.proxy-card:last-child{border-radius:0 0 7px 7px;margin-top:-1px}
+.proxy-card+.proxy-card{margin-top:-1px}
+.proxy-card:hover{background:var(--surface2)}
+.proxy-card.on{background:var(--surface2)}
 
-  .proxy-top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
-  .proxy-sku-block { flex: 1; }
-  .proxy-sku-name { font-size: 13px; font-weight: 700; color: var(--txt); margin-bottom: 4px; }
-  .proxy-sku-sub { font-size: 11px; color: var(--txt2); }
-  .proxy-sim-block { flex-shrink: 0; text-align: right; }
-  .sim-score { font-size: 22px; font-weight: 800; color: var(--proxy); font-family: var(--mono); line-height: 1; }
-  .sim-label { font-size: 10px; color: var(--txt3); margin-top: 2px; text-align: right; }
+.pc-check{flex-shrink:0;margin-top:1px;width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+.pc-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.pc-body{flex:1;min-width:0}
+.pc-name{font-size:12.5px;font-weight:600;color:var(--text)}
+.pc-context{font-size:11px;color:var(--muted);margin-top:1px}
+.pc-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.pc-chip{
+  font-size:10px;padding:1px 6px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+}
+.pc-chip.match{background:var(--green-light);border-color:#bbf7d0;color:var(--green)}
+.pc-chip.warn{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.pc-wk7{font-size:10.5px;color:var(--muted);margin-top:5px}
+.pc-wk7 b{color:var(--text)}
+.pc-right{flex-shrink:0;text-align:right;padding-top:1px}
+.pc-pct{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.pc-pct-label{font-size:9.5px;color:var(--subtle);margin-top:1px}
 
-  .sim-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-  .sim-chip {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 10.5px; padding: 3px 9px; border-radius: 20px;
-    background: var(--proxy-dim); border: 1px solid rgba(168,85,247,.2);
-    color: var(--proxy);
-  }
-  .sim-chip.pass::before { content: '✓ '; }
-  .sim-chip.metric { background: var(--surf3); border-color: var(--border-dim); color: var(--txt2); }
+/* Add custom proxy row */
+.add-proxy-row{
+  display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);
+  padding-top:12px;
+}
+.add-proxy-label{font-size:11px;color:var(--muted);white-space:nowrap}
+.add-proxy-select{
+  flex:1;border:1px solid var(--border2);border-radius:6px;padding:5px 28px 5px 8px;
+  font-size:12px;color:var(--text);background:var(--surface);
+  appearance:none;cursor:pointer;font-family:inherit;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:calc(100% - 9px) center;
+}
+.add-proxy-select:focus{outline:2px solid var(--accent-mid);border-color:var(--accent)}
+.add-btn{
+  border:1px solid var(--accent);color:var(--accent);background:var(--accent-light);
+  border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;font-family:inherit;
+}
+.add-btn:hover{background:var(--accent);color:#fff}
 
-  .proxy-override { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .override-label { font-size: 11px; color: var(--txt3); white-space: nowrap; }
-  .override-select {
-    flex: 1; background: var(--surf3); border: 1px solid var(--border);
-    color: var(--txt); padding: 5px 10px; border-radius: var(--r); font-size: 12px;
-    font-family: var(--sans); cursor: pointer; appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234d6680'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: calc(100% - 10px) center;
-    padding-right: 28px;
-  }
-  .override-select:focus { outline: 1px solid var(--accent); }
+/* Active proxy legend strip */
+.proxy-legend{
+  display:flex;gap:10px;flex-wrap:wrap;padding:10px 14px 0;
+  border-top:1px solid var(--border);
+  font-size:10.5px;color:var(--muted);
+}
+.proxy-legend-item{display:flex;align-items:center;gap:5px}
+.pl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
-  .proxy-mini-chart { margin-bottom: 14px; }
-  .proxy-chart-label { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--txt3); text-transform: uppercase; margin-bottom: 6px; }
+/* ── Price slider ─────────────────────────────────────── */
+.price-section{padding:0 20px 16px}
+.price-header{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;
+}
+.price-pct{font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.slider-wrap{position:relative}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.slider-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--subtle);margin-top:2px}
+.price-note{
+  margin-top:8px;font-size:11px;line-height:1.55;color:var(--muted);
+  padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);
+}
+.price-note b{color:var(--text)}
 
-  .proxy-note {
-    font-size: 11px; line-height: 1.55; color: var(--txt3);
-    padding: 10px 12px;
-    background: rgba(168,85,247,0.05);
-    border: 1px solid rgba(168,85,247,0.12);
-    border-radius: var(--r);
-  }
-  .proxy-note b { color: var(--txt2); }
-  .proxy-note .druid { font-family: var(--mono); font-size: 10px; color: var(--txt4); display: block; margin-top: 4px; }
+/* ── Footer ───────────────────────────────────────────── */
+.drawer-footer{
+  padding:12px 20px 16px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--subtle);line-height:1.6;margin-top:auto;
+}
+.drawer-footer code{font-family:'SF Mono','Fira Code',monospace;font-size:9.5px;color:var(--muted)}
+.tag{color:var(--accent);font-weight:600}
+.schematic-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9px;font-weight:700;letter-spacing:.06em;
+  background:var(--p1-bg);border:1px dashed var(--p1-border);
+  color:var(--p1);padding:1px 6px;border-radius:3px;text-transform:uppercase;
+  margin-left:6px;
+}
 
-  /* ── ETS insight box ─────────────────────────────── */
-  .ets-insight {
-    margin: 0 24px 16px;
-    padding: 10px 14px;
-    background: var(--amber-dim);
-    border: 1px solid rgba(245,158,11,.2);
-    border-radius: var(--r);
-    font-size: 11.5px; line-height: 1.5; color: var(--txt2);
-    display: flex; align-items: flex-start; gap: 8px;
-  }
-  .ets-icon { color: var(--amber); flex-shrink: 0; font-size: 14px; margin-top: 1px; }
-  .ets-insight b { color: var(--amber); }
-
-  /* ── footer ──────────────────────────────────────── */
-  .drawer-footer {
-    padding: 14px 24px;
-    border-top: 1px solid var(--border-dim);
-    font-size: 10px; color: var(--txt4); line-height: 1.6;
-  }
-  .drawer-footer code { font-family: var(--mono); font-size: 9.5px; color: var(--txt3); }
-  .drawer-footer .tag { color: var(--accent); }
-
-  /* ── schematic watermark ─────────────────────────── */
-  .schematic-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 9px; font-weight: 700; letter-spacing: .07em;
-    background: rgba(168,85,247,0.08); border: 1px dashed rgba(168,85,247,0.3);
-    color: var(--proxy); padding: 2px 7px; border-radius: 4px;
-    text-transform: uppercase;
-  }
+/* ── Tooltip (proxy inline hover) ─────────────────────── */
+.proxy-interp{
+  margin-top:8px;font-size:11px;line-height:1.55;color:var(--muted);
+  padding:8px 10px;border-radius:6px;border-left:3px solid var(--p1);
+  background:var(--p1-bg);
+  display:none;
+}
+.proxy-interp.show{display:block}
 </style>
 
-<!-- ── Mo nav ───────────────────────────────────────────────────── -->
+<!-- ── Mo Nav ─────────────────────────────────────────────────── -->
 <div class="mo-nav">
   <div class="mo-logo">M<span>o</span></div>
+  <div class="focal-chip">FOCAL</div>
+  <div class="focal-name">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (08-40229-30333)</div>
   <div class="nav-tabs">
-    <div class="nav-tab">Trends</div>
-    <div class="nav-tab active">Cannibalization</div>
-    <div class="nav-tab">Price Elasticity</div>
-    <div class="nav-tab">Rate Forecast</div>
-    <div class="nav-tab">Retailer Summary</div>
-  </div>
-  <div class="nav-right">
-    <div class="nav-dot"></div>
-    <div class="nav-label">BUILT · Circle K</div>
+    <div class="nav-tab">RETAILER SUMMARY</div>
+    <div class="nav-tab">TRENDS</div>
+    <div class="nav-tab active">SKU VIEW</div>
+    <div class="nav-tab">CANNIBALIZATION</div>
+    <div class="nav-tab">PRICE ELASTICITY</div>
   </div>
 </div>
 
-<!-- ── page body ────────────────────────────────────────────────── -->
+<!-- ── Page ──────────────────────────────────────────────────── -->
 <div class="page">
 
-  <!-- dimmed sidebar (simulates Mo background) -->
-  <div class="sidebar-bg">
-    <div class="sb-section">BUILT SKUs</div>
-    <div class="sb-item">Brownie Batter 4pk</div>
-    <div class="sb-item">C&amp;C 4pk</div>
-    <div class="sb-item">C&amp;C Puff Single</div>
-    <div class="sb-item hi"><div class="sb-dot"></div>Cookie Dough Chunk</div>
-    <div class="sb-item">Coconut Puff</div>
-    <div class="sb-section">Accounts</div>
-    <div class="sb-item">Circle K Total Corp</div>
-    <div class="sb-item">MULO Food</div>
-    <div class="sb-item">Walmart</div>
-    <div class="sb-item">Kroger</div>
+  <!-- Left: dimmed SKU View table -->
+  <div class="sku-bg">
+    <div class="sku-bg-title">SKU View — Cross-Retailer Performance</div>
+    <div class="sku-bg-sub">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz</div>
+    <div class="filter-row">
+      <div class="filter-pill">All channels ▾</div>
+      <div class="filter-pill">circle k ×</div>
+      <div class="filter-pill">↓ Export CSV</div>
+    </div>
+    <table class="sku-table">
+      <thead>
+        <tr>
+          <th>CHANNEL ⇅</th>
+          <th>ACCOUNT ⇅</th>
+          <th>YTD SALES ↓</th>
+          <th>4WK AVG</th>
+          <th>LAUNCH</th>
+          <th>LAUNCH 13W</th>
+          <th>TREND</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="hl">
+          <td><span class="ch-label">CONV|CONV</span></td>
+          <td><span class="acct">CIRCLE K</span></td>
+          <td>$14K</td>
+          <td>2.9K</td>
+          <td style="font-size:11px;color:var(--muted)">Dec 7, 2025</td>
+          <td>$2K</td>
+          <td>
+            <svg class="trend-spark" viewBox="0 0 60 18"><polyline points="0,16 10,14 20,12 30,13 40,9 50,6 60,3" fill="none" stroke="#16a34a" stroke-width="1.5"/></svg>
+          </td>
+          <td><button class="more-btn active">More ▾</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 10px;font-size:10.5px;color:#94a3b8">— in Elasticity or Cannibal = not yet scored. Coverage varies by data maturity.</div>
   </div>
 
-  <!-- ── Forecast Drawer ──────────────────────────────────────── -->
+  <!-- ── Forecast Drawer ─────────────────────────────────────── -->
   <div class="drawer">
 
-    <!-- header -->
-    <div class="drawer-header">
-      <div class="breadcrumb">
-        <a href="#">Cannibalization Suite</a>
-        <span class="bc-sep">›</span>
-        <a href="#">SKU Summary</a>
-        <span class="bc-sep">›</span>
-        <span>Forecast Drawer</span>
+    <!-- Header -->
+    <div class="dh">
+      <div class="dh-left">
+        <div class="dh-product">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz</div>
+        <div class="dh-context">CIRCLE K · CONVENTIONAL|CONVENIENCE</div>
+        <div class="dh-row3">
+          <span class="model-tag">⚡ Cold Start · 7 wks · ETS mode</span>
+          <span class="model-sub">LightGBM activates at ≥ 52 weeks of history (7 / 52)</span>
+        </div>
       </div>
-      <div class="sku-row">
-        <div class="sku-title-block">
-          <div class="cold-badge">7 weeks post-launch · Cold-start mode</div>
-          <div class="sku-name">BUILT Puff Cookie Dough Chunk</div>
-          <div class="sku-sub">Circle K · TOTAL CORPORATE <span class="upc-badge">08-40229-30333</span></div>
-          <div class="meta-chips">
-            <div class="chip"><div class="chip-dot amber"></div> $3.34/bar</div>
-            <div class="chip">Single pack · 1.41 oz</div>
-            <div class="chip">TDP 2.2 stores (Wk 7)</div>
-            <div class="chip">Launch Dec 7 2025</div>
-            <div class="chip">ETS primary · LGB pending ≥52 wk</div>
+      <button class="close-btn">× Close</button>
+    </div>
+
+    <!-- View toggle -->
+    <div class="view-toggle">
+      <button class="vtbtn active">Units / wk</button>
+      <button class="vtbtn">Sales $</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="st-label">Wk 7 Run Rate</div>
+        <div class="st-val">195</div>
+        <div class="st-sub">units / week · last actual</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-label">Anchor ARP</div>
+        <div class="st-val">$3.34</div>
+        <div class="st-sub">per bar · wk 7 avg</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-label">13W Forecast (ETS)</div>
+        <div class="st-val" style="color:var(--amber)">4,332</div>
+        <div class="st-sub">total units · wide band applies</div>
+      </div>
+    </div>
+
+    <!-- Model status box -->
+    <div class="model-status-box" style="margin-top:14px">
+      <div class="msb-icon">⚠</div>
+      <div class="msb-text">
+        <b>ETS forecast uncertainty is high at 7 observations.</b>
+        Linear trend extrapolation from sparse early data systematically underestimates explosive ramp-up.
+        The 90% confidence band is intentionally wide. Use the <b>Proxy Reference</b> below for ramp
+        context from comparable past launches. LightGBM activates automatically once ≥ 52 weeks accumulate.
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-area">
+      <div class="chart-header">
+        <div class="chart-label">Units / week — weeks since launch</div>
+        <div class="chart-legend">
+          <div class="leg"><div class="leg-line" style="background:var(--green)"></div>Actuals</div>
+          <div class="leg"><div class="leg-area" style="background:var(--accent)"></div>ETS 90% band</div>
+          <div class="leg"><div class="leg-dash" style="color:var(--accent)"></div>ETS q50</div>
+          <div class="leg" id="leg-p1" style="display:flex"><div class="leg-line" style="background:var(--p1)"></div><span style="color:var(--p1)">Proxy 1</span></div>
+          <div class="leg" id="leg-p2" style="display:none"><div class="leg-line" style="background:var(--p2)"></div><span style="color:var(--p2)">Proxy 2</span></div>
+          <div class="leg" id="leg-p3" style="display:none"><div class="leg-line" style="background:var(--p3)"></div><span style="color:var(--p3)">Proxy 3</span></div>
+          <div class="leg" id="leg-p4" style="display:none"><div class="leg-line" style="background:var(--p4)"></div><span style="color:var(--p4)">Custom</span></div>
+        </div>
+      </div>
+      <canvas id="chart"></canvas>
+    </div>
+
+    <!-- Promo toggle -->
+    <div class="promo-toggle" style="margin-bottom:10px">
+      <input type="checkbox" id="promo-cb">
+      <label for="promo-cb">Show promo uplift (base + promo)</label>
+    </div>
+
+    <!-- ── Proxy Reference section ─────────────────────────── -->
+    <div class="proxy-section">
+      <div class="proxy-head" onclick="toggleProxyBody()">
+        <div class="proxy-head-left">
+          <div class="proxy-title">Proxy Reference</div>
+          <div class="proxy-count-badge" id="active-count-badge">1 active</div>
+          <div class="proxy-hint">Comparable past launches · matched by channel, format &amp; TDP ramp</div>
+        </div>
+        <div class="proxy-chevron" id="proxy-chevron">▲</div>
+      </div>
+
+      <div id="proxy-body" class="proxy-body">
+
+        <!-- Proxy cards -->
+        <div class="proxy-cards">
+
+          <!-- P1 -->
+          <div class="proxy-card on" id="card-p1" onclick="toggleCard(1)">
+            <input class="pc-check" type="checkbox" id="chk-p1" checked onclick="event.stopPropagation();toggleProxy(1,this.checked)">
+            <div class="pc-swatch" style="background:var(--p1)"></div>
+            <div class="pc-body">
+              <div class="pc-name">BUILT Puff Brownie Batter Single</div>
+              <div class="pc-context">Circle K · CONVENTIONAL|CONVENIENCE · launched Aug 2024</div>
+              <div class="pc-chips">
+                <span class="pc-chip match">✓ Same channel</span>
+                <span class="pc-chip match">✓ Same format (1.41 oz single)</span>
+                <span class="pc-chip match">✓ Same brand family</span>
+                <span class="pc-chip warn">ARP Δ +$0.62 / bar</span>
+                <span class="pc-chip">TDP ramp r = 0.91</span>
+              </div>
+              <div class="pc-wk7">At wk 7: <b>247 units</b> — CDc is at <b>79% of proxy pace</b></div>
+            </div>
+            <div class="pc-right">
+              <div class="pc-pct" style="color:var(--p1)">93%</div>
+              <div class="pc-pct-label">similarity</div>
+            </div>
+          </div>
+
+          <!-- P2 -->
+          <div class="proxy-card" id="card-p2" onclick="toggleCard(2)">
+            <input class="pc-check" type="checkbox" id="chk-p2" onclick="event.stopPropagation();toggleProxy(2,this.checked)">
+            <div class="pc-swatch" style="background:var(--p2)"></div>
+            <div class="pc-body">
+              <div class="pc-name">BUILT Puff Cookies &amp; Cream Single</div>
+              <div class="pc-context">Circle K · CONVENTIONAL|CONVENIENCE · launched Nov 2024</div>
+              <div class="pc-chips">
+                <span class="pc-chip match">✓ Same channel</span>
+                <span class="pc-chip match">✓ Same format (1.41 oz single)</span>
+                <span class="pc-chip match">✓ Same brand family</span>
+                <span class="pc-chip warn">ARP Δ +$0.89 / bar</span>
+                <span class="pc-chip">TDP ramp r = 0.78</span>
+              </div>
+              <div class="pc-wk7">At wk 7: <b>178 units</b> — CDc tracking <b>10% above proxy</b></div>
+            </div>
+            <div class="pc-right">
+              <div class="pc-pct" style="color:var(--p2)">81%</div>
+              <div class="pc-pct-label">similarity</div>
+            </div>
+          </div>
+
+          <!-- P3 -->
+          <div class="proxy-card" id="card-p3" onclick="toggleCard(3)">
+            <input class="pc-check" type="checkbox" id="chk-p3" onclick="event.stopPropagation();toggleProxy(3,this.checked)">
+            <div class="pc-swatch" style="background:var(--p3)"></div>
+            <div class="pc-body">
+              <div class="pc-name">BUILT Puff Coconut Puff Single</div>
+              <div class="pc-context">Circle K · CONVENTIONAL|CONVENIENCE · launched Jun 2024</div>
+              <div class="pc-chips">
+                <span class="pc-chip match">✓ Same channel</span>
+                <span class="pc-chip match">✓ Same format (1.41 oz single)</span>
+                <span class="pc-chip warn">~ Different flavor family</span>
+                <span class="pc-chip">ARP Δ +$0.43 / bar</span>
+                <span class="pc-chip">TDP ramp r = 0.61</span>
+              </div>
+              <div class="pc-wk7">At wk 7: <b>97 units</b> — CDc tracking <b>2× proxy pace</b></div>
+            </div>
+            <div class="pc-right">
+              <div class="pc-pct" style="color:var(--p3)">71%</div>
+              <div class="pc-pct-label">similarity</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- chart -->
-    <div class="chart-section">
-      <div class="chart-label-row">
-        <div class="chart-title">Weekly Units · Weeks since launch</div>
-        <div class="chart-legend">
-          <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Confirmed actuals</div>
-          <div class="leg-item"><div class="leg-area" style="background:var(--accent)"></div> ETS 90% band</div>
-          <div class="leg-item"><div class="leg-dash" style="border-color:var(--accent)"></div> ETS q50 forecast</div>
-          <div class="leg-item"><div class="leg-line" style="background:var(--proxy);opacity:.7"></div> Proxy ramp</div>
-          <div class="leg-item"><div class="leg-dash" style="border-color:var(--green);opacity:.3"></div> Actual (future)</div>
+        <!-- Add custom proxy -->
+        <div class="add-proxy-row">
+          <div class="add-proxy-label">Add proxy:</div>
+          <select class="add-proxy-select" id="custom-proxy-select">
+            <option value="">Search any BUILT SKU to compare…</option>
+            <option value="p4a">BUILT Bar Brownie Batter 4pk · Circle K (70% match)</option>
+            <option value="p4b">BUILT Bar Cookie Dough 4pk · Circle K (65% match)</option>
+            <option value="p4c">BUILT Puff Sour Peach Single · Circle K (58% match)</option>
+            <option value="p4d">BUILT Bar Double Chocolate 4pk · Walmart (42% match)</option>
+            <option value="p4e">BUILT Puff Strawberry Single · Circle K (38% match)</option>
+          </select>
+          <button class="add-btn" onclick="addCustomProxy()">+ Add</button>
         </div>
-      </div>
-      <div class="chart-wrap">
-        <svg class="chart" viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bandGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#3b82f6" stop-opacity=".22"/>
-              <stop offset="100%" stop-color="#3b82f6" stop-opacity=".06"/>
-            </linearGradient>
-            <linearGradient id="proxyGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#a855f7" stop-opacity=".12"/>
-              <stop offset="100%" stop-color="#a855f7" stop-opacity=".04"/>
-            </linearGradient>
-            <!-- clip to chart area -->
-            <clipPath id="chartClip">
-              <rect x="65" y="28" width="635" height="218"/>
-            </clipPath>
-          </defs>
 
-          <!-- grid lines -->
-          <line x1="65" y1="246" x2="700" y2="246" stroke="#1e3251" stroke-width=".8"/>
-          <line x1="65" y1="192" x2="700" y2="192" stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
-          <line x1="65" y1="138" x2="700" y2="138" stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
-          <line x1="65" y1="84"  x2="700" y2="84"  stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
-          <line x1="65" y1="30"  x2="700" y2="30"  stroke="#1e3251" stroke-width=".8" stroke-dasharray="3,4"/>
-
-          <!-- y-axis labels -->
-          <text x="60" y="249" text-anchor="end" font-size="9.5" fill="#4d6680">0</text>
-          <text x="60" y="195" text-anchor="end" font-size="9.5" fill="#4d6680">1K</text>
-          <text x="60" y="141" text-anchor="end" font-size="9.5" fill="#4d6680">2K</text>
-          <text x="60" y="87"  text-anchor="end" font-size="9.5" fill="#4d6680">3K</text>
-          <text x="60" y="33"  text-anchor="end" font-size="9.5" fill="#4d6680">4K</text>
-
-          <!-- vertical divider: last actual / forecast boundary -->
-          <line x1="265.5" y1="28" x2="265.5" y2="246" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" opacity=".5"/>
-          <text x="266" y="22" font-size="9" fill="#f59e0b" opacity=".8">Wk 7 · last actual →</text>
-
-          <!-- ETS band (weeks 7–20) -->
-          <polygon
-            points="265.5,235 298.9,195 332.4,175 365.8,159 399.2,146 432.6,134 466.1,123 499.5,113 532.9,103 566.3,94 599.7,85 633.2,77 666.6,69 700.0,61
-                    700.0,246 666.6,246 633.2,246 599.7,246 566.3,246 532.9,246 499.5,246 466.1,246 432.6,246 399.2,246 365.8,246 332.4,246 298.9,246 265.5,235"
-            fill="url(#bandGrad)"
-            clip-path="url(#chartClip)"/>
-
-          <!-- proxy ramp fill area -->
-          <polygon
-            points="65,246 98.4,246 131.8,246 165.3,245 198.7,243 232.1,238 265.5,225 298.9,207 332.4,186 365.8,159 399.2,129 432.6,102 466.1,83 499.5,69 532.9,61 566.3,56 599.7,52 633.2,51 666.6,50 700,50
-                    700,246"
-            fill="url(#proxyGrad)"
-            clip-path="url(#chartClip)"/>
-
-          <!-- future actuals (faint, reveals week-by-week in production) -->
-          <polyline
-            points="265.5,235 298.9,216 332.4,195 365.8,188 399.2,185 432.6,174 466.1,169 499.5,154 532.9,138 566.3,99 599.7,87 633.2,95 666.6,72 700.0,51"
-            fill="none" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3,4" opacity=".25"
-            clip-path="url(#chartClip)"/>
-
-          <!-- proxy ramp line -->
-          <polyline
-            points="65,246 98.4,246 131.8,246 165.3,245 198.7,243 232.1,238 265.5,225 298.9,207 332.4,186 365.8,159 399.2,129 432.6,102 466.1,83 499.5,69 532.9,61 566.3,56 599.7,52 633.2,51 666.6,50 700,50"
-            fill="none" stroke="#a855f7" stroke-width="1.6" opacity=".65"
-            clip-path="url(#chartClip)"/>
-
-          <!-- ETS median forecast (dashed, weeks 7–20) -->
-          <polyline
-            points="265.5,235 298.9,238 332.4,236 365.8,235 399.2,233 432.6,231 466.1,230 499.5,228 532.9,226 566.3,224 599.7,223 633.2,221 666.6,219 700.0,218"
-            fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="6,4"
-            clip-path="url(#chartClip)"/>
-
-          <!-- confirmed actuals line (weeks 1–7) -->
-          <polyline
-            points="65,246 98.4,246 131.8,246 165.3,245 198.7,246 232.1,243 265.5,235"
-            fill="none" stroke="#22c55e" stroke-width="2.2"
-            clip-path="url(#chartClip)"/>
-
-          <!-- actual data points (circles) -->
-          <circle cx="65"   cy="246" r="3" fill="#22c55e"/>
-          <circle cx="98.4" cy="246" r="3" fill="#22c55e"/>
-          <circle cx="131.8" cy="246" r="3" fill="#22c55e"/>
-          <circle cx="165.3" cy="245" r="3" fill="#22c55e"/>
-          <circle cx="198.7" cy="246" r="3" fill="#22c55e"/>
-          <circle cx="232.1" cy="243" r="3" fill="#22c55e"/>
-          <circle cx="265.5" cy="235" r="4" fill="#22c55e" stroke="#0e1623" stroke-width="1.5"/>
-
-          <!-- ETS terminal label -->
-          <text x="703" y="221" font-size="9" fill="#3b82f6" opacity=".8">q50</text>
-          <text x="703" y="64" font-size="9" fill="#3b82f6" opacity=".5">q90</text>
-          <!-- Proxy terminal label -->
-          <text x="703" y="53" font-size="9" fill="#a855f7" opacity=".7">prxy</text>
-          <!-- future actual terminal -->
-          <text x="703" y="43" font-size="9" fill="#22c55e" opacity=".3">act</text>
-
-          <!-- x-axis labels -->
-          <text x="65"   y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 1</text>
-          <text x="165.3" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 4</text>
-          <text x="265.5" y="270" text-anchor="middle" font-size="9.5" fill="#f59e0b" opacity=".8">Wk 7†</text>
-          <text x="365.8" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 10</text>
-          <text x="466.1" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 13</text>
-          <text x="566.3" y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 16</text>
-          <text x="700"   y="270" text-anchor="middle" font-size="9.5" fill="#4d6680">Wk 20</text>
-
-          <!-- "Forecast" region label -->
-          <text x="483" y="43" text-anchor="middle" font-size="9" fill="#3b82f6" opacity=".5" letter-spacing=".05em">ETS FORECAST REGION</text>
-
-          <!-- y-axis line -->
-          <line x1="65" y1="28" x2="65" y2="246" stroke="#1e3251" stroke-width="1"/>
-          <!-- x-axis line -->
-          <line x1="65" y1="246" x2="700" y2="246" stroke="#1e3251" stroke-width="1"/>
-
-          <!-- actual unit callouts for key points -->
-          <text x="268" y="229" font-size="8.5" fill="#22c55e">195</text>
-          <text x="236" y="237" font-size="8.5" fill="#22c55e" opacity=".7">47</text>
-        </svg>
-      </div>
-    </div>
-
-    <!-- ETS limitation insight -->
-    <div class="ets-insight">
-      <div class="ets-icon">⚠</div>
-      <div>
-        <b>ETS forecast uncertainty is high at 7 observations.</b>
-        Linear trend extrapolation from sparse early data systematically underestimates
-        explosive ramp-up. The 90% confidence band is intentionally wide.
-        Use the Proxy Reference below for ramp context from a comparable launch.
-        LightGBM activates automatically once ≥52 weeks of history accumulate.
-      </div>
-    </div>
-
-    <!-- stats row -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Wk 7 Run Rate</div>
-        <div class="stat-value green">195</div>
-        <div class="stat-sub">units/week · confirmed actual</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">ETS 13-wk Total (q50)</div>
-        <div class="stat-value amber">4,332</div>
-        <div class="stat-sub">units · <b>wide uncertainty band applies</b></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Model Status</div>
-        <div class="stat-value" style="font-size:13px;padding-top:3px;color:var(--amber)">ETS Active</div>
-        <div class="stat-sub">LGB eligible in <b>45 weeks</b> · 7/52</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">TDP · Wk 7</div>
-        <div class="stat-value">2.2</div>
-        <div class="stat-sub">stores · TDP trajectory: early ramp</div>
-      </div>
-    </div>
-
-    <!-- ── Proxy Reference toggle & panel ──────────────────────── -->
-    <div class="proxy-toggle-row">
-      <div class="proxy-toggle-left">
-        <div class="proxy-label">Proxy Reference</div>
-        <div class="proxy-auto">Auto-selected: <b>BUILT Puff BB Single · Circle K</b></div>
-        <div class="expand-badge">Expanded</div>
-      </div>
-      <div class="chevron">▲ collapse</div>
-    </div>
-
-    <div class="proxy-panel">
-
-      <!-- proxy SKU + similarity score -->
-      <div class="proxy-top">
-        <div class="proxy-sku-block">
-          <div class="proxy-sku-name">BUILT Puff Brownie Batter Single</div>
-          <div class="proxy-sku-sub">Circle K · TOTAL CORPORATE · $2.72/bar · 1.41 oz · Single (1ct)</div>
+        <!-- Active legend (below cards) -->
+        <div class="proxy-legend" id="proxy-legend">
+          <div class="proxy-legend-item" id="ll-p1">
+            <div class="pl-dot" style="background:var(--p1)"></div>
+            BB Single (wk 13 avg: <b style="color:var(--text)">1,723</b> u/wk)
+          </div>
+          <div class="proxy-legend-item" id="ll-p2" style="display:none">
+            <div class="pl-dot" style="background:var(--p2)"></div>
+            C&amp;C Single (wk 13 avg: <b style="color:var(--text)">1,134</b> u/wk)
+          </div>
+          <div class="proxy-legend-item" id="ll-p3" style="display:none">
+            <div class="pl-dot" style="background:var(--p3)"></div>
+            Coconut Puff (wk 13 avg: <b style="color:var(--text)">512</b> u/wk)
+          </div>
+          <div class="proxy-legend-item" id="ll-p4" style="display:none">
+            <div class="pl-dot" style="background:var(--p4)"></div>
+            Custom proxy
+          </div>
         </div>
-        <div class="proxy-sim-block">
-          <div class="sim-score">93%</div>
-          <div class="sim-label">similarity score</div>
+
+        <!-- Interpretation note (updates dynamically) -->
+        <div class="proxy-interp show" id="proxy-interp">
+          <b>How to read:</b> Purple line shows how BB Single (93% match) ramped across its first 20 launch weeks, aligned to launch week 0. CDc (green) is at 79% of proxy pace at week 7 (195 vs 247 units). If BB Single's wk 13 run-rate of ~1,723 u/wk holds as the analog, CDc's implied wk 13 is ~1,360 u/wk — vs the ETS q50 of ~283. <b>Proxy reference suggests meaningful upside to ETS.</b>
         </div>
-      </div>
 
-      <!-- similarity chips -->
-      <div class="sim-chips">
-        <div class="sim-chip pass">Same channel (CK)</div>
-        <div class="sim-chip pass">Same format (1ct · 1.41 oz)</div>
-        <div class="sim-chip pass">Same brand (BUILT Puff)</div>
-        <div class="sim-chip metric">ARP Δ: +$0.62/bar</div>
-        <div class="sim-chip metric">TDP trajectory r = 0.88</div>
-        <div class="sim-chip metric">Launch pattern: gradual ramp</div>
-      </div>
+      </div><!-- /proxy-body -->
+    </div><!-- /proxy-section -->
 
-      <!-- override picker -->
-      <div class="proxy-override">
-        <div class="override-label">Override proxy:</div>
-        <select class="override-select">
-          <option selected>BUILT Puff BB Single (auto · 93% match)</option>
-          <option>BUILT Puff C&amp;C Single (81% match)</option>
-          <option>BUILT Puff Coconut Puff Single (76% match)</option>
-          <option>Manual entry (custom SKU)</option>
-        </select>
+    <!-- Price slider -->
+    <div class="price-section">
+      <div class="price-header">
+        <span>Price sensitivity: ARP adjustment</span>
+        <span class="price-pct" id="price-pct-lbl">0%</span>
       </div>
-
-      <!-- proxy chart label -->
-      <div class="proxy-mini-chart">
-        <div class="proxy-chart-label">
-          Proxy ramp overlay (purple line in chart above)
-          <span class="schematic-badge">Schematic · Druid at build</span>
-        </div>
+      <div class="slider-wrap">
+        <input type="range" min="-30" max="30" value="0" id="price-slider" oninput="document.getElementById('price-pct-lbl').textContent=this.value+'%'">
+        <div class="slider-labels"><span>−30% (price cut)</span><span>0% (no change)</span><span>+30% (price increase)</span></div>
       </div>
-
-      <!-- interpretation note -->
-      <div class="proxy-note">
-        <b>How to read this:</b> The purple ramp line shows how a comparable BUILT single-puff SKU
-        (same channel, format, brand) ramped in its first 20 launch weeks, aligned to launch week 0.
-        This is <b>context only</b> — the ETS forecast (blue dashed) is the primary projection.
-        If CDc is tracking above the proxy by week 10, velocity is outperforming the analog.
-        If tracking below, distribution may need acceleration (check TDP tab).
-        <span class="druid">Proxy ramp query: built_filtered_weekly WHERE retail_account='CIRCLE K' AND retail_account_level='TOTAL CORPORATE' · aligned to min(week) per UPC</span>
+      <div class="price-note">
+        Elasticity: <b>Insufficient history — ETS mode.</b>
+        Price sensitivity adjustment requires ≥ 52 weeks of history for LightGBM elasticity scoring.
+        Slider is available for reference once the model activates.
+        Revenue = units × ARP; promo and distribution also affect demand.
       </div>
     </div>
 
-    <!-- footer -->
+    <!-- Footer -->
     <div class="drawer-footer">
-      <b class="tag">Data:</b> Actuals from <code>built_filtered_weekly</code> · <code>retail_account='CIRCLE K'</code> · <code>retail_account_level='TOTAL CORPORATE'</code> · Dec 7 2025–Jan 24 2026 (Wks 1–7, real SPINS data).
-      ETS forecast: Holt's linear exponential smoothing, α=0.5 β=0.3, anchored at Wk 7 actual (195 units). 90% confidence band widens as √h per step.
-      Proxy ramp line is schematic for this mockup — values from <code>built_filtered_weekly</code> at feature implementation.
-      LightGBM activates at ≥52 weeks history (currently 7/52). · <b>Mo v12 · Cold-Start Overlay — Feature Design Mockup 2026-07-21</b>
+      <span class="tag">Data:</span> Actuals from <code>built_filtered_weekly</code> · <code>retail_account = 'CIRCLE K'</code> · Dec 7 2025 – Jan 25 2026 (Wks 1–7, real SPINS cadence).
+      ETS: Holt's linear exponential smoothing α=0.5 β=0.3, anchored Wk 7 (195 units). Proxy ramp values schematic — sourced from <code>built_filtered_weekly WHERE upc IN (...)</code> aligned to <code>min(__time)</code> per SKU at feature build.
+      LightGBM activates at ≥ 52 weeks. <span class="schematic-badge">Design Mockup</span>
+      · Mo v12 · Cold-Start Proxy · 2026-07-22
     </div>
-
   </div><!-- /drawer -->
 </div><!-- /page -->
+
+<script>
+// ── chart data ──────────────────────────────────────────────────────────────
+const ACTUAL  = [12,22,35,28,47,108,195]; // wks 0-6
+const ETS_Q50 = [195,210,225,238,249,259,268,275,281,286,290,293,296,298]; // wks 6-19
+const ETS_HI  = [195,310,460,590,700,790,865,920,960,988,1010,1025,1035,1040];
+const ETS_LO  = [195,148,110,84,66,55,49,45,43,42,42,42,43,44];
+const P1      = [8,15,31,52,89,184,247,438,621,849,1142,1389,1547,1723,1889,2012,2198,2341,2489,2634];
+const P2      = [5,18,28,41,69,112,178,289,412,589,741,889,1012,1134,1256,1378,1489,1567,1634,1689];
+const P3      = [3,8,14,22,38,61,97,142,198,267,341,412,469,512,563,589,612,634,647,658];
+const P4_DATA = {
+  p4a:[14,28,48,72,119,232,348,556,789,1012,1289,1467,1589,1698,1789,1856,1923,1978,2034,2089],
+  p4b:[9,21,38,58,89,152,224,389,534,712,934,1089,1198,1312,1434,1512,1589,1645,1698,1745],
+  p4c:[4,12,21,32,54,88,142,212,298,401,512,609,692,769,834,889,932,968,998,1023],
+  p4d:[22,41,68,98,149,278,412,634,867,1089,1345,1534,1689,1834,1978,2089,2198,2289,2367,2434],
+  p4e:[3,9,16,24,41,67,108,162,231,312,401,489,563,632,689,734,769,798,821,839]
+};
+
+// proxy visibility state
+const vis = {p1:true,p2:false,p3:false,p4:false};
+let customKey = '';
+let proxyBodyOpen = true;
+
+// ── canvas setup ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('chart');
+let dpr = window.devicePixelRatio || 1;
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr;
+  canvas.height = rect.height * dpr;
+}
+
+function drawChart(){
+  resizeCanvas();
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.width  / dpr;
+  const H = canvas.height / dpr;
+
+  const ML=50, MR=14, MT=18, MB=30;
+  const cW = W-ML-MR, cH = H-MT-MB;
+  const N_WK = 20; // weeks 0-19
+  const YMAX = 2800;
+
+  const px = w => ML + w*(cW/(N_WK-1));
+  const py = v => MT + cH - v*(cH/YMAX);
+
+  ctx.clearRect(0,0,W,H);
+
+  // background
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,W,H);
+
+  // grid lines
+  ctx.strokeStyle='#f1f5f9'; ctx.lineWidth=1;
+  [0,700,1400,2100,2800].forEach(v=>{
+    const y=py(v);
+    ctx.beginPath();ctx.moveTo(ML,y);ctx.lineTo(W-MR,y);ctx.stroke();
+  });
+
+  // y labels
+  ctx.fillStyle='#94a3b8';ctx.font='9.5px system-ui';ctx.textAlign='right';
+  [[0,'0'],[700,'700'],[1400,'1.4K'],[2100,'2.1K'],[2800,'2.8K']].forEach(([v,lbl])=>{
+    ctx.fillText(lbl, ML-6, py(v)+3.5);
+  });
+
+  // x labels
+  ctx.textAlign='center'; ctx.fillStyle='#94a3b8';
+  [0,2,4,6,7,10,13,16,19].forEach(w=>{
+    const lbl = w===7?'Wk 7†':'Wk '+w;
+    ctx.fillStyle = w===7?'#d97706':'#94a3b8';
+    ctx.font = w===7?'bold 9.5px system-ui':'9.5px system-ui';
+    ctx.fillText(lbl, px(w), H-MB+14);
+  });
+
+  // axes
+  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(ML,MT);ctx.lineTo(ML,MT+cH);ctx.lineTo(W-MR,MT+cH);ctx.stroke();
+
+  // ─── proxy lines (under ETS so they're behind the band) ───────────────────
+  function drawLine(data, color, dash=[]){
+    ctx.beginPath();
+    ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.setLineDash(dash);
+    data.forEach((v,i)=>{ const x=px(i),y=py(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.stroke();ctx.setLineDash([]);
+  }
+  if(vis.p1) drawLine(P1,'#7c3aed');
+  if(vis.p2) drawLine(P2,'#c2410c');
+  if(vis.p3) drawLine(P3,'#0e7490');
+  if(vis.p4 && customKey && P4_DATA[customKey]) drawLine(P4_DATA[customKey],'#9d174d');
+
+  // ─── ETS band (clipped to forecast region wk 6 onward) ────────────────────
+  const bStart = 6; // start of forecast region
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(px(bStart), MT, W-MR-px(bStart), cH);
+  ctx.clip();
+
+  // band fill
+  ctx.beginPath();
+  ETS_HI.forEach((v,i)=>{ const x=px(i+bStart),y=py(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  for(let i=ETS_LO.length-1;i>=0;i--){ const x=px(i+bStart),y=py(ETS_LO[i]); ctx.lineTo(x,y); }
+  ctx.closePath();
+  ctx.fillStyle='rgba(37,99,235,0.09)';ctx.fill();
+
+  // ETS q50 dashed
+  ctx.beginPath();
+  ctx.strokeStyle='#2563eb';ctx.lineWidth=1.8;ctx.setLineDash([5,3]);
+  ETS_Q50.forEach((v,i)=>{ const x=px(i+bStart),y=py(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();ctx.setLineDash([]);
+  ctx.restore();
+
+  // ─── wk 7 divider ──────────────────────────────────────────────────────────
+  ctx.strokeStyle='#d97706';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.globalAlpha=.5;
+  ctx.beginPath();ctx.moveTo(px(6),MT);ctx.lineTo(px(6),MT+cH);ctx.stroke();
+  ctx.setLineDash([]);ctx.globalAlpha=1;
+  ctx.fillStyle='#d97706';ctx.font='bold 9px system-ui';ctx.textAlign='left';
+  ctx.globalAlpha=.8;ctx.fillText('Wk 7 · last actual →', px(6)+4, MT+11);ctx.globalAlpha=1;
+
+  // → forecast annotation
+  ctx.fillStyle='#2563eb';ctx.font='9px system-ui';ctx.textAlign='center';
+  ctx.globalAlpha=.45;ctx.fillText('→ ETS forecast', px(12), MT+8);ctx.globalAlpha=1;
+
+  // ─── actual line ────────────────────────────────────────────────────────────
+  ctx.strokeStyle='#16a34a';ctx.lineWidth=2.5;
+  ctx.beginPath();
+  ACTUAL.forEach((v,i)=>{ const x=px(i),y=py(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+
+  // actual dots
+  ACTUAL.forEach((v,i)=>{
+    const x=px(i),y=py(v);
+    ctx.beginPath();ctx.arc(x,y,i===6?4:2.5,0,Math.PI*2);
+    ctx.fillStyle='#16a34a';ctx.fill();
+    if(i===6){ ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke(); }
+  });
+
+  // anchor callout
+  ctx.fillStyle='#16a34a';ctx.font='bold 9.5px system-ui';ctx.textAlign='left';
+  ctx.fillText('195', px(6)+6, py(195)-4);
+}
+
+// ── proxy toggle logic ───────────────────────────────────────────────────────
+function toggleProxy(n, on){
+  vis['p'+n] = on;
+  updateLegend();
+  updateActiveBadge();
+  updateInterp();
+  drawChart();
+}
+
+function toggleCard(n){
+  const cb = document.getElementById('chk-p'+n);
+  cb.checked = !cb.checked;
+  document.getElementById('card-p'+n).classList.toggle('on', cb.checked);
+  toggleProxy(n, cb.checked);
+}
+
+function updateLegend(){
+  ['p1','p2','p3','p4'].forEach(k=>{
+    const on = vis[k] && (k!=='p4'||customKey);
+    ['leg-','ll-'].forEach(pre=>{
+      const el=document.getElementById(pre+k);
+      if(el) el.style.display=on?'flex':'none';
+    });
+  });
+}
+
+function updateActiveBadge(){
+  const n=[vis.p1,vis.p2,vis.p3,vis.p4&&customKey].filter(Boolean).length;
+  document.getElementById('active-count-badge').textContent = n+' active';
+}
+
+function updateInterp(){
+  const interp = document.getElementById('proxy-interp');
+  if(vis.p1){
+    interp.style.display='block';
+    interp.style.borderLeftColor='var(--p1)';
+    interp.style.background='var(--p1-bg)';
+    interp.innerHTML='<b>How to read:</b> Purple line = BB Single (93% match) at the same launch stage. CDc is at 79% of proxy pace at wk 7 (195 vs 247 units). BB Single\'s wk 13 run-rate (~1,723 u/wk) implies CDc\'s wk 13 range: <b>~1,100–1,700 u/wk</b> — vs the ETS q50 of ~275. Proxy reference suggests meaningful upside to ETS.';
+  } else if(vis.p2){
+    interp.style.display='block';
+    interp.style.borderLeftColor='var(--p2)';
+    interp.style.background='var(--p2-bg)';
+    interp.innerHTML='<b>How to read:</b> Orange line = C&amp;C Single (81% match). CDc is tracking 10% above this proxy at wk 7 (195 vs 178 units). C&amp;C Single\'s wk 13 run-rate (~1,134 u/wk) implies CDc is on a stronger trajectory if the outperformance holds.';
+  } else if(vis.p3){
+    interp.style.display='block';
+    interp.style.borderLeftColor='var(--p3)';
+    interp.style.background='var(--p3-bg)';
+    interp.innerHTML='<b>How to read:</b> Teal line = Coconut Puff (71% match, different flavor family). CDc is tracking 2× above this proxy at wk 7, suggesting a stronger early ramp. Coconut Puff\'s wk 13 (~512 u/wk) represents the conservative floor for the analog range.';
+  } else {
+    interp.style.display='none';
+  }
+}
+
+function addCustomProxy(){
+  const sel = document.getElementById('custom-proxy-select');
+  const key = sel.value;
+  if(!key) return;
+  customKey = key;
+  vis.p4 = true;
+  document.getElementById('chk-p4') && (document.getElementById('chk-p4').checked=true);
+  // update legend label
+  const ll=document.getElementById('ll-p4');
+  const names={p4a:'BB 4pk',p4b:'CDc 4pk',p4c:'Sour Peach',p4d:'DB Choc 4pk (WMT)',p4e:'Strawberry'};
+  if(ll) ll.innerHTML='<div class="pl-dot" style="background:var(--p4)"></div>Custom: '+names[key];
+  // add remove button if not present
+  if(!document.getElementById('remove-p4')){
+    const row = document.querySelector('.add-proxy-row');
+    const rem = document.createElement('button');
+    rem.id='remove-p4';rem.className='add-btn';rem.style.background='#fef2f2';rem.style.borderColor='#fca5a5';rem.style.color='#dc2626';
+    rem.textContent='× Remove';rem.onclick=removeCustomProxy;
+    row.appendChild(rem);
+  }
+  updateLegend();updateActiveBadge();updateInterp();drawChart();
+}
+
+function removeCustomProxy(){
+  customKey='';vis.p4=false;
+  document.getElementById('custom-proxy-select').value='';
+  const rem=document.getElementById('remove-p4');
+  if(rem)rem.remove();
+  updateLegend();updateActiveBadge();updateInterp();drawChart();
+}
+
+function toggleProxyBody(){
+  proxyBodyOpen=!proxyBodyOpen;
+  document.getElementById('proxy-body').style.display=proxyBodyOpen?'block':'none';
+  document.getElementById('proxy-chevron').textContent=proxyBodyOpen?'▲':'▼';
+}
+
+// ── init ────────────────────────────────────────────────────────────────────
+drawChart();
+window.addEventListener('resize',drawChart);
+updateActiveBadge();
+updateInterp();
+</script>

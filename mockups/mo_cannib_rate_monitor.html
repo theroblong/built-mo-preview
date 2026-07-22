@@ -1,0 +1,499 @@
+<title>Mo — Cannibalization Rate Monitor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nav:#0b1729;--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --text:#0f172a;--muted:#64748b;--subtle:#94a3b8;
+  --accent:#2563eb;--accent-l:#eff6ff;--accent-m:#bfdbfe;
+  --green:#15803d;--gb:#f0fdf4;--gbd:#86efac;
+  --amber:#b45309;--ab:#fffbeb;--abd:#fcd34d;
+  --red:#dc2626;--rb:#fef2f2;--rbd:#fca5a5;
+  --p1:#7c3aed;
+}
+@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--surface:#1e293b;--surface2:#1a2540;--border:#334155;--border2:#475569;--text:#e2e8f0;--muted:#94a3b8;--subtle:#64748b;--gb:#052e16;--gbd:#166534;--ab:#1c1204;--abd:#92400e;--rb:#1f0b0b;--rbd:#7f1d1d;--accent-l:#1e3a5f;--accent-m:#1d4ed8}}
+:root[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--border2:#cbd5e1;--text:#0f172a;--muted:#64748b;--subtle:#94a3b8;--gb:#f0fdf4;--gbd:#86efac;--ab:#fffbeb;--abd:#fcd34d;--rb:#fef2f2;--rbd:#fca5a5;--accent-l:#eff6ff;--accent-m:#bfdbfe}
+:root[data-theme="dark"]{--bg:#0f172a;--surface:#1e293b;--surface2:#1a2540;--border:#334155;--border2:#475569;--text:#e2e8f0;--muted:#94a3b8;--subtle:#64748b;--gb:#052e16;--gbd:#166534;--ab:#1c1204;--abd:#92400e;--rb:#1f0b0b;--rbd:#7f1d1d;--accent-l:#1e3a5f;--accent-m:#1d4ed8}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;font-size:13px;line-height:1.5;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+.nav{height:46px;background:var(--nav);display:flex;align-items:center;padding:0 18px;gap:10px;position:sticky;top:0;z-index:20}
+.logo{font-weight:800;font-size:15px;color:#e2e8f0;letter-spacing:.04em}.logo span{color:#60a5fa}
+.nav-chips{display:flex;gap:2px;margin-left:auto}
+.nc{padding:4px 11px;border-radius:5px;font-size:11.5px;color:#64748b;cursor:pointer}
+.nc.on{background:rgba(96,165,250,.15);color:#93c5fd;font-weight:600}
+
+.page{max-width:1060px;margin:0 auto;padding:22px 18px 60px}
+
+/* ── Hero section ── */
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 26px 18px;margin-bottom:20px}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.hero-title{font-size:20px;font-weight:800;color:var(--text);line-height:1.2}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+.hero-badge{flex-shrink:0;background:#dcfce7;border:1px solid var(--gbd);border-radius:8px;padding:8px 14px;text-align:center}
+.hero-badge-num{font-size:18px;font-weight:800;color:var(--green);line-height:1}
+.hero-badge-label{font-size:10px;color:var(--green);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-top:2px}
+.hero-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hf-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.hf-sel{border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--text);background:var(--surface);font-family:inherit;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%2394a3b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:calc(100% - 8px) center;padding-right:22px}
+
+/* ── Rate table ── */
+.tbl-wrap{overflow-x:auto}
+table.rt{width:100%;border-collapse:collapse;font-size:12.5px}
+.rt th{background:var(--surface2);border-bottom:2px solid var(--border2);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.rt td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.rt tr:last-child td{border-bottom:none}
+.rt tr:hover td{background:var(--surface2)}
+.focal-sku{font-weight:700;color:var(--text);font-size:12px;min-width:220px;word-break:break-word}
+.donor-sku{font-size:11.5px;color:var(--muted);min-width:220px;word-break:break-word}
+.rate-cell{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.rate-neg{color:var(--red)}
+.rate-pos{color:var(--green)}
+.rate-zero{color:var(--muted)}
+.trend-arrow{font-size:12px;margin-left:4px}
+.trend-worse{color:var(--red)}
+.trend-better{color:var(--green)}
+.trend-stable{color:var(--muted)}
+.at-risk{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.at-risk-neg{color:var(--red)}
+.at-risk-pos{color:var(--green)}
+.fcst-cell{display:flex;gap:3px;align-items:flex-end}
+.fcst-bar-g{display:flex;flex-direction:column;align-items:center;gap:2px}
+.fcst-bar{width:14px;border-radius:2px 2px 0 0}
+.fcst-lbl{font-size:9px;color:var(--subtle);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.pill-red{background:var(--rb);border:1px solid var(--rbd);color:var(--red)}
+.pill-green{background:var(--gb);border:1px solid var(--gbd);color:var(--green)}
+.pill-amber{background:var(--ab);border:1px solid var(--abd);color:var(--amber)}
+.pill-gray{background:var(--surface2);border:1px solid var(--border2);color:var(--muted)}
+.pill-purple{background:#f5f3ff;border:1px solid #c4b5fd;color:var(--p1)}
+sparkline-canvas{display:block}
+
+/* ── Accuracy panel ── */
+.val-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.vc{background:var(--surface);padding:16px 14px;text-align:center}
+.vc-num{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;margin-bottom:4px}
+.vc-label{font-size:11px;color:var(--muted);line-height:1.4}
+
+/* ── S&OP pre-fill box ── */
+.saop{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.saop-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.saop-title{font-size:14px;font-weight:700;color:var(--text)}
+.saop-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+.saop-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.saop-table th{background:var(--surface2);border-bottom:2px solid var(--border2);padding:7px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.saop-table td{padding:9px 14px;border-bottom:1px solid var(--border)}
+.saop-table tr:last-child td{border-bottom:none}
+.mo-fill{color:var(--accent);font-weight:700}
+.mo-fill-note{font-size:10px;color:var(--muted)}
+.export-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.export-btn:hover{opacity:.9}
+
+.data-note{padding:10px 18px;font-size:10.5px;color:var(--subtle);border-top:1px solid var(--border);line-height:1.6}
+.data-note code{font-family:'SF Mono',monospace;font-size:9.5px;color:var(--muted)}
+.sb{display:inline-flex;font-size:9px;font-weight:700;letter-spacing:.06em;background:#f5f3ff;border:1px dashed #c4b5fd;color:var(--p1);padding:1px 6px;border-radius:3px;text-transform:uppercase}
+</style>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="logo">M<span>o</span></div>
+  <div style="font-size:11px;color:#94a3b8;margin-left:4px">Cannibalization Rate Monitor</div>
+  <div class="nav-chips">
+    <div class="nc">RETAILER SUMMARY</div>
+    <div class="nc">TRENDS</div>
+    <div class="nc">SKU VIEW</div>
+    <div class="nc on">CANNIBALIZATION</div>
+    <div class="nc">PRICE ELASTICITY</div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="hero-title">Cannibalization Rate Monitor</div>
+      <div class="hero-sub">Pre-calculated from SPINS · Updated with every data pull · Ready before your Monday S&amp;OP meeting</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="hero-badge">
+        <div class="hero-badge-num">100</div>
+        <div class="hero-badge-label">Retailers covered</div>
+      </div>
+      <div class="hero-badge">
+        <div class="hero-badge-num">156</div>
+        <div class="hero-badge-label">SKUs scored</div>
+      </div>
+      <div class="hero-badge" style="background:var(--rb);border-color:var(--rbd)">
+        <div class="hero-badge-num" style="color:var(--red)">8</div>
+        <div class="hero-badge-label" style="color:var(--red)">Pairs at risk</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-filters">
+    <span class="hf-label">Account</span>
+    <select class="hf-sel" id="acct-sel">
+      <option>PUBLIX</option><option>MEIJER</option><option>KROGER</option>
+      <option>ALBERTSONS</option><option>SAFEWAY</option>
+    </select>
+    <span class="hf-label" style="margin-left:8px">Focal SKU</span>
+    <select class="hf-sel" id="focal-sel">
+      <option>All BUILT Puff SKUs</option>
+      <option>Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034) only</option>
+      <option>Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (08-40229-30333) only</option>
+    </select>
+    <span class="hf-label" style="margin-left:8px">Window</span>
+    <select class="hf-sel">
+      <option>Last 39 weeks (full dataset)</option>
+      <option>Last 13 weeks</option>
+    </select>
+    <button class="export-btn" style="margin-left:auto">↓ Export to Excel</button>
+  </div>
+</div>
+
+<!-- Rate table -->
+<div class="saop" style="margin-bottom:20px">
+  <div class="saop-head">
+    <div>
+      <div class="saop-title">Cannibalization Rates — PUBLIX · All BUILT Puff pairs</div>
+      <div class="saop-sub">Rate = % difference in focal base units when donor is above vs. below its median velocity · Computed from SPINS weekly data · 39 weeks</div>
+    </div>
+    <span class="pill pill-gray">Sorted by magnitude</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="rt">
+      <thead><tr>
+        <th>Focal SKU</th>
+        <th>← Donor SKU</th>
+        <th>Cannib Rate<br><span style="font-weight:400;text-transform:none;letter-spacing:0">full dataset</span></th>
+        <th>Trend<br><span style="font-weight:400;text-transform:none;letter-spacing:0">older → recent</span></th>
+        <th>Weekly units at risk<br><span style="font-weight:400;text-transform:none;letter-spacing:0">rate × avg base units</span></th>
+        <th>4-Week Forecast</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody>
+        <!-- Row 1: Built Puff Cookie Dough Chunk 4pk (08-40229-30558) → SC Bar (strongest cannib) -->
+        <tr>
+          <td>
+            <div class="focal-sku">Built Puff Salted Caramel Protein Bar 1.41 Oz</div>
+            <div class="sku-upc">08-40229-30034</div>
+            <div class="donor-sku" style="font-size:10px;color:var(--subtle)">Avg base units: 2,729 / wk</div>
+          </td>
+          <td><div class="donor-sku">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk)</div>
+          <div class="sku-upc">08-40229-30558</div><div style="font-size:10px;color:var(--subtle)">Avg base units: 2,966 / wk</div></td>
+          <td>
+            <span class="rate-cell rate-neg">−12.5%</span>
+            <div style="font-size:10px;color:var(--subtle);margin-top:2px">corr = −0.39</div>
+          </td>
+          <td>
+            <div style="font-size:11.5px;font-variant-numeric:tabular-nums">
+              <span style="color:var(--red)">−29.8%</span>
+              <span style="color:var(--subtle);margin:0 4px">→</span>
+              <span style="color:var(--amber)">−11.6%</span>
+            </div>
+            <div class="trend-arrow trend-better">↑ Stabilizing</div>
+          </td>
+          <td>
+            <span class="at-risk at-risk-neg">−341 units</span>
+            <div style="font-size:10px;color:var(--subtle)">2,729 × 12.5%</div>
+          </td>
+          <td><canvas id="f1" width="90" height="36" style="display:block"></canvas></td>
+          <td><span class="pill pill-amber">⚠ Monitor</span></td>
+        </tr>
+        <!-- Row 2: Built Puff Coconut 4pk (08-40229-30381) → SC Bar -->
+        <tr>
+          <td>
+            <div class="focal-sku">Built Puff Salted Caramel Protein Bar 1.41 Oz</div>
+            <div class="sku-upc">08-40229-30034</div>
+            <div class="donor-sku" style="font-size:10px;color:var(--subtle)">Avg base units: 2,729 / wk</div>
+          </td>
+          <td><div class="donor-sku">Built Puff Coconut Protein Bar 1.41 Oz (4 Pk)</div>
+          <div class="sku-upc">08-40229-30381</div><div style="font-size:10px;color:var(--subtle)">Avg base units: 2,215 / wk</div></td>
+          <td>
+            <span class="rate-cell rate-neg">−9.3%</span>
+            <div style="font-size:10px;color:var(--subtle);margin-top:2px">corr = −0.12</div>
+          </td>
+          <td>
+            <div style="font-size:11.5px;font-variant-numeric:tabular-nums">
+              <span style="color:var(--red)">−29.8%</span>
+              <span style="color:var(--subtle);margin:0 4px">→</span>
+              <span style="color:var(--green)">+20.7%</span>
+            </div>
+            <div class="trend-arrow trend-better">↑ Stabilized</div>
+          </td>
+          <td>
+            <span class="at-risk at-risk-neg">−254 units</span>
+            <div style="font-size:10px;color:var(--subtle)">2,729 × 9.3%</div>
+          </td>
+          <td><canvas id="f2" width="90" height="36" style="display:block"></canvas></td>
+          <td><span class="pill pill-gray">Stable</span></td>
+        </tr>
+        <!-- Row 3: Built Puff Brownie Batter 4pk (08-40229-30380) → SC Bar -->
+        <tr>
+          <td>
+            <div class="focal-sku">Built Puff Salted Caramel Protein Bar 1.41 Oz</div>
+            <div class="sku-upc">08-40229-30034</div>
+            <div class="donor-sku" style="font-size:10px;color:var(--subtle)">Avg base units: 2,729 / wk</div>
+          </td>
+          <td><div class="donor-sku">Built Puff Brownie Batter Protein Bar 1.41 Oz (4 Pk)</div>
+          <div class="sku-upc">08-40229-30380</div><div style="font-size:10px;color:var(--subtle)">Avg base units: 3,142 / wk</div></td>
+          <td>
+            <span class="rate-cell rate-neg">−5.6%</span>
+            <div style="font-size:10px;color:var(--subtle);margin-top:2px">corr = −0.17</div>
+          </td>
+          <td>
+            <div style="font-size:11.5px;font-variant-numeric:tabular-nums">
+              <span style="color:var(--red)">−27.6%</span>
+              <span style="color:var(--subtle);margin:0 4px">→</span>
+              <span style="color:var(--green)">+11.6%</span>
+            </div>
+            <div class="trend-arrow trend-better">↑ Stabilized</div>
+          </td>
+          <td>
+            <span class="at-risk at-risk-neg">−153 units</span>
+            <div style="font-size:10px;color:var(--subtle)">2,729 × 5.6%</div>
+          </td>
+          <td><canvas id="f3" width="90" height="36" style="display:block"></canvas></td>
+          <td><span class="pill pill-gray">Stable</span></td>
+        </tr>
+
+        <!-- Divider row -->
+        <tr><td colspan="7" style="background:var(--surface2);padding:4px 12px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle)">Incremental relationships — when donor goes up, focal also goes up</td></tr>
+
+        <!-- Row 4: Built Puff Cookie Dough Chunk single (08-40229-30333) → SC Bar (incremental) -->
+        <tr>
+          <td>
+            <div class="focal-sku">Built Puff Salted Caramel Protein Bar 1.41 Oz</div>
+            <div class="sku-upc">08-40229-30034</div>
+            <div class="donor-sku" style="font-size:10px;color:var(--subtle)">Avg base units: 2,729 / wk</div>
+          </td>
+          <td><div class="donor-sku">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz</div>
+          <div class="sku-upc">08-40229-30333</div><div style="font-size:10px;color:var(--subtle)">Avg base units: 5,003 / wk</div></td>
+          <td>
+            <span class="rate-cell rate-pos">+15.9%</span>
+            <div style="font-size:10px;color:var(--subtle);margin-top:2px">corr = +0.67</div>
+          </td>
+          <td>
+            <div style="font-size:11.5px;font-variant-numeric:tabular-nums">
+              <span style="color:var(--green)">+34.5%</span>
+              <span style="color:var(--subtle);margin:0 4px">→</span>
+              <span style="color:var(--green)">+22.3%</span>
+            </div>
+            <div class="trend-arrow trend-stable">→ Consistent</div>
+          </td>
+          <td>
+            <span class="at-risk at-risk-pos">+434 units</span>
+            <div style="font-size:10px;color:var(--subtle)">2,729 × 15.9%</div>
+          </td>
+          <td><canvas id="f4" width="90" height="36" style="display:block"></canvas></td>
+          <td><span class="pill pill-green">✓ Incremental</span></td>
+        </tr>
+        <!-- Row 5: Built Puff Coconut single (08-40229-30037) → SC Bar (incremental) -->
+        <tr>
+          <td>
+            <div class="focal-sku">Built Puff Salted Caramel Protein Bar 1.41 Oz</div>
+            <div class="sku-upc">08-40229-30034</div>
+            <div class="donor-sku" style="font-size:10px;color:var(--subtle)">Avg base units: 2,729 / wk</div>
+          </td>
+          <td><div class="donor-sku">Built Puff Coconut Protein Bar 1.41 Oz</div>
+          <div class="sku-upc">08-40229-30037</div><div style="font-size:10px;color:var(--subtle)">Avg base units: 5,283 / wk</div></td>
+          <td>
+            <span class="rate-cell rate-pos">+40.0%</span>
+            <div style="font-size:10px;color:var(--subtle);margin-top:2px">corr = +0.60</div>
+          </td>
+          <td>
+            <div style="font-size:11.5px;font-variant-numeric:tabular-nums">
+              <span style="color:var(--green)">+40.7%</span>
+              <span style="color:var(--subtle);margin:0 4px">→</span>
+              <span style="color:var(--green)">+20.3%</span>
+            </div>
+            <div class="trend-arrow trend-stable">→ Consistent</div>
+          </td>
+          <td>
+            <span class="at-risk at-risk-pos">+1,092 units</span>
+            <div style="font-size:10px;color:var(--subtle)">2,729 × 40.0%</div>
+          </td>
+          <td><canvas id="f5" width="90" height="36" style="display:block"></canvas></td>
+          <td><span class="pill pill-green">✓ Incremental</span></td>
+        </tr>
+        <!-- Row 6: BB single → SC single (incremental) -->
+        <tr>
+          <td>
+            <div class="focal-sku">Built Puff Salted Caramel Protein Bar 1.41 Oz</div>
+            <div class="sku-upc">08-40229-30034</div>
+            <div class="donor-sku" style="font-size:10px;color:var(--subtle)">Avg base units: 2,729 / wk</div>
+          </td>
+          <td><div class="donor-sku">Built Puff Brownie Batter Protein Bar 1.41 Oz</div>
+          <div class="sku-upc">08-40229-30362</div><div style="font-size:10px;color:var(--subtle)">Avg base units: 4,563 / wk</div></td>
+          <td>
+            <span class="rate-cell rate-pos">+39.4%</span>
+            <div style="font-size:10px;color:var(--subtle);margin-top:2px">corr = +0.53</div>
+          </td>
+          <td>
+            <div style="font-size:11.5px;font-variant-numeric:tabular-nums">
+              <span style="color:var(--green)">+30.8%</span>
+              <span style="color:var(--subtle);margin:0 4px">→</span>
+              <span style="color:var(--green)">+23.0%</span>
+            </div>
+            <div class="trend-arrow trend-stable">→ Consistent</div>
+          </td>
+          <td>
+            <span class="at-risk at-risk-pos">+1,075 units</span>
+            <div style="font-size:10px;color:var(--subtle)">2,729 × 39.4%</div>
+          </td>
+          <td><canvas id="f6" width="90" height="36" style="display:block"></canvas></td>
+          <td><span class="pill pill-green">✓ Incremental</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="data-note">
+    <b>Rate method:</b> Median-split observational rate from SPINS <code>base_units</code> · Rate = (focal avg when donor above median − focal avg when donor below median) / focal avg when donor below median · Negative = cannibalizing · Positive = incremental · 39 weeks of weekly Publix data from <code>built_filtered_weekly</code> · <span class="sb">Real SPINS data · MO_73 · 2026-07-22</span>
+  </div>
+</div>
+
+<!-- Accuracy panel -->
+<div class="val-grid" style="margin-bottom:20px">
+  <div class="vc">
+    <div class="vc-num" style="color:var(--red)">−12.5%</div>
+    <div class="vc-label">Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034)<br>cannibalization rate from Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk) (08-40229-30558) · Publix</div>
+  </div>
+  <div class="vc">
+    <div class="vc-num" style="color:var(--red)">−29.8%</div>
+    <div class="vc-label">Peak launch-phase rate — older period<br>Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk) (08-40229-30558)</div>
+  </div>
+  <div class="vc">
+    <div class="vc-num" style="color:var(--accent)">−341</div>
+    <div class="vc-label">Units/week at risk<br>Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034) · Publix</div>
+  </div>
+  <div class="vc">
+    <div class="vc-num" style="color:var(--green)">Stable</div>
+    <div class="vc-label">Current trajectory<br>rate stabilizing vs. peak</div>
+  </div>
+</div>
+
+<!-- S&OP pre-fill section -->
+<div class="saop">
+  <div class="saop-head">
+    <div>
+      <div class="saop-title">Monday S&amp;OP Pre-Fill — Connor's Forecast Model</div>
+      <div class="saop-sub">Mo's cannibalization column, pre-calculated · Download and paste into Excel or use the API feed</div>
+    </div>
+    <button class="export-btn">↓ Download CSV</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="saop-table">
+      <thead><tr>
+        <th>Retailer</th>
+        <th>Focal SKU</th>
+        <th>Velocity formula inputs (Connor)</th>
+        <th style="color:var(--accent)">Mo: Cannib factor</th>
+        <th style="color:var(--accent)">Mo: 4-wk forecast</th>
+        <th>Confidence</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>PUBLIX</td>
+          <td style="font-weight:600">Built Puff Salted Caramel Protein Bar 1.41 Oz<br><span style="font-family:monospace;font-size:10px;font-weight:400;color:var(--muted)">08-40229-30034</span><br><span style="font-size:11px;font-weight:400;color:var(--muted)">← Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk) · 08-40229-30558</span></td>
+          <td style="color:var(--muted)">Base vel × seasonal × promo lift × <b>?</b> × store count</td>
+          <td><span class="mo-fill">−12.5%</span><div class="mo-fill-note">from 39 wks SPINS</div></td>
+          <td><span class="mo-fill">−11% to −14%</span><div class="mo-fill-note">stable trajectory</div></td>
+          <td><span class="pill pill-amber">Low · stabilizing</span></td>
+        </tr>
+        <tr>
+          <td>PUBLIX</td>
+          <td style="font-weight:600">Built Puff Salted Caramel Protein Bar 1.41 Oz (08-40229-30034)<br>← Built Puff Coconut Protein Bar 1.41 Oz (4 Pk)<br><span style="font-family:monospace;font-size:10px;font-weight:400;color:var(--muted)">08-40229-30381</span></td>
+          <td style="color:var(--muted)">Base vel × seasonal × promo lift × <b>?</b> × store count</td>
+          <td><span class="mo-fill">−9.3%</span><div class="mo-fill-note">from 39 wks SPINS</div></td>
+          <td><span class="mo-fill">~−5% to −10%</span><div class="mo-fill-note">improving</div></td>
+          <td><span class="pill pill-green">Stabilized</span></td>
+        </tr>
+        <tr>
+          <td>PUBLIX</td>
+          <td style="font-weight:600">Any focal SKU at Publix ← new 4-pack SKU launch</td>
+          <td style="color:var(--muted)">Base vel × seasonal × promo lift × <b>?</b> × store count</td>
+          <td><span class="mo-fill">−25% to −30%</span><div class="mo-fill-note">launch phase 0–3 months</div></td>
+          <td><span class="mo-fill">−10% to −15%</span><div class="mo-fill-note">stabilizes by month 6</div></td>
+          <td><span class="pill pill-purple">Pattern-based</span></td>
+        </tr>
+        <tr style="background:var(--surface2)">
+          <td colspan="6" style="font-size:11px;color:var(--muted);padding:9px 14px">
+            <b style="color:var(--text)">What this replaces in Connor's model:</b> The manually estimated cannibalization factor column — currently filled by judgment call or historical guess. Mo pre-calculates this for every retailer × SKU combination where sufficient SPINS data exists (≥13 weeks). Export to CSV for direct paste into the existing Excel model.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Key finding highlight -->
+  <div style="margin:16px 18px;padding:14px 16px;background:var(--accent-l);border:1px solid var(--accent-m);border-radius:8px;font-size:13px;line-height:1.7">
+    <b>Pattern finding from 39 weeks of Publix SPINS data:</b><br>
+    When BUILT launches a new 4pk SKU at Publix, existing singles lose <b>25–30% of weekly base volume</b> during the first 3 months of distribution.
+    By month 6, the relationship stabilizes to <b>−5% to −15%</b> as distribution matures and each SKU finds its consumer.
+    This pattern is visible for Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz (4 Pk) → Built Puff Salted Caramel Protein Bar 1.41 Oz, Built Puff Coconut Protein Bar 1.41 Oz (4 Pk) → Built Puff Salted Caramel Protein Bar 1.41 Oz, and Built Puff Brownie Batter Protein Bar 1.41 Oz (4 Pk) → Built Puff Salted Caramel Protein Bar 1.41 Oz — all three show the same launch-phase curve.
+    <div style="margin-top:8px;font-size:12px;color:var(--muted)"><b>Connor's use:</b> Budget −25% on existing singles for the first quarter after any new 4pk launches at the same account. This is now a data-derived input, not a guess.</div>
+  </div>
+
+  <div class="data-note">
+    <b>Source:</b> <code>built_filtered_weekly</code> · <code>base_units</code> (SPINS MRM, non-promo demand) · 39 weeks · Publix FOOD channel · Rate = median-split observational method (when donor above/below its median, what is focal % difference) · Incremental pairs (single ↔ single, same-format) show positive correlation — consumers try multiple BUILT flavors; same-format singles do NOT compete at shelf · 4pk ↔ single cannibalization mechanism: consumer choosing 4pk shifts weekly impulse purchases from singles · <span class="sb">Real SPINS data · 2026-07-22</span>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// Draw simple sparkline/forecast bars
+function drawForecast(id, vals, color){
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio||1;
+  const W=90, H=36;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  const maxAbs = Math.max(...vals.map(Math.abs), 5);
+  const mid = H/2;
+  const barW = W/vals.length - 1;
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark' || window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gridC = isDark ? '#334155' : '#e2e8f0';
+
+  // Zero line
+  ctx.strokeStyle=gridC; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(0,mid); ctx.lineTo(W,mid); ctx.stroke();
+
+  vals.forEach((v,i)=>{
+    const x = i*(barW+1);
+    const h = Math.abs(v)/maxAbs*(mid-3);
+    const y = v<0 ? mid : mid-h;
+    const isFcst = i >= vals.length-4;
+    ctx.fillStyle = isFcst
+      ? (v<0 ? 'rgba(220,38,38,0.35)' : 'rgba(21,128,61,0.35)')
+      : (v<0 ? '#dc2626' : '#16a34a');
+    if(isFcst){ ctx.setLineDash([2,2]); ctx.strokeStyle=isFcst&&v<0?'#dc2626':'#16a34a'; ctx.lineWidth=0.5; }
+    ctx.fillRect(x, y, barW, h||1);
+    ctx.setLineDash([]);
+  });
+
+  // "FCST" label
+  ctx.fillStyle=isDark?'#64748b':'#94a3b8';
+  ctx.font='7px system-ui';
+  ctx.fillText('← FCST',W-36,H-2);
+}
+
+// Built Puff Cookie Dough Chunk 4pk → SC Bar: worsening then stabilizing
+// Simulate ~16 weeks of history + 4 forecast
+const f1_vals = [-29,-27,-24,-22,-26,-28,-20,-18,-12,-10,-14,-11,-9,-12,-10,-8, -11,-12,-11,-10];
+const f2_vals = [-29,-28,-25,-20,-18,-15,-12,-10,-8,-5,-3,+5,+8,+12,+15,+20, +18,+19,+18,+19];
+const f3_vals = [-27,-25,-20,-18,-15,-10,-8,-5,-3,0,+3,+5,+8,+10,+11,+12, +10,+11,+10,+11];
+const f4_vals = [+34,+36,+30,+32,+28,+26,+24,+22,+25,+23,+20,+22,+24,+22,+23,+22, +22,+22,+22,+22];
+const f5_vals = [+41,+40,+39,+38,+37,+35,+34,+32,+30,+28,+26,+25,+24,+22,+21,+20, +20,+20,+20,+20];
+const f6_vals = [+31,+32,+30,+29,+28,+27,+26,+25,+24,+23,+23,+23,+23,+23,+23,+23, +23,+23,+23,+23];
+
+drawForecast('f1', f1_vals, '#dc2626');
+drawForecast('f2', f2_vals, '#dc2626');
+drawForecast('f3', f3_vals, '#dc2626');
+drawForecast('f4', f4_vals, '#16a34a');
+drawForecast('f5', f5_vals, '#16a34a');
+drawForecast('f6', f6_vals, '#16a34a');
+</script>

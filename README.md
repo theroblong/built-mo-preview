@@ -127,6 +127,43 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-22 (update 36) — Friday Bracken prep: MO_73 promo lift, cannib rate monitor, cannib scenario planner, full-description policy
+
+Five HTML artifacts prepared for the Friday July 25 meeting with Brian, Bracken, and Connor. All mockups use full BUILT product descriptions and UPCs as they appear in the Mo application — no abbreviated labels.
+
+**MO_73 — Promo Lift Rate Framework** (`mockups/mo_promo_lift_mockup.html`)
+
+`scripts/MO_73_promo_lift_framework.py` queries `built_filtered_weekly` → `incr_units / base_units` = SPINS MRM lift rate. 59,746 promo event weeks across BUILT × retailer × discount depth.
+
+Overall lift ladder: <10% off → 20% lift (13,953 wks) · 10–20% → 31% (17,793) · 20–30% → 46% (6,868) · 30%+ → 76% (11,833). Reference points: Meijer × CDc 4pk × 10–20% → 21% lift (19 wks); Publix × CDc 4pk × 10–20% → 27% (17 wks); Circle K × CDc single × 10–20% → 16% (40 wks).
+
+**Pack × Channel findings (new):** C-store singles show a flat lift curve — deepening discount does not help (11%/18%/18%/11% across buckets). Barebells grew at C-store at $1/bar premium over BUILT, confirming price is not the C-store lever. Grocery 12pk has a cliff structure: <30% off = 5–7% lift (near zero), 30%+ = 108% lift (306 promo weeks) — stock-up threshold unlocked at $1.54/bar vs $2.74 single. Grocery 4pk is the efficient band: 10–20% TPR delivers 27% lift with sustainable margin.
+
+Mockup: two-column layout (retailer × SKU × discount depth lookup + Mo Chat panel) + full-width Pack × Channel section with canvas lift curves and efficiency table. Data note: `arp_pct_discount_any_promo` in `built_filtered_weekly` is 0–100 scale (divide by 100).
+
+**Cannibalization Rate Monitor** (`mockups/mo_cannib_rate_monitor.html`)
+
+Answers Brian's repeated request for cannibalization rate forecasting. Framed as a Monday S&OP pre-fill: Mo pre-calculates the cannibalization factor column in Connor's velocity formula (base_vel × seasonal × promo lift × **cannib factor** × store count) for every retailer × SKU pair with ≥13 weeks of SPINS history.
+
+Real observational rates from `built_filtered_weekly` median-split method (when donor above vs. below its median, what % difference in focal base_units?). Six donor series for SC Puff at Publix:
+
+- Built Puff Cookie Dough Chunk 1.55 Oz (4 Pk) → −12.5% (corr=−0.39, 39 wks) — stabilizing; older period was −29.8%
+- Built Puff Coconut Protein Bar 1.41 Oz (4 Pk) → −9.3% (corr=−0.12)
+- Built Puff Brownie Batter Protein Bar 1.41 Oz (4 Pk) → −5.6% (corr=−0.17)
+- Built Puff Cookie Dough Chunk 1.55 Oz → +15.9% (corr=+0.67) — INCREMENTAL
+- Built Puff Coconut Protein Bar 1.41 Oz → +40.0% (corr=+0.60) — INCREMENTAL
+- Built Puff Brownie Batter Protein Bar 1.41 Oz → +39.4% (corr=+0.53) — INCREMENTAL
+
+Pattern: when BUILT launches a new 4pk at Publix, existing singles lose 25–30% of weekly base volume during the first 3 months of distribution; stabilizes to −5–15% by month 6. Canvas sparklines show 16 history bars + 4 shaded forecast bars per row.
+
+**Cannibalization Scenario Planner** (`mockups/mo_cannib_scenario_mockup.html`)
+
+Holistic scenario planner for Brian's assortment × new product intro × competitive entry questions. Left panel: real `scored_cannibalization` pairs at Publix (clickable, full pair detail). Right panel: three scenario tabs — New SKU Intro (flavor × format → risk classification), Assortment Cut (keep/cut recommendations), Competitive Entry (Barebells example). Key patterns section anchors the 94% incremental (rel_dist=1) and 36% cannibalizing (rel_dist=5) findings from 1,000 BUILT-to-BUILT pairs.
+
+**Full product description policy** — established 2026-07-22. All visible SKU text in any Mo artifact must use the official BUILT product description and UPC from the Mo application/Druid database. No abbreviated labels (e.g., "SC Puff", "CDc 4pk", "BB Puff"). SKU cells use `word-break:break-word` with generous `min-width`; no `text-overflow:ellipsis` on product name columns. Applied retroactively across all three new mockups and the cannib scenario planner.
+
+**Five Friday artifacts** sent to Rob: `connor_process_review.html` (email attachment) + `mo_cold_start_proxy_mockup.html` + `mo_cannib_rate_monitor.html` + `mo_cannib_scenario_mockup.html` + `mo_promo_lift_mockup.html` + `velocity_extract.html`. See wiki `07-demo-guide.md` for artifact URLs and walkthrough notes.
+
 ### 2026-07-22 (update 35) — MO_70 bug fixes: empty table, forecast velocity inflation, UI polish
 
 Three bugs found and fixed in `mockups/velocity_extract.html` after initial delivery:
