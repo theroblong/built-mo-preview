@@ -127,6 +127,21 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 42) — Mo Trends: Velocity + Macro stacked tile + expanded modal polish (96vw, 1.2× font scaling)
+
+Two UX improvements to the Mo Trends expand experience, plus a new stacked tile wired to the FRED macro data.
+
+**Velocity + Macro tile (tile 8):** New full-width stacked tile below the standalone Macro Context tile. Top sub-chart shows BUILT velocity lines (one per retailer, from the product picker); bottom sub-chart shows the FRED macro signals (gas $/gal + consumer sentiment) over the identical date range. Shared `syncId="vel-macro"` drives a synchronized hover crosshair — a single vertical line tracks across both sub-charts simultaneously. Right margins tuned to pixel-perfect alignment: velocity `margin.right=88` = macro `margin.right:52` + sentiment axis width `36`, so plot-area right edges are identical.
+
+**Expanded modal now 96vw × 90vh (max 1600px), chart height H=680.** Prior: 88vw/1060px/82vh/H=480. The modal now uses most available screen space for demo and analysis.
+
+**Font scaling via `ChartCtx` context (1.2× in expand):** All 9 chart components read a React context (`ChartCtx`) that defaults to `scale=1, tickColor="var(--quiet)"` in inline tiles. When `TileExpandView` renders, it wraps the chart body in `<ChartCtx.Provider value={{ scale: 1.2, tickColor: "var(--muted)" }}>`. Every font size routes through `fs(n) = Math.round(n * scale)`: axis ticks 9→11px, tooltips 11→13px, legends and subtitle text step up proportionally; tick fill darkens from dim to visible. 1.2× was chosen over a higher factor to avoid scaled header elements (retailer buttons, confidence text) crowding the available chart height.
+
+**Files changed:**
+- `customer-built-mo-ui/src/pages/Trends.tsx` — `VelocityMacroTile` component + `ChartCtx` context + Provider in TileExpandView + modal sizing + font scaling across all 9 chart components
+
+---
+
 ### 2026-07-23 (update 41) — FRED Macro Context tile added to Mo Trends: live gas prices + consumer sentiment
 
 New full-width tile (tile 7) added to the Mo Trends page, rendering below the 3×2 grid. Pulls live FRED API data — weekly retail gas prices (GASDESW) and monthly University of Michigan Consumer Sentiment (UMCSENT) — and renders a dual-axis Recharts ComposedChart (amber line = gas $/gal on left Y; sky-blue dashed = sentiment index on right Y) over a rolling 52-week window.
