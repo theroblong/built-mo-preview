@@ -127,6 +127,24 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 41) — FRED Macro Context tile added to Mo Trends: live gas prices + consumer sentiment
+
+New full-width tile (tile 7) added to the Mo Trends page, rendering below the 3×2 grid. Pulls live FRED API data — weekly retail gas prices (GASDESW) and monthly University of Michigan Consumer Sentiment (UMCSENT) — and renders a dual-axis Recharts ComposedChart (amber line = gas $/gal on left Y; sky-blue dashed = sentiment index on right Y) over a rolling 52-week window.
+
+**Motivation:** Connor (BUILT FP&A Director) said in the July 22 meeting: *"Whether gas prices — there's a lot of things like just factoring in the total, what the total category is doing. And that should be captured in seasonality, but it's not perfect."* This tile is the direct answer: Mo surfaces macroeconomic headwinds alongside SPINS category data.
+
+**Live data as of July 2026:** gas $3.81→$5.13/gal over 52 weeks; sentiment 61.7→44.8. Zero gaps — UMCSENT monthly values forward-filled to weekly cadence. 1-hour server-side cache. FRED attribution in footer per API terms.
+
+**Files changed:**
+- `customer-built-mo-api/app/config.py` — optional `FRED_API_KEY` env var
+- `customer-built-mo-api/app/routers/trends.py` — `_fred_fetch()` + `_macro_cache` + `/api/trends/macro` endpoint
+- `customer-built-mo-ui/src/api/types.ts` — `MacroPoint` / `MacroData` interfaces
+- `customer-built-mo-ui/src/pages/Trends.tsx` — `MacroContextTile` component + TILE_TITLES entry + TileExpandView case + full-width tile render
+
+Expandable to additional FRED series (UNRATE, CPIAUCSL) with the same forward-fill pattern.
+
+---
+
 ### 2026-07-23 (update 40) — Cost of Staying Still: recalibrated to per-person credible hours; mindshare + opportunity cost sections added
 
 `mockups/cost_of_staying_still.html` — recalibrated version of the FP&A growth impact artifact.
