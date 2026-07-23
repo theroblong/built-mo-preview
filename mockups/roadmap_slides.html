@@ -1,0 +1,472 @@
+<title>CPG Platform — Roadmap Slide Options</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#111827;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;padding:40px 20px 60px;-webkit-font-smoothing:antialiased}
+.page-label{text-align:center;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#4b5563;margin-bottom:40px}
+
+/* Slide wrapper */
+.option-wrap{max-width:960px;margin:0 auto 56px}
+.option-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;margin-bottom:10px;padding-left:2px}
+.option-desc{font-size:12.5px;color:#4b5563;margin-bottom:14px;padding-left:2px}
+.slide{width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;position:relative}
+
+/* ══════════════════════════════════════════════
+   OPTION 1 — TEAMS-READY
+   Now / Next / Later with outcome floors
+   ══════════════════════════════════════════════ */
+:root{
+  --t-bg:#08172a;--t-rail:#0f2040;--t-border:#1a3055;--t-text:#eef4ff;--t-muted:#5a85b8;
+  --t-now:#1ec65a;--t-now-floor:#021a09;--t-now-seam:#0a3a1a;
+  --t-next:#f59e0b;--t-next-floor:#190d00;--t-next-seam:#3a2000;
+  --t-later:#9089fc;--t-later-floor:#0d0b28;--t-later-seam:#28224c;
+}
+.s1{background:var(--t-bg);display:flex;flex-direction:column}
+.s1-topbar{flex-shrink:0;display:flex;align-items:center;padding:9px 22px;border-bottom:1px solid var(--t-border);background:var(--t-rail);gap:14px}
+.s1-brand{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#3a6caa}
+.s1-sep{font-size:10px;color:var(--t-border)}
+.s1-title-bar{font-size:10.5px;font-weight:600;color:var(--t-muted)}
+.s1-spacer{flex:1}
+.s1-note{font-size:9.5px;color:#2a4f7a;font-style:italic}
+.s1-cols{display:grid;grid-template-columns:1fr 1fr 1fr;flex:1;min-height:0}
+.s1-col{display:flex;flex-direction:column;border-right:1px solid var(--t-border);min-height:0}
+.s1-col:last-child{border-right:none}
+.s1-bar{height:5px;flex-shrink:0}
+.s1-col-now  .s1-bar{background:var(--t-now)}
+.s1-col-next .s1-bar{background:var(--t-next)}
+.s1-col-later .s1-bar{background:var(--t-later)}
+.s1-hd{flex-shrink:0;padding:13px 20px 11px;border-bottom:1px solid var(--t-border)}
+.s1-phase{font-size:9.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin-bottom:5px}
+.s1-col-now  .s1-phase{color:var(--t-now)}
+.s1-col-next .s1-phase{color:var(--t-next)}
+.s1-col-later .s1-phase{color:var(--t-later)}
+.s1-hd-title{font-size:16px;font-weight:800;color:var(--t-text);line-height:1.2;margin-bottom:4px}
+.s1-hd-sub{font-size:10.5px;color:var(--t-muted);line-height:1.45}
+.s1-mods{flex:1;min-height:0;padding:6px 20px;display:flex;flex-direction:column;justify-content:space-evenly}
+.s1-mod{display:flex;align-items:flex-start;gap:11px;padding:3px 0}
+.s1-mod-bar{width:3px;height:20px;border-radius:2px;flex-shrink:0;margin-top:3px}
+.s1-col-now  .s1-mod-bar{background:var(--t-now)}
+.s1-col-next .s1-mod-bar{background:var(--t-next)}
+.s1-col-later .s1-mod-bar{background:var(--t-later)}
+.s1-mod-name{font-size:13.5px;font-weight:700;color:var(--t-text);line-height:1.25}
+.s1-mod-sub{font-size:10.5px;color:#7ab2d4;margin-top:2px;line-height:1.35}
+.s1-floor{flex-shrink:0;padding:12px 20px 15px;border-top:1px solid}
+.s1-col-now  .s1-floor{background:var(--t-now-floor);border-color:var(--t-now-seam)}
+.s1-col-next .s1-floor{background:var(--t-next-floor);border-color:var(--t-next-seam)}
+.s1-col-later .s1-floor{background:var(--t-later-floor);border-color:var(--t-later-seam)}
+.s1-stat{font-size:38px;font-weight:900;color:var(--t-text);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.s1-stat-label{font-size:11.5px;font-weight:500;line-height:1.45;margin-top:5px}
+.s1-col-now  .s1-stat-label{color:var(--t-now)}
+.s1-col-next .s1-stat-label{color:var(--t-next)}
+.s1-col-later .s1-stat-label{color:var(--t-later)}
+
+/* ══════════════════════════════════════════════
+   OPTION 2 — THE LANES
+   Three columns: NOW / Q3 / ROADMAP
+   ══════════════════════════════════════════════ */
+.s2{background:#0d1117;display:grid;grid-template-columns:1fr 1fr 1fr}
+.lane{display:flex;flex-direction:column;border-right:1px solid #1f2937}
+.lane:last-child{border-right:none}
+.lane-hd{padding:18px 20px 14px;display:flex;align-items:center;gap:10px}
+.lane-hd-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.lane-hd-text{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.lane-now .lane-hd{border-bottom:2px solid #16a34a}
+.lane-now .lane-hd-text{color:#4ade80}
+.lane-now .lane-hd-dot{background:#4ade80}
+.lane-q3 .lane-hd{border-bottom:2px solid #d97706}
+.lane-q3 .lane-hd-text{color:#fbbf24}
+.lane-q3 .lane-hd-dot{background:#fbbf24}
+.lane-next .lane-hd{border-bottom:2px solid #7c3aed}
+.lane-next .lane-hd-text{color:#a78bfa}
+.lane-next .lane-hd-dot{background:#a78bfa}
+.lane-body{padding:10px 14px 18px;display:flex;flex-direction:column;gap:7px;flex:1}
+.chip{padding:9px 12px;border-radius:6px;display:flex;align-items:flex-start;gap:9px}
+.chip-now{background:#052e16;border:1px solid #166534}
+.chip-q3{background:#1c1204;border:1px solid #78350f}
+.chip-next{background:#1e1b4b;border:1px solid #4c1d95}
+.chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.chip-dot-now{background:#4ade80}
+.chip-dot-q3{background:#fbbf24}
+.chip-dot-next{background:#a78bfa}
+.chip-name{font-size:12px;font-weight:700;color:#f0f6ff;line-height:1.3}
+.chip-sub{font-size:10.5px;color:#b0c8e0;margin-top:3px;line-height:1.4}
+
+/* ══════════════════════════════════════════════
+   OPTION 3 — THE COMPOUND CURVE
+   Value compounds as each module activates
+   ══════════════════════════════════════════════ */
+.s4c{background:#060d1a;display:flex;flex-direction:column}
+.s4c-top{flex-shrink:0;padding:10px 22px 8px;border-bottom:1px solid #12243f;background:#0b1a30;display:flex;align-items:baseline;gap:18px}
+.s4c-eyebrow{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#2a5890;flex-shrink:0}
+.s4c-top-title{font-size:14px;font-weight:800;color:#dceeff;line-height:1.2}
+.s4c-chart-wrap{flex:3;min-height:0;position:relative}
+.s4c-chart-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.s4c-modules{flex:2;min-height:0;display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #12243f}
+.s4c-mod-col{padding:9px 14px 8px;border-right:1px solid #12243f;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.s4c-mod-col:last-child{border-right:none}
+.s4c-mod-now{background:rgba(30,198,90,.04)}
+.s4c-mod-q3{background:rgba(245,158,11,.04)}
+.s4c-mod-later{background:rgba(144,137,252,.04)}
+.s4c-phase-hd{font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:3px;flex-shrink:0}
+.s4c-mod-now .s4c-phase-hd{color:#1ec65a}
+.s4c-mod-q3  .s4c-phase-hd{color:#f59e0b}
+.s4c-mod-later .s4c-phase-hd{color:#9089fc}
+.s4c-chips{display:flex;flex-wrap:wrap;gap:3px}
+.s4c-chip{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:3px;line-height:1.45;white-space:nowrap}
+.s4c-mod-now .s4c-chip{background:rgba(30,198,90,.13);border:1px solid rgba(30,198,90,.28);color:#a8f5c4}
+.s4c-mod-q3  .s4c-chip{background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.28);color:#fde68a}
+.s4c-mod-later .s4c-chip{background:rgba(144,137,252,.13);border:1px solid rgba(144,137,252,.28);color:#c4b5fd}
+</style>
+
+<div class="page-label">CPG Platform — Roadmap Slide Options</div>
+
+<!-- ── OPTION 1: TEAMS-READY ── -->
+<div class="option-wrap">
+  <div class="option-label">Option 1 — Teams-Ready</div>
+  <div class="option-desc">Now / Next / Later with outcome metrics. Large text. Built for screen share.</div>
+  <div class="slide">
+    <div class="s1" style="width:100%;height:100%">
+      <div class="s1-topbar">
+        <span class="s1-brand">Mo · Aevah</span>
+        <span class="s1-sep">·</span>
+        <span class="s1-title-bar">CPG Intelligence Platform — Module Roadmap</span>
+        <span class="s1-spacer"></span>
+        <span class="s1-note">What ships with your implementation</span>
+      </div>
+      <div class="s1-cols">
+        <div class="s1-col s1-col-now">
+          <div class="s1-bar"></div>
+          <div class="s1-hd">
+            <div class="s1-phase">Now · Available at Launch</div>
+            <div class="s1-hd-title">Core Demand Intelligence</div>
+            <div class="s1-hd-sub">Automated baseline from day one</div>
+          </div>
+          <div class="s1-mods">
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Sales &amp; Operations Planning</div><div class="s1-mod-sub">Monday baseline, pre-filled and ready to review</div></div></div>
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Velocity Forecast</div><div class="s1-mod-sub">SKU × retailer · Low / Base / High range</div></div></div>
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Promo Lift Analysis</div><div class="s1-mod-sub">Pack × channel discount depth curves</div></div></div>
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Cannibalization Monitor</div><div class="s1-mod-sub">Own-brand impact rates, tracked weekly</div></div></div>
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">New SKU Ramp Proxy</div><div class="s1-mod-sub">New additions launch with a week-1 baseline</div></div></div>
+          </div>
+          <div class="s1-floor">
+            <div class="s1-stat">156 SKUs</div>
+            <div class="s1-stat-label">across 100+ retailers —<br>one automated baseline</div>
+          </div>
+        </div>
+        <div class="s1-col s1-col-next">
+          <div class="s1-bar"></div>
+          <div class="s1-hd">
+            <div class="s1-phase">Next · Q3 in Build</div>
+            <div class="s1-hd-title">Launch &amp; Event Intelligence</div>
+            <div class="s1-hd-sub">Read markets before they tell you</div>
+          </div>
+          <div class="s1-mods">
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Causal Event Analysis</div><div class="s1-mod-sub">Attribute sales shifts to specific price events</div></div></div>
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Cold-Start Proxy</div><div class="s1-mod-sub">Demand baseline before the first sale records</div></div></div>
+          </div>
+          <div class="s1-floor">
+            <div class="s1-stat">Week 1</div>
+            <div class="s1-stat-label">demand baseline before<br>first sale records</div>
+          </div>
+        </div>
+        <div class="s1-col s1-col-later">
+          <div class="s1-bar"></div>
+          <div class="s1-hd">
+            <div class="s1-phase">Later · Roadmap</div>
+            <div class="s1-hd-title">Macro &amp; Scenario Intelligence</div>
+            <div class="s1-hd-sub">Anticipate headwinds before they land</div>
+          </div>
+          <div class="s1-mods">
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">FRED Macro Signals</div><div class="s1-mod-sub">Gas prices, sentiment, unemployment — built in</div></div></div>
+            <div class="s1-mod"><div class="s1-mod-bar"></div><div><div class="s1-mod-name">Scenario Planner</div><div class="s1-mod-sub">Run what-ifs before committing to a plan</div></div></div>
+          </div>
+          <div class="s1-floor">
+            <div class="s1-stat">8 Weeks</div>
+            <div class="s1-stat-label">macro lead time — gas price<br>to shelf behavior signal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPTION 2: THE LANES ── -->
+<div class="option-wrap">
+  <div class="option-label">Option 2 — The Lanes</div>
+  <div class="option-desc">Three columns. Status at a glance. Full module inventory.</div>
+  <div class="slide">
+    <div class="s2" style="width:100%;height:100%">
+
+      <div class="lane lane-now">
+        <div class="lane-hd">
+          <div class="lane-hd-dot"></div>
+          <div class="lane-hd-text">Live at Launch</div>
+        </div>
+        <div class="lane-body">
+          <div class="chip chip-now"><div class="chip-dot chip-dot-now"></div><div><div class="chip-name">Demand Forecast</div><div class="chip-sub">SKU × retailer · Low / Base / High</div></div></div>
+          <div class="chip chip-now"><div class="chip-dot chip-dot-now"></div><div><div class="chip-name">Cannibalization Intelligence</div><div class="chip-sub">Pre-scored pairs · weekly rate · scenario planner</div></div></div>
+          <div class="chip chip-now"><div class="chip-dot chip-dot-now"></div><div><div class="chip-name">Price &amp; Elasticity</div><div class="chip-sub">SKU-level elasticity · pack norms · competitive gap</div></div></div>
+          <div class="chip chip-now"><div class="chip-dot chip-dot-now"></div><div><div class="chip-name">Competitive Intelligence</div><div class="chip-sub">Full category · velocity benchmarking · trend alerts</div></div></div>
+          <div class="chip chip-now"><div class="chip-dot chip-dot-now"></div><div><div class="chip-name">New SKU Ramp Proxy</div><div class="chip-sub">Comparable past launches · ramp reference on week 1</div></div></div>
+          <div class="chip chip-now"><div class="chip-dot chip-dot-now"></div><div><div class="chip-name">Mo AI</div><div class="chip-sub">Ask anything · sourced answers · navigate by voice</div></div></div>
+        </div>
+      </div>
+
+      <div class="lane lane-q3">
+        <div class="lane-hd">
+          <div class="lane-hd-dot"></div>
+          <div class="lane-hd-text">Q3 2026</div>
+        </div>
+        <div class="lane-body">
+          <div class="chip chip-q3"><div class="chip-dot chip-dot-q3"></div><div><div class="chip-name">Sales &amp; Operations Planning Pre-Fill</div><div class="chip-sub">Every factor column ready before Monday</div></div></div>
+          <div class="chip chip-q3"><div class="chip-dot chip-dot-q3"></div><div><div class="chip-name">Promo Lift Intelligence</div><div class="chip-sub">Retailer × SKU × discount depth · 50K+ event weeks</div></div></div>
+          <div class="chip chip-q3"><div class="chip-dot chip-dot-q3"></div><div><div class="chip-name">Sales Rep Mobile View</div><div class="chip-sub">One-screen summary · confirm or flag by email/tap</div></div></div>
+          <div class="chip chip-q3"><div class="chip-dot chip-dot-q3"></div><div><div class="chip-name">Distribution Calendar</div><div class="chip-sub">Store expansion input → forward TDP ramp projection</div></div></div>
+          <div class="chip chip-q3"><div class="chip-dot chip-dot-q3"></div><div><div class="chip-name">Forecast Accuracy Scoreboard</div><div class="chip-sub">Mo vs. field vs. actuals · cycle over cycle</div></div></div>
+        </div>
+      </div>
+
+      <div class="lane lane-next">
+        <div class="lane-hd">
+          <div class="lane-hd-dot"></div>
+          <div class="lane-hd-text">Roadmap</div>
+        </div>
+        <div class="lane-body">
+          <div class="chip chip-next"><div class="chip-dot chip-dot-next"></div><div><div class="chip-name">ERP / NetSuite Integration</div><div class="chip-sub">Closes plan → actuals loop automatically</div></div></div>
+          <div class="chip chip-next"><div class="chip-dot chip-dot-next"></div><div><div class="chip-name">Macro Signal Integration</div><div class="chip-sub">Gas prices · consumer sentiment · unemployment</div></div></div>
+          <div class="chip chip-next"><div class="chip-dot chip-dot-next"></div><div><div class="chip-name">Flash Sales &amp; Operations Planning Report</div><div class="chip-sub">Auto-generated · ready to present every Monday</div></div></div>
+          <div class="chip chip-next"><div class="chip-dot chip-dot-next"></div><div><div class="chip-name">Circana Integration</div><div class="chip-sub">Closes wholesale / Costco data gap</div></div></div>
+          <div class="chip chip-next"><div class="chip-dot chip-dot-next"></div><div><div class="chip-name">Rep Comp Visibility</div><div class="chip-sub">Forecast vs. actual · margin-aware</div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ── OPTION 3: THE COMPOUND CURVE ── -->
+<div class="option-wrap">
+  <div class="option-label">Option 3 — The Compound Curve</div>
+  <div class="option-desc">Value multiplies as each module activates. The curve doesn't just go up — it steepens.</div>
+  <div class="slide">
+    <div class="s4c" style="width:100%;height:100%">
+
+      <div class="s4c-top">
+        <div class="s4c-eyebrow">Mo Intelligence · Powered by Aevah</div>
+        <div class="s4c-top-title">Decision quality compounds as each module goes live</div>
+      </div>
+
+      <div class="s4c-chart-wrap">
+        <canvas id="s4c-canvas"></canvas>
+      </div>
+
+      <div class="s4c-modules">
+        <div class="s4c-mod-col s4c-mod-now">
+          <div class="s4c-phase-hd">● Launch Day</div>
+          <div class="s4c-chips">
+            <span class="s4c-chip">Demand Forecast</span>
+            <span class="s4c-chip">Cannibalization Insights</span>
+            <span class="s4c-chip">Price &amp; Elasticity</span>
+            <span class="s4c-chip">Competitive Intelligence</span>
+            <span class="s4c-chip">New SKU Ramp Proxy</span>
+            <span class="s4c-chip">Mo AI</span>
+          </div>
+        </div>
+        <div class="s4c-mod-col s4c-mod-q3">
+          <div class="s4c-phase-hd">● Q3 2026</div>
+          <div class="s4c-chips">
+            <span class="s4c-chip">Sales &amp; Operations Planning</span>
+            <span class="s4c-chip">Promo Lift Engine</span>
+            <span class="s4c-chip">Sales Rep Mobile View</span>
+            <span class="s4c-chip">Distribution Signals</span>
+            <span class="s4c-chip">Forecast Accuracy Scoreboard</span>
+          </div>
+        </div>
+        <div class="s4c-mod-col s4c-mod-later">
+          <div class="s4c-phase-hd">● Roadmap</div>
+          <div class="s4c-chips">
+            <span class="s4c-chip">FRED Macro Signals</span>
+            <span class="s4c-chip">Scenario Planner</span>
+            <span class="s4c-chip">ERP Integration</span>
+            <span class="s4c-chip">Circana Integration</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function drawCompound(){
+    var canvas = document.getElementById('s4c-canvas');
+    if(!canvas) return;
+    var wrap = canvas.parentElement;
+    var W = wrap.clientWidth, H = wrap.clientHeight;
+    if(!W || !H) return;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    var pl=28, pr=16, pt=16, pb=26;
+    var cw=W-pl-pr, ch=H-pt-pb;
+
+    // Value range — reference baseline at 1.0, curve starts elevated and compounds
+    var vMin=0.45, vMax=5.9;
+    function toY(v){ return pt + ch*(1-(v-vMin)/(vMax-vMin)); }
+    function toX(t){ return pl + cw*t; }
+
+    // True exponential compound — starts elevated at launch (all 6 modules active),
+    // accelerates as intelligence layers weave together
+    function compound(t){ return 1.85 * Math.exp(1.068 * t); }
+
+    // ── Below-baseline shade (manual process territory) ──
+    var refY = toY(1.0);
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillRect(pl, refY, cw, (pt+ch)-refY);
+
+    // ── Subtle horizontal grid lines (no labels — feeling, not numbers) ──
+    var gridVals = [2,3,4,5];
+    gridVals.forEach(function(v){
+      var y = toY(v);
+      ctx.save();
+      ctx.setLineDash([3,7]);
+      ctx.strokeStyle = 'rgba(18,48,90,0.35)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(pl,y); ctx.lineTo(pl+cw,y);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // ── Reference line: manual-process baseline ──
+    ctx.save();
+    ctx.setLineDash([6,5]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(pl, refY); ctx.lineTo(pl+cw, refY);
+    ctx.stroke();
+    ctx.restore();
+
+    // ── Phase dividers ──
+    [1/3, 2/3].forEach(function(t){
+      var x = toX(t);
+      ctx.save();
+      ctx.setLineDash([5,5]);
+      ctx.strokeStyle = 'rgba(22,55,105,0.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x,pt); ctx.lineTo(x,pt+ch);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // ── Sample curve ──
+    var N=400, pts=[];
+    for(var i=0;i<=N;i++){
+      var t=i/N;
+      pts.push({ x:toX(t), y:toY(compound(t)) });
+    }
+
+    // ── Area fill under curve ──
+    var fillGrad = ctx.createLinearGradient(pl,0,pl+cw,0);
+    fillGrad.addColorStop(0,    'rgba(30,198,90,0.20)');
+    fillGrad.addColorStop(0.33, 'rgba(245,158,11,0.17)');
+    fillGrad.addColorStop(0.67, 'rgba(144,137,252,0.16)');
+    fillGrad.addColorStop(1,    'rgba(144,137,252,0.07)');
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(function(p){ ctx.lineTo(p.x,p.y); });
+    ctx.lineTo(pts[N].x, pt+ch); ctx.lineTo(pts[0].x, pt+ch);
+    ctx.closePath();
+    ctx.fillStyle = fillGrad;
+    ctx.fill();
+
+    // ── Curve stroke ──
+    var lineGrad = ctx.createLinearGradient(pl,0,pl+cw,0);
+    lineGrad.addColorStop(0,    '#1ec65a');
+    lineGrad.addColorStop(0.33, '#f59e0b');
+    lineGrad.addColorStop(0.67, '#9089fc');
+    lineGrad.addColorStop(1,    '#9089fc');
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(function(p){ ctx.lineTo(p.x,p.y); });
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // ── Phase milestone dots (no number labels) ──
+    [[1/3,'#f59e0b'],[2/3,'#9089fc'],[1,'#9089fc']].forEach(function(m){
+      var t=m[0], color=m[1];
+      var x=toX(t), y=toY(compound(t));
+      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fillStyle='#060d1a'; ctx.fill();
+      ctx.strokeStyle=color; ctx.lineWidth=1.8; ctx.stroke();
+    });
+
+    // ── "YOU ARE HERE" pin — map style, placed on reference line at left edge ──
+    var pinX = toX(0.01), pinY = refY;
+
+    // Outer pulse ring
+    ctx.beginPath(); ctx.arc(pinX, pinY, 13, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fill();
+    // Middle ring
+    ctx.beginPath(); ctx.arc(pinX, pinY, 8.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
+    // Inner dot
+    ctx.beginPath(); ctx.arc(pinX, pinY, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+
+    // Label "YOU ARE HERE"
+    ctx.font = '700 9px -apple-system,system-ui,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(255,255,255,0.60)';
+    ctx.fillText('YOU ARE HERE', pinX + 17, pinY + 3.5);
+
+    // Subtle upward arrow from pin toward curve start
+    var arrowTopY = pts[0].y + 8;
+    ctx.strokeStyle = 'rgba(30,198,90,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pinX, pinY - 15);
+    ctx.lineTo(pinX, arrowTopY);
+    ctx.stroke();
+    // arrowhead
+    ctx.beginPath();
+    ctx.moveTo(pinX, arrowTopY);
+    ctx.lineTo(pinX - 4, arrowTopY + 6);
+    ctx.lineTo(pinX + 4, arrowTopY + 6);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(30,198,90,0.35)'; ctx.fill();
+
+    // ── X-axis phase labels ──
+    ctx.font = '700 9px -apple-system,system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    [
+      {t:1/6,  label:'Launch Day', color:'rgba(30,198,90,0.85)'},
+      {t:1/2,  label:'Q3 2026',    color:'rgba(245,158,11,0.85)'},
+      {t:5/6,  label:'Roadmap',    color:'rgba(144,137,252,0.85)'},
+    ].forEach(function(xl){
+      ctx.fillStyle = xl.color;
+      ctx.fillText(xl.label, toX(xl.t), H-5);
+    });
+
+    // ── Y-axis direction label — no numbers, just direction ──
+    ctx.save();
+    ctx.translate(12, pt + ch/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.font = '600 8px -apple-system,system-ui,sans-serif';
+    ctx.fillStyle = 'rgba(42,74,112,0.7)';
+    ctx.textAlign = 'center';
+    ctx.fillText('PREDICTIVE CAPABILITY', 0, 0);
+    ctx.restore();
+  }
+
+  window.addEventListener('load', drawCompound);
+  window.addEventListener('resize', function(){ setTimeout(drawCompound,50); });
+})();
+</script>

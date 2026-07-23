@@ -1,0 +1,277 @@
+<title>CPG Intelligence Platform — Now · Next · Later</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08172a;
+  --rail:#0f2040;
+  --border:#1a3055;
+  --text:#eef4ff;
+  --muted:#5a85b8;
+
+  --now:#1ec65a;
+  --now-floor:#021a09;
+  --now-seam:#0a3a1a;
+
+  --next:#f59e0b;
+  --next-floor:#190d00;
+  --next-seam:#3a2000;
+
+  --later:#9089fc;
+  --later-floor:#0d0b28;
+  --later-seam:#28224c;
+}
+
+body{
+  background:#05101e;
+  font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+  padding:32px 24px 48px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  color:var(--text);
+}
+
+/* ── Slide shell ─────────────────────────────── */
+.slide-wrap{
+  width:100%;
+  max-width:960px;
+}
+.slide-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#2a4f7a;
+  margin-bottom:10px;
+  padding-left:2px;
+}
+.slide{
+  width:100%;
+  aspect-ratio:16/9;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── Slide top bar ───────────────────────────── */
+.s-topbar{
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  padding:9px 22px;
+  border-bottom:1px solid var(--border);
+  background:var(--rail);
+  gap:14px;
+}
+.s-brand{
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:#3a6caa;
+}
+.s-sep{font-size:10px;color:var(--border)}
+.s-title{
+  font-size:10.5px;
+  font-weight:600;
+  color:var(--muted);
+}
+.s-spacer{flex:1}
+.s-note{
+  font-size:9.5px;
+  color:#2a4f7a;
+  font-style:italic;
+}
+
+/* ── 3 columns ───────────────────────────────── */
+.cols{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  flex:1;
+  min-height:0;
+}
+.col{
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid var(--border);
+  min-height:0;
+}
+.col:last-child{border-right:none}
+
+/* Phase accent bar */
+.col-bar{height:5px;flex-shrink:0}
+.col-now  .col-bar{background:var(--now)}
+.col-next .col-bar{background:var(--next)}
+.col-later .col-bar{background:var(--later)}
+
+/* Column header */
+.col-hd{
+  flex-shrink:0;
+  padding:13px 20px 11px;
+  border-bottom:1px solid var(--border);
+}
+.col-phase{
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.col-now  .col-phase{color:var(--now)}
+.col-next .col-phase{color:var(--next)}
+.col-later .col-phase{color:var(--later)}
+
+.col-hd-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--text);
+  line-height:1.2;
+  margin-bottom:4px;
+}
+.col-hd-sub{
+  font-size:10.5px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+/* Module list */
+.col-mods{
+  flex:1;
+  min-height:0;
+  padding:6px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-evenly;
+}
+.mod{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:3px 0;
+}
+.mod-bar{
+  width:3px;
+  height:18px;
+  border-radius:2px;
+  flex-shrink:0;
+}
+.col-now  .mod-bar{background:var(--now)}
+.col-next .mod-bar{background:var(--next)}
+.col-later .mod-bar{background:var(--later)}
+.mod-name{
+  font-size:14.5px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1.25;
+}
+
+/* Outcome floor */
+.col-floor{
+  flex-shrink:0;
+  padding:12px 20px 15px;
+  border-top:1px solid;
+}
+.col-now  .col-floor{background:var(--now-floor);border-color:var(--now-seam)}
+.col-next .col-floor{background:var(--next-floor);border-color:var(--next-seam)}
+.col-later .col-floor{background:var(--later-floor);border-color:var(--later-seam)}
+
+.floor-stat{
+  font-size:38px;
+  font-weight:900;
+  color:var(--text);
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;
+}
+.floor-label{
+  font-size:11.5px;
+  font-weight:500;
+  line-height:1.45;
+  margin-top:5px;
+}
+.col-now  .floor-label{color:var(--now)}
+.col-next .floor-label{color:var(--next)}
+.col-later .floor-label{color:var(--later)}
+</style>
+
+<div class="slide-wrap">
+  <div class="slide-label">Teams Presentation — Now · Next · Later with Outcomes</div>
+
+  <div class="slide">
+
+    <!-- Top bar -->
+    <div class="s-topbar">
+      <span class="s-brand">Mo · Aevah</span>
+      <span class="s-sep">·</span>
+      <span class="s-title">CPG Intelligence Platform — Module Roadmap</span>
+      <span class="s-spacer"></span>
+      <span class="s-note">What ships with your implementation</span>
+    </div>
+
+    <!-- Columns -->
+    <div class="cols">
+
+      <!-- NOW -->
+      <div class="col col-now">
+        <div class="col-bar"></div>
+        <div class="col-hd">
+          <div class="col-phase">Now · Available at Launch</div>
+          <div class="col-hd-title">Core Demand Intelligence</div>
+          <div class="col-hd-sub">Automated baseline from day one</div>
+        </div>
+        <div class="col-mods">
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">S&amp;OP Intelligence</div></div>
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">Velocity Forecast</div></div>
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">Promo Lift Analysis</div></div>
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">Cannibalization Monitor</div></div>
+        </div>
+        <div class="col-floor">
+          <div class="floor-stat">156 SKUs</div>
+          <div class="floor-label">across 100+ retailers —<br>one automated baseline</div>
+        </div>
+      </div>
+
+      <!-- NEXT -->
+      <div class="col col-next">
+        <div class="col-bar"></div>
+        <div class="col-hd">
+          <div class="col-phase">Next · Q3 in Build</div>
+          <div class="col-hd-title">Launch &amp; Event Intelligence</div>
+          <div class="col-hd-sub">Read markets before they tell you</div>
+        </div>
+        <div class="col-mods">
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">Causal Event Analysis</div></div>
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">Cold-Start Proxy</div></div>
+        </div>
+        <div class="col-floor">
+          <div class="floor-stat">Week 1</div>
+          <div class="floor-label">demand baseline before<br>first sale records</div>
+        </div>
+      </div>
+
+      <!-- LATER -->
+      <div class="col col-later">
+        <div class="col-bar"></div>
+        <div class="col-hd">
+          <div class="col-phase">Later · Roadmap</div>
+          <div class="col-hd-title">Macro &amp; Scenario Intelligence</div>
+          <div class="col-hd-sub">Anticipate headwinds before they land</div>
+        </div>
+        <div class="col-mods">
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">FRED Macro Signals</div></div>
+          <div class="mod"><div class="mod-bar"></div><div class="mod-name">Scenario Planner</div></div>
+        </div>
+        <div class="col-floor">
+          <div class="floor-stat">8 Weeks</div>
+          <div class="floor-label">macro lead time — gas price<br>to shelf behavior signal</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

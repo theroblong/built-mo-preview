@@ -1,0 +1,468 @@
+<title>CPG Demand Intelligence Platform — Module Roadmap</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f2040;
+  --navy-mid:#1a3358;
+  --navy-light:#243f6a;
+  --bg:#f0f4f8;
+  --surface:#ffffff;
+  --border:#dde4ee;
+  --border2:#c5d0e0;
+  --text:#0f1f38;
+  --muted:#5a6d85;
+  --subtle:#8fa0b5;
+  --accent:#2563eb;
+  --accent-bg:#eff6ff;
+  --green:#15803d;
+  --green-bg:#f0fdf4;
+  --green-b:#86efac;
+  --amber:#b45309;
+  --amber-bg:#fffbeb;
+  --amber-b:#fcd34d;
+  --purple:#6d28d9;
+  --purple-bg:#f5f3ff;
+  --purple-b:#c4b5fd;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1b2e;--surface:#152340;--border:#1f3357;--border2:#2a4470;
+    --text:#dbe8f8;--muted:#7a9abf;--subtle:#4a6585;
+    --accent-bg:#1a2e50;
+    --green-bg:#052e16;--green-b:#166534;
+    --amber-bg:#1c1204;--amber-b:#92400e;
+    --purple-bg:#1e1b4b;--purple-b:#5b21b6;
+  }
+}
+:root[data-theme="light"]{--bg:#f0f4f8;--surface:#ffffff;--border:#dde4ee;--border2:#c5d0e0;--text:#0f1f38;--muted:#5a6d85;--subtle:#8fa0b5;--accent-bg:#eff6ff;--green-bg:#f0fdf4;--green-b:#86efac;--amber-bg:#fffbeb;--amber-b:#fcd34d;--purple-bg:#f5f3ff;--purple-b:#c4b5fd}
+:root[data-theme="dark"]{--bg:#0d1b2e;--surface:#152340;--border:#1f3357;--border2:#2a4470;--text:#dbe8f8;--muted:#7a9abf;--subtle:#4a6585;--accent-bg:#1a2e50;--green-bg:#052e16;--green-b:#166534;--amber-bg:#1c1204;--amber-b:#92400e;--purple-bg:#1e1b4b;--purple-b:#5b21b6}
+
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;font-size:13.5px;line-height:1.6;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── Header ── */
+.hdr{background:var(--navy);padding:44px 40px 36px;position:relative;overflow:hidden}
+.hdr::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 120% at 80% 50%,rgba(37,99,235,.18) 0%,transparent 70%);pointer-events:none}
+.hdr-inner{max-width:1040px;margin:0 auto;position:relative;text-align:center}
+.hdr-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7aa4d4;margin-bottom:12px}
+.hdr-title{font-size:32px;font-weight:800;color:#e8f1fb;line-height:1.2;text-wrap:balance;margin-bottom:12px}
+.hdr-sub{font-size:14px;color:#7aa4d4;max-width:620px;margin:0 auto;line-height:1.75}
+.hdr-meta{display:flex;gap:20px;margin-top:24px}
+.hdr-stat{display:flex;flex-direction:column;gap:2px}
+.hdr-stat-n{font-size:22px;font-weight:800;color:#e8f1fb;font-variant-numeric:tabular-nums}
+.hdr-stat-l{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#5a84aa}
+
+/* ── Formula bar ── */
+.formula-wrap{background:var(--navy-mid);border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(0,0,0,.2)}
+.formula-inner{max-width:1040px;margin:0 auto;padding:20px 40px;text-align:center}
+.formula-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5a84aa;margin-bottom:14px}
+.formula-row{display:flex;align-items:flex-start;flex-wrap:wrap;gap:0;justify-content:center}
+.f-term{display:flex;flex-direction:column;align-items:center;gap:5px}
+.f-val{font-family:Georgia,serif;font-size:15px;color:#c8dcf5;font-weight:400;white-space:nowrap;padding:0 6px}
+.f-tag{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.f-tag-live{background:rgba(21,128,61,.25);color:#4ade80}
+.f-tag-q3{background:rgba(180,83,9,.25);color:#fbbf24}
+.f-tag-road{background:rgba(109,40,217,.25);color:#c4b5fd}
+.f-op{font-family:Georgia,serif;font-size:18px;color:#3a5a80;padding:0 4px;line-height:2.2;align-self:flex-start;padding-top:2px}
+.f-result{font-family:Georgia,serif;font-size:15px;color:#60a5fa;font-weight:700;padding:0 6px}
+
+/* ── Page body ── */
+.page{max-width:1040px;margin:0 auto;padding:32px 40px 60px}
+
+/* ── Section header ── */
+.sec-hd{margin-bottom:20px}
+.sec-title{font-size:16px;font-weight:700;color:var(--text)}
+.sec-sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ── Status pills ── */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.pill-live{background:var(--green-bg);border:1px solid var(--green-b);color:var(--green)}
+.pill-q3{background:var(--amber-bg);border:1px solid var(--amber-b);color:var(--amber)}
+.pill-road{background:var(--purple-bg);border:1px solid var(--purple-b);color:var(--purple)}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ── Module grid ── */
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px}
+@media(max-width:740px){.mod-grid{grid-template-columns:1fr}}
+
+.mod-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.mod-card-top{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.mod-priority{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--subtle);flex-shrink:0;padding-top:2px}
+.mod-name-wrap{flex:1}
+.mod-name{font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
+.mod-replaces{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.mod-body{padding:14px 18px;flex:1}
+.mod-features{list-style:none;display:flex;flex-direction:column;gap:7px}
+.mod-features li{display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:var(--text);line-height:1.5}
+.mod-features li::before{content:'—';color:var(--subtle);flex-shrink:0;font-size:11px}
+.mod-features .sub{font-size:11px;color:var(--muted)}
+.mod-foot{padding:10px 18px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mod-foot-note{font-size:11px;color:var(--muted)}
+
+/* ── Priority accent bars ── */
+.mod-card[data-pri="1"] .mod-card-top{border-left:3px solid #2563eb}
+.mod-card[data-pri="2"] .mod-card-top{border-left:3px solid #2563eb}
+.mod-card[data-pri="3"] .mod-card-top{border-left:3px solid #2563eb}
+.mod-card[data-pri="4"] .mod-card-top{border-left:3px solid #d97706}
+.mod-card[data-pri="5"] .mod-card-top{border-left:3px solid #d97706}
+.mod-card[data-pri="6"] .mod-card-top{border-left:3px solid #6d28d9}
+.mod-card[data-pri="7"] .mod-card-top{border-left:3px solid #6d28d9}
+.mod-card[data-pri="8"] .mod-card-top{border-left:3px solid #94a3b8}
+
+/* ── Launch sequence ── */
+.launch{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:32px}
+.launch-hd{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.launch-hd-title{font-size:13px;font-weight:700;color:#e8f1fb;letter-spacing:.02em}
+.launch-hd-sub{font-size:11px;color:#7aa4d4}
+.launch-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+@media(max-width:640px){.launch-cols{grid-template-columns:1fr}}
+.launch-col{padding:18px 20px;border-right:1px solid var(--border)}
+.launch-col:last-child{border-right:none}
+.launch-col-title{font-size:10.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;margin-bottom:12px}
+.launch-col-title.live{color:var(--green)}
+.launch-col-title.q3{color:var(--amber)}
+.launch-col-title.road{color:var(--purple)}
+.launch-items{list-style:none;display:flex;flex-direction:column;gap:8px}
+.launch-items li{font-size:12px;color:var(--text);line-height:1.5;display:flex;align-items:baseline;gap:7px}
+.launch-items li .icon{font-size:10px;flex-shrink:0}
+.launch-items li .lbl{font-weight:600}
+.launch-items li .desc{color:var(--muted);font-size:11px}
+
+/* ── ROI summary ── */
+.roi{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+@media(max-width:640px){.roi{grid-template-columns:1fr}}
+.roi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center}
+.roi-n{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--accent)}
+.roi-l{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* ── Footer note ── */
+.foot-note{font-size:11.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:16px;line-height:1.7}
+</style>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-eyebrow">CPG Demand Intelligence Platform</div>
+    <div class="hdr-title">Every number in your weekly forecast,<br>pre-calculated before Monday.</div>
+    <div class="hdr-sub">A connected system of demand intelligence modules that plug into your existing velocity formula — replacing the manual columns with live, data-grounded signals across every retailer and SKU.</div>
+  </div>
+</div>
+
+<!-- Formula bar -->
+<div class="formula-wrap">
+  <div class="formula-inner">
+    <div class="formula-label">Your velocity formula — each term, covered by a module</div>
+    <div class="formula-row">
+      <div class="f-term">
+        <div class="f-val">Base Velocity</div>
+        <div class="f-tag f-tag-live">Demand Forecast</div>
+      </div>
+      <div class="f-op">×</div>
+      <div class="f-term">
+        <div class="f-val">Seasonality</div>
+        <div class="f-tag f-tag-live">Demand Forecast</div>
+      </div>
+      <div class="f-op">×</div>
+      <div class="f-term">
+        <div class="f-val">Promo Lift</div>
+        <div class="f-tag f-tag-q3">Promo Lift Engine</div>
+      </div>
+      <div class="f-op">×</div>
+      <div class="f-term">
+        <div class="f-val">Cannibalization</div>
+        <div class="f-tag f-tag-live">Cannib Intelligence</div>
+      </div>
+      <div class="f-op">×</div>
+      <div class="f-term">
+        <div class="f-val">Store Count</div>
+        <div class="f-tag f-tag-q3">Distribution Intel</div>
+      </div>
+      <div class="f-op">=</div>
+      <div class="f-term">
+        <div class="f-result">Forecast Units</div>
+        <div class="f-tag f-tag-live">Mo AI · validated</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page body -->
+<div class="page">
+
+  <!-- ROI summary -->
+  <div class="roi" style="margin-top:28px">
+    <div class="roi-card">
+      <div class="roi-n">~80%</div>
+      <div class="roi-l">Reduction in manual data assembly time per planning cycle</div>
+    </div>
+    <div class="roi-card">
+      <div class="roi-n">4–7×</div>
+      <div class="roi-l">Forecast accuracy improvement over L12 SPINS average baseline</div>
+    </div>
+    <div class="roi-card">
+      <div class="roi-n">100+</div>
+      <div class="roi-l">Retailer × SKU combinations pre-scored and ready before the Monday Sales &amp; Operations Planning meeting</div>
+    </div>
+  </div>
+
+  <!-- Module grid -->
+  <div class="sec-hd" style="margin-top:8px">
+    <div class="sec-title">Intelligence Modules</div>
+    <div class="sec-sub">Ordered by deal-closing priority — highest impact on planning accuracy and analyst time savings first</div>
+  </div>
+
+  <div class="mod-grid">
+
+    <!-- 1: Sales & Operations Planning Intelligence -->
+    <div class="mod-card" data-pri="1">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Sales &amp; Operations Planning</div>
+          <div class="mod-replaces">Compresses: all-day Monday planning cycle into a focused exception review — the calls still happen, but they're shorter and sharper</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 1</div>
+          <div class="pill pill-q3"><span class="pill-dot"></span>Q3 2026</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Weekly pre-fill: every forecast factor column (velocity, lift, cannib, seasonality) pre-calculated and ready Sunday night — the meeting starts from a number, not from scratch</li>
+          <li>Sales rep mobile view: each rep gets a one-screen summary of their accounts with Mo's forecast the night before — confirm, flag a concern, or add context via email reply or a simple tap. No new app to learn.</li>
+          <li>Field adjustment capture: rep input from Monday calls is logged against Mo's forecast — creating a tracked "field confidence" layer that accumulates over time</li>
+          <li>Forecast accuracy scoreboard: track Mo vs. actuals vs. field-adjusted forecast cycle over cycle — surfaces where the model is reliable and where field knowledge adds the most value</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">Goal: turn a 30-min rep call into an exception-only conversation — not eliminate it</div>
+      </div>
+    </div>
+
+    <!-- 2: Demand Forecast -->
+    <div class="mod-card" data-pri="2">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Demand Forecast</div>
+          <div class="mod-replaces">Replaces: L12 SPINS average as base velocity, manual seasonality adjustment</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 2</div>
+          <div class="pill pill-live"><span class="pill-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>SKU × retailer quantile forecast — Low / Base / High scenario bands with confidence intervals</li>
+          <li>Seasonality built into the model — no manual seasonal multiplier needed</li>
+          <li>13-week forward view updated each SPINS refresh cycle</li>
+          <li>New SKU ramp model: replaces "12 weeks to maturity" rule of thumb with an actual ramp curve <span class="sub">(see Distribution Signals)</span></li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">4–7× wMAPE improvement vs. L12 average in backtesting</div>
+      </div>
+    </div>
+
+    <!-- 3: Cannibalization Insights -->
+    <div class="mod-card" data-pri="3">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Cannibalization Insights</div>
+          <div class="mod-replaces">Replaces: manually estimated cannibalization factor column in the forecast model</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 3</div>
+          <div class="pill pill-live"><span class="pill-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Pre-scored cannibalization rate for every SKU pair on shelf — direction, magnitude, and trend</li>
+          <li>Weekly rate monitor: stabilizing vs. accelerating signals, 4-week forecast per pair</li>
+          <li>Assortment scenario planner: simulate new SKU intro, assortment cut, or competitive entry before committing</li>
+          <li>Pack-format insight: same-flavor 12pk is almost always incremental; cross-flavor singles carry the most cannibalization risk</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">Launch-phase pattern: new 4pk typically draws −25–30% from existing singles for 3 months</div>
+      </div>
+    </div>
+
+    <!-- 4: Promo Lift Engine -->
+    <div class="mod-card" data-pri="4">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Promo Lift Engine</div>
+          <div class="mod-replaces">Replaces: guessed promo lift factor; no accounting for retailer, SKU, or discount depth</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 4</div>
+          <div class="pill pill-q3"><span class="pill-dot"></span>Q3 2026</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Lift rates by retailer × SKU × discount depth — derived from 50,000+ historical promo event weeks</li>
+          <li>Pack × channel strategy: C-store singles are price-inelastic (flat lift curve); grocery 12pk has a stock-up threshold — two different strategies, one data source</li>
+          <li>Mo Chat query: "We're running a 15% TPR at Kroger next month on this SKU — what lift should I assume?"</li>
+          <li>Display / feature vs. TPR lift separated — not all promo mechanics are equal</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">Powered by SPINS MRM lift rate: incr_units / base_units per event week</div>
+      </div>
+    </div>
+
+    <!-- 5: New SKU / Distribution Signals -->
+    <div class="mod-card" data-pri="5">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Distribution Signals</div>
+          <div class="mod-replaces">Replaces: sales team gut estimates for new SKU ramp; no visibility into future store expansion</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 5</div>
+          <div class="pill pill-live"><span class="pill-dot"></span>Live <span style="font-weight:400;opacity:.7">/ Q3</span></div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Cold-start proxy: new SKU with &lt;8 weeks of history is matched to the 3 most comparable past launches at the same channel and format — ramp reference instead of a guess</li>
+          <li>ETS uncertainty band: shows how wide the confidence interval is before LightGBM has enough data to take over</li>
+          <li>Distribution calendar input <span class="sub">(Q3)</span>: upload planned store expansion (SKU × retailer × stores × date) → forward-looking TDP ramp projection</li>
+          <li>Data-dark retailer proxy <span class="sub">(Q3)</span>: channel-matched SPINS surrogate for retailers with no category data, with explicit confidence notation</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">Closes the biggest unknown in new-product planning: what does the ramp actually look like?</div>
+      </div>
+    </div>
+
+    <!-- 6: Price &amp; Elasticity -->
+    <div class="mod-card" data-pri="6">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Price &amp; Elasticity</div>
+          <div class="mod-replaces">Replaces: quarterly price review in Excel; no sensitivity analysis or competitive context</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 6</div>
+          <div class="pill pill-live"><span class="pill-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Price elasticity per SKU × retailer — with elasticity-aware scenario forecast (drag price, see unit impact)</li>
+          <li>Pack price norms: where does each format sit vs. the category average per bar/unit?</li>
+          <li>Competitive price gap monitor: real-time gap vs. major competitors at each retailer</li>
+          <li>Trade spend guardrails: flags price moves that trigger cannibalization risk within your own portfolio</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">Elasticity scored at the SKU × retailer level — not a category average</div>
+      </div>
+    </div>
+
+    <!-- 7: Competitive Intelligence -->
+    <div class="mod-card" data-pri="7">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Competitive Intelligence</div>
+          <div class="mod-replaces">Replaces: manual SPINS competitive pulls; no systematic velocity benchmarking or trend alerting</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 7</div>
+          <div class="pill pill-live"><span class="pill-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Full SPINS competitive universe: 5,000+ SKUs across all brands, channels, and formats — searchable and filterable</li>
+          <li>Velocity benchmarking: your SKU vs. brand / channel / format peers, week by week</li>
+          <li>Trend signals: rising/falling velocity by competitor brand or flavor — surfaced automatically, not hunted manually</li>
+          <li>Shelf share view: your distribution and velocity relative to the category at any retailer</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">Replaces the manual "5,000 SKU pull" that takes hours to build and is stale within a week</div>
+      </div>
+    </div>
+
+    <!-- 8: Mo AI Assistant -->
+    <div class="mod-card" data-pri="8">
+      <div class="mod-card-top">
+        <div class="mod-name-wrap">
+          <div class="mod-name">Mo AI Assistant</div>
+          <div class="mod-replaces">Replaces: building ad hoc Excel analyses to answer one-off planning questions</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div class="mod-priority">Priority 8</div>
+          <div class="pill pill-live"><span class="pill-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="mod-body">
+        <ul class="mod-features">
+          <li>Ask in plain language: "What lift should I assume at Kroger on this SKU at 15% off?" — answers from live SPINS data, not generated text</li>
+          <li>Navigate any screen by asking: "Show me the cannibalization risk for the 4pk at Walmart"</li>
+          <li>Every number is sourced — Mo cites the data table, retailer, and time window behind every answer</li>
+          <li>Sovereign AI option: run on private infrastructure for sensitive planning data — no third-party data egress</li>
+        </ul>
+      </div>
+      <div class="mod-foot">
+        <div class="mod-foot-note">The interface that makes the platform accessible to any planner, not just analysts</div>
+      </div>
+    </div>
+
+  </div><!-- /mod-grid -->
+
+  <!-- Launch sequence -->
+  <div class="sec-hd">
+    <div class="sec-title">What Starts at Launch</div>
+    <div class="sec-sub">Day one vs. what follows — so planning never depends on a full implementation before value starts</div>
+  </div>
+
+  <div class="launch">
+    <div class="launch-hd">
+      <div class="launch-hd-title">Feature availability timeline</div>
+      <div class="launch-hd-sub">Starts delivering value from the first SPINS data connection</div>
+    </div>
+    <div class="launch-cols">
+      <div class="launch-col">
+        <div class="launch-col-title live">At Launch — Live Now</div>
+        <ul class="launch-items">
+          <li><span class="icon">✓</span><div><span class="lbl">Demand forecast</span><br><span class="desc">SKU × retailer quantile forecast, seasonality-adjusted, 13-week forward</span></div></li>
+          <li><span class="icon">✓</span><div><span class="lbl">Cannibalization scores</span><br><span class="desc">Pre-scored pairs, weekly rate, trend direction per planning cycle</span></div></li>
+          <li><span class="icon">✓</span><div><span class="lbl">Price elasticity</span><br><span class="desc">Elasticity per SKU × retailer, pack norms, scenario forecast</span></div></li>
+          <li><span class="icon">✓</span><div><span class="lbl">Competitive intelligence</span><br><span class="desc">Full category velocity universe, benchmarking, trend alerts</span></div></li>
+          <li><span class="icon">✓</span><div><span class="lbl">Cold-start proxy ramp</span><br><span class="desc">New SKU matched to 3 comparable past launches — ramp reference on week 1</span></div></li>
+          <li><span class="icon">✓</span><div><span class="lbl">Mo AI Assistant</span><br><span class="desc">Natural language queries across all live modules</span></div></li>
+        </ul>
+      </div>
+      <div class="launch-col">
+        <div class="launch-col-title q3">Q3 2026 — In Build</div>
+        <ul class="launch-items">
+          <li><span class="icon">◎</span><div><span class="lbl">Sales &amp; Operations Planning pre-fill report</span><br><span class="desc">Every forecast factor column pre-calculated and delivered Monday morning</span></div></li>
+          <li><span class="icon">◎</span><div><span class="lbl">Promo lift lookup</span><br><span class="desc">Retailer × SKU × discount depth lift rates surfaced in platform and via Mo Chat</span></div></li>
+          <li><span class="icon">◎</span><div><span class="lbl">Distribution calendar</span><br><span class="desc">Upload planned store expansion → forward TDP ramp projection</span></div></li>
+          <li><span class="icon">◎</span><div><span class="lbl">Data-dark retailer proxy</span><br><span class="desc">Channel-matched SPINS surrogate for retailers with no category data</span></div></li>
+          <li><span class="icon">◎</span><div><span class="lbl">Sales rep mobile view + field capture</span><br><span class="desc">Rep sees Mo's number before the Monday call; flags or adjusts via email/tap; input logged and tracked vs. actuals</span></div></li>
+          <li><span class="icon">◎</span><div><span class="lbl">Forecast accuracy scoreboard</span><br><span class="desc">Mo vs. actuals vs. field-adjusted — cycle over cycle; surfaces where field judgment adds measurable value</span></div></li>
+        </ul>
+      </div>
+      <div class="launch-col">
+        <div class="launch-col-title road">Roadmap — Post-Q3</div>
+        <ul class="launch-items">
+          <li><span class="icon">○</span><div><span class="lbl">ERP / NetSuite integration</span><br><span class="desc">Closes the forecast → actuals loop; enables automatic model retraining on your numbers</span></div></li>
+          <li><span class="icon">○</span><div><span class="lbl">Macro signal integration</span><br><span class="desc">Gas prices, consumer sentiment, unemployment as forecast features (FRED API)</span></div></li>
+          <li><span class="icon">○</span><div><span class="lbl">Flash Sales &amp; Operations Planning report</span><br><span class="desc">Standardized weekly meeting format — auto-generated, ready to present</span></div></li>
+          <li><span class="icon">○</span><div><span class="lbl">Circana / Costco integration</span><br><span class="desc">Fills data-dark wholesale channel gap alongside SPINS coverage</span></div></li>
+          <li><span class="icon">○</span><div><span class="lbl">Sales rep comp visibility</span><br><span class="desc">Rep-level forecast vs. actual with margin awareness — closes accountability loop</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-note">
+    All modules are grounded in SPINS point-of-sale data refreshed on each SPINS update cycle. Every number surfaced by the platform cites its source data, retailer scope, and time window — no generated or estimated values presented without disclosure. The platform is designed to complement and augment existing forecast processes, not replace the planner's judgment and override capability.
+  </div>
+
+</div>

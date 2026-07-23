@@ -127,6 +127,25 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 37) — CPG module roadmap slides + FRED macro signals: 3 slide options, compound curve, intelligence synonym policy
+
+Four HTML artifacts for the Rob roadmap conversation and Connor/Bracken follow-up.
+
+**Roadmap slides — 3 options** (`mockups/roadmap_slides.html`, `mockups/roadmap_slide_teams.html`):
+- **Option 1 — Teams Ready**: 16:9 dark slide, 3-column Now·Next·Later. CSS tokens `--t-now:#1ec65a` / `--t-next:#f59e0b` / `--t-later:#9089fc`. Each module has a sub-text line (color `#7ab2d4`). Outcome floors: 156 SKUs / Week 1 demand baseline / 8 Weeks macro lead time. Includes "New SKU Ramp Proxy" module with sub "New additions launch with a week-1 baseline."
+- **Option 2 — The Lanes**: Phase swimlane layout with module chips. Chip sub-text lightened to `#b0c8e0` for legibility on dark card backgrounds.
+- **Option 3 — The Compound Curve**: Canvas-rendered exponential curve. Formula `1.85 * Math.exp(1.068 * t)` — starts elevated at launch (1.85× = immediate value from 6 active modules), accelerates to ~5.3× at full roadmap. Reference baseline y=1.0 = "Without Mo / Connor's current state." No numbers on Y-axis — direction and feeling only. "YOU ARE HERE" map-pin (concentric rings) at reference baseline, upward arrow to curve start.
+
+**CPG Module Roadmap doc** (`mockups/cpg_module_roadmap.html`): 8 modules, velocity formula spine (Base Velocity × Seasonality × Promo Lift × Cannibalization × Store Count = Forecast Units), full launch sequence. S&OP always spelled out.
+
+**FRED Macro Signals** (`mockups/fred_macro_signals.html`): 4 economic signals incorporated into the Aevah demand model (Gas Prices GASDESW, Consumer Sentiment UMCSENT, Unemployment UNRATE, CPI CPIAUCSL). Not a technical integration guide — positioned as "what we draw from FRED."
+
+**Policies established:**
+- S&OP always spelled out as "Sales & Operations Planning" — never abbreviated
+- Intelligence synonym rule: Cannibalization Insights / Promo Lift Engine / Distribution Signals / Price & Elasticity / Competitive Intelligence (industry term, kept) — no two modules share the same suffix word
+
+---
+
 ### 2026-07-22 (update 36) — Friday Bracken prep: MO_73 promo lift, cannib rate monitor, cannib scenario planner, full-description policy
 
 Five HTML artifacts prepared for the Friday July 25 meeting with Brian, Bracken, and Connor. All mockups use full BUILT product descriptions and UPCs as they appear in the Mo application — no abbreviated labels.
