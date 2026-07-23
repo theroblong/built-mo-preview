@@ -127,6 +127,26 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 38) — Forecast accuracy horserace: Aevah vs. BUILT current vs. frontier AI, FP&A framing
+
+`mockups/aevah_forecast_horserace.html` — benchmark artifact for the Bracken/Connor pitch.
+
+**Chart:** 4-row horizontal bar chart on a 0–50% scale. Rows top to bottom (best to worst): Aevah target (4%, green) · BUILT current model (7–10%, amber) · Excel rolling average (~27%, gray) · Off-the-shelf AI platforms (46–118%, red, intentionally overflows right edge). Scale is zoomed to 0–50% so the Aevah vs. BUILT gap is visually readable; the off-the-shelf bar clips out of frame to underscore how far it misses.
+
+**Retraining note** below chart: "Aevah's 4% is a starting point, not a ceiling — accuracy improves each retraining cycle."
+
+**Callout** answers "why not just use ChatGPT/Salesforce?": Mo is trained on BUILT's actual weekly data; general AI answers questions about the world, Mo answers questions about your business.
+
+**Bandwidth before/after:** Before = 65% forecast maintenance / 22% error chasing / 13% strategy. After = 85% freed for what-if scenarios, channel strategy, supply chain + field feedback, with 15% oversight.
+
+**FP&A framing rules:**
+- No "wMAPE" — "average forecast error" only
+- No model names (no N-BEATS) — "off-the-shelf AI & forecasting platforms"
+- No "moat" language — every claim ends with what Connor/Bracken get, not what Aevah has
+- Connor's 7–10% framed as "A strong starting point" — his team did real work
+
+---
+
 ### 2026-07-23 (update 37) — CPG module roadmap slides + FRED macro signals: 3 slide options, compound curve, intelligence synonym policy
 
 Four HTML artifacts for the Rob roadmap conversation and Connor/Bracken follow-up.

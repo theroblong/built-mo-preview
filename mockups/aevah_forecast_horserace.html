@@ -1,0 +1,458 @@
+<title>Aevah · Forecasting Benchmark</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07111e;
+  --surface:#0f2240;
+  --surface2:#142d55;
+  --border:#1a3555;
+  --text:#e6f0ff;
+  --muted:#5a82b0;
+  --subtle:#2d4f78;
+
+  --green:#22c55e;
+  --green-dim:rgba(34,197,94,.12);
+  --green-border:rgba(34,197,94,.3);
+
+  --red:#f43f5e;
+  --red-dim:rgba(244,63,94,.12);
+  --red-border:rgba(244,63,94,.3);
+
+  --gray:#64748b;
+
+  --gold:#f59e0b;
+  --gold-dim:rgba(245,158,11,.10);
+  --gold-border:rgba(245,158,11,.3);
+}
+
+body{
+  font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+  font-size:13.5px;background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+}
+
+/* ── Header ─────────────────────────────────── */
+.hdr{
+  padding:42px 44px 38px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,#0a1a30 0%,var(--bg) 65%);
+}
+.hdr-inner{max-width:940px;margin:0 auto}
+.hdr-eye{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#3a6090;margin-bottom:12px}
+.hdr-title{font-size:30px;font-weight:900;color:var(--text);line-height:1.2;text-wrap:balance;margin-bottom:10px;letter-spacing:-.015em}
+.hdr-title em{font-style:normal;color:var(--green)}
+.hdr-sub{font-size:14px;color:var(--muted);max-width:660px;line-height:1.75}
+
+/* ── Page ───────────────────────────────────── */
+.page{max-width:940px;margin:0 auto;padding:38px 44px 68px}
+
+.sec-label{
+  font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--subtle);margin-bottom:18px;display:flex;align-items:center;gap:10px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px}
+.sec-sub{font-size:13px;color:var(--muted);margin-bottom:26px;line-height:1.65;max-width:720px}
+
+/* ── Race chart ──────────────────────────────── */
+.race-wrap{margin-bottom:6px}
+.race-row{
+  display:grid;grid-template-columns:220px 1fr 160px;
+  align-items:center;gap:18px;margin-bottom:10px;
+}
+
+.race-model-name{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;text-align:right}
+.race-model-sub{font-size:10.5px;color:var(--muted);margin-top:2px;text-align:right;line-height:1.35}
+
+/* Scale: 0–50%. Off-the-shelf bar overflows and clips. */
+.race-track{
+  position:relative;height:40px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;
+}
+.race-grid-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.04)}
+
+/* Range bar */
+.race-bar{
+  position:absolute;top:5px;bottom:5px;border-radius:5px;
+  display:flex;align-items:center;
+  font-size:10.5px;font-weight:800;padding:0 10px;white-space:nowrap;
+}
+.bar-aevah{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.bar-current{background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold)}
+.bar-ma{
+  position:absolute;top:0;bottom:0;width:2px;background:var(--gray);border-radius:2px;
+}
+.bar-ma-label{
+  position:absolute;top:50%;transform:translateY(-50%);
+  font-size:10px;font-weight:700;color:var(--gray);white-space:nowrap;left:calc(100% + 6px);
+}
+.bar-frontier{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+
+/* Overflow arrow for off-the-shelf bar that extends past scale */
+.overflow-arrow{
+  position:absolute;right:0;top:0;bottom:0;width:28px;
+  background:linear-gradient(90deg,transparent,rgba(244,63,94,.2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--red);font-weight:900;
+}
+
+/* Right-side verdict */
+.race-verdict{line-height:1.35}
+.race-verdict-main{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.race-verdict-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
+.v-green{color:var(--green)}
+.v-gold{color:var(--gold)}
+.v-gray{color:var(--gray)}
+.v-red{color:var(--red)}
+
+/* Axis row */
+.race-axis{position:relative;height:16px}
+.race-axis-tick{
+  position:absolute;font-size:9px;color:var(--subtle);transform:translateX(-50%);top:0;
+}
+.race-axis-note{
+  font-size:9.5px;color:var(--subtle);text-align:center;
+  grid-column:2;margin-top:6px;
+}
+
+/* ── Callout ─────────────────────────────────── */
+.callout{
+  background:var(--gold-dim);border:1px solid var(--gold-border);
+  border-radius:10px;padding:20px 24px;margin:26px 0 44px;
+  display:flex;gap:18px;align-items:flex-start;
+}
+.callout-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:4px}
+.callout-head{font-size:13.5px;font-weight:800;color:var(--gold);margin-bottom:7px}
+.callout-text{font-size:13px;color:#8aafda;line-height:1.7}
+.callout-text strong{color:var(--text);font-weight:700}
+
+/* ── Retraining note ─────────────────────────── */
+.retrain-note{
+  background:var(--green-dim);border:1px solid var(--green-border);
+  border-radius:8px;padding:12px 18px;margin-bottom:44px;
+  display:flex;align-items:center;gap:14px;
+}
+.retrain-arrow{font-size:18px;color:var(--green)}
+.retrain-body{font-size:12.5px;color:var(--muted);line-height:1.55}
+.retrain-body strong{color:var(--text);font-weight:700}
+
+/* ── Before / After ──────────────────────────── */
+.bw-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:44px}
+.bw-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.bw-panel-hd{padding:16px 22px 14px;border-bottom:1px solid var(--border)}
+.bw-panel-hd-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.bw-before .bw-panel-hd-label{color:var(--red)}
+.bw-after  .bw-panel-hd-label{color:var(--green)}
+.bw-panel-hd-title{font-size:14.5px;font-weight:800;color:var(--text)}
+.bw-panel-hd-sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+.bw-panel-body{padding:18px 22px 20px}
+.bw-bar-row{margin-bottom:12px}
+.bw-bar-row:last-child{margin-bottom:0}
+.bw-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.bw-bar-name{font-size:12px;font-weight:600;color:var(--text)}
+.bw-bar-pct{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.bw-bar-desc{font-size:10.5px;color:var(--muted);margin-bottom:5px;line-height:1.4}
+.bw-bar-track{height:9px;background:var(--surface2);border-radius:8px;overflow:hidden}
+.bw-bar-fill{height:100%;border-radius:8px}
+.fill-b1{background:#f43f5e}.fill-b2{background:#fb923c}.fill-b3{background:#94a3b8}
+.fill-a1{background:#22c55e}.fill-a2{background:#38bdf8}.fill-a3{background:#818cf8}.fill-a4{background:#f59e0b}
+
+/* ── Auto chips ─────────────────────────────── */
+.chips-hd{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--subtle);margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 16px;
+}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:4px}
+.chip-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
+.chip-desc{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+@media(max-width:680px){
+  .race-row{grid-template-columns:1fr}
+  .bw-split{grid-template-columns:1fr}
+  .hdr,.page{padding-left:20px;padding-right:20px}
+}
+</style>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-eye">Aevah · Head-to-Head Forecast Accuracy · CPG</div>
+    <div class="hdr-title">A forecast that knows <em>your business</em> — not just the internet</div>
+    <div class="hdr-sub">ChatGPT, Salesforce, and off-the-shelf forecasting tools are powerful. But they don't know what happened at Kroger last quarter. Mo does. Here is what that difference looks like in numbers — and what it gives back to Connor's team.</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ACCURACY CHART -->
+  <div class="sec-label">Accuracy Benchmark</div>
+  <div class="sec-title">Average forecast error, across all SKUs and retailers</div>
+  <div class="sec-sub">Lower is better. Your team's current model is the benchmark Mo is built to beat — and unlike a static model, Mo's accuracy improves each time it retrains on new data.</div>
+
+  <!--
+    Chart scale: 0–50%. Each % of error = 2% of track width.
+    Aevah target:   4%  → marker at left=8%
+    BUILT current:  7–10% → bar left=14%, width=6%
+    Moving avg:    ~27%  → marker at left=54%
+    Off-the-shelf: 46–118% → bar left=92%, overflows right edge
+  -->
+  <div class="race-wrap">
+
+    <!-- Aevah -->
+    <div class="race-row">
+      <div class="race-model">
+        <div class="race-model-name" style="color:var(--green)">Aevah · Target</div>
+        <div class="race-model-sub">Trained on BUILT's data<br>Improves with every retraining cycle</div>
+      </div>
+      <div class="race-track">
+        <div class="race-grid-line" style="left:20%"></div>
+        <div class="race-grid-line" style="left:40%"></div>
+        <div class="race-grid-line" style="left:60%"></div>
+        <div class="race-grid-line" style="left:80%"></div>
+        <!-- Aevah: thin marker at 4% (= 8% of 0-50 scale) -->
+        <div class="race-bar bar-aevah" style="left:6%;width:6%">4%</div>
+      </div>
+      <div class="race-verdict">
+        <div class="race-verdict-main v-green">4%</div>
+        <div class="race-verdict-sub">accuracy target</div>
+      </div>
+    </div>
+
+    <!-- BUILT current -->
+    <div class="race-row">
+      <div class="race-model">
+        <div class="race-model-name" style="color:var(--gold)">Your Current Model</div>
+        <div class="race-model-sub">Connor's team estimate<br>A strong starting point</div>
+      </div>
+      <div class="race-track">
+        <div class="race-grid-line" style="left:20%"></div>
+        <div class="race-grid-line" style="left:40%"></div>
+        <div class="race-grid-line" style="left:60%"></div>
+        <div class="race-grid-line" style="left:80%"></div>
+        <!-- BUILT: 7–10% → 14%–20% of 0-50 scale -->
+        <div class="race-bar bar-current" style="left:14%;width:6%">7–10%</div>
+      </div>
+      <div class="race-verdict">
+        <div class="race-verdict-main v-gold">7–10%</div>
+        <div class="race-verdict-sub">team's estimate</div>
+      </div>
+    </div>
+
+    <!-- Moving average -->
+    <div class="race-row">
+      <div class="race-model">
+        <div class="race-model-name" style="color:var(--gray)">Rolling Average · Excel Baseline</div>
+        <div class="race-model-sub">13-week moving average<br>No learning, no context</div>
+      </div>
+      <div class="race-track">
+        <div class="race-grid-line" style="left:20%"></div>
+        <div class="race-grid-line" style="left:40%"></div>
+        <div class="race-grid-line" style="left:60%"></div>
+        <div class="race-grid-line" style="left:80%"></div>
+        <!-- MA: ~27% → 54% of 0-50 scale -->
+        <div class="bar-ma" style="left:54%">
+          <span class="bar-ma-label">~27%</span>
+        </div>
+      </div>
+      <div class="race-verdict">
+        <div class="race-verdict-main v-gray">~27%</div>
+        <div class="race-verdict-sub">typical baseline</div>
+      </div>
+    </div>
+
+    <!-- Off-the-shelf AI -->
+    <div class="race-row">
+      <div class="race-model">
+        <div class="race-model-name" style="color:var(--red)">Off-the-Shelf AI &amp; Forecasting Platforms</div>
+        <div class="race-model-sub">ChatGPT, Salesforce, standard tools<br>No BUILT data · No CPG context</div>
+      </div>
+      <div class="race-track">
+        <div class="race-grid-line" style="left:20%"></div>
+        <div class="race-grid-line" style="left:40%"></div>
+        <div class="race-grid-line" style="left:60%"></div>
+        <div class="race-grid-line" style="left:80%"></div>
+        <!-- 46% starts at 92% of 0-50 scale, overflows right -->
+        <div class="race-bar bar-frontier" style="left:92%;width:200%">46 – 118%</div>
+        <div class="overflow-arrow">→</div>
+      </div>
+      <div class="race-verdict">
+        <div class="race-verdict-main v-red">46–118%</div>
+        <div class="race-verdict-sub">off the chart</div>
+      </div>
+    </div>
+
+    <!-- Axis ticks -->
+    <div class="race-row" style="margin-bottom:0">
+      <div></div>
+      <div class="race-axis">
+        <span class="race-axis-tick" style="left:0%">0%</span>
+        <span class="race-axis-tick" style="left:20%">10%</span>
+        <span class="race-axis-tick" style="left:40%">20%</span>
+        <span class="race-axis-tick" style="left:60%">30%</span>
+        <span class="race-axis-tick" style="left:80%">40%</span>
+        <span class="race-axis-tick" style="left:100%">50%+</span>
+      </div>
+      <div></div>
+    </div>
+    <div class="race-row" style="margin-top:4px;margin-bottom:0">
+      <div></div>
+      <div style="font-size:9.5px;color:var(--subtle);text-align:center">← More accurate &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Less accurate →</div>
+      <div></div>
+    </div>
+
+  </div>
+
+  <!-- Retraining note -->
+  <div class="retrain-note">
+    <div class="retrain-arrow">↗</div>
+    <div class="retrain-body">
+      <strong>Aevah's 4% is a starting point, not a ceiling.</strong> Mo retrains on your data with each new cycle — the more BUILT data it sees, the more accurately it learns your SKUs, your retailers, and your seasonal patterns. A static spreadsheet model does not improve on its own. Mo does.
+    </div>
+  </div>
+
+  <!-- Callout -->
+  <div class="callout">
+    <div class="callout-dot"></div>
+    <div>
+      <div class="callout-head">Why not just ask ChatGPT — or use Salesforce, or another forecast platform?</div>
+      <div class="callout-text">
+        You can ask ChatGPT anything about the protein bar category and get a thoughtful answer. But it cannot tell you <strong>what your 4-pack did at Kroger last quarter, or why your 12-pack is underperforming at Walmart while it is growing at Target, or whether your next promotional event will pull volume from your own single-serve.</strong> General AI tools answer questions about the world. Mo answers questions about your business — because it is trained on BUILT's actual weekly sales data, across every SKU, every retailer, every channel. The result is a forecast that responds to your dynamics, not industry averages.
+      </div>
+    </div>
+  </div>
+
+  <!-- BANDWIDTH -->
+  <div class="sec-label">What This Unlocks</div>
+  <div class="sec-title">Better numbers aren't just an accuracy story — they're a capacity story</div>
+  <div class="sec-sub">Aevah runs the weekly forecast automatically across all 156 SKUs and 100+ retailers. That changes where Connor's team spends their time.</div>
+
+  <div class="bw-split">
+
+    <div class="bw-panel bw-before">
+      <div class="bw-panel-hd">
+        <div class="bw-panel-hd-label">Without Aevah — Today</div>
+        <div class="bw-panel-hd-title">Where the week actually goes</div>
+        <div class="bw-panel-hd-sub">100 retailers × 156 SKUs, maintained manually in Excel</div>
+      </div>
+      <div class="bw-panel-body">
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">Building and updating forecasts</span>
+            <span class="bw-bar-pct" style="color:var(--red)">65%</span>
+          </div>
+          <div class="bw-bar-desc">The mechanical work — pulling data, maintaining formulas, version control across retailer tabs</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-b1" style="width:65%"></div></div>
+        </div>
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">Chasing down data errors</span>
+            <span class="bw-bar-pct" style="color:var(--red)">22%</span>
+          </div>
+          <div class="bw-bar-desc">Reconciling mismatches, tracing outliers, correcting stale inputs before the Monday S&amp;OP meeting</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-b2" style="width:22%"></div></div>
+        </div>
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">Actual strategy and analysis</span>
+            <span class="bw-bar-pct" style="color:var(--gray)">13%</span>
+          </div>
+          <div class="bw-bar-desc">The work that drives growth decisions — scenario planning, channel strategy, executive briefings</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-b3" style="width:13%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bw-panel bw-after">
+      <div class="bw-panel-hd">
+        <div class="bw-panel-hd-label">With Aevah — What Opens Up</div>
+        <div class="bw-panel-hd-title">Where attention can actually go</div>
+        <div class="bw-panel-hd-sub">Aevah covers the weekly model run — Connor's team reviews and decides</div>
+      </div>
+      <div class="bw-panel-body">
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">What-if scenario planning</span>
+            <span class="bw-bar-pct" style="color:var(--green)">30%</span>
+          </div>
+          <div class="bw-bar-desc">Price changes, new SKU introductions, retailer assortment cuts — modeled before they happen</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-a1" style="width:30%"></div></div>
+        </div>
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">Revenue channel strategy</span>
+            <span class="bw-bar-pct" style="color:var(--green)">27%</span>
+          </div>
+          <div class="bw-bar-desc">Which retailers, which pack sizes, which channels are growing — deeper than averages</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-a2" style="width:27%"></div></div>
+        </div>
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">Supply chain, manufacturing &amp; field input</span>
+            <span class="bw-bar-pct" style="color:var(--green)">28%</span>
+          </div>
+          <div class="bw-bar-desc">Accurate demand signal feeds production planning and incorporates field sales feedback meaningfully</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-a3" style="width:28%"></div></div>
+        </div>
+        <div class="bw-bar-row">
+          <div class="bw-bar-top">
+            <span class="bw-bar-name">Model review and oversight</span>
+            <span class="bw-bar-pct" style="color:var(--muted)">15%</span>
+          </div>
+          <div class="bw-bar-desc">Connor's team stays in control — reviewing outputs, flagging exceptions, adjusting where judgment matters</div>
+          <div class="bw-bar-track"><div class="bw-bar-fill fill-a4" style="width:15%"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- WHAT MO HANDLES -->
+  <div class="chips-hd">What Aevah calculates automatically — every week, across every SKU and retailer</div>
+  <div class="chips">
+    <div class="chip">
+      <div class="chip-dot"></div>
+      <div>
+        <div class="chip-name">Sales &amp; Operations Planning Pre-Fill</div>
+        <div class="chip-desc">Monday demand signal ready before the meeting starts</div>
+      </div>
+    </div>
+    <div class="chip">
+      <div class="chip-dot"></div>
+      <div>
+        <div class="chip-name">13-Week Demand Forecast</div>
+        <div class="chip-desc">Best-case, expected, and downside scenario bands</div>
+      </div>
+    </div>
+    <div class="chip">
+      <div class="chip-dot"></div>
+      <div>
+        <div class="chip-name">Pack-Size Cannibalization Rate</div>
+        <div class="chip-desc">How much a new size pulls from existing — before launch</div>
+      </div>
+    </div>
+    <div class="chip">
+      <div class="chip-dot"></div>
+      <div>
+        <div class="chip-name">Promotional Lift by Retailer</div>
+        <div class="chip-desc">Which discount depth actually moves volume — by channel</div>
+      </div>
+    </div>
+    <div class="chip">
+      <div class="chip-dot"></div>
+      <div>
+        <div class="chip-name">Price Sensitivity by Pack Size</div>
+        <div class="chip-desc">How much demand changes per dollar of price movement</div>
+      </div>
+    </div>
+    <div class="chip">
+      <div class="chip-dot"></div>
+      <div>
+        <div class="chip-name">New SKU Launch Baseline</div>
+        <div class="chip-desc">Projected week-one demand before any sales data exists</div>
+      </div>
+    </div>
+  </div>
+
+</div>
