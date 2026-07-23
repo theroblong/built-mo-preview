@@ -127,6 +127,27 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 39) — Cost of Staying Still: growth impact artifact, time-tax quantification, hiring avoidance framing
+
+`mockups/cost_of_staying_still.html` — FP&A pitch artifact quantifying the compounding cost of manual forecasting as BUILT grows.
+
+**Dominant visual:** Canvas diverging line chart. Without Aevah (red): 52→71 hrs/week maintenance burden over 3 years at 10% annual SKU/retailer growth. With Aevah (green): 12→14 hrs/week flat. Amber dashed threshold line at 60 hrs/week labeled "HIRING PRESSURE" — the "Without Aevah" curve crosses it in Year 2. Shaded green fill between curves labeled "RECLAIMED CAPACITY."
+
+**Four named time taxes (cards):**
+- S&OP pre-fill: 156 hrs/year (3 hrs/Monday)
+- Error reconciliation: 104 hrs/year (2 hrs/week)
+- New SKU setup: 75 hrs/year (5 hrs × 15 SKUs/year)
+- Leadership scenario requests: 36 hrs/year (3 hrs × 12/year)
+- **Total: 371 hrs/year before growth multiplier**
+
+**Reclaimed stats strip:** 57 hrs/week by Year 3 · 2,960 hrs/year · ≈0 marginal hours per new SKU with Aevah running.
+
+**Hiring callout:** At 10% annual growth the model predicts a 1 FP&A hire needed by Year 2–3 ($90–120K loaded). Framed as "growth capability that would otherwise require a hire to unlock" — not a cost-savings pitch.
+
+All numbers labeled illustrative/directional; chart disclaimer included. No people's names anywhere — fully audience-agnostic.
+
+---
+
 ### 2026-07-23 (update 38) — Forecast accuracy horserace: Aevah vs. BUILT current vs. frontier AI, FP&A framing
 
 `mockups/aevah_forecast_horserace.html` — benchmark artifact for the Bracken/Connor pitch.
