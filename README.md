@@ -127,6 +127,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 43) — Weather API research: NOAA CDO recommended for planned Mo Trends weather tile
+
+Research for a near-term Mo Trends weather context tile, extending the macro story Connor raised (gas prices, seasonality, external signals). Three free APIs evaluated:
+
+**NOAA CDO (Climate Data Online) — recommended.** Free key (instant via email at ncei.noaa.gov/cdo-web/token). Pre-aggregated monthly data across 9 official US climate regions (Northeast, Upper Midwest, Ohio Valley, Southeast, Northern Rockies & Plains, South, Southwest, Northwest, West) — the closest match to a desired 8-region grouping. Covers TAVG, TMIN, TMAX, PRCP series back to 1895. Also has a Storm Events database for flagging anomalous weeks (heat waves, major storms) as chart annotations. Attribution required: "NOAA National Centers for Environmental Information (NCEI)". Same free-government-data pattern as the existing FRED integration.
+
+**National Weather Service (NWS) — good complement for real-time alerts.** No key required (`api.weather.gov`). Primarily forecast-focused with limited historical depth, but `/alerts/active` returns active weather warnings/watches by zone — could render as annotation chips on the weather chart to flag significant event weeks alongside historical trend lines.
+
+**OpenWeather — not suitable for this use case.** Free tier (1,000 calls/day) covers current + 5-day forecast only; historical data requires a paid plan ($40+/month). Point-based, no regional aggregates.
+
+**Regional groupings:** 4 Census regions (Northeast / Midwest / South / West) are the CPG-standard; NOAA's 9 climate regions are the natural fit for CDO data. No standard body uses exactly 8 — would require splitting one NOAA region.
+
+**Implementation plan (when ready):** Add `NOAA_CDO_KEY` to `customer-built-mo-api/.env`; new `/api/trends/weather` endpoint in `trends.py` using the same `_requests.get` + 1-hour cache pattern as the FRED endpoint; new `WeatherContextTile` component in `Trends.tsx` following the `MacroContextTile` pattern.
+
+---
+
 ### 2026-07-23 (update 42) — Mo Trends: Velocity + Macro stacked tile + expanded modal polish (96vw, 1.2× font scaling)
 
 Two UX improvements to the Mo Trends expand experience, plus a new stacked tile wired to the FRED macro data.
