@@ -127,6 +127,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-23 (update 40) — Cost of Staying Still: recalibrated to per-person credible hours; mindshare + opportunity cost sections added
+
+`mockups/cost_of_staying_still.html` — recalibrated version of the FP&A growth impact artifact.
+
+**Problem with previous version:** Without Aevah line reached 71 hrs/week — implausible for a person with a 40–65 hr work week. True basis: 371 named hrs/year ÷ 52 weeks = **7 hrs/week** = 1 full work day for the planning lead; roughly half that for Brian.
+
+**Chart (recalibrated):** Y-axis now 0–18 hrs/week, **per-person** framing not aggregate. Without Aevah: 7→11 hrs/week over 3 years (complexity compounds non-linearly at 10% annual growth). With Aevah: 1.5→2 hrs/week. White dashed reference line at 8 hrs = "1 FULL WORK DAY / WEEK" — the team sits at this line today before any growth. Gap at Year 3 ≈ 9 hrs/week reclaimed.
+
+**New: Mindshare section** — three invisible costs that never appear in a time audit: pre-meeting anxiety about whether numbers are right, context-switching cost (shifting from growth strategy to data reconciliation mid-quarter), and energy/focus reserve (less fuel for compounding decisions).
+
+**Replaced: Opportunity cost callout** — instead of a "hire by Year 2" threshold (which required a defensible crossing point), now shows loaded senior-time cost: $45–65K today growing to $60–80K by Year 3, representing ~25% of a senior FTE's annual capacity consumed by named maintenance tasks alone.
+
+Stats strip now reads: 1 day/week freed today · 9+ hrs/week reclaimed by Year 3 · ≈0 marginal hours per new SKU.
+
+---
+
 ### 2026-07-23 (update 39) — Cost of Staying Still: growth impact artifact, time-tax quantification, hiring avoidance framing
 
 `mockups/cost_of_staying_still.html` — FP&A pitch artifact quantifying the compounding cost of manual forecasting as BUILT grows.

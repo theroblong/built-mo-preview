@@ -18,6 +18,9 @@
   --gold:#f59e0b;
   --gold-dim:rgba(245,158,11,.1);
   --gold-border:rgba(245,158,11,.28);
+  --blue:#38bdf8;
+  --blue-dim:rgba(56,189,248,.08);
+  --blue-border:rgba(56,189,248,.22);
 }
 body{
   font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
@@ -27,8 +30,7 @@ body{
 
 /* ── Header ─────────────────────────────────── */
 .hdr{
-  padding:40px 44px 36px;
-  border-bottom:1px solid var(--border);
+  padding:40px 44px 36px;border-bottom:1px solid var(--border);
   background:linear-gradient(135deg,#0a1a30 0%,var(--bg) 65%);
 }
 .hdr-inner{max-width:940px;margin:0 auto}
@@ -48,112 +50,109 @@ body{
 .sec-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px}
 .sec-sub{font-size:12.5px;color:var(--muted);line-height:1.65;margin-bottom:20px;max-width:680px}
 
-/* ── Growth chart ───────────────────────────── */
+/* ── Chart shell ────────────────────────────── */
 .chart-shell{
   background:var(--surface);border:1px solid var(--border);
   border-radius:12px;overflow:hidden;margin-bottom:10px;
 }
 .chart-legend{
-  display:flex;align-items:center;gap:24px;
-  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;flex-wrap:wrap;align-items:center;gap:22px;
+  padding:13px 20px;border-bottom:1px solid var(--border);
 }
 .legend-item{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600}
-.legend-swatch{width:24px;height:3px;border-radius:2px}
-.legend-dash{
-  width:24px;height:0;border-top:2px dashed var(--gold);
-}
-.legend-label-red{color:var(--red)}
-.legend-label-green{color:var(--green)}
-.legend-label-gold{color:var(--gold)}
+.legend-swatch{width:22px;height:3px;border-radius:2px;flex-shrink:0}
+.legend-dash{width:22px;height:0;border-top:1.5px dashed rgba(255,255,255,.25);flex-shrink:0}
+.leg-red{color:var(--red)}.leg-green{color:var(--green)}.leg-gray{color:#64748b}
 .chart-canvas-wrap{padding:16px 16px 8px}
 canvas{display:block;width:100%}
-.chart-note{
-  padding:8px 20px 14px;
-  font-size:10px;color:var(--subtle);font-style:italic;
-}
+.chart-note{padding:8px 20px 14px;font-size:10px;color:var(--subtle);font-style:italic}
 
-/* ── Reclaimed stats strip ──────────────────── */
+/* ── Stats strip ─────────────────────────────── */
 .stats-strip{
   display:grid;grid-template-columns:1fr 1fr 1fr;
-  gap:0;
   background:var(--green-dim);border:1px solid var(--green-border);
   border-radius:10px;margin-bottom:36px;overflow:hidden;
 }
-.stat-cell{
-  padding:20px 24px;border-right:1px solid var(--green-border);
-  text-align:center;
-}
+.stat-cell{padding:20px 22px;border-right:1px solid var(--green-border);text-align:center}
 .stat-cell:last-child{border-right:none}
 .stat-num{
-  font-size:42px;font-weight:900;color:var(--green);
-  font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;
-  margin-bottom:4px;
+  font-size:40px;font-weight:900;color:var(--green);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;margin-bottom:4px;
 }
-.stat-unit{font-size:16px;font-weight:700}
+.stat-unit{font-size:14px;font-weight:700}
 .stat-label{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:6px}
 
 /* ── Tax cards ──────────────────────────────── */
-.tax-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:12px;margin-bottom:36px;
-}
+.tax-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:36px}
 .tax-card{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:20px 22px;
-  display:flex;gap:18px;align-items:flex-start;
+  border-radius:10px;padding:20px 22px;display:flex;gap:18px;align-items:flex-start;
 }
-.tax-hrs{
-  flex-shrink:0;text-align:right;min-width:56px;
-}
+.tax-hrs{flex-shrink:0;text-align:right;min-width:52px}
 .tax-hrs-num{
-  font-size:28px;font-weight:900;color:var(--red);
+  font-size:26px;font-weight:900;color:var(--red);
   font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.01em;
 }
 .tax-hrs-unit{font-size:10px;font-weight:700;color:var(--muted);margin-top:2px}
-.tax-body{}
 .tax-name{font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px}
 .tax-desc{font-size:11.5px;color:var(--muted);line-height:1.6}
 .tax-note{
-  display:inline-block;font-size:10px;font-weight:700;
-  color:var(--green);margin-top:7px;
-  background:var(--green-dim);border:1px solid var(--green-border);
+  display:inline-block;font-size:10px;font-weight:700;color:var(--green);
+  margin-top:7px;background:var(--green-dim);border:1px solid var(--green-border);
   border-radius:6px;padding:2px 8px;
 }
 
-/* ── Hiring callout ─────────────────────────── */
-.hire-callout{
-  background:var(--gold-dim);border:1px solid var(--gold-border);
-  border-radius:12px;padding:26px 28px;margin-bottom:36px;
+/* ── Mindshare callout ──────────────────────── */
+.mindshare{
+  background:var(--blue-dim);border:1px solid var(--blue-border);
+  border-radius:12px;padding:24px 28px;margin-bottom:36px;
 }
-.hire-callout-hd{font-size:15px;font-weight:900;color:var(--gold);margin-bottom:10px}
-.hire-body{
-  display:grid;grid-template-columns:1fr 1fr;gap:20px;
-  align-items:start;
+.mindshare-hd{font-size:14px;font-weight:900;color:var(--blue);margin-bottom:10px}
+.mindshare-body{
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;
 }
-.hire-text{font-size:13px;color:#8aafda;line-height:1.75}
-.hire-text strong{color:var(--text);font-weight:700}
-.hire-stat-row{display:flex;flex-direction:column;gap:10px}
-.hire-stat{
-  background:rgba(0,0,0,.2);border:1px solid var(--gold-border);
-  border-radius:8px;padding:12px 16px;
-  display:flex;align-items:center;gap:14px;
+.mindshare-text{font-size:13px;color:#8aafda;line-height:1.75}
+.mindshare-text strong{color:var(--text);font-weight:700}
+.mindshare-items{display:flex;flex-direction:column;gap:9px}
+.ms-item{
+  display:flex;align-items:flex-start;gap:12px;
+  background:rgba(0,0,0,.2);border:1px solid var(--blue-border);
+  border-radius:8px;padding:11px 14px;
 }
-.hire-stat-num{
-  font-size:24px;font-weight:900;color:var(--gold);
-  font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1;
+.ms-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--blue);
+  flex-shrink:0;margin-top:4px;
 }
-.hire-stat-label{font-size:11.5px;color:var(--muted);line-height:1.45}
+.ms-label{font-size:12px;color:var(--text);font-weight:600;margin-bottom:2px}
+.ms-sub{font-size:11px;color:var(--muted);line-height:1.45}
 
-/* ── Reclaimed for chips ────────────────────── */
-.chips-label{
-  font-size:10px;font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--subtle);margin-bottom:14px;
+/* ── Opportunity cost callout ────────────────── */
+.opp-callout{
+  background:var(--gold-dim);border:1px solid var(--gold-border);
+  border-radius:12px;padding:24px 28px;margin-bottom:36px;
 }
+.opp-callout-hd{font-size:14px;font-weight:900;color:var(--gold);margin-bottom:10px}
+.opp-body{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.opp-text{font-size:13px;color:#8aafda;line-height:1.75}
+.opp-text strong{color:var(--text);font-weight:700}
+.opp-stats{display:flex;flex-direction:column;gap:9px}
+.opp-stat{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(0,0,0,.2);border:1px solid var(--gold-border);
+  border-radius:8px;padding:11px 16px;
+}
+.opp-stat-num{
+  font-size:22px;font-weight:900;color:var(--gold);
+  font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1;flex-shrink:0;
+}
+.opp-stat-label{font-size:11.5px;color:var(--muted);line-height:1.45}
+
+/* ── Chips ───────────────────────────────────── */
+.chips-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--subtle);margin-bottom:14px}
 .chips{display:flex;flex-wrap:wrap;gap:9px}
 .chip{
   display:flex;align-items:flex-start;gap:10px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:9px;padding:10px 16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 16px;
 }
 .chip-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:4px}
 .chip-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
@@ -161,7 +160,7 @@ canvas{display:block;width:100%}
 
 @media(max-width:680px){
   .hdr,.page{padding-left:20px;padding-right:20px}
-  .stats-strip,.tax-grid,.hire-body{grid-template-columns:1fr}
+  .stats-strip,.tax-grid,.mindshare-body,.opp-body{grid-template-columns:1fr}
   .stat-cell{border-right:none;border-bottom:1px solid var(--green-border)}
   .stat-cell:last-child{border-bottom:none}
 }
@@ -171,7 +170,7 @@ canvas{display:block;width:100%}
   <div class="hdr-inner">
     <div class="hdr-eye">Aevah · FP&amp;A Planning Team · Growth Impact Analysis</div>
     <div class="hdr-title">The cost of <em>staying still</em> compounds as you grow</div>
-    <div class="hdr-sub">A small, busy planning team running a 100-retailer × 156-SKU model manually is already at capacity. Every new SKU and every new retailer makes the problem harder — not just more work, but more risk, more latency, and eventually a headcount decision. This is what that trajectory looks like.</div>
+    <div class="hdr-sub">One full work day per week for the planning lead — spent on model mechanics, not strategy. That number grows as SKU count and retailer count grow. And the hours you can count are only part of the story.</div>
   </div>
 </div>
 
@@ -179,39 +178,39 @@ canvas{display:block;width:100%}
 
   <!-- CHART -->
   <div class="sec-label">The Growth Trajectory</div>
-  <div class="sec-title">FP&amp;A maintenance hours per week — with and without Aevah</div>
-  <div class="sec-sub">As SKU count and retailer count grow at a conservative 10% per year, the manual model burden grows with them. The team's week fills up. The amber threshold is where sustained workload tips into a hiring decision.</div>
+  <div class="sec-title">Hours per week on model maintenance — planning lead, with and without Aevah</div>
+  <div class="sec-sub">At a conservative 10% annual growth in SKU and retailer count, maintenance hours compound. The reference line is one full work day per week — where the team is today, before any growth.</div>
 
   <div class="chart-shell">
     <div class="chart-legend">
       <div class="legend-item">
         <div class="legend-swatch" style="background:var(--red)"></div>
-        <span class="legend-label-red">Without Aevah — maintenance burden grows with every new SKU and retailer</span>
+        <span class="leg-red">Without Aevah — grows with every new SKU and retailer</span>
       </div>
       <div class="legend-item">
         <div class="legend-swatch" style="background:var(--green)"></div>
-        <span class="legend-label-green">With Aevah — marginal cost of new SKU or retailer is near zero</span>
+        <span class="leg-green">With Aevah — near-zero marginal cost per new SKU</span>
       </div>
       <div class="legend-item">
         <div class="legend-dash"></div>
-        <span class="legend-label-gold">Hiring pressure threshold</span>
+        <span class="leg-gray">1 full work day / week</span>
       </div>
     </div>
     <div class="chart-canvas-wrap">
       <canvas id="growth-chart" height="260"></canvas>
     </div>
-    <div class="chart-note">Illustrative projections based on current team size, SKU count, and a 10% annual growth rate. Not derived from a time audit — intended to show the shape of the problem, not a precise forecast.</div>
+    <div class="chart-note">Illustrative projections based on 371 named annual task hours at current SKU count and 10% annual growth. Not a time audit — intended to show direction and scale, not a precise forecast.</div>
   </div>
 
-  <!-- RECLAIMED STATS STRIP -->
+  <!-- STATS STRIP -->
   <div class="stats-strip" style="margin-top:16px">
     <div class="stat-cell">
-      <div class="stat-num">57<span class="stat-unit"> hrs</span></div>
-      <div class="stat-label">per week reclaimed by Year 3<br>without adding headcount</div>
+      <div class="stat-num">1 <span class="stat-unit">day</span></div>
+      <div class="stat-label">per week freed today<br>for the planning lead</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-num">2,960<span class="stat-unit"> hrs</span></div>
-      <div class="stat-label">per year freed for strategy,<br>scenario planning, and growth work</div>
+      <div class="stat-num">9+ <span class="stat-unit">hrs</span></div>
+      <div class="stat-label">per week reclaimed by Year 3<br>as SKU and retailer count grows</div>
     </div>
     <div class="stat-cell">
       <div class="stat-num">≈0</div>
@@ -221,86 +220,115 @@ canvas{display:block;width:100%}
 
   <!-- TAX CARDS -->
   <div class="sec-label">Where the Hours Go Today</div>
-  <div class="sec-title">Four named time taxes — before growth makes them worse</div>
-  <div class="sec-sub">These are recurring costs that show up as late nights, not line items. Each one compounds as BUILT adds products and expands into new accounts.</div>
+  <div class="sec-title">Four recurring time taxes — 371 hours per year, before growth</div>
+  <div class="sec-sub">These are the named, countable costs. Each one grows as BUILT adds products and expands into new accounts.</div>
 
   <div class="tax-grid">
-
     <div class="tax-card">
       <div class="tax-hrs">
         <div class="tax-hrs-num">156</div>
         <div class="tax-hrs-unit">hrs / year</div>
       </div>
-      <div class="tax-body">
+      <div>
         <div class="tax-name">Weekly S&amp;OP pre-fill</div>
         <div class="tax-desc">~3 hours every Monday morning pulling numbers, validating inputs, and preparing the planning meeting baseline — before the meeting even starts.</div>
         <div class="tax-note">Aevah pre-fills this automatically</div>
       </div>
     </div>
-
     <div class="tax-card">
       <div class="tax-hrs">
         <div class="tax-hrs-num">104</div>
         <div class="tax-hrs-unit">hrs / year</div>
       </div>
-      <div class="tax-body">
+      <div>
         <div class="tax-name">Error reconciliation</div>
-        <div class="tax-desc">~2 hours per week tracing why a number doesn't look right in a 100-retailer model. Under deadline pressure — post-promo review, quarter-end — this doubles.</div>
+        <div class="tax-desc">~2 hours per week tracing why a number doesn't look right. Under deadline pressure — post-promo review, quarter-end — this doubles.</div>
         <div class="tax-note">Aevah flags anomalies automatically</div>
       </div>
     </div>
-
     <div class="tax-card">
       <div class="tax-hrs">
         <div class="tax-hrs-num">75</div>
         <div class="tax-hrs-unit">hrs / year</div>
       </div>
-      <div class="tax-body">
+      <div>
         <div class="tax-name">New SKU setup</div>
-        <div class="tax-desc">~5 hours each time a new product is added to the model — building the tab, sourcing the baseline, wiring in the formulas. At 15 new SKUs per year, that is two full work weeks.</div>
+        <div class="tax-desc">~5 hours each time a new product enters the model — building the tab, sourcing the baseline, wiring in the formulas. At 15 new SKUs per year, that is two full work weeks.</div>
         <div class="tax-note">Aevah onboards new SKUs at launch</div>
       </div>
     </div>
-
     <div class="tax-card">
       <div class="tax-hrs">
         <div class="tax-hrs-num">36</div>
         <div class="tax-hrs-unit">hrs / year</div>
       </div>
-      <div class="tax-body">
+      <div>
         <div class="tax-name">Scenario requests from leadership</div>
-        <div class="tax-desc">Every "what if we cut price at Kroger" or "what happens if we add a 12-pack at Target" is ~3 hours of senior analyst time. At 12 requests per year, that is a week of high-leverage thinking spent on model mechanics.</div>
+        <div class="tax-desc">Every "what if we cut price at Kroger" is ~3 hours of senior analyst time re-running the model. At 12 requests per year, that is a week of high-leverage thinking spent on mechanics.</div>
         <div class="tax-note">Aevah runs scenarios in seconds</div>
       </div>
     </div>
-
   </div>
 
-  <!-- HIRING CALLOUT -->
-  <div class="hire-callout">
-    <div class="hire-callout-hd">The decision your team is quietly heading toward</div>
-    <div class="hire-body">
-      <div class="hire-text">
-        At a 10% annual growth rate in SKU and retailer count, the manual model burden crosses the team's sustainable capacity by <strong>Year 2 to Year 3</strong>. At that point, leadership faces a choice: absorb the quality risk, ask the team to absorb more hours, or hire. <strong>A fully loaded FP&amp;A hire runs $90–120K per year.</strong> Mo removes that forcing function — the model scales with BUILT's growth without scaling headcount. That is not a cost savings. It is a growth capability that would otherwise require a hire to unlock.
+  <!-- MINDSHARE -->
+  <div class="sec-label">The Invisible Cost</div>
+  <div class="mindshare">
+    <div class="mindshare-hd">The hours you can count are only part of the cost</div>
+    <div class="mindshare-body">
+      <div class="mindshare-text">
+        A planning lead running a manual model doesn't stop thinking about it when they step away from the spreadsheet. <strong>The cognitive overhead travels with them</strong> — into Monday's executive meeting, into the commute, into the next quarter's planning cycle. That context-switching tax is real, it affects decision quality, and it never shows up in a time audit. Neither does the energy drain of going into a high-stakes buyer or board meeting with lingering uncertainty about whether the numbers are right.
       </div>
-      <div class="hire-stat-row">
-        <div class="hire-stat">
-          <div class="hire-stat-num">$90–120K</div>
-          <div class="hire-stat-label">Fully loaded annual cost of the FP&amp;A hire the model predicts by Year 2–3</div>
+      <div class="mindshare-items">
+        <div class="ms-item">
+          <div class="ms-dot"></div>
+          <div>
+            <div class="ms-label">Pre-meeting anxiety</div>
+            <div class="ms-sub">Uncertainty about whether the numbers are right before a board or buyer meeting. Aevah gives the team a validated signal to walk in with.</div>
+          </div>
         </div>
-        <div class="hire-stat">
-          <div class="hire-stat-num">Year 2</div>
-          <div class="hire-stat-label">When maintenance burden is projected to cross the hiring pressure threshold at current growth</div>
+        <div class="ms-item">
+          <div class="ms-dot"></div>
+          <div>
+            <div class="ms-label">Context-switching cost</div>
+            <div class="ms-sub">Shifting from growth strategy to data reconciliation mid-quarter costs more than the time — it costs the train of thought.</div>
+          </div>
         </div>
-        <div class="hire-stat">
-          <div class="hire-stat-num">371 hrs</div>
-          <div class="hire-stat-label">Named recurring hours per year in the four tax categories above — before any growth</div>
+        <div class="ms-item">
+          <div class="ms-dot"></div>
+          <div>
+            <div class="ms-label">Energy and focus reserve</div>
+            <div class="ms-sub">A team that ends the week maintaining a model has less fuel for the decisions that compound over time. Growth work needs a clear head, not a tired one.</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- WHAT OPENS UP -->
+  <!-- OPP COST -->
+  <div class="opp-callout">
+    <div class="opp-callout-hd">The senior time cost — growing every year</div>
+    <div class="opp-body">
+      <div class="opp-text">
+        The 371 hours per year in named tasks are being spent by senior planning staff — not an analyst running reports. <strong>At a loaded rate for that level of experience, that is $45–65K in high-value hours allocated to table-stakes work.</strong> By Year 3, at current growth, that rises to nearly $60–80K. This is not a case for cutting headcount. It is a case for making sure the most experienced people on the team are spending their time on the decisions that require them — not the mechanics that do not.
+      </div>
+      <div class="opp-stats">
+        <div class="opp-stat">
+          <div class="opp-stat-num">$45–65K</div>
+          <div class="opp-stat-label">Senior planning time spent on model mechanics today, at a loaded annual rate</div>
+        </div>
+        <div class="opp-stat">
+          <div class="opp-stat-num">$60–80K</div>
+          <div class="opp-stat-label">Projected by Year 3 as task volume grows with SKU and retailer count</div>
+        </div>
+        <div class="opp-stat">
+          <div class="opp-stat-num">~25%</div>
+          <div class="opp-stat-label">Of a senior FTE's annual capacity consumed by named maintenance tasks alone by Year 3</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHIPS -->
   <div class="chips-label">What the reclaimed hours go back into</div>
   <div class="chips">
     <div class="chip">
@@ -345,138 +373,105 @@ canvas{display:block;width:100%}
 <script>
 (function(){
   function draw(){
-    const canvas = document.getElementById('growth-chart');
-    const wrap   = canvas.parentElement;
-    const dpr    = window.devicePixelRatio || 1;
-    const W      = wrap.clientWidth;
-    const H      = 260;
+    var canvas = document.getElementById('growth-chart');
+    var wrap   = canvas.parentElement;
+    var dpr    = window.devicePixelRatio || 1;
+    var W      = wrap.clientWidth;
+    var H      = 260;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
-    const ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    const pad = {t:28, b:44, l:58, r:90};
-    const cw  = W - pad.l - pad.r;
-    const ch  = H - pad.t - pad.b;
+    var pad = {t:28, b:44, l:58, r:90};
+    var cw  = W - pad.l - pad.r;
+    var ch  = H - pad.t - pad.b;
 
-    // Data — hrs/week maintenance burden
-    const wo  = [52, 57, 64, 71];  // without Mo
-    const wm  = [12, 13, 13, 14];  // with Mo
-    const xl  = ['Today','Year 1','Year 2','Year 3'];
-    const yMin = 0, yMax = 80, hireY = 60;
-    const n   = wo.length;
+    // Recalibrated: single planning lead, hrs/week
+    var wo = [7, 8, 9.5, 11];       // without Aevah
+    var wm = [1.5, 1.5, 1.7, 2.0];  // with Aevah
+    var xl = ['Today','Year 1','Year 2','Year 3'];
+    var yMin = 0, yMax = 18;
+    var workDay = 8;
+    var n = wo.length;
 
-    function toX(i){ return pad.l + (i / (n-1)) * cw; }
-    function toY(v){ return pad.t + ch * (1 - (v - yMin)/(yMax - yMin)); }
+    function toX(i){ return pad.l + (i/(n-1))*cw; }
+    function toY(v){ return pad.t + ch*(1-(v-yMin)/(yMax-yMin)); }
 
-    // Grid
+    // Grid lines
     ctx.strokeStyle = 'rgba(255,255,255,.04)';
     ctx.lineWidth = 1;
-    [20,40,60,80].forEach(v=>{
-      ctx.beginPath(); ctx.moveTo(pad.l, toY(v)); ctx.lineTo(pad.l+cw, toY(v)); ctx.stroke();
+    [3,6,9,12,15,18].forEach(function(v){
+      ctx.beginPath(); ctx.moveTo(pad.l,toY(v)); ctx.lineTo(pad.l+cw,toY(v)); ctx.stroke();
     });
 
     // Y-axis labels
     ctx.fillStyle = '#2d4f78';
     ctx.font = '9.5px -apple-system,system-ui,sans-serif';
     ctx.textAlign = 'right';
-    [20,40,60,80].forEach(v=>{
-      ctx.fillText(v+' hrs', pad.l - 8, toY(v) + 3.5);
+    [3,6,9,12,15,18].forEach(function(v){
+      ctx.fillText(v+' hrs', pad.l-8, toY(v)+3.5);
     });
-    ctx.fillStyle = '#2d4f78';
-    ctx.font = '9px -apple-system,system-ui,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.save();
-    ctx.translate(12, pad.t + ch/2);
-    ctx.rotate(-Math.PI/2);
-    ctx.fillText('hrs / week on maintenance', 0, 0);
-    ctx.restore();
 
     // Vertical phase lines
-    ctx.strokeStyle = 'rgba(255,255,255,.06)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3,5]);
-    [1,2].forEach(i=>{
-      ctx.beginPath(); ctx.moveTo(toX(i), pad.t); ctx.lineTo(toX(i), pad.t+ch); ctx.stroke();
-    });
+    ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1; ctx.setLineDash([3,5]);
+    [1,2].forEach(function(i){ ctx.beginPath(); ctx.moveTo(toX(i),pad.t); ctx.lineTo(toX(i),pad.t+ch); ctx.stroke(); });
     ctx.setLineDash([]);
 
     // Phase labels
-    ctx.fillStyle = 'rgba(255,255,255,.18)';
-    ctx.font = '9px -apple-system,system-ui,sans-serif';
-    ctx.textAlign = 'center';
+    ctx.fillStyle='rgba(255,255,255,.16)'; ctx.font='9px -apple-system,system-ui,sans-serif'; ctx.textAlign='center';
     ctx.fillText('New SKU launches', toX(1), pad.t+13);
     ctx.fillText('Retailer expansion', toX(2), pad.t+13);
 
-    // Hire threshold dashed line
-    ctx.strokeStyle = 'rgba(245,158,11,.45)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([7,5]);
-    ctx.beginPath(); ctx.moveTo(pad.l, toY(hireY)); ctx.lineTo(pad.l+cw, toY(hireY)); ctx.stroke();
+    // 1-day reference line
+    ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1.5; ctx.setLineDash([7,5]);
+    ctx.beginPath(); ctx.moveTo(pad.l,toY(workDay)); ctx.lineTo(pad.l+cw,toY(workDay)); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = '700 9px -apple-system,system-ui,sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('HIRING PRESSURE', pad.l+4, toY(hireY)-6);
+    ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font='700 9px -apple-system,system-ui,sans-serif'; ctx.textAlign='left';
+    ctx.fillText('1 FULL WORK DAY / WEEK', pad.l+6, toY(workDay)-6);
 
     // Fill between curves
     ctx.beginPath();
-    wo.forEach((v,i)=>{ i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)); });
-    for(let i=n-1;i>=0;i--) ctx.lineTo(toX(i), toY(wm[i]));
+    wo.forEach(function(v,i){ i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)); });
+    for(var i=n-1;i>=0;i--) ctx.lineTo(toX(i),toY(wm[i]));
     ctx.closePath();
-    ctx.fillStyle = 'rgba(34,197,94,.07)';
-    ctx.fill();
+    ctx.fillStyle='rgba(34,197,94,.07)'; ctx.fill();
 
-    // "RECLAIMED CAPACITY" in zone
-    const midI  = 2.1;
-    const midWo = wo[2] + (wo[3]-wo[2])*0.1;
-    const midWm = wm[2] + (wm[3]-wm[2])*0.1;
-    const zoneY = toY((midWo + midWm) / 2);
-    ctx.fillStyle = 'rgba(34,197,94,.45)';
-    ctx.font = '700 9.5px -apple-system,system-ui,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('RECLAIMED CAPACITY', toX(2.2), zoneY);
+    // RECLAIMED CAPACITY label
+    ctx.fillStyle='rgba(34,197,94,.4)'; ctx.font='700 9px -apple-system,system-ui,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('RECLAIMED CAPACITY', toX(2.1), toY((wo[2]+wm[2])/2));
 
-    // Without Mo line
+    // Without Aevah line
     ctx.beginPath();
-    wo.forEach((v,i)=>{ i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)); });
-    ctx.strokeStyle = '#f43f5e';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
+    wo.forEach(function(v,i){ i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)); });
+    ctx.strokeStyle='#f43f5e'; ctx.lineWidth=2.5; ctx.stroke();
 
-    // With Mo line
+    // With Aevah line
     ctx.beginPath();
-    wm.forEach((v,i)=>{ i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)); });
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
+    wm.forEach(function(v,i){ i===0 ? ctx.moveTo(toX(i),toY(v)) : ctx.lineTo(toX(i),toY(v)); });
+    ctx.strokeStyle='#22c55e'; ctx.lineWidth=2.5; ctx.stroke();
 
-    // Endpoint dots + labels (right side)
-    const ex = toX(n-1);
-    [[wo[n-1],'#f43f5e'],[wm[n-1],'#22c55e']].forEach(([v,c])=>{
-      ctx.beginPath(); ctx.arc(ex, toY(v), 4.5, 0, Math.PI*2);
-      ctx.fillStyle = c; ctx.fill();
+    // Endpoint dots + labels
+    var ex=toX(n-1);
+    [[wo[n-1],'#f43f5e'],[wm[n-1],'#22c55e']].forEach(function(pair){
+      var v=pair[0],c=pair[1];
+      ctx.beginPath(); ctx.arc(ex,toY(v),4.5,0,Math.PI*2); ctx.fillStyle=c; ctx.fill();
     });
-    ctx.textAlign = 'left';
-    ctx.font = '700 11px -apple-system,system-ui,sans-serif';
-    ctx.fillStyle = '#f43f5e';
-    ctx.fillText(wo[n-1]+' hrs/wk', ex+10, toY(wo[n-1])+4);
-    ctx.fillStyle = '#22c55e';
-    ctx.fillText(wm[n-1]+' hrs/wk', ex+10, toY(wm[n-1])+4);
+    ctx.textAlign='left'; ctx.font='700 10.5px -apple-system,system-ui,sans-serif';
+    ctx.fillStyle='#f43f5e'; ctx.fillText(wo[n-1]+' hrs/wk', ex+9, toY(wo[n-1])+4);
+    ctx.fillStyle='#22c55e'; ctx.fillText(wm[n-1]+' hrs/wk', ex+9, toY(wm[n-1])+4);
 
-    // Today dot on both
-    [[wo[0],'#f43f5e'],[wm[0],'#22c55e']].forEach(([v,c])=>{
-      ctx.beginPath(); ctx.arc(toX(0), toY(v), 4, 0, Math.PI*2);
-      ctx.fillStyle = c; ctx.fill();
+    // Today dots
+    [[wo[0],'#f43f5e'],[wm[0],'#22c55e']].forEach(function(pair){
+      var v=pair[0],c=pair[1];
+      ctx.beginPath(); ctx.arc(toX(0),toY(v),4,0,Math.PI*2); ctx.fillStyle=c; ctx.fill();
     });
 
     // X-axis labels
-    ctx.fillStyle = '#2d4f78';
-    ctx.font = '10px -apple-system,system-ui,sans-serif';
-    ctx.textAlign = 'center';
-    xl.forEach((lbl,i)=>{ ctx.fillText(lbl, toX(i), H-12); });
+    ctx.fillStyle='#2d4f78'; ctx.font='10px -apple-system,system-ui,sans-serif'; ctx.textAlign='center';
+    xl.forEach(function(lbl,i){ ctx.fillText(lbl, toX(i), H-12); });
   }
 
   window.addEventListener('load', draw);
