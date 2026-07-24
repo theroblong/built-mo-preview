@@ -127,6 +127,22 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-24 (update 45) — Connor day-in-life artifact shipped + Copilot positioning added to horserace
+
+HTML artifact for the Bracken/Jeff/Connor/Chase stakeholder meeting: `mockups/connor_day_in_life.html` — published at https://claude.ai/code/artifact/df4a6bd4-4adf-4f41-80e2-a2e1d924ee25
+
+**Artifact structure:** Hero (Bracken's June 26 question) · Monday Trigger (before/after two-column) · Three People (Connor / Ethan / Chase task lists with amber/green indicators) · Jeff's View (verbal accountability → permanent system changes) · Metrics (4 cards: 4% forecast error, 371+ hrs automated, 97M rows, no scale ceiling) · Capability table (10 rows, Live + Q3 badges) · Closing.
+
+**Copilot integration angle (two artifacts updated):**
+
+1. **Forecast horserace** (`mockups/aevah_forecast_horserace.html`) — off-the-shelf row now explicitly names *Microsoft Copilot* alongside ChatGPT/Salesforce; callout box renamed "Why not just use Microsoft Copilot, ChatGPT, or another forecasting platform?" and explains that Copilot without BUILT domain data lands at 46-118% error — but that Mo Chat can run *on* BUILT's Azure Copilot endpoint, staying inside their four walls with domain intelligence.
+
+2. **Day-in-life closing section** — new paragraph: "Works with your existing Copilot investment: Mo Chat can run on BUILT's Azure Copilot endpoint — same Microsoft environment, same security posture, same data governance. Your Copilot subscription becomes domain-intelligent overnight."
+
+Source transcripts: `docs/Current Process Review.docx` (July 22 Connor spreadsheet walkthrough) · `docs/Brian & Jason & Rob & Connor.docx` (July 24 Brian confirms demo next week) · June 26 intro meeting (Bracken's question + BUILT uses Copilot confirmed).
+
+---
+
 ### 2026-07-24 (update 44) — Manufacturing: Andrew meeting notes (AWP prospect) + BUILT: Connor day-in-the-life prep
 
 ---
