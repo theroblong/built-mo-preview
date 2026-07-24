@@ -127,6 +127,40 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-24 (update 44) — Manufacturing: Andrew meeting notes (AWP prospect) + BUILT: Connor day-in-the-life prep
+
+---
+
+#### Manufacturing Prospect — Andrew (AWP manufacturer, boom lifts / scissor lifts / vertical lifts / telehandlers)
+
+*This section is separate from BUILT / Mo work.*
+
+First substantive discovery session with Andrew, executive at an AWP manufacturer (boom lifts, scissor lifts, vertical lifts, telehandlers). Currently on INFOR + AS400; implementing Hinowa ERP within the year; 10-year goal to migrate to INFOR LN.
+
+**Top 2 priorities ("Christmas list"):**
+1. ERP completion — accelerate getting there; already using AI
+2. MES (Manufacturing Execution System) — developing expertise in this area
+
+**Technology landscape:** AMR → SCADA → Ignition integration; ISA-95 tiers as framework; Yaskawa + Siemens PLCs; Raspberry Pi sensors; PTC Windchill (PLM); Birlasoft (SI, having issues); interest in PLC config management and behavioral analysis over time; evaluating data historians vs. time series databases.
+
+**Where Aevah resonated:** Reach-in data access ✓ · Bespoke business process per company ✓ · Handles what doesn't belong in ETL ✓ · Architecture solid where Databricks breaks ✓ · Earn trust first ✓ · Watching Palantir.
+
+**Rob's points during call:** SLM vs LLM — commodity LLMs good, drop on dedicated hardware. CNC example: business drivers stay, specialists went away; now you build operators and feeders.
+
+**Next steps:** Initiate NDA · Andrew to think through use case examples · work through Kym (internal approval path) · goal: seed demo with 90 days of XA order + production history.
+
+Notes captured in: `memory/project_andrew_meeting.md` · `customer-built-doc/wiki/11-prospects.md`
+
+---
+
+#### BUILT — Connor "Day in the Life" prep
+
+Brian meeting went well. Next step is a presentation for **Bracken, Jeff, Connor, and Chase** built around Connor's daily FP&A workflow before and after Mo. Four pillars: more repeatable · Mo time strategically focused · more ROI · dynamic growth. Artifact in planning; Brian transcript to inform tone and talking points.
+
+Notes captured in: `memory/project_connor_day_in_life.md`
+
+---
+
 ### 2026-07-23 (update 43) — Weather API research: NOAA CDO recommended for planned Mo Trends weather tile
 
 Research for a near-term Mo Trends weather context tile, extending the macro story Connor raised (gas prices, seasonality, external signals). Three free APIs evaluated:
