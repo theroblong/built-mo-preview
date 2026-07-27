@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 51) — Mo Executive Brief: headline tone decision documented
+
+No HTML changes. Capturing copywriting decision: imperative headlines ("Get more accurate forecasts") read as ad copy to SVP Finance / C-suite; declarative outcomes ("More accurate forecasts.") read as a business case. Keep first two clauses declarative. If closer needs more action, "Give your team what they need to lead it." is the move — a direct ask to the decision-maker. Current headline retained: "More accurate forecasts. More time for growth. Your team elevated to lead it."
+
+---
+
 ### 2026-07-27 (update 50) — Mo Executive Brief: headline and final copy refinements
 
 - **Headline:** "Your team elevated to lead it." — replaces "same team" framing with empowerment; "elevated" carries the next-level feeling without the casual register of "powered up" (wrong tone for SVP Finance)
