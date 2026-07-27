@@ -1,0 +1,335 @@
+<title>Mo — Executive Brief · BUILT FP&A</title>
+<style>
+  :root {
+    --bg: #0C1221;
+    --surface: #131C2E;
+    --surface-raised: #1A2540;
+    --border: #1E2D45;
+    --border-light: #243352;
+    --text: #E2E8F0;
+    --text-muted: #94A3B8;
+    --text-dim: #64748B;
+    --blue: #3B82F6;
+    --blue-dim: rgba(59,130,246,.13);
+    --green: #10B981;
+    --green-dim: rgba(16,185,129,.08);
+    --amber: #F59E0B;
+    --amber-dim: rgba(245,158,11,.08);
+    --mono: "SF Mono","Fira Code","Cascadia Code",monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #EEF2F9;
+      --surface: #FFFFFF;
+      --surface-raised: #F8FAFC;
+      --border: #CBD5E1;
+      --border-light: #E2E8F0;
+      --text: #0F172A;
+      --text-muted: #334155;
+      --text-dim: #64748B;
+      --blue: #1D4ED8;
+      --blue-dim: #DBEAFE;
+      --green: #047857;
+      --green-dim: #D1FAE5;
+      --amber: #92400E;
+      --amber-dim: #FEF3C7;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0C1221; --surface: #131C2E; --surface-raised: #1A2540;
+    --border: #1E2D45; --border-light: #243352;
+    --text: #E2E8F0; --text-muted: #94A3B8; --text-dim: #64748B;
+    --blue: #3B82F6; --blue-dim: rgba(59,130,246,.13);
+    --green: #10B981; --green-dim: rgba(16,185,129,.08);
+    --amber: #F59E0B; --amber-dim: rgba(245,158,11,.08);
+  }
+  :root[data-theme="light"] {
+    --bg: #EEF2F9; --surface: #FFFFFF; --surface-raised: #F8FAFC;
+    --border: #CBD5E1; --border-light: #E2E8F0;
+    --text: #0F172A; --text-muted: #334155; --text-dim: #64748B;
+    --blue: #1D4ED8; --blue-dim: #DBEAFE;
+    --green: #047857; --green-dim: #D1FAE5;
+    --amber: #92400E; --amber-dim: #FEF3C7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .accent-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--green) 100%);
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 18px 36px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 5px;
+  }
+  .headline {
+    font-size: clamp(18px, 2vw, 22px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .headline em { color: var(--green); font-style: normal; }
+
+  /* ── METRICS ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--green);
+    border-radius: 9px;
+    padding: 14px 16px 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    text-align: center;
+  }
+  .metric.blue-top { border-top-color: var(--blue); }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+  .metric-number {
+    font-size: clamp(36px, 4.4vw, 54px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -.025em;
+    color: var(--green);
+    font-variant-numeric: tabular-nums;
+  }
+  .metric-number.blue { color: var(--blue); }
+  .metric-unit {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+  .metric-context {
+    font-size: 11px;
+    color: var(--text-muted);  /* one shade up from --text-dim */
+    line-height: 1.45;
+    margin-top: 7px;
+    padding-top: 7px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  /* ── COMPARE — unified block ── */
+  .compare-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+  }
+
+  .compare-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .ch {
+    padding: 9px 16px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ch.before {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border-bottom: 2px solid var(--amber);
+  }
+  .ch.after {
+    background: var(--green-dim);
+    color: var(--green);
+    border-bottom: 2px solid var(--green);
+    border-left: 1px solid var(--border);
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot.amber { background: var(--amber); }
+  .dot.green { background: var(--green); }
+
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border-light);
+  }
+  .cc {
+    padding: 10px 16px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text);  /* full contrast — not muted */
+  }
+  .cc.before {
+    background: var(--surface);
+    border-right: 1px solid var(--border-light);
+  }
+  .cc.after {
+    background: var(--surface-raised);
+  }
+  .cc strong { font-weight: 700; }
+  .cc.before strong { color: var(--amber); }
+  .cc.after  strong { color: var(--green); }
+
+  /* ── BOTTOM ── */
+  .bottom {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--blue);
+    border-radius: 9px;
+    padding: 18px 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+  }
+  .bottom h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 11px;
+    letter-spacing: .01em;
+  }
+  .bottom-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bottom-bullets li {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    padding-left: 20px;
+    position: relative;
+  }
+  .bottom-bullets li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .bottom-bullets strong { font-weight: 700; }
+  .bottom-bullets .hl-green { color: var(--green); }
+  .bottom-bullets .hl-blue  { color: var(--blue); }
+  .bottom-bullets .hl-text  { color: var(--text); }
+
+  @media (max-width: 860px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .compare-header, .compare-row { grid-template-columns: 1fr; }
+    .ch.after, .cc.after { border-left: none; border-top: 1px solid var(--border-light); }
+    .page { padding: 14px 18px 18px; }
+  }
+</style>
+
+<div class="accent-bar"></div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="eyebrow">Aevah · Mo — Executive Brief · BUILT FP&amp;A</div>
+    <div class="headline">More accurate forecasts. More time for <em>growth</em>. The same team — working at a different level.</div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Forecast Accuracy</div>
+      <div class="metric-number">4%</div>
+      <div class="metric-unit">target error rate</div>
+      <div class="metric-context">vs. 7–10% today — Aevah benchmark on CPG data</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Revenue Impact</div>
+      <div class="metric-number">~$1M</div>
+      <div class="metric-unit">per 1% accuracy gain</div>
+      <div class="metric-context">3–6% improvement gap = $3–6M across the portfolio</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Hours Reclaimed</div>
+      <div class="metric-number">371<span style="font-size:.42em;font-weight:900;letter-spacing:0">+</span></div>
+      <div class="metric-unit">per year, 3 people</div>
+      <div class="metric-context">Shifted from data assembly to growth decisions</div>
+    </div>
+    <div class="metric blue-top">
+      <div class="metric-label">Scale Ceiling</div>
+      <div class="metric-number blue">∞</div>
+      <div class="metric-unit">retailers · SKUs · geos</div>
+      <div class="metric-context">Aevah absorbs growth — no proportional headcount increase</div>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="compare-block">
+    <div class="compare-header">
+      <div class="ch before"><div class="dot amber"></div>Today</div>
+      <div class="ch after"><div class="dot green"></div>With Mo, Powered by Aevah</div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before">SPINS arrives → <strong>team manually rebuilds</strong> the model each month</div>
+      <div class="cc after">SPINS arrives → <strong>Mo has already refreshed</strong></div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before"><strong>One forecast model</strong> — errors surface from NetSuite after the fact</div>
+      <div class="cc after"><strong>Two forecasts run in parallel</strong> — gaps surface automatically</div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before">Leadership flags something → <strong>must remember to apply it next month</strong></div>
+      <div class="cc after">Leadership flags something → <strong>permanent system setting</strong></div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before"><strong>97M rows of competitive data</strong> — intractable to work with manually</div>
+      <div class="cc after"><strong>Any SKU, any retailer, any question</strong> — answered in seconds</div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before">More retailers, more SKUs → <strong>more manual work and headcount pressure</strong></div>
+      <div class="cc after">More retailers, more SKUs → <strong>Mo scales; team stays focused</strong></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom">
+    <h3>The bottom line for BUILT</h3>
+    <ul class="bottom-bullets">
+      <li>The FP&amp;A team shifts from assembling data to making decisions — <strong class="hl-green">371+ hours reclaimed per year</strong>, redirected toward the work that drives growth.</li>
+      <li>Every correction leadership makes becomes a <strong class="hl-green">permanent system setting</strong> — compounding forecast accuracy over time instead of resetting each month.</li>
+      <li>As BUILT scales to more retailers and SKUs, Mo absorbs the growth without adding headcount. Closing the forecast gap alone represents a <strong class="hl-blue">$3–6M revenue impact</strong> at BUILT's scale.</li>
+    </ul>
+  </div>
+
+</div>

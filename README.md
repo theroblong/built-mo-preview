@@ -127,6 +127,23 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 48) — Mo Executive Brief: one-page for Jeff &amp; Bracken
+
+Companion to the Connor day-in-life artifact. Targeted at Jeff (SVP Finance) and Bracken — full financial/strategic case on one screen, no scroll.
+
+**File:** `mockups/mo_exec_brief.html` · **Artifact:** https://claude.ai/code/artifact/9e81eb52-5f3e-4506-9c26-7cec1c77e600
+
+**Structure:** gradient accent bar → 4 centered metric cards (4%, ~$1M, 371+ hrs, ∞) → Before/After unified table (5 rows) → 3-bullet bottom line with inline colored callouts.
+
+**Design rules established:**
+- "With Mo" column always shorter/snappier than "Today" column — brevity is the message
+- No people's names — role-neutral throughout
+- No internal tech stack refs — Aevah/Mo/AI only (FRED API OK to credit)
+- Positive tone — "must remember next month" not "forgotten next month"
+- Bottom line as scannable bullets, not paragraphs
+
+---
+
 ### 2026-07-27 (update 47) — Connor day-in-life artifact: internal tech stack references removed
 
 Client-facing artifacts must not reference internal Mo/Aevah components. Updated `mockups/connor_day_in_life.html`:
