@@ -127,6 +127,15 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 50) — Mo Executive Brief: headline and final copy refinements
+
+- **Headline:** "Your team elevated to lead it." — replaces "same team" framing with empowerment; "elevated" carries the next-level feeling without the casual register of "powered up" (wrong tone for SVP Finance)
+- **Table row 3 After:** "guidance retained" — warmer than "permanent system setting" in the quick-scan table; bottom bullet still delivers the full explanation
+- **Hours tile context:** "data assembly → strategic decisions"
+- **Table row 2 After:** "Multiple forecasts run in parallel — gaps surface immediately"
+
+---
+
 ### 2026-07-27 (update 49) — Mo Executive Brief: copy and legibility polish
 
 Iterative refinements to `mockups/mo_exec_brief.html` after review:
