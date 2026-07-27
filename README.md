@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 54) — AI-103 Azure AI Foundry course content saved as alternate reference
+
+Read and mapped Microsoft AI-103T00-A (Develop AI Apps and Agents on Azure) study guide to Mo/Aevah architecture. Key connections: agent function-calling/tool schemas = Mo's tool-use loop; RAG + vector search = Mo's SPINS/Druid grounding pattern on Azure; multi-agent orchestration = future Aevah pipeline. Enterprise vocabulary captured: Microsoft Foundry, grounding, Entra Agent ID, oversight modes, Content Understanding. Computer vision/speech domains flagged as low relevance for current CPG scope. Saved as alternate reference — no demo changes.
+
+---
+
 ### 2026-07-27 (update 53) — MS Copilot features evaluation saved as alternate reference
 
 Evaluated 9 lesser-used M365 Copilot features (Projects, Notebook, Computer-Using Agents, Agentic Workflows, Skills, Connectors, Slash Commands, Pages) for Mo/Aevah integration potential. Saved as alternate reference only — no changes to Mo Chat demo behavior. Highest-value angle: Skills feature maps directly to Aevah's core pitch ("Copilot lets you teach it your process — Aevah already has your industry's process built in"). Saved to project memory + wiki 08-roadmap.md.
