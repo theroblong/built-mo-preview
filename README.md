@@ -127,6 +127,18 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 47) — Connor day-in-life artifact: internal tech stack references removed
+
+Client-facing artifacts must not reference internal Mo/Aevah components. Updated `mockups/connor_day_in_life.html`:
+
+- "Druid pipeline" / "in Druid" → "Aevah" (3 places — Monday trigger step, Connor list, capability table)
+- "ML-scored" → "AI-scored" (2 places — Connor list, capability table)
+- FRED API references kept and credited — it's a public data source, not an internal component
+
+Rule: Druid, LightGBM, pipeline component names stay in internal docs. Client artifacts say Aevah / Mo / AI.
+
+---
+
 ### 2026-07-27 (update 46) — Connor day-in-life artifact re-synced from live claude.ai artifact
 
 Fetched live artifact content from https://claude.ai/code/artifact/df4a6bd4-4adf-4f41-80e2-a2e1d924ee25 and re-wrote `mockups/connor_day_in_life.html` as clean standalone HTML (Claude runtime JS stripped). Content confirmed identical to prior commit — 32KB, no changes.
