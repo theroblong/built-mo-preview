@@ -127,6 +127,18 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 49) — Mo Executive Brief: copy and legibility polish
+
+Iterative refinements to `mockups/mo_exec_brief.html` after review:
+
+- **Accuracy correction:** 7–10% context now reads "vs. BUILT's current 7–10%" — not an Aevah benchmark; that's BUILT's stated error rate
+- **Tile context trimmed:** `~$1M` → `$1M` (tilde removed); Scale Ceiling → "unlimited growth supported"; Hours → "data assembly → growth decisions"; Revenue → "$3–6M total impact at BUILT's scale"
+- **Tile labels:** stepped up to `--text-muted` for Teams webinar / email legibility
+- **People-first language:** "headcount pressure" → "staffing pressure"; "without adding headcount" → "Mo automatically adjusts — the team grows its impact, not its workload"
+- **Table copy:** "Two forecasts" → "Multiple forecasts"; "gaps surface automatically" → "gaps surface immediately"
+
+---
+
 ### 2026-07-27 (update 48) — Mo Executive Brief: one-page for Jeff &amp; Bracken
 
 Companion to the Connor day-in-life artifact. Targeted at Jeff (SVP Finance) and Bracken — full financial/strategic case on one screen, no scroll.
