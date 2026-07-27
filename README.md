@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 46) — Connor day-in-life artifact re-synced from live claude.ai artifact
+
+Fetched live artifact content from https://claude.ai/code/artifact/df4a6bd4-4adf-4f41-80e2-a2e1d924ee25 and re-wrote `mockups/connor_day_in_life.html` as clean standalone HTML (Claude runtime JS stripped). Content confirmed identical to prior commit — 32KB, no changes.
+
+---
+
 ### 2026-07-24 (update 45) — Connor day-in-life artifact shipped + Copilot positioning added to horserace
 
 HTML artifact for the Bracken/Jeff/Connor/Chase stakeholder meeting: `mockups/connor_day_in_life.html` — published at https://claude.ai/code/artifact/df4a6bd4-4adf-4f41-80e2-a2e1d924ee25
