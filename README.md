@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-27 (update 52) — MS Copilot integration architecture researched and documented
+
+Investigated connecting Mo to BUILT's Microsoft 365 Copilot. Key finding: MCP support in M365 Copilot Declarative Agents is GA as of mid-2026. Recommended path is Mo as an MCP Server behind a Declarative Agent (deployed as a Teams app) — Mo's existing tool definitions map directly to MCP tools, no separate synchronous REST endpoint needed. Pilot path is Copilot Studio + REST API tool (upload OpenAPI spec, no code). Licensing gate: requires paid M365 Copilot add-on (~$30/user/mo). Saved to project memory and wiki 08-roadmap.md.
+
+---
+
 ### 2026-07-27 (update 51) — Mo Executive Brief: headline tone decision documented
 
 No HTML changes. Capturing copywriting decision: imperative headlines ("Get more accurate forecasts") read as ad copy to SVP Finance / C-suite; declarative outcomes ("More accurate forecasts.") read as a business case. Keep first two clauses declarative. If closer needs more action, "Give your team what they need to lead it." is the move — a direct ask to the decision-maker. Current headline retained: "More accurate forecasts. More time for growth. Your team elevated to lead it."
