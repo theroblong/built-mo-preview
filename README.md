@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-28 (update 56) — Connor day-in-life: Three People section pivoted to horizontal before/after layout per person
+
+`mockups/connor_day_in_life.html` restructured so each person (Connor, Ethan, Chase) now displays Today | With Mo side by side in a 2-column grid, matching the Jeff Thompson section pattern. Previous design stacked before/after vertically inside a 3-column person grid. Artifact republished at same URL.
+
+---
+
 ### 2026-07-28 (update 55) — Cold-start proxy overlay shipped: SKU View forecast drawer now surfaces comparable BUILT ramp for new products
 
 When a focal SKU has < 8 weeks of actuals, the forecast drawer shows a collapsible `◈ Proxy reference` sub-panel with up to 3 comparable BUILT SKUs of the same pack format and channel, each with ≥ 13 weeks of launch history. The selected proxy's units-per-week ramp overlays the chart as a purple dashed line, x-axis aligned to weeks-since-launch, giving context for early-stage forecasts where ETS underestimates demand. Two bugs fixed during implementation: (1) focal UPCs in the dropdown are not in `built_filtered_weekly`, so pack count is now parsed from the description string `(N Pk)` via EDW fallback; (2) `ORDER BY upc, __time` in the BFW query was rejected by Druid (multi-column sort with non-time first column) — fixed to `ORDER BY __time`. `similarity_score` returns `null` (not 0%) when the focal has no BFW data; candidates sort by ramp history length. Demo: Built Puff Strawberries N Cream 12pk (`08-40229-30590`) at KROGER (2 wk, cold-start) vs. AHOLD DELHAIZE (7 wk, full forecast). Files: `retailer.py`, `types.ts`, `SkuRetailerView.tsx`.

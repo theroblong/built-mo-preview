@@ -201,11 +201,10 @@
 
   /* ── THREE PEOPLE ── */
   .people-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
-  @media (max-width: 900px) { .people-grid { grid-template-columns: 1fr; } }
 
   .person-card {
     background: var(--surface);
@@ -214,11 +213,15 @@
     overflow: hidden;
   }
   .person-header {
-    padding: 20px 20px 16px;
+    padding: 18px 24px;
     border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
   }
+  .person-header-info { flex: 1; }
   .person-name {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--text);
     margin-bottom: 2px;
@@ -226,7 +229,6 @@
   .person-role {
     font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 10px;
   }
   .person-tag {
     display: inline-block;
@@ -234,14 +236,28 @@
     font-size: 10px;
     letter-spacing: .06em;
     text-transform: uppercase;
-    padding: 3px 8px;
+    padding: 3px 10px;
     border-radius: 4px;
     background: var(--blue-dim);
     color: var(--blue);
+    white-space: nowrap;
   }
 
-  .person-section { padding: 16px 20px; }
-  .person-section + .person-section { border-top: 1px solid var(--border); }
+  .person-ba {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 700px) { .person-ba { grid-template-columns: 1fr; } }
+
+  .person-ba-col {
+    padding: 20px 24px;
+  }
+  .person-ba-col:first-child {
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 700px) {
+    .person-ba-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+  }
 
   .ps-label {
     display: flex;
@@ -251,36 +267,10 @@
     font-weight: 600;
     letter-spacing: .07em;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .ps-label.before { color: var(--amber); }
-  .ps-label.after { color: var(--green); }
-
-  .task-list { list-style: none; }
-  .task-list li {
-    font-size: 13px;
-    color: var(--text-muted);
-    padding: 5px 0 5px 16px;
-    position: relative;
-    line-height: 1.5;
-    border-bottom: 1px solid var(--border-light);
-  }
-  .task-list li:last-child { border-bottom: none; }
-  .task-list li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 12px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--text-dim);
-  }
-  .task-list.before li::before { background: var(--amber); }
-  .task-list.after li::before { background: var(--green); }
-
-  .task-list li strong { color: var(--text); font-weight: 600; }
-  .task-list.after li { color: var(--text); }
+  .ps-label.after  { color: var(--green); }
 
   /* ── JEFF VIEW ── */
   .jeff-grid {
@@ -573,97 +563,97 @@
       <!-- CONNOR -->
       <div class="person-card">
         <div class="person-header">
-          <div class="person-name">Connor Lain</div>
-          <div class="person-role">Director of Strategy · Retail Forecast</div>
+          <div class="person-header-info">
+            <div class="person-name">Connor Lain</div>
+            <div class="person-role">Director of Strategy · Retail Forecast</div>
+          </div>
           <div class="person-tag">Primary Mo User</div>
         </div>
-        <div class="person-section">
-          <div class="ps-label before"><div class="dot amber"></div>Today</div>
-          <ul class="task-list before">
-            <li><strong>Copy-pastes ~50K SPINS rows</strong> into master Excel monthly</li>
-            <li><strong>Updates seasonality curve manually</strong> each cycle</li>
-            <li>Opens 100 sales planner files for <strong>promo calendar data</strong></li>
-            <li><strong>Estimates cannibalization column by hand</strong> — acknowledged as a guess</li>
-            <li><strong>No macro signals</strong> — gas prices, consumer sentiment not in model</li>
-            <li><strong>No independent sanity check</strong> — one model, errors caught from NetSuite actuals after the fact</li>
-            <li>Data-dark retailers like Winco: <strong>flying blind on velocity changes</strong></li>
-            <li>New SKU ramp: <strong>defaults to sales team estimate</strong>, 12-week rule of thumb</li>
-          </ul>
-        </div>
-        <div class="person-section">
-          <div class="ps-label after"><div class="dot green"></div>With Mo</div>
-          <ul class="task-list after">
-            <li>SPINS structured in Aevah — <strong>no copy-paste, always current</strong></li>
-            <li>Seasonality <strong>baked into AI model automatically</strong></li>
-            <li><strong>AI-scored cannibalization</strong> replaces the manual column</li>
-            <li><strong>Gas prices + consumer sentiment</strong> live on every velocity chart (FRED API)</li>
-            <li><strong>13-week AI forecast</strong> as independent sanity check on his numbers</li>
-            <li>New SKU ramp: <strong>cold-start proxy</strong> from similar BUILT launches, data-anchored</li>
-            <li>Mo Chat: <em>"What lift should I assume at Winco next month?"</em></li>
-            <li>S&OP: <strong>reviews and decides</strong> — does not spend the day assembling</li>
-          </ul>
+        <div class="person-ba">
+          <div class="person-ba-col">
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
+            <div class="jeff-item"><strong>Copy-pastes ~50K SPINS rows</strong> into master Excel monthly</div>
+            <div class="jeff-item"><strong>Updates seasonality curve manually</strong> each cycle</div>
+            <div class="jeff-item">Opens 100 sales planner files for <strong>promo calendar data</strong></div>
+            <div class="jeff-item"><strong>Estimates cannibalization column by hand</strong> — acknowledged as a guess</div>
+            <div class="jeff-item"><strong>No macro signals</strong> — gas prices, consumer sentiment not in model</div>
+            <div class="jeff-item"><strong>No independent sanity check</strong> — errors caught from NetSuite actuals after the fact</div>
+            <div class="jeff-item">Data-dark retailers like Winco: <strong>flying blind on velocity changes</strong></div>
+            <div class="jeff-item">New SKU ramp: <strong>defaults to sales team estimate</strong>, 12-week rule of thumb</div>
+          </div>
+          <div class="person-ba-col">
+            <div class="ps-label after"><div class="dot green"></div>With Mo</div>
+            <div class="jeff-item"><strong>SPINS structured in Aevah</strong> — no copy-paste, always current</div>
+            <div class="jeff-item">Seasonality <strong>baked into AI model automatically</strong></div>
+            <div class="jeff-item"><strong>AI-scored cannibalization</strong> replaces the manual column</div>
+            <div class="jeff-item"><strong>Gas prices + consumer sentiment</strong> live on every velocity chart (FRED API)</div>
+            <div class="jeff-item"><strong>13-week AI forecast</strong> as independent sanity check on his numbers</div>
+            <div class="jeff-item">New SKU ramp: <strong>cold-start proxy</strong> from similar BUILT launches, data-anchored</div>
+            <div class="jeff-item">Mo Chat: <em>"What lift should I assume at Winco next month?"</em></div>
+            <div class="jeff-item">S&OP: <strong>reviews and decides</strong> — does not spend the day assembling</div>
+          </div>
         </div>
       </div>
 
       <!-- ETHAN -->
       <div class="person-card">
         <div class="person-header">
-          <div class="person-name">Ethan</div>
-          <div class="person-role">FP&A Director · Forecast Coordination</div>
+          <div class="person-header-info">
+            <div class="person-name">Ethan</div>
+            <div class="person-role">FP&A Director · Forecast Coordination</div>
+          </div>
           <div class="person-tag">Data Flow Owner</div>
         </div>
-        <div class="person-section">
-          <div class="ps-label before"><div class="dot amber"></div>Today</div>
-          <ul class="task-list before">
-            <li><strong>Collects 100 individual retailer forecasts</strong> from sales reps — one file at a time</li>
-            <li>Coordinates calls with 6–7 sales reps, <strong>each managing 10–20 planners</strong></li>
-            <li>Manages data flow from 100 planner files <strong>into Connor's master Excel</strong></li>
-            <li><strong>Version control firefighting</strong> — shared access caused conflicts; each rep updates their own file</li>
-            <li><strong>Data quality gaps</strong>: reps traveling, planners not updated, lift assumptions inconsistent</li>
-            <li><strong>Manually aggregates</strong> opportunities, shippers, and Costco tabs</li>
-          </ul>
-        </div>
-        <div class="person-section">
-          <div class="ps-label after"><div class="dot green"></div>With Mo</div>
-          <ul class="task-list after">
-            <li>SPINS already structured by <strong>account × SKU × week in Aevah</strong> — automated, no collection</li>
-            <li>Sales team promo inputs: <strong>structured digital form replaces 100 Excel files</strong> <span class="badge q3">Q3</span></li>
-            <li><strong>No version control</strong> needed — one live system, always current</li>
-            <li>Coordination shifts from <strong>data collection to insight review</strong></li>
-            <li>Data quality issues surface automatically — <strong>gaps flagged in the system</strong></li>
-            <li>Time freed for <strong>higher-value coordination</strong> and exception management</li>
-          </ul>
+        <div class="person-ba">
+          <div class="person-ba-col">
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
+            <div class="jeff-item"><strong>Collects 100 individual retailer forecasts</strong> from sales reps — one file at a time</div>
+            <div class="jeff-item">Coordinates calls with 6–7 sales reps, <strong>each managing 10–20 planners</strong></div>
+            <div class="jeff-item">Manages data flow from 100 planner files <strong>into Connor's master Excel</strong></div>
+            <div class="jeff-item"><strong>Version control firefighting</strong> — shared access caused conflicts; each rep updates their own file</div>
+            <div class="jeff-item"><strong>Data quality gaps</strong>: reps traveling, planners not updated, lift assumptions inconsistent</div>
+            <div class="jeff-item"><strong>Manually aggregates</strong> opportunities, shippers, and Costco tabs</div>
+          </div>
+          <div class="person-ba-col">
+            <div class="ps-label after"><div class="dot green"></div>With Mo</div>
+            <div class="jeff-item">SPINS already structured by <strong>account × SKU × week in Aevah</strong> — automated, no collection</div>
+            <div class="jeff-item">Sales team promo inputs: <strong>structured digital form replaces 100 Excel files</strong> <span class="badge q3">Q3</span></div>
+            <div class="jeff-item"><strong>No version control</strong> needed — one live system, always current</div>
+            <div class="jeff-item">Coordination shifts from <strong>data collection to insight review</strong></div>
+            <div class="jeff-item">Data quality issues surface automatically — <strong>gaps flagged in the system</strong></div>
+            <div class="jeff-item">Time freed for <strong>higher-value coordination</strong> and exception management</div>
+          </div>
         </div>
       </div>
 
       <!-- CHASE -->
       <div class="person-card">
         <div class="person-header">
-          <div class="person-name">Chase Sparrow</div>
-          <div class="person-role">FP&A · Trade &amp; Revenue Analysis</div>
+          <div class="person-header-info">
+            <div class="person-name">Chase Sparrow</div>
+            <div class="person-role">FP&A · Trade &amp; Revenue Analysis</div>
+          </div>
           <div class="person-tag">Analyst · Ad Hoc Intelligence</div>
         </div>
-        <div class="person-section">
-          <div class="ps-label before"><div class="dot amber"></div>Today</div>
-          <ul class="task-list before">
-            <li>Category intelligence <strong>intractable at scale</strong> — 97M rows of SPINS, 300+ competitors, 5,000+ SKUs</li>
-            <li><strong>Trade analysis and ad hoc revenue modeling in Excel</strong></li>
-            <li>Learning Connor's process — <strong>taking on lower-hanging fruit manually</strong></li>
-            <li>Competitive pricing and assortment changes: <strong>slow to detect, hard to quantify</strong></li>
-            <li>Revenue analysis by retailer and sales rep: <strong>manual builds from scratch each time</strong></li>
-            <li>"I would want to <strong>slice and dice and drill</strong> on any nuanced occasion" — no single tool does this today</li>
-          </ul>
-        </div>
-        <div class="person-section">
-          <div class="ps-label after"><div class="dot green"></div>With Mo</div>
-          <ul class="task-list after">
-            <li><strong>Mo Trends</strong>: competitive velocity, flavor trends, brand share — automated across the full category</li>
-            <li><strong>Price elasticity suite</strong>: how BUILT vs. competitor prices drive demand shifts — live</li>
-            <li><strong>Cannibalization suite</strong>: which SKUs are incremental vs. taking share — scored, always current</li>
-            <li>Mo Chat: <em>"Which competitors gained share at Kroger last quarter?"</em> — instant answer, any ad hoc question</li>
-            <li><strong>Grows into Connor's world faster</strong> — data already structured, no manual builds</li>
-            <li>Trade analysis <strong>grounded in 97M rows of SPINS</strong>, not just what a rep reported</li>
-          </ul>
+        <div class="person-ba">
+          <div class="person-ba-col">
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
+            <div class="jeff-item">Category intelligence <strong>intractable at scale</strong> — 97M rows, 300+ competitors, 5,000+ SKUs</div>
+            <div class="jeff-item"><strong>Trade analysis and ad hoc revenue modeling in Excel</strong></div>
+            <div class="jeff-item">Learning Connor's process — <strong>taking on lower-hanging fruit manually</strong></div>
+            <div class="jeff-item">Competitive pricing and assortment changes: <strong>slow to detect, hard to quantify</strong></div>
+            <div class="jeff-item">Revenue analysis by retailer and sales rep: <strong>manual builds from scratch each time</strong></div>
+            <div class="jeff-item">"I would want to <strong>slice and dice and drill</strong> on any nuanced occasion" — no single tool does this today</div>
+          </div>
+          <div class="person-ba-col">
+            <div class="ps-label after"><div class="dot green"></div>With Mo</div>
+            <div class="jeff-item"><strong>Mo Trends</strong>: competitive velocity, flavor trends, brand share — automated across the full category</div>
+            <div class="jeff-item"><strong>Price elasticity suite</strong>: how BUILT vs. competitor prices drive demand shifts — live</div>
+            <div class="jeff-item"><strong>Cannibalization suite</strong>: which SKUs are incremental vs. taking share — scored, always current</div>
+            <div class="jeff-item">Mo Chat: <em>"Which competitors gained share at Kroger last quarter?"</em> — instant answer, any ad hoc question</div>
+            <div class="jeff-item"><strong>Grows into Connor's world faster</strong> — data already structured, no manual builds</div>
+            <div class="jeff-item">Trade analysis <strong>grounded in 97M rows of SPINS</strong>, not just what a rep reported</div>
+          </div>
         </div>
       </div>
 
