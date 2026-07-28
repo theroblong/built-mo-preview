@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-28 (update 59) — Cold-start demo path: Wegmans + UNFI (skip KROGER 12pk — data artifact)
+
+KROGER shows **Built Puff Strawberries N Cream Protein Bar 1.41 Oz (12 Pk)** (`08-40229-30590`) with $99 YTD sales and cold-start firing (< 8 weeks actuals), but this is a data artifact — likely SPINS tray purchases scanning as 12pk units. Jeff Thompson flagged at the Jun 26 demo: "We don't sell 12 packs at Kroger." 1–2 units is not a real distribution. Recommended demo path for the cold-start proxy feature: **Wegmans · CONVENTIONAL|FOOD** (7 weeks, March 2026 launch — visible ramp shape, proxy gap is a real business question) and **UNFI · CONVENTIONAL|FOOD** (5 weeks, March 2026 — distributor channel, shows why channel context matters when interpreting proxy gaps). Both are genuine recent launches, recent enough to feel live in BUILT's current planning cycle.
+
+---
+
 ### 2026-07-28 (update 58) — v2.5.1: proxy legend dot fix — legend swatch now matches chart's dotted line style
 
 The custom legend renderer was hardcoding `strokeDasharray="5 3"` (dashes) for all non-solid entries, so the proxy legend swatch showed dashes even though the proxy chart line uses `strokeDasharray="2 4"` (dots). Extended the legend entry type from `dash: boolean` to `dash: boolean | string`; passing `dash: "2 4"` for the proxy entry now renders dots in the legend that match the chart exactly. All other legend entries (forecast bands) unchanged at `"5 3"`. File: `SkuRetailerView.tsx`.
