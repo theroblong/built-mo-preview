@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-28 (update 55) — Cold-start proxy overlay shipped: SKU View forecast drawer now surfaces comparable BUILT ramp for new products
+
+When a focal SKU has < 8 weeks of actuals, the forecast drawer shows a collapsible `◈ Proxy reference` sub-panel with up to 3 comparable BUILT SKUs of the same pack format and channel, each with ≥ 13 weeks of launch history. The selected proxy's units-per-week ramp overlays the chart as a purple dashed line, x-axis aligned to weeks-since-launch, giving context for early-stage forecasts where ETS underestimates demand. Two bugs fixed during implementation: (1) focal UPCs in the dropdown are not in `built_filtered_weekly`, so pack count is now parsed from the description string `(N Pk)` via EDW fallback; (2) `ORDER BY upc, __time` in the BFW query was rejected by Druid (multi-column sort with non-time first column) — fixed to `ORDER BY __time`. `similarity_score` returns `null` (not 0%) when the focal has no BFW data; candidates sort by ramp history length. Demo: Built Puff Strawberries N Cream 12pk (`08-40229-30590`) at KROGER (2 wk, cold-start) vs. AHOLD DELHAIZE (7 wk, full forecast). Files: `retailer.py`, `types.ts`, `SkuRetailerView.tsx`.
+
+---
+
 ### 2026-07-27 (update 54) — AI-103 Azure AI Foundry course content saved as alternate reference
 
 Read and mapped Microsoft AI-103T00-A (Develop AI Apps and Agents on Azure) study guide to Mo/Aevah architecture. Key connections: agent function-calling/tool schemas = Mo's tool-use loop; RAG + vector search = Mo's SPINS/Druid grounding pattern on Azure; multi-agent orchestration = future Aevah pipeline. Enterprise vocabulary captured: Microsoft Foundry, grounding, Entra Agent ID, oversight modes, Content Understanding. Computer vision/speech domains flagged as low relevance for current CPG scope. Saved as alternate reference — no demo changes.
