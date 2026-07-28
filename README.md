@@ -127,6 +127,12 @@ Brad is the analyst persona defined for this project. He is positioned as the ma
 
 ## What we have built so far
 
+### 2026-07-28 (update 57) — Cold-start proxy v2: seasonal adjustment, extended forecast window, grouped SKU dropdown, dotted purple line
+
+Enhanced the SKU View cold-start proxy overlay with four improvements. (1) **Seasonal adjustment:** proxy actuals are now scaled by the ratio of monthly CPG seasonal indices (focal launch month vs. proxy launch month per week), using the SPINS raw monthly demand pattern (March peak +30%, Dec trough −28%). Prevents over/understating the proxy when products launched in different seasons. (2) **Extended forecast window:** the proxy line now continues through the full 13-week forecast zone (not just the focal's 2 weeks of actuals). For cold-start SKUs with no scored LightGBM forecast in `retailer_sales_forecast`, the chart now generates 13 synthetic forward weeks so the proxy ramp has a meaningful window to draw against — matching the x-axis range of a mature SKU drawer. (3) **Grouped dropdown:** the endpoint now returns up to 20 candidates (was capped at 3). UI groups them into `Top Matches` (recommended top 3) and `Other BUILT SKUs` optgroups, giving the user full override capability. `similarity_score: null` now renders as "format match" label rather than blank. (4) **Visual differentiation:** proxy line changed from dashed (`6 3`) to dotted (`2 4`) at strokeWidth 2 — visually distinct from the gray dashed forecast bands, which are model predictions; the purple dots signal "peer reference, not model forecast." Demo SKU: **Built Puff Strawberries N Cream Protein Bar 1.41 Oz (12 Pk)** (`08-40229-30590`) at KROGER · CONVENTIONAL|FOOD. Files: `retailer.py`, `types.ts`, `SkuRetailerView.tsx`.
+
+---
+
 ### 2026-07-28 (update 56) — Connor day-in-life: Three People section pivoted to horizontal before/after layout per person
 
 `mockups/connor_day_in_life.html` restructured so each person (Connor, Ethan, Chase) now displays Today | With Mo side by side in a 2-column grid, matching the Jeff Thompson section pattern. Previous design stacked before/after vertically inside a 3-column person grid. Artifact republished at same URL.
