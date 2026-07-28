@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 60: TDP integration in SKU View forecast drawer (2026-07-28)
+
+v2.5.2. Two connected changes that make the cold-start proxy narrative more data-grounded:
+
+**Focal TDP tile** — A 5th KPI tile labelled **TDP** now appears in the forecast drawer header row. Backend queries `built_filtered_weekly` in parallel for the focal UPC × retailer × channel and returns `current_tdp` on each `ForecastSeries`. Shows "—" for new cold-start SKUs not yet in BFW. Lets users see the focal SKU's current distribution points without leaving the drawer.
+
+**Proxy TDP stats** — Each proxy candidate now carries `launch_tdp`, `week7_tdp`, and `peak_tdp` extracted from its BFW ramp. Rendered in the proxy panel below the match chips: **Proxy TDP** Launch: 28 · Wk 7: 118 · Peak: 156. Answers the key question about the Wegmans/UNFI gap: velocity underperformance or distribution still building?
+
+Files changed: `retailer.py` (new `_q_tdp()`, TDP stats on candidates, 5-worker pool), `types.ts` (new fields on `ForecastSeries` and `ProxyCandidate`), `SkuRetailerView.tsx` (TDP KPI tile + proxy stats row).
+
+---
+
 ## Open Agenda Items (as of 2026-07-01)
 
 ### Brian sanity-check (gating dependency for July close)
