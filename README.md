@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 61: v2.5.3 — proxy retailer scope fix; demo caveats for Bracken/Jeff (2026-07-28)
+
+Critical data correctness fix. Proxy candidates were aggregated across all retailers in the CONVENTIONAL|FOOD channel, producing a proxy unit ramp of 400–600 units/week vs Wegmans-only actuals of 20–120 units/week — a 5–6x apparent gap that was entirely a scope mismatch, not a real signal. Fix: `get_proxy_candidates` now accepts `retail_account` and filters `built_filtered_weekly` to that retailer. UI passes `series.retail_account` when fetching candidates. Proxy units and TDP stats are now Wegmans-specific (or UNFI-specific, etc.), directly comparable to focal actuals.
+
+Verified for 08-40229-30590 (**Built Puff Strawberries N Cream Protein Bar 1.41 Oz (12 Pk)**):
+- Wegmans → 4 candidates, peak 59–174 units/wk (was 400–600+); Built Double Choc 12pk TDP at Wegmans: Launch 51, Wk7 60, Peak 67
+- UNFI → 4 candidates, peak 15–46 units/wk
+
+**Demo caveats for Bracken/Jeff (documented in project memory and wiki):**
+1. Focal actuals spike-then-decline (~120 → ~20 by wk7): could be placement fill, Puff seasonality, or trial-without-repeat — BUILT explains the cause, Mo surfaces the pattern
+2. "0 units / 0" cold-start KPI tiles: no scored LightGBM yet; open proxy panel first
+3. TDP metric difference: focal = cumulative `post_13w_tdp` (÷13 ≈ 19.5/wk avg); proxy = weekly BFW snapshot; both Wegmans-specific, direction correct, don't compare raw numbers side-by-side
+4. "Format match" proxy: focal not in BFW, no scored similarity; valid comparison (same retailer + 12pk format)
+
+Also bumped: description text in proxy panel now says "same retailer, same channel" explicitly; empty-state names the retailer; version bumped to 2.5.3 across API and UI.
+
+---
+
 ## README update 60: TDP integration in SKU View forecast drawer (2026-07-28)
 
 v2.5.2. Two connected changes that make the cold-start proxy narrative more data-grounded:
