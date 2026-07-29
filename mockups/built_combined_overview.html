@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mo — BUILT Combined Overview</title>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:          #0B1120;
+  --surface:     #131C2E;
+  --surface-raised: #1A2540;
+  --border:      #1E2D45;
+  --border-light:#243352;
+  --text:        #E2E8F0;
+  --text-muted:  #94A3B8;
+  --text-dim:    #64748B;
+  --blue:        #3B82F6;
+  --blue-dim:    #1D3461;
+  --green:       #10B981;
+  --green-dim:   #0A2E20;
+  --amber:       #F59E0B;
+  --amber-dim:   #2D2007;
+  --mono: "SF Mono","Fira Code","Cascadia Code",monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:#EEF2F9; --surface:#FFFFFF; --surface-raised:#F8FAFC;
+    --border:#CBD5E1; --border-light:#E2E8F0;
+    --text:#0F172A; --text-muted:#334155; --text-dim:#64748B;
+    --blue:#1D4ED8; --blue-dim:#DBEAFE;
+    --green:#047857; --green-dim:#D1FAE5;
+    --amber:#92400E; --amber-dim:#FEF3C7;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0B1120; --surface:#131C2E; --surface-raised:#1A2540;
+  --border:#1E2D45; --border-light:#243352;
+  --text:#E2E8F0; --text-muted:#94A3B8; --text-dim:#64748B;
+  --blue:#3B82F6; --blue-dim:#1D3461;
+  --green:#10B981; --green-dim:#0A2E20;
+  --amber:#F59E0B; --amber-dim:#2D2007;
+}
+:root[data-theme="light"] {
+  --bg:#EEF2F9; --surface:#FFFFFF; --surface-raised:#F8FAFC;
+  --border:#CBD5E1; --border-light:#E2E8F0;
+  --text:#0F172A; --text-muted:#334155; --text-dim:#64748B;
+  --blue:#1D4ED8; --blue-dim:#DBEAFE;
+  --green:#047857; --green-dim:#D1FAE5;
+  --amber:#92400E; --amber-dim:#FEF3C7;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { max-width: 100%; overflow-x: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── DOC BANNER ── */
+.doc-banner {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.doc-banner-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 11px 36px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.doc-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.doc-nav {
+  display: flex;
+  margin-left: auto;
+}
+.doc-nav a {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 4px 14px;
+  border-left: 1px solid var(--border);
+  transition: color .15s;
+}
+.doc-nav a:first-child { border-left: none; }
+.doc-nav a:hover { color: var(--blue); }
+@media (max-width: 620px) { .doc-nav { display: none; } }
+
+/* ── SECTION BREAK ── */
+.section-break {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 44px 36px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sb-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: .1em;
+  flex-shrink: 0;
+}
+.sb-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.sb-rule { flex: 1; height: 1px; background: var(--border); }
+
+/* ═══════════════════════════════
+   SECTION 1 — EXECUTIVE SUMMARY
+═══════════════════════════════ */
+.eb-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--green) 100%);
+  max-width: calc(1100px - 72px);
+  margin: 14px auto 0;
+}
+.eb-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.eb-header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.eb-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 5px;
+}
+.eb-headline {
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+.eb-headline em { color: var(--green); font-style: normal; }
+
+.eb-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.eb-metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--green);
+  border-radius: 9px;
+  padding: 14px 16px 12px;
+  text-align: center;
+}
+.eb-metric.blue-top { border-top-color: var(--blue); }
+.eb-metric-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.eb-metric-number {
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.025em;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.eb-metric-number.blue { color: var(--blue); }
+.eb-metric-unit { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 3px; }
+.eb-metric-context {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-light);
+}
+
+.compare-block {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.compare-header { display: grid; grid-template-columns: 1fr 1fr; }
+.ch {
+  padding: 9px 16px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ch.before { background: var(--amber-dim); color: var(--amber); border-bottom: 2px solid var(--amber); }
+.ch.after  { background: var(--green-dim);  color: var(--green);  border-bottom: 2px solid var(--green); border-left: 1px solid var(--border); }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot.amber { background: var(--amber); }
+.dot.green { background: var(--green); }
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-light); }
+.cc { padding: 10px 16px; font-size: 12.5px; line-height: 1.45; color: var(--text); }
+.cc.before { background: var(--surface); border-right: 1px solid var(--border-light); }
+.cc.after  { background: var(--surface-raised); }
+.cc strong { font-weight: 700; }
+.cc.before strong { color: var(--amber); }
+.cc.after  strong { color: var(--green); }
+
+.eb-bottom {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
+  border-radius: 9px;
+  padding: 18px 22px;
+}
+.eb-bottom h3 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.eb-bullets { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.eb-bullets li {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding-left: 20px;
+  position: relative;
+}
+.eb-bullets li::before { content: "→"; position: absolute; left: 0; color: var(--blue); font-weight: 700; }
+.eb-bullets strong { font-weight: 700; }
+.hl-green { color: var(--green); }
+.hl-blue  { color: var(--blue); }
+
+@media (max-width: 860px) { .eb-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .eb-metrics { grid-template-columns: 1fr; }
+  .compare-header, .compare-row { grid-template-columns: 1fr; }
+  .ch.after, .cc.after { border-left: none; border-top: 1px solid var(--border-light); }
+  .ch, .cc { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/* ═══════════════════════════════════════
+   SECTION 2 — DAY IN THE LIFE
+═══════════════════════════════════════ */
+.dc-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 36px 48px;
+}
+
+.hero {
+  padding: 36px 0 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 44px;
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text);
+  max-width: 700px;
+  margin-bottom: 14px;
+  text-wrap: balance;
+}
+.hero h1 em { color: var(--blue); font-style: normal; }
+.hero-sub { font-size: 15px; color: var(--text-muted); max-width: 620px; line-height: 1.7; }
+.hero-bracken {
+  margin-top: 20px;
+  padding: 14px 20px;
+  border-left: 3px solid var(--blue);
+  background: var(--surface);
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  max-width: 660px;
+}
+.hero-bracken span {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-style: normal;
+  display: block;
+  margin-top: 5px;
+  font-family: var(--mono);
+}
+
+.dc-section { margin-bottom: 52px; }
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+.dc-section h2 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.section-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; max-width: 680px; }
+
+.monday-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 700px) { .monday-grid { grid-template-columns: 1fr; } }
+.monday-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.monday-header {
+  padding: 11px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.monday-header.before { background: var(--amber-dim); color: var(--amber); }
+.monday-header.after  { background: var(--green-dim);  color: var(--green); }
+.monday-steps { padding: 16px 18px; }
+.step { display: flex; gap: 12px; margin-bottom: 13px; }
+.step:last-child { margin-bottom: 0; }
+.step-time { font-family: var(--mono); font-size: 10px; color: var(--text-dim); width: 44px; flex-shrink: 0; padding-top: 2px; }
+.step-title { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.step-detail { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
+.step-detail.warn { color: var(--amber); }
+.step-detail.ok   { color: var(--green); }
+
+.full-divider { height: 1px; background: var(--border); margin: 44px 0; }
+
+.people-grid { display: flex; flex-direction: column; gap: 18px; }
+.person-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.person-header {
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.person-header-info { flex: 1; }
+.person-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.person-role { font-size: 11.5px; color: var(--text-muted); }
+.person-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  white-space: nowrap;
+}
+.person-ba { display: grid; grid-template-columns: 1fr 1fr; }
+@media (max-width: 700px) { .person-ba { grid-template-columns: 1fr; } }
+.person-ba-col { padding: 16px 22px; }
+.person-ba-col:first-child { border-right: 1px solid var(--border); }
+@media (max-width: 700px) {
+  .person-ba-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+}
+.ps-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-bottom: 11px;
+}
+.ps-label.before { color: var(--amber); }
+.ps-label.after  { color: var(--green); }
+
+.jeff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .jeff-grid { grid-template-columns: 1fr; } }
+.jeff-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+.jeff-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.jeff-label.before { color: var(--amber); }
+.jeff-label.after  { color: var(--green); }
+.jeff-item { font-size: 12.5px; color: var(--text-muted); padding: 7px 0; border-bottom: 1px solid var(--border-light); line-height: 1.5; }
+.jeff-item:last-child { border-bottom: none; }
+.jeff-item strong { color: var(--text); }
+
+.durable-box {
+  margin-top: 18px;
+  padding: 16px 20px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 8px 8px 0;
+}
+.durable-box p { font-size: 13px; color: var(--text-muted); font-style: italic; line-height: 1.7; }
+.durable-box span {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-style: normal;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+@media (max-width: 800px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .metrics-grid { grid-template-columns: 1fr; } }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.metric-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.metric-before { font-size: 11.5px; color: var(--amber); margin-bottom: 3px; font-family: var(--mono); }
+.metric-after  { font-size: 17px; font-weight: 700; color: var(--green); margin-bottom: 3px; font-family: var(--mono); }
+.metric-desc   { font-size: 10.5px; color: var(--text-dim); line-height: 1.5; }
+
+.capability-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.capability-table th {
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.capability-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-muted);
+  vertical-align: top;
+}
+.capability-table tr:last-child td { border-bottom: none; }
+.capability-table td:first-child { color: var(--text); font-weight: 500; }
+.capability-table td.amber { color: var(--amber); }
+.capability-table td.green { color: var(--green); }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.badge.live { background: var(--green-dim); color: var(--green); }
+.badge.q3   { background: var(--blue-dim);  color: var(--blue); }
+
+.closing {
+  padding: 26px 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 44px;
+}
+.closing h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.closing p { font-size: 13px; color: var(--text-muted); line-height: 1.75; max-width: 760px; margin-bottom: 14px; }
+.closing p:last-child { margin-bottom: 0; }
+.closing strong { color: var(--text); }
+
+/* ═══════════════════════════════
+   SECTION 3 — GO-LIVE PLAN
+═══════════════════════════════ */
+.gl-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 36px 48px;
+}
+
+.gl-progress {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 22px;
+  margin-bottom: 28px;
+}
+.gl-progress-labels { display: flex; justify-content: space-between; margin-bottom: 9px; }
+.gl-progress-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-dim); }
+.gl-progress-label.right { color: var(--amber); }
+.now-chip {
+  display: inline-block;
+  background: var(--amber);
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 99px;
+  letter-spacing: .05em;
+}
+.gl-track { height: 7px; background: var(--border); border-radius: 99px; position: relative; }
+.gl-fill { height: 100%; width: 12%; background: linear-gradient(90deg, var(--blue), var(--amber)); border-radius: 99px; position: relative; }
+.gl-marker {
+  position: absolute; right: -1px; top: 50%;
+  transform: translateY(-50%);
+  width: 12px; height: 12px;
+  background: var(--amber);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+}
+.gl-caption { margin-top: 7px; font-size: 10px; color: var(--text-dim); }
+
+.gl-timeline { padding-bottom: 8px; }
+.phase { display: grid; grid-template-columns: 40px 1fr; gap: 0 18px; position: relative; }
+.phase:not(:last-child) .phase-spine::after {
+  content: "";
+  display: block;
+  width: 2px;
+  background: var(--border);
+  position: absolute;
+  top: 40px;
+  bottom: -20px;
+  left: 19px;
+}
+.phase-spine { position: relative; }
+.phase-badge {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.phase-badge.gold { background: var(--amber); color: #000; border-color: var(--amber); }
+.phase-badge.combined { font-size: 10px; letter-spacing: -.03em; }
+.phase-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 15px 18px 17px;
+  margin-bottom: 20px;
+}
+.phase-card.active { border-color: var(--amber); box-shadow: 0 0 0 2px rgba(245,158,11,.1); }
+.phase-hdr {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; margin-bottom: 9px; flex-wrap: wrap;
+}
+.phase-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.phase-weeks { font-size: 10px; font-weight: 600; color: var(--text-dim); white-space: nowrap; padding-top: 3px; font-family: var(--mono); }
+.phase-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
+.phase-workstream + .phase-workstream {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+.phase-workstream-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 6px;
+}
+
+.activity-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.activity-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--text-muted); }
+.activity-list li::before { content: "›"; color: var(--amber); font-weight: 700; font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+
+.gl-callout {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--amber-dim);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 8px 8px 0;
+}
+.gl-callout-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); margin-bottom: 4px; }
+.gl-callout-title { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.gl-callout-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.gl-callout-list li { font-size: 12px; color: var(--text-muted); display: flex; gap: 7px; align-items: flex-start; }
+.gl-callout-list li::before { content: "→"; color: var(--amber); font-weight: 700; flex-shrink: 0; }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+.tag {
+  font-size: 9px; font-weight: 600;
+  padding: 2px 8px; border-radius: 99px;
+  background: var(--blue-dim); color: var(--blue);
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.tag.gold { background: var(--amber); color: #000; }
+
+.gl-footer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 24px;
+  margin-top: 4px;
+  display: flex; gap: 28px; flex-wrap: wrap;
+}
+.gl-stat { flex: 1; min-width: 90px; }
+.gl-stat .val { font-size: 20px; font-weight: 800; color: var(--amber); font-variant-numeric: tabular-nums; }
+.gl-stat .lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+
+@media (max-width: 560px) {
+  .eb-wrap, .dc-wrap, .gl-wrap, .section-break, .doc-banner-inner {
+    width: 100%;
+    min-width: 0;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .doc-eyebrow { min-width: 0; white-space: normal; }
+  .phase { grid-template-columns: 36px minmax(0, 1fr); gap: 0 12px; }
+  .phase-badge { width: 36px; height: 36px; }
+  .phase:not(:last-child) .phase-spine::after { top: 36px; left: 17px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── STICKY NAV ── -->
+<div class="doc-banner">
+  <div class="doc-banner-inner">
+    <div class="doc-eyebrow">Mo by Aevah · BUILT Combined Overview</div>
+    <nav class="doc-nav">
+      <a href="#exec">Executive Summary</a>
+      <a href="#team">Day in the Life</a>
+      <a href="#golive">Go-Live Plan</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 1 — EXECUTIVE SUMMARY
+════════════════════════════════════════ -->
+<div class="section-break" id="exec">
+  <span class="sb-num">01</span>
+  <span class="sb-label">Executive Summary</span>
+  <div class="sb-rule"></div>
+</div>
+
+<div class="eb-bar"></div>
+<div class="eb-wrap">
+
+  <div class="eb-header">
+    <div class="eb-eyebrow">Aevah · Mo — Executive Brief · BUILT FP&amp;A</div>
+    <div class="eb-headline">More accurate forecasts. More time for <em>growth</em>. Your team elevated to lead it.</div>
+  </div>
+
+  <div class="eb-metrics">
+    <div class="eb-metric">
+      <div class="eb-metric-label">Forecast Accuracy</div>
+      <div class="eb-metric-number">4%</div>
+      <div class="eb-metric-unit">target error rate</div>
+      <div class="eb-metric-context">vs. BUILT's current 7–10%</div>
+    </div>
+    <div class="eb-metric">
+      <div class="eb-metric-label">Revenue Impact</div>
+      <div class="eb-metric-number">$1M</div>
+      <div class="eb-metric-unit">per 1% accuracy gain</div>
+      <div class="eb-metric-context">$3–6M total impact at BUILT's scale</div>
+    </div>
+    <div class="eb-metric">
+      <div class="eb-metric-label">Hours Reclaimed</div>
+      <div class="eb-metric-number">371<span style="font-size:.44em;font-weight:900;letter-spacing:0">+</span></div>
+      <div class="eb-metric-unit">per year, 3 people</div>
+      <div class="eb-metric-context">data assembly → strategic decisions</div>
+    </div>
+    <div class="eb-metric blue-top">
+      <div class="eb-metric-label">Scale Ceiling</div>
+      <div class="eb-metric-number blue">∞</div>
+      <div class="eb-metric-unit">retailers · SKUs · geos</div>
+      <div class="eb-metric-context">unlimited growth supported</div>
+    </div>
+  </div>
+
+  <div class="compare-block">
+    <div class="compare-header">
+      <div class="ch before"><div class="dot amber"></div>Today</div>
+      <div class="ch after"><div class="dot green"></div>With Mo, Powered by Aevah</div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before">SPINS arrives → <strong>team manually rebuilds</strong> the model each month</div>
+      <div class="cc after">SPINS arrives → <strong>Mo has already refreshed</strong></div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before"><strong>One forecast model</strong> — errors surface from NetSuite after the fact</div>
+      <div class="cc after"><strong>Multiple forecasts run in parallel</strong> — gaps surface immediately</div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before">Leadership flags something → <strong>must remember to apply it next month</strong></div>
+      <div class="cc after">Leadership flags something → <strong>guidance retained</strong></div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before"><strong>97M rows of competitive data</strong> — intractable to work with manually</div>
+      <div class="cc after"><strong>Any SKU, any retailer, any question</strong> — answered in seconds</div>
+    </div>
+    <div class="compare-row">
+      <div class="cc before">More retailers, more SKUs → <strong>more manual work and staffing pressure</strong></div>
+      <div class="cc after">More retailers, more SKUs → <strong>Mo scales; team stays focused</strong></div>
+    </div>
+  </div>
+
+  <div class="eb-bottom">
+    <h3>The bottom line for BUILT</h3>
+    <ul class="eb-bullets">
+      <li>The FP&amp;A team shifts from assembling data to making decisions — <strong class="hl-green">371+ hours reclaimed per year</strong>, redirected toward the work that drives growth.</li>
+      <li>Every correction leadership makes becomes a <strong class="hl-green">permanent system setting</strong> — compounding forecast accuracy over time instead of resetting each month.</li>
+      <li>As BUILT scales to more retailers and SKUs, Mo automatically adjusts — the team grows its impact, not its workload. Closing the forecast gap alone represents a <strong class="hl-blue">$3–6M revenue impact</strong> at BUILT's scale.</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 2 — DAY IN THE LIFE
+════════════════════════════════════════ -->
+<div class="section-break" id="team">
+  <span class="sb-num">02</span>
+  <span class="sb-label">Day in the Life · Connor's World</span>
+  <div class="sb-rule"></div>
+</div>
+
+<div class="dc-wrap">
+
+  <div class="hero">
+    <div class="hero-eyebrow">Aevah / Mo — BUILT FP&amp;A</div>
+    <h1>What this <em>practically</em> means<br>for your team</h1>
+    <p class="hero-sub">Three people. One platform. The Monday morning that changes how BUILT forecasts its business — and how fast that business can grow.</p>
+    <div class="hero-bracken">
+      "What does this practically mean for us, like for our team specifically — with who — with the task that everyone's doing right now, like how can we integrate something like this and what would it actually yield for us?"
+      <span>— Bracken Palmer, June 26, 2026</span>
+    </div>
+  </div>
+
+  <div class="dc-section">
+    <div class="section-label">The Weekly Trigger</div>
+    <h2>Monday morning. New SPINS data arrives.</h2>
+    <p class="section-desc">Every month, SPINS releases updated consumption data. That data is the foundation of BUILT's forecast. Here is what happens next — today vs. with Mo.</p>
+    <div class="monday-grid">
+      <div class="monday-card">
+        <div class="monday-header before"><div class="dot amber"></div>Today</div>
+        <div class="monday-steps">
+          <div class="step">
+            <div class="step-time">AM</div>
+            <div class="step-content">
+              <div class="step-title">Brian's team processes the SPINS extract</div>
+              <div class="step-detail warn">~50,000 rows — manual download and format</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time"></div>
+            <div class="step-content">
+              <div class="step-title">Connor copies data into the master Excel file</div>
+              <div class="step-detail warn">5 revenue build tabs, updated one section at a time</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time"></div>
+            <div class="step-content">
+              <div class="step-title">Ethan opens 100 sales planner files</div>
+              <div class="step-detail warn">One by one — promo calendars, lift assumptions, store counts</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time"></div>
+            <div class="step-content">
+              <div class="step-title">S&amp;OP meeting — every Monday, all day</div>
+              <div class="step-detail warn">Connor + Director of Planning + Jeff · 30 min per sales rep</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time">PM</div>
+            <div class="step-content">
+              <div class="step-title">Forecast updated — if everything was on time</div>
+              <div class="step-detail warn">Sales planners often outdated; reps traveling; data stale</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="monday-card">
+        <div class="monday-header after"><div class="dot green"></div>With Mo</div>
+        <div class="monday-steps">
+          <div class="step">
+            <div class="step-time">Sun PM</div>
+            <div class="step-content">
+              <div class="step-title">Aevah ingests new SPINS automatically</div>
+              <div class="step-detail ok">All 156 SKUs × 100 retailers structured overnight — no manual pull</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time">8 AM</div>
+            <div class="step-content">
+              <div class="step-title">Connor opens Mo — forecast already updated</div>
+              <div class="step-detail ok">13-week AI forecast refreshed · Cannibalization scores updated · Macro signals live</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time"></div>
+            <div class="step-content">
+              <div class="step-title">Events surfaced: what changed, what's at risk</div>
+              <div class="step-detail ok">Alert queue shows new signals — no hunting required</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time"></div>
+            <div class="step-content">
+              <div class="step-title">S&amp;OP meeting — team reviews, not assembles</div>
+              <div class="step-detail ok">Everyone looking at the same live view · Jeff's changes are permanent in the system</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-time">PM</div>
+            <div class="step-content">
+              <div class="step-title">Forecast improved by the decisions made, not the data assembled</div>
+              <div class="step-detail ok">Path to monthly S&amp;OP as data assembly burden drops</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="full-divider"></div>
+
+  <div class="dc-section">
+    <div class="section-label">Three People</div>
+    <h2>Who saves time. What they do instead.</h2>
+    <p class="section-desc">Mo doesn't replace Connor, Ethan, or Chase. It removes the data assembly work so each person can spend that time on what they're actually good at.</p>
+    <div class="people-grid">
+
+      <div class="person-card">
+        <div class="person-header">
+          <div class="person-header-info">
+            <div class="person-name">Connor Lain</div>
+            <div class="person-role">Director of Strategy · Retail Forecast</div>
+          </div>
+          <div class="person-tag">Primary Mo User</div>
+        </div>
+        <div class="person-ba">
+          <div class="person-ba-col">
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
+            <div class="jeff-item"><strong>Copy-pastes ~50K SPINS rows</strong> into master Excel monthly</div>
+            <div class="jeff-item"><strong>Updates seasonality curve manually</strong> each cycle</div>
+            <div class="jeff-item">Opens 100 sales planner files for <strong>promo calendar data</strong></div>
+            <div class="jeff-item"><strong>Estimates cannibalization column by hand</strong> — acknowledged as a guess</div>
+            <div class="jeff-item"><strong>No macro signals</strong> — gas prices, consumer sentiment not in model</div>
+            <div class="jeff-item"><strong>No independent sanity check</strong> — errors caught from NetSuite actuals after the fact</div>
+            <div class="jeff-item">Data-dark retailers like Winco: <strong>flying blind on velocity changes</strong></div>
+            <div class="jeff-item">New SKU ramp: <strong>defaults to sales team estimate</strong>, 12-week rule of thumb</div>
+          </div>
+          <div class="person-ba-col">
+            <div class="ps-label after"><div class="dot green"></div>With Mo</div>
+            <div class="jeff-item"><strong>SPINS structured in Aevah</strong> — no copy-paste, always current</div>
+            <div class="jeff-item">Seasonality <strong>baked into AI model automatically</strong></div>
+            <div class="jeff-item"><strong>AI-scored cannibalization</strong> replaces the manual column</div>
+            <div class="jeff-item"><strong>Gas prices + consumer sentiment</strong> live on every velocity chart (FRED API)</div>
+            <div class="jeff-item"><strong>13-week AI forecast</strong> as independent sanity check on his numbers</div>
+            <div class="jeff-item">New SKU ramp: <strong>cold-start proxy</strong> from similar BUILT launches, data-anchored</div>
+            <div class="jeff-item">Mo Chat: <em>"What lift should I assume at Winco next month?"</em></div>
+            <div class="jeff-item">S&amp;OP: <strong>reviews and decides</strong> — does not spend the day assembling</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="person-card">
+        <div class="person-header">
+          <div class="person-header-info">
+            <div class="person-name">Ethan</div>
+            <div class="person-role">FP&amp;A Director · Forecast Coordination</div>
+          </div>
+          <div class="person-tag">Data Flow Owner</div>
+        </div>
+        <div class="person-ba">
+          <div class="person-ba-col">
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
+            <div class="jeff-item"><strong>Collects 100 individual retailer forecasts</strong> from sales reps — one file at a time</div>
+            <div class="jeff-item">Coordinates calls with 6–7 sales reps, <strong>each managing 10–20 planners</strong></div>
+            <div class="jeff-item">Manages data flow from 100 planner files <strong>into Connor's master Excel</strong></div>
+            <div class="jeff-item"><strong>Version control firefighting</strong> — shared access caused conflicts</div>
+            <div class="jeff-item"><strong>Data quality gaps</strong>: reps traveling, planners not updated, lift assumptions inconsistent</div>
+            <div class="jeff-item"><strong>Manually aggregates</strong> opportunities, shippers, and Costco tabs</div>
+          </div>
+          <div class="person-ba-col">
+            <div class="ps-label after"><div class="dot green"></div>With Mo</div>
+            <div class="jeff-item">SPINS already structured by <strong>account × SKU × week in Aevah</strong> — automated, no collection</div>
+            <div class="jeff-item">Sales team promo inputs: <strong>structured digital form replaces 100 Excel files</strong> <span class="badge q3">Q3</span></div>
+            <div class="jeff-item"><strong>No version control</strong> needed — one live system, always current</div>
+            <div class="jeff-item">Coordination shifts from <strong>data collection to insight review</strong></div>
+            <div class="jeff-item">Data quality issues surface automatically — <strong>gaps flagged in the system</strong></div>
+            <div class="jeff-item">Time freed for <strong>higher-value coordination</strong> and exception management</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="person-card">
+        <div class="person-header">
+          <div class="person-header-info">
+            <div class="person-name">Chase Sparrow</div>
+            <div class="person-role">FP&amp;A · Trade &amp; Revenue Analysis</div>
+          </div>
+          <div class="person-tag">Analyst · Ad Hoc Intelligence</div>
+        </div>
+        <div class="person-ba">
+          <div class="person-ba-col">
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
+            <div class="jeff-item">Category intelligence <strong>intractable at scale</strong> — 97M rows, 300+ competitors, 5,000+ SKUs</div>
+            <div class="jeff-item"><strong>Trade analysis and ad hoc revenue modeling in Excel</strong></div>
+            <div class="jeff-item">Learning Connor's process — <strong>taking on lower-hanging fruit manually</strong></div>
+            <div class="jeff-item">Competitive pricing and assortment changes: <strong>slow to detect, hard to quantify</strong></div>
+            <div class="jeff-item">Revenue analysis by retailer and sales rep: <strong>manual builds from scratch each time</strong></div>
+          </div>
+          <div class="person-ba-col">
+            <div class="ps-label after"><div class="dot green"></div>With Mo</div>
+            <div class="jeff-item"><strong>Mo Trends</strong>: competitive velocity, flavor trends, brand share — automated across the full category</div>
+            <div class="jeff-item"><strong>Price elasticity suite</strong>: how BUILT vs. competitor prices drive demand shifts — live</div>
+            <div class="jeff-item"><strong>Cannibalization suite</strong>: which SKUs are incremental vs. taking share — scored, always current</div>
+            <div class="jeff-item">Mo Chat: <em>"Which competitors gained share at Kroger last quarter?"</em> — instant answer</div>
+            <div class="jeff-item">Trade analysis <strong>grounded in 97M rows of SPINS</strong>, not just what a rep reported</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="full-divider"></div>
+
+  <div class="dc-section">
+    <div class="section-label">Jeff Thompson — SVP Finance</div>
+    <h2>What Jeff sees. What changes for him.</h2>
+    <p class="section-desc">Jeff oversees all forecasting. He attends every Monday S&amp;OP meeting and calls out things that look wrong. Today, those calls are heard in a room and forgotten by next month.</p>
+    <div class="jeff-grid">
+      <div class="jeff-card">
+        <div class="jeff-label before"><div class="dot amber"></div>Today</div>
+        <div class="jeff-item"><strong>All-day Mondays:</strong> Connor + Director of Planning + Jeff attend every S&amp;OP meeting, 30 min per rep</div>
+        <div class="jeff-item"><strong>Verbal accountability:</strong> Jeff likes the voice-over from reps — it's currently the only accountability mechanism</div>
+        <div class="jeff-item"><strong>One-off corrections:</strong> When Jeff flags something wrong, it gets fixed for this cycle. No guarantee it's applied consistently going forward</div>
+        <div class="jeff-item"><strong>No validation layer:</strong> The model has no independent check. Errors surface from NetSuite actuals — after the fact</div>
+        <div class="jeff-item"><strong>Growth pressure:</strong> "We're growing so fast" — the process that worked at 20 customers is straining at 100+</div>
+      </div>
+      <div class="jeff-card">
+        <div class="jeff-label after"><div class="dot green"></div>With Mo</div>
+        <div class="jeff-item"><strong>Jeff's call becomes a system setting:</strong> When he flags an assumption, it updates in Mo — consistent and permanent across every future cycle</div>
+        <div class="jeff-item"><strong>Independent validation built in:</strong> 13-week AI forecast alongside Connor's model — Jeff can see where they agree and where they diverge</div>
+        <div class="jeff-item"><strong>Forecast accuracy over time:</strong> 4% model error vs. 7–10% industry baseline. Every 1% improvement = $1M difference across the portfolio</div>
+        <div class="jeff-item"><strong>S&amp;OP meeting evolves:</strong> Team reviews anomalies and decisions — not raw data. Path to monthly cadence as assembly time drops</div>
+        <div class="jeff-item"><strong>No ceiling as BUILT grows:</strong> 200 retailers, 300 SKUs — Mo scales without adding FP&amp;A headcount proportionally</div>
+      </div>
+    </div>
+    <div class="durable-box">
+      <p>"When we change that setting in Mo, it's now consistent and permanent. You're not relying on people adjusting how they work and remembering to do it differently. It's about putting things in systems to continue to refine and improve accuracy over time — in a durable way."</p>
+      <span>— Rob Long, July 22, 2026</span>
+    </div>
+  </div>
+
+  <div class="full-divider"></div>
+
+  <div class="dc-section">
+    <div class="section-label">What It Yields</div>
+    <h2>The numbers behind the change.</h2>
+    <p class="section-desc">Across forecast accuracy, time savings, and analytical scale — what Mo delivers for a hyper-growth CPG brand.</p>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Forecast Error</div>
+        <div class="metric-before">7–10% today</div>
+        <div class="metric-after">4%</div>
+        <div class="metric-desc">Aevah benchmark on CPG data. Every 1% improvement = ~$1M across the portfolio.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Data Assembly</div>
+        <div class="metric-before">371+ hrs / year</div>
+        <div class="metric-after">Automated</div>
+        <div class="metric-desc">Across 3 people on the FP&amp;A team. Hours shift from assembly to decision-making.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Category Intelligence</div>
+        <div class="metric-before">Intractable manually</div>
+        <div class="metric-after">97M rows</div>
+        <div class="metric-desc">Full SPINS category — 300+ competitors, 5,000+ SKUs — always current, always queryable.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Scale Ceiling</div>
+        <div class="metric-before">Straining at 100</div>
+        <div class="metric-after">No ceiling</div>
+        <div class="metric-desc">More retailers, more SKUs, more geographies — Mo scales without proportional headcount growth.</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="capability-table">
+      <thead>
+        <tr><th>Capability</th><th>Today</th><th>With Mo</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Base velocity (L12 SPINS)</td><td class="amber">50K-row manual copy-paste monthly</td><td class="green">Aevah — auto-updated, always current</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Cannibalization column</td><td class="amber">Manual estimate — Connor's acknowledged guess</td><td class="green">AI-scored probability — 85 focal SKUs, refreshed each cycle</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Independent forecast sanity check</td><td class="amber">None — errors caught from NetSuite after the fact</td><td class="green">13-week AI forecast alongside Connor's model</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Macro signals (gas, sentiment)</td><td class="amber">Zero — Connor: "too hard to manually track"</td><td class="green">FRED API live on every velocity chart</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>New SKU ramp projection</td><td class="amber">Sales team estimate + 12-week rule of thumb</td><td class="green">Cold-start proxy from similar BUILT launches, same channel</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Competitive intelligence at scale</td><td class="amber">Intractable — 97M rows, manual sampling</td><td class="green">Mo Trends — full category velocity, brand share, flavor trends</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Promo lift accuracy</td><td class="amber">Sales team estimate, no environmental factors</td><td class="green">MO_73 promo lift by retailer, SKU, depth — competitor context included</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Data-dark retailer proxy (Winco, HEB)</td><td class="amber">Broker tribal knowledge — stale quickly</td><td class="green">Channel-matched surrogate from similar SPINS retailers</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Sales planner integration (100 files)</td><td class="amber">Ethan opens each file manually each month</td><td class="green">Structured digital input — replaces 100 Excel files</td><td><span class="badge q3">Q3 Build</span></td></tr>
+        <tr><td>S&amp;OP flash report format</td><td class="amber">Connor builds ad hoc; Jeff reviews verbally</td><td class="green">Standard format, always fed from latest Mo data</td><td><span class="badge q3">Q3 Build</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="closing">
+    <h3>The answer to Bracken's question</h3>
+    <p>Connor stops assembling and starts deciding. Ethan stops coordinating data and starts reviewing insights. Chase has instant access to 97 million rows of competitive intelligence — any ad hoc question, any retailer, any SKU, answered in seconds. Jeff's feedback becomes a system improvement, not a weekly memory exercise.</p>
+    <p>And as BUILT grows — <strong>more retailers, more SKUs, more geographies, more sales reps</strong> — the FP&amp;A team doesn't have to grow at the same rate. Mo absorbs the scale. The team focuses on the judgment calls that only they can make.</p>
+    <p style="font-size:12.5px; color:var(--text-dim);"><strong style="color:var(--text-muted);">Works with your existing Copilot investment:</strong> Mo Chat can run on BUILT's Azure Copilot endpoint — same Microsoft environment, same security posture, same data governance you already have in place. The interface stays familiar; what changes is that Mo is now grounded in 97 million rows of BUILT's actual SPINS data.</p>
+    <p style="font-size:12.5px; color:var(--text-dim);"><strong style="color:var(--text-muted);">Note on promotional analysis:</strong> Promo data quality requires a calibration period. Brian and the team have flagged this as a near-term focus area — the base velocity, cannibalization, and competitive intelligence capabilities are available now, and promo lift precision improves as we work through the data together.</p>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     SECTION 3 — GO-LIVE PLAN
+════════════════════════════════════════ -->
+<div class="section-break" id="golive">
+  <span class="sb-num">03</span>
+  <span class="sb-label">Go-Live Implementation Plan</span>
+  <div class="sb-rule"></div>
+</div>
+
+<div class="gl-wrap">
+
+  <div class="gl-progress">
+    <div class="gl-progress-labels">
+      <span class="gl-progress-label"><span class="now-chip">NOW</span> &nbsp;Hands-on Demo</span>
+      <span class="gl-progress-label right">Production Go-Live →</span>
+    </div>
+    <div class="gl-track">
+      <div class="gl-fill"><div class="gl-marker"></div></div>
+    </div>
+    <div class="gl-caption">6 implementation workstreams · 5 weeks to full production · data validation at every gate</div>
+  </div>
+
+  <div class="gl-timeline">
+
+    <div class="phase">
+      <div class="phase-spine"><div class="phase-badge gold">0</div></div>
+      <div class="phase-card active">
+        <div class="phase-hdr">
+          <div class="phase-title">Engagement Kickoff</div>
+          <div class="phase-weeks">Week 1</div>
+        </div>
+        <div class="phase-desc">Formalize the relationship and establish the access needed to do integration work.</div>
+        <ul class="activity-list">
+          <li>Contract and data sharing agreement executed</li>
+          <li>Stakeholder kickoff: Brian, Jeff, Bracken, Connor, Aevah team</li>
+          <li>Define success metrics and go-live acceptance criteria</li>
+          <li>Identify internal BUILT data owners and export paths</li>
+        </ul>
+        <div class="tag-row">
+          <span class="tag gold">Active now</span>
+          <span class="tag">Legal / contracts</span>
+          <span class="tag">Stakeholder alignment</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-spine"><div class="phase-badge">1</div></div>
+      <div class="phase-card">
+        <div class="phase-hdr">
+          <div class="phase-title">Discovery — Connor's Data Model</div>
+          <div class="phase-weeks">Week 1</div>
+        </div>
+        <div class="phase-desc">Understand how BUILT currently tracks demand, budgets, and trade performance — then map it to Mo's data model.</div>
+        <ul class="activity-list">
+          <li>Structured walkthrough of Connor's Excel model (100 retailers × 156 SKUs)</li>
+          <li>Document all input fields: actuals, trade spend, promotional calendars, ARP records</li>
+          <li>Map BUILT's internal KPIs to Mo's output schema (units, velocity, distribution, elasticity)</li>
+          <li>Identify what Mo provides that Connor's model cannot (cannibalization, proxy benchmarks, distribution signals)</li>
+          <li>Capture manual steps in Connor's current process — time-tax audit</li>
+        </ul>
+        <div class="gl-callout">
+          <div class="gl-callout-lbl">Key integration workstream</div>
+          <div class="gl-callout-title">Connor's Actuals → Mo Validation Baseline</div>
+          <ul class="gl-callout-list">
+            <li>Export BUILT actuals for 20+ priority SKUs × top 10 retailers as ground truth</li>
+            <li>Run side-by-side: Connor's figures vs. Mo's SPINS-derived output — identify any discrepancies</li>
+            <li>Reconcile ARP differences (e.g., AHOLD pricing anomalies) against BUILT's trade records</li>
+            <li>Document what matches, what diverges, and why — this becomes the validation report</li>
+          </ul>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Data mapping</span>
+          <span class="tag">Connor / FP&amp;A</span>
+          <span class="tag">Validation baseline</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-spine"><div class="phase-badge">2</div></div>
+      <div class="phase-card">
+        <div class="phase-hdr">
+          <div class="phase-title">Validation &amp; Calibration</div>
+          <div class="phase-weeks">Weeks 2–3</div>
+        </div>
+        <div class="phase-desc">Use BUILT's own actuals as the benchmark to verify Mo's accuracy — and to improve it.</div>
+        <ul class="activity-list">
+          <li>Forecast backtesting: Mo vs. BUILT's prior-year actuals on held-out retailers</li>
+          <li>Elasticity verification: cross-reference Mo's price signals against known BUILT trade events</li>
+          <li>Distribution accuracy: reconcile SPINS TDP with BUILT's internal distribution records</li>
+          <li>Cannibalization audit: validate Mo's scored pairs against BUILT's portfolio team intuition</li>
+          <li>Coverage gap report: retailers or SKUs thin in SPINS data; agree on plan for each</li>
+          <li>Statistical forecasting enabled for retailer/SKU combinations not yet pipeline-scored</li>
+        </ul>
+        <div class="tag-row">
+          <span class="tag">Accuracy verification</span>
+          <span class="tag">Model calibration</span>
+          <span class="tag">Coverage gaps</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-spine"><div class="phase-badge">3</div></div>
+      <div class="phase-card">
+        <div class="phase-hdr">
+          <div class="phase-title">BUILT-Specific Configuration</div>
+          <div class="phase-weeks">Week 4</div>
+        </div>
+        <div class="phase-desc">Tune Mo to BUILT's product hierarchy, terminology, and the specific workflows each stakeholder needs.</div>
+        <ul class="activity-list">
+          <li>Connor / FP&amp;A view: budget vs. forecast variance, period-over-period comparison, export to Excel</li>
+          <li>Jeff / Bracken view: executive portfolio P&amp;L summary, distribution health, top alerts</li>
+          <li>Sales team view: retailer-by-retailer scorecard, event queue, competitive gap signals</li>
+          <li>Mo AI tuned on BUILT's product vocabulary, SKU naming conventions, and common questions</li>
+          <li>Alert rules configured: distribution drops, velocity divergence, cannibalization threshold breaches</li>
+        </ul>
+        <div class="tag-row">
+          <span class="tag">FP&amp;A workflow</span>
+          <span class="tag">Executive views</span>
+          <span class="tag">Mo AI tuning</span>
+          <span class="tag">Alerts</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-spine"><div class="phase-badge combined">4+5</div></div>
+      <div class="phase-card">
+        <div class="phase-hdr">
+          <div class="phase-title">Production, UAT, Launch &amp; Adoption</div>
+          <div class="phase-weeks">Final Week · Week 5</div>
+        </div>
+        <div class="phase-desc">Complete production readiness and user acceptance, then go live with Connor's team and establish the operating cadence for adoption.</div>
+        <div class="phase-workstream">
+          <div class="phase-workstream-title">Phase 4 · Production Infrastructure &amp; UAT</div>
+          <ul class="activity-list">
+            <li>Cloud hosting deployment — BUILT-specific environment, not shared infrastructure</li>
+            <li>SSO / role-based access (FP&amp;A, Sales, Executive tiers)</li>
+            <li>Automated weekly SPINS data refresh pipeline</li>
+            <li>Monitoring, uptime SLA, and incident response defined</li>
+            <li>Data governance documentation and access audit log</li>
+            <li>UAT with Connor's team: structured test scenarios against Phase 2 validation baselines</li>
+            <li>UAT defect log, triage, and resolution before sign-off</li>
+            <li>Connor sign-off: Mo output within agreed tolerance vs. BUILT actuals — gate to launch activities</li>
+          </ul>
+        </div>
+        <div class="phase-workstream">
+          <div class="phase-workstream-title">Phase 5 · Launch &amp; Adoption</div>
+          <ul class="activity-list">
+            <li>Team onboarding: FP&amp;A team training (Connor + direct reports)</li>
+            <li>Formal go/no-go review against Week 1 acceptance criteria</li>
+            <li>Monthly business review cadence: Mo insights → BUILT planning decisions</li>
+            <li>Quarterly model refresh incorporating new BUILT actuals as training signal</li>
+            <li>Expanded rollout: Sales, Marketing, National Accounts access</li>
+          </ul>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Infrastructure</span>
+          <span class="tag">Security</span>
+          <span class="tag">Data refresh</span>
+          <span class="tag">SLA</span>
+          <span class="tag">UAT</span>
+          <span class="tag">Sign-off</span>
+          <span class="tag">Training</span>
+          <span class="tag">Go-live</span>
+          <span class="tag">Cadence</span>
+          <span class="tag">Expansion</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="gl-footer">
+    <div class="gl-stat"><div class="val">5 wks</div><div class="lbl">Demo to full production</div></div>
+    <div class="gl-stat"><div class="val">6</div><div class="lbl">Implementation workstreams</div></div>
+    <div class="gl-stat"><div class="val">Week 1</div><div class="lbl">Kickoff + Connor walkthrough</div></div>
+    <div class="gl-stat"><div class="val">Every gate</div><div class="lbl">Validation before advancing</div></div>
+  </div>
+
+</div>
+</body>
+</html>
