@@ -6,6 +6,23 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 68: v2.5.6 — UpcCombobox non-blocking focal SKU selector (2026-07-29)
+
+`v2.5.6` tagged across all four repos. Replaces native `<select>` elements in the focal SKU header pill and the proxy candidate selector (forecast drawer) with a custom `UpcCombobox` React component.
+
+**Key behaviors:**
+- Positioned `div` overlay — never captures Mac OS input focus; user can switch apps, respond to email, multitask while the dropdown is open
+- Type-ahead filter: description keywords, full UPC, last 5 UPC digits, pack size tokens already in the description string
+- Full `description (upc)` shown in the closed trigger with no truncation (matches original `<select>` display width)
+- Proxy selector preserves "Top Matches / Other BUILT SKUs" group dividers; trigger shows description only, score info in list
+- Keyboard nav (arrows / enter / escape), match highlighting, outside-click dismissal
+- Placeholder text communicates search capability — no "Search by:" chip tags that looked interactive but weren't
+- TypeScript compile clean
+
+**Files:** `src/components/layout/UpcCombobox.tsx` (new), `Header.tsx`, `SkuRetailerView.tsx`
+
+---
+
 ## README update 67: Circana field map + dark-retailer shipment estimation documented (2026-07-29)
 
 Research session on data coverage gaps for Class 2 (Circana/Costco) and Class 4 (dark: Winco/HEB/TJ's) retailers. No implementation yet — blocked on sample data from BUILT.
