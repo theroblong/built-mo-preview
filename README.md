@@ -6,6 +6,19 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 63: BUILT go-live implementation plan (2026-07-29)
+
+6-phase, 10-week rollout plan from Hands-on Demo to production — created for Brian + Rob meeting 2026-07-23.
+
+**Phases:** 0 Kickoff (Wk 1) → 1 Discovery/Connor (Wk 2) → 2 Validation (Wks 3–4) → 3 Configuration (Wks 5–6) → 4 Infrastructure (Wks 7–8) → 5 Launch (Wks 9–10).
+
+**Phase 1 is the critical gate:** structured walkthrough of Connor's 100 retailers × 156 SKUs Excel model; export BUILT actuals for 20+ priority SKUs; side-by-side vs Mo's SPINS output to produce a validation report (what matches, what diverges, why). All downstream accuracy guarantees depend on this reconciliation step.
+
+Artifact published at: https://claude.ai/code/artifact/a1b5c7b7-75fe-4367-86cc-81cabcb7cd2e  
+Local: `mockups/built_golive_plan.html` · Wiki: `customer-built-doc/wiki/11-prospects.md`
+
+---
+
 ## README update 62: v2.5.4 — TDP recalibration; Launch TDP + Last TDP on consistent BFW basis (2026-07-28)
 
 Full audit of TDP metrics across SKU View revealed a mislabeled pipeline artifact: `post_13w_tdp` in `built_prepost_features` is a cumulative sum of weekly TDP values over the launch window (totalled 253 for 30590 at Wegmans), while the proxy panel's "Launch TDP" was a BFW week-1 snapshot (48). Same label, different scales, different sources.
