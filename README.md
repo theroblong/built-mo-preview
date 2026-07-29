@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 65: MO_75 — ETS statistical forecast fallback for all forecast drawers (2026-07-29)
+
+Forecast drawers with no LightGBM output now show a 13-week ETS (Damped Holt's Linear) projection when ≥ 4 actuals exist, keeping time window consistent across all drawers.
+
+**Changes:**
+- `retailer.py`: `_ets_forecast()` — statsmodels ExponentialSmoothing, damped trend, 500-path bootstrap CI (q10/q90); `_q_actuals_total` extended to fetch `arp`; `recent_arp_map` built per series for anchor ARP; ETS fallback injected in assembly loop when no LightGBM rows; `forecast_model` field added to every series response (`"LightGBM" | "ETS" | null`)
+- `requirements.txt`: `statsmodels==0.14.6` + `numpy>=1.26.0` added
+- `types.ts`: `forecast_model?: "LightGBM" | "ETS" | null` added to `ForecastSeries`
+- `SkuRetailerView.tsx`: subtitle is now model-aware — ETS shows "13-week statistical forecast (ETS)", no model + few actuals shows "Actuals only · insufficient history for forecast", no data shows "No data available"
+
+**Fallback ladder:** LightGBM (Druid scored series) → ETS (≥ 4 actuals) → actuals-only → no data. All drawers project exactly 13 weeks forward.
+
 ## README update 64: 4-class retailer data framework incorporated into all client artifacts (2026-07-29)
 
 Brian Cluster named four retailer data classes on the July 22, 2026 Connor process review call, confirmed by Connor with direct quotes.
