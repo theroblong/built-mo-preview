@@ -473,14 +473,14 @@
             <div class="step-time">AM</div>
             <div class="step-content">
               <div class="step-title">Brian's team processes the SPINS extract</div>
-              <div class="step-detail warn">~50,000 rows — manual download and format</div>
+              <div class="step-detail warn">~50,000 rows — manual download and format (covers ~80 retailers)</div>
             </div>
           </div>
           <div class="step">
             <div class="step-time"></div>
             <div class="step-content">
               <div class="step-title">Connor copies data into the master Excel file</div>
-              <div class="step-detail warn">5 revenue build tabs, updated one section at a time</div>
+              <div class="step-detail warn">5 revenue build tabs — plus separate Circana file for Costco, portal pull for ACS, and tribal knowledge for dark retailers</div>
             </div>
           </div>
           <div class="step">
@@ -578,18 +578,20 @@
             <div class="jeff-item"><strong>Estimates cannibalization column by hand</strong> — acknowledged as a guess</div>
             <div class="jeff-item"><strong>No macro signals</strong> — gas prices, consumer sentiment not in model</div>
             <div class="jeff-item"><strong>No independent sanity check</strong> — errors caught from NetSuite actuals after the fact</div>
-            <div class="jeff-item">Data-dark retailers like Winco: <strong>flying blind on velocity changes</strong></div>
+            <div class="jeff-item">4 retailer data classes, 4 manual workflows: <strong>SPINS (~80 retailers), Circana/Costco, ACS portal, dark retailers (Winco/HEB/TJ's)</strong></div>
+            <div class="jeff-item">Winco, HEB, Trader Joe's: <strong>no syndicated data at all</strong> — buyer refuses velocity info; category view impossible</div>
             <div class="jeff-item">New SKU ramp: <strong>defaults to sales team estimate</strong>, 12-week rule of thumb</div>
           </div>
           <div class="person-ba-col">
             <div class="ps-label after"><div class="dot green"></div>With Mo</div>
-            <div class="jeff-item"><strong>SPINS structured in Aevah</strong> — no copy-paste, always current</div>
+            <div class="jeff-item"><strong>SPINS + Circana unified in Aevah</strong> — one query surface across all retailer data classes</div>
             <div class="jeff-item">Seasonality <strong>baked into AI model automatically</strong></div>
             <div class="jeff-item"><strong>AI-scored cannibalization</strong> replaces the manual column</div>
             <div class="jeff-item"><strong>Gas prices + consumer sentiment</strong> live on every velocity chart (FRED API)</div>
             <div class="jeff-item"><strong>13-week AI forecast</strong> as independent sanity check on his numbers</div>
+            <div class="jeff-item">Costco: <strong>Circana data ingested into Aevah</strong> — same AI forecast pipeline as SPINS retailers</div>
+            <div class="jeff-item">Winco/HEB/TJ's: <strong>pattern-retailer proxy</strong> from channel-matched SPINS reporters, scaled to known distribution</div>
             <div class="jeff-item">New SKU ramp: <strong>cold-start proxy</strong> from similar BUILT launches, data-anchored</div>
-            <div class="jeff-item">Mo Chat: <em>"What lift should I assume at Winco next month?"</em></div>
             <div class="jeff-item">S&OP: <strong>reviews and decides</strong> — does not spend the day assembling</div>
           </div>
         </div>
@@ -612,7 +614,7 @@
             <div class="jeff-item">Manages data flow from 100 planner files <strong>into Connor's master Excel</strong></div>
             <div class="jeff-item"><strong>Version control firefighting</strong> — shared access caused conflicts; each rep updates their own file</div>
             <div class="jeff-item"><strong>Data quality gaps</strong>: reps traveling, planners not updated, lift assumptions inconsistent</div>
-            <div class="jeff-item"><strong>Manually aggregates</strong> opportunities, shippers, and Costco tabs</div>
+            <div class="jeff-item"><strong>Manually aggregates</strong> opportunities, shippers, and Costco Circana tab (separate file, warehouse by SKU)</div>
           </div>
           <div class="person-ba-col">
             <div class="ps-label after"><div class="dot green"></div>With Mo</div>
@@ -782,9 +784,15 @@
           <td><span class="badge live">Live</span></td>
         </tr>
         <tr>
-          <td>Data-dark retailer proxy (Winco, HEB)</td>
-          <td class="amber">Broker tribal knowledge — stale quickly</td>
-          <td class="green">Channel-matched surrogate from similar SPINS retailers</td>
+          <td>Costco (Circana data)</td>
+          <td class="amber">Separate Excel file — manual Circana pull by warehouse by SKU; pallet-level only</td>
+          <td class="green">Circana ingested into Aevah — same AI forecast pipeline as SPINS retailers</td>
+          <td><span class="badge q3">Q3 Build</span></td>
+        </tr>
+        <tr>
+          <td>Fully dark retailers (Winco, HEB, TJ's)</td>
+          <td class="amber">No syndicated data — buyer refuses velocity; broker tribal knowledge is the fallback</td>
+          <td class="green">Pattern-retailer proxy: channel-matched SPINS reporter as trajectory; scaled to known shipment volume</td>
           <td><span class="badge live">Live</span></td>
         </tr>
         <tr>

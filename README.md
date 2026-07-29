@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 64: 4-class retailer data framework incorporated into all client artifacts (2026-07-29)
+
+Brian Cluster named four retailer data classes on the July 22, 2026 Connor process review call, confirmed by Connor with direct quotes.
+
+**4 classes:**
+- Class 1 (SPINS): ~80 retailers — current Mo pipeline
+- Class 2 (Circana): Costco — BUILT already has Circana data by warehouse by SKU in a separate file; ingest path to Druid (Q3)
+- Class 3 (own portal): ACS and similar — manual portal; custom integration, lower priority
+- Class 4 (fully dark): Winco, HEB, Trader Joe's — buyer refuses velocity data; no syndicated data from either SPINS or Circana; pattern-retailer proxy from channel-matched SPINS reporter, scaled to known shipment volume
+
+**Updated artifacts:**
+- `mockups/mo_exec_brief.html` — new compare row: 4 data classes → unified in Aevah
+- `mockups/connor_day_in_life.html` — Monday trigger expanded; Connor card with 4-class breakdown; capability table split into Costco (Circana) + dark retailer rows
+- `mockups/built_implementation_brief.html` — same changes propagated to combined doc
+
+**Wiki:** `02-data-architecture.md` new "Retailer Data Classes" section with key quotes; `08-roadmap.md` new "Data Sources" backlog section (Circana ingest, dark retailer proxy, portal integrations).
+
+**Source:** `docs/Current Process Review.docx` (July 22, 2026 Connor walkthrough transcript)
+
 ## README update 63: BUILT go-live implementation plan (2026-07-29)
 
 6-phase, 10-week rollout plan from Hands-on Demo to production — created for Brian + Rob meeting 2026-07-23.
