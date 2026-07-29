@@ -6,6 +6,10 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 66: v2.5.5 released (2026-07-29)
+
+`v2.5.5` tags cut across all four repos (API, UI, doc, FirstAgent). Bundles MO_75 ETS forecast fallback and the Taking Share badge glyph fix from this session. Previous latest was v2.5.4 (TDP recalibration, 2026-07-28).
+
 ## README update 65: MO_75 — ETS statistical forecast fallback for all forecast drawers (2026-07-29)
 
 Forecast drawers with no LightGBM output now show a 13-week ETS (Damped Holt's Linear) projection when ≥ 4 actuals exist, keeping time window consistent across all drawers.
