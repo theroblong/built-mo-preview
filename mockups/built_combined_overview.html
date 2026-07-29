@@ -21,6 +21,19 @@
   --green-dim:   #0A2E20;
   --rose:        #FB7185;
   --rose-dim:    #351724;
+  --plan-navy:   #7AA3E0;
+  --plan-navy-2: #A8C4F0;
+  --plan-header: #2D4A8A;
+  --plan-gold:   #E8A020;
+  --plan-gold-dim:#2D2408;
+  --plan-surface:#111827;
+  --plan-surface-2:#1A2535;
+  --plan-border: #2D3748;
+  --plan-text:   #E8EDF5;
+  --plan-quiet:  #A0AEC0;
+  --plan-muted:  #718096;
+  --plan-tag-bg: #1A2D4A;
+  --plan-tag-fg: #7AA3E0;
   --mono: "SF Mono","Fira Code","Cascadia Code",monospace;
 }
 @media (prefers-color-scheme: light) {
@@ -31,6 +44,11 @@
     --blue:#1D4ED8; --blue-dim:#DBEAFE;
     --green:#047857; --green-dim:#D1FAE5;
     --rose:#BE123C; --rose-dim:#FFF1F2;
+    --plan-navy:#0F1F3D; --plan-navy-2:#1A3260; --plan-header:#0F1F3D;
+    --plan-gold:#E8A020; --plan-gold-dim:#FDF3E0;
+    --plan-surface:#FFFFFF; --plan-surface-2:#F7F9FC; --plan-border:#E2E8F0;
+    --plan-text:#0F1F3D; --plan-quiet:#4A5568; --plan-muted:#718096;
+    --plan-tag-bg:#E8F0FE; --plan-tag-fg:#1A3260;
   }
 }
 :root[data-theme="dark"] {
@@ -40,6 +58,11 @@
   --blue:#3B82F6; --blue-dim:#1D3461;
   --green:#10B981; --green-dim:#0A2E20;
   --rose:#FB7185; --rose-dim:#351724;
+  --plan-navy:#7AA3E0; --plan-navy-2:#A8C4F0; --plan-header:#2D4A8A;
+  --plan-gold:#E8A020; --plan-gold-dim:#2D2408;
+  --plan-surface:#111827; --plan-surface-2:#1A2535; --plan-border:#2D3748;
+  --plan-text:#E8EDF5; --plan-quiet:#A0AEC0; --plan-muted:#718096;
+  --plan-tag-bg:#1A2D4A; --plan-tag-fg:#7AA3E0;
 }
 :root[data-theme="light"] {
   --bg:#EEF2F9; --surface:#FFFFFF; --surface-raised:#F8FAFC;
@@ -48,6 +71,11 @@
   --blue:#1D4ED8; --blue-dim:#DBEAFE;
   --green:#047857; --green-dim:#D1FAE5;
   --rose:#BE123C; --rose-dim:#FFF1F2;
+  --plan-navy:#0F1F3D; --plan-navy-2:#1A3260; --plan-header:#0F1F3D;
+  --plan-gold:#E8A020; --plan-gold-dim:#FDF3E0;
+  --plan-surface:#FFFFFF; --plan-surface-2:#F7F9FC; --plan-border:#E2E8F0;
+  --plan-text:#0F1F3D; --plan-quiet:#4A5568; --plan-muted:#718096;
+  --plan-tag-bg:#E8F0FE; --plan-tag-fg:#1A3260;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -515,131 +543,156 @@ body {
   padding: 28px 36px 48px;
 }
 
-.gl-progress {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px 22px;
-  margin-bottom: 28px;
+.gl-header {
+  background: var(--plan-header);
+  padding: 28px 40px 24px;
+  border-radius: 10px 10px 0 0;
 }
-.gl-progress-labels { display: flex; justify-content: space-between; margin-bottom: 9px; }
-.gl-progress-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-dim); }
-.gl-progress-label.right { color: var(--green); }
+.gl-header-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--plan-gold);
+  margin-bottom: 6px;
+}
+.gl-header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.02em;
+}
+.gl-header-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,.65);
+  margin-top: 4px;
+}
+
+.gl-progress {
+  background: var(--plan-surface-2);
+  border: 1px solid var(--plan-border);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  padding: 20px 40px;
+  margin-bottom: 32px;
+}
+.gl-progress-labels { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.gl-progress-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--plan-quiet); }
+.gl-progress-label.right { color: var(--plan-gold); }
 .now-chip {
   display: inline-block;
-  background: var(--blue);
-  color: #fff;
-  font-size: 9px;
+  background: var(--plan-gold);
+  color: #000;
+  font-size: 10px;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 99px;
   letter-spacing: .05em;
 }
-.gl-track { height: 7px; background: var(--border); border-radius: 99px; position: relative; }
-.gl-fill { height: 100%; width: 12%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 99px; position: relative; }
+.gl-track { height: 8px; background: var(--plan-border); border-radius: 99px; position: relative; }
+.gl-fill { height: 100%; width: 12%; background: linear-gradient(90deg, var(--plan-header), var(--plan-gold)); border-radius: 99px; position: relative; }
 .gl-marker {
   position: absolute; right: -1px; top: 50%;
   transform: translateY(-50%);
-  width: 12px; height: 12px;
-  background: var(--blue);
-  border: 2px solid var(--bg);
+  width: 14px; height: 14px;
+  background: var(--plan-gold);
+  border: 2px solid var(--plan-surface);
   border-radius: 50%;
 }
-.gl-caption { margin-top: 7px; font-size: 10px; color: var(--text-dim); }
+.gl-caption { margin-top: 8px; font-size: 11px; color: var(--plan-muted); }
 
-.gl-timeline { padding-bottom: 8px; }
-.phase { display: grid; grid-template-columns: 40px 1fr; gap: 0 18px; position: relative; }
+.gl-timeline { max-width: 860px; margin: 0 auto; padding-bottom: 8px; }
+.phase { display: grid; grid-template-columns: 44px 1fr; gap: 0 20px; position: relative; }
 .phase:not(:last-child) .phase-spine::after {
   content: "";
   display: block;
   width: 2px;
-  background: var(--border);
+  background: var(--plan-border);
   position: absolute;
-  top: 40px;
-  bottom: -20px;
-  left: 19px;
+  top: 44px;
+  bottom: -24px;
+  left: 21px;
 }
 .phase-spine { position: relative; }
 .phase-badge {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
+  background: var(--plan-header);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800;
+  font-size: 15px; font-weight: 800;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
-.phase-badge.current { background: var(--blue); color: #fff; border-color: var(--blue); }
+.phase-badge.current { background: var(--plan-gold); color: #000; }
 .phase-badge.combined { font-size: 10px; letter-spacing: -.03em; }
 .phase-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--plan-surface);
+  border: 1px solid var(--plan-border);
   border-radius: 10px;
-  padding: 15px 18px 17px;
-  margin-bottom: 20px;
+  padding: 18px 20px 20px;
+  margin-bottom: 24px;
 }
-.phase-card.active { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(59,130,246,.12); }
+.phase-card.active { border-color: var(--plan-gold); box-shadow: 0 0 0 3px rgba(232,160,32,.12); }
 .phase-hdr {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 10px; margin-bottom: 9px; flex-wrap: wrap;
+  gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
 }
-.phase-title { font-size: 14px; font-weight: 700; color: var(--text); }
-.phase-weeks { font-size: 10px; font-weight: 600; color: var(--text-dim); white-space: nowrap; padding-top: 3px; font-family: var(--mono); }
-.phase-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
+.phase-title { font-size: 15px; font-weight: 700; color: var(--plan-text); }
+.phase-weeks { font-size: 11px; font-weight: 600; color: var(--plan-muted); white-space: nowrap; padding-top: 2px; font-variant-numeric: tabular-nums; }
+.phase-desc { font-size: 13px; color: var(--plan-quiet); margin-bottom: 14px; }
 .phase-workstream + .phase-workstream {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid var(--plan-border);
 }
 .phase-workstream-title {
-  font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--blue);
+  color: var(--plan-gold);
   margin-bottom: 6px;
 }
 
-.activity-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.activity-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--text-muted); }
-.activity-list li::before { content: "›"; color: var(--blue); font-weight: 700; font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+.activity-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.activity-list li { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: var(--plan-quiet); }
+.activity-list li::before { content: "›"; color: var(--plan-gold); font-weight: 700; font-size: 15px; line-height: 1.4; flex-shrink: 0; }
 
 .gl-callout {
-  margin-top: 12px;
-  padding: 12px 14px;
-  background: var(--blue-dim);
-  border-left: 3px solid var(--blue);
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--plan-gold-dim);
+  border-left: 3px solid var(--plan-gold);
   border-radius: 0 8px 8px 0;
 }
-.gl-callout-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 4px; }
-.gl-callout-title { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.gl-callout-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--plan-gold); margin-bottom: 6px; }
+.gl-callout-title { font-size: 13px; font-weight: 700; color: var(--plan-text); margin-bottom: 6px; }
 .gl-callout-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
-.gl-callout-list li { font-size: 12px; color: var(--text-muted); display: flex; gap: 7px; align-items: flex-start; }
-.gl-callout-list li::before { content: "→"; color: var(--blue); font-weight: 700; flex-shrink: 0; }
+.gl-callout-list li { font-size: 12px; color: var(--plan-quiet); display: flex; gap: 7px; align-items: flex-start; }
+.gl-callout-list li::before { content: "→"; color: var(--plan-gold); font-weight: 700; flex-shrink: 0; }
 
-.tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 .tag {
-  font-size: 9px; font-weight: 600;
-  padding: 2px 8px; border-radius: 99px;
-  background: var(--blue-dim); color: var(--blue);
+  font-size: 10px; font-weight: 600;
+  padding: 3px 9px; border-radius: 99px;
+  background: var(--plan-tag-bg); color: var(--plan-tag-fg);
   letter-spacing: .04em; text-transform: uppercase;
 }
-.tag.current { background: var(--blue); color: #fff; }
+.tag.current { background: var(--plan-gold); color: #000; }
 
 .gl-footer {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  max-width: 860px;
+  margin: 4px auto 0;
+  background: var(--plan-surface-2);
+  border: 1px solid var(--plan-border);
   border-radius: 10px;
-  padding: 18px 24px;
-  margin-top: 4px;
-  display: flex; gap: 28px; flex-wrap: wrap;
+  padding: 20px 24px;
+  display: flex; gap: 32px; flex-wrap: wrap;
 }
-.gl-stat { flex: 1; min-width: 90px; }
-.gl-stat .val { font-size: 20px; font-weight: 800; color: var(--blue); font-variant-numeric: tabular-nums; }
-.gl-stat .lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+.gl-stat { flex: 1; min-width: 100px; }
+.gl-stat .val { font-size: 22px; font-weight: 800; color: var(--plan-gold); font-variant-numeric: tabular-nums; }
+.gl-stat .lbl { font-size: 11px; color: var(--plan-muted); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
 
 @media (max-width: 560px) {
   .eb-wrap, .dc-wrap, .gl-wrap, .section-break, .doc-banner-inner {
@@ -649,6 +702,9 @@ body {
     padding-right: 18px;
   }
   .doc-eyebrow { min-width: 0; white-space: normal; }
+  .gl-header, .gl-progress { padding-left: 20px; padding-right: 20px; }
+  .gl-header-title { font-size: 20px; }
+  .gl-progress-labels { gap: 12px; }
   .phase { grid-template-columns: 36px minmax(0, 1fr); gap: 0 12px; }
   .phase-badge { width: 36px; height: 36px; }
   .phase:not(:last-child) .phase-spine::after { top: 36px; left: 17px; }
@@ -1066,6 +1122,12 @@ body {
 </div>
 
 <div class="gl-wrap">
+
+  <div class="gl-header">
+    <div class="gl-header-eyebrow">Mo by Aevah · BUILT BAR</div>
+    <div class="gl-header-title">Go-Live Implementation Plan</div>
+    <div class="gl-header-sub">Hands-on Demo → Production · Revised July 2026</div>
+  </div>
 
   <div class="gl-progress">
     <div class="gl-progress-labels">
