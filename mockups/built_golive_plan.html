@@ -340,7 +340,7 @@
 <div class="header">
   <div class="header-eyebrow">Mo by Aevah · BUILT BAR</div>
   <div class="header-title">Go-Live Implementation Plan</div>
-  <div class="header-sub">Hands-on Demo → Production · v1.0 · July 2026</div>
+  <div class="header-sub">Hands-on Demo → Production · v1.1 · July 2026</div>
 </div>
 
 <div class="progress-wrap">
@@ -353,7 +353,7 @@
       <div class="progress-marker"></div>
     </div>
   </div>
-  <div class="progress-caption">6-phase rollout · ~10 weeks to full production · data validation at every gate</div>
+  <div class="progress-caption">6-phase rollout · ~8 weeks to full production · data validation at every gate</div>
 </div>
 
 <div class="timeline">
@@ -456,7 +456,7 @@
     <div class="phase-card">
       <div class="phase-header">
         <div class="phase-title">BUILT-Specific Configuration</div>
-        <div class="phase-weeks">Weeks 5–6</div>
+        <div class="phase-weeks">Week 5</div>
       </div>
       <div class="phase-desc">Tune Mo to BUILT's product hierarchy, terminology, and the specific workflows each stakeholder needs.</div>
       <ul class="activity-list">
@@ -482,22 +482,27 @@
     </div>
     <div class="phase-card">
       <div class="phase-header">
-        <div class="phase-title">Production Infrastructure</div>
-        <div class="phase-weeks">Weeks 7–8</div>
+        <div class="phase-title">Production Infrastructure &amp; UAT</div>
+        <div class="phase-weeks">Week 6</div>
       </div>
-      <div class="phase-desc">Move from demo to a hosted, secure, multi-user environment with automated data refresh.</div>
+      <div class="phase-desc">Move from demo to a hosted, secure, multi-user environment with automated data refresh — and run formal user acceptance testing before go-live.</div>
       <ul class="activity-list">
         <li>Cloud hosting deployment — BUILT-specific environment, not shared infrastructure</li>
         <li>SSO / role-based access (FP&amp;A, Sales, Executive tiers)</li>
         <li>Automated weekly SPINS data refresh pipeline</li>
         <li>Monitoring, uptime SLA, and incident response defined</li>
         <li>Data governance documentation and access audit log</li>
+        <li>UAT with Connor's team: structured test scenarios against Phase 2 validation baselines</li>
+        <li>UAT defect log, triage, and resolution before sign-off</li>
+        <li>Connor sign-off: Mo output within agreed tolerance vs. BUILT actuals — gate to Phase 5</li>
       </ul>
       <div class="tag-row">
         <span class="tag">Infrastructure</span>
         <span class="tag">Security</span>
         <span class="tag">Data refresh</span>
         <span class="tag">SLA</span>
+        <span class="tag">UAT</span>
+        <span class="tag">Sign-off</span>
       </div>
     </div>
   </div>
@@ -510,7 +515,7 @@
     <div class="phase-card">
       <div class="phase-header">
         <div class="phase-title">Launch &amp; Adoption</div>
-        <div class="phase-weeks">Weeks 9–10</div>
+        <div class="phase-weeks">Weeks 7–8</div>
       </div>
       <div class="phase-desc">Go live with Connor's team, establish a cadence, and build the feedback loop that makes Mo more accurate over time.</div>
       <ul class="activity-list">
@@ -533,7 +538,7 @@
 
 <div class="footer-summary">
   <div class="summary-stat">
-    <div class="val">10 wks</div>
+    <div class="val">8 wks</div>
     <div class="lbl">Demo to full production</div>
   </div>
   <div class="summary-stat">
