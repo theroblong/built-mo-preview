@@ -68,7 +68,7 @@ Brian Cluster named four retailer data classes on the July 22, 2026 Connor proce
 **Updated artifacts:**
 - `mockups/mo_exec_brief.html` — new compare row: 4 data classes → unified in Aevah
 - `mockups/connor_day_in_life.html` — Monday trigger expanded; Connor card with 4-class breakdown; capability table split into Costco (Circana) + dark retailer rows
-- `mockups/built_implementation_brief.html` — same changes propagated to combined doc
+- `mockups/built_combined_overview.html` — corrected combined doc (rebuilt by Rob + Jason; replaces built_implementation_brief.html which had character encoding corruption)
 
 **Wiki:** `02-data-architecture.md` new "Retailer Data Classes" section with key quotes; `08-roadmap.md` new "Data Sources" backlog section (Circana ingest, dark retailer proxy, portal integrations).
 
