@@ -19,8 +19,8 @@
   --blue-dim:    #1D3461;
   --green:       #10B981;
   --green-dim:   #0A2E20;
-  --rose:        #FB7185;
-  --rose-dim:    #351724;
+  --amber:       #F59E0B;
+  --amber-dim:   rgba(245,158,11,.08);
   --plan-navy:   #7AA3E0;
   --plan-navy-2: #A8C4F0;
   --plan-header: #2D4A8A;
@@ -43,7 +43,7 @@
     --text:#0F172A; --text-muted:#334155; --text-dim:#64748B;
     --blue:#1D4ED8; --blue-dim:#DBEAFE;
     --green:#047857; --green-dim:#D1FAE5;
-    --rose:#BE123C; --rose-dim:#FFF1F2;
+    --amber:#92400E; --amber-dim:#FEF3C7;
     --plan-navy:#0F1F3D; --plan-navy-2:#1A3260; --plan-header:#0F1F3D;
     --plan-gold:#E8A020; --plan-gold-dim:#FDF3E0;
     --plan-surface:#FFFFFF; --plan-surface-2:#F7F9FC; --plan-border:#E2E8F0;
@@ -57,7 +57,7 @@
   --text:#E2E8F0; --text-muted:#94A3B8; --text-dim:#64748B;
   --blue:#3B82F6; --blue-dim:#1D3461;
   --green:#10B981; --green-dim:#0A2E20;
-  --rose:#FB7185; --rose-dim:#351724;
+  --amber:#F59E0B; --amber-dim:rgba(245,158,11,.08);
   --plan-navy:#7AA3E0; --plan-navy-2:#A8C4F0; --plan-header:#2D4A8A;
   --plan-gold:#E8A020; --plan-gold-dim:#2D2408;
   --plan-surface:#111827; --plan-surface-2:#1A2535; --plan-border:#2D3748;
@@ -70,7 +70,7 @@
   --text:#0F172A; --text-muted:#334155; --text-dim:#64748B;
   --blue:#1D4ED8; --blue-dim:#DBEAFE;
   --green:#047857; --green-dim:#D1FAE5;
-  --rose:#BE123C; --rose-dim:#FFF1F2;
+  --amber:#92400E; --amber-dim:#FEF3C7;
   --plan-navy:#0F1F3D; --plan-navy-2:#1A3260; --plan-header:#0F1F3D;
   --plan-gold:#E8A020; --plan-gold-dim:#FDF3E0;
   --plan-surface:#FFFFFF; --plan-surface-2:#F7F9FC; --plan-border:#E2E8F0;
@@ -253,17 +253,17 @@ body {
   align-items: center;
   gap: 8px;
 }
-.ch.before { background: var(--rose-dim); color: var(--rose); border-bottom: 2px solid var(--rose); }
+.ch.before { background: var(--amber-dim); color: var(--amber); border-bottom: 2px solid var(--amber); }
 .ch.after  { background: var(--green-dim);  color: var(--green);  border-bottom: 2px solid var(--green); border-left: 1px solid var(--border); }
 .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dot.rose { background: var(--rose); }
+.dot.amber { background: var(--amber); }
 .dot.green { background: var(--green); }
 .compare-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-light); }
 .cc { padding: 10px 16px; font-size: 12.5px; line-height: 1.45; color: var(--text); }
 .cc.before { background: var(--surface); border-right: 1px solid var(--border-light); }
 .cc.after  { background: var(--surface-raised); }
 .cc strong { font-weight: 700; }
-.cc.before strong { color: var(--rose); }
+.cc.before strong { color: var(--amber); }
 .cc.after  strong { color: var(--green); }
 
 .eb-bottom {
@@ -374,7 +374,7 @@ body {
   gap: 8px;
   border-bottom: 1px solid var(--border);
 }
-.monday-header.before { background: var(--rose-dim); color: var(--rose); }
+.monday-header.before { background: var(--amber-dim); color: var(--amber); }
 .monday-header.after  { background: var(--green-dim);  color: var(--green); }
 .monday-steps { padding: 16px 18px; }
 .step { display: flex; gap: 12px; margin-bottom: 13px; }
@@ -382,7 +382,7 @@ body {
 .step-time { font-family: var(--mono); font-size: 10px; color: var(--text-dim); width: 44px; flex-shrink: 0; padding-top: 2px; }
 .step-title { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 .step-detail { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
-.step-detail.warn { color: var(--rose); }
+.step-detail.warn { color: var(--amber); }
 .step-detail.ok   { color: var(--green); }
 
 .full-divider { height: 1px; background: var(--border); margin: 44px 0; }
@@ -428,7 +428,7 @@ body {
   text-transform: uppercase;
   margin-bottom: 11px;
 }
-.ps-label.before { color: var(--rose); }
+.ps-label.before { color: var(--amber); }
 .ps-label.after  { color: var(--green); }
 
 .jeff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -444,7 +444,7 @@ body {
   align-items: center;
   gap: 8px;
 }
-.jeff-label.before { color: var(--rose); }
+.jeff-label.before { color: var(--amber); }
 .jeff-label.after  { color: var(--green); }
 .jeff-item { font-size: 12.5px; color: var(--text-muted); padding: 7px 0; border-bottom: 1px solid var(--border-light); line-height: 1.5; }
 .jeff-item:last-child { border-bottom: none; }
@@ -485,7 +485,7 @@ body {
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-.metric-before { font-size: 11.5px; color: var(--rose); margin-bottom: 3px; font-family: var(--mono); }
+.metric-before { font-size: 11.5px; color: var(--amber); margin-bottom: 3px; font-family: var(--mono); }
 .metric-after  { font-size: 17px; font-weight: 700; color: var(--green); margin-bottom: 3px; font-family: var(--mono); }
 .metric-desc   { font-size: 10.5px; color: var(--text-dim); line-height: 1.5; }
 
@@ -509,7 +509,7 @@ body {
 }
 .capability-table tr:last-child td { border-bottom: none; }
 .capability-table td:first-child { color: var(--text); font-weight: 500; }
-.capability-table td.rose { color: var(--rose); }
+.capability-table td.amber { color: var(--amber); }
 .capability-table td.green { color: var(--green); }
 .badge {
   display: inline-block;
@@ -694,6 +694,76 @@ body {
 .gl-stat .val { font-size: 22px; font-weight: 800; color: var(--plan-gold); font-variant-numeric: tabular-nums; }
 .gl-stat .lbl { font-size: 11px; color: var(--plan-muted); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
 
+/* ── SOURCE-SPECIFIC SECTION THEMES ── */
+.eb-wrap {
+  --bg:#0C1221; --surface:#131C2E; --surface-raised:#1A2540;
+  --border:#1E2D45; --border-light:#243352;
+  --text:#E2E8F0; --text-muted:#94A3B8; --text-dim:#64748B;
+  --blue:#3B82F6; --blue-dim:rgba(59,130,246,.13);
+  --green:#10B981; --green-dim:rgba(16,185,129,.08);
+  --amber:#F59E0B; --amber-dim:rgba(245,158,11,.08);
+  background: var(--bg);
+}
+.dc-wrap {
+  --bg:#0B1120; --surface:#131C2E; --surface-raised:#1A2540;
+  --border:#1E2D45; --border-light:#243352;
+  --text:#E2E8F0; --text-muted:#94A3B8; --text-dim:#64748B;
+  --blue:#3B82F6; --blue-dim:#1D3461;
+  --green:#10B981; --green-dim:#0A2E20;
+  --amber:#F59E0B; --amber-dim:#2D2007;
+  background: var(--bg);
+}
+@media (prefers-color-scheme: light) {
+  .eb-wrap {
+    --bg:#EEF2F9; --surface:#FFFFFF; --surface-raised:#F8FAFC;
+    --border:#CBD5E1; --border-light:#E2E8F0;
+    --text:#0F172A; --text-muted:#334155; --text-dim:#64748B;
+    --blue:#1D4ED8; --blue-dim:#DBEAFE;
+    --green:#047857; --green-dim:#D1FAE5;
+    --amber:#92400E; --amber-dim:#FEF3C7;
+  }
+  .dc-wrap {
+    --bg:#F0F4FA; --surface:#FFFFFF; --surface-raised:#F8FAFC;
+    --border:#CBD5E1; --border-light:#E2E8F0;
+    --text:#0F172A; --text-muted:#475569; --text-dim:#94A3B8;
+    --blue:#3B82F6; --blue-dim:#DBEAFE;
+    --green:#10B981; --green-dim:#D1FAE5;
+    --amber:#F59E0B; --amber-dim:#FEF3C7;
+  }
+}
+:root[data-theme="dark"] .eb-wrap {
+  --bg:#0C1221; --surface:#131C2E; --surface-raised:#1A2540;
+  --border:#1E2D45; --border-light:#243352;
+  --text:#E2E8F0; --text-muted:#94A3B8; --text-dim:#64748B;
+  --blue:#3B82F6; --blue-dim:rgba(59,130,246,.13);
+  --green:#10B981; --green-dim:rgba(16,185,129,.08);
+  --amber:#F59E0B; --amber-dim:rgba(245,158,11,.08);
+}
+:root[data-theme="dark"] .dc-wrap {
+  --bg:#0B1120; --surface:#131C2E; --surface-raised:#1A2540;
+  --border:#1E2D45; --border-light:#243352;
+  --text:#E2E8F0; --text-muted:#94A3B8; --text-dim:#64748B;
+  --blue:#3B82F6; --blue-dim:#1D3461;
+  --green:#10B981; --green-dim:#0A2E20;
+  --amber:#F59E0B; --amber-dim:#2D2007;
+}
+:root[data-theme="light"] .eb-wrap {
+  --bg:#EEF2F9; --surface:#FFFFFF; --surface-raised:#F8FAFC;
+  --border:#CBD5E1; --border-light:#E2E8F0;
+  --text:#0F172A; --text-muted:#334155; --text-dim:#64748B;
+  --blue:#1D4ED8; --blue-dim:#DBEAFE;
+  --green:#047857; --green-dim:#D1FAE5;
+  --amber:#92400E; --amber-dim:#FEF3C7;
+}
+:root[data-theme="light"] .dc-wrap {
+  --bg:#F0F4FA; --surface:#FFFFFF; --surface-raised:#F8FAFC;
+  --border:#CBD5E1; --border-light:#E2E8F0;
+  --text:#0F172A; --text-muted:#475569; --text-dim:#94A3B8;
+  --blue:#3B82F6; --blue-dim:#DBEAFE;
+  --green:#10B981; --green-dim:#D1FAE5;
+  --amber:#F59E0B; --amber-dim:#FEF3C7;
+}
+
 @media (max-width: 560px) {
   .eb-wrap, .dc-wrap, .gl-wrap, .section-break, .doc-banner-inner {
     width: 100%;
@@ -771,7 +841,7 @@ body {
 
   <div class="compare-block">
     <div class="compare-header">
-      <div class="ch before"><div class="dot rose"></div>Today</div>
+      <div class="ch before"><div class="dot amber"></div>Today</div>
       <div class="ch after"><div class="dot green"></div>With Mo, Powered by Aevah</div>
     </div>
     <div class="compare-row">
@@ -834,7 +904,7 @@ body {
     <p class="section-desc">Every month, SPINS releases updated consumption data. That data is the foundation of BUILT's forecast. Here is what happens next — today vs. with Mo.</p>
     <div class="monday-grid">
       <div class="monday-card">
-        <div class="monday-header before"><div class="dot rose"></div>Today</div>
+        <div class="monday-header before"><div class="dot amber"></div>Today</div>
         <div class="monday-steps">
           <div class="step">
             <div class="step-time">AM</div>
@@ -934,7 +1004,7 @@ body {
         </div>
         <div class="person-ba">
           <div class="person-ba-col">
-            <div class="ps-label before"><div class="dot rose"></div>Today</div>
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
             <div class="jeff-item"><strong>Copy-pastes ~50K SPINS rows</strong> into master Excel monthly</div>
             <div class="jeff-item"><strong>Updates seasonality curve manually</strong> each cycle</div>
             <div class="jeff-item">Opens 100 sales planner files for <strong>promo calendar data</strong></div>
@@ -968,7 +1038,7 @@ body {
         </div>
         <div class="person-ba">
           <div class="person-ba-col">
-            <div class="ps-label before"><div class="dot rose"></div>Today</div>
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
             <div class="jeff-item"><strong>Collects 100 individual retailer forecasts</strong> from sales reps — one file at a time</div>
             <div class="jeff-item">Coordinates calls with 6–7 sales reps, <strong>each managing 10–20 planners</strong></div>
             <div class="jeff-item">Manages data flow from 100 planner files <strong>into Connor's master Excel</strong></div>
@@ -998,7 +1068,7 @@ body {
         </div>
         <div class="person-ba">
           <div class="person-ba-col">
-            <div class="ps-label before"><div class="dot rose"></div>Today</div>
+            <div class="ps-label before"><div class="dot amber"></div>Today</div>
             <div class="jeff-item">Category intelligence <strong>intractable at scale</strong> — 97M rows, 300+ competitors, 5,000+ SKUs</div>
             <div class="jeff-item"><strong>Trade analysis and ad hoc revenue modeling in Excel</strong></div>
             <div class="jeff-item">Learning Connor's process — <strong>taking on lower-hanging fruit manually</strong></div>
@@ -1027,9 +1097,9 @@ body {
     <p class="section-desc">Jeff oversees all forecasting. He attends every Monday S&amp;OP meeting and calls out things that look wrong. Today, those calls are heard in a room and forgotten by next month.</p>
     <div class="jeff-grid">
       <div class="jeff-card">
-        <div class="jeff-label before"><div class="dot rose"></div>Today</div>
+        <div class="jeff-label before"><div class="dot amber"></div>Today</div>
         <div class="jeff-item"><strong>All-day Mondays:</strong> Connor + Director of Planning + Jeff attend every S&amp;OP meeting, 30 min per rep</div>
-        <div class="jeff-item"><strong>Verbal accountability:</strong> Jeff likes the voice-over from reps — it's currently the only accountability mechanism</div>
+        <div class="jeff-item"><strong>Verbal accountability:</strong> Jeff likes the voice-over from reps — it's currently a key accountability mechanism</div>
         <div class="jeff-item"><strong>One-off corrections:</strong> When Jeff flags something wrong, it gets fixed for this cycle. No guarantee it's applied consistently going forward</div>
         <div class="jeff-item"><strong>No validation layer:</strong> The model has no independent check. Errors surface from NetSuite actuals — after the fact</div>
         <div class="jeff-item"><strong>Growth pressure:</strong> "We're growing so fast" — the process that worked at 20 customers is straining at 100+</div>
@@ -1087,16 +1157,16 @@ body {
         <tr><th>Capability</th><th>Today</th><th>With Mo</th><th>Status</th></tr>
       </thead>
       <tbody>
-        <tr><td>Base velocity (L12 SPINS)</td><td class="rose">50K-row manual copy-paste monthly</td><td class="green">Aevah — auto-updated, always current</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Cannibalization column</td><td class="rose">Manual estimate — Connor's acknowledged guess</td><td class="green">AI-scored probability — 85 focal SKUs, refreshed each cycle</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Independent forecast sanity check</td><td class="rose">None — errors caught from NetSuite after the fact</td><td class="green">13-week AI forecast alongside Connor's model</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Macro signals (gas, sentiment)</td><td class="rose">Zero — Connor: "too hard to manually track"</td><td class="green">FRED API live on every velocity chart</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>New SKU ramp projection</td><td class="rose">Sales team estimate + 12-week rule of thumb</td><td class="green">Cold-start proxy from similar BUILT launches, same channel</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Competitive intelligence at scale</td><td class="rose">Intractable — 97M rows, manual sampling</td><td class="green">Mo Trends — full category velocity, brand share, flavor trends</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Promo lift accuracy</td><td class="rose">Sales team estimate, no environmental factors</td><td class="green">MO_73 promo lift by retailer, SKU, depth — competitor context included</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Data-dark retailer proxy (Winco, HEB)</td><td class="rose">Broker tribal knowledge — stale quickly</td><td class="green">Channel-matched surrogate from similar SPINS retailers</td><td><span class="badge live">Live</span></td></tr>
-        <tr><td>Sales planner integration (100 files)</td><td class="rose">Ethan opens each file manually each month</td><td class="green">Structured digital input — replaces 100 Excel files</td><td><span class="badge q3">Q3 Build</span></td></tr>
-        <tr><td>S&amp;OP flash report format</td><td class="rose">Connor builds ad hoc; Jeff reviews verbally</td><td class="green">Standard format, always fed from latest Mo data</td><td><span class="badge q3">Q3 Build</span></td></tr>
+        <tr><td>Base velocity (L12 SPINS)</td><td class="amber">50K-row manual copy-paste monthly</td><td class="green">Aevah — auto-updated, always current</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Cannibalization column</td><td class="amber">Manual estimate — Connor's acknowledged guess</td><td class="green">AI-scored probability — 85 focal SKUs, refreshed each cycle</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Independent forecast sanity check</td><td class="amber">None — errors caught from NetSuite after the fact</td><td class="green">13-week AI forecast alongside Connor's model</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Macro signals (gas, sentiment)</td><td class="amber">Zero — Connor: "too hard to manually track"</td><td class="green">FRED API live on every velocity chart</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>New SKU ramp projection</td><td class="amber">Sales team estimate + 12-week rule of thumb</td><td class="green">Cold-start proxy from similar BUILT launches, same channel</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Competitive intelligence at scale</td><td class="amber">Intractable — 97M rows, manual sampling</td><td class="green">Mo Trends — full category velocity, brand share, flavor trends</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Promo lift accuracy</td><td class="amber">Sales team estimate, no environmental factors</td><td class="green">MO_73 promo lift by retailer, SKU, depth — competitor context included</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Data-dark retailer proxy (Winco, HEB)</td><td class="amber">Broker tribal knowledge — stale quickly</td><td class="green">Channel-matched surrogate from similar SPINS retailers</td><td><span class="badge live">Live</span></td></tr>
+        <tr><td>Sales planner integration (100 files)</td><td class="amber">Ethan opens each file manually each month</td><td class="green">Structured digital input — replaces 100 Excel files</td><td><span class="badge q3">Q3 Build</span></td></tr>
+        <tr><td>S&amp;OP flash report format</td><td class="amber">Connor builds ad hoc; Jeff reviews verbally</td><td class="green">Standard format, always fed from latest Mo data</td><td><span class="badge q3">Q3 Build</span></td></tr>
       </tbody>
     </table>
     </div>
