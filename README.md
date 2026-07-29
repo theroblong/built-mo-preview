@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 62: v2.5.4 — TDP recalibration; Launch TDP + Last TDP on consistent BFW basis (2026-07-28)
+
+Full audit of TDP metrics across SKU View revealed a mislabeled pipeline artifact: `post_13w_tdp` in `built_prepost_features` is a cumulative sum of weekly TDP values over the launch window (totalled 253 for 30590 at Wegmans), while the proxy panel's "Launch TDP" was a BFW week-1 snapshot (48). Same label, different scales, different sources.
+
+**Fix:** All TDP now sourced from `built_filtered_weekly` (raw SPINS weekly floats). `_q_tdp_map()` rewritten to query BFW ORDER BY `__time` ASC; first row per (retail_account, channel_outlet) = week-1 Launch TDP. `_q_bfw_tdp()` in `get_sku_summary` returns both launch and last TDP in one BFW pass. `_q_last_tdp_map()` added to `get_sku_forecast` for the new Last TDP drawer tile.
+
+**New: Last TDP** — added as a column in the SKU View table and a 6th KPI tile in the forecast drawer. Shows current distribution state vs launch state. Wegmans 53 → 15 (contracting), VS 15 → 0 (delistment signal), Harmons 4 → 7 (growing).
+
+**`fmtTdp()` helper:** values < 1 = "—" (below SPINS threshold); exact 0 = "0" (genuinely ceased); ≥ 1 = rounded integer.
+
+**Result:** focal Launch TDP (53) and proxy Launch TDP (48) are now on identical basis — directly comparable. Demo caveat #3 (TDP metric mismatch) is resolved. Drawer widened to `min(860px, 76vw)` for 6 tiles. Full SKU View metrics audit performed; all other columns verified correct.
+
+---
+
 ## README update 61: v2.5.3 — proxy retailer scope fix; demo caveats for Bracken/Jeff (2026-07-28)
 
 Critical data correctness fix. Proxy candidates were aggregated across all retailers in the CONVENTIONAL|FOOD channel, producing a proxy unit ramp of 400–600 units/week vs Wegmans-only actuals of 20–120 units/week — a 5–6x apparent gap that was entirely a scope mismatch, not a real signal. Fix: `get_proxy_candidates` now accepts `retail_account` and filters `built_filtered_weekly` to that retailer. UI passes `series.retail_account` when fetching candidates. Proxy units and TDP stats are now Wegmans-specific (or UNFI-specific, etc.), directly comparable to focal actuals.
