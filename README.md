@@ -6,6 +6,22 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 67: Circana field map + dark-retailer shipment estimation documented (2026-07-29)
+
+Research session on data coverage gaps for Class 2 (Circana/Costco) and Class 4 (dark: Winco/HEB/TJ's) retailers. No implementation yet — blocked on sample data from BUILT.
+
+**Findings:**
+- `SPINS field compare.xlsx` is SPINS-vs-SPINS only (24-col vs 214-col extract formats), not a Circana mapping
+- Standard Circana Liquid Data POS → SPINS field map built from Circana CPG Dictionary; key difference: Circana velocity = $/MM ACV vs SPINS = units/store/week — not interchangeable denominators; Base Sales methodology also differs (modeled vs scanner-reported)
+- Costco notes: data is by warehouse by SKU; no traditional promo decomposition; TDP equivalent = # warehouses × weeks
+- Dark-retailer estimation methods: depletion model for velocity (steady-state shipments ≈ sell-through after 4–6 week fill phase), store-count TDP proxy from buyer data, SPINS channel proxy for ARP; ACV not reliably estimable — suppress rather than fabricate
+- Jason has a Circana field glossary from another client project to port once BUILT shares actual column names
+
+**Saved to:**
+- `wiki/02-data-architecture.md` — new "Circana → SPINS Field Map" section + "Dark-Retailer Metric Estimation" table
+- `wiki/08-roadmap.md` — Circana ingest row updated (BLOCKED + field map pointer); dark-retailer estimation row updated with method documentation pointer
+- Memory: `project_circana_field_map.md` (new); `MEMORY.md` compacted from 107 → 79 entries
+
 ## README update 66: v2.5.5 released (2026-07-29)
 
 `v2.5.5` tags cut across all four repos (API, UI, doc, FirstAgent). Bundles MO_75 ETS forecast fallback and the Taking Share badge glyph fix from this session. Previous latest was v2.5.4 (TDP recalibration, 2026-07-28).
