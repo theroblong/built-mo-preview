@@ -624,17 +624,6 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
   ctx.fillText('BI / Reports ↓                                        Causal ML / AI ↑', 0, 0);
   ctx.restore();
 
-  // Quadrant corner labels
-  ctx.font = '10px "Courier New", monospace';
-  ctx.fillStyle = COLORS.quadLabel;
-  ctx.textAlign = 'right';
-  ctx.fillText('Deep AI · Enterprise-only', PAD.l + CW - 8, PAD.t + 18);
-  ctx.textAlign = 'left';
-  ctx.fillText('Deep AI · Accessible  ←  THE WHITESPACE', PAD.l + CW / 2 + 8, PAD.t + 18);
-  ctx.textAlign = 'right';
-  ctx.fillText('Shallow · Enterprise-only', PAD.l + CW - 8, PAD.t + CH - 8);
-  ctx.textAlign = 'left';
-  ctx.fillText('Shallow · Accessible', PAD.l + CW / 2 + 8, PAD.t + CH - 8);
 
   // Competitors
   const vendors = [
@@ -665,7 +654,7 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
   });
 
   // Mo/Aevah — highlighted, top-right
-  const mo = pt(84, 91);
+  const mo = pt(82, 86);
   ctx.shadowColor = COLORS.moShadow;
   ctx.shadowBlur = isDark ? 28 : 14;
   ctx.beginPath();
@@ -682,15 +671,16 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
   ctx.fill();
   ctx.stroke();
 
-  ctx.font = 'bold 12px "Courier New", monospace';
+  ctx.font = 'bold 13px "Courier New", monospace';
   ctx.fillStyle = COLORS.moText;
   ctx.textAlign = 'center';
-  ctx.fillText('Mo / Aevah', mo.cx, mo.cy + 4);
+  ctx.fillText('Mo / Aevah', mo.cx, mo.cy + 5);
+
+  ctx.font = 'bold 10px "Courier New", monospace';
+  ctx.fillStyle = COLORS.moFill;
+  ctx.fillText('4% wMAPE · mid-market', mo.cx, mo.cy + 44);
   ctx.font = '10px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(239,244,255,0.65)';
-  ctx.fillText('4% wMAPE', mo.cx, mo.cy + 17);
-  ctx.fillText('mid-market', mo.cx, mo.cy + 29);
-  ctx.fillText('2–4 wk', mo.cx, mo.cy + 40);
+  ctx.fillText('2–4 wk go-live', mo.cx, mo.cy + 56);
 
 })();
 </script>
