@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 70: Retailer sales correlation framework + external API catalog complete (2026-07-31)
+
+Completed `wiki/12-external-data-apis.md` with three major additions this session:
+
+**Retailer sales correlation (new leading section):** Two-question framework for tracking BUILT brand demand vs. retailer channel health.
+- Question 1 (zero cost, build first): SPINS category share — `spins_full` has all products; total bar category ÷ BUILT velocity = share by retailer by week. Already in Druid, scoped for SKU View / Retailer Summary.
+- Question 2 (external signals): EDGAR retailer comp sales (9 public retailers with CIKs — Kroger, Walmart, Target, Costco, Sprouts, Grocery Outlet, Albertsons, Dollar General, Weis); FRED grocery retail sales; EDGAR 8-K earnings text search for category commentary; Placer/Advan foot traffic (enterprise).
+
+**CPG category signal guides:** Protein bars, snacks, pickles/fermented foods, and a universal CPG layer — each with sources, cadence, and CPG relevance.
+
+**GLP-1 tracking section:** Structural demand shift analysis (tailwind/headwind by category), four free trackable signals (Wikipedia pageviews, Reddit API, SEC EDGAR Novo/Lilly earnings, Google Trends dietary adaptation search), full source table with commercial licensing.
+
+**SEC EDGAR API section:** Full coverage — endpoints, filing types, 30+ company CIKs with CPG relevance, key XBRL financial concepts, top-10 priority data pulls, technical integration notes. Fully free, fully commercial, no key required.
+
+**Saved to:** `wiki/12-external-data-apis.md`, memory `project_retailer_correlation.md`, `reference_external_data_apis.md` updated.
+
+---
+
 ## README update 69: External data API catalog — wiki/12-external-data-apis.md (2026-07-31)
 
 New wiki page cataloging all external API sources evaluated for commercial use in Mo/Aevah. Covers 4 signal categories, 25+ sources, licensing status, cost tiers, and a priority queue.
