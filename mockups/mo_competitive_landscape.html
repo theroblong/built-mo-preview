@@ -124,6 +124,11 @@ tr:hover td.mo-c { background:rgba(45,127,249,.10); }
 :root[data-theme="dark"]  .cp { color:var(--amber); }
 :root[data-theme="light"] .cx { color:#B91C1C; }
 :root[data-theme="light"] .cp { color:#92580a; }
+/* ── Data ecosystem table overrides ─────────────── */
+.eco-tbl td:nth-child(1) { width:18%; }
+.eco-tbl td:nth-child(2) { text-align:left; white-space:normal; width:57%; }
+.eco-tbl td:nth-child(3) { text-align:center; width:13%; }
+.eco-tbl td:nth-child(4) { text-align:center; width:12%; }
 
 /* ── Moat cards ────────────────────────────────── */
 .moat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px,1fr)); gap:14px; }
@@ -506,13 +511,13 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
   <h2>The Data Ecosystem Advantage</h2>
   <p class="section-note">Mo's signal layer is built on a catalogued stack of 50+ external data sources — commercial-licensed, enterprise-grade, spanning macro, commodity, weather, prediction markets, consumer behavior, and competitive intelligence. Most analytics platforms use 3–5 external signals. Mo treats external data as first-class features in the demand model.</p>
   <div class="tbl-wrap">
-    <table>
+    <table class="eco-tbl">
       <thead>
         <tr>
           <th style="text-align:left">Signal Category</th>
           <th style="text-align:left">Sources</th>
-          <th style="text-align:left">Cadence</th>
-          <th style="text-align:left">Status</th>
+          <th>Cadence</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
