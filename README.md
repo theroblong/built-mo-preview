@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 71: External API catalog — search/trend tools + prediction markets added (2026-07-31)
+
+Three new sections added to `wiki/12-external-data-apis.md`:
+
+**Search & trend intelligence:** Legitimate commercial alternatives to pytrends. Glimpse ($79–$199/mo) has a Google reseller agreement — drop-in replacement for pytrends with no ToS risk, best candidate for a Mo Trends consumer interest tile. Exploding Topics ($99/mo) for emerging trend detection. Semrush and Similarweb for branded search volume and competitor traffic as demand proxies. SparkToro for audience research on the protein bar buyer.
+
+**Amazon keyword & rank intelligence:** Helium 10 ($99–$279/mo) — keyword search volume (weekly), BSR trend, competitor ASIN tracking; best for Amazon-selling CPG brands; more demand-signal depth than Keepa. Jungle Scout ($49–$129/mo) as lower-cost alternative. Recommended to pair Helium 10 (real-time keyword demand) + Keepa (historical BSR + price) when BUILT has meaningful Amazon presence.
+
+**Prediction markets:** Kalshi (CFTC-regulated, fully commercial API, free to read) provides crowd-aggregated forward probabilities for CPI prints, Fed rate decisions, recession odds, weather events, and earnings beats — a forward-looking layer that complements FRED's lagging actuals. Polymarket (decentralized, on-chain) is read-safe for data but US trading is restricted. Integration pattern: probability tiles in Mo Trends alongside FRED macro ("Recession probability: 34% (Kalshi)").
+
+---
+
 ## README update 70: Retailer sales correlation framework + external API catalog complete (2026-07-31)
 
 Completed `wiki/12-external-data-apis.md` with three major additions this session:
