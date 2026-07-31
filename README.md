@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 72: Competitive landscape chart — Mo bubble legibility + quadrant clutter resolved (2026-07-31)
+
+Three iterative fixes to the canvas positioning matrix in `mockups/mo_competitive_landscape.html`:
+
+**Quadrant corner labels removed.** Four text strings ("Deep AI · Accessible ← THE WHITESPACE", etc.) were drawn at `PAD.t + 18` — directly inside the Aevah bubble's circle boundary. Removed entirely; the axis labels ("← Enterprise-only ... Mid-market ready →" / "BI / Reports ↓ ... Causal ML / AI ↑") already communicate the quadrant story without clutter.
+
+**Aevah bubble text restructured.** The original design tried to fit four lines of text inside a 28px-radius circle: "Mo / Aevah" + "4% wMAPE" + "mid-market" + "2–4 wk" spanned 40px below center, overflowing the circle boundary. Bottom two labels rendered as white-on-light-background = invisible. Fix: label inside the circle is now just "Aevah" (bold 14px, fully inside r=28); stats appear below the bubble in `COLORS.moFill` matching the competitor label pattern: "Mo / Aevah · 4% wMAPE" and "2–4 wk go-live".
+
+**Text glow for legibility.** "Aevah" inside the dark navy circle uses `shadowColor: rgba(180,215,255,0.6)` with `shadowBlur: 10` — a soft luminous halo that makes white text pop against the solid fill without a harsh outline.
+
+Aevah bubble repositioned from `pt(84, 91)` → `pt(82, 86)` for more breathing room from the chart corner.
+
+---
+
 ## README update 71: External API catalog — search/trend tools + prediction markets added (2026-07-31)
 
 Three new sections added to `wiki/12-external-data-apis.md`:
