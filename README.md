@@ -6,6 +6,26 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 69: External data API catalog — wiki/12-external-data-apis.md (2026-07-31)
+
+New wiki page cataloging all external API sources evaluated for commercial use in Mo/Aevah. Covers 4 signal categories, 25+ sources, licensing status, cost tiers, and a priority queue.
+
+**Categories:**
+- **Macroeconomic**: FRED (integrated), BLS CPI food sub-indices, BEA, World Bank
+- **Commodity prices** (ingredients): Alpha Vantage (cocoa/sugar/dairy proxy), Nasdaq Data Link, USDA ERS/NASS, EIA diesel, World Bank Pink Sheet
+- **Weather**: Open-Meteo (free commercial, no key — top candidate), NOAA CDO (planned), OpenWeatherMap, Tomorrow.io, Visual Crossing
+- **Consumer & retail**: Google Trends (internal modeling only — ToS), Reddit Data API, Exploding Topics, Placer.ai, Advan, Keepa/Amazon BSR
+
+**CPG-specific signal rationale documented:** ingredient cost pressure, regional weather × channel mix, fitness participation as leading indicator, competitor BSR as near-real-time velocity proxy, back-to-school/holiday calendar windows.
+
+**Licensing rule:** All sources must allow commercial redistribution in software. Google Trends (pytrends) flagged as ToS-gray — internal modeling only.
+
+**Priority queue top 5:** Open-Meteo → NOAA CDO → BLS CPI food → EIA diesel → Alpha Vantage commodities.
+
+**File:** `customer-built-doc/wiki/12-external-data-apis.md`
+
+---
+
 ## README update 68: v2.5.6 — UpcCombobox non-blocking focal SKU selector (2026-07-29)
 
 `v2.5.6` tagged across all four repos. Replaces native `<select>` elements in the focal SKU header pill and the proxy candidate selector (forecast drawer) with a custom `UpcCombobox` React component.
