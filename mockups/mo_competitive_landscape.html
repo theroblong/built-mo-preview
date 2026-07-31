@@ -624,9 +624,15 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
   ctx.fillText('← Enterprise-only                                              Mid-market ready →', PAD.l + CW / 2, H - 12);
 
   ctx.save();
-  ctx.translate(16, PAD.t + CH / 2);
+  ctx.translate(16, PAD.t + CH * 0.80);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText('BI / Reports ↓                                        Causal ML / AI ↑', 0, 0);
+  ctx.fillText('BI / Reports ↓', 0, 0);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(16, PAD.t + CH * 0.20);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Causal ML / AI ↑', 0, 0);
   ctx.restore();
 
 
