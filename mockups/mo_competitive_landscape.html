@@ -140,13 +140,24 @@ tr:hover td.mo-c { background:rgba(45,127,249,.10); }
 .conf-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:12px; }
 .ccard { background:var(--surf); border:1px solid var(--border); border-radius:6px; padding:16px 18px; }
 .cname { font-family:var(--mono); font-size:12px; font-weight:700; margin-bottom:3px; }
-.cmeta { font-size:11px; color:var(--muted); margin-bottom:8px; }
-.cattend { font-size:11px; color:var(--muted); border-top:1px solid var(--border);
-  padding-top:8px; margin-top:8px; line-height:1.55; }
-.cstatus { font-family:var(--mono); font-size:9px; letter-spacing:.07em; text-transform:uppercase;
-  padding:2px 8px; border-radius:3px; display:inline-block; margin-top:8px; }
-.s-target   { background:rgba(45,127,249,.12); color:var(--accent); border:1px solid rgba(45,127,249,.25); }
-.s-prospect { background:rgba(245,158,11,.10); color:var(--amber); border:1px solid rgba(245,158,11,.2); }
+.cmeta { font-size:12px; color:var(--text); margin-bottom:8px; opacity:.65; }
+.cattend { font-size:12px; color:var(--text); border-top:1px solid var(--border);
+  padding-top:10px; margin-top:10px; line-height:1.6; opacity:.75; }
+.cstatus { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.07em;
+  text-transform:uppercase; padding:3px 10px; border-radius:3px; display:inline-block; margin-top:10px; }
+/* Light mode (default) — same opaque treatment as vendor tags */
+.s-target   { background:rgba(30,58,138,.15); color:#1E3A8A; border:1.5px solid rgba(30,58,138,.52); }
+.s-prospect { background:rgba(120,53,15,.15); color:#7C2D12; border:1.5px solid rgba(120,53,15,.52); }
+.s-present  { background:rgba(20,83,45,.15); color:#14532D; border:1.5px solid rgba(20,83,45,.50); }
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .s-target   { background:rgba(45,127,249,.16); color:#93C5FD; border-color:rgba(45,127,249,.38); }
+  .s-prospect { background:rgba(245,158,11,.14); color:#FDE68A; border-color:rgba(245,158,11,.35); }
+  .s-present  { background:rgba(30,198,90,.14); color:#86EFAC; border-color:rgba(30,198,90,.35); }
+}
+:root[data-theme="dark"] .s-target   { background:rgba(45,127,249,.16); color:#93C5FD; border-color:rgba(45,127,249,.38); }
+:root[data-theme="dark"] .s-prospect { background:rgba(245,158,11,.14); color:#FDE68A; border-color:rgba(245,158,11,.35); }
+:root[data-theme="dark"] .s-present  { background:rgba(30,198,90,.14); color:#86EFAC; border-color:rgba(30,198,90,.35); }
 .s-present  { background:rgba(30,198,90,.10); color:#4ADE80; border:1px solid rgba(30,198,90,.2); }
 
 /* ── Footer ────────────────────────────────────── */
@@ -550,8 +561,10 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
     compText:  isDark ? 'rgba(139,164,204,0.9)' : 'rgba(10,35,110,1.0)',
     quadrant:  isDark ? 'rgba(45,127,249,0.06)' : 'rgba(45,127,249,0.09)',
     quadLabel: isDark ? 'rgba(45,127,249,0.22)' : 'rgba(20,70,210,0.55)',
-    moFill:    '#2D7FF9',
-    moGlow:    isDark ? 'rgba(45,127,249,0.22)' : 'rgba(45,127,249,0.22)',
+    moFill:    isDark ? '#2D7FF9' : '#0C3794',
+    moGlow:    isDark ? 'rgba(45,127,249,0.25)' : 'rgba(12,55,148,0.18)',
+    moShadow:  isDark ? '#2D7FF9'               : '#0C3794',
+    moStroke:  isDark ? 'rgba(93,164,255,0.7)'  : 'rgba(255,255,255,0.55)',
     moText:    '#FFFFFF',
   };
 
@@ -653,19 +666,19 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
 
   // Mo/Aevah — highlighted, top-right
   const mo = pt(84, 91);
-  ctx.shadowColor = '#2D7FF9';
-  ctx.shadowBlur = 28;
+  ctx.shadowColor = COLORS.moShadow;
+  ctx.shadowBlur = isDark ? 28 : 14;
   ctx.beginPath();
-  ctx.arc(mo.cx, mo.cy, 32, 0, Math.PI * 2);
+  ctx.arc(mo.cx, mo.cy, isDark ? 32 : 28, 0, Math.PI * 2);
   ctx.fillStyle = COLORS.moGlow;
   ctx.fill();
   ctx.shadowBlur = 0;
 
   ctx.beginPath();
-  ctx.arc(mo.cx, mo.cy, 26, 0, Math.PI * 2);
+  ctx.arc(mo.cx, mo.cy, 28, 0, Math.PI * 2);
   ctx.fillStyle = COLORS.moFill;
-  ctx.strokeStyle = 'rgba(93,164,255,0.7)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = COLORS.moStroke;
+  ctx.lineWidth = isDark ? 2 : 2.5;
   ctx.fill();
   ctx.stroke();
 
