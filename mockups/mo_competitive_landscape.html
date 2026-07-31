@@ -1,0 +1,641 @@
+<title>Mo / Aevah — CPG Analytics Market Intelligence</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #07111F;
+  --surf:    #0D1B38;
+  --surf2:   #142247;
+  --border:  rgba(45,127,249,.18);
+  --accent:  #2D7FF9;
+  --red:     #C0392B;
+  --green:   #1EC65A;
+  --amber:   #F59E0B;
+  --text:    #EFF4FF;
+  --muted:   #8BA4CC;
+  --mono:    'Courier New', Courier, monospace;
+  --sans:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: light) { :root {
+  --bg: #F0F4FF; --surf: #FFFFFF; --surf2: #E6EDF8;
+  --border: rgba(45,127,249,.2); --text: #0D1B38; --muted: #4A6FA8;
+}}
+:root[data-theme="dark"]  { --bg:#07111F; --surf:#0D1B38; --surf2:#142247; --border:rgba(45,127,249,.18); --text:#EFF4FF; --muted:#8BA4CC; }
+:root[data-theme="light"] { --bg:#F0F4FF; --surf:#FFFFFF; --surf2:#E6EDF8; --border:rgba(45,127,249,.2); --text:#0D1B38; --muted:#4A6FA8; }
+
+body { background:var(--bg); color:var(--text); font-family:var(--sans);
+  font-size:14px; line-height:1.6; max-width:1200px; margin:0 auto; padding:40px 24px 80px; }
+
+/* ── Header ────────────────────────────────────── */
+.hdr { border-bottom:2px solid var(--accent); padding-bottom:28px; margin-bottom:40px;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:32px; flex-wrap:wrap; }
+.eyebrow { font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
+h1 { font-family:var(--mono); font-size:28px; font-weight:700; line-height:1.2; margin-bottom:8px; }
+.tagline { font-size:14px; color:var(--muted); max-width:600px; line-height:1.65; }
+.hdr-meta { text-align:right; flex-shrink:0; }
+.chip { font-family:var(--mono); font-size:10px; background:rgba(45,127,249,.12);
+  border:1px solid rgba(45,127,249,.28); border-radius:4px; padding:4px 10px;
+  color:var(--accent); letter-spacing:.08em; display:inline-block; margin-bottom:6px; }
+.meta-line { font-family:var(--mono); font-size:10px; color:var(--muted); display:block; }
+
+/* ── Stats bar ─────────────────────────────────── */
+.stats { display:flex; gap:2px; margin-bottom:48px; }
+.stat { flex:1; background:var(--surf); border:1px solid var(--border); padding:16px 20px; }
+.stat:first-child { border-radius:6px 0 0 6px; }
+.stat:last-child  { border-radius:0 6px 6px 0; }
+.stat-v { font-family:var(--mono); font-size:22px; font-weight:700; color:var(--accent); display:block; }
+.stat-l { font-size:11px; color:var(--muted); display:block; margin-top:2px; }
+
+/* ── Sections ──────────────────────────────────── */
+section { margin-bottom:56px; }
+h2 { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:20px;
+  padding-bottom:8px; border-bottom:1px solid var(--border); }
+.section-note { font-size:12px; color:var(--muted); margin-bottom:20px; max-width:640px; line-height:1.6; }
+
+/* ── Matrix chart ──────────────────────────────── */
+.matrix-wrap { background:var(--surf); border:1px solid var(--border);
+  border-radius:8px; padding:24px; overflow-x:auto; }
+#matrix { display:block; max-width:100%; }
+
+/* ── Vendor cards ──────────────────────────────── */
+.vendor-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(270px,1fr)); gap:14px; }
+.vcard { background:var(--surf); border:1px solid var(--border); border-radius:6px;
+  padding:18px 20px; position:relative; overflow:hidden; }
+.vcard::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.vcard.tier1::before { background:rgba(192,57,43,.6); }
+.vcard.tier2::before { background:rgba(245,158,11,.5); }
+.vcard.tieradj::before { background:rgba(139,164,204,.3); }
+.vcard.mo::before { background:linear-gradient(90deg, var(--accent), #7C3AED); }
+.vtier { font-family:var(--mono); font-size:9px; letter-spacing:.1em;
+  text-transform:uppercase; margin-bottom:7px; }
+.t1 { color:var(--red); } .t2 { color:var(--amber); } .tadj { color:var(--muted); } .tmo { color:var(--accent); }
+.vname { font-family:var(--mono); font-size:13px; font-weight:700; margin-bottom:5px; }
+.vdesc { font-size:12px; color:var(--muted); line-height:1.55; margin-bottom:10px; }
+.vtags { display:flex; flex-wrap:wrap; gap:4px; }
+.tag { font-family:var(--mono); font-size:9px; padding:2px 7px;
+  border-radius:3px; letter-spacing:.04em; }
+.tag-p  { background:rgba(192,57,43,.12); color:#E57368; border:1px solid rgba(192,57,43,.22); }
+.tag-s  { background:rgba(30,198,90,.10); color:#4ADE80; border:1px solid rgba(30,198,90,.2); }
+.tag-w  { background:rgba(245,158,11,.10); color:var(--amber); border:1px solid rgba(245,158,11,.2); }
+.tag-n  { background:rgba(45,127,249,.10); color:var(--accent); border:1px solid rgba(45,127,249,.2); }
+
+/* ── Comparison table ──────────────────────────── */
+.tbl-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:6px; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th, td { text-align:center; padding:9px 14px; border-bottom:1px solid var(--border); white-space:nowrap; }
+th { font-family:var(--mono); font-size:10px; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--muted); background:var(--surf2); }
+th.mo-h { color:var(--accent); background:rgba(45,127,249,.12); }
+td.mo-c { background:rgba(45,127,249,.06); font-weight:600; }
+td:first-child { text-align:left; font-family:var(--mono); font-size:11px;
+  color:var(--muted); white-space:normal; min-width:180px; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(45,127,249,.04); }
+tr:hover td.mo-c { background:rgba(45,127,249,.10); }
+.ck { color:var(--green); font-weight:700; }
+.cx { color:rgba(192,57,43,.6); }
+.cp { color:var(--amber); font-size:11px; }
+
+/* ── Moat cards ────────────────────────────────── */
+.moat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px,1fr)); gap:14px; }
+.mcard { background:var(--surf); border:1px solid var(--border);
+  border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+  padding:16px 20px; display:flex; gap:14px; align-items:flex-start; }
+.mnum { font-family:var(--mono); font-size:24px; font-weight:700;
+  color:rgba(45,127,249,.28); flex-shrink:0; line-height:1; padding-top:1px; }
+.mtitle { font-family:var(--mono); font-size:12px; font-weight:700; margin-bottom:5px; }
+.mdesc { font-size:12px; color:var(--muted); line-height:1.55; }
+.mstat { font-family:var(--mono); font-size:11px; color:var(--accent); margin-top:6px; display:block; }
+
+/* ── Conference grid ───────────────────────────── */
+.conf-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:12px; }
+.ccard { background:var(--surf); border:1px solid var(--border); border-radius:6px; padding:16px 18px; }
+.cname { font-family:var(--mono); font-size:12px; font-weight:700; margin-bottom:3px; }
+.cmeta { font-size:11px; color:var(--muted); margin-bottom:8px; }
+.cattend { font-size:11px; color:var(--muted); border-top:1px solid var(--border);
+  padding-top:8px; margin-top:8px; line-height:1.55; }
+.cstatus { font-family:var(--mono); font-size:9px; letter-spacing:.07em; text-transform:uppercase;
+  padding:2px 8px; border-radius:3px; display:inline-block; margin-top:8px; }
+.s-target   { background:rgba(45,127,249,.12); color:var(--accent); border:1px solid rgba(45,127,249,.25); }
+.s-prospect { background:rgba(245,158,11,.10); color:var(--amber); border:1px solid rgba(245,158,11,.2); }
+.s-present  { background:rgba(30,198,90,.10); color:#4ADE80; border:1px solid rgba(30,198,90,.2); }
+
+/* ── Footer ────────────────────────────────────── */
+footer { border-top:1px solid var(--border); padding-top:20px; margin-top:40px;
+  display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width:640px) {
+  .stats { flex-direction:column; gap:6px; }
+  .stat { border-radius:6px !important; }
+  .hdr { flex-direction:column; gap:16px; }
+  .hdr-meta { text-align:left; }
+}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════ HEADER -->
+<header class="hdr">
+  <div>
+    <div class="eyebrow">Competitive Intelligence Brief · Internal Use Only</div>
+    <h1>Mo / Aevah<br>in the CPG Analytics Market</h1>
+    <p class="tagline">How we position against SymphonyAI, NIQ, Circana, Bedrock Analytics, Visualfabriq, and others at GroceryShop, ShopTalk, and FMI — where we win, where they do, and why the moat is durable.</p>
+  </div>
+  <div class="hdr-meta">
+    <span class="chip">Mo v2.5.6 · 2026-07-31</span>
+    <span class="meta-line">Aevah Platform · Internal</span>
+    <span class="meta-line">Rob Long · Jason Brazeal</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ STATS -->
+<div class="stats">
+  <div class="stat"><span class="stat-v">4%</span><span class="stat-l">Mo wMAPE on 104 SKUs × 78 retailers</span></div>
+  <div class="stat"><span class="stat-v">30–118%</span><span class="stat-l">wMAPE range of off-the-shelf foundation models</span></div>
+  <div class="stat"><span class="stat-v">2–4 wk</span><span class="stat-l">Time to live forecasts (vs. 6–18 mo enterprise)</span></div>
+  <div class="stat"><span class="stat-v">$500K+</span><span class="stat-l">SymphonyAI annual entry price vs. Mo mid-market</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MATRIX -->
+<section>
+  <h2>Market Positioning Matrix</h2>
+  <p class="section-note">Y axis = intelligence depth (BI dashboards → causal ML/AI). X axis = market accessibility (enterprise-only → mid-market turnkey). Mo occupies the whitespace that incumbents don't serve: deep causal intelligence at accessible scale.</p>
+  <div class="matrix-wrap">
+    <canvas id="matrix" width="840" height="460"></canvas>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ VENDORS -->
+<section>
+  <h2>Vendor Profiles</h2>
+  <p class="section-note">Vendors present at GroceryShop, ShopTalk, and FMI. Tier 1 = direct CPG analytics competitors. Tier 2 = adjacent or partial overlap.</p>
+  <div class="vendor-grid">
+
+    <div class="vcard tier1">
+      <div class="vtier t1">Tier 1 · Direct</div>
+      <div class="vname">SymphonyAI</div>
+      <div class="vdesc">AI-native RGM and TPO platform. Clients at Nestlé, AB InBev, Diageo, Heineken scale. Strong European market. The highest-capability incumbent, but built for enterprises with dedicated implementation teams.</div>
+      <div class="vtags">
+        <span class="tag tag-p">$500K+/yr</span>
+        <span class="tag tag-s">Deep AI</span>
+        <span class="tag tag-s">RGM/TPO</span>
+        <span class="tag tag-w">6–18 mo implementation</span>
+        <span class="tag tag-w">Not mid-market</span>
+      </div>
+    </div>
+
+    <div class="vcard tier1">
+      <div class="vtier t1">Tier 1 · Direct</div>
+      <div class="vname">NIQ / NielsenIQ</div>
+      <div class="vdesc">The incumbent syndicated data provider + analytics layer. Byzzer ($199/mo) serves emerging brands with surface-level reports. NIQ Connect serves large CPG with deep (and expensive) data contracts. Legacy BI architecture, slow to adopt ML.</div>
+      <div class="vtags">
+        <span class="tag tag-p">$100K–$500K+/yr</span>
+        <span class="tag tag-s">Data breadth</span>
+        <span class="tag tag-s">Brand recognition</span>
+        <span class="tag tag-w">BI-heavy, not ML-native</span>
+        <span class="tag tag-w">Slow innovation</span>
+      </div>
+    </div>
+
+    <div class="vcard tier1">
+      <div class="vtier t1">Tier 1 · Direct</div>
+      <div class="vname">Circana (IRI + NPD)</div>
+      <div class="vdesc">Legacy CPG analytics heritage from the IRI and NPD Group merger (2023). Deep retail data relationships and traditional methodology. Strong with large legacy CPG clients; not AI-native. Overlaps with SPINS in the data layer.</div>
+      <div class="vtags">
+        <span class="tag tag-p">$100K+/yr</span>
+        <span class="tag tag-s">Retail relationships</span>
+        <span class="tag tag-s">Long history</span>
+        <span class="tag tag-w">Legacy architecture</span>
+        <span class="tag tag-w">Expensive</span>
+      </div>
+    </div>
+
+    <div class="vcard tier1">
+      <div class="vtier t1">Tier 1 · Direct</div>
+      <div class="vname">Bedrock Analytics</div>
+      <div class="vdesc">AI + CPG data → insight generation and deck-ready slides. Founded 2016, VC-backed. Focused on sales enablement — making data presentable — more than decision-support modeling. More accessible than NIQ/Symphony but shallower ML depth.</div>
+      <div class="vtags">
+        <span class="tag tag-p">Mid-market</span>
+        <span class="tag tag-s">Accessible</span>
+        <span class="tag tag-s">Sales enablement</span>
+        <span class="tag tag-w">Presentation-layer focus</span>
+        <span class="tag tag-w">Limited causal depth</span>
+      </div>
+    </div>
+
+    <div class="vcard tier1">
+      <div class="vtier t1">Tier 1 · Direct</div>
+      <div class="vname">Visualfabriq</div>
+      <div class="vdesc">AI-native TPO (Trade Promotion Optimization) and RGM (Revenue Growth Management). Clients include PepsiCo, Heineken, Diageo. European origins (Amsterdam), expanding US. Exceptionally deep in promo optimization; less focused on cannibalization, new item, or elasticity.</div>
+      <div class="vtags">
+        <span class="tag tag-p">$200K+/yr</span>
+        <span class="tag tag-s">AI-native TPO</span>
+        <span class="tag tag-s">European stronghold</span>
+        <span class="tag tag-w">Expensive</span>
+        <span class="tag tag-w">Implementation-heavy</span>
+      </div>
+    </div>
+
+    <div class="vcard tier2">
+      <div class="vtier t2">Tier 2 · Adjacent</div>
+      <div class="vname">Alloy.ai</div>
+      <div class="vdesc">Retail data integration + AI-driven replenishment. 450+ retailer integrations, $50M+ Series C. Supply chain and operational angle — answers "how much to reorder" not "why is demand changing." Excellent data pipes; limited causal analytics.</div>
+      <div class="vtags">
+        <span class="tag tag-p">Enterprise</span>
+        <span class="tag tag-s">450+ retailers</span>
+        <span class="tag tag-s">Replenishment AI</span>
+        <span class="tag tag-w">Supply chain, not demand analytics</span>
+      </div>
+    </div>
+
+    <div class="vcard tier2">
+      <div class="vtier t2">Tier 2 · Adjacent</div>
+      <div class="vname">SPINS Analytics Portal</div>
+      <div class="vdesc">Mo's own data supplier has a native analytics layer. Primarily BI dashboards and category reports. Competes at the visualization layer; does not offer ML forecasting, cannibalization scoring, or elasticity modeling. Relationship to manage carefully.</div>
+      <div class="vtags">
+        <span class="tag tag-p">Bundled with data contract</span>
+        <span class="tag tag-s">Native data</span>
+        <span class="tag tag-w">BI dashboards only</span>
+        <span class="tag tag-w">No predictive ML</span>
+      </div>
+    </div>
+
+    <div class="vcard tier2">
+      <div class="vtier t2">Tier 2 · Adjacent</div>
+      <div class="vname">Byzzer (NIQ for SMBs)</div>
+      <div class="vdesc">NIQ's democratized data platform targeting emerging brands under $50M revenue. Surface-level category reports, no ML. $199/mo. Relevant: it proves NIQ recognizes the mid-market gap. Direct competitor for brands graduating off Byzzer's shallow reports toward Mo.</div>
+      <div class="vtags">
+        <span class="tag tag-n">$199/mo</span>
+        <span class="tag tag-s">Accessible price</span>
+        <span class="tag tag-s">NIQ data brand</span>
+        <span class="tag tag-w">No ML, no forecasting</span>
+        <span class="tag tag-w">Surface-level reports</span>
+      </div>
+    </div>
+
+    <div class="vcard mo">
+      <div class="vtier tmo">Our Position</div>
+      <div class="vname">Mo / Aevah</div>
+      <div class="vdesc">Causal ML demand intelligence built on SPINS/Druid. Domain-intelligent forecasts (TDP-adjusted), cannibalization scoring at SKU×retailer, price elasticity, promo lift, and LLM-native chat — grounded in live data. Mid-market price, enterprise intelligence, 2–4 weeks to live.</div>
+      <div class="vtags">
+        <span class="tag tag-n">Mid-market price</span>
+        <span class="tag tag-s">4% wMAPE</span>
+        <span class="tag tag-s">Causal ML</span>
+        <span class="tag tag-s">LLM-native</span>
+        <span class="tag tag-s">2–4 wk deployment</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ FEATURE TABLE -->
+<section>
+  <h2>Feature Comparison</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Capability</th>
+          <th class="mo-h">Mo / Aevah</th>
+          <th>SymphonyAI</th>
+          <th>NIQ / Circana</th>
+          <th>Bedrock</th>
+          <th>Visualfabriq</th>
+          <th>Alloy.ai</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Causal demand ML (why, not just what)</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cp">partial</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>TDP-adjusted forecasting</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="cp">partial</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>Cannibalization scoring (SKU × retailer)</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="cp">partial</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>Price elasticity modeling</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="cx">✗</span></td><td><span class="ck">✓</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>Promo lift / trade optimization</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="cx">✗</span></td><td><span class="ck">✓</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>New item / launch forecasting</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="cp">partial</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>LLM-native conversational analytics</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="cp">early</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>Cross-retailer multi-account view</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+        <tr><td>External macro signal integration</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="cp">partial</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>Open API outputs (scored Druid tables)</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="cp">partial</span></td></tr>
+        <tr><td>Mid-market accessible pricing</td><td class="mo-c"><span class="ck">✓</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td><td><span class="ck">✓</span></td><td><span class="cx">✗</span></td><td><span class="cx">✗</span></td></tr>
+        <tr><td>Weeks to go live</td><td class="mo-c">2–4 wk</td><td>6–18 mo</td><td>3–6 mo</td><td>4–8 wk</td><td>6–12 mo</td><td>3–6 mo</td></tr>
+        <tr><td>Forecast accuracy (wMAPE)</td><td class="mo-c">4%</td><td>~8–12%</td><td>~15–25%</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ MOAT -->
+<section>
+  <h2>Mo / Aevah — Differentiation &amp; Moat</h2>
+  <p class="section-note">Seven durable advantages — not features, but structural positions that compound as the platform matures and data accumulates.</p>
+  <div class="moat-grid">
+
+    <div class="mcard">
+      <div class="mnum">01</div>
+      <div>
+        <div class="mtitle">Causal ML, not BI</div>
+        <div class="mdesc">Mo explains <em>why</em> demand changed — causal event detection, cannibalization DAGs, pre/post methodology. Competitors show dashboards. Mo surfaces decisions with evidence trails. This is the difference between a reporting tool and an analytical co-pilot.</div>
+        <span class="mstat">Event directional accuracy: 63% on 30,876 validated events</span>
+      </div>
+    </div>
+
+    <div class="mcard">
+      <div class="mnum">02</div>
+      <div>
+        <div class="mtitle">TDP as a First-Class Feature</div>
+        <div class="mdesc">Distribution velocity (TDP) is the single strongest predictor of CPG demand — yet no other mid-market platform incorporates it into forecasts. This domain knowledge is the primary driver of Mo's 4% wMAPE vs. 30–118% for off-the-shelf models.</div>
+        <span class="mstat">MO_62: Aevah 6.1% vs. foundation model avg 31.5% (5.1× gap)</span>
+      </div>
+    </div>
+
+    <div class="mcard">
+      <div class="mnum">03</div>
+      <div>
+        <div class="mtitle">Cannibalization Scoring at SKU × Retailer</div>
+        <div class="mdesc">Real-time cannibalization probability for every own-brand pair, at every retailer, every week. Competitors don't offer this for mid-market CPG. BUILT uses it to know — before a buyer conversation — whether launching a new SKU grows the category or steals from itself.</div>
+        <span class="mstat">60,695 scored pairs across 78 retailers; cannibal_prob ≥ 0.99 for confirmed pairs</span>
+      </div>
+    </div>
+
+    <div class="mcard">
+      <div class="mnum">04</div>
+      <div>
+        <div class="mtitle">Price Point vs. Intelligence Depth</div>
+        <div class="mdesc">SymphonyAI starts at $500K/year. NIQ contracts run $100K–$500K+. Mo delivers enterprise-grade causal intelligence at mid-market pricing — serving the brands NIQ wasn't designed for and Symphony can't justify deploying to. The addressable market is enormous.</div>
+        <span class="mstat">Target: brands outgrowing Byzzer ($199/mo reports) but not ready for $500K SymphonyAI</span>
+      </div>
+    </div>
+
+    <div class="mcard">
+      <div class="mnum">05</div>
+      <div>
+        <div class="mtitle">Speed: Weeks, Not Quarters</div>
+        <div class="mdesc">Enterprise CPG analytics implementations take 6–18 months. Mo goes live in 2–4 weeks from SPINS data to live forecast, because the pipeline is built specifically for the SPINS data model. Brands can make decisions before competitors have even finished onboarding elsewhere.</div>
+        <span class="mstat">Full ML pipeline (P0–P12): data → scored Druid tables in one run</span>
+      </div>
+    </div>
+
+    <div class="mcard">
+      <div class="mnum">06</div>
+      <div>
+        <div class="mtitle">LLM-Native from the Ground Up</div>
+        <div class="mdesc">Mo Chat is grounded in live Druid data per screen — not a chatbot bolted onto a BI tool. Provider-agnostic (GPT-4o, Claude, Qwen, Azure, open-source). Competitors are adding AI as a feature; Mo was architected as an AI-first decision surface from day one.</div>
+        <span class="mstat">14 screen-aware proactive messages; streaming SSE; &lt;5s response target</span>
+      </div>
+    </div>
+
+    <div class="mcard">
+      <div class="mnum">07</div>
+      <div>
+        <div class="mtitle">Aevah as an Open Harness</div>
+        <div class="mdesc">Scored outputs — cannibalization rates, elasticities, promo lift, forecasts — are published back to Druid as API endpoints. Client data science teams can consume them directly. This is the opposite of a walled garden: Aevah becomes infrastructure, not a subscription to replace.</div>
+        <span class="mstat">All scores served as Druid tables: scored_cannibalization, scored_price_elasticity, cannibalization_rate_forecast_weekly, …</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ CONFERENCES -->
+<section>
+  <h2>Conference &amp; Industry Presence</h2>
+  <p class="section-note">Where the competitive set shows up — and where Mo should. Incumbents sponsor at the highest tiers; challengers speak on panels and demo in startup showcases.</p>
+  <div class="conf-grid">
+
+    <div class="ccard">
+      <div class="cname">GroceryShop</div>
+      <div class="cmeta">Las Vegas · September · ~4,000 attendees</div>
+      <div class="cattend">Grocery/CPG technology executives. SymphonyAI, NIQ, Circana, Profitero, Alloy.ai are typical sponsors. The primary venue for CPG analytics conversations.</div>
+      <span class="cstatus s-target">Priority target</span>
+    </div>
+
+    <div class="ccard">
+      <div class="cname">ShopTalk</div>
+      <div class="cmeta">Las Vegas · March · ~10,000 attendees</div>
+      <div class="cattend">Broader retail + brand tech. Less CPG-specific than GroceryShop but higher visibility. Startup showcase is a viable entry point for emerging vendors.</div>
+      <span class="cstatus s-target">Priority target</span>
+    </div>
+
+    <div class="ccard">
+      <div class="cname">FMI (Food Industry Speaks)</div>
+      <div class="cmeta">Various · January–May</div>
+      <div class="cattend">Food Marketing Institute conferences. CPG brand and retailer executives. More operational/supply chain than analytics, but key buyer personas attend. NIQ and Circana are fixtures.</div>
+      <span class="cstatus s-prospect">Evaluate</span>
+    </div>
+
+    <div class="ccard">
+      <div class="cname">CAGNY</div>
+      <div class="cmeta">Florida · February · Invite-only</div>
+      <div class="cattend">Consumer Analyst Group of New York. Investor-facing; major CPG CEO/CFO presentations. Not a vendor venue — but target buyer personas (CFO, VP Finance) present here. Intelligence gathering.</div>
+      <span class="cstatus s-prospect">Monitor</span>
+    </div>
+
+    <div class="ccard">
+      <div class="cname">National Grocers Association</div>
+      <div class="cmeta">NGA Show · February</div>
+      <div class="cattend">Independent and regional grocery retailers — the accounts Mo helps brands navigate. Less analytics vendor presence = more whitespace for Mo's story.</div>
+      <span class="cstatus s-target">Whitespace opportunity</span>
+    </div>
+
+    <div class="ccard">
+      <div class="cname">Expo West / Expo East</div>
+      <div class="cmeta">Anaheim (March) · Philadelphia (Sept)</div>
+      <div class="cattend">Natural and specialty CPG brands — the exact BUILT-adjacent audience. Emerging brands outgrowing Excel, not yet at NIQ scale. High density of Mo's ideal early-adopter customer profile.</div>
+      <span class="cstatus s-target">Best near-term fit</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ DATA ECOSYSTEM -->
+<section>
+  <h2>The Data Ecosystem Advantage</h2>
+  <p class="section-note">Mo's signal layer is built on a catalogued stack of 50+ external data sources — commercial-licensed, enterprise-grade, spanning macro, commodity, weather, prediction markets, consumer behavior, and competitive intelligence. Most analytics platforms use 3–5 external signals. Mo treats external data as first-class features in the demand model.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Signal Category</th>
+          <th style="text-align:left">Sources</th>
+          <th style="text-align:left">Cadence</th>
+          <th style="text-align:left">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Macroeconomic (FRED)</td><td>Gas prices, sentiment, CPI, unemployment, retail sales, PCE, yield curve, credit stress</td><td>Weekly / Monthly</td><td><span class="ck">✓ Integrated</span></td></tr>
+        <tr><td>Weather</td><td>Open-Meteo (free commercial), NOAA CDO (9 regions)</td><td>Daily</td><td><span class="cp">Planned</span></td></tr>
+        <tr><td>Commodity / Ingredient costs</td><td>Alpha Vantage (cocoa, sugar), USDA ERS (whey/dairy), EIA (diesel)</td><td>Weekly</td><td><span class="cp">Planned</span></td></tr>
+        <tr><td>Competitor financials</td><td>SEC EDGAR: Simply Good Foods (Quest), BellRing (Premier Protein), PepsiCo (Frito-Lay)</td><td>Quarterly</td><td><span class="cp">Catalogued</span></td></tr>
+        <tr><td>GLP-1 adoption</td><td>Wikipedia pageviews (Semaglutide), Reddit r/Ozempic, Novo + Lilly EDGAR earnings</td><td>Weekly / Quarterly</td><td><span class="cp">Catalogued</span></td></tr>
+        <tr><td>Search &amp; trend intelligence</td><td>Glimpse (licensed Google Trends), Exploding Topics, Helium 10 (Amazon)</td><td>Weekly</td><td><span class="cp">Evaluating</span></td></tr>
+        <tr><td>Prediction markets</td><td>Kalshi: CPI, Fed rate, recession probability, earnings beats</td><td>Daily</td><td><span class="cp">Catalogued</span></td></tr>
+        <tr><td>Retail category share</td><td>spins_full (already in Druid) — total bar category ÷ BUILT velocity</td><td>Weekly</td><td><span class="cp">Scoped</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ FOOTER -->
+<footer>
+  <p>Mo / Aevah · Competitive Intelligence Brief · v2.5.6 · 2026-07-31</p>
+  <p>Internal use only · Not for external distribution without review</p>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════ CANVAS CHART -->
+<script>
+(function() {
+  const canvas = document.getElementById('matrix');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const PAD = { l: 72, r: 28, t: 28, b: 60 };
+  const CW = W - PAD.l - PAD.r;
+  const CH = H - PAD.t - PAD.b;
+
+  // Detect theme
+  const isDark = !document.documentElement.dataset.theme
+    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+    : document.documentElement.dataset.theme === 'dark';
+
+  const COLORS = {
+    bg: isDark ? '#0D1B38' : '#FFFFFF',
+    grid: isDark ? 'rgba(45,127,249,0.08)' : 'rgba(45,127,249,0.12)',
+    axis: isDark ? 'rgba(45,127,249,0.35)' : 'rgba(45,127,249,0.45)',
+    label: isDark ? 'rgba(139,164,204,0.8)' : 'rgba(74,111,168,0.9)',
+    compFill: isDark ? 'rgba(139,164,204,0.15)' : 'rgba(139,164,204,0.2)',
+    compStroke: isDark ? 'rgba(139,164,204,0.4)' : 'rgba(74,111,168,0.4)',
+    compText: isDark ? 'rgba(139,164,204,0.9)' : 'rgba(74,111,168,1)',
+    quadrant: isDark ? 'rgba(45,127,249,0.06)' : 'rgba(45,127,249,0.05)',
+    quadLabel: isDark ? 'rgba(45,127,249,0.22)' : 'rgba(45,127,249,0.3)',
+    moFill: '#2D7FF9',
+    moGlow: 'rgba(45,127,249,0.22)',
+    moText: '#EFF4FF',
+  };
+
+  // Convert 0-100 coords to canvas pixels
+  // x: 0 = enterprise-only (left), 100 = fully accessible (right)
+  // y: 0 = BI reports (bottom), 100 = causal AI (top)
+  function pt(x, y) {
+    return {
+      cx: PAD.l + (x / 100) * CW,
+      cy: PAD.t + ((100 - y) / 100) * CH
+    };
+  }
+
+  // Background
+  ctx.fillStyle = COLORS.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Quadrant background - top right
+  const qpt = pt(50, 50);
+  ctx.fillStyle = COLORS.quadrant;
+  ctx.fillRect(qpt.cx, PAD.t, CW - (qpt.cx - PAD.l), CH / 2);
+
+  // Grid
+  ctx.strokeStyle = COLORS.grid;
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const gx = PAD.l + (CW * i / 10);
+    const gy = PAD.t + (CH * i / 10);
+    ctx.beginPath(); ctx.moveTo(gx, PAD.t); ctx.lineTo(gx, PAD.t + CH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.l, gy); ctx.lineTo(PAD.l + CW, gy); ctx.stroke();
+  }
+
+  // Center divider lines
+  ctx.strokeStyle = COLORS.axis;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  const mid = pt(50, 50);
+  ctx.beginPath(); ctx.moveTo(mid.cx, PAD.t); ctx.lineTo(mid.cx, PAD.t + CH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.l, mid.cy); ctx.lineTo(PAD.l + CW, mid.cy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Axes
+  ctx.strokeStyle = COLORS.axis;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t + CH); ctx.lineTo(PAD.l + CW, PAD.t + CH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t); ctx.lineTo(PAD.l, PAD.t + CH); ctx.stroke();
+
+  // Axis labels
+  ctx.font = '11px "Courier New", monospace';
+  ctx.fillStyle = COLORS.label;
+  ctx.textAlign = 'center';
+  ctx.fillText('← Enterprise-only                                              Mid-market ready →', PAD.l + CW / 2, H - 12);
+
+  ctx.save();
+  ctx.translate(16, PAD.t + CH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('BI / Reports ↓                                        Causal ML / AI ↑', 0, 0);
+  ctx.restore();
+
+  // Quadrant corner labels
+  ctx.font = '10px "Courier New", monospace';
+  ctx.fillStyle = COLORS.quadLabel;
+  ctx.textAlign = 'right';
+  ctx.fillText('Deep AI · Enterprise-only', PAD.l + CW - 8, PAD.t + 18);
+  ctx.textAlign = 'left';
+  ctx.fillText('Deep AI · Accessible  ←  THE WHITESPACE', PAD.l + CW / 2 + 8, PAD.t + 18);
+  ctx.textAlign = 'right';
+  ctx.fillText('Shallow · Enterprise-only', PAD.l + CW - 8, PAD.t + CH - 8);
+  ctx.textAlign = 'left';
+  ctx.fillText('Shallow · Accessible', PAD.l + CW / 2 + 8, PAD.t + CH - 8);
+
+  // Competitors
+  const vendors = [
+    { name: 'SymphonyAI',    x: 11, y: 90, r: 20 },
+    { name: 'Visualfabriq',  x: 19, y: 82, r: 14 },
+    { name: 'NIQ / Circana', x: 28, y: 56, r: 24 },
+    { name: 'Bedrock',       x: 54, y: 44, r: 13 },
+    { name: 'Alloy.ai',      x: 60, y: 60, r: 15 },
+    { name: 'SPINS Portal',  x: 56, y: 26, r: 12 },
+    { name: 'Byzzer / NIQ',  x: 78, y: 18, r: 13 },
+    { name: 'Tableau + DIY', x: 64, y: 12, r: 11 },
+  ];
+
+  vendors.forEach(v => {
+    const { cx, cy } = pt(v.x, v.y);
+    ctx.beginPath();
+    ctx.arc(cx, cy, v.r, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS.compFill;
+    ctx.strokeStyle = COLORS.compStroke;
+    ctx.lineWidth = 1.5;
+    ctx.fill();
+    ctx.stroke();
+    ctx.font = '10px "Courier New", monospace';
+    ctx.fillStyle = COLORS.compText;
+    ctx.textAlign = 'center';
+    ctx.fillText(v.name, cx, cy + v.r + 13);
+  });
+
+  // Mo/Aevah — highlighted, top-right
+  const mo = pt(84, 91);
+  ctx.shadowColor = '#2D7FF9';
+  ctx.shadowBlur = 28;
+  ctx.beginPath();
+  ctx.arc(mo.cx, mo.cy, 32, 0, Math.PI * 2);
+  ctx.fillStyle = COLORS.moGlow;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.arc(mo.cx, mo.cy, 26, 0, Math.PI * 2);
+  ctx.fillStyle = COLORS.moFill;
+  ctx.strokeStyle = 'rgba(93,164,255,0.7)';
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = 'bold 12px "Courier New", monospace';
+  ctx.fillStyle = COLORS.moText;
+  ctx.textAlign = 'center';
+  ctx.fillText('Mo / Aevah', mo.cx, mo.cy + 4);
+  ctx.font = '10px "Courier New", monospace';
+  ctx.fillStyle = 'rgba(239,244,255,0.65)';
+  ctx.fillText('4% wMAPE', mo.cx, mo.cy + 17);
+  ctx.fillText('mid-market', mo.cx, mo.cy + 29);
+  ctx.fillText('2–4 wk', mo.cx, mo.cy + 40);
+
+})();
+</script>

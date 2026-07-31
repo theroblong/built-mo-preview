@@ -105,6 +105,36 @@ Forecast drawers with no LightGBM output now show a 13-week ETS (Damped Holt's L
 
 **Fallback ladder:** LightGBM (Druid scored series) → ETS (≥ 4 actuals) → actuals-only → no data. All drawers project exactly 13 weeks forward.
 
+## README update 65: competitive landscape brief + expanded enterprise API catalog (2026-07-31)
+
+CPG analytics market positioning for GroceryShop, ShopTalk, and FMI conference prep. Mo's differentiation vs. SymphonyAI, NIQ/Circana, Bedrock, Visualfabriq, and Alloy.ai documented across 7 durable moat points.
+
+**New artifacts:**
+- `mockups/mo_competitive_landscape.html` — visual competitive brief: positioning matrix (canvas chart), vendor profile cards, feature comparison table, 7-point moat cards, conference GTM grid, data ecosystem summary
+- `customer-built-doc/wiki/13-competitive-landscape.md` — full text version: competitor profiles, positioning angles, conference strategy, positioning statements by buyer persona
+
+**wiki/12 additions:** Expanded enterprise-vetted API catalog with 20+ new sources across 7 new sections:
+- Pricing intelligence: Engage3, Profitero+, DataWeave
+- Consumer panel & receipt data: Numerator, Earnest Analytics, Affinity Solutions, Attain
+- Ingredient cost intelligence: Expana (formerly Mintec — 36K+ ingredient series)
+- Trade & logistics: Panjiva/S&P Global, Project44, FourKites
+- Brand health: YouGov BrandIndex, Morning Consult
+- Product & nutrition databases: USDA FoodData Central (free), Open Food Facts, OpenFDA, GS1 US
+- Retail intelligence: Crisp, CommerceIQ, Stackline, 84.51 Stratum, Mintel GNPD
+
+**Enterprise vetting notes added:** Wiser Solutions EXCLUDED (Chapter 11 April 2026); Intelligence Node FLAGGED (IPG Acxiom acquisition Dec 2024).
+
+**Competitive moat summary:**
+1. Causal ML (not BI) — 63% event directional accuracy
+2. TDP as first-class feature — 5.1× accuracy gap vs. foundation models (MO_62)
+3. Cannibalization scoring — 60,695+ scored pairs, no other mid-market platform
+4. Price point — enterprise intelligence at accessible price vs. $500K SymphonyAI
+5. Speed — 2–4 weeks to live forecasts vs. 6–18 months enterprise
+6. LLM-native architecture — Mo Chat grounded in live Druid data; provider-agnostic
+7. Aevah open harness — scored outputs as API endpoints, not a walled garden
+
+**Conference GTM priority:** Expo West/East (highest density of Mo's ideal customer profile — emerging natural CPG brands outgrowing Byzzer), then GroceryShop, then ShopTalk.
+
 ## README update 64: 4-class retailer data framework incorporated into all client artifacts (2026-07-29)
 
 Brian Cluster named four retailer data classes on the July 22, 2026 Connor process review call, confirmed by Connor with direct quotes.
