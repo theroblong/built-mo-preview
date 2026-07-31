@@ -17,11 +17,11 @@
   --sans:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 @media (prefers-color-scheme: light) { :root {
-  --bg: #F0F4FF; --surf: #FFFFFF; --surf2: #E6EDF8;
-  --border: rgba(45,127,249,.2); --text: #0D1B38; --muted: #4A6FA8;
+  --bg: #EEF2FA; --surf: #FFFFFF; --surf2: #DCE5F5;
+  --border: rgba(45,127,249,.28); --text: #0A1628; --muted: #244080;
 }}
 :root[data-theme="dark"]  { --bg:#07111F; --surf:#0D1B38; --surf2:#142247; --border:rgba(45,127,249,.18); --text:#EFF4FF; --muted:#8BA4CC; }
-:root[data-theme="light"] { --bg:#F0F4FF; --surf:#FFFFFF; --surf2:#E6EDF8; --border:rgba(45,127,249,.2); --text:#0D1B38; --muted:#4A6FA8; }
+:root[data-theme="light"] { --bg:#EEF2FA; --surf:#FFFFFF; --surf2:#DCE5F5; --border:rgba(45,127,249,.28); --text:#0A1628; --muted:#244080; }
 
 body { background:var(--bg); color:var(--text); font-family:var(--sans);
   font-size:14px; line-height:1.6; max-width:1200px; margin:0 auto; padding:40px 24px 80px; }
@@ -76,10 +76,21 @@ h2 { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.1
 .vtags { display:flex; flex-wrap:wrap; gap:4px; }
 .tag { font-family:var(--mono); font-size:9px; padding:2px 7px;
   border-radius:3px; letter-spacing:.04em; }
-.tag-p  { background:rgba(192,57,43,.12); color:#E57368; border:1px solid rgba(192,57,43,.22); }
-.tag-s  { background:rgba(30,198,90,.10); color:#4ADE80; border:1px solid rgba(30,198,90,.2); }
-.tag-w  { background:rgba(245,158,11,.10); color:var(--amber); border:1px solid rgba(245,158,11,.2); }
-.tag-n  { background:rgba(45,127,249,.10); color:var(--accent); border:1px solid rgba(45,127,249,.2); }
+.tag-p  { background:rgba(192,57,43,.12); color:#C0392B; border:1px solid rgba(192,57,43,.3); }
+.tag-s  { background:rgba(30,160,70,.10); color:#166534; border:1px solid rgba(30,160,70,.25); }
+.tag-w  { background:rgba(180,110,0,.10); color:#92580a; border:1px solid rgba(180,110,0,.25); }
+.tag-n  { background:rgba(45,127,249,.12); color:#1a56c4; border:1px solid rgba(45,127,249,.3); }
+@media (prefers-color-scheme: dark) {
+  .tag-p  { color:#F87171; } .tag-s { color:#4ADE80; } .tag-w { color:#FCD34D; } .tag-n { color:#93C5FD; }
+}
+:root[data-theme="dark"]  .tag-p { color:#F87171; }
+:root[data-theme="dark"]  .tag-s { color:#4ADE80; }
+:root[data-theme="dark"]  .tag-w { color:#FCD34D; }
+:root[data-theme="dark"]  .tag-n { color:#93C5FD; }
+:root[data-theme="light"] .tag-p { color:#C0392B; }
+:root[data-theme="light"] .tag-s { color:#166534; }
+:root[data-theme="light"] .tag-w { color:#92580a; }
+:root[data-theme="light"] .tag-n { color:#1a56c4; }
 
 /* ── Comparison table ──────────────────────────── */
 .tbl-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:6px; }
@@ -95,8 +106,13 @@ tr:last-child td { border-bottom:none; }
 tr:hover td { background:rgba(45,127,249,.04); }
 tr:hover td.mo-c { background:rgba(45,127,249,.10); }
 .ck { color:var(--green); font-weight:700; }
-.cx { color:rgba(192,57,43,.6); }
-.cp { color:var(--amber); font-size:11px; }
+.cx { color:#B91C1C; }
+.cp { color:#92580a; font-size:11px; }
+@media (prefers-color-scheme: dark) { .cx { color:rgba(220,80,60,.8); } .cp { color:var(--amber); } }
+:root[data-theme="dark"]  .cx { color:rgba(220,80,60,.8); }
+:root[data-theme="dark"]  .cp { color:var(--amber); }
+:root[data-theme="light"] .cx { color:#B91C1C; }
+:root[data-theme="light"] .cp { color:#92580a; }
 
 /* ── Moat cards ────────────────────────────────── */
 .moat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px,1fr)); gap:14px; }
@@ -500,18 +516,18 @@ footer p { font-family:var(--mono); font-size:10px; color:var(--muted); }
     : document.documentElement.dataset.theme === 'dark';
 
   const COLORS = {
-    bg: isDark ? '#0D1B38' : '#FFFFFF',
-    grid: isDark ? 'rgba(45,127,249,0.08)' : 'rgba(45,127,249,0.12)',
-    axis: isDark ? 'rgba(45,127,249,0.35)' : 'rgba(45,127,249,0.45)',
-    label: isDark ? 'rgba(139,164,204,0.8)' : 'rgba(74,111,168,0.9)',
-    compFill: isDark ? 'rgba(139,164,204,0.15)' : 'rgba(139,164,204,0.2)',
-    compStroke: isDark ? 'rgba(139,164,204,0.4)' : 'rgba(74,111,168,0.4)',
-    compText: isDark ? 'rgba(139,164,204,0.9)' : 'rgba(74,111,168,1)',
-    quadrant: isDark ? 'rgba(45,127,249,0.06)' : 'rgba(45,127,249,0.05)',
-    quadLabel: isDark ? 'rgba(45,127,249,0.22)' : 'rgba(45,127,249,0.3)',
-    moFill: '#2D7FF9',
-    moGlow: 'rgba(45,127,249,0.22)',
-    moText: '#EFF4FF',
+    bg:        isDark ? '#0D1B38'               : '#F0F4FF',
+    grid:      isDark ? 'rgba(45,127,249,0.08)' : 'rgba(45,127,249,0.18)',
+    axis:      isDark ? 'rgba(45,127,249,0.35)' : 'rgba(30,90,210,0.55)',
+    label:     isDark ? 'rgba(139,164,204,0.8)' : 'rgba(20,50,120,0.85)',
+    compFill:  isDark ? 'rgba(139,164,204,0.15)': 'rgba(60,100,185,0.18)',
+    compStroke:isDark ? 'rgba(139,164,204,0.4)' : 'rgba(30,70,180,0.70)',
+    compText:  isDark ? 'rgba(139,164,204,0.9)' : 'rgba(15,45,120,0.95)',
+    quadrant:  isDark ? 'rgba(45,127,249,0.06)' : 'rgba(45,127,249,0.07)',
+    quadLabel: isDark ? 'rgba(45,127,249,0.22)' : 'rgba(20,80,210,0.45)',
+    moFill:    '#2D7FF9',
+    moGlow:    isDark ? 'rgba(45,127,249,0.22)' : 'rgba(45,127,249,0.18)',
+    moText:    isDark ? '#EFF4FF'               : '#FFFFFF',
   };
 
   // Convert 0-100 coords to canvas pixels
