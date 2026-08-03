@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 73: Generic Aevah CPG demo dataset — brand list pulled, approaches documented (2026-08-03)
+
+Queried `built_filtered_weekly` for all distinct brands and UPC counts. Dataset contains **~350 brands, Jan 2023 – Apr 2026** — entirely protein/nutrition bar category and adjacent snack brands. Pop-Tarts not present; cereal bar crossover is thin (NUTRI-GRAIN 3 UPCs, SPECIAL K 30 UPCs, QUAKER 3 UPCs).
+
+**Top 10 brands by UPC richness (all full date range):**
+KIND (237), LARABAR (215), CLIF BAR (208), QUEST (174), PRIVATE LABEL (164), RXBAR (131), ATKINS (118), THINK! (117), PURE PROTEIN (104), ONE BAR (93).
+
+**Three demo dataset approaches documented:**
+1. **Synthetic anonymous data (preferred)** — Invent brand + UPCs, model realistic demand curves/TDP/promo patterns after category norms. No licensing exposure.
+2. **Anonymize a real SPINS brand** — Rename KIND/QUEST/RXBAR data generically; requires explicit consent from BUILT (SPINS data is licensed to them, not Aevah).
+3. **Wait for second CPG client** — Cleanest long-term path.
+
+**Rob's weather angle:** Outdoor/active brands (Honey Stinger 55 UPCs, GU 8, Clif 208) are natural candidates for weather-correlated demand demo stories alongside the planned Open-Meteo integration.
+
+**Saved to:** `wiki/08-roadmap.md`, memory `project_aevah_demo_dataset.md`.
+
+---
+
 ## README update 72: Competitive landscape chart — Mo bubble legibility + quadrant clutter resolved (2026-07-31)
 
 Three iterative fixes to the canvas positioning matrix in `mockups/mo_competitive_landscape.html`:
