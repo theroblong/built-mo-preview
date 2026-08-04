@@ -6,6 +6,19 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 74: Aevah demo dataset — PRIVATE LABEL eliminated, best brand templates identified (2026-08-04)
+
+Evaluated PRIVATE LABEL (164 UPCs, #5 by count) as a demo brand candidate — **eliminated.** In SPINS, PRIVATE LABEL is not a real brand; it aggregates all retailer-owned store products (Kroger, Target Archer Farms, Whole Foods 365, Costco Kirkland, etc.) into one bucket. Price elasticity across incompatible retailer house brands would be noise, cannibalization modeling incoherent, TDP ramps misleading. No coherent brand narrative possible.
+
+**Best single-brand templates identified for synthetic demo modeling:**
+- RXBAR (131 UPCs) — clean product line, distinct flavor/format variety, premium positioning; anonymizes cleanly
+- QUEST (174 UPCs) — strong pack-size variation, well-suited for cannibalization demo story
+- KIND (237 UPCs) — widest variety, most complex to anonymize
+
+Decision on brand template and implementation start still pending.
+
+---
+
 ## README update 73: Generic Aevah CPG demo dataset — brand list pulled, approaches documented (2026-08-03)
 
 Queried `built_filtered_weekly` for all distinct brands and UPC counts. Dataset contains **~350 brands, Jan 2023 – Apr 2026** — entirely protein/nutrition bar category and adjacent snack brands. Pop-Tarts not present; cereal bar crossover is thin (NUTRI-GRAIN 3 UPCs, SPECIAL K 30 UPCs, QUAKER 3 UPCs).
