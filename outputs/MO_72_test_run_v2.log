@@ -1,0 +1,56 @@
+=================================================================
+MO_72 — Automated Per-Event CausalImpact
+  Min |Δprice/bar|  : 5%
+  Min pre/post weeks: 8/8
+  Parallel workers  : 4
+=================================================================
+
+Querying price_elasticity_training_features …
+  Total eligible rows: 32,257
+  After dedup (1 per series): 1,417
+  After --limit 200: 200
+
+Scoring 200 events with 4 workers …
+  (45s timeout per event; errors logged as SKIPPED)
+
+     50/200  success=6  skipped=44  err=0  rate=14.2/s  ETA=0min
+    100/200  success=12  skipped=88  err=0  rate=27.5/s  ETA=0min
+    150/200  success=18  skipped=132  err=0  rate=40.3/s  ETA=0min
+    200/200  success=40  skipped=160  err=0  rate=50.9/s  ETA=0min
+
+  Total elapsed: 0.1 min
+
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/causal_impact_scores.parquet  (40 rows)
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/mo72_causal_impact_summary.json
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/mo72_causal_impact_chart.png
+
+=================================================================
+SUMMARY
+=================================================================
+  Events scored      : 40
+  SIGNIFICANT (p<.05): 13  (32%)
+  MARGINAL (p<.10)   : 3  (8%)
+  INCONCLUSIVE       : 24  (60%)
+
+  Significant events:
+    Median impact   : +41.3%
+    Median p-value  : 0.0003
+    % price down    : 85%
+    % demand up     : 62%
+
+  Top 10 significant events by |impact %|:
+              retail_account            upc  price_pct_chg  causal_impact_pct  causal_p_value  n_control_series
+                     REASORS 08-40229-30362          -34.6              279.0          0.0000                 3
+                         BJS 08-40229-30378          -35.6              215.5          0.0000                 3
+                   MCKEEVERS 08-40229-30037          -30.7              196.3          0.0003                 3
+                      PUBLIX 08-40229-30378          -31.1              155.8          0.0004                 3
+                   MCKEEVERS 08-40229-30333          -31.3               51.0          0.0288                 1
+                   MCKEEVERS 08-40229-30362          -31.1               49.9          0.0231                 3
+                    WAKEFERN 08-40229-30333          -31.8               41.3          0.0002                 3
+                    WAKEFERN 08-40229-30037          -31.9               30.2          0.0000                 3
+ANDRONICOS COMMUNITY MARKETS 08-40229-30333           33.7              -45.4          0.0143                 3
+                    SCHNUCKS 08-40229-30099          -32.9              -48.8          0.0036                 1
+
+Next step: ingest causal_impact_scores.parquet → Druid (Rob)
+  Then wire causal_impact_pct + causal_p_value into Event Detail Modal
+=================================================================

@@ -1,0 +1,52 @@
+=================================================================
+MO_72 — Automated Per-Event CausalImpact
+  Min |Δprice/bar|  : 5%
+  Min pre/post weeks: 8/8
+  Parallel workers  : 4
+=================================================================
+
+Querying price_elasticity_training_features …
+  Total eligible rows: 32,257
+  After dedup (1 per series): 1,417
+  After --limit 200: 200
+
+Scoring 200 events with 4 workers …
+  (45s timeout per event; errors logged as SKIPPED)
+
+     50/200  success=5  skipped=45  err=0  rate=14.7/s  ETA=0min
+    100/200  success=11  skipped=89  err=0  rate=28.6/s  ETA=0min
+    150/200  success=15  skipped=135  err=0  rate=41.8/s  ETA=0min
+    200/200  success=36  skipped=164  err=0  rate=52.8/s  ETA=0min
+
+  Total elapsed: 0.1 min
+
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/causal_impact_scores.parquet  (36 rows)
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/mo72_causal_impact_summary.json
+Saved /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/mo72_causal_impact_chart.png
+
+=================================================================
+SUMMARY
+=================================================================
+  Events scored      : 36
+  SIGNIFICANT (p<.05): 6  (17%)
+  MARGINAL (p<.10)   : 3  (8%)
+  INCONCLUSIVE       : 27  (75%)
+
+  Significant events:
+    Median impact   : -64.8%
+    Median p-value  : 0.0016
+    % price down    : 83%
+    % demand up     : 33%
+
+  Top 10 significant events by |impact %|:
+   retail_account            upc  price_pct_chg  causal_impact_pct  causal_p_value  n_control_series
+              BJS 08-40229-30378          -35.6              285.4          0.0029                 3
+           PUBLIX 08-40229-30378          -31.1              155.8          0.0004                 3
+   AHOLD DELHAIZE 08-40229-30432          -48.8              -62.2          0.0000                 3
+TOMS FOOD MARKETS 08-40229-30034           33.4              -67.4          0.0075                 3
+           KROGER 08-40229-30378          -31.6              -80.4          0.0285                 1
+SKOGENS FOODLINER 08-40229-30130          -30.9              -85.5          0.0000                 2
+
+Next step: ingest causal_impact_scores.parquet → Druid (Rob)
+  Then wire causal_impact_pct + causal_p_value into Event Detail Modal
+=================================================================

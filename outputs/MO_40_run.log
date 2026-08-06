@@ -1,0 +1,39 @@
+======================================================================
+MO_40 — Model Explainability Report
+======================================================================
+
+Loading /Users/jasonbrazeal/Documents/FirstAgent/scripts/outputs/retailer_sales_weekly.parquet …
+  Rows: 37,420  |  Series: 613
+  Qualifying series: 164  |  Train rows: 15,073
+  Test rows (first 13w): 2,126
+
+Training LightGBM (Dec 2025 cutpoint) …
+[500]	valid_0's l2: 0.00471748
+[1000]	valid_0's l2: 0.00416956
+[1500]	valid_0's l2: 0.00400624
+  Best iteration: 1492
+
+Computing SHAP values …
+  SHAP matrix: (2126, 27)  |  Base value: 4.4762
+
+[Chart 4/5] SHAP feature importance summary …
+  Saved: v2_mo40_shap_summary.png
+
+[Chart] Waterfall: Brownie Batter 4pk
+  Rows: 13  |  Actual avg: 27317  |  Pred avg: 28472  |  Error: 4.2%
+  Saved: v2_mo40_waterfall_bb4pk.png
+
+[Chart] Waterfall: Cookie Dough Chunk 4pk
+  Rows: 13  |  Actual avg: 29275  |  Pred avg: 29772  |  Error: 1.7%
+  Saved: v2_mo40_waterfall_cd4pk.png
+
+[Chart 3/5] Cold-start narrative: Brownie Batter 8pk …
+  Saved: v2_mo40_coldstart_bb8pk.png
+
+[Chart 5/5] Prediction audit trail …
+  Saved: v2_mo40_prediction_audit.png
+
+[HTML] Adding Section 14 to report …
+  Report updated: 6.4 MB
+
+Done.

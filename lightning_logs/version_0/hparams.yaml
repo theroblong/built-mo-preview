@@ -1,0 +1,105 @@
+accelerator: cpu
+alias: null
+attn_dropout: 0.0
+batch_size: 32
+dataloader_kwargs: null
+drop_last_loader: false
+dropout: 0.1
+early_stop_patience_steps: 25
+enable_model_summary: false
+enable_progress_bar: false
+exclude_insample_y: false
+futr_exog_list: null
+grn_activation: ELU
+h: 13
+h_train: 1
+hidden_size: 64
+hist_exog_list:
+- base_units_roll4_avg
+- base_units_roll8_avg
+- base_units_roll8_std
+- base_units_roll13_avg
+- base_units_roll13_std
+- base_units_wow_delta
+- base_units_z8
+- base_units_z13
+- velocity_spm_roll8_avg
+- velocity_spm_roll13_avg
+- velocity_spm_z8
+- velocity_spm_z13
+- tdp
+- tdp_z8
+- arp
+- arp_wow_delta
+- arp_roll8_avg
+- arp_roll8_std
+- weeks_since_launch
+- implied_elasticity
+- max_donor_cannibal_prob
+- donor_count
+- week_of_year
+- base_units_lag1
+- base_units_lag4
+- base_units_lag13
+inference_input_size: 52
+inference_windows_batch_size: 1024
+input_size: 52
+learning_rate: 0.001
+loss: !!python/object:neuralforecast.losses.pytorch.MAE
+  _backward_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _backward_pre_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _buffers: {}
+  _forward_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _forward_hooks_always_called: !!python/object/apply:collections.OrderedDict
+  - []
+  _forward_hooks_with_kwargs: !!python/object/apply:collections.OrderedDict
+  - []
+  _forward_pre_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _forward_pre_hooks_with_kwargs: !!python/object/apply:collections.OrderedDict
+  - []
+  _is_full_backward_hook: null
+  _load_state_dict_post_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _load_state_dict_pre_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _modules: {}
+  _non_persistent_buffers_set: !!set {}
+  _parameters: {}
+  _state_dict_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _state_dict_pre_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  horizon_weight: null
+  is_distribution_output: false
+  output_names:
+  - ''
+  outputsize_multiplier: 1
+  training: true
+lr_scheduler: null
+lr_scheduler_kwargs: null
+max_steps: 500
+n_head: 4
+n_rnn_layers: 1
+n_samples: 100
+n_series: 1
+num_lr_decays: -1
+one_rnn_initial_state: false
+optimizer: null
+optimizer_kwargs: null
+random_seed: 42
+rnn_type: lstm
+scaler_type: standard
+start_padding_enabled: true
+stat_exog_list: null
+step_size: 1
+tgt_size: 1
+training_data_availability_threshold: 0.0
+val_check_steps: 25
+val_monitor: ptl/val_loss
+valid_batch_size: null
+valid_loss: null
+windows_batch_size: 1024

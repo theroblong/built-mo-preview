@@ -1,0 +1,146 @@
+{
+  "model_version": "v3",
+  "trained_at": "2026-07-02T02:34:54.944948+00:00",
+  "features_used": [
+    "base_units_roll4_avg",
+    "base_units_roll8_avg",
+    "base_units_roll8_std",
+    "base_units_roll13_avg",
+    "base_units_roll13_std",
+    "base_units_wow_delta",
+    "base_units_z8",
+    "base_units_z13",
+    "velocity_spm_roll8_avg",
+    "velocity_spm_roll13_avg",
+    "velocity_spm_z8",
+    "velocity_spm_z13",
+    "tdp",
+    "tdp_z8",
+    "arp",
+    "arp_wow_delta",
+    "arp_roll8_avg",
+    "arp_roll8_std",
+    "weeks_since_launch",
+    "implied_elasticity",
+    "max_donor_cannibal_prob",
+    "donor_count",
+    "week_of_year",
+    "base_units_lag1",
+    "base_units_lag4",
+    "base_units_lag13",
+    "base_units_lag52",
+    "velocity_spm_lag52",
+    "rolling_cannibal_pressure",
+    "rolling_cannibal_trend",
+    "rolling_elasticity",
+    "channel_outlet"
+  ],
+  "features_missing": [],
+  "train_rows": 123166,
+  "val_rows": 21803,
+  "train_date_range": [
+    "2023-07-16",
+    "2026-01-18"
+  ],
+  "val_date_range": [
+    "2026-01-25",
+    "2026-04-19"
+  ],
+  "target_p99_clip": 84988.84000000001,
+  "quantile_metrics": {
+    "q10": {
+      "quantile": 0.1,
+      "best_iteration": 1500,
+      "val_pinball_loss": 0.007164606247506716
+    },
+    "q50": {
+      "quantile": 0.5,
+      "best_iteration": 1500,
+      "val_pinball_loss": 0.012367614705394785,
+      "val_mae": 182.74947091093532,
+      "val_rmse": 1223.8712886851768
+    },
+    "q90": {
+      "quantile": 0.9,
+      "best_iteration": 1500,
+      "val_pinball_loss": 0.008559261785227146
+    }
+  },
+  "top_features_q50": {
+    "base_units_lag1": 12767,
+    "base_units_wow_delta": 11953,
+    "base_units_roll4_avg": 10759,
+    "base_units_z8": 7004,
+    "base_units_roll8_avg": 5964,
+    "base_units_roll8_std": 5616,
+    "base_units_z13": 4151,
+    "base_units_roll13_std": 3634,
+    "base_units_lag4": 3027,
+    "base_units_roll13_avg": 2814,
+    "tdp_z8": 2568,
+    "tdp": 2274,
+    "weeks_since_launch": 1986,
+    "base_units_lag13": 1910,
+    "implied_elasticity": 1905,
+    "arp_roll8_std": 1824,
+    "arp_roll8_avg": 1767,
+    "week_of_year": 1615,
+    "arp_wow_delta": 1540,
+    "arp": 1329
+  },
+  "total_units_trained": true,
+  "total_units_features_used": [
+    "base_units_roll4_avg",
+    "base_units_roll8_avg",
+    "base_units_roll8_std",
+    "base_units_roll13_avg",
+    "base_units_roll13_std",
+    "base_units_wow_delta",
+    "base_units_z8",
+    "base_units_z13",
+    "velocity_spm_roll8_avg",
+    "velocity_spm_roll13_avg",
+    "velocity_spm_z8",
+    "velocity_spm_z13",
+    "tdp",
+    "tdp_z8",
+    "arp",
+    "arp_wow_delta",
+    "arp_roll8_avg",
+    "arp_roll8_std",
+    "weeks_since_launch",
+    "implied_elasticity",
+    "max_donor_cannibal_prob",
+    "donor_count",
+    "week_of_year",
+    "velocity_spm_lag52",
+    "rolling_cannibal_pressure",
+    "rolling_cannibal_trend",
+    "rolling_elasticity",
+    "channel_outlet",
+    "total_units_lag1",
+    "total_units_lag4",
+    "total_units_lag13",
+    "total_units_lag52"
+  ],
+  "total_units_features_missing": [],
+  "total_units_quantile_metrics": {
+    "q10": {
+      "quantile": 0.1,
+      "best_iteration": 1500,
+      "val_pinball_loss": 0.021601176112927008
+    },
+    "q50": {
+      "quantile": 0.5,
+      "best_iteration": 1499,
+      "val_pinball_loss": 0.044759009942360733,
+      "val_mae": 589.3004514125295,
+      "val_rmse": 3013.706927905514
+    },
+    "q90": {
+      "quantile": 0.9,
+      "best_iteration": 715,
+      "val_pinball_loss": 0.025683779855947365
+    }
+  }
+}
