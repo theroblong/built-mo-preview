@@ -1,0 +1,964 @@
+<title>Mo Pipeline Automation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  /* ── Tokens ── */
+  :root {
+    --bg:            #F4F6FB;
+    --bg-card:       #FFFFFF;
+    --bg-code:       #EDF0F8;
+    --bg-nav:        #FFFFFF;
+    --border:        #D8DEEE;
+    --border-strong: #B0BCDA;
+    --text-primary:  #0F1B35;
+    --text-secondary:#3A4B6B;
+    --text-faint:    #6B7A9A;
+    --navy:          #1B3566;
+    --navy-deep:     #0F1B35;
+    --blue:          #4078D0;
+    --blue-light:    #E8EDF7;
+    --green:         #0E5E38;
+    --green-light:   #E6F4EE;
+    --amber:         #8A4800;
+    --amber-light:   #FEF3E6;
+    --red:           #8B1A1A;
+    --red-light:     #FEF0F0;
+    --purple:        #4B2D8A;
+    --purple-light:  #F0ECFA;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:            #0D1525;
+      --bg-card:       #131E34;
+      --bg-code:       #1A2540;
+      --bg-nav:        #101828;
+      --border:        #253350;
+      --border-strong: #3A4F72;
+      --text-primary:  #E8EDF7;
+      --text-secondary:#9AAFD0;
+      --text-faint:    #5A7099;
+      --blue-light:    #1A2D52;
+      --green-light:   #0D2E1E;
+      --amber-light:   #2A1A06;
+      --red-light:     #2A0E0E;
+      --purple-light:  #1E1438;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:            #0D1525;
+    --bg-card:       #131E34;
+    --bg-code:       #1A2540;
+    --bg-nav:        #101828;
+    --border:        #253350;
+    --border-strong: #3A4F72;
+    --text-primary:  #E8EDF7;
+    --text-secondary:#9AAFD0;
+    --text-faint:    #5A7099;
+    --blue-light:    #1A2D52;
+    --green-light:   #0D2E1E;
+    --amber-light:   #2A1A06;
+    --red-light:     #2A0E0E;
+    --purple-light:  #1E1438;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  /* ── Layout ── */
+  .doc-wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ── Header ── */
+  .doc-header {
+    border-bottom: 2px solid var(--navy);
+    padding: 40px 0 28px;
+    margin-bottom: 36px;
+  }
+  .doc-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .doc-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .doc-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    max-width: 680px;
+    line-height: 1.6;
+  }
+  .doc-meta {
+    margin-top: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: .04em;
+  }
+
+  /* ── Section ── */
+  .section { margin-bottom: 52px; }
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .section-desc {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    max-width: 720px;
+    margin-bottom: 20px;
+    line-height: 1.65;
+  }
+
+  /* ── Pipeline flow strip ── */
+  .pipeline-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 36px;
+    overflow-x: auto;
+  }
+  .pipe-stage {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-right: none;
+    padding: 14px 12px 12px;
+    position: relative;
+  }
+  .pipe-stage:first-child { border-radius: 6px 0 0 6px; }
+  .pipe-stage:last-child  { border-right: 1px solid var(--border); border-radius: 0 6px 6px 0; }
+  .pipe-stage::after {
+    content: '›';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--border-strong);
+    z-index: 1;
+    background: var(--bg);
+    padding: 0 2px;
+    line-height: 1;
+  }
+  .pipe-stage:last-child::after { display: none; }
+  .pipe-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-faint);
+    letter-spacing: .06em;
+    margin-bottom: 4px;
+  }
+  .pipe-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .pipe-actor {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--blue);
+    background: var(--blue-light);
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ── Stage cards ── */
+  .stage-card {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg-card);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .stage-card-head {
+    background: var(--navy);
+    color: #fff;
+    padding: 10px 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .stage-card-head .stage-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: .7;
+  }
+  .stage-card-head .stage-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .stage-card-head .stage-trigger {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    opacity: .6;
+    letter-spacing: .04em;
+  }
+  .stage-card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+  }
+  .stage-col {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border);
+  }
+  .stage-col:last-child { border-right: none; }
+  .stage-col-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .stage-col ul {
+    list-style: none;
+    padding: 0;
+  }
+  .stage-col ul li {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    padding: 2px 0 2px 12px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .stage-col ul li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--blue);
+    font-weight: 700;
+  }
+
+  /* Gate block */
+  .gate-block {
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .gate-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .gate-pass { color: var(--green); }
+  .gate-fail { color: var(--red); }
+  .gate-checks {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .gate-item { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+  .gate-icon { font-size: 10px; flex-shrink: 0; }
+  .pass-icon { color: var(--green); }
+  .fail-icon { color: var(--red); }
+
+  /* ── Code / chip ── */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    background: var(--bg-code);
+    color: var(--navy);
+    padding: 1px 5px;
+    border-radius: 3px;
+    word-break: break-all;
+  }
+
+  /* ── Option table (Druid) ── */
+  .option-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .option-table thead th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-strong);
+    background: var(--bg);
+  }
+  .option-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .option-table tbody tr:last-child td { border-bottom: none; }
+  .option-table td:first-child { font-weight: 500; color: var(--text-primary); }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-card); }
+
+  .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+  }
+  .badge-green  { background: var(--green-light);  color: var(--green); }
+  .badge-amber  { background: var(--amber-light);  color: var(--amber); }
+  .badge-red    { background: var(--red-light);    color: var(--red); }
+  .badge-blue   { background: var(--blue-light);   color: var(--blue); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+
+  /* ── Philosophy cards ── */
+  .philosophy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) { .philosophy-grid { grid-template-columns: 1fr; } }
+  .phil-card {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg-card);
+    padding: 16px;
+  }
+  .phil-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .phil-card-body {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── Roadmap ── */
+  .roadmap-list { list-style: none; padding: 0; }
+  .roadmap-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .roadmap-item:last-child { border-bottom: none; }
+  .roadmap-pri {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-faint);
+    min-width: 32px;
+    padding-top: 2px;
+  }
+  .roadmap-body {}
+  .roadmap-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+  .roadmap-desc {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .roadmap-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 44px 0; }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 3px solid var(--blue);
+    background: var(--blue-light);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.6;
+  }
+  .callout strong { font-weight: 600; }
+</style>
+
+<div class="doc-wrap">
+
+  <!-- Header -->
+  <header class="doc-header">
+    <div class="doc-eyebrow">Mo · Aevah · Internal Design Document</div>
+    <h1 class="doc-title">Pipeline Automation Design</h1>
+    <p class="doc-subtitle">Architecture for removing manual steps from the Mo data operations pipeline — replacing named individuals with Aevah-driven orchestration, file-watch triggers, per-stage smoke-test gates, and automated scoring publication.</p>
+    <div class="doc-meta">DRAFT · 2026-08-25 · v0.1 — No changes implemented; design only</div>
+  </header>
+
+  <!-- Automation flow strip -->
+  <section class="section">
+    <div class="section-label">Overview</div>
+    <h2 class="section-title">Automated pipeline chain</h2>
+    <p class="section-desc">Five stages run in sequence. Each stage has a smoke-test gate. A failure at any gate halts the run and raises an alert — scoring tables from the prior successful run remain live until the new run completes cleanly.</p>
+
+    <div class="pipeline-strip">
+      <div class="pipe-stage">
+        <div class="pipe-num">STAGE 0</div>
+        <div class="pipe-name">SPINS Ingest</div>
+        <div class="pipe-actor">Aevah trigger</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">STAGE 1</div>
+        <div class="pipe-name">Feature Engineering</div>
+        <div class="pipe-actor">Q-series · Druid SQL</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">STAGE 2</div>
+        <div class="pipe-name">Model Training</div>
+        <div class="pipe-actor">P-series · conditional</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">STAGE 3</div>
+        <div class="pipe-name">Scoring</div>
+        <div class="pipe-actor">P-series · all combos</div>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">STAGE 4</div>
+        <div class="pipe-name">UI Validation</div>
+        <div class="pipe-actor">Smoke assertions</div>
+      </div>
+    </div>
+
+    <div class="callout"><strong>Rollback guarantee:</strong> Each stage writes to a staging table or versioned artifact before promoting to the live query path. A gate failure means the prior version stays live — no partial writes reach Mo users.</div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Trigger layer -->
+  <section class="section">
+    <div class="section-label">Trigger layer</div>
+    <h2 class="section-title">What starts a run</h2>
+    <p class="section-desc">Three trigger types; the file-watch is primary. Aevah monitors the MinIO deposit bucket — when a new SPINS export lands, it validates the file header and row count before handing off to Stage 0. If no file arrives within the expected weekly window, the scheduled fallback fires to alert the BUILT data contact rather than run stale.</p>
+
+    <div class="tbl-wrap">
+      <table class="option-table">
+        <colgroup>
+          <col style="width: 160px">
+          <col style="width: 36%">
+          <col>
+        </colgroup>
+        <thead>
+          <tr><th>Trigger type</th><th>Condition</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-green">Primary</span><br>File-watch</td>
+            <td>New file detected in MinIO deposit bucket with valid header (214 columns, expected date range)</td>
+            <td>Validate → start Stage 0 · log run ID + file fingerprint</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-amber">Fallback</span><br>Scheduled cron</td>
+            <td>No new file within expected weekly window (e.g., Tuesday 09:00 local and no file since prior week)</td>
+            <td>Alert data contact at BUILT · do not run stale data · log missed-window event</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">Manual</span><br>Admin override</td>
+            <td>Explicit trigger via Aevah admin or CLI (e.g., for re-runs after a gate failure is resolved)</td>
+            <td>Start Stage 0 with override flag in run log · same gates apply</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Orchestration stages -->
+  <section class="section">
+    <div class="section-label">Orchestration layer</div>
+    <h2 class="section-title">Stage-by-stage design</h2>
+    <p class="section-desc">Each stage is a shell-orchestrated script chain (same pattern as <code>run_fpa_report.sh</code>). Smoke-test assertions run after every stage. Gate failure halts the run immediately — subsequent stages do not execute.</p>
+
+    <!-- Stage 0 -->
+    <div class="stage-card">
+      <div class="stage-card-head">
+        <span class="stage-id">STAGE 0</span>
+        <span class="stage-name">SPINS Ingest</span>
+        <span class="stage-trigger">trigger: file-watch event</span>
+      </div>
+      <div class="stage-card-body">
+        <div class="stage-col">
+          <div class="stage-col-label">Scripts</div>
+          <ul>
+            <li>SPINS ingest pipeline (OVERWRITE WHERE pattern)</li>
+            <li>Incremental watermark update</li>
+            <li>High-water mark log entry</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">What it does</div>
+          <ul>
+            <li>Loads only new weeks (watermark-gated)</li>
+            <li>Appends to <code>spins_full</code> — never full overwrite</li>
+            <li>Records file fingerprint, row delta, max week date</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Output</div>
+          <ul>
+            <li><code>spins_full</code> updated</li>
+            <li>Run log: ingest row count, date range, BUILT UPC count</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gate-block">
+        <div>
+          <div class="gate-label gate-pass">Gate — pass conditions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Row delta &gt; 0 and within expected range (±30% of prior week)</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Max <code>week_end_date</code> advanced vs. prior run</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Distinct BUILT UPC count unchanged or growing</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="gate-label gate-fail">Gate — fail actions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon fail-icon">✗</span> <span>Halt run · alert · do not proceed to Stage 1</span></div>
+            <div class="gate-item"><span class="gate-icon fail-icon">✗</span> <span>Prior <code>spins_full</code> state preserved (no partial write)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gate-block" style="background:var(--amber-light); border-top:1px solid var(--border);">
+        <div>
+          <div class="gate-label" style="color:var(--amber);">⚠ Exception — MULO rows</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><code>spins_full</code> includes MULO CRMA rows — these are <strong>geographic aggregates</strong>, not retailer-specific rows. They must be ingested but are filtered out of all account-level queries downstream. Row counts in the gate check should account for MULO row volume being disproportionately large vs. a single retailer.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 1 -->
+    <div class="stage-card">
+      <div class="stage-card-head">
+        <span class="stage-id">STAGE 1</span>
+        <span class="stage-name">Feature Engineering</span>
+        <span class="stage-trigger">trigger: Stage 0 gate pass</span>
+      </div>
+      <div class="stage-card-body">
+        <div class="stage-col">
+          <div class="stage-col-label">Scripts</div>
+          <ul>
+            <li>Q-series Druid SQL chain (QS1–Q22)</li>
+            <li>Runs in dependency order: seed tables → enrichment → comparison pools → event detection → PE features</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">What it does</div>
+          <ul>
+            <li>Rebuilds <code>built_filtered_weekly</code>, <code>built_enriched_weekly</code>, <code>comparison_pool_weekly</code></li>
+            <li>Assembles <code>ml_training_features</code></li>
+            <li>Produces <code>price_elasticity_training_features</code></li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Output</div>
+          <ul>
+            <li>All intermediate Druid feature tables updated</li>
+            <li>Run log: row counts, null rates, date ranges per table</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gate-block">
+        <div>
+          <div class="gate-label gate-pass">Gate — pass conditions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span><code>ml_training_features</code> row count within 10% of prior run</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Null rate on key feature columns below threshold (e.g., &lt;5%)</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Date range covers expected new weeks</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>QS1 gate: new UPC count plausible (not an order-of-magnitude jump)</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="gate-label gate-fail">Gate — fail actions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon fail-icon">✗</span> <span>Halt · alert · prior feature tables remain live</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gate-block" style="background:var(--amber-light); border-top:1px solid var(--border);">
+        <div>
+          <div class="gate-label" style="color:var(--amber);">⚠ Exceptions — Q-series data rules</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>MULO exclusion:</strong> MULO CRMA rows are excluded from all account-level feature tables (<code>built_filtered_weekly</code>, <code>comparison_pool_weekly</code>). FOOD and MASS MERCH RMA rows are used for account-level data. MULO is excluded from SKU View by default and must not appear in <code>ml_training_features</code> as a distinct retailer.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>QS1 data-maturity gate:</strong> New UPCs must have ≥8 weeks of post-launch data before entering active scoring via Q5. Fewer than 8 weeks → flagged to <code>new_product_ramp_monitor</code>, not <code>ml_training_features</code>. This is intentional — do not treat low new-UPC counts as a gate failure.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>Null focal pct_chg columns:</strong> Some feature columns have expected NULL rates by design (e.g., pct_chg fields are NULL for first observed week). Null-rate thresholds must be calibrated per column, not applied uniformly.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="stage-card">
+      <div class="stage-card-head">
+        <span class="stage-id">STAGE 2</span>
+        <span class="stage-name">Model Training</span>
+        <span class="stage-trigger">trigger: Stage 1 gate pass · conditional on drift or schedule</span>
+      </div>
+      <div class="stage-card-body">
+        <div class="stage-col">
+          <div class="stage-col-label">Scripts (conditional)</div>
+          <ul>
+            <li>P1 — Cannibalization classifier</li>
+            <li>P2 — Donor ranker</li>
+            <li>P3 — Event detector</li>
+            <li>P7 — Price elasticity model</li>
+            <li>P11 — Cannibalization rate model</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Retrain conditions</div>
+          <ul>
+            <li>New data window &gt; N weeks since last train (configurable; default 4)</li>
+            <li>Feature drift detected: distribution shift on key inputs vs. training window</li>
+            <li>Manual retrain flag set in run config</li>
+            <li>If no condition met: skip training, use existing model artifacts</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Output</div>
+          <ul>
+            <li>Versioned model artifacts (classifier, ranker, elasticity — q10/q50/q90, rate model)</li>
+            <li>Training metadata: feature list, hyperparameters, data version, eval metric</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gate-block">
+        <div>
+          <div class="gate-label gate-pass">Gate — pass conditions (if training ran)</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Model artifact written and readable</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Eval metric within acceptable bounds vs. prior artifact</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Base/promo coherence check passes (&lt;25% violation rate)</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="gate-label gate-fail">Gate — fail actions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon fail-icon">✗</span> <span>Retain prior model artifact · alert · proceed to Stage 3 with prior model (flagged in run log)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gate-block" style="background:var(--amber-light); border-top:1px solid var(--border);">
+        <div>
+          <div class="gate-label" style="color:var(--amber);">⚠ Expected warnings — do not treat as errors</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>LightGBM degenerate label warnings:</strong> Expected during donor ranker (P2) training when group sizes are small. Log and monitor for frequency increases, but do not halt on these warnings alone.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>Numeric dtype conversion:</strong> Several feature columns require explicit cast to float before model ingestion. This conversion is part of the training scripts (not a bug) — log the cast operations but do not treat them as gate failures.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="stage-card">
+      <div class="stage-card-head">
+        <span class="stage-id">STAGE 3</span>
+        <span class="stage-name">Scoring</span>
+        <span class="stage-trigger">trigger: Stage 2 gate pass (or skip)</span>
+      </div>
+      <div class="stage-card-body">
+        <div class="stage-col">
+          <div class="stage-col-label">Scripts</div>
+          <ul>
+            <li>P4 — Cannibalization scorer</li>
+            <li>P5 — Event assembler</li>
+            <li>P6 — New pack enrollment</li>
+            <li>P8 — Price elasticity scorer</li>
+            <li>P10 — Price event queue</li>
+            <li>P12 — Rate forecast</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">What it does</div>
+          <ul>
+            <li>Scores all focal × donor × account × geography × window combinations</li>
+            <li>Writes to staging tables before promotion</li>
+            <li>Applies all guardrails ($/bar, ramp suppression)</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Output (staging)</div>
+          <ul>
+            <li><code>scored_cannibalization</code></li>
+            <li><code>scored_price_elasticity</code></li>
+            <li><code>cannibalization_rate_forecast_weekly</code></li>
+            <li><code>event_queue</code>, <code>price_event_queue</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="gate-block">
+        <div>
+          <div class="gate-label gate-pass">Gate — pass conditions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Coverage: <code>scored_cannibalization</code> combo count ≥ prior run (or within −5%)</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Coverage: <code>scored_price_elasticity</code> UPC count within expected range</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>No degenerate output: elasticity distribution not collapsed to a single value</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>Forecast rows cover expected SKU × account combinations</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="gate-label gate-fail">Gate — fail actions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon fail-icon">✗</span> <span>Do not promote staging tables to live · prior scoring tables remain active · alert</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gate-block" style="background:var(--amber-light); border-top:1px solid var(--border);">
+        <div>
+          <div class="gate-label" style="color:var(--amber);">⚠ Exceptions — expected scoring behavior</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>~48% cannibalization coverage is expected and correct:</strong> <code>scored_cannibalization</code> covers roughly 48% of focal×donor combos. Root cause is the Q5 data-maturity gate (≥8 post-launch weeks required). Do not treat sub-100% coverage as a gate failure — the gate checks for <em>regression</em> from the prior run's baseline, not absolute coverage.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>$/bar guardrail in P8 (price elasticity scorer):</strong> Observations where price moved &gt;40% in a single week are rejected as likely data artifacts. These rejected rows will not appear in <code>scored_price_elasticity</code> — they are discarded, not scored at zero. Coverage shortfalls attributable to the guardrail are expected and should be logged separately from model-coverage issues.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>Ramp suppression in P4:</strong> Focal×donor pairs where the focal SKU is in the ramp period (flagged by Q9) are suppressed from <code>scored_cannibalization</code>. These pairs are not missing — they are intentionally excluded and visible in <code>new_product_ramp_monitor</code>.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>MULO excluded from all scoring outputs:</strong> No scoring table should contain MULO CRMA as a distinct retailer account. Any MULO rows that appear in scoring output are a data lineage error, not expected behavior.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>Positive elasticity at AHOLD and VS accounts:</strong> Known artifact — AHOLD positive elasticity is a CRMA geographic aggregate artifact; VS positive values reflect clearance lifecycle pricing. These are not model errors. Pinned test cases should not assert negative elasticity for these accounts.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 4 -->
+    <div class="stage-card">
+      <div class="stage-card-head">
+        <span class="stage-id">STAGE 4</span>
+        <span class="stage-name">UI Validation</span>
+        <span class="stage-trigger">trigger: Stage 3 gate pass → promote to live</span>
+      </div>
+      <div class="stage-card-body">
+        <div class="stage-col">
+          <div class="stage-col-label">Checks</div>
+          <ul>
+            <li>Spot-check known UPC × account combos against expected value ranges</li>
+            <li>Assert Mo API returns non-empty responses for pinned test cases</li>
+            <li>Verify live Druid query paths return data (not empty [])</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Test cases (pinned)</div>
+          <ul>
+            <li>Cannibalization: 2–3 known high-confidence pairs</li>
+            <li>Price elasticity: 2–3 UPCs with established direction</li>
+            <li>Forecast: 1–2 focal SKUs with known velocity pattern</li>
+          </ul>
+        </div>
+        <div class="stage-col">
+          <div class="stage-col-label">Output</div>
+          <ul>
+            <li>Staging tables promoted to live query path</li>
+            <li>Run marked <strong>complete</strong> in run log</li>
+            <li>Run summary written (coverage stats, model versions, gate outcomes)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gate-block">
+        <div>
+          <div class="gate-label gate-pass">Gate — pass conditions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>All pinned test cases return expected value direction and plausible magnitude</span></div>
+            <div class="gate-item"><span class="gate-icon pass-icon">✓</span> <span>No API endpoint returns empty [] for test UPCs</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="gate-label gate-fail">Gate — fail actions</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span class="gate-icon fail-icon">✗</span> <span>Do not promote · alert with test case diff · prior live tables preserved</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gate-block" style="background:var(--amber-light); border-top:1px solid var(--border);">
+        <div>
+          <div class="gate-label" style="color:var(--amber);">⚠ Pinned test case rules</div>
+          <div class="gate-checks">
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>Use FOOD or MASS MERCH accounts only — never MULO:</strong> MULO is excluded from SKU View by default. Pinned test cases that reference MULO as a retailer account will return no data and produce false gate failures.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>Do not assert exact values — assert direction and range:</strong> Scored outputs fluctuate week to week as new data arrives. Pin to expected direction (e.g., elasticity ε &lt; 0, cannibalization status = CANNIBALIZING) and a plausible magnitude band, not a specific number.</span></div>
+            <div class="gate-item"><span style="color:var(--amber);font-size:10px;">▸</span> <span><strong>AHOLD and VS elasticity exceptions:</strong> Do not include AHOLD or Value Shoppe accounts as pinned elasticity test cases — both exhibit positive elasticity due to data artifacts (CRMA aggregation and clearance pricing, respectively), not model errors.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Druid optimization -->
+  <section class="section">
+    <div class="section-label">Druid optimization</div>
+    <h2 class="section-title">Options for reducing load times</h2>
+    <p class="section-desc">Three distinct levers with different risk profiles. Pursue in priority order — Option A is low-risk and likely the largest single gain. Options B and C require benchmark data before touching any spec.</p>
+
+    <div class="tbl-wrap">
+      <table class="option-table">
+        <colgroup>
+          <col style="width: 180px">
+          <col style="width: 22%">
+          <col style="width: 18%">
+          <col style="width: 18%">
+          <col>
+        </colgroup>
+        <thead>
+          <tr><th>Option</th><th>What it does</th><th>Impact</th><th>Risk</th><th>Prerequisites</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-green">A · Priority 1</span><br><br>Incremental ingest watermark</td>
+            <td>Load only new weeks via <code>OVERWRITE WHERE week_end_date &gt; &lt;watermark&gt;</code> — never re-process full history</td>
+            <td><span class="badge badge-green">High</span></td>
+            <td><span class="badge badge-green">Low</span> — already using this pattern for <code>spins_full</code></td>
+            <td>Watermark metadata store (can be a simple table or file); verify all downstream Q-series queries are window-safe</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-amber">B · Priority 2</span><br><br>Segment granularity tuning</td>
+            <td>Adjust Druid segment granularity (e.g., WEEK → MONTH) and partition by <code>week_end_date</code> to reduce scan scope on time-range queries</td>
+            <td><span class="badge badge-amber">Medium</span></td>
+            <td><span class="badge badge-amber">Medium</span> — spec change requires re-ingest; <strong>must not break MULO exclusion logic</strong> (MULO CRMA rows must remain filterable at query time) or OVERWRITE WHERE pattern</td>
+            <td>Baseline query-time benchmark per table; spec change review; re-ingest test on a copy; verify MULO rows remain correctly excluded from account-level result sets after re-ingest</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-red">C · Priority 3</span><br><br>Rollup / pre-aggregation</td>
+            <td>Aggregate at ingest time (sum units/dollars at brand × week × geography) to reduce row count for summary queries</td>
+            <td><span class="badge badge-amber">Medium-high</span> for summary views</td>
+            <td><span class="badge badge-red">High</span> — changes the data model; may break UPC-level queries, <strong>MULO exclusion</strong> (CRMA channel tag must survive aggregation), SKU-granularity feature engineering, and the $/bar guardrail which requires UPC-week-level price observations</td>
+            <td>Full audit of all downstream queries; confirm UPC-level granularity is preserved; verify MULO channel tag survives rollup; confirm $/bar guardrail inputs are unaffected</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Testing philosophy -->
+  <section class="section">
+    <div class="section-label">Testing philosophy</div>
+    <h2 class="section-title">Reliability and accuracy principles</h2>
+
+    <div class="philosophy-grid">
+      <div class="phil-card">
+        <div class="phil-card-title">No spec change without a benchmark</div>
+        <div class="phil-card-body">Any Druid spec modification must be preceded by a before/after benchmark on the same queries against the same data. If the change doesn't show measurable improvement, it doesn't go live.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-card-title">Smoke gates run on every automated run</div>
+        <div class="phil-card-body">Assertions are not a one-time release check. They run every time the pipeline fires and are the primary reliability signal — not monitoring dashboards added later.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-card-title">Rollback is always defined before go-live</div>
+        <div class="phil-card-body">Each stage must have a documented rollback path before automation is enabled for that stage. "We'll figure it out if it fails" is not a plan when Mo is live for BUILT users.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-card-title">Degenerate output detection</div>
+        <div class="phil-card-body">Coverage drops &gt;10% from prior run, elasticity distribution collapsed to a single value, or scored_cannibalization returning zero rows for known focal SKUs — any of these halt and alert, regardless of whether the underlying code ran without error.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-card-title">New methods run in parallel first</div>
+        <div class="phil-card-body">Any new Druid optimization or ingestion method runs alongside the existing method on a copy of the data until output parity is confirmed. Parallel runs, not cut-overs, are how we validate.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-card-title">Run log is the audit trail</div>
+        <div class="phil-card-body">Every run records: trigger type, file fingerprint, row deltas, gate outcomes, model versions used, and whether a retrain occurred. This log is the authoritative answer to "what changed between last week and this week."</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- Roadmap -->
+  <section class="section">
+    <div class="section-label">Roadmap</div>
+    <h2 class="section-title">Implementation sequence</h2>
+    <p class="section-desc">Ordered by impact-to-risk ratio. Each item is a prerequisite for the next where noted.</p>
+
+    <ul class="roadmap-list">
+      <li class="roadmap-item">
+        <div class="roadmap-pri">P1</div>
+        <div class="roadmap-body">
+          <div class="roadmap-name">Incremental ingest watermark</div>
+          <div class="roadmap-desc">Implement watermark metadata store and update SPINS ingest to skip already-loaded weeks. Verify all Q-series queries are window-safe before enabling.</div>
+          <div class="roadmap-tags"><span class="badge badge-green">Low risk</span><span class="badge badge-green">High impact</span></div>
+        </div>
+      </li>
+      <li class="roadmap-item">
+        <div class="roadmap-pri">P2</div>
+        <div class="roadmap-body">
+          <div class="roadmap-name">Shell orchestration script — <code>run_data_ops.sh</code></div>
+          <div class="roadmap-desc">Chain Q-series and P-series scripts with per-stage gate assertions, run logging, and halt-on-failure logic. Modelled on <code>run_fpa_report.sh</code>. Manual execution first; trigger integration in P3.</div>
+          <div class="roadmap-tags"><span class="badge badge-blue">Orchestration</span></div>
+        </div>
+      </li>
+      <li class="roadmap-item">
+        <div class="roadmap-pri">P3</div>
+        <div class="roadmap-body">
+          <div class="roadmap-name">File-watch trigger — MinIO bucket event</div>
+          <div class="roadmap-desc">Wire MinIO bucket notification (or polling daemon) to fire <code>run_data_ops.sh</code> when a new SPINS export lands. Requires P2 complete.</div>
+          <div class="roadmap-tags"><span class="badge badge-blue">Trigger</span></div>
+        </div>
+      </li>
+      <li class="roadmap-item">
+        <div class="roadmap-pri">P4</div>
+        <div class="roadmap-body">
+          <div class="roadmap-name">Smoke test suite — pinned test cases</div>
+          <div class="roadmap-desc">Define and code Stage 4 pinned test cases: known UPC × account pairs with expected direction and plausible magnitude ranges. These become the permanent reliability gate for every run.</div>
+          <div class="roadmap-tags"><span class="badge badge-purple">Testing</span></div>
+        </div>
+      </li>
+      <li class="roadmap-item">
+        <div class="roadmap-pri">P5</div>
+        <div class="roadmap-body">
+          <div class="roadmap-name">Druid segment tuning — benchmark first</div>
+          <div class="roadmap-desc">Baseline query-time benchmark on <code>built_filtered_weekly</code> and <code>ml_training_features</code>. Evaluate segment granularity and partition changes against the benchmark on a copy before any live spec change.</div>
+          <div class="roadmap-tags"><span class="badge badge-amber">Medium risk</span><span class="badge badge-amber">Benchmark required</span></div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+</div>

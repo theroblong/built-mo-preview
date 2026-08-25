@@ -1,0 +1,940 @@
+<title>Mo Decisions Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --bg:            #F4F6FB;
+    --bg-card:       #FFFFFF;
+    --bg-code:       #EDF0F8;
+    --border:        #D8DEEE;
+    --border-strong: #B0BCDA;
+    --text-primary:  #0F1B35;
+    --text-secondary:#3A4B6B;
+    --text-faint:    #6B7A9A;
+    --navy:          #1B3566;
+    --navy-deep:     #0F1B35;
+    --blue:          #4078D0;
+    --blue-light:    #E8EDF7;
+    --green:         #0E5E38;
+    --green-light:   #E6F4EE;
+    --amber:         #8A4800;
+    --amber-light:   #FEF3E6;
+    --red:           #8B1A1A;
+    --red-light:     #FEF0F0;
+    --purple:        #4B2D8A;
+    --purple-light:  #F0ECFA;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:            #0D1525;
+      --bg-card:       #131E34;
+      --bg-code:       #1A2540;
+      --border:        #253350;
+      --border-strong: #3A4F72;
+      --text-primary:  #E8EDF7;
+      --text-secondary:#9AAFD0;
+      --text-faint:    #5A7099;
+      --blue-light:    #1A2D52;
+      --green-light:   #0D2E1E;
+      --amber-light:   #2A1A06;
+      --red-light:     #2A0E0E;
+      --purple-light:  #1E1438;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:            #0D1525;
+    --bg-card:       #131E34;
+    --bg-code:       #1A2540;
+    --border:        #253350;
+    --border-strong: #3A4F72;
+    --text-primary:  #E8EDF7;
+    --text-secondary:#9AAFD0;
+    --text-faint:    #5A7099;
+    --blue-light:    #1A2D52;
+    --green-light:   #0D2E1E;
+    --amber-light:   #2A1A06;
+    --red-light:     #2A0E0E;
+    --purple-light:  #1E1438;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* Header */
+  .doc-header {
+    border-bottom: 2px solid var(--navy);
+    padding: 40px 0 24px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header-left {}
+  .doc-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .doc-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .doc-subtitle {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    max-width: 620px;
+  }
+  .doc-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: .04em;
+    margin-top: 10px;
+  }
+  .header-stats {
+    display: flex;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+  .stat-box {
+    text-align: center;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    min-width: 64px;
+  }
+  .stat-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Category nav */
+  .cat-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 32px;
+  }
+  .cat-nav a {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    transition: background .15s, color .15s;
+  }
+  .cat-nav a:hover { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+
+  /* Section */
+  .reg-section { margin-bottom: 48px; }
+  .section-anchor { display: block; padding-top: 64px; margin-top: -64px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .section-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  /* Register table */
+  .reg-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-card); }
+  .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .reg-table thead th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-strong);
+    background: var(--bg);
+    white-space: nowrap;
+  }
+  .reg-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .reg-table tbody tr:last-child td { border-bottom: none; }
+  .reg-table tbody tr:hover td { background: var(--blue-light); }
+
+  .col-id    { width: 72px; }
+  .col-item  { min-width: 220px; }
+  .col-where { width: 200px; }
+  .col-why   { min-width: 200px; }
+  .col-status{ width: 88px; }
+  .col-date  { width: 76px; white-space: nowrap; }
+
+  .entry-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-faint);
+  }
+  .entry-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+  .entry-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--bg-code);
+    color: var(--navy);
+    padding: 1px 4px;
+    border-radius: 3px;
+    word-break: break-all;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  .badge-active   { background: var(--green-light);  color: var(--green); }
+  .badge-open     { background: var(--amber-light);  color: var(--amber); }
+  .badge-resolved { background: var(--blue-light);   color: var(--blue); }
+  .badge-blocked  { background: var(--red-light);    color: var(--red); }
+  .badge-monitor  { background: var(--purple-light); color: var(--purple); }
+
+  /* Where tags */
+  .where-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin: 1px 2px 1px 0;
+    background: var(--bg-code);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  /* Formula block */
+  .formula-block {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: 4px;
+    padding: 7px 10px;
+    margin: 6px 0 4px;
+    color: var(--navy);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .col-formula { min-width: 200px; }
+</style>
+
+<div class="wrap">
+
+  <header class="doc-header">
+    <div class="header-left">
+      <div class="doc-eyebrow">Mo · Living Reference Document</div>
+      <h1 class="doc-title">Decisions &amp; Caveats Register</h1>
+      <p class="doc-subtitle">Ongoing record of data handling decisions, known anomalies, exclusion rules, and open items. Update this register whenever a new decision is made or a new caveat is discovered.</p>
+      <div class="doc-meta">Last updated 2026-08-25 · v0.1 — entries added as decisions are made, not at release boundaries</div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-box"><div class="stat-num">48</div><div class="stat-label">Entries</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--amber)">7</div><div class="stat-label">Open</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--red)">2</div><div class="stat-label">Blocked</div></div>
+    </div>
+  </header>
+
+  <!-- Nav -->
+  <nav class="cat-nav">
+    <a href="#null-missing">Null / Missing Values</a>
+    <a href="#normalization">Normalization &amp; Transforms</a>
+    <a href="#retailer-geo">Retailer &amp; Geography Exclusions</a>
+    <a href="#anomalies">Known Data Anomalies</a>
+    <a href="#guardrails">Model Guardrails</a>
+    <a href="#coverage">Coverage &amp; Scoring Behavior</a>
+    <a href="#formulas">Formulas &amp; Metrics</a>
+    <a href="#open">Open Items to Review</a>
+  </nav>
+
+  <!-- ── NULL / MISSING ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="null-missing"></span>
+    <div class="section-head">
+      <span class="section-title">Null / Missing Values</span>
+      <span class="section-count">6 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">NUL-01</td>
+            <td><div class="entry-title">focal pct_chg columns are NULL for first observed week</div><div class="entry-body">Expected by design — no prior week exists to compute a change from. Do not treat as a data error or apply fill.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">Stage 1 gate</span></td>
+            <td>First observation of any UPC has no prior week. NULL here is semantically correct and intentional. Filling with 0 would imply no change, which is a different signal.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NUL-02</td>
+            <td><div class="entry-title">cannibal_rate_sum: NULL → 0 fill applied</div><div class="entry-body">NULL in this field means no measured cannibalization rate for a pair, which should be treated as 0 (no cannibalization), not missing data.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">P1 scoring</span></td>
+            <td>Confirmed: NULL and 0 are semantically equivalent here. The alternative (dropping rows) would eliminate valid no-cannibalization training examples and bias the classifier.</td>
+            <td><span class="badge badge-resolved">Resolved</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NUL-03</td>
+            <td><div class="entry-title">Null-rate thresholds must be calibrated per column</div><div class="entry-body">A uniform null-rate threshold (e.g., &lt;5% across all columns) is incorrect. Some columns have structurally high null rates by design (first-week metrics, ramp-period fields). Gate checks must use per-column thresholds.</div></td>
+            <td><span class="where-tag">Stage 1 gate</span><span class="where-tag">all feature tables</span></td>
+            <td>Applying a blanket threshold would cause false gate failures on columns that are intentionally sparse.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NUL-04</td>
+            <td><div class="entry-title">built_tdp_share NULL treatment: exclude from model, keep for audit</div><div class="entry-body"><code>built_tdp_share</code> has high null rates in early data windows. Field was demoted from model features after MO_25 audit — it hurts model performance. Still computed and stored for auditing but not passed to any scoring model.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">P1</span><span class="where-tag">P7</span></td>
+            <td>Demoted in MO_53 28-feature ablation. Including it degraded cannibalization classifier accuracy. Kept for audit visibility only.</td>
+            <td><span class="badge badge-resolved">Resolved</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NUL-05</td>
+            <td><div class="entry-title">Missing units_promo vs. Units Promo distinction — critical bug history</div><div class="entry-body"><code>units_promo</code> (raw field from SPINS: units sold on promo) is distinct from <code>Units, Promo</code> (% of units on promo). These must never be used interchangeably. A prior mix-up caused incorrect promo-lift calculations.</div></td>
+            <td><span class="where-tag">built_filtered_weekly</span><span class="where-tag">Q-series</span><span class="where-tag">P-series</span></td>
+            <td>SPINS field naming is ambiguous. The distinction is: Units (raw count on promo) vs. Units % Promo (share of total on promo). All queries must reference the correct field explicitly.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NUL-06</td>
+            <td><div class="entry-title">Ramp-period fields NULL until Q9 classification fires</div><div class="entry-body">Fields sourced from <code>new_product_ramp_monitor</code> are NULL for SKUs that have completed ramp (≥8 weeks post-launch). Downstream scoring treats NULL ramp fields as "not in ramp" — this is correct behavior.</div></td>
+            <td><span class="where-tag">new_product_ramp_monitor</span><span class="where-tag">P4 scoring</span></td>
+            <td>Q9 only classifies active ramp-period items. Past-ramp items exit the monitor. NULL = graduated from ramp, not missing data.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── NORMALIZATION ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="normalization"></span>
+    <div class="section-head">
+      <span class="section-title">Normalization &amp; Transforms</span>
+      <span class="section-count">5 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">NRM-01</td>
+            <td><div class="entry-title">Numeric dtype conversion required before model ingestion</div><div class="entry-body">Several feature columns arrive as object/string dtype from Druid and must be explicitly cast to float before passing to LightGBM or quantile regression models. Conversion is built into training and scoring scripts.</div></td>
+            <td><span class="where-tag">P1</span><span class="where-tag">P2</span><span class="where-tag">P7</span><span class="where-tag">P8</span><span class="where-tag">P11</span></td>
+            <td>Druid returns numerics as strings in some query paths. Silently failing here produces model errors that are hard to trace. Explicit cast + type assertion on load is the fix.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NRM-02</td>
+            <td><div class="entry-title">$/bar normalization for cross-pack price comparison</div><div class="entry-body">ARP (average retail price) is normalized to price-per-bar using pack count before any cross-SKU price comparison, elasticity calculation, or competitive gap analysis. Raw ARP is never compared across pack sizes.</div></td>
+            <td><span class="where-tag">Q14–Q17</span><span class="where-tag">P7</span><span class="where-tag">P8</span><span class="where-tag">P10</span></td>
+            <td>A 12-pack at $14.99 and a single at $1.99 have the same $/bar (~$1.25). Without normalization, pack-size differences dominate the price signal and corrupt elasticity estimates.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NRM-03</td>
+            <td><div class="entry-title">Outlier clipping applied to key velocity features</div><div class="entry-body">Extreme velocity observations (units/week far outside the normal distribution for a pack size) are clipped before model training. Specific clip bounds are set per SKU segment, not globally.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">P1</span><span class="where-tag">P7</span></td>
+            <td>Outliers are often SPINS data artifacts (double-counted weeks, delistings with inventory clearance spikes). Clipping prevents these from skewing gradient boosting splits.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NRM-04</td>
+            <td><div class="entry-title">STL seasonal decomposition: use raw monthly avg for UI charts, not STL output</div><div class="entry-body">STL seasonal index produces a July artifact in SPINS data. UI charts use <code>compute_monthly_demand_index()</code> (12-month raw average). STL CSV is generated for forecasting pipeline use only — never fed directly to client-facing charts.</div></td>
+            <td><span class="where-tag">forecast pipeline</span><span class="where-tag">Trends suite</span><span class="where-tag">Demand Velocity</span></td>
+            <td>STL July artifact inflates or deflates the seasonal index for July in a way that doesn't match observed SPINS seasonality. Raw monthly averaging is more accurate for the Wellness &amp; Nutrition Bars category.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NRM-05</td>
+            <td><div class="entry-title">Absolute $ promo value used (not % promo depth) in promo lift features</div><div class="entry-body">Promo feature uses absolute dollar discount amount, not percentage depth. This was confirmed as the stronger signal in MO_53 ablation — percentage depth was demoted.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">P1 promo features</span></td>
+            <td>Absolute $ promo correlates more reliably with volume lift than % depth, likely because consumer response is anchored to shelf price, not percentage math. Confirmed in MO_53 28-feature set.</td>
+            <td><span class="badge badge-resolved">Resolved</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── RETAILER / GEO EXCLUSIONS ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="retailer-geo"></span>
+    <div class="section-head">
+      <span class="section-title">Retailer &amp; Geography Exclusions</span>
+      <span class="section-count">5 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">GEO-01</td>
+            <td><div class="entry-title">MULO CRMA excluded from all account-level feature tables and SKU View</div><div class="entry-body">MULO CRMA rows are a geographic aggregate across all measured outlets — they are NOT a retailer. They must be ingested into <code>spins_full</code> but filtered out of <code>built_filtered_weekly</code>, <code>comparison_pool_weekly</code>, <code>ml_training_features</code>, and all scoring outputs. MULO is excluded from SKU View by default.</div></td>
+            <td><span class="where-tag">spins_full</span><span class="where-tag">Q0</span><span class="where-tag">Q1</span><span class="where-tag">SKU View</span><span class="where-tag">all scoring</span></td>
+            <td>MULO is a rollup, not a real retailer row. Including it in account-level analysis would double-count volume and inflate comparison pool metrics. It is valid as a benchmark reference but must be clearly separated.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-02</td>
+            <td><div class="entry-title">Use FOOD and MASS MERCH RMA rows for account-level data</div><div class="entry-body">When SPINS account-level data is needed, use rows with <code>channel_name</code> = FOOD or MASS MERCH (RMA), not MULO CRMA. These map to specific retail accounts (e.g., KROGER FOOD, TARGET MASS MERCH).</div></td>
+            <td><span class="where-tag">Q1</span><span class="where-tag">comparison_pool_weekly</span><span class="where-tag">Retailer Summary</span></td>
+            <td>RMA (Retail Market Area) rows are retailer-specific. CRMA (Combined RMA) is the geographic aggregate. Mixing them produces account attribution errors.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-03</td>
+            <td><div class="entry-title">4 retailer data classes: SPINS, Circana (Costco), own-portal (ACS), fully dark</div><div class="entry-body">Retailers fall into 4 categories: (1) SPINS-covered (~80 retailers), (2) Circana-only (Costco), (3) own data portal/ACS, (4) fully dark — ship data only, no category view (Winco, HEB, TJ's). Mo currently operates on SPINS data only.</div></td>
+            <td><span class="where-tag">all Mo screens</span><span class="where-tag">Retailer Summary</span></td>
+            <td>Confirmed by Brian and Connor. Dark retailers cannot be included in category-level benchmarking. Any UI claim about retailer coverage must respect this framework.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-04</td>
+            <td><div class="entry-title">Pinned UI test cases must use FOOD or MASS MERCH accounts — never MULO</div><div class="entry-body">Automated smoke test cases for Stage 4 validation must reference FOOD or MASS MERCH retailer accounts. MULO accounts return no data in SKU View and will produce false gate failures.</div></td>
+            <td><span class="where-tag">Stage 4 gate</span><span class="where-tag">UI smoke tests</span></td>
+            <td>SKU View excludes MULO by default. A test using a MULO account would return empty [] — indistinguishable from a real data pipeline failure.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-05</td>
+            <td><div class="entry-title">Circana field map: BLOCKED on sample file from BUILT</div><div class="entry-body">Full Circana-to-SPINS field mapping and dark-retailer shipment estimation methodology is documented but cannot be finalized without a sample Costco Circana extract from BUILT.</div></td>
+            <td><span class="where-tag">Circana integration</span><span class="where-tag">dark-retailer estimation</span></td>
+            <td>Need BUILT to share a sample file with field schema before implementing the Circana ingest path.</td>
+            <td><span class="badge badge-blocked">Blocked</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── KNOWN ANOMALIES ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="anomalies"></span>
+    <div class="section-head">
+      <span class="section-title">Known Data Anomalies</span>
+      <span class="section-count">6 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">ANO-01</td>
+            <td><div class="entry-title">AHOLD positive price elasticity — CRMA artifact</div><div class="entry-body">AHOLD accounts show positive price elasticity in <code>scored_price_elasticity</code>. This is a known artifact of CRMA geographic aggregation — the aggregate smooths price variation in a way that inverts the estimated demand response. Do not cite AHOLD elasticity scores as valid in client artifacts.</div></td>
+            <td><span class="where-tag">scored_price_elasticity</span><span class="where-tag">PE suite</span><span class="where-tag">UI test cases</span></td>
+            <td>CRMA aggregation across multiple retail formats in the AHOLD footprint creates a price-demand correlation inversion. Account-level RMA rows would be needed for a valid estimate.</td>
+            <td><span class="badge badge-monitor">Monitor</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-02</td>
+            <td><div class="entry-title">Value Shoppe (VS) positive price elasticity — clearance lifecycle</div><div class="entry-body">VS accounts show positive elasticity due to clearance pricing patterns — price drops coincide with the tail of a product lifecycle, when volume is also declining. The model correctly identifies the correlation; the economics are the anomaly.</div></td>
+            <td><span class="where-tag">scored_price_elasticity</span><span class="where-tag">PE suite</span></td>
+            <td>Clearance lifecycle: a retailer marks down to clear inventory as a SKU exits distribution. Volume continues to fall even as price drops. This is real behavior, not a model error, but it should not be used to counsel a price decrease.</td>
+            <td><span class="badge badge-monitor">Monitor</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-03</td>
+            <td><div class="entry-title">STL July seasonal artifact in SPINS data</div><div class="entry-body">STL decomposition produces an inflated or deflated July seasonal index for the Wellness &amp; Nutrition Bars category. The artifact is visible in the STL CSV but must not propagate to UI charts. Use <code>compute_monthly_demand_index()</code> (12-month raw average) for all client-visible seasonal charts.</div></td>
+            <td><span class="where-tag">STL CSV</span><span class="where-tag">Trends suite</span><span class="where-tag">Demand Velocity</span></td>
+            <td>Likely caused by a SPINS data filing pattern in July (e.g., a common reset cycle or promotional blackout that is category-specific). Not a pipeline bug — the STL algorithm is fitting a real artifact in the input data.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-04</td>
+            <td><div class="entry-title">SPINS March peak (+30%) and December trough (−28%)</div><div class="entry-body">Category-wide seasonality for Wellness &amp; Nutrition Bars shows a consistent March peak (New Year resolution carry-through) and December trough. Q1 is broadly high. This pattern is confirmed across multiple years and should be used to contextualize velocity and forecast numbers in UI.</div></td>
+            <td><span class="where-tag">Demand Velocity</span><span class="where-tag">Trends suite</span><span class="where-tag">Forecast drawer</span></td>
+            <td>SPINS data pattern confirmed via 12-month raw averaging. Use these anchors when explaining week-over-week velocity changes to BUILT users.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-05</td>
+            <td><div class="entry-title">Base/promo coherence violations — 24.24% rate before fix, now &lt;25% threshold</div><div class="entry-body">Before MO_58, ~24.24% of training examples had incoherent base/promo unit relationships (e.g., base units &gt; total units). MO_58 fixed the coherence logic. Gate threshold is &lt;25% violation rate — if it rises above this in a future run, halt and investigate.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">P1</span><span class="where-tag">Stage 2 gate</span></td>
+            <td>Incoherent rows distort the classifier's understanding of the base/promo signal. MO_58 identified and fixed the root cause but the gate ensures regressions are caught on future data.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-06</td>
+            <td><div class="entry-title">Single-week extreme price moves (&gt;40%) are SPINS data artifacts</div><div class="entry-body">ARP observations showing a &gt;40% price change in a single week ($/bar basis) are treated as SPINS filing artifacts rather than real price events. These are rejected by the $/bar guardrail in P8 and not scored. They may represent retailer price-file corrections, temporary promotional display errors, or double-filed weeks.</div></td>
+            <td><span class="where-tag">price_elasticity_weekly_features</span><span class="where-tag">P8</span></td>
+            <td>Confirmed via spot review of flagged observations. No real retailer moves price by &gt;40% in a single week in this category. The pattern is consistent with SPINS filing noise.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── MODEL GUARDRAILS ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="guardrails"></span>
+    <div class="section-head">
+      <span class="section-title">Model Guardrails</span>
+      <span class="section-count">5 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">GRD-01</td>
+            <td><div class="entry-title">$/bar guardrail: reject price observations with &gt;40% single-week move</div><div class="entry-body">Price elasticity scorer (P8) rejects any observation where ARP moved more than 40% in a single week on a $/bar basis. Rejected rows are logged but not scored — they are not set to zero elasticity.</div></td>
+            <td><span class="where-tag">P8</span><span class="where-tag">scored_price_elasticity</span></td>
+            <td>These observations are SPINS filing artifacts (ANO-06). Including them corrupts the elasticity estimate for that UPC×account×window. Rejection preserves estimate quality.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GRD-02</td>
+            <td><div class="entry-title">Ramp suppression: ramp-period pairs excluded from cannibalization scoring</div><div class="entry-body">Focal×donor pairs where the focal SKU is in the ramp period (≤8 weeks post-launch, flagged by Q9) are suppressed from <code>scored_cannibalization</code>. They appear in <code>new_product_ramp_monitor</code> instead. Not a coverage gap — intentional routing.</div></td>
+            <td><span class="where-tag">P4</span><span class="where-tag">scored_cannibalization</span><span class="where-tag">new_product_ramp_monitor</span></td>
+            <td>Cannibalization signal is unreliable during ramp — the focal SKU hasn't reached steady-state distribution, so TDP/velocity deltas reflect ramp dynamics, not true cannibalization.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GRD-03</td>
+            <td><div class="entry-title">LightGBM degenerate label warnings are expected — not errors</div><div class="entry-body">During donor ranker (P2) training, LightGBM emits degenerate label warnings when group sizes are small (e.g., a focal SKU with only 1–2 donor candidates in the training window). These are logged but should not halt the pipeline.</div></td>
+            <td><span class="where-tag">P2</span><span class="where-tag">Stage 2 training</span></td>
+            <td>Small groups are an inherent feature of the donor ranking task — not all focal SKUs have large donor pools. LambdaRank degrades gracefully on small groups; the warning is informational.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GRD-04</td>
+            <td><div class="entry-title">QS1 data-maturity gate: ≥8 post-launch weeks required for active scoring</div><div class="entry-body">New BUILT UPCs must accumulate at least 8 weeks of post-launch sales data before entering <code>ml_training_features</code> and cannibalization scoring. UPCs with fewer than 8 weeks are routed to <code>new_product_ramp_monitor</code>. This is not a data quality failure — it is intentional.</div></td>
+            <td><span class="where-tag">QS1</span><span class="where-tag">Q5</span><span class="where-tag">new_product_ramp_monitor</span></td>
+            <td>Fewer than 8 weeks produces insufficient TDP and velocity signal for reliable cannibalization classification. The 8-week threshold was set empirically from MO_10 model development.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GRD-05</td>
+            <td><div class="entry-title">built_tdp_share removed from model features — audit only</div><div class="entry-body"><code>built_tdp_share</code> (BUILT's share of category TDP) was tested as a model feature and found to hurt cannibalization classifier accuracy. Removed from <code>ml_training_features</code> after MO_53 ablation. Still computed and stored in audit tables for business review.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">P1</span><span class="where-tag">MO_53</span></td>
+            <td>Feature demoted in the 28-feature definitive set. Including it degraded model performance — likely because TDP share at the category level introduces multicollinearity with individual SKU TDP features.</td>
+            <td><span class="badge badge-resolved">Resolved</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── COVERAGE / SCORING ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="coverage"></span>
+    <div class="section-head">
+      <span class="section-title">Coverage &amp; Scoring Behavior</span>
+      <span class="section-count">4 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">COV-01</td>
+            <td><div class="entry-title">scored_cannibalization covers ~48% of focal×donor combos — expected</div><div class="entry-body">The cannibalization scoring table covers approximately 48% of all possible focal×donor combinations. This is correct and expected — the root cause is the QS1 data-maturity gate (≥8 post-launch weeks). Coverage checks should measure <em>regression from prior run</em>, not absolute percentage.</div></td>
+            <td><span class="where-tag">scored_cannibalization</span><span class="where-tag">Stage 3 gate</span></td>
+            <td>~52% of potential pairs involve at least one SKU that has not yet met the 8-week maturity threshold. Coverage will grow over time as SKUs age. Not a bug.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-02</td>
+            <td><div class="entry-title">FOOD and MULO channels are best for demos; demos should avoid dark retailers</div><div class="entry-body">Demo scenarios and smoke test cases should use FOOD-channel accounts (e.g., KROGER FOOD) or MULO-excluded multi-outlet views. Avoid demo-ing dark retailers (Winco, HEB, TJ's) — no category data exists, so the UI will show limited or no data.</div></td>
+            <td><span class="where-tag">all Mo screens</span><span class="where-tag">demo scenarios</span></td>
+            <td>Dark retailers have no SPINS coverage — they ship product but don't share point-of-sale data. Demo-ing them would show empty screens and undermine confidence in the platform.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-03</td>
+            <td><div class="entry-title">Causal events and cannibalization rates must not be cross-linked in the UI</div><div class="entry-body">Price event → demand lift (Causal drawer, Price suite) and assortment → cannibalization rate (Rate Forecast, Cannibal suite) are separate mechanisms. The UI must never suggest that a price event caused a cannibalization rate change, or vice versa.</div></td>
+            <td><span class="where-tag">Causal drawer</span><span class="where-tag">Rate Forecast</span><span class="where-tag">Mo Chat</span></td>
+            <td>Cross-linking these two mechanisms would give BUILT users incorrect causal inference — e.g., attributing a rate change to a price promo when it was actually driven by a distribution gain. Kept strictly separate by design.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-04</td>
+            <td><div class="entry-title">ML scoring tables must never be blended with live Druid context queries</div><div class="entry-body">Every Mo screen draws from two distinct sources: ML scoring tables (projection data, written by P-series in Stage 3) and live Druid queries (component/context data at render time). These have separate lineage and must never be merged or cited interchangeably.</div></td>
+            <td><span class="where-tag">all Mo screens</span><span class="where-tag">Mo Chat</span><span class="where-tag">automation design</span></td>
+            <td>Blending would mean showing ML projections labeled as observed actuals, or using observed actuals as if they were model outputs. Both introduce silent inaccuracy in a decision tool where cited numbers drive real $ decisions.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── FORMULAS ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="formulas"></span>
+    <div class="section-head">
+      <span class="section-title">Formulas &amp; Metric Definitions</span>
+      <span class="section-count">10 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-formula"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Metric</th><th>Formula / Definition</th><th>Where it applies</th><th>Notes &amp; caveats</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">FML-01</td>
+            <td><div class="entry-title">Price elasticity (ε)</div><div class="entry-body">Demand sensitivity to own-price changes, estimated per UPC × account × window.</div></td>
+            <td><div class="formula-block">ε = ∂ log(units) / ∂ log(ARP)
+
+Estimated via quantile regression
+on 13-week rolling windows.
+Outputs: q10, q50, q90 bands.</div></td>
+            <td><span class="where-tag">Q14–Q17</span><span class="where-tag">P7</span><span class="where-tag">P8</span><span class="where-tag">scored_price_elasticity</span></td>
+            <td>Log-log specification means ε is unit-free and directly interpretable as % demand change per 1% price change. Confound flags (promo weeks, new UPC periods) are included as covariates to isolate clean price signal. Cross-price elasticity (sensitivity to competitor price) estimated separately. See ANO-01/ANO-02 for AHOLD/VS sign anomalies.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-02</td>
+            <td><div class="entry-title">$/bar normalization</div><div class="entry-body">Price per individual bar unit, enabling cross-pack-size price comparison.</div></td>
+            <td><div class="formula-block">price_per_bar = ARP / source_pack_count
+
+ARP = Average Retail Price (dollars)
+source_pack_count = bars per package</div></td>
+            <td><span class="where-tag">Q14–Q17</span><span class="where-tag">P7</span><span class="where-tag">P8</span><span class="where-tag">P10</span><span class="where-tag">GRD-01</span></td>
+            <td>All cross-SKU price comparisons, elasticity estimation, and competitive gap calculations use $/bar. Raw ARP is never compared across pack sizes. The $/bar guardrail (GRD-01) uses this field: observations where $/bar moved &gt;40% week-over-week are rejected as data artifacts.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-03</td>
+            <td><div class="entry-title">Promo lift ratio</div><div class="entry-body">Ratio of incremental volume to base volume during a promoted week.</div></td>
+            <td><div class="formula-block">promo_lift_ratio = incr_units / base_units
+
+incr_units = units sold above baseline
+             (SPINS field: Incr Units)
+base_units  = baseline demand
+             (SPINS field: Base Units)</div></td>
+            <td><span class="where-tag">built_filtered_weekly</span><span class="where-tag">Promo Response suite</span><span class="where-tag">MO_73</span></td>
+            <td>Both <code>incr_units</code> and <code>base_units</code> come directly from SPINS — they are SPINS-modeled decompositions, not computed by Mo. A ratio &gt;1 means promo drove more incremental volume than the baseline. Watch for the units_promo vs. Units % Promo distinction (NUL-05) — <code>incr_units</code> is not the same field as <code>units_promo</code>.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-04</td>
+            <td><div class="entry-title">Promo depth (discount %)</div><div class="entry-body">Percentage price reduction during a promoted week relative to base price.</div></td>
+            <td><div class="formula-block">promo_depth_pct =
+  (Base ARP − ARP) / Base ARP × 100
+
+Base ARP = baseline (non-promo) ARP
+ARP      = actual shelf price that week</div></td>
+            <td><span class="where-tag">Q14</span><span class="where-tag">Promo Response suite</span><span class="where-tag">MO_73</span></td>
+            <td>Used as a feature input, not a model output. Absolute $ promo value (Base ARP − ARP) is the stronger model signal than promo_depth_pct — confirmed in MO_53 ablation (NRM-05). Depth % is retained for UI display and interpretability.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-05</td>
+            <td><div class="entry-title">TDP (Total Distribution Points)</div><div class="entry-body">Composite distribution metric combining breadth (% stores stocking) and depth (share of shelf) into a single weekly figure.</div></td>
+            <td><div class="formula-block">TDP = %ACV × (selling stores / total stores)
+      × 100  [simplified]
+
+SPINS provides TDP directly.
+Mo uses: TDP, Any Promo and base TDP
+as separate feature inputs.</div></td>
+            <td><span class="where-tag">built_filtered_weekly</span><span class="where-tag">Q1</span><span class="where-tag">ml_training_features</span><span class="where-tag">all suites</span></td>
+            <td>TDP is the primary distribution signal in all Mo models. A growing TDP for a new SKU during ramp is expected and not a cannibalization signal (GRD-02). <code>built_tdp_share</code> (BUILT's share of category TDP) was tested as a feature and demoted — hurts model performance (GRD-05). Individual SKU TDP is retained.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-06</td>
+            <td><div class="entry-title">Avg Weekly Units SPM (velocity)</div><div class="entry-body">Average units sold per store per week — normalizes velocity by distribution so high-distribution SKUs don't appear artificially stronger.</div></td>
+            <td><div class="formula-block">units_spm =
+  Avg Weekly Units / Avg % ACV Selling
+
+SPINS field: Avg Weekly Units SPM
+(Stores Per Million — SPINS terminology
+ for per-store velocity)</div></td>
+            <td><span class="where-tag">built_filtered_weekly</span><span class="where-tag">Demand Velocity suite</span><span class="where-tag">SKU View</span></td>
+            <td>SPM stands for "Selling Points per Million" in SPINS terminology — it normalizes by distribution points, not literally per million stores. Used in Demand Velocity suite as the primary velocity signal. Compare SKUs on SPM, not raw units, when distribution differs.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-07</td>
+            <td><div class="entry-title">wMAPE (weighted MAPE) — conditional</div><div class="entry-body">Primary forecast accuracy metric. Weights errors by actual volume so high-volume weeks carry more weight than low-volume weeks.</div></td>
+            <td><div class="formula-block">wMAPE =
+  Σ |actual − forecast|
+  ─────────────────────── × 100
+       Σ actual
+
+Computed per-SKU × account × window.
+Conditional: exclude zero-actual weeks
+from denominator to avoid division by 0.</div></td>
+            <td><span class="where-tag">P7</span><span class="where-tag">P12</span><span class="where-tag">forecast validation</span><span class="where-tag">FP&amp;A brief</span></td>
+            <td>Conditional wMAPE (excluding zero-actual periods) was confirmed as correct for this dataset — weeks with zero actual sales are often delisting / out-of-stock artifacts that should not inflate the error metric. Standard MAPE (unweighted) is not used — it gives equal weight to small and large volume periods and is distorted by near-zero actuals.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-08</td>
+            <td><div class="entry-title">Monthly demand index (seasonality)</div><div class="entry-body">12-month seasonal index used in UI charts and forecast decomposition. Not the STL output — a raw monthly average normalized to 1.0.</div></td>
+            <td><div class="formula-block">demand_index[month m] =
+  avg_units[month m across all years]
+  ─────────────────────────────────
+  avg_units[all months]
+
+Function: compute_monthly_demand_index()
+Returns 12 values normalized around 1.0</div></td>
+            <td><span class="where-tag">Trends suite</span><span class="where-tag">Demand Velocity</span><span class="where-tag">Forecast drawer</span></td>
+            <td>STL decomposition is computed for forecasting pipeline use only — it produces a July artifact (ANO-03, NRM-04) that must not reach client-facing charts. This raw monthly index is the correct alternative for UI display. March ≈ +30% vs. annual avg; December ≈ −28% (ANO-04).</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-09</td>
+            <td><div class="entry-title">Cannibalization rate</div><div class="entry-body">Share of a focal SKU's sales volume that was shifted from a specific donor SKU (as opposed to net-new demand).</div></td>
+            <td><div class="formula-block">cannib_rate(focal, donor) =
+  donor_unit_decline
+  ──────────────────
+  focal_unit_lift
+
+Where both are measured over the
+same pre/post event window.
+Bounded [0, 1]; values &gt;1 clipped.</div></td>
+            <td><span class="where-tag">Q3–Q5</span><span class="where-tag">P11</span><span class="where-tag">P12</span><span class="where-tag">cannibalization_rate_forecast_weekly</span></td>
+            <td>Rate is learned by P11 as a function of TDP, pricing, distribution, and assortment changes over the SKU lifecycle — it is not a static ratio but a time-evolving model output. P12 forecasts the rate 13 weeks forward. <code>cannibal_rate_sum</code> (aggregate across all donors) NULL → 0 fill is correct (NUL-02). Rate and causal lift must never be cross-linked in the UI (COV-03).</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">FML-10</td>
+            <td><div class="entry-title">Incremental share (cannibalization scoring)</div><div class="entry-body">Fraction of a focal SKU's total lift that represents net-new demand (not shifted from donors). Complement of cannibalization rate.</div></td>
+            <td><div class="formula-block">incremental_share =
+  1 − Σ cannib_rate(focal, donor_i)
+        for all scored donor_i
+
+= net-new fraction of focal lift
+  not attributable to any donor</div></td>
+            <td><span class="where-tag">scored_cannibalization</span><span class="where-tag">Cannibalization suite</span><span class="where-tag">SKU Summary</span></td>
+            <td>Displayed as the "incremental share" tile in the Cannibalization suite. A value near 1.0 means the focal SKU is growing the category; a value near 0 means it is mostly shifting existing demand. Mo Chat confirmed: 12pk = 94% incremental, cross-flavor single = 36% cannibalization (from MO_73).</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── OPEN ITEMS ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="open"></span>
+    <div class="section-head">
+      <span class="section-title">Open Items to Review</span>
+      <span class="section-count">7 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">OPN-01</td>
+            <td><div class="entry-title">Per-column null-rate thresholds not yet defined</div><div class="entry-body">Stage 1 gate requires per-column null thresholds (NUL-03). These have not yet been defined — currently no automated null-rate check runs in the pipeline. Need to establish baseline null rates per column from current data and set alert thresholds.</div></td>
+            <td><span class="where-tag">Stage 1 gate</span><span class="where-tag">ml_training_features</span></td>
+            <td>Without per-column thresholds, null-rate regressions (e.g., a new SPINS extract with missing fields) will not be caught before scoring.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-02</td>
+            <td><div class="entry-title">Per-series drift detection not implemented</div><div class="entry-body">The model retrain condition (Stage 2) currently triggers on elapsed time or manual flag. Per-series feature drift detection — comparing the current data window's distribution against the training window — is not yet implemented.</div></td>
+            <td><span class="where-tag">Stage 2 trigger</span><span class="where-tag">P1</span><span class="where-tag">P7</span></td>
+            <td>Without drift detection, a model trained on winter data may run stale on summer data without triggering a retrain, silently degrading forecast accuracy.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-03</td>
+            <td><div class="entry-title">Temporal / account holdout not yet implemented in PE model (MO_16)</div><div class="entry-body">Price elasticity model (P7) currently uses a random 80/20 train/test split. No temporal holdout or account holdout has been tested. This means the model may overfit to time-correlated patterns or specific retailer behavior.</div></td>
+            <td><span class="where-tag">P7</span><span class="where-tag">MO_16</span><span class="where-tag">scored_price_elasticity</span></td>
+            <td>Random splits can leak future information into training when the data has temporal autocorrelation (which price data always does). Temporal holdout is the correct validation approach for a time-series-derived model.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-04</td>
+            <td><div class="entry-title">AHOLD elasticity: should positive values be flagged or suppressed in UI?</div><div class="entry-body">AHOLD positive elasticity is a known CRMA artifact (ANO-01). Decision needed: should Mo suppress AHOLD elasticity scores from the PE suite display, flag them with a caveat, or display them as-is with a data source note?</div></td>
+            <td><span class="where-tag">PE suite</span><span class="where-tag">scored_price_elasticity</span><span class="where-tag">SKU Retailer View</span></td>
+            <td>Displaying uncaveated positive elasticity for AHOLD could cause BUILT to make incorrect pricing decisions (e.g., raising price expecting volume gains). Need a UX decision on how to surface this without cluttering the UI.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-05</td>
+            <td><div class="entry-title">Circana field map blocked — waiting on sample file from BUILT</div><div class="entry-body">Circana-to-SPINS mapping and dark-retailer (Costco) estimation methodology is documented but cannot be finalized. BUILT has not yet provided a sample Circana extract with field schema. (See GEO-05.)</div></td>
+            <td><span class="where-tag">Circana integration</span></td>
+            <td>Blocked on external deliverable. Jason also has a Circana glossary from another client that can be ported once the sample file is received.</td>
+            <td><span class="badge badge-blocked">Blocked</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-06</td>
+            <td><div class="entry-title">Druid segment tuning: baseline query benchmarks not yet collected</div><div class="entry-body">Before any Druid spec changes (Options B and C in the automation design), baseline query-time benchmarks must be collected against <code>built_filtered_weekly</code> and <code>ml_training_features</code>. This has not been done.</div></td>
+            <td><span class="where-tag">Druid optimization</span><span class="where-tag">automation design</span></td>
+            <td>Without a baseline, there is no way to verify whether a spec change actually improved performance. Benchmark first, always.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-07</td>
+            <td><div class="entry-title">Clip bounds for outlier clipping not formally documented</div><div class="entry-body">Outlier clipping is applied to key velocity features (NRM-03) but the specific clip bounds (by SKU segment or pack size) are embedded in script logic and not formally documented or version-controlled independently. Should be extracted to a config file.</div></td>
+            <td><span class="where-tag">P1</span><span class="where-tag">P7</span><span class="where-tag">ml_training_features</span></td>
+            <td>If clip bounds change (e.g., a new pack format with different velocity ranges is added), they should be reviewable and auditable without reading through script code.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

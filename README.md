@@ -6,6 +6,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 77: Decisions & Caveats Register + Pipeline Automation Design (2026-08-25)
+
+Two new living reference documents:
+
+**`mockups/mo_decisions_register.html`** — Comprehensive register of Mo pipeline data handling decisions, known anomalies, exclusion rules, key formulas, and open items. 48 entries across 8 categories (NUL, NRM, GEO, ANO, GRD, COV, FML, OPN). Covers: null semantics per column, $/bar normalization, MULO exclusion, SPINS data artifacts (AHOLD/VS elasticity, STL July, base/promo coherence), model guardrails ($/bar guardrail, ramp suppression, QS1 gate), all key formulas (ε, TDP, wMAPE, cannibalization rate, incremental share, promo lift, SPM velocity), and 7 open items. Updated across all conversations as new decisions are made.
+
+**`mockups/mo_automation_design.html`** — Design document for automating the Mo data pipeline. Five-stage orchestration chain (SPINS Ingest → Feature Engineering → Model Training → Scoring → UI Validation) with trigger layer (file-watch/cron/manual), per-stage smoke-test gates with pass/fail/exception callouts, Druid optimization options (incremental watermark, segment tuning, rollup), and 5-item implementation roadmap. MULO exclusion, $/bar guardrail, ramp suppression, and known scoring caveats annotated inline per stage.
+
+---
+
 ## README update 76: Kickoff technical reference — script name table overflow fix; artifact/HTML sync rule (2026-08-25)
 
 Fixed CSS overflow in `mockups/mo_data_ops_kickoff.html`: long underscore-separated script names (e.g. `MO_17_price_elasticity_score`) were bleeding past cell borders in the Script column across all P-series and scoring pipeline tables. Added `word-break: break-all` and `overflow-wrap: break-word` to `.op-table td.qid small`. Artifact republished to the same URL.
