@@ -278,6 +278,63 @@
 
   .divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
+  /* Status legend */
+  .status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 200px;
+    flex: 1;
+  }
+  .legend-def {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .legend-def strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1px;
+  }
+
+  /* Tooltip */
+  [data-tip] { position: relative; cursor: help; }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy-deep);
+    color: #fff;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 7px 11px;
+    border-radius: 5px;
+    width: 240px;
+    white-space: normal;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  }
+  [data-tip]:hover::after { opacity: 1; }
+
   /* Formula block */
   .formula-block {
     font-family: 'IBM Plex Mono', monospace;
@@ -323,6 +380,30 @@
     <a href="#formulas">Formulas &amp; Metrics</a>
     <a href="#open">Open Items to Review</a>
   </nav>
+
+  <!-- Status legend -->
+  <div class="status-legend">
+    <div class="legend-item">
+      <span class="badge badge-active" style="flex-shrink:0;margin-top:2px">Active</span>
+      <div class="legend-def"><strong>Decision in effect</strong>Applies to current pipeline and code. No action needed — follow this rule as written.</div>
+    </div>
+    <div class="legend-item">
+      <span class="badge badge-open" style="flex-shrink:0;margin-top:2px">Open</span>
+      <div class="legend-def"><strong>Needs resolution</strong>Decision or threshold not yet made or implemented. Must be resolved before the relevant pipeline stage is production-ready.</div>
+    </div>
+    <div class="legend-item">
+      <span class="badge badge-resolved" style="flex-shrink:0;margin-top:2px">Resolved</span>
+      <div class="legend-def"><strong>Settled — historical record</strong>Previously open question, now definitively answered. Documented so future conversations don't re-litigate it.</div>
+    </div>
+    <div class="legend-item">
+      <span class="badge badge-blocked" style="flex-shrink:0;margin-top:2px">Blocked</span>
+      <div class="legend-def"><strong>External dependency</strong>Cannot proceed without something outside the team's control — a data file, schema, or approval from BUILT or a third party.</div>
+    </div>
+    <div class="legend-item">
+      <span class="badge badge-monitor" style="flex-shrink:0;margin-top:2px">Monitor</span>
+      <div class="legend-def"><strong>Known, accepted anomaly</strong>Understood and accepted for now. Review periodically — if it worsens or causes a downstream problem, escalate to Open.</div>
+    </div>
+  </div>
 
   <!-- ── NULL / MISSING ── -->
   <section class="reg-section">
@@ -938,3 +1019,18 @@ Bounded [0, 1]; values &gt;1 clipped.</div></td>
   </section>
 
 </div>
+
+<script>
+  const STATUS_TIPS = {
+    'badge-active':   'Active — decision is in effect and must be followed. No action needed.',
+    'badge-open':     'Open — not yet decided or implemented. Must be resolved before this pipeline stage is production-ready.',
+    'badge-resolved': 'Resolved — previously open, now definitively settled. Historical record only.',
+    'badge-blocked':  'Blocked — cannot proceed without an external dependency (e.g., data file or schema from BUILT).',
+    'badge-monitor':  'Monitor — known anomaly, accepted for now. Review periodically; escalate to Open if it worsens.',
+  };
+  document.querySelectorAll('.badge').forEach(b => {
+    for (const [cls, tip] of Object.entries(STATUS_TIPS)) {
+      if (b.classList.contains(cls)) { b.dataset.tip = tip; break; }
+    }
+  });
+</script>
