@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 83: BUILT pack size distribution — copy correction in crayon drawing (2026-08-25)
+
+BUILT pack size sales reality: 1-pack (most common, convenience/impulse), 4-pack (#2, everyday grocery multipack), 8-pack (occasional), 12-pack (bulk/wholesale/online only — Costco, Amazon, B2B). No mainstream 6-pack format. Corrected two chips in `scratchpad/mo_built_crayon.html`: "6-pack or 12-pack? 📦" → "1-pack, 4-pack, or 12-pack? 📦"; "make more 12-packs! 📦📦" → "sell more 4-packs! 📦📦". Crayon drawing republished at same URL. Pack size copy guidance saved to BUILT hierarchy memory and wiki.
+
+---
+
 ## README update 82: Mo Artifact Navigator — table of contents for all working documents (2026-08-25)
 
 `mockups/mo_artifact_navigator.html` — new reference page that maps every Mo artifact by category, audience, and purpose. Two-column layout: sticky left nav (color-coded category links with counts) + scrollable main content. Horizontal SVG mindmap at the top shows the 5-category tree with live counts. Artifact cards (3-col grid per section) show title, filename chip, audience badges, one-line description, and status dot. 29 artifacts catalogued across 5 categories: Customer-Facing (6), Internal Reference (7), GTM & Sales (5), ML & Data Science (8), UI & Mockups (3). Card data is JS-rendered from an inline data array so the index stays maintainable as new artifacts are added. Artifact published.
