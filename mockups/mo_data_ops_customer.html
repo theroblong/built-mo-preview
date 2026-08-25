@@ -167,15 +167,15 @@
     display: flex;
     align-items: flex-start;
     flex-wrap: nowrap;
-    gap: 0;
+    gap: 10px;
   }
 
   /* Staircase — each step descends 18px */
   .pipeline-steps > .p-step:nth-child(1) { margin-top: 0;    }
-  .pipeline-steps > .p-step:nth-child(3) { margin-top: 18px; }
-  .pipeline-steps > .p-step:nth-child(5) { margin-top: 36px; }
-  .pipeline-steps > .p-step:nth-child(7) { margin-top: 54px; }
-  .pipeline-steps > .p-step:nth-child(9) { margin-top: 72px; }
+  .pipeline-steps > .p-step:nth-child(2) { margin-top: 18px; }
+  .pipeline-steps > .p-step:nth-child(3) { margin-top: 36px; }
+  .pipeline-steps > .p-step:nth-child(4) { margin-top: 54px; }
+  .pipeline-steps > .p-step:nth-child(5) { margin-top: 72px; }
 
   .p-step {
     display: flex;
@@ -220,14 +220,6 @@
     margin-top: 3px;
   }
 
-  .p-arrow {
-    font-size: 13px;
-    color: var(--border-strong);
-    padding: 0 6px;
-    flex-shrink: 0;
-    margin-top: 20px;
-    user-select: none;
-  }
 
   /* ── Section heading ── */
   .intro-section {
@@ -260,14 +252,43 @@
     overflow: hidden;
   }
 
+  /* details/summary resets */
+  details.sim-card > summary { list-style: none; }
+  details.sim-card > summary::-webkit-details-marker { display: none; }
+
   .sim-header {
     background: var(--navy);
     padding: 20px 28px;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 16px;
     flex-wrap: wrap;
+    cursor: pointer;
+    user-select: none;
   }
+
+  .sim-toggle {
+    margin-left: 10px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.13);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: rgba(210,225,255,0.95);
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .sim-header:hover .sim-toggle {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .toggle-open { display: none; }
+  details[open] .toggle-closed { display: none; }
+  details[open] .toggle-open  { display: inline; }
 
   .sim-num {
     font-size: 11px;
@@ -380,31 +401,6 @@
   :root[data-theme="dark"] .src-erp { background: #3A2A08; color: #E8B050; }
   :root[data-theme="dark"] .src-pos { background: #2A1040; color: #C080E8; }
 
-  /* ── Operations list ── */
-  .ops-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .op-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-    font-size: 12.5px;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .op-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--blue);
-    flex-shrink: 0;
-    margin-top: 7px;
-  }
-
   /* ── Screen output ── */
   .output-block {
     border-radius: 6px;
@@ -431,6 +427,12 @@
     background: var(--amber-dim);
     color: var(--amber);
     border-color: var(--amber-border);
+  }
+
+  .output-block-header.ops {
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    border-color: var(--border-light);
   }
 
   .output-block-body {
@@ -475,7 +477,6 @@
     .sim-left { border-right: none; border-bottom: 1px solid var(--border-light); }
     .sim-answer { margin-left: 0; max-width: 100%; }
     .pipeline-steps { flex-direction: column; align-items: flex-start; }
-    .p-arrow { transform: rotate(90deg); padding: 4px 0; }
   }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -501,7 +502,6 @@
           <span class="p-step-who">BUILT Data Team</span>
         </div>
       </div>
-      <div class="p-arrow">→</div>
       <div class="p-step">
         <div class="p-step-box">
           <span class="p-step-num">Step 2</span>
@@ -509,7 +509,6 @@
           <span class="p-step-who">Aevah — automated</span>
         </div>
       </div>
-      <div class="p-arrow">→</div>
       <div class="p-step">
         <div class="p-step-box">
           <span class="p-step-num">Step 3</span>
@@ -517,7 +516,6 @@
           <span class="p-step-who">Aevah builds intelligence tables</span>
         </div>
       </div>
-      <div class="p-arrow">→</div>
       <div class="p-step">
         <div class="p-step-box">
           <span class="p-step-num">Step 4</span>
@@ -525,7 +523,6 @@
           <span class="p-step-who">Aevah trains, scores, publishes</span>
         </div>
       </div>
-      <div class="p-arrow">→</div>
       <div class="p-step">
         <div class="p-step-box">
           <span class="p-step-num">Step 5</span>
@@ -543,12 +540,13 @@
   </div>
 
   <!-- ══ SIM 1: Cannibalization ══ -->
-  <div class="sim-card">
-    <div class="sim-header">
+  <details class="sim-card">
+    <summary class="sim-header">
       <span class="sim-num">01</span>
       <span class="sim-name">Cannibalization Risk</span>
       <span class="sim-answer">"Is this new SKU pulling demand from an existing one, or adding net-new buyers?"</span>
-    </div>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
     <div class="sim-body">
       <div class="sim-left">
         <div>
@@ -567,17 +565,6 @@
               <tr><td class="field-name">Weeks on promo</td><td><span class="src-tag src-spins">SPINS</span></td><td>Flag confounding promotional periods</td></tr>
             </tbody>
           </table>
-        </div>
-        <div>
-          <div class="block-label">Operations performed on the data</div>
-          <div class="ops-list">
-            <div class="op-item"><div class="op-dot"></div>Build before/after windows (4-week, 13-week, 26-week) around each product launch, aligned to the first week selling</div>
-            <div class="op-item"><div class="op-dot"></div>Pair each focal SKU with candidate donor SKUs — same specific flavor, same pack family, same brand, same category, competitor tier</div>
-            <div class="op-item"><div class="op-dot"></div>Measure whether the focal SKU gained demand while candidate donors declined in the same stores during the same window</div>
-            <div class="op-item"><div class="op-dot"></div>Flag windows contaminated by promotions, distribution ramps, or supply events that could explain the change independently of cannibalization</div>
-            <div class="op-item"><div class="op-dot"></div>Calculate incremental share: the proportion of focal SKU demand that is net-new to the brand vs. transferred from a donor</div>
-            <div class="op-item"><div class="op-dot"></div>Assign a deterministic label (Cannibalizing / Watch / Incremental / Neutral) from observable business evidence before the model scores</div>
-          </div>
         </div>
       </div>
       <div class="sim-right">
@@ -601,17 +588,29 @@
             <div class="output-item">Comparison pool description — which SKUs are in scope and why</div>
           </div>
         </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Build before/after windows (4-week, 13-week, 26-week) around each product launch, aligned to the first week selling</div>
+            <div class="output-item">Pair each focal SKU with candidate donor SKUs — same specific flavor, same pack family, same brand, same category, competitor tier</div>
+            <div class="output-item">Measure whether the focal SKU gained demand while candidate donors declined in the same stores during the same window</div>
+            <div class="output-item">Flag windows contaminated by promotions, distribution ramps, or supply events that could explain the change independently of cannibalization</div>
+            <div class="output-item">Calculate incremental share: the proportion of focal SKU demand that is net-new to the brand vs. transferred from a donor</div>
+            <div class="output-item">Assign a deterministic label (Cannibalizing / Watch / Incremental / Neutral) from observable business evidence before the model scores</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- ══ SIM 2: Price Elasticity ══ -->
-  <div class="sim-card">
-    <div class="sim-header">
+  <details class="sim-card">
+    <summary class="sim-header">
       <span class="sim-num">02</span>
       <span class="sim-name">Price Elasticity</span>
       <span class="sim-answer">"If we change price by X%, how much does demand change — and what's the optimal price point?"</span>
-    </div>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
     <div class="sim-body">
       <div class="sim-left">
         <div>
@@ -631,17 +630,6 @@
               <tr><td class="field-name">Competitor price (same flavor)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate own-price response from competitive pressure</td></tr>
             </tbody>
           </table>
-        </div>
-        <div>
-          <div class="block-label">Operations performed on the data</div>
-          <div class="ops-list">
-            <div class="op-item"><div class="op-dot"></div>Normalize price to price-per-bar across all pack sizes so single bars and 12-packs are comparable</div>
-            <div class="op-item"><div class="op-dot"></div>Build 13-week regression windows per SKU × account — the minimum period needed for a stable price response estimate</div>
-            <div class="op-item"><div class="op-dot"></div>Separate promotional price changes from everyday price changes, and flag windows where promotions overlap with price moves</div>
-            <div class="op-item"><div class="op-dot"></div>Compare BUILT price-per-bar against same-flavor competitors in the same account and week to isolate competitive pressure</div>
-            <div class="op-item"><div class="op-dot"></div>Compare price-per-bar across BUILT's own pack sizes of the same flavor to detect pack-ladder compression (e.g. 12pk priced too close to single bar)</div>
-            <div class="op-item"><div class="op-dot"></div>Apply a guardrail that rejects regression windows where price moved more than 40% in a single week — typically a data artifact, not a real pricing event</div>
-          </div>
         </div>
       </div>
       <div class="sim-right">
@@ -664,17 +652,29 @@
             <div class="output-item">Category benchmark — how BUILT's price-per-bar compares to the MULO FOOD category norm</div>
           </div>
         </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Normalize price to price-per-bar across all pack sizes so single bars and 12-packs are comparable</div>
+            <div class="output-item">Build 13-week regression windows per SKU × account — the minimum period needed for a stable price response estimate</div>
+            <div class="output-item">Separate promotional price changes from everyday price changes, and flag windows where promotions overlap with price moves</div>
+            <div class="output-item">Compare BUILT price-per-bar against same-flavor competitors in the same account and week to isolate competitive pressure</div>
+            <div class="output-item">Compare price-per-bar across BUILT's own pack sizes of the same flavor to detect pack-ladder compression (e.g. 12pk priced too close to single bar)</div>
+            <div class="output-item">Apply a guardrail that rejects regression windows where price moved more than 40% in a single week — typically a data artifact, not a real pricing event</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- ══ SIM 3: Promo Lift ══ -->
-  <div class="sim-card">
-    <div class="sim-header">
+  <details class="sim-card">
+    <summary class="sim-header">
       <span class="sim-num">03</span>
       <span class="sim-name">Promotional Response</span>
       <span class="sim-answer">"How much incremental demand does a promotion generate, and what discount depth maximizes return?"</span>
-    </div>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
     <div class="sim-body">
       <div class="sim-left">
         <div>
@@ -693,16 +693,6 @@
               <tr><td class="field-name">Distribution on promo (TDP, Any Promo)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate display/feature support from pure price promotion</td></tr>
             </tbody>
           </table>
-        </div>
-        <div>
-          <div class="block-label">Operations performed on the data</div>
-          <div class="ops-list">
-            <div class="op-item"><div class="op-dot"></div>Calculate promo lift ratio: incremental units divided by base units, per SKU × account × event week</div>
-            <div class="op-item"><div class="op-dot"></div>Group promo events into discount depth buckets (0–10%, 10–20%, 20–30%, 30%+) to produce a lift response curve</div>
-            <div class="op-item"><div class="op-dot"></div>Separate response curves by channel — grocery shows a steeper 12-pack response curve than c-store, which flattens above 20% discount</div>
-            <div class="op-item"><div class="op-dot"></div>Separate response curves by pack size — single bars and 12-packs have distinct optimal discount depths</div>
-            <div class="op-item"><div class="op-dot"></div>Identify the discount depth where marginal lift no longer justifies additional margin give-up (the "cliff" point)</div>
-          </div>
         </div>
       </div>
       <div class="sim-right">
@@ -723,17 +713,28 @@
             <div class="output-item">Channel comparison — how this SKU's lift curve compares across grocery / mass / c-store</div>
           </div>
         </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Calculate promo lift ratio: incremental units divided by base units, per SKU × account × event week</div>
+            <div class="output-item">Group promo events into discount depth buckets (0–10%, 10–20%, 20–30%, 30%+) to produce a lift response curve</div>
+            <div class="output-item">Separate response curves by channel — grocery shows a steeper 12-pack response curve than c-store, which flattens above 20% discount</div>
+            <div class="output-item">Separate response curves by pack size — single bars and 12-packs have distinct optimal discount depths</div>
+            <div class="output-item">Identify the discount depth where marginal lift no longer justifies additional margin give-up (the "cliff" point)</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- ══ SIM 4: Demand Forecast ══ -->
-  <div class="sim-card">
-    <div class="sim-header">
+  <details class="sim-card">
+    <summary class="sim-header">
       <span class="sim-num">04</span>
       <span class="sim-name">Demand Velocity &amp; Forecast</span>
       <span class="sim-answer">"What will this SKU sell in the next 13 weeks, by retailer account?"</span>
-    </div>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
     <div class="sim-body">
       <div class="sim-left">
         <div>
@@ -751,17 +752,6 @@
               <tr><td class="field-name">Week end date</td><td><span class="src-tag src-spins">SPINS</span></td><td>Derive seasonality index and calendar features</td></tr>
             </tbody>
           </table>
-        </div>
-        <div>
-          <div class="block-label">Operations performed on the data</div>
-          <div class="ops-list">
-            <div class="op-item"><div class="op-dot"></div>Normalize velocity to non-zero distribution weeks only — removing weeks when a SKU had no shelf presence eliminates false demand troughs from the training history</div>
-            <div class="op-item"><div class="op-dot"></div>Compute rolling averages (4-week and 13-week) to smooth short-term noise while preserving trend signal</div>
-            <div class="op-item"><div class="op-dot"></div>Build a 12-month seasonality index from category-level monthly raw averages (not model-estimated — directly observable from the data)</div>
-            <div class="op-item"><div class="op-dot"></div>Flag promo weeks in the training history so the model learns baseline demand vs. promo-lifted demand separately</div>
-            <div class="op-item"><div class="op-dot"></div>Train a separate forecast per SKU × retailer account — a SKU's velocity at Kroger is not a reliable predictor of its velocity at Target</div>
-            <div class="op-item"><div class="op-dot"></div>Fall back to an exponential smoothing model for any SKU with fewer than 8 weeks of selling history</div>
-          </div>
         </div>
       </div>
       <div class="sim-right">
@@ -782,17 +772,29 @@
             <div class="output-item">Seasonal index overlay — expected seasonal lift or drag on the forecast period</div>
           </div>
         </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Normalize velocity to non-zero distribution weeks only — removing weeks when a SKU had no shelf presence eliminates false demand troughs from the training history</div>
+            <div class="output-item">Compute rolling averages (4-week and 13-week) to smooth short-term noise while preserving trend signal</div>
+            <div class="output-item">Build a 12-month seasonality index from category-level monthly raw averages (not model-estimated — directly observable from the data)</div>
+            <div class="output-item">Flag promo weeks in the training history so the model learns baseline demand vs. promo-lifted demand separately</div>
+            <div class="output-item">Train a separate forecast per SKU × retailer account — a SKU's velocity at Kroger is not a reliable predictor of its velocity at Target</div>
+            <div class="output-item">Fall back to an exponential smoothing model for any SKU with fewer than 8 weeks of selling history</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </details>
 
   <!-- ══ SIM 5: Launch Monitoring ══ -->
-  <div class="sim-card">
-    <div class="sim-header">
+  <details class="sim-card">
+    <summary class="sim-header">
       <span class="sim-num">05</span>
       <span class="sim-name">Distribution &amp; Launch Monitoring</span>
       <span class="sim-answer">"Is this new product ramping as expected — in enough stores, with the right velocity?"</span>
-    </div>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
     <div class="sim-body">
       <div class="sim-left">
         <div>
@@ -809,16 +811,6 @@
               <tr><td class="field-name">Number of weeks selling</td><td><span class="src-tag src-spins">SPINS</span></td><td>Track position in the launch lifecycle</td></tr>
             </tbody>
           </table>
-        </div>
-        <div>
-          <div class="block-label">Operations performed on the data</div>
-          <div class="ops-list">
-            <div class="op-item"><div class="op-dot"></div>Track weeks 1–16 of distribution build and velocity ramp for each new BUILT UPC</div>
-            <div class="op-item"><div class="op-dot"></div>Compare each new SKU's ramp trajectory against the category norm for launches of the same pack type</div>
-            <div class="op-item"><div class="op-dot"></div>Classify each new UPC: new pack size of an existing flavor, new flavor, or duplicate/relaunch (which determines whether it enters cannibalization scoring immediately or after a review)</div>
-            <div class="op-item"><div class="op-dot"></div>Flag underperformance — SKUs where distribution build or velocity is tracking below the expected ramp curve at 4, 8, and 13 weeks post-launch</div>
-            <div class="op-item"><div class="op-dot"></div>Suppress cannibalization risk scoring during the ramp period to avoid penalizing a new product for demand transfer that is still distribution-driven</div>
-          </div>
         </div>
       </div>
       <div class="sim-right">
@@ -839,9 +831,148 @@
             <div class="output-item">Cannibalization scoring readiness — flag for when this SKU graduates from ramp monitoring to active scoring</div>
           </div>
         </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Track weeks 1–16 of distribution build and velocity ramp for each new BUILT UPC</div>
+            <div class="output-item">Compare each new SKU's ramp trajectory against the category norm for launches of the same pack type</div>
+            <div class="output-item">Classify each new UPC: new pack size of an existing flavor, new flavor, or duplicate/relaunch (which determines whether it enters cannibalization scoring immediately or after a review)</div>
+            <div class="output-item">Flag underperformance — SKUs where distribution build or velocity is tracking below the expected ramp curve at 4, 8, and 13 weeks post-launch</div>
+            <div class="output-item">Suppress cannibalization risk scoring during the ramp period to avoid penalizing a new product for demand transfer that is still distribution-driven</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </details>
+
+  <!-- ══ SIM 6: Mo Trends ══ -->
+  <details class="sim-card">
+    <summary class="sim-header">
+      <span class="sim-num">06</span>
+      <span class="sim-name">Mo Trends</span>
+      <span class="sim-answer">"What is the full competitive landscape doing — by flavor, format, retailer, and macro context?"</span>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Data sources</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Field</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">Weekly units + base units + ARP</td><td><span class="src-tag src-spins">SPINS</span></td><td>Velocity, price/promo, and distribution tiles across all brands</td></tr>
+              <tr><td class="field-name">Distribution (TDP) over time</td><td><span class="src-tag src-spins">SPINS</span></td><td>Distribution arc tile — store count by retailer and brand</td></tr>
+              <tr><td class="field-name">Flavor, pack format, brand taxonomy</td><td><span class="src-tag src-spins">SPINS</span></td><td>Flavor Demand tile — category breakdown by flavor, format, or brand</td></tr>
+              <tr><td class="field-name">Forecast q10/q50/q90</td><td><span class="src-tag src-spins">SPINS</span></td><td>13-week demand forecast tile (single SKU; MO_27)</td></tr>
+              <tr><td class="field-name">GASDESW — gas $/gal (weekly)</td><td><span class="src-tag src-erp">FRED</span></td><td>Macro context tile — cost-of-living / c-store traffic proxy</td></tr>
+              <tr><td class="field-name">UMCSENT — Consumer Sentiment (monthly → weekly)</td><td><span class="src-tag src-erp">FRED</span></td><td>Macro context tile — demand headwind/tailwind indicator</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">Live tiles — 8 currently active</div>
+          <div class="output-block-body">
+            <div class="output-item">Velocity — weekly units by retailer (BUILT + full competitive set); one line per retailer account</div>
+            <div class="output-item">Demand Forecast — 13-week q10/q50/q90 band for a selected SKU (MO_27 model)</div>
+            <div class="output-item">Pack Crossover — one line per UPC; rising focal + falling donor = potential transfer signal</div>
+            <div class="output-item">Price &amp; Promo — dual-axis ARP trend + promo lift bars; account sub-selector (FOOD / MASS MERCH channels only — no price data in convenience)</div>
+            <div class="output-item">Distribution Arc — TDP build over time by retailer; shows which accounts are gaining or losing distribution</div>
+            <div class="output-item">Flavor Demand — category-level units by flavor, pack format, or brand; full competitive universe from SPINS</div>
+            <div class="output-item">Macro Context (Tile 7) — standalone FRED dual-axis: gas $/gal + consumer sentiment index; 2-year history; 1-hr cache</div>
+            <div class="output-item">Velocity + Macro (Tile 8) — stacked: retailer velocity lines on top, macro signals below; synchronized crosshair</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Filter bar &amp; demo defaults</div>
+          <div class="output-block-body">
+            <div class="output-item">Products — full SPINS universe (5,000+ SKUs across all brands); searchable; supports multi-select</div>
+            <div class="output-item">Brand — competitive brand filter; drives brand-portfolio velocity and distribution views without selecting individual SKUs</div>
+            <div class="output-item">Channel — CONVENTIONAL / FOOD / MASS MERCH / CONVENIENCE; multi-select; scopes retailer account list</div>
+            <div class="output-item">Account — retailer account selector; channel-aware; pre-loaded on mount; KROGER + WALMART auto-selected as demo defaults</div>
+            <div class="output-item">Units / $ Revenue toggle — switch all tiles between base units and dollar revenue</div>
+            <div class="output-item">Demo defaults on mount: BUILT Puff brand + KROGER + WALMART → immediate meaningful view with no user configuration</div>
+          </div>
+        </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Aggregate all selected UPCs into one line per retailer account (force_by_account mode) — avoids line-count explosion in multi-UPC views</div>
+            <div class="output-item">Exclude MULO rows when no channel filter is set — MULO is a geographic aggregate, not a retailer; excluded from all account-level tile views</div>
+            <div class="output-item">Forward-fill FRED UMCSENT (monthly) to weekly cadence by matching year-month to each GASDESW weekly observation</div>
+            <div class="output-item">Synchronize crosshair across velocity and macro sub-charts in Tile 8 using shared syncId — same date highlighted in both panels simultaneously</div>
+            <div class="output-item">All tile data queried live from Druid at display time — no scoring table involved; Trends is a pure live-query screen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ══ SIM 7: External Signals ══ -->
+  <details class="sim-card">
+    <summary class="sim-header">
+      <span class="sim-num">07</span>
+      <span class="sim-name">External Signal Integration</span>
+      <span class="sim-answer">"What macro, weather, and market signals can Mo layer on top of SPINS to explain demand?"</span>
+      <span class="sim-toggle"><span class="toggle-closed">See details ›</span><span class="toggle-open">Close ↑</span></span>
+    </summary>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Signal catalog — live &amp; planned</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Signal</th><th>Source</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">Gas $/gal (GASDESW) + Consumer Sentiment (UMCSENT)</td><td><span class="src-tag src-erp">FRED</span></td><td>Live in Mo Trends tiles 7 &amp; 8</td></tr>
+              <tr><td class="field-name">Regional weather (temp + precipitation)</td><td><span class="src-tag src-erp">API</span></td><td>Planned — Open-Meteo (free, commercial-OK, no key required)</td></tr>
+              <tr><td class="field-name">Food category CPI sub-indices</td><td><span class="src-tag src-erp">API</span></td><td>Planned — BLS API (free, government-sourced)</td></tr>
+              <tr><td class="field-name">Ingredient commodity prices (cocoa, sugar, whey)</td><td><span class="src-tag src-erp">API</span></td><td>Planned — Alpha Vantage + USDA ERS (free tiers)</td></tr>
+              <tr><td class="field-name">Recession probability / CPI print forecasts</td><td><span class="src-tag src-erp">API</span></td><td>Planned — Kalshi (CFTC-regulated; free read API)</td></tr>
+              <tr><td class="field-name">Amazon keyword demand + BSR trend</td><td><span class="src-tag src-erp">API</span></td><td>Planned — Helium 10 / Keepa (leads SPINS by 4+ weeks)</td></tr>
+              <tr><td class="field-name">Consumer trend intelligence (search trends)</td><td><span class="src-tag src-erp">API</span></td><td>Planned — Glimpse (commercially licensed Google Trends alternative)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">What external signals unlock</div>
+          <div class="output-block-body">
+            <div class="output-item">Separate BUILT price increases driven by strategy from those tracking broader food cost inflation (BLS CPI + commodity prices)</div>
+            <div class="output-item">Explain demand seasonality driven by weather — c-store traffic drops in bad weather; protein bar velocity drops in winter (Open-Meteo)</div>
+            <div class="output-item">Add forward-looking context to lagging SPINS actuals — "Recession probability 34%" alongside FRED consumer sentiment gives current reading + market expectation (Kalshi)</div>
+            <div class="output-item">Track competitor velocity on Amazon 4 weeks before it shows in SPINS — early warning signal for distribution gains or promotional pushes (Helium 10 / Keepa)</div>
+            <div class="output-item">Surface emerging flavor and format trends 3–18 months before peak SPINS volume — new product development input (Glimpse)</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Integration pattern (all signals follow FRED model)</div>
+          <div class="output-block-body">
+            <div class="output-item">Server-side fetch with 1-hour cache — one API call per hour maximum; no per-user latency cost</div>
+            <div class="output-item">API key stored in <code>.env</code> — endpoint returns graceful <code>needs_key</code> response if key is absent; UI degrades without crashing</div>
+            <div class="output-item">Monthly / irregular signals forward-filled to weekly cadence to match SPINS data frequency</div>
+            <div class="output-item">All signals rendered via the same Recharts ComposedChart pattern as the existing macro tile — no new UI framework required</div>
+            <div class="output-item">Attribution required where specified by data provider (FRED: "Federal Reserve Bank of St. Louis")</div>
+            <div class="output-item">Licensing rule: every external source must explicitly permit commercial redistribution before it appears in any customer-facing screen or Mo Chat response</div>
+          </div>
+        </div>
+        <div class="output-block ops">
+          <div class="output-block-header ops">Operations on the data</div>
+          <div class="output-block-body">
+            <div class="output-item">Fetch from external API on first request after cache expiry; subsequent requests within TTL return cached response</div>
+            <div class="output-item">Join to SPINS weekly dates using nearest-neighbor match within ±4 days — handles irregular API cadences without gaps</div>
+            <div class="output-item">Normalize to common index where needed (e.g., sentiment rebased to 100 = Jan 2024) for readable dual-axis charts</div>
+            <div class="output-item">Filter out known anomalous spikes before rendering (e.g., gas price outliers during supply disruptions flagged via z-score)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
 
   <div class="divider"></div>
   <div class="footnote">

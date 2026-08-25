@@ -363,8 +363,8 @@
       <div class="doc-meta">Last updated 2026-08-25 · v0.1 — entries added as decisions are made, not at release boundaries</div>
     </div>
     <div class="header-stats">
-      <div class="stat-box"><div class="stat-num">48</div><div class="stat-label">Entries</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--amber)">7</div><div class="stat-label">Open</div></div>
+      <div class="stat-box"><div class="stat-num">56</div><div class="stat-label">Entries</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--amber)">12</div><div class="stat-label">Open</div></div>
       <div class="stat-box"><div class="stat-num" style="color:var(--red)">2</div><div class="stat-label">Blocked</div></div>
     </div>
   </header>
@@ -379,6 +379,7 @@
     <a href="#coverage">Coverage &amp; Scoring Behavior</a>
     <a href="#formulas">Formulas &amp; Metrics</a>
     <a href="#open">Open Items to Review</a>
+    <a href="#external-apis">External Data Sources</a>
   </nav>
 
   <!-- Status legend -->
@@ -1010,6 +1011,91 @@ Bounded [0, 1]; values &gt;1 clipped.</div></td>
             <td><div class="entry-title">Clip bounds for outlier clipping not formally documented</div><div class="entry-body">Outlier clipping is applied to key velocity features (NRM-03) but the specific clip bounds (by SKU segment or pack size) are embedded in script logic and not formally documented or version-controlled independently. Should be extracted to a config file.</div></td>
             <td><span class="where-tag">P1</span><span class="where-tag">P7</span><span class="where-tag">ml_training_features</span></td>
             <td>If clip bounds change (e.g., a new pack format with different velocity ranges is added), they should be reviewable and auditable without reading through script code.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── EXTERNAL DATA SOURCES ── -->
+  <section class="reg-section">
+    <span class="section-anchor" id="external-apis"></span>
+    <div class="section-head">
+      <span class="section-title">External Data Sources</span>
+      <span class="section-count">8 entries</span>
+    </div>
+    <div class="reg-wrap">
+      <table class="reg-table">
+        <colgroup>
+          <col class="col-id"><col class="col-item"><col class="col-where"><col class="col-why"><col class="col-status"><col class="col-date">
+        </colgroup>
+        <thead>
+          <tr><th>ID</th><th>Decision / Caveat</th><th>Where it applies</th><th>Why</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="entry-id">EXT-01</td>
+            <td><div class="entry-title">FRED API: GASDESW + UMCSENT integrated in Mo Trends</div><div class="entry-body">Weekly gas prices (<code>GASDESW</code>) and University of Michigan Consumer Sentiment (<code>UMCSENT</code>) are live in Mo Trends tiles 7 and 8. UMCSENT is monthly; forward-filled to weekly by matching <code>{YYYY-MM}</code> to each GASDESW date. 1-hour server-side cache. FRED attribution required on all displayed charts.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">MacroContextTile</span><span class="where-tag">VelocityMacroTile</span></td>
+            <td>Connor (FP&amp;A) asked directly about factoring in gas prices and macro signals alongside SPINS category data. FRED is free for commercial use with attribution; no licensing risk. Key stored in <code>customer-built-mo-api/.env</code> — endpoint returns <code>needs_key: True</code> gracefully if absent.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-02</td>
+            <td><div class="entry-title">Licensing rule: all external APIs must allow commercial redistribution</div><div class="entry-body">Before integrating any external data source into a Mo screen, the API's terms of service must explicitly permit commercial use and redistribution of derived data. This includes any data shown directly to users in charts, tables, or Mo Chat responses.</div></td>
+            <td><span class="where-tag">all Mo screens</span><span class="where-tag">Mo Chat</span><span class="where-tag">external integrations</span></td>
+            <td>Violating a data provider's ToS exposes Aevah and BUILT to legal risk. Several attractive sources (e.g., Google Trends / pytrends) are explicitly excluded from commercial redistribution — see EXT-03.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-03</td>
+            <td><div class="entry-title">Google Trends (pytrends): internal modeling only — never redistribute raw index values</div><div class="entry-body">Google Trends data via pytrends is ToS-gray for commercial redistribution. It may be used as an internal feature signal for model training or demand forecasting, but raw index values must never be displayed to users or included in any customer-facing output. Use Glimpse ($79–$199/mo) as the licensed commercial alternative for any customer-facing trend intelligence.</div></td>
+            <td><span class="where-tag">ml_training_features</span><span class="where-tag">Mo Trends</span><span class="where-tag">Mo Chat</span></td>
+            <td>Google's ToS prohibits commercial redistribution of Trends data. Glimpse has a reseller agreement with Google providing commercial license; it is the correct drop-in for any customer-facing feature.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-04</td>
+            <td><div class="entry-title">Open-Meteo: planned weather tile — free commercial, no key required</div><div class="entry-body">Open-Meteo provides historical weather data to 1940 and forecasts, at no cost, with no API key, under a commercial-OK license. Planned as the weather tile in Mo Trends: temperature + precipitation by US region, overlaid with SPINS velocity to show weather-driven demand seasonality. NOAA CDO (free key) is an alternative with 9 regional aggregates.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">Tile 9 — planned</span></td>
+            <td>Weather is a meaningful demand driver for protein bars (c-store traffic, outdoor activity, summer peaks). Connor's July 22 comment explicitly called out "factoring in what the total category is doing." Open-Meteo eliminates the NOAA key management overhead while providing equivalent historical depth.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-05</td>
+            <td><div class="entry-title">BLS CPI food sub-indices: category-level inflation signal, free</div><div class="entry-body">Bureau of Labor Statistics CPI sub-indices for food away from home, snacks, and related categories provide a free, government-sourced inflation signal. Can be used to contextualize ARP trends — distinguishing price increases driven by BUILT strategy from those tracking broader food CPI. Same FRED-pattern fetch via BLS API.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">Price Elasticity suite</span><span class="where-tag">MacroContextTile</span></td>
+            <td>Helps BUILT separate own-price strategy from market-driven pricing drift. Complements FRED GASDESW (cost-side) and UMCSENT (consumer-side).</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-06</td>
+            <td><div class="entry-title">Kalshi prediction markets: forward-looking macro probability layer</div><div class="entry-body">Kalshi is a CFTC-regulated prediction market with a commercial-OK read API (free). Markets include CPI prints, Fed rate decisions, recession probability, and weather events. Use: display "Recession probability: 34%" alongside FRED sentiment to add a forward-looking expectation alongside FRED's lagging actuals. Polymarket (decentralized) is an alternative but US trading is restricted — read-only only.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">MacroContextTile</span></td>
+            <td>FRED signals are lagging (past actuals). Kalshi adds forward-looking market probability — complementary, not redundant. Particularly useful for recession risk and CPI trajectory framing in FP&amp;A conversations.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-07</td>
+            <td><div class="entry-title">Amazon BSR / keyword intelligence: competitor velocity proxy</div><div class="entry-body">Helium 10 ($99–$279/mo) and Keepa (€15/mo) provide Amazon Best Seller Rank trends and keyword demand data. BSR is a near-real-time velocity proxy for competitors — leads SPINS by 4+ weeks. Keepa is best for long-run price history; Helium 10 for live keyword demand and ASIN tracking. Only applicable for brands with meaningful Amazon presence.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">competitive intelligence</span></td>
+            <td>SPINS reflects sell-through at retail; Amazon BSR reflects sell-through online. For omnichannel CPG brands, the combination provides a more complete competitive velocity picture. Both services explicitly allow commercial use in software.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">EXT-08</td>
+            <td><div class="entry-title">Ingredient commodity prices: EIA diesel + Alpha Vantage + USDA ERS</div><div class="entry-body">Three free/low-cost sources cover CPG input costs: EIA diesel prices (distribution cost proxy, same FRED-style fetch), Alpha Vantage commodities (cocoa, sugar, dairy whey; free tier), and USDA ERS ingredient prices (sweeteners, dairy; free CSV bulk). Combined, these provide a cost-side signal to explain ARP trends independent of BUILT pricing strategy.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">MacroContextTile</span><span class="where-tag">FP&amp;A context</span></td>
+            <td>If whey protein input cost rises 20%, BUILT's ARP increase is a cost pass-through — not a strategic pricing move. Surfacing commodity context prevents elasticity scores from being misread as demand insensitivity when cost inflation is the actual driver.</td>
             <td><span class="badge badge-open">Open</span></td>
             <td>2026-08-25</td>
           </tr>
