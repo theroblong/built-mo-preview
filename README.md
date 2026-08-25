@@ -6,6 +6,14 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 76: Kickoff technical reference — script name table overflow fix; artifact/HTML sync rule (2026-08-25)
+
+Fixed CSS overflow in `mockups/mo_data_ops_kickoff.html`: long underscore-separated script names (e.g. `MO_17_price_elasticity_score`) were bleeding past cell borders in the Script column across all P-series and scoring pipeline tables. Added `word-break: break-all` and `overflow-wrap: break-word` to `.op-table td.qid small`. Artifact republished to the same URL.
+
+Established workflow rule: whenever a published HTML artifact is edited locally, republish to the same artifact URL in the same turn. Known artifact URLs are tracked in `memory/feedback_artifact_html_sync.md`.
+
+---
+
 ## README update 75: BUILT kickoff data-ops artifacts — customer overview + technical reference + PPTX (2026-08-06)
 
 Three artifacts created for the BUILT kickoff meeting, organized by Rob's simulation-type frame: for each Mo intelligence module, document the required data inputs (with source), operations on the data, model assembled, and what displays on screen (ML scoring table projection vs. live Druid component data).
