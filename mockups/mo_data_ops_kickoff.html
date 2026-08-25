@@ -1,0 +1,1197 @@
+<title>Mo Data Operations</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg:           #F0F4FA;
+    --bg-surface:   #FFFFFF;
+    --bg-raised:    #E4EAF6;
+    --bg-code:      #D6E0F0;
+    --border:       #BCC8DC;
+    --text-primary: #1A2234;
+    --text-secondary: #4A5A74;
+    --text-faint:   #7A8BA0;
+    --accent:       #2A5FC4;
+    --accent-dim:   #D8E5FF;
+    --amber:        #C07800;
+    --amber-dim:    #FFF0C0;
+    --green:        #1A7A4A;
+    --green-dim:    #D0F0E0;
+    --code-text:    #1D3E80;
+    --shadow:       0 1px 4px rgba(20,40,80,0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:           #0D1117;
+      --bg-surface:   #161C28;
+      --bg-raised:    #1E2736;
+      --bg-code:      #1A2438;
+      --border:       #2A3650;
+      --text-primary: #CDD5E0;
+      --text-secondary: #7A8FA8;
+      --text-faint:   #4A5A72;
+      --accent:       #4F8EF7;
+      --accent-dim:   #162040;
+      --amber:        #F0B429;
+      --amber-dim:    #2A1E04;
+      --green:        #3ACCA0;
+      --green-dim:    #0A2418;
+      --code-text:    #A8C4E8;
+      --shadow:       0 1px 4px rgba(0,0,0,0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:           #0D1117;
+    --bg-surface:   #161C28;
+    --bg-raised:    #1E2736;
+    --bg-code:      #1A2438;
+    --border:       #2A3650;
+    --text-primary: #CDD5E0;
+    --text-secondary: #7A8FA8;
+    --text-faint:   #4A5A72;
+    --accent:       #4F8EF7;
+    --accent-dim:   #162040;
+    --amber:        #F0B429;
+    --amber-dim:    #2A1E04;
+    --green:        #3ACCA0;
+    --green-dim:    #0A2418;
+    --code-text:    #A8C4E8;
+    --shadow:       0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  :root[data-theme="light"] {
+    --bg:           #F0F4FA;
+    --bg-surface:   #FFFFFF;
+    --bg-raised:    #E4EAF6;
+    --bg-code:      #D6E0F0;
+    --border:       #BCC8DC;
+    --text-primary: #1A2234;
+    --text-secondary: #4A5A74;
+    --text-faint:   #7A8BA0;
+    --accent:       #2A5FC4;
+    --accent-dim:   #D8E5FF;
+    --amber:        #C07800;
+    --amber-dim:    #FFF0C0;
+    --green:        #1A7A4A;
+    --green-dim:    #D0F0E0;
+    --code-text:    #1D3E80;
+    --shadow:       0 1px 4px rgba(20,40,80,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background: var(--bg);
+    color: var(--text-primary);
+    padding: 0 16px 80px;
+  }
+
+  .page { max-width: 880px; margin: 0 auto; }
+
+  .doc-header {
+    padding: 48px 0 36px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+
+  .doc-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .doc-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.25;
+    text-wrap: balance;
+    margin-bottom: 12px;
+  }
+
+  .doc-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    max-width: 580px;
+    line-height: 1.6;
+  }
+
+  .doc-meta {
+    margin-top: 20px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .meta-item strong { color: var(--text-secondary); font-weight: 500; }
+
+  /* Pipeline bar */
+  .pipeline-bar {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    overflow-x: auto;
+  }
+
+  .pipeline-bar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 14px;
+  }
+
+  .pipeline-flow {
+    display: flex;
+    align-items: flex-start;
+    min-width: 600px;
+  }
+
+  .pipe-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    flex: 1;
+    min-width: 90px;
+  }
+
+  .pipe-node:hover .pipe-box { border-color: var(--accent); }
+
+  .pipe-box {
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 6px;
+    text-align: center;
+    transition: border-color 0.15s;
+  }
+
+  .pipe-box-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .pipe-box-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    color: var(--text-secondary);
+    display: block;
+    line-height: 1.3;
+  }
+
+  .pipe-arrow {
+    font-size: 13px;
+    color: var(--border);
+    padding: 0 3px;
+    flex-shrink: 0;
+    margin-top: 14px;
+  }
+
+  .pipe-who {
+    font-size: 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  /* Sections */
+  .section { margin-bottom: 48px; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .section-who {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border-radius: 3px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    max-width: 640px;
+    line-height: 1.65;
+  }
+
+  /* Suite card */
+  .suite {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .suite-header {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    padding: 11px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .suite-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.04em;
+  }
+
+  .suite-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* Real HTML tables */
+  .tbl-wrap { overflow-x: auto; }
+
+  .op-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  .op-table thead tr {
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .op-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 8px 14px;
+    text-align: left;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .op-table th:last-child { border-right: none; }
+
+  .op-table td {
+    padding: 10px 14px;
+    vertical-align: top;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .op-table tbody tr:last-child td { border-bottom: none; }
+
+  .op-table td:last-child { border-right: none; }
+
+  .op-table td strong { color: var(--text-primary); font-weight: 500; }
+
+  .op-table td.qid {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    width: 100px;
+  }
+
+  .op-table td.qid small {
+    display: block;
+    font-weight: 400;
+    font-size: 9px;
+    color: var(--text-faint);
+    margin-top: 2px;
+    white-space: normal;
+  }
+
+  .op-table col.col-id  { width: 110px; }
+  .op-table col.col-op  { width: 36%; }
+  .op-table col.col-in  { width: 30%; }
+  .op-table col.col-out { width: 24%; }
+
+  /* Inline code */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    background: var(--bg-code);
+    color: var(--code-text);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* Source pills */
+  .src {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    padding: 1px 6px;
+    display: inline-block;
+    margin-bottom: 3px;
+  }
+
+  .src-spins { background: var(--accent-dim); color: var(--accent); }
+  .src-ml    { background: var(--green-dim);  color: var(--green); }
+  .src-druid { background: var(--amber-dim);  color: var(--amber); }
+
+  /* Display split (two-source) */
+  .display-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border);
+  }
+
+  .display-col {
+    padding: 14px 18px;
+    border-right: 1px solid var(--border);
+  }
+
+  .display-col:last-child { border-right: none; }
+
+  .display-col-head {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .display-col-head.ml   { color: var(--green); }
+  .display-col-head.live { color: var(--amber); }
+
+  .display-item {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.45;
+  }
+
+  .display-item::before {
+    content: '›';
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  /* Step grid (Part 0 / Part 1) */
+  .step-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .step-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .step-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .step-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .step-card-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* Field chip list */
+  .field-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .field-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--bg-code);
+    color: var(--code-text);
+    border-radius: 3px;
+    padding: 2px 6px;
+    line-height: 1.4;
+  }
+
+  .note {
+    background: var(--amber-dim);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 4px 4px 0;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--amber);
+    line-height: 1.6;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  @media (max-width: 640px) {
+    .step-grid { grid-template-columns: 1fr; }
+    .display-split { grid-template-columns: 1fr; }
+    .display-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+
+  <header class="doc-header">
+    <div class="doc-eyebrow">Aevah / Mo · BUILT Kickoff Reference — Technical</div>
+    <h1 class="doc-title">Mo Data Operations</h1>
+    <p class="doc-subtitle">End-to-end map of every data operation from SPINS export through Druid feature engineering, model training, scoring, and UI display — organized by operation, not implementation.</p>
+    <div class="doc-meta">
+      <div class="meta-item"><strong>Prepared:</strong> August 2026</div>
+      <div class="meta-item"><strong>SPINS extract:</strong> 214-column format, ~97M rows</div>
+      <div class="meta-item"><strong>Pipeline:</strong> SPINS → Druid (Q-series) → Python ML (P-series) → UI</div>
+    </div>
+  </header>
+
+  <div class="pipeline-bar">
+    <div class="pipeline-bar-label">End-to-end pipeline — click to jump</div>
+    <div class="pipeline-flow">
+      <a href="#part0" class="pipe-node">
+        <div class="pipe-box">
+          <span class="pipe-box-id">PART 0</span>
+          <span class="pipe-box-label">SPINS Export</span>
+        </div>
+        <div class="pipe-who">Brian</div>
+      </a>
+      <div class="pipe-arrow">→</div>
+      <a href="#part1" class="pipe-node">
+        <div class="pipe-box">
+          <span class="pipe-box-id">PART 1</span>
+          <span class="pipe-box-label">Druid Ingest</span>
+        </div>
+        <div class="pipe-who">Rob</div>
+      </a>
+      <div class="pipe-arrow">→</div>
+      <a href="#part2" class="pipe-node">
+        <div class="pipe-box">
+          <span class="pipe-box-id">PART 2</span>
+          <span class="pipe-box-label">Feature Eng.</span>
+        </div>
+        <div class="pipe-who">Jason (Q-series)</div>
+      </a>
+      <div class="pipe-arrow">→</div>
+      <a href="#part3" class="pipe-node">
+        <div class="pipe-box">
+          <span class="pipe-box-id">PART 3</span>
+          <span class="pipe-box-label">Model Training</span>
+        </div>
+        <div class="pipe-who">Jason (P-series)</div>
+      </a>
+      <div class="pipe-arrow">→</div>
+      <a href="#part4" class="pipe-node">
+        <div class="pipe-box">
+          <span class="pipe-box-id">PART 4</span>
+          <span class="pipe-box-label">Score → Druid</span>
+        </div>
+        <div class="pipe-who">Jason</div>
+      </a>
+      <div class="pipe-arrow">→</div>
+      <a href="#part5" class="pipe-node">
+        <div class="pipe-box">
+          <span class="pipe-box-id">PART 5</span>
+          <span class="pipe-box-label">UI Display</span>
+        </div>
+        <div class="pipe-who">Mo</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- PART 0 -->
+  <section class="section" id="part0">
+    <div class="section-header">
+      <span class="section-id">PART 0</span>
+      <span class="section-title">SPINS Export</span>
+      <span class="section-who">Brian</span>
+    </div>
+    <p class="section-desc">Brian exports from the SPINS portal using the saved 214-column report template and deposits the CSV to MinIO. The column configuration and scope filters must match exactly — any deviation causes Q0 to produce nulls or fail silently.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-card-label">What to export</div>
+        <div class="step-card-title">214-column report (April 2026 template)</div>
+        <div class="step-card-body">Open the saved SPINS template, update the end date, re-export. Do not rebuild the column list manually — verify column count = 214 before depositing. The older 167-column format is missing 18 required fields.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-card-label">Scope filters</div>
+        <div class="step-card-title">BUILT + Wellness &amp; Nutrition Bars</div>
+        <div class="step-card-body">Include BUILT (all lines) + Subcategory = <code>WELLNESS &amp; NUTRITION BARS</code> + <code>GRANOLA &amp; SNACK BARS</code>. All channels: FOOD, MASS MERCH, MULTI OUTLET, MILITARY, C-STORE. All geographies. Full history refresh or delta append for new weeks only.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-card-label">55 Q0-critical fields (must be present)</div>
+        <div class="step-card-title">Core demand, price, promo, distribution</div>
+        <div class="step-card-body">
+          <div class="field-list">
+            <span class="field-chip">Channel/Outlet</span><span class="field-chip">Geography Level</span><span class="field-chip">Retail Account</span><span class="field-chip">Time Period End Date</span><span class="field-chip">UPC</span><span class="field-chip">Brand</span><span class="field-chip">Description</span><span class="field-chip">PACK COUNT</span><span class="field-chip">FLAVOR</span><span class="field-chip">Units</span><span class="field-chip">Base Units</span><span class="field-chip">Dollars</span><span class="field-chip">Base Dollars</span><span class="field-chip">TDP</span><span class="field-chip">ARP</span><span class="field-chip">Base ARP</span><span class="field-chip">Incr Units</span><span class="field-chip">Incr Dollars</span><span class="field-chip">Units, Promo</span><span class="field-chip">Units % Promo</span><span class="field-chip">Promo Weeks</span><span class="field-chip">TDP, Any Promo</span><span class="field-chip">First Week Selling</span><span class="field-chip">NFP - PROTEIN</span><span class="field-chip">NFP - SUGARS</span><span class="field-chip">NFP - CALORIES</span><span class="field-chip">Avg % ACV</span><span class="field-chip">% of Stores Selling</span><span class="field-chip">Avg Weekly Units SPM</span><span class="field-chip">+ 26 more</span>
+          </div>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-card-label">Deposit</div>
+        <div class="step-card-title">MinIO bucket</div>
+        <div class="step-card-body">File naming: <code>All_items_extract_MMDDYY.csv</code>. Coordinate bucket path and credentials with Rob. This file is the only input to Part 1.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PART 1 -->
+  <section class="section" id="part1">
+    <div class="section-header">
+      <span class="section-id">PART 1</span>
+      <span class="section-title">Druid Ingest</span>
+      <span class="section-who">Rob</span>
+    </div>
+    <p class="section-desc">Rob ingests the SPINS CSV into the <code>spins_full</code> Druid datasource using the safe OVERWRITE WHERE pattern. This replaces only the segments covering the new date range — all historical segments remain untouched.</p>
+
+    <div class="note"><strong>Critical:</strong> Do NOT use <code>INSERT INTO</code> (creates duplicate rows) or <code>OVERWRITE ALL</code> (times out at ~97M rows). Always use <code>REPLACE INTO … OVERWRITE WHERE</code> bounded to the new period only.</div>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-card-label">Pre-ingest baseline</div>
+        <div class="step-card-title">Record current state before touching spins_full</div>
+        <div class="step-card-body">Record current high-water mark date, row count per year, and distinct BUILT UPC count. If Brian's new file has a gap relative to current max date, stop and resolve with Brian before ingesting — a gap breaks all rolling-window features.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-card-label">Ingest operation</div>
+        <div class="step-card-title">REPLACE INTO spins_full OVERWRITE WHERE</div>
+        <div class="step-card-body">Start the replacement window 1 week before current MAX to handle the boundary cleanly. Future bound must be explicit and DAY-aligned. Column names in Druid have commas stripped vs. CSV headers. Use Rob's original ingest spec.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-card-label">Post-ingest QA gate (QS1 gate)</div>
+        <div class="step-card-title">New UPCs must pass flavor-mapping review</div>
+        <div class="step-card-body">Any BUILT UPC not yet in <code>flavor_mapping</code> blocks the Q-series. After ingest, run QS1 validation. New UPCs require curated flavor/pack entries before Q0 will process them correctly.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-card-label">Post-ingest sanity checks</div>
+        <div class="step-card-title">Verify counts and date range</div>
+        <div class="step-card-body">Confirm row count delta matches expected new weeks, new high-water mark is correct, BUILT UPC count is ≥ pre-ingest count, and no weekly gaps exist in the new range.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PART 2 -->
+  <section class="section" id="part2">
+    <div class="section-header">
+      <span class="section-id">PART 2</span>
+      <span class="section-title">Druid Feature Engineering (Q-series)</span>
+      <span class="section-who">Jason</span>
+    </div>
+    <p class="section-desc">Druid SQL queries compress the 97M raw rows into governed intermediate tables. Each query has a defined input, a defined operation, and a named output table. The Q-series must run in order — later queries depend on earlier outputs.</p>
+
+    <!-- Seed tables -->
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Seed Tables</span>
+        <span class="suite-tag">QS1 · QS2 · QS3</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Query</th>
+              <th>Operation</th>
+              <th>Data In</th>
+              <th>Output Table</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">QS1<small>Flavor mapping seed</small></td>
+              <td>Map each BUILT UPC to curated brand line, flavor family, specific flavor, and pack count via inline CASE expressions. Re-run when product line changes.</td>
+              <td><span class="src src-spins">SPINS</span> <code>spins_full</code> (BUILT rows only)</td>
+              <td><code>flavor_mapping</code></td>
+            </tr>
+            <tr>
+              <td class="qid">QS2<small>Flavor overrides seed</small></td>
+              <td>Apply canonical overrides to resolve ambiguous or split flavor names when SPINS changes a flavor label mid-history.</td>
+              <td><span class="src src-spins">SPINS</span> <code>flavor_mapping</code></td>
+              <td><code>flavor_canonical_overrides</code></td>
+            </tr>
+            <tr>
+              <td class="qid">QS3<small>Item catalog seed</small></td>
+              <td>Build item catalog with competitor tier assignments (Tier 1–3), category membership, and competitor eligibility flags for comparison pool generation.</td>
+              <td><span class="src src-spins">SPINS</span> <code>spins_full</code> (all brands)</td>
+              <td><code>item_catalog</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Base tables -->
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Base &amp; Enrichment Tables</span>
+        <span class="suite-tag">Q0 · Q1</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Query</th><th>Operation</th><th>Data In</th><th>Output Table</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">Q0<small>Category extract normalization</small></td>
+              <td>Normalize 214-column raw extract: rename fields, standardize geography types, filter to BUILT + nutrition bar category, derive <code>$/bar</code>, <code>velocity</code>, <code>promo_pct</code>, clean UPC format. Only query that reads <code>spins_full</code> directly.</td>
+              <td><span class="src src-spins">SPINS</span> <code>spins_full</code> (all ~97M rows)</td>
+              <td><code>built_filtered_weekly</code><br><small style="color:var(--text-faint)">~572 brands, Jan 2023–present</small></td>
+            </tr>
+            <tr>
+              <td class="qid">Q1<small>Enriched weekly base table</small></td>
+              <td>Join product metadata: attach normalized specific flavor, flavor family, brand line, pack-size band, protein tier, competitor tier, market hierarchy, and calendar dimensions. Foundation for all Q2–Q22.</td>
+              <td><span class="src src-druid">DRUID</span> <code>built_filtered_weekly</code> + <code>flavor_mapping</code> + <code>flavor_canonical_overrides</code></td>
+              <td><code>built_enriched_weekly</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Comparison pools -->
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Comparison Pools &amp; Pre/Post Windows</span>
+        <span class="suite-tag">Q2 · Q3 · Q4 · Q5</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Query</th><th>Operation</th><th>Data In</th><th>Output Table</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">Q2<small>Universal comparison pool</small></td>
+              <td>Self-join enriched weekly to produce all valid focal/candidate SKU pairs. Assigns relationship distance 1–5: same specific flavor (1), same flavor family (2), same brand (3), same category (4), competitor (5).</td>
+              <td><span class="src src-druid">DRUID</span> <code>built_enriched_weekly</code> self-join + <code>item_catalog</code></td>
+              <td><code>comparison_pool_weekly</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q3<small>Focal pre/post window aggregation</small></td>
+              <td>For each focal BUILT SKU, compute before/after demand, velocity, TDP, price, and promo metrics across 4-week, 13-week, 26-week, and YTD windows aligned to <code>first_week_selling</code>.</td>
+              <td><span class="src src-druid">DRUID</span> BUILT rows in <code>built_enriched_weekly</code></td>
+              <td><code>built_prepost_features</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q4<small>Donor pre/post aggregation</small></td>
+              <td>Apply the same pre/post window logic to candidate donor SKUs, aligned to the focal SKU's launch date. Measures whether donors declined during the focal window — the required evidence for cannibalization.</td>
+              <td><span class="src src-druid">DRUID</span> <code>comparison_pool_weekly</code> + <code>built_enriched_weekly</code></td>
+              <td><code>donor_prepost_features</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q5<small>Final ML feature table assembly</small></td>
+              <td>Join focal and donor windows; compute deltas, confound flags (promo overlap, heavy TDP movement), deterministic labels (CANNIBALIZING / WATCH / INCREMENTAL / NEUTRAL), <code>incremental_share</code>, and <code>cannibalization_rate</code>.</td>
+              <td><span class="src src-druid">DRUID</span> <code>built_prepost_features</code> + <code>donor_prepost_features</code></td>
+              <td><code>ml_training_features</code><br><small style="color:var(--text-faint)">Supervised learning table</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Event detection -->
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Event Detection &amp; Launch Monitoring</span>
+        <span class="suite-tag">Q6 · Q7 · Q8 · Q9</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Query</th><th>Operation</th><th>Data In</th><th>Output Table</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">Q6<small>Rolling stats and z-scores</small></td>
+              <td>Compute rolling 4-week, 8-week, and 13-week statistics plus z-scores for demand, velocity, and distribution. Creates the statistical layer that surfaces unusual movement without requiring users to scan every SKU.</td>
+              <td><span class="src src-druid">DRUID</span> BUILT rows in <code>built_enriched_weekly</code></td>
+              <td><code>event_detection_weekly</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q7<small>New UPC detection</small></td>
+              <td>Identify BUILT UPCs appearing in the current week with no prior history — new launch candidates requiring ramp handling.</td>
+              <td><span class="src src-druid">DRUID</span> Current + historical BUILT rows in <code>built_enriched_weekly</code></td>
+              <td><code>new_upc_candidates</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q8<small>New UPC classification</small></td>
+              <td>Classify new UPCs as: new pack size, new flavor candidate, or duplicate/relaunch. Determines whether a new item can auto-enter pack-ladder monitoring or must be manually reviewed.</td>
+              <td><span class="src src-druid">DRUID</span> <code>new_upc_candidates</code> + existing BUILT catalog in <code>built_enriched_weekly</code></td>
+              <td><code>new_upc_classifications</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q9<small>Ramp monitoring</small></td>
+              <td>Track weeks 1–16 of each launch: distribution trend, velocity trend, underperformance flags, and scoring readiness. Suppresses cannibalization scoring while TDP is still ramping.</td>
+              <td><span class="src src-druid">DRUID</span> Recent launch rows in <code>built_enriched_weekly</code></td>
+              <td><code>new_product_ramp_monitor</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Price elasticity features -->
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Price Elasticity Features</span>
+        <span class="suite-tag">Q14 · Q15 · Q16 · Q17 · Q20 · Q21 · Q22</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Query</th><th>Operation</th><th>Data In</th><th>Output Table</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">Q14<small>Price elasticity weekly features</small></td>
+              <td>Derive <code>$/bar</code>, log price/volume, promo depth buckets, promo confound flags, and seasonality controls. The clean weekly feature base for all price modeling.</td>
+              <td><span class="src src-druid">DRUID</span> BUILT rows in <code>built_enriched_weekly</code></td>
+              <td><code>price_elasticity_weekly_features</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q15<small>Pack price ladder weekly</small></td>
+              <td>Compare $/bar across pack sizes of the same specific flavor in the same account and week. Identifies pack role compression, trade-up risk, and pricing inconsistency.</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_elasticity_weekly_features</code> self-join</td>
+              <td><code>price_pack_ladder_weekly</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q16<small>Competitive price weekly</small></td>
+              <td>Compare BUILT $/bar against Tier 1 competitors selling the same specific flavor in the same account and week. Separates competitive price pressure from internal BUILT switching.</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_elasticity_weekly_features</code> + <code>built_filtered_weekly</code> + <code>item_catalog</code></td>
+              <td><code>price_competitive_weekly</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q17<small>Price elasticity training features</small></td>
+              <td>Build regression-ready 13-week windows for own-price, cross-price, and promo elasticity estimation. Includes guardrail context flagging unreliable windows (TDP movement, promo confounds).</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_elasticity_weekly_features</code></td>
+              <td><code>price_elasticity_training_features</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q20<small>MULO FOOD pack size norms</small></td>
+              <td>Calculate category benchmark price, velocity, store penetration, and distribution norms by pack size across MULO FOOD. Provides competitive category norms for BUILT benchmarking.</td>
+              <td><span class="src src-druid">DRUID</span> Non-BUILT nutrition bar rows in <code>built_filtered_weekly</code></td>
+              <td><code>mulo_food_pack_size_norms</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q21<small>Flavor vs protein driver features</small></td>
+              <td>Compare flavor-group and protein-content behavior against velocity and penetration. Determines whether demand is better explained by flavor, protein tier, price, distribution, or store penetration.</td>
+              <td><span class="src src-druid">DRUID</span> Nutrition bar rows in <code>built_filtered_weekly</code> with protein + flavor fields</td>
+              <td><code>flavor_protein_driver_features</code></td>
+            </tr>
+            <tr>
+              <td class="qid">Q22<small>Price event queue</small></td>
+              <td>Pre-populate deterministic pricing events: competitive price gaps where BUILT $/bar is at risk, and pack-ladder compression where same-flavor pack roles have converged in price.</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_competitive_weekly</code> + <code>price_pack_ladder_weekly</code></td>
+              <td><code>price_event_queue</code><br><small style="color:var(--text-faint)">Pre-scoring events</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PART 3 -->
+  <section class="section" id="part3">
+    <div class="section-header">
+      <span class="section-id">PART 3</span>
+      <span class="section-title">Model Training (P-series)</span>
+      <span class="section-who">Jason</span>
+    </div>
+    <p class="section-desc">Python scripts train focused models — each with a clear job. Inputs are the Druid feature tables from Part 2. Models are versioned: training data version, feature list, hyperparameters, and random seed are tracked for each run.</p>
+
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Cannibalization Suite</span>
+        <span class="suite-tag">P1 MO_10 · P2 MO_11 · P3 MO_12</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Script</th><th>What it trains</th><th>Training input</th><th>Output artifact</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">P1<small>MO_10_cannibal_train</small></td>
+              <td><strong>Cannibalization classifier.</strong> Predicts whether a focal/donor pair is CANNIBALIZING, WATCH, INCREMENTAL, or NEUTRAL. Gradient-boosted tree model with SHAP-style feature attribution.</td>
+              <td><span class="src src-druid">DRUID</span> <code>ml_training_features</code> — labeled focal/donor pairs with deltas, confound flags, relationship distance</td>
+              <td>Versioned classifier → used by P4 scorer</td>
+            </tr>
+            <tr>
+              <td class="qid">P2<small>MO_11_donor_ranker_train</small></td>
+              <td><strong>Donor ranker.</strong> Orders likely donor SKUs by evidence strength — focal lift, donor decline, TDP movement, relationship distance, price proximity.</td>
+              <td><span class="src src-druid">DRUID</span> <code>ml_training_features</code> — ranking labels derived from <code>cannibalization_rate</code> ordering</td>
+              <td>Versioned ranking model → used by P4 scorer</td>
+            </tr>
+            <tr>
+              <td class="qid">P3<small>MO_12_event_detector_train</small></td>
+              <td><strong>Event detector.</strong> Classifies which z-score anomalies represent material business events worth surfacing vs. noise. Prioritizes events by commercial impact.</td>
+              <td><span class="src src-druid">DRUID</span> <code>event_detection_weekly</code> — z-scores, rolling stats, manually reviewed event labels</td>
+              <td>Versioned classifier → used by P5 event assembler</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Price Elasticity Suite</span>
+        <span class="suite-tag">P7 MO_16 · P9 MO_18</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Script</th><th>What it trains</th><th>Training input</th><th>Output artifact</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">P7<small>MO_16_price_elasticity_train</small></td>
+              <td><strong>Price elasticity model.</strong> Estimates own-price elasticity (demand sensitivity to BUILT price changes), cross-price elasticity (sensitivity to competitor price changes), and promo elasticity (depth-of-discount response curve).</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_elasticity_training_features</code> — 13-week regression windows with log price/volume, confound flags, guardrail context</td>
+              <td>3 quantile model artifacts (q10/q50/q90) → used by P8 scorer</td>
+            </tr>
+            <tr>
+              <td class="qid">P9<small>MO_18_price_elasticity_forecast</small></td>
+              <td><strong>Price scenario forecast.</strong> Projects demand under hypothetical price and promo depth changes. Powers the what-if calculator on screen.</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_elasticity_training_features</code> + P7 model artifacts</td>
+              <td>Scenario forecast table → published to Druid</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Cannibalization Rate Forecast</span>
+        <span class="suite-tag">P11 MO_20 · P12 MO_21</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Script</th><th>What it trains</th><th>Training input</th><th>Output artifact</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">P11<small>MO_20_cannibal_rate_train</small></td>
+              <td><strong>Cannibalization rate model.</strong> Learns how cannibalization rate evolves over the SKU lifecycle — from launch ramp through steady-state — as a function of TDP, pricing, distribution, and assortment changes.</td>
+              <td><span class="src src-druid">DRUID</span> <code>ml_training_features</code> with trailing rate time series per focal/donor pair</td>
+              <td>Versioned rate model → used by P12</td>
+            </tr>
+            <tr>
+              <td class="qid">P12<small>MO_21_cannibal_rate_forecast</small></td>
+              <td><strong>Rate forecast.</strong> Projects cannibalization rate forward 13 weeks with confidence bands. Enables "what happens if we expand distribution of the focal SKU" scenario modeling.</td>
+              <td><span class="src src-druid">DRUID</span> Current-period cannibalization rate + P11 model artifacts</td>
+              <td>Forecast series → published to <code>cannibalization_rate_forecast_weekly</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PART 4 -->
+  <section class="section" id="part4">
+    <div class="section-header">
+      <span class="section-id">PART 4</span>
+      <span class="section-title">Score → Druid Publishing</span>
+      <span class="section-who">Jason</span>
+    </div>
+    <p class="section-desc">Validated models score current data and write outputs back to Druid as governed scoring tables. Every row carries lineage: source datasource, scoring window, feature table version, model version, and timestamp.</p>
+
+    <div class="suite">
+      <div class="suite-header">
+        <span class="suite-name">Scoring Pipeline</span>
+        <span class="suite-tag">P4 MO_13 · P5 MO_14 · P6 MO_15 · P8 MO_17 · P10 MO_14.7</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="op-table">
+          <colgroup>
+            <col class="col-id">
+            <col class="col-op">
+            <col class="col-in">
+            <col class="col-out">
+          </colgroup>
+          <thead>
+            <tr><th>Script</th><th>Operation</th><th>Data In</th><th>Druid Output</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="qid">P4<small>MO_13_cannibal_score</small></td>
+              <td>Score focal × donor × account × geography × window combinations. Applies classifier and donor ranker. Suppresses ramp-period pairs flagged by Q9.</td>
+              <td><span class="src src-druid">DRUID</span> <code>ml_training_features</code> + P1 + P2 model artifacts + <code>new_product_ramp_monitor</code></td>
+              <td><code>scored_cannibalization</code><br><small style="color:var(--text-faint)">status, risk score, incremental share, donor rankings, top drivers, model version</small></td>
+            </tr>
+            <tr>
+              <td class="qid">P5<small>MO_14_event_assemble</small></td>
+              <td>Combine event detector output with ramp monitor and scored cannibalization alerts into a unified priority event queue. Applies suppression rules and severity ranking.</td>
+              <td><span class="src src-druid">DRUID</span> <code>event_detection_weekly</code> + <code>scored_cannibalization</code> + <code>new_product_ramp_monitor</code></td>
+              <td><code>event_queue</code></td>
+            </tr>
+            <tr>
+              <td class="qid">P6<small>MO_15_new_pack_enroll</small></td>
+              <td>Enroll new BUILT UPCs that passed QS1 review into pack-ladder tracking and comparison pool monitoring. Transitions items from classifications to active scoring.</td>
+              <td><span class="src src-druid">DRUID</span> <code>new_upc_classifications</code> + <code>comparison_pool_weekly</code></td>
+              <td>Updates <code>comparison_pool_weekly</code></td>
+            </tr>
+            <tr>
+              <td class="qid">P8<small>MO_17_price_elasticity_score</small></td>
+              <td>Score current-period price observations with trained elasticity model. Applies $/bar guardrail (rejects observations where price moved &gt;40% in a single week — likely data artifact). Writes quantile estimates for UI confidence display.</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_elasticity_weekly_features</code> + P7 quantile model artifacts</td>
+              <td><code>scored_price_elasticity</code> + <code>price_elasticity_forecast_weekly</code></td>
+            </tr>
+            <tr>
+              <td class="qid">P10<small>MO_14.7_price_events</small></td>
+              <td>Merge deterministic price events (Q22: competitive gaps + pack compression) with ML-scored elasticity alerts into a unified pricing event queue with severity and action vocabulary.</td>
+              <td><span class="src src-druid">DRUID</span> <code>price_event_queue</code> (Q22 deterministic) + <code>scored_price_elasticity</code></td>
+              <td><code>price_event_queue</code><br><small style="color:var(--text-faint)">ML-augmented, final</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PART 5 -->
+  <section class="section" id="part5">
+    <div class="section-header">
+      <span class="section-id">PART 5</span>
+      <span class="section-title">UI Display — Two Data Sources per Screen</span>
+      <span class="section-who">Mo</span>
+    </div>
+    <p class="section-desc">Every Mo screen draws from two distinct sources: <strong>ML scoring tables</strong> (projection data written in Part 4) and <strong>live Druid queries</strong> (component/context data queried at render time). These must never be blended — each has its own query path and lineage.</p>
+
+    <div class="suite">
+      <div class="suite-header"><span class="suite-name">Cannibalization Suite</span></div>
+      <div class="display-split">
+        <div class="display-col">
+          <div class="display-col-head ml"><span class="src src-ml">ML scoring table</span> &nbsp;Projection data</div>
+          <div class="display-item">Risk score + confidence — from <code>scored_cannibalization</code></div>
+          <div class="display-item">Status label (CANNIBALIZING / WATCH / INCREMENTAL / NEUTRAL)</div>
+          <div class="display-item">Ranked donor SKUs with top drivers (focal lift, donor decline, TDP delta)</div>
+          <div class="display-item"><code>incremental_share</code> — net-new demand vs. transferred demand</div>
+          <div class="display-item">Cannibalization rate actuals + 13-week forecast from <code>cannibalization_rate_forecast_weekly</code></div>
+          <div class="display-item">Model version + scoring window provenance</div>
+        </div>
+        <div class="display-col">
+          <div class="display-col-head live"><span class="src src-druid">Live Druid</span> &nbsp;Component / context data</div>
+          <div class="display-item">Focal SKU current demand, velocity, TDP — from <code>built_enriched_weekly</code></div>
+          <div class="display-item">Pre/post demand trend charts — from <code>built_prepost_features</code></div>
+          <div class="display-item">Geography heatmap — from <code>built_prepost_features</code> (Q2c)</div>
+          <div class="display-item">Scope bar (comparison pool count, relationship distance) — from Q2d</div>
+          <div class="display-item">New pack launch ramp chart — from <code>new_product_ramp_monitor</code></div>
+          <div class="display-item">Event priority queue — from <code>event_queue</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suite">
+      <div class="suite-header"><span class="suite-name">Price Elasticity Suite</span></div>
+      <div class="display-split">
+        <div class="display-col">
+          <div class="display-col-head ml"><span class="src src-ml">ML scoring table</span> &nbsp;Projection data</div>
+          <div class="display-item">Own-price elasticity estimate (q10/q50/q90) — from <code>scored_price_elasticity</code></div>
+          <div class="display-item">Cross-price elasticity vs. competitor</div>
+          <div class="display-item">Promo elasticity by depth bucket</div>
+          <div class="display-item">What-if scenario demand curves — from <code>price_elasticity_forecast_weekly</code></div>
+          <div class="display-item">Price event severity + action vocabulary — from <code>price_event_queue</code></div>
+        </div>
+        <div class="display-col">
+          <div class="display-col-head live"><span class="src src-druid">Live Druid</span> &nbsp;Component / context data</div>
+          <div class="display-item">Current $/bar and trailing price trend — from <code>price_elasticity_weekly_features</code></div>
+          <div class="display-item">Pack price ladder (same flavor, same account) — from <code>price_pack_ladder_weekly</code></div>
+          <div class="display-item">Competitive price gap chart — from <code>price_competitive_weekly</code></div>
+          <div class="display-item">MULO FOOD category norms by pack size — from <code>mulo_food_pack_size_norms</code></div>
+          <div class="display-item">Promo depth distribution — from <code>price_elasticity_weekly_features</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suite">
+      <div class="suite-header"><span class="suite-name">Velocity &amp; Demand Forecast</span></div>
+      <div class="display-split">
+        <div class="display-col">
+          <div class="display-col-head ml"><span class="src src-ml">ML scoring table</span> &nbsp;Projection data</div>
+          <div class="display-item">13-week ensemble demand forecast by SKU × account</div>
+          <div class="display-item">Confidence bands (q10/q50/q90)</div>
+          <div class="display-item">Promo-uplift scenario line (amber dashed)</div>
+          <div class="display-item">ETS fallback forecast for series with &lt;8 weeks of history</div>
+        </div>
+        <div class="display-col">
+          <div class="display-col-head live"><span class="src src-druid">Live Druid</span> &nbsp;Component / context data</div>
+          <div class="display-item">52-week actuals — from <code>built_filtered_weekly</code></div>
+          <div class="display-item">TDP (distribution) trend — from <code>built_enriched_weekly</code></div>
+          <div class="display-item">Rolling avg non-zero TDP anchor for velocity normalization</div>
+          <div class="display-item">Category 13-week avg velocity benchmark — from <code>built_filtered_weekly</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suite">
+      <div class="suite-header"><span class="suite-name">Trends &amp; Competitive Intelligence</span></div>
+      <div class="display-split">
+        <div class="display-col">
+          <div class="display-col-head ml"><span class="src src-ml">ML scoring table</span> &nbsp;Projection data</div>
+          <div class="display-item">Cannibalization risk flags on category tiles</div>
+          <div class="display-item">Price elasticity signals for trending SKUs</div>
+        </div>
+        <div class="display-col">
+          <div class="display-col-head live"><span class="src src-druid">Live Druid</span> &nbsp;Component / context data</div>
+          <div class="display-item">6-tile competitive dashboard — brand velocity, TDP, $/bar, share — from <code>built_filtered_weekly</code></div>
+          <div class="display-item">Flavor filter + full product universe — from <code>built_enriched_weekly</code></div>
+          <div class="display-item">Macro context tiles (FRED: gasoline price, consumer sentiment)</div>
+          <div class="display-item">Seasonal demand index — 12-month raw monthly average</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-faint);padding-bottom:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <span>Mo Data Operations · Technical Reference · BUILT Kickoff · August 2026</span>
+    <span>SPINS → spins_full → built_filtered_weekly → Q-series → P-series → scored_* → Mo UI</span>
+  </div>
+
+</div>

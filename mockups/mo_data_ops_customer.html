@@ -1,0 +1,836 @@
+<title>How Mo Works With Your Data</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg:             #F6F8FC;
+    --bg-surface:     #FFFFFF;
+    --bg-raised:      #EDF1FA;
+    --border:         #CAD3E8;
+    --border-light:   #DDE5F5;
+    --navy:           #1B3566;
+    --navy-mid:       #2A4E8E;
+    --blue:           #4078D0;
+    --blue-dim:       #D8E5FF;
+    --text-primary:   #111827;
+    --text-secondary: #3D4F6E;
+    --text-faint:     #6B7FA0;
+    --amber:          #8A4800;
+    --amber-dim:      #FFF3D6;
+    --amber-border:   #E8B870;
+    --green:          #0E5E38;
+    --green-dim:      #D4F0E4;
+    --green-border:   #68C9A0;
+    --shadow-sm:      0 1px 3px rgba(20,40,80,0.07);
+    --shadow-md:      0 3px 10px rgba(20,40,80,0.09);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:             #0C1220;
+      --bg-surface:     #141D30;
+      --bg-raised:      #1C2840;
+      --border:         #283A5A;
+      --border-light:   #1E2E4A;
+      --navy:           #6EA3F5;
+      --navy-mid:       #4A80D8;
+      --blue:           #5A90F0;
+      --blue-dim:       #142040;
+      --text-primary:   #D8E0F0;
+      --text-secondary: #8A9EC0;
+      --text-faint:     #546080;
+      --amber:          #F0B850;
+      --amber-dim:      #2A1E04;
+      --amber-border:   #6A4800;
+      --green:          #3ACCA0;
+      --green-dim:      #0A2418;
+      --green-border:   #1A6040;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md:      0 3px 10px rgba(0,0,0,0.4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:             #0C1220;
+    --bg-surface:     #141D30;
+    --bg-raised:      #1C2840;
+    --border:         #283A5A;
+    --border-light:   #1E2E4A;
+    --navy:           #6EA3F5;
+    --navy-mid:       #4A80D8;
+    --blue:           #5A90F0;
+    --blue-dim:       #142040;
+    --text-primary:   #D8E0F0;
+    --text-secondary: #8A9EC0;
+    --text-faint:     #546080;
+    --amber:          #F0B850;
+    --amber-dim:      #2A1E04;
+    --amber-border:   #6A4800;
+    --green:          #3ACCA0;
+    --green-dim:      #0A2418;
+    --green-border:   #1A6040;
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md:      0 3px 10px rgba(0,0,0,0.4);
+  }
+
+  :root[data-theme="light"] {
+    --bg:             #F6F8FC;
+    --bg-surface:     #FFFFFF;
+    --bg-raised:      #EDF1FA;
+    --border:         #CAD3E8;
+    --border-light:   #DDE5F5;
+    --navy:           #1B3566;
+    --navy-mid:       #2A4E8E;
+    --blue:           #4078D0;
+    --blue-dim:       #D8E5FF;
+    --text-primary:   #111827;
+    --text-secondary: #3D4F6E;
+    --text-faint:     #6B7FA0;
+    --amber:          #8A4800;
+    --amber-dim:      #FFF3D6;
+    --amber-border:   #E8B870;
+    --green:          #0E5E38;
+    --green-dim:      #D4F0E4;
+    --green-border:   #68C9A0;
+    --shadow-sm:      0 1px 3px rgba(20,40,80,0.07);
+    --shadow-md:      0 3px 10px rgba(20,40,80,0.09);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    background: var(--bg);
+    color: var(--text-primary);
+    padding: 0 20px 80px;
+  }
+
+  .page { max-width: 900px; margin: 0 auto; }
+
+  /* ── Doc header ── */
+  .doc-header {
+    padding: 52px 0 44px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .doc-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 14px;
+  }
+
+  .doc-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 38px;
+    font-weight: 400;
+    color: var(--navy);
+    line-height: 1.15;
+    text-wrap: balance;
+    margin-bottom: 16px;
+  }
+
+  .doc-subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    max-width: 580px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  /* ── Pipeline overview ── */
+  .pipeline-overview {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 52px;
+  }
+
+  .pipeline-overview-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(180,200,255,0.7);
+    margin-bottom: 18px;
+  }
+
+  .pipeline-steps {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    row-gap: 12px;
+  }
+
+  .p-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .p-step-box {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 5px;
+    padding: 8px 14px;
+    text-align: center;
+  }
+
+  .p-step-num {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(140,180,255,0.9);
+    display: block;
+    letter-spacing: 0.06em;
+  }
+
+  .p-step-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #FFFFFF;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .p-step-who {
+    font-size: 9px;
+    color: rgba(180,200,255,0.6);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .p-arrow {
+    font-size: 14px;
+    color: rgba(140,180,255,0.5);
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── Section heading ── */
+  .intro-section {
+    margin-bottom: 48px;
+  }
+
+  .intro-heading {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--navy);
+    margin-bottom: 10px;
+  }
+
+  .intro-body {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    max-width: 640px;
+    line-height: 1.7;
+  }
+
+  /* ── Simulation card ── */
+  .sim-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .sim-header {
+    background: var(--navy);
+    padding: 20px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .sim-num {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgba(140,180,255,0.8);
+  }
+
+  .sim-name {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: #FFFFFF;
+  }
+
+  .sim-answer {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(200,215,255,0.85);
+    line-height: 1.5;
+    margin-left: auto;
+    max-width: 340px;
+    font-style: italic;
+  }
+
+  .sim-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sim-left {
+    padding: 24px 28px;
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .sim-right {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ── Data inputs table ── */
+  .block-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+
+  .inputs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  .inputs-table th {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 5px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-raised);
+  }
+
+  .inputs-table td {
+    padding: 6px 8px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+
+  .inputs-table tbody tr:last-child td { border-bottom: none; }
+
+  .inputs-table td.field-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .src-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    padding: 1px 5px;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .src-spins { background: var(--blue-dim); color: var(--blue); }
+  .src-erp   { background: #F0E8D4; color: #7A4800; }
+  .src-pos   { background: #E8D4F0; color: #6A2080; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .src-erp { background: #3A2A08; color: #E8B050; }
+    :root:not([data-theme="light"]) .src-pos { background: #2A1040; color: #C080E8; }
+  }
+
+  :root[data-theme="dark"] .src-erp { background: #3A2A08; color: #E8B050; }
+  :root[data-theme="dark"] .src-pos { background: #2A1040; color: #C080E8; }
+
+  /* ── Operations list ── */
+  .ops-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .op-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .op-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+    margin-top: 7px;
+  }
+
+  /* ── Screen output ── */
+  .output-block {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+  }
+
+  .output-block-header {
+    padding: 8px 14px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .output-block-header.ml {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: var(--green-border);
+  }
+
+  .output-block-header.live {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border-color: var(--amber-border);
+  }
+
+  .output-block-body {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .output-item {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    line-height: 1.45;
+  }
+
+  .output-item::before {
+    content: '›';
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+  /* ── Footnote ── */
+  .footnote {
+    font-size: 11px;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 12px;
+  }
+
+  a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px; }
+
+  @media (max-width: 680px) {
+    .sim-body { grid-template-columns: 1fr; }
+    .sim-left { border-right: none; border-bottom: 1px solid var(--border-light); }
+    .sim-answer { margin-left: 0; max-width: 100%; }
+    .pipeline-steps { flex-direction: column; align-items: flex-start; }
+    .p-arrow { transform: rotate(90deg); padding: 4px 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header class="doc-header">
+    <div class="doc-eyebrow">Mo by Aevah · BUILT Kickoff · August 2026</div>
+    <h1 class="doc-title">How Mo Works<br>With Your Data</h1>
+    <p class="doc-subtitle">A plain-language walkthrough of the process behind each Mo intelligence module — what data it needs, where that data comes from, what operations are performed, and what appears on screen.</p>
+  </header>
+
+  <!-- ── Pipeline overview ── -->
+  <div class="pipeline-overview">
+    <div class="pipeline-overview-label">The end-to-end process — five steps from your SPINS export to decisions on screen</div>
+    <div class="pipeline-steps">
+      <div class="p-step">
+        <div class="p-step-box">
+          <span class="p-step-num">Step 1</span>
+          <span class="p-step-label">SPINS Export</span>
+          <span class="p-step-who">Brian deposits to MinIO</span>
+        </div>
+      </div>
+      <div class="p-arrow">→</div>
+      <div class="p-step">
+        <div class="p-step-box">
+          <span class="p-step-num">Step 2</span>
+          <span class="p-step-label">Data Ingest</span>
+          <span class="p-step-who">Rob loads to analytics store</span>
+        </div>
+      </div>
+      <div class="p-arrow">→</div>
+      <div class="p-step">
+        <div class="p-step-box">
+          <span class="p-step-num">Step 3</span>
+          <span class="p-step-label">Feature Engineering</span>
+          <span class="p-step-who">Aevah builds intelligence tables</span>
+        </div>
+      </div>
+      <div class="p-arrow">→</div>
+      <div class="p-step">
+        <div class="p-step-box">
+          <span class="p-step-num">Step 4</span>
+          <span class="p-step-label">Model Training &amp; Scoring</span>
+          <span class="p-step-who">Aevah trains, scores, publishes</span>
+        </div>
+      </div>
+      <div class="p-arrow">→</div>
+      <div class="p-step">
+        <div class="p-step-box">
+          <span class="p-step-num">Step 5</span>
+          <span class="p-step-label">Mo UI</span>
+          <span class="p-step-who">BUILT team sees decisions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Intro ── -->
+  <div class="intro-section">
+    <h2 class="intro-heading">Each analysis module follows the same pattern</h2>
+    <p class="intro-body">For every intelligence module in Mo, we identify the required data inputs and their source (SPINS point-of-sale, ERP, or POS), perform the operations needed to prepare that data, train a focused model, and display the result as two distinct layers: <strong>projection data</strong> (what the model forecasts) and <strong>context data</strong> (the live actuals that explain why).</p>
+  </div>
+
+  <!-- ══ SIM 1: Cannibalization ══ -->
+  <div class="sim-card">
+    <div class="sim-header">
+      <span class="sim-num">01</span>
+      <span class="sim-name">Cannibalization Risk</span>
+      <span class="sim-answer">"Is this new SKU pulling demand from an existing one, or adding net-new buyers?"</span>
+    </div>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Data required</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Field</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">Weekly units sold</td><td><span class="src-tag src-spins">SPINS</span></td><td>Measure demand before and after launch</td></tr>
+              <tr><td class="field-name">Base units (non-promo baseline)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate promo-driven from underlying demand</td></tr>
+              <tr><td class="field-name">Distribution (stores selling)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Distinguish demand drop from distribution loss</td></tr>
+              <tr><td class="field-name">Average retail price</td><td><span class="src-tag src-spins">SPINS</span></td><td>Detect whether price changes explain the shift</td></tr>
+              <tr><td class="field-name">First week selling (launch date)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Anchor the before/after comparison window</td></tr>
+              <tr><td class="field-name">Pack count, flavor, brand line</td><td><span class="src-tag src-spins">SPINS</span></td><td>Identify which SKUs could be substitutes</td></tr>
+              <tr><td class="field-name">Weeks on promo</td><td><span class="src-tag src-spins">SPINS</span></td><td>Flag confounding promotional periods</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="block-label">Operations performed on the data</div>
+          <div class="ops-list">
+            <div class="op-item"><div class="op-dot"></div>Build before/after windows (4-week, 13-week, 26-week) around each product launch, aligned to the first week selling</div>
+            <div class="op-item"><div class="op-dot"></div>Pair each focal SKU with candidate donor SKUs — same specific flavor, same pack family, same brand, same category, competitor tier</div>
+            <div class="op-item"><div class="op-dot"></div>Measure whether the focal SKU gained demand while candidate donors declined in the same stores during the same window</div>
+            <div class="op-item"><div class="op-dot"></div>Flag windows contaminated by promotions, distribution ramps, or supply events that could explain the change independently of cannibalization</div>
+            <div class="op-item"><div class="op-dot"></div>Calculate incremental share: the proportion of focal SKU demand that is net-new to the brand vs. transferred from a donor</div>
+            <div class="op-item"><div class="op-dot"></div>Assign a deterministic label (Cannibalizing / Watch / Incremental / Neutral) from observable business evidence before the model scores</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">Forecast &amp; projection — from trained model</div>
+          <div class="output-block-body">
+            <div class="output-item">Risk score and confidence level for each focal/donor pair</div>
+            <div class="output-item">Status label: Cannibalizing · Watch · Incremental · Neutral</div>
+            <div class="output-item">Ranked list of likely donor SKUs with evidence summary (focal lift, donor decline, distribution delta)</div>
+            <div class="output-item">Incremental share — how much of the focal SKU's demand is net-new vs. transferred</div>
+            <div class="output-item">Cannibalization rate actuals + 13-week forward projection with confidence bands</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Live context data — queried at display time</div>
+          <div class="output-block-body">
+            <div class="output-item">Actual weekly demand trend for focal and donor SKUs</div>
+            <div class="output-item">Distribution (TDP) trend — how many stores are stocking each SKU</div>
+            <div class="output-item">Geography heatmap — which markets show the strongest demand transfer</div>
+            <div class="output-item">Launch ramp chart — weeks 1–16 of distribution build vs. category norms</div>
+            <div class="output-item">Comparison pool description — which SKUs are in scope and why</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SIM 2: Price Elasticity ══ -->
+  <div class="sim-card">
+    <div class="sim-header">
+      <span class="sim-num">02</span>
+      <span class="sim-name">Price Elasticity</span>
+      <span class="sim-answer">"If we change price by X%, how much does demand change — and what's the optimal price point?"</span>
+    </div>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Data required</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Field</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">Average retail price</td><td><span class="src-tag src-spins">SPINS</span></td><td>Measure price level across accounts and weeks</td></tr>
+              <tr><td class="field-name">Weekly units sold</td><td><span class="src-tag src-spins">SPINS</span></td><td>Measure demand response to price changes</td></tr>
+              <tr><td class="field-name">Base price (non-promoted)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate everyday price from promotional price</td></tr>
+              <tr><td class="field-name">Promo discount depth (%)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Quantify the magnitude of promotional price drops</td></tr>
+              <tr><td class="field-name">Incremental units (promo-driven)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Isolate promoted demand from baseline demand</td></tr>
+              <tr><td class="field-name">Distribution (TDP)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Control for distribution changes that mimic price effects</td></tr>
+              <tr><td class="field-name">Pack count</td><td><span class="src-tag src-spins">SPINS</span></td><td>Normalize price to per-bar for cross-pack comparison</td></tr>
+              <tr><td class="field-name">Competitor price (same flavor)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate own-price response from competitive pressure</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="block-label">Operations performed on the data</div>
+          <div class="ops-list">
+            <div class="op-item"><div class="op-dot"></div>Normalize price to price-per-bar across all pack sizes so single bars and 12-packs are comparable</div>
+            <div class="op-item"><div class="op-dot"></div>Build 13-week regression windows per SKU × account — the minimum period needed for a stable price response estimate</div>
+            <div class="op-item"><div class="op-dot"></div>Separate promotional price changes from everyday price changes, and flag windows where promotions overlap with price moves</div>
+            <div class="op-item"><div class="op-dot"></div>Compare BUILT price-per-bar against same-flavor competitors in the same account and week to isolate competitive pressure</div>
+            <div class="op-item"><div class="op-dot"></div>Compare price-per-bar across BUILT's own pack sizes of the same flavor to detect pack-ladder compression (e.g. 12pk priced too close to single bar)</div>
+            <div class="op-item"><div class="op-dot"></div>Apply a guardrail that rejects regression windows where price moved more than 40% in a single week — typically a data artifact, not a real pricing event</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">Forecast &amp; projection — from trained model</div>
+          <div class="output-block-body">
+            <div class="output-item">Own-price elasticity estimate with confidence range (low / mid / high scenario)</div>
+            <div class="output-item">Cross-price elasticity — demand response when a competitor changes price</div>
+            <div class="output-item">Promo elasticity curve — lift expected at each discount depth (10% / 20% / 30%+)</div>
+            <div class="output-item">What-if demand curves — projected units at alternative price points</div>
+            <div class="output-item">Pricing event queue — SKUs with active competitive gaps or pack-ladder compression</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Live context data — queried at display time</div>
+          <div class="output-block-body">
+            <div class="output-item">Current price-per-bar and trailing 52-week price trend by account</div>
+            <div class="output-item">Pack price ladder — single / 4pk / 12pk side-by-side in the same account</div>
+            <div class="output-item">Competitive price gap chart — BUILT vs. Tier 1 competitor in the same flavor</div>
+            <div class="output-item">Category benchmark — how BUILT's price-per-bar compares to the MULO FOOD category norm</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SIM 3: Promo Lift ══ -->
+  <div class="sim-card">
+    <div class="sim-header">
+      <span class="sim-num">03</span>
+      <span class="sim-name">Promotional Response</span>
+      <span class="sim-answer">"How much incremental demand does a promotion generate, and what discount depth maximizes return?"</span>
+    </div>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Data required</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Field</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">Incremental units</td><td><span class="src-tag src-spins">SPINS</span></td><td>SPINS-attributed demand above non-promo baseline</td></tr>
+              <tr><td class="field-name">Base units (non-promo baseline)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Denominator for lift ratio calculation</td></tr>
+              <tr><td class="field-name">% units sold on promotion</td><td><span class="src-tag src-spins">SPINS</span></td><td>Measure how promo-dependent a SKU is</td></tr>
+              <tr><td class="field-name">Promo discount depth (%)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Quantify the price concession driving lift</td></tr>
+              <tr><td class="field-name">Channel (grocery / mass / c-store)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Segment response curves — grocery and c-store behave differently</td></tr>
+              <tr><td class="field-name">Pack count</td><td><span class="src-tag src-spins">SPINS</span></td><td>Segment by pack size — 12pk cliff behavior differs from single</td></tr>
+              <tr><td class="field-name">Distribution on promo (TDP, Any Promo)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate display/feature support from pure price promotion</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="block-label">Operations performed on the data</div>
+          <div class="ops-list">
+            <div class="op-item"><div class="op-dot"></div>Calculate promo lift ratio: incremental units divided by base units, per SKU × account × event week</div>
+            <div class="op-item"><div class="op-dot"></div>Group promo events into discount depth buckets (0–10%, 10–20%, 20–30%, 30%+) to produce a lift response curve</div>
+            <div class="op-item"><div class="op-dot"></div>Separate response curves by channel — grocery shows a steeper 12-pack response curve than c-store, which flattens above 20% discount</div>
+            <div class="op-item"><div class="op-dot"></div>Separate response curves by pack size — single bars and 12-packs have distinct optimal discount depths</div>
+            <div class="op-item"><div class="op-dot"></div>Identify the discount depth where marginal lift no longer justifies additional margin give-up (the "cliff" point)</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">Forecast &amp; projection — from trained model</div>
+          <div class="output-block-body">
+            <div class="output-item">Expected lift % at each discount depth for this SKU × channel × pack size</div>
+            <div class="output-item">Optimal discount depth recommendation — where lift peaks before the cliff</div>
+            <div class="output-item">Incremental vs. cannibalized demand breakdown at each discount level</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Live context data — queried at display time</div>
+          <div class="output-block-body">
+            <div class="output-item">Historical promo events — discount depth, timing, and observed lift for each past event</div>
+            <div class="output-item">Lift trend by event type — TPR vs. display vs. feature support</div>
+            <div class="output-item">% weeks on promo trend — is this SKU becoming promo-dependent?</div>
+            <div class="output-item">Channel comparison — how this SKU's lift curve compares across grocery / mass / c-store</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SIM 4: Demand Forecast ══ -->
+  <div class="sim-card">
+    <div class="sim-header">
+      <span class="sim-num">04</span>
+      <span class="sim-name">Demand Velocity &amp; Forecast</span>
+      <span class="sim-answer">"What will this SKU sell in the next 13 weeks, by retailer account?"</span>
+    </div>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Data required</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Field</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">52-week weekly units sold</td><td><span class="src-tag src-spins">SPINS</span></td><td>Training history for demand patterns</td></tr>
+              <tr><td class="field-name">Distribution (stores selling)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Normalize velocity to exclude distribution gaps</td></tr>
+              <tr><td class="field-name">Average retail price</td><td><span class="src-tag src-spins">SPINS</span></td><td>Capture price-demand relationship in forecast</td></tr>
+              <tr><td class="field-name">% weeks on promo</td><td><span class="src-tag src-spins">SPINS</span></td><td>Separate promoted from non-promoted baseline</td></tr>
+              <tr><td class="field-name">Retail account</td><td><span class="src-tag src-spins">SPINS</span></td><td>Train separate model per account — each retailer behaves differently</td></tr>
+              <tr><td class="field-name">Week end date</td><td><span class="src-tag src-spins">SPINS</span></td><td>Derive seasonality index and calendar features</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="block-label">Operations performed on the data</div>
+          <div class="ops-list">
+            <div class="op-item"><div class="op-dot"></div>Normalize velocity to non-zero distribution weeks only — removing weeks when a SKU had no shelf presence eliminates false demand troughs from the training history</div>
+            <div class="op-item"><div class="op-dot"></div>Compute rolling averages (4-week and 13-week) to smooth short-term noise while preserving trend signal</div>
+            <div class="op-item"><div class="op-dot"></div>Build a 12-month seasonality index from category-level monthly raw averages (not model-estimated — directly observable from the data)</div>
+            <div class="op-item"><div class="op-dot"></div>Flag promo weeks in the training history so the model learns baseline demand vs. promo-lifted demand separately</div>
+            <div class="op-item"><div class="op-dot"></div>Train a separate forecast per SKU × retailer account — a SKU's velocity at Kroger is not a reliable predictor of its velocity at Target</div>
+            <div class="op-item"><div class="op-dot"></div>Fall back to an exponential smoothing model for any SKU with fewer than 8 weeks of selling history</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">Forecast &amp; projection — from trained model</div>
+          <div class="output-block-body">
+            <div class="output-item">13-week demand forecast per SKU × retailer account</div>
+            <div class="output-item">Confidence bands (low / base / high scenario)</div>
+            <div class="output-item">Promo-uplift scenario — projected demand if a promotional event is planned in the forecast window</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Live context data — queried at display time</div>
+          <div class="output-block-body">
+            <div class="output-item">52-week actual demand trend by SKU and retailer account</div>
+            <div class="output-item">Distribution (stores stocking) trend over the same period</div>
+            <div class="output-item">Category average velocity — how this SKU compares to the category norm for the same 13-week window</div>
+            <div class="output-item">Seasonal index overlay — expected seasonal lift or drag on the forecast period</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SIM 5: Launch Monitoring ══ -->
+  <div class="sim-card">
+    <div class="sim-header">
+      <span class="sim-num">05</span>
+      <span class="sim-name">Distribution &amp; Launch Monitoring</span>
+      <span class="sim-answer">"Is this new product ramping as expected — in enough stores, with the right velocity?"</span>
+    </div>
+    <div class="sim-body">
+      <div class="sim-left">
+        <div>
+          <div class="block-label">Data required</div>
+          <table class="inputs-table">
+            <thead>
+              <tr><th>Field</th><th>Source</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="field-name">% of stores selling</td><td><span class="src-tag src-spins">SPINS</span></td><td>Measure distribution build week over week</td></tr>
+              <tr><td class="field-name">Total distribution points (TDP)</td><td><span class="src-tag src-spins">SPINS</span></td><td>Primary ramp metric — combines store count and shelf presence</td></tr>
+              <tr><td class="field-name">Avg weekly units per store selling</td><td><span class="src-tag src-spins">SPINS</span></td><td>Measure velocity independent of distribution level</td></tr>
+              <tr><td class="field-name">First week selling</td><td><span class="src-tag src-spins">SPINS</span></td><td>Anchor the ramp monitoring window</td></tr>
+              <tr><td class="field-name">Number of weeks selling</td><td><span class="src-tag src-spins">SPINS</span></td><td>Track position in the launch lifecycle</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="block-label">Operations performed on the data</div>
+          <div class="ops-list">
+            <div class="op-item"><div class="op-dot"></div>Track weeks 1–16 of distribution build and velocity ramp for each new BUILT UPC</div>
+            <div class="op-item"><div class="op-dot"></div>Compare each new SKU's ramp trajectory against the category norm for launches of the same pack type</div>
+            <div class="op-item"><div class="op-dot"></div>Classify each new UPC: new pack size of an existing flavor, new flavor, or duplicate/relaunch (which determines whether it enters cannibalization scoring immediately or after a review)</div>
+            <div class="op-item"><div class="op-dot"></div>Flag underperformance — SKUs where distribution build or velocity is tracking below the expected ramp curve at 4, 8, and 13 weeks post-launch</div>
+            <div class="op-item"><div class="op-dot"></div>Suppress cannibalization risk scoring during the ramp period to avoid penalizing a new product for demand transfer that is still distribution-driven</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-right">
+        <div class="output-block">
+          <div class="output-block-header ml">Forecast &amp; projection — from trained model</div>
+          <div class="output-block-body">
+            <div class="output-item">Launch status at current week: On Track · Watch · Underperforming</div>
+            <div class="output-item">Expected ramp curve — where this SKU should be at week 8, 13, and 16 given its category and pack type</div>
+            <div class="output-item">Predicted full-distribution velocity — what weekly units per store this SKU should reach at maturity</div>
+          </div>
+        </div>
+        <div class="output-block">
+          <div class="output-block-header live">Live context data — queried at display time</div>
+          <div class="output-block-body">
+            <div class="output-item">Actual TDP ramp week by week since first week selling</div>
+            <div class="output-item">Actual velocity per store — is the product pulling through where it is stocked?</div>
+            <div class="output-item">Comparable launch benchmarks — how similar BUILT or category launches ramped in the same retailer</div>
+            <div class="output-item">Cannibalization scoring readiness — flag for when this SKU graduates from ramp monitoring to active scoring</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="footnote">
+    <span>Mo by Aevah · BUILT Kickoff · August 2026 · Customer Overview</span>
+    <span>All data sourced from SPINS point-of-sale unless otherwise noted</span>
+  </div>
+
+</div>
