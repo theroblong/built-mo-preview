@@ -107,14 +107,20 @@
     padding: 0 20px 80px;
   }
 
-  .page { max-width: 900px; margin: 0 auto; }
+  .page { max-width: 1280px; margin: 0 auto; }
 
-  /* ── Doc header ── */
-  .doc-header {
-    padding: 52px 0 44px;
+  /* ── Hero: title + pipeline side by side ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 40px;
+    align-items: center;
+    padding: 44px 0 36px;
     border-bottom: 2px solid var(--border);
-    margin-bottom: 48px;
+    margin-bottom: 44px;
   }
+
+  .hero-left {}
 
   .doc-eyebrow {
     font-size: 11px;
@@ -127,21 +133,19 @@
 
   .doc-title {
     font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 38px;
+    font-size: 36px;
     font-weight: 400;
     color: var(--navy);
     line-height: 1.15;
     text-wrap: balance;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
   .doc-subtitle {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 300;
     color: var(--text-secondary);
-    max-width: 580px;
-    line-height: 1.7;
-    margin-bottom: 28px;
+    line-height: 1.65;
   }
 
   /* ── Pipeline overview ── */
@@ -149,8 +153,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 24px 28px 60px;
-    margin-bottom: 52px;
+    padding: 22px 24px 56px;
     overflow: visible;
   }
 
@@ -305,12 +308,12 @@
   }
 
   .sim-answer {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 300;
     color: rgba(200,215,255,0.85);
     line-height: 1.5;
     margin-left: auto;
-    max-width: 340px;
+    max-width: 420px;
     font-style: italic;
   }
 
@@ -320,7 +323,7 @@
   }
 
   .sim-left {
-    padding: 24px 28px;
+    padding: 28px 32px;
     border-right: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
@@ -328,10 +331,10 @@
   }
 
   .sim-right {
-    padding: 24px 28px;
+    padding: 28px 32px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
   }
 
   /* ── Data inputs table ── */
@@ -341,33 +344,33 @@
     letter-spacing: 0.13em;
     text-transform: uppercase;
     color: var(--text-faint);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .inputs-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12.5px;
+    font-size: 14px;
   }
 
   .inputs-table th {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-faint);
-    padding: 5px 8px;
+    padding: 7px 10px;
     text-align: left;
     border-bottom: 1px solid var(--border-light);
     background: var(--bg-raised);
   }
 
   .inputs-table td {
-    padding: 6px 8px;
+    padding: 9px 10px;
     vertical-align: top;
     border-bottom: 1px solid var(--border-light);
     color: var(--text-secondary);
-    line-height: 1.45;
+    line-height: 1.5;
   }
 
   .inputs-table tbody tr:last-child td { border-bottom: none; }
@@ -379,12 +382,12 @@
   }
 
   .src-tag {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     border-radius: 3px;
-    padding: 1px 5px;
+    padding: 2px 7px;
     white-space: nowrap;
     display: inline-block;
   }
@@ -409,10 +412,10 @@
   }
 
   .output-block-header {
-    padding: 8px 14px;
-    font-size: 9px;
+    padding: 10px 16px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border-light);
   }
@@ -436,19 +439,19 @@
   }
 
   .output-block-body {
-    padding: 10px 14px;
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
   }
 
   .output-item {
-    font-size: 12px;
+    font-size: 13.5px;
     color: var(--text-secondary);
     display: flex;
     align-items: flex-start;
-    gap: 7px;
-    line-height: 1.45;
+    gap: 8px;
+    line-height: 1.5;
   }
 
   .output-item::before {
@@ -472,6 +475,9 @@
 
   a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px; }
 
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; gap: 24px; }
+  }
   @media (max-width: 680px) {
     .sim-body { grid-template-columns: 1fr; }
     .sim-left { border-right: none; border-bottom: 1px solid var(--border-light); }
@@ -484,15 +490,14 @@
 
 <div class="page">
 
-  <!-- ── Header ── -->
-  <header class="doc-header">
-    <div class="doc-eyebrow">Mo by Aevah · BUILT Kickoff · August 2026</div>
-    <h1 class="doc-title">How Mo Works<br>With Your Data</h1>
-    <p class="doc-subtitle">A plain-language walkthrough of the process behind each Mo intelligence module — what data it needs, where that data comes from, what operations are performed, and what appears on screen.</p>
-  </header>
-
-  <!-- ── Pipeline overview ── -->
-  <div class="pipeline-overview">
+  <!-- ── Hero: title + pipeline ── -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="doc-eyebrow">Mo by Aevah · BUILT Kickoff · August 2026</div>
+      <h1 class="doc-title">How Mo Works<br>With Your Data</h1>
+      <p class="doc-subtitle">A plain-language walkthrough of the process behind each Mo intelligence module — what data it needs, where that data comes from, what operations are performed, and what appears on screen.</p>
+    </div>
+    <div class="pipeline-overview">
     <div class="pipeline-overview-label">The end-to-end process — five steps from your SPINS export to decisions on screen</div>
     <div class="pipeline-steps">
       <div class="p-step">
@@ -532,6 +537,7 @@
       </div>
     </div>
   </div>
+  </div><!-- end .hero -->
 
   <!-- ── Intro ── -->
   <div class="intro-section">

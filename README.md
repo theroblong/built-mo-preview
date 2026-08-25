@@ -6,6 +6,23 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 81: LaTeX-style typeset formulas in decisions register (2026-08-25)
+
+All 10 formula blocks (FML-01–FML-10) in `mockups/mo_decisions_register.html` converted from ASCII-art monospace to proper typeset math layout. Added STIX Two Text (a math-designed serif font from Google Fonts) for formula rendering. New CSS math system: `.mfrac` (real fraction bars via `border-bottom` + flexbox stack), `.mvar` (italic variable names per LaTeX convention), `.mequation` (inline equation row), `.mannot` (annotation text in a distinct mono register below each equation). Fractions that were previously drawn with `─────` ASCII bars — wMAPE (FML-07), demand index (FML-08), cannibalization rate (FML-09), promo lift (FML-03), $/bar normalization (FML-02), TDP (FML-05), units SPM (FML-06), promo depth (FML-04), price elasticity (FML-01), and incremental share (FML-10) — now render as typeset math. Artifact republished.
+
+---
+
+## README update 80: Wider layouts + crayon picture (2026-08-25)
+
+Fixed narrow-layout problem across remaining technical artifacts (proactive — not waiting to be asked per prior feedback):
+
+- `mockups/mo_data_ops_kickoff.html` — max-width 880px → 1360px; all inner max-width constraints removed (subtitle, section desc); font sizes bumped throughout: table headers 9→11px, table content 12.5→14px, display-item 12→13.5px, step-card-body 12→13.5px, source pills 9→10.5px, badges 9→10.5px, inline code 10.5→12px; cell padding increased across all table elements
+- `mockups/mo_automation_design.html` — max-width 920px → 1360px; padding 24→32px; font sizes bumped: stage col labels 9→10.5px, stage col list items 12.5→13.5px, gate labels 9→10.5px, gate checks 12→13.5px, option table headers 9→11px, badges 9→10.5px, inline code 10.5→12px; cell padding increased
+
+Bonus: `scratchpad/mo_built_crayon.html` — a crayon-style story artifact in 3 panels explaining what Mo does for BUILT at a 4-year-old level, using the Caveat handwriting font, slightly-rotated panels, hand-drawn SVG arrows, and a sticky note for grown-ups. Published at https://claude.ai/code/artifact/7ebb5a87-33fe-4bc9-9321-a81d0fc47e27
+
+---
+
 ## README update 79: External data APIs + Mo Trends documented in customer overview & decisions register (2026-08-25)
 
 Two new collapsible sections added to `mockups/mo_data_ops_customer.html` after the 5 ML intelligence modules: **06: Mo Trends** (8 live tiles, filter bar options, demo defaults, FRED integration, MULO exclusion) and **07: External Signal Integration** (full API catalog — live FRED + planned Open-Meteo, BLS CPI, Kalshi, Helium 10/Keepa, Glimpse; integration pattern; licensing rule).
