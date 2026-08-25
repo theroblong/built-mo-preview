@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 78: Customer overview pipeline graphic redesign (2026-08-25)
+
+Redesigned the 5-step pipeline strip in `mockups/mo_data_ops_customer.html` for legibility. The original dark-navy background with semi-transparent white cards and light-blue text created poor contrast. New design: white/light card surface, each step box with a blue left accent bar, high-contrast navy label and grey actor text, staircase layout (each subsequent step offset 18px down via CSS `nth-child`), and visible navy arrows. Actor labels updated to remove personal names: "Brian deposits to MinIO" → BUILT Data Team; "Rob loads to analytics store" → Aevah — automated. Artifact republished at the same URL.
+
+---
+
 ## README update 77: Decisions & Caveats Register + Pipeline Automation Design (2026-08-25)
 
 Two new living reference documents:
