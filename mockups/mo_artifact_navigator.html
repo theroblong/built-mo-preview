@@ -152,25 +152,6 @@
   .stat { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-faint); }
   .stat strong { color: var(--text-sec); }
 
-  /* ── Mindmap ── */
-  .mindmap-wrap {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 18px 20px 16px;
-    margin-bottom: 34px;
-    overflow-x: auto;
-  }
-  .mindmap-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-    margin-bottom: 12px;
-  }
-
   /* ── Sections ── */
   .section { margin-bottom: 40px; }
   .section-head {
@@ -344,61 +325,6 @@
         <span class="stat">Last updated <strong>2026-08-25</strong></span>
       </div>
     </header>
-
-    <!-- ── Mindmap ── -->
-    <div class="mindmap-wrap">
-      <div class="mindmap-label">Artifact map — categories &amp; counts</div>
-      <svg id="mindmap-svg" viewBox="0 0 860 180" width="860" height="180" style="max-width:100%;overflow:visible">
-        <!-- Root -->
-        <rect x="8" y="72" width="110" height="36" rx="6" fill="#1B3566"/>
-        <text x="63" y="95" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" font-weight="600" fill="white">Mo Artifacts</text>
-
-        <!-- Trunk -->
-        <line x1="118" y1="90" x2="172" y2="90" stroke="#A8B6D4" stroke-width="2"/>
-
-        <!-- Vertical connector -->
-        <line x1="172" y1="18" x2="172" y2="162" stroke="#A8B6D4" stroke-width="1.5"/>
-
-        <!-- Branch lines + nodes — will be updated by JS with counts -->
-        <!-- Customer y=18 -->
-        <line x1="172" y1="18" x2="220" y2="18" stroke="#1565C0" stroke-width="1.5"/>
-        <rect x="220" y="6" width="180" height="24" rx="5" fill="#DCEEFB"/>
-        <circle cx="232" cy="18" r="5" fill="#1565C0"/>
-        <text x="246" y="22.5" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#1565C0">Customer-Facing</text>
-        <text id="mm-c1" x="400" y="22.5" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6B7A9A"></text>
-
-        <!-- Internal y=54 -->
-        <line x1="172" y1="54" x2="220" y2="54" stroke="#1A6B3A" stroke-width="1.5"/>
-        <rect x="220" y="42" width="180" height="24" rx="5" fill="#E0F4EA"/>
-        <circle cx="232" cy="54" r="5" fill="#1A6B3A"/>
-        <text x="246" y="58.5" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#1A6B3A">Internal Reference</text>
-        <text id="mm-c2" x="400" y="58.5" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6B7A9A"></text>
-
-        <!-- GTM y=90 -->
-        <line x1="172" y1="90" x2="220" y2="90" stroke="#6A1B9A" stroke-width="1.5"/>
-        <rect x="220" y="78" width="180" height="24" rx="5" fill="#F0E8FB"/>
-        <circle cx="232" cy="90" r="5" fill="#6A1B9A"/>
-        <text x="246" y="94.5" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#6A1B9A">GTM &amp; Sales</text>
-        <text id="mm-c3" x="400" y="94.5" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6B7A9A"></text>
-
-        <!-- ML y=126 -->
-        <line x1="172" y1="126" x2="220" y2="126" stroke="#C84B10" stroke-width="1.5"/>
-        <rect x="220" y="114" width="180" height="24" rx="5" fill="#FDEEE8"/>
-        <circle cx="232" cy="126" r="5" fill="#C84B10"/>
-        <text x="246" y="130.5" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#C84B10">ML &amp; Data Science</text>
-        <text id="mm-c4" x="400" y="130.5" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6B7A9A"></text>
-
-        <!-- UI y=162 -->
-        <line x1="172" y1="162" x2="220" y2="162" stroke="#37474F" stroke-width="1.5"/>
-        <rect x="220" y="150" width="180" height="24" rx="5" fill="#ECEFF1"/>
-        <circle cx="232" cy="162" r="5" fill="#37474F"/>
-        <text x="246" y="166.5" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#37474F">UI &amp; Mockups</text>
-        <text id="mm-c5" x="400" y="166.5" font-family="IBM Plex Mono,monospace" font-size="10" fill="#6B7A9A"></text>
-
-        <!-- Sub-items hints (dots) rendered by JS into right half -->
-        <g id="mm-dots"></g>
-      </svg>
-    </div>
 
     <!-- ── Rendered sections ── -->
     <div id="sections-root"></div>
@@ -720,15 +646,12 @@ const root = document.getElementById('sections-root');
 root.innerHTML = CATS.map(renderSection).join('');
 
 // Nav counts
-const ids = ['c1','c2','c3','c4','c5'];
 let total = 0;
 CATS.forEach((cat, i) => {
   const n = cat.items.length;
   total += n;
   const el = document.getElementById('nc' + (i+1));
   if (el) el.textContent = n;
-  const mm = document.getElementById('mm-' + ids[i]);
-  if (mm) mm.textContent = `(${n})`;
 });
 document.getElementById('total-count').textContent = total;
 

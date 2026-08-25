@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 84: Artifact Navigator — mindmap removed (2026-08-25)
+
+Removed the "Artifact map — categories & counts" SVG mindmap from `mockups/mo_artifact_navigator.html`. The sticky left nav already shows color-coded category links with counts, making the mindmap purely redundant. Removing it brings the first artifact cards above the fold. Design feedback saved to memory: when a sticky nav carries the orientation context, skip the in-content summary diagram. Artifact republished at same URL.
+
+---
+
 ## README update 83: BUILT pack size distribution — copy correction in crayon drawing (2026-08-25)
 
 BUILT pack size sales reality: 1-pack (most common, convenience/impulse), 4-pack (#2, everyday grocery multipack), 8-pack (occasional), 12-pack (bulk/wholesale/online only — Costco, Amazon, B2B). No mainstream 6-pack format. Corrected two chips in `scratchpad/mo_built_crayon.html`: "6-pack or 12-pack? 📦" → "1-pack, 4-pack, or 12-pack? 📦"; "make more 12-packs! 📦📦" → "sell more 4-packs! 📦📦". Crayon drawing republished at same URL. Pack size copy guidance saved to BUILT hierarchy memory and wiki.
