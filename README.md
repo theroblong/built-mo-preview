@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 82: Mo Artifact Navigator — table of contents for all working documents (2026-08-25)
+
+`mockups/mo_artifact_navigator.html` — new reference page that maps every Mo artifact by category, audience, and purpose. Two-column layout: sticky left nav (color-coded category links with counts) + scrollable main content. Horizontal SVG mindmap at the top shows the 5-category tree with live counts. Artifact cards (3-col grid per section) show title, filename chip, audience badges, one-line description, and status dot. 29 artifacts catalogued across 5 categories: Customer-Facing (6), Internal Reference (7), GTM & Sales (5), ML & Data Science (8), UI & Mockups (3). Card data is JS-rendered from an inline data array so the index stays maintainable as new artifacts are added. Artifact published.
+
+---
+
 ## README update 81: LaTeX-style typeset formulas in decisions register (2026-08-25)
 
 All 10 formula blocks (FML-01–FML-10) in `mockups/mo_decisions_register.html` converted from ASCII-art monospace to proper typeset math layout. Added STIX Two Text (a math-designed serif font from Google Fonts) for formula rendering. New CSS math system: `.mfrac` (real fraction bars via `border-bottom` + flexbox stack), `.mvar` (italic variable names per LaTeX convention), `.mequation` (inline equation row), `.mannot` (annotation text in a distinct mono register below each equation). Fractions that were previously drawn with `─────` ASCII bars — wMAPE (FML-07), demand index (FML-08), cannibalization rate (FML-09), promo lift (FML-03), $/bar normalization (FML-02), TDP (FML-05), units SPM (FML-06), promo depth (FML-04), price elasticity (FML-01), and incremental share (FML-10) — now render as typeset math. Artifact republished.

@@ -251,10 +251,10 @@ docs = [
     (PURPLE, WHITE,      PURPLE_LIGHT,
      "Decisions & Caveats Register",
      "mo_decisions_register.html",
-     "48-entry living register: null handling, normalization rules, MULO exclusion, known data anomalies, model guardrails, key formulas, and open items. Updated every session.",
+     "56-entry living register: null handling, normalization rules, MULO exclusion, known anomalies, model guardrails, key formulas (LaTeX-typeset), external data API rules, and open items. Updated every session.",
      [("Audience", "Rob, Jason"),
       ("Format",   "HTML artifact — living"),
-      ("Covers",   "NUL/NRM/GEO/ANO/GRD/COV/FML/OPN")]),
+      ("Covers",   "NUL/NRM/GEO/ANO/GRD/COV/FML/OPN/EXT")]),
 ]
 
 card_w = 3.0
@@ -563,7 +563,127 @@ add_sim_slide(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 9 — AUTOMATION ROADMAP
+# SLIDE 9 — MO TRENDS & EXTERNAL SIGNAL INTEGRATION
+# ═══════════════════════════════════════════════════════════════════════════════
+slide = prs.slides.add_slide(BLANK)
+rect(slide, 0, 0, 13.333, 7.5, fill=OFF_WHITE)
+rect(slide, 0, 0, 13.333, 1.1, fill=NAVY)
+rect(slide, 0, 0, 0.08, 7.5, fill=BLUE)
+
+tb(slide, 0.5, 0.18, 10, 0.6,
+   "Mo Trends & External Signal Integration", size=22, bold=True, color=WHITE)
+tb(slide, 0.5, 0.72, 12, 0.32,
+   "Sections 06 + 07 of the customer overview — competitive dashboard tiles and external macro/market data feeds (FRED + roadmap).",
+   size=10.5, color=BLUE_LIGHT)
+
+# ── Left: Mo Trends tiles ──
+left_x = 0.4
+tile_w = 5.9
+
+rect(slide, left_x, 1.2, tile_w, 0.32, fill=NAVY)
+tb(slide, left_x + 0.12, 1.24, tile_w - 0.24, 0.24,
+   "06  ·  MO TRENDS — all data queried live from Druid, no ML scoring table",
+   size=8, bold=True, color=BLUE_LIGHT)
+
+tiles = [
+    ("1 — Brand Velocity",   "Weekly units trend — 52-week history + 13-week rolling avg by product/retailer"),
+    ("2 — Demand Forecast",  "13-week forward projection with confidence bands  [ML scoring table]"),
+    ("3 — Pack Crossover",   "Single vs. multipack demand split across the BUILT product line"),
+    ("4 — Price & Promo",    "ARP trend with promo event overlays and discount depth markers"),
+    ("5 — Distribution Arc", "TDP build trajectory and ramp vs. category launch norms  [FML-05]"),
+    ("6 — Flavor Demand",    "Flavor-level velocity comparison across full BUILT flavor range"),
+    ("7 — Macro Context",    "FRED GASDESW + UMCSENT — gas prices + U of Michigan consumer confidence"),
+    ("8 — Velocity + Macro", "Stacked chart: brand velocity trend alongside macro signal overlay"),
+]
+
+tile_y = 1.52
+row_h = 0.41
+for i, (name, desc) in enumerate(tiles):
+    bg = RGBColor(0xF8, 0xFA, 0xFD) if i % 2 == 0 else WHITE
+    rect(slide, left_x, tile_y, tile_w, row_h, fill=bg, line=0.5,
+         line_color=RGBColor(0xCC, 0xD8, 0xEE))
+    tb(slide, left_x + 0.1, tile_y + 0.07, 2.15, row_h - 0.1,
+       name, size=8.5, bold=True, color=DARK_TEXT)
+    tb(slide, left_x + 2.3, tile_y + 0.07, tile_w - 2.4, row_h - 0.1,
+       desc, size=8, color=MID_GREY)
+    tile_y += row_h
+
+# Filter bar note
+rect(slide, left_x, tile_y + 0.08, tile_w, 0.36, fill=LIGHT_BLUE)
+tb(slide, left_x + 0.12, tile_y + 0.14, tile_w - 0.24, 0.26,
+   "Filter bar:  Product · Brand · Channel (FOOD / MASS / C-STORE) · Account · Units / $ toggle",
+   size=8.5, color=DARK_TEXT)
+tb(slide, left_x + 0.12, tile_y + 0.31, tile_w - 0.24, 0.16,
+   "Demo defaults: BUILT Puff  +  KROGER  +  WALMART    |    MULO excluded from all Trends views  [GEO-01]",
+   size=7.5, color=MID_GREY, italic=True)
+
+# ── Right: External Signal Integration ──
+right_x = 6.7
+right_w  = 6.25
+
+rect(slide, right_x, 1.2, right_w, 0.32, fill=GREEN)
+tb(slide, right_x + 0.12, 1.24, right_w - 0.24, 0.24,
+   "07  ·  EXTERNAL SIGNALS — commercial redistribution required for all  [EXT-02]",
+   size=8, bold=True, color=WHITE)
+
+# Live section
+rect(slide, right_x, 1.52, right_w, 0.26, fill=GREEN_LIGHT)
+tb(slide, right_x + 0.12, 1.55, right_w - 0.24, 0.2,
+   "LIVE IN PRODUCTION", size=7.5, bold=True, color=GREEN)
+
+live_sigs = [
+    ("FRED — GASDESW",  "Weekly U.S. gas price index (St. Louis Fed)  ·  EXT-01"),
+    ("FRED — UMCSENT",  "U. of Michigan consumer confidence index  ·  EXT-01"),
+]
+sig_y = 1.78
+for name, desc in live_sigs:
+    rect(slide, right_x, sig_y, right_w, 0.36, fill=WHITE, line=0.5,
+         line_color=RGBColor(0xCC, 0xD8, 0xEE))
+    rect(slide, right_x, sig_y, 0.07, 0.36, fill=GREEN)
+    tb(slide, right_x + 0.16, sig_y + 0.06, 2.1, 0.26,
+       name, size=9, bold=True, color=DARK_TEXT)
+    tb(slide, right_x + 2.35, sig_y + 0.06, right_w - 2.45, 0.26,
+       desc, size=8, color=MID_GREY)
+    sig_y += 0.36
+
+# Planned section
+sig_y += 0.1
+rect(slide, right_x, sig_y, right_w, 0.26, fill=AMBER_LIGHT)
+tb(slide, right_x + 0.12, sig_y + 0.04, right_w - 0.24, 0.2,
+   "PLANNED — OPEN ITEMS  (EXT-04 through EXT-08)", size=7.5, bold=True, color=AMBER)
+sig_y += 0.26
+
+planned_sigs = [
+    ("Open-Meteo Weather",    "Regional precip + temperature for seasonal demand context  ·  EXT-04"),
+    ("BLS CPI — Food",        "CPI food sub-indices for consumer price-pressure signal  ·  EXT-05"),
+    ("Kalshi Markets",        "Prediction market odds for macro events (recession, rates)  ·  EXT-06"),
+    ("Amazon BSR / Helium 10","Digital shelf velocity proxy for e-commerce demand  ·  EXT-07"),
+    ("EIA / USDA Commodities","Cocoa, whey, oat prices — ingredient cost-pressure signal  ·  EXT-08"),
+]
+for name, desc in planned_sigs:
+    rect(slide, right_x, sig_y, right_w, 0.36, fill=WHITE, line=0.5,
+         line_color=RGBColor(0xCC, 0xD8, 0xEE))
+    rect(slide, right_x, sig_y, 0.07, 0.36, fill=AMBER)
+    tb(slide, right_x + 0.16, sig_y + 0.06, 2.1, 0.26,
+       name, size=9, bold=True, color=DARK_TEXT)
+    tb(slide, right_x + 2.35, sig_y + 0.06, right_w - 2.45, 0.26,
+       desc, size=8, color=MID_GREY)
+    sig_y += 0.36
+
+# Licensing rule callout
+sig_y += 0.06
+rect(slide, right_x, sig_y, right_w, 0.44, fill=RED_LIGHT,
+     line=0.5, line_color=RGBColor(0xDD, 0xAA, 0xAA))
+tb(slide, right_x + 0.12, sig_y + 0.06, right_w - 0.24, 0.34,
+   "Licensing rule: all signals must permit commercial redistribution before integration  [EXT-02]\n"
+   "Google Trends / pytrends: internal analysis only — never redistribute  [EXT-03]",
+   size=8, color=RED)
+
+footnote(slide)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 10 — AUTOMATION ROADMAP
 # ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 rect(slide, 0, 0, 13.333, 7.5, fill=OFF_WHITE)
@@ -635,7 +755,7 @@ footnote(slide)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 10 — NEXT STEPS
+# SLIDE 11 — NEXT STEPS
 # ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 rect(slide, 0, 0, 13.333, 7.5, fill=NAVY_DEEP)
