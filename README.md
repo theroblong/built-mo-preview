@@ -6,6 +6,22 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 85: PPTX kickoff deck reworked after Rob/Jason transcript review (2026-08-26)
+
+Major rework of `scripts/mo_data_ops_kickoff_pptx.py` based on transcript from Rob and Jason's August 26 presentation review call. PPTX regenerated (11 slides).
+
+**Changes:**
+- **"Druid" removed from all customer-facing slides** — replaced with "Aevah" or generic terms; rationale: Aevah may pivot to Redshift/BigQuery and customers should never touch the underlying platform directly
+- **Automation Roadmap slide removed** — internal-only; not for the customer kickoff meeting
+- **Reference Documents slide → RACI slide (Slide 3)** — two-column Aevah Delivers / BUILT Provides layout + 6-row RACI matrix (R/A/C/I); per-module RACI strip added at bottom of all 5 module slides
+- **Phase 1 / Phase 2 distinction added everywhere** — Modules 01-02 (Cannibalization + Price Elasticity) labeled PHASE 1 (now–Dec 2026); Modules 03-05 labeled PHASE 2 (planned 2027); title slide module badges updated with phase coloring
+- **Timeline slide added (Slide 10)** — 4 milestone cards: Data Commitment (wk 1-2), Data Onboarding (wk 3-6), Phase 1 Preview (wk 7-10), Iterate + Phase 2 Scope (wk 11+); duration note to validate with Brian
+- **Next Steps → Kickoff Alignment slide (Slide 11)** — two-column: what to agree in the meeting (data scope, RACI sign-off, timeline validation, stakeholder map, success criteria) + numbered what-happens-after sequence
+- **Purpose column font → 7px** — fixes text overflow in Data Required tables on all module slides
+- Transcript saved to `docs/Transcript from Rob and Jason review of BUILT pptx 082626.docx`; decisions saved to memory and wiki
+
+---
+
 ## README update 84: Artifact Navigator — mindmap removed (2026-08-25)
 
 Removed the "Artifact map — categories & counts" SVG mindmap from `mockups/mo_artifact_navigator.html`. The sticky left nav already shows color-coded category links with counts, making the mindmap purely redundant. Removing it brings the first artifact cards above the fold. Design feedback saved to memory: when a sticky nav carries the orientation context, skip the in-content summary diagram. Artifact republished at same URL.

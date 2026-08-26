@@ -27,6 +27,9 @@ PURPLE      = RGBColor(0x4B, 0x2D, 0x8A)
 PURPLE_LIGHT= RGBColor(0xEC, 0xE8, 0xF8)
 RED         = RGBColor(0x8B, 0x1A, 0x1A)
 RED_LIGHT   = RGBColor(0xFE, 0xF0, 0xF0)
+GREY_MID    = RGBColor(0x4A, 0x56, 0x6A)
+GREY_LIGHT  = RGBColor(0xD4, 0xDA, 0xE6)
+GREY_PALE   = RGBColor(0xEE, 0xF0, 0xF4)
 
 # ── Slide dimensions (widescreen 16:9) ───────────────────────────────────────
 W = Inches(13.333)
@@ -109,6 +112,44 @@ def footnote(slide):
        size=8, color=MID_GREY, align=PP_ALIGN.RIGHT)
 
 
+def phase_badge(slide, phase):
+    """Top-right phase pill on module slides."""
+    if phase == 1:
+        bg, text_color, label = BLUE, WHITE, "PHASE 1  ·  Now – Dec 2026"
+    else:
+        bg, text_color, label = GREY_MID, WHITE, "PHASE 2  ·  Planned 2027"
+    rect(slide, 9.8, 0.22, 3.3, 0.32, fill=bg)
+    tb(slide, 9.85, 0.26, 3.2, 0.24, label,
+       size=8.5, bold=True, color=text_color, align=PP_ALIGN.CENTER)
+
+
+def raci_strip(slide, aevah_text, built_text):
+    """Two-column RACI strip at the bottom of each module slide."""
+    y = 6.12
+    h = 0.88
+    left_w = 5.0
+    right_x = 5.85
+    right_w = 7.1
+
+    # Aevah side
+    rect(slide, 0.45, y, left_w, 0.26, fill=NAVY)
+    tb(slide, 0.55, y + 0.04, left_w - 0.2, 0.2,
+       "AEVAH DELIVERS", size=7.5, bold=True, color=BLUE_LIGHT)
+    rect(slide, 0.45, y + 0.26, left_w, h - 0.26,
+         fill=RGBColor(0xE8, 0xED, 0xF8), line=0.5, line_color=RGBColor(0xB0, 0xC0, 0xE0))
+    tb(slide, 0.55, y + 0.32, left_w - 0.2, h - 0.32,
+       aevah_text, size=8.5, color=DARK_TEXT)
+
+    # BUILT side
+    rect(slide, right_x, y, right_w, 0.26, fill=GREEN)
+    tb(slide, right_x + 0.1, y + 0.04, right_w - 0.2, 0.2,
+       "BUILT PROVIDES", size=7.5, bold=True, color=WHITE)
+    rect(slide, right_x, y + 0.26, right_w, h - 0.26,
+         fill=GREEN_LIGHT, line=0.5, line_color=RGBColor(0x80, 0xC8, 0xA0))
+    tb(slide, right_x + 0.1, y + 0.32, right_w - 0.2, h - 0.32,
+       built_text, size=8.5, color=DARK_TEXT)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SLIDE 1 — TITLE
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -132,19 +173,28 @@ tb(slide, 0.5, 3.35, 8.5, 1.2,
 
 rect(slide, 0.5, 4.75, 6, 0.03, fill=BLUE)
 
-modules = [
-    "Cannibalization Risk",
-    "Price Elasticity",
-    "Promotional Response",
-    "Demand Forecast",
-    "Launch Monitoring",
-]
+# Phase 1 modules (active — bright blue)
+phase1_modules = ["Cannibalization Risk", "Price Elasticity"]
+phase2_modules = ["Promotional Response", "Demand Forecast", "Launch Monitoring"]
+
+# Phase label
+tb(slide, 0.5, 4.9, 4.7, 0.22,
+   "PHASE 1  ·  NOW THROUGH DEC 2026", size=7.5, bold=True, color=BLUE)
+tb(slide, 5.25, 4.9, 6.8, 0.22,
+   "PHASE 2  ·  PLANNED 2027", size=7.5, bold=True, color=GREY_MID)
+
 col_w = 2.3
-for i, mod in enumerate(modules):
+for i, mod in enumerate(phase1_modules):
     x = 0.5 + i * col_w
     rect(slide, x, 5.1, col_w - 0.12, 0.5, fill=RGBColor(0x20, 0x40, 0x70))
     tb(slide, x + 0.1, 5.15, col_w - 0.22, 0.4,
        mod, size=10, bold=True, color=BLUE_LIGHT, align=PP_ALIGN.CENTER)
+
+for i, mod in enumerate(phase2_modules):
+    x = 0.5 + (len(phase1_modules) + i) * col_w
+    rect(slide, x, 5.1, col_w - 0.12, 0.5, fill=RGBColor(0x2E, 0x38, 0x4A))
+    tb(slide, x + 0.1, 5.15, col_w - 0.22, 0.4,
+       mod, size=10, bold=True, color=GREY_LIGHT, align=PP_ALIGN.CENTER)
 
 tb(slide, 9.0, 6.8, 4, 0.4,
    "aevah.ai  ·  Confidential",
@@ -169,13 +219,13 @@ tb(slide, 0.5, 1.2, 12.5, 0.4,
 
 steps = [
     ("Stage 1", "SPINS Export", "BUILT Data Team",
-     "214-column weekly POS extract deposited to shared MinIO storage"),
+     "214-column weekly POS extract deposited to shared storage"),
     ("Stage 2", "Data Ingest", "Aevah — automated",
      "File-watch trigger detects new export; quality gates applied; incremental load only"),
     ("Stage 3", "Feature\nEngineering", "Aevah — automated",
-     "Q-series SQL chains compress raw rows into ML-ready feature tables per module"),
+     "Aevah compresses raw rows into ML-ready feature tables per module — no manual steps"),
     ("Stage 4", "Model Training\n& Scoring", "Aevah — automated",
-     "Models retrain on drift/schedule; scores written to Druid; smoke-test gates at each stage"),
+     "Models retrain on drift/schedule; scores saved to Aevah; smoke-test gates at each stage"),
     ("Stage 5", "Mo UI", "BUILT Team",
      "Two data layers: ML projections (forecast) + live context data (actuals at render time)"),
 ]
@@ -205,96 +255,120 @@ rect(slide, 0.4, 5.1, 12.5, 1.15, fill=LIGHT_BLUE)
 tb(slide, 0.6, 5.17, 12, 0.28, "KEY PRINCIPLE", size=8, bold=True, color=BLUE)
 tb(slide, 0.6, 5.45, 12, 0.7,
    "Every Mo screen draws from two distinct sources: ML scoring tables (what the model forecasts, written in Stage 4) "
-   "and live Druid queries (actual component data queried at render time). "
-   "These have separate lineage and must never be blended. See: mo_decisions_register — COV-04.",
+   "and live Aevah queries (actual component data queried at render time). "
+   "These have separate lineage and must never be blended.",
    size=10.5, color=DARK_TEXT)
 
 footnote(slide)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 3 — REFERENCE DOCUMENTS
+# SLIDE 3 — ROLES & RESPONSIBILITIES (RACI)
 # ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 rect(slide, 0, 0, 13.333, 7.5, fill=OFF_WHITE)
 rect(slide, 0, 0, 13.333, 1.1, fill=NAVY)
 rect(slide, 0, 0, 0.08, 7.5, fill=BLUE)
 
-tb(slide, 0.5, 0.22, 10, 0.6,
-   "Reference Documents", size=24, bold=True, color=WHITE)
-tb(slide, 0.5, 0.72, 12, 0.32,
-   "Four living artifacts — updated as the project evolves. Open any time for the current state of the pipeline, decisions, and automation design.",
+tb(slide, 0.5, 0.18, 10, 0.6,
+   "Roles & Responsibilities — Phase 1",
+   size=24, bold=True, color=WHITE)
+tb(slide, 0.5, 0.72, 12.5, 0.32,
+   "What Aevah commits to deliver, what BUILT commits to provide, and the shared milestones where both teams align.",
    size=11, color=BLUE_LIGHT)
 
-docs = [
-    (NAVY,   WHITE,      BLUE_LIGHT,
-     "Customer-Facing Overview",
-     "mo_data_ops_customer.html",
-     "Module-by-module walkthrough for the BUILT team — what data each simulation needs, what operations are performed, and what Mo displays. No implementation detail.",
-     [("Audience", "Brian, Connor"),
-      ("Format",   "HTML artifact"),
-      ("Covers",   "All 5 modules")]),
-    (GREEN,  WHITE,      GREEN_LIGHT,
-     "Technical Pipeline Reference",
-     "mo_data_ops_kickoff.html",
-     "Full Q-series and P-series pipeline stages with input/output tables. Source of truth for data lineage, script IDs, and Druid table names.",
-     [("Audience", "Rob, Jason"),
-      ("Format",   "HTML artifact"),
-      ("Covers",   "Q0–Q22, P1–P12")]),
-    (BLUE,   WHITE,      LIGHT_BLUE,
-     "Pipeline Automation Design",
-     "mo_automation_design.html",
-     "5-stage automation architecture: trigger layer, per-stage smoke-test gates, rollback guarantee, Druid optimization options, and implementation roadmap (P1–P5).",
-     [("Audience", "Rob, Jason"),
-      ("Format",   "HTML artifact"),
-      ("Covers",   "5-stage, gates, Druid")]),
-    (PURPLE, WHITE,      PURPLE_LIGHT,
-     "Decisions & Caveats Register",
-     "mo_decisions_register.html",
-     "56-entry living register: null handling, normalization rules, MULO exclusion, known anomalies, model guardrails, key formulas (LaTeX-typeset), external data API rules, and open items. Updated every session.",
-     [("Audience", "Rob, Jason"),
-      ("Format",   "HTML artifact — living"),
-      ("Covers",   "NUL/NRM/GEO/ANO/GRD/COV/FML/OPN/EXT")]),
+# ── Left column: Aevah Delivers ──
+left_x, left_w = 0.42, 6.0
+rect(slide, left_x, 1.22, left_w, 0.32, fill=NAVY)
+tb(slide, left_x + 0.12, 1.26, left_w - 0.24, 0.24,
+   "AEVAH DELIVERS", size=9, bold=True, color=BLUE_LIGHT)
+
+aevah_items = [
+    "Platform setup, hosting, and data ingestion pipeline",
+    "Data quality gates at every stage — no bad data reaches the UI",
+    "Feature engineering: raw SPINS rows compressed into ML-ready tables per module",
+    "Model training and scoring: cannibalization risk + price elasticity (Phase 1)",
+    "Mo UI deployment: all screens, filters, and visualizations",
+    "Model monitoring: drift detection and automatic retraining on schedule",
+    "Customer-facing overview and reference documentation, updated each session",
+]
+item_y = 1.54
+for item in aevah_items:
+    rect(slide, left_x + 0.12, item_y + 0.12, 0.08, 0.08, fill=BLUE)
+    tb(slide, left_x + 0.3, item_y + 0.04, left_w - 0.42, 0.32,
+       item, size=10, color=DARK_TEXT)
+    item_y += 0.38
+
+# ── Right column: BUILT Provides ──
+right_x, right_w = 6.85, 6.1
+rect(slide, right_x, 1.22, right_w, 0.32, fill=GREEN)
+tb(slide, right_x + 0.12, 1.26, right_w - 0.24, 0.24,
+   "BUILT PROVIDES", size=9, bold=True, color=WHITE)
+
+built_items = [
+    "Weekly SPINS export (214 columns) deposited to shared storage on agreed schedule",
+    "ERP / data warehouse access — for Phase 2 data sources and Connor's actuals",
+    "Stakeholder availability: kickoff, data QA review, demo sessions, and sign-off",
+    "Projection validation: Connor + Brian confirm whether findings match their market knowledge",
+    "UI feedback: what information helps the job get done — what to add, change, or remove",
+    "Phase 1 milestone sign-off before proceeding to Phase 2 scope",
+]
+item_y = 1.54
+for item in built_items:
+    rect(slide, right_x + 0.12, item_y + 0.12, 0.08, 0.08, fill=GREEN)
+    tb(slide, right_x + 0.3, item_y + 0.04, right_w - 0.42, 0.32,
+       item, size=10, color=DARK_TEXT)
+    item_y += 0.38
+
+# ── RACI Matrix ──
+matrix_y = 4.38
+col_widths = [4.2, 1.8, 1.5, 1.6, 1.8, 2.0]  # Activity, Aevah, Brian, Connor, Data Team, Milestone
+col_x = [0.42]
+for w in col_widths[:-1]:
+    col_x.append(col_x[-1] + w)
+
+headers = ["Activity", "Aevah", "Brian", "Connor", "BUILT Data", "Milestone"]
+rect(slide, 0.42, matrix_y, 12.53, 0.3, fill=NAVY)
+for i, (h, x) in enumerate(zip(headers, col_x)):
+    align = PP_ALIGN.CENTER if i > 0 else PP_ALIGN.LEFT
+    pad = 0.1 if i == 0 else 0.0
+    tb(slide, x + pad, matrix_y + 0.05, col_widths[i] - 0.1, 0.22,
+       h, size=8, bold=True, color=WHITE, align=align)
+matrix_y += 0.3
+
+raci_rows = [
+    ("SPINS export & weekly deposit to shared storage",
+     "I", "A", "—", "R", "Week 1–2"),
+    ("Data ingest, quality gates, feature engineering",
+     "R", "I", "—", "—", "Week 3–4"),
+    ("Model training, scoring & Mo UI deployment",
+     "R", "I", "—", "—", "Week 4–6"),
+    ("Projection review & business validation",
+     "C", "A", "R", "—", "Week 6–8"),
+    ("UI feedback sessions",
+     "C", "A", "R", "—", "Week 7–10"),
+    ("Phase 1 milestone sign-off",
+     "A", "A", "C", "—", "Week 10–12"),
 ]
 
-card_w = 3.0
-card_h = 5.4
-card_y = 1.3
+for row_i, (activity, *cells) in enumerate(raci_rows):
+    row_bg = RGBColor(0xF8, 0xFA, 0xFD) if row_i % 2 == 0 else WHITE
+    row_h = 0.32
+    rect(slide, 0.42, matrix_y, 12.53, row_h, fill=row_bg,
+         line=0.5, line_color=RGBColor(0xCC, 0xD8, 0xEE))
+    tb(slide, col_x[0] + 0.1, matrix_y + 0.06, col_widths[0] - 0.2, row_h - 0.08,
+       activity, size=8.5, color=DARK_TEXT)
+    for i, (cell, cx) in enumerate(zip(cells, col_x[1:])):
+        cell_color = BLUE if cell == "R" else (GREEN if cell == "A" else DARK_TEXT)
+        tb(slide, cx, matrix_y + 0.06, col_widths[i + 1], row_h - 0.08,
+           cell, size=9, bold=(cell in ("R", "A")), color=cell_color,
+           align=PP_ALIGN.CENTER)
+    matrix_y += row_h
 
-for i, (hdr_color, hdr_text, body_text, title, filename, desc, meta) in enumerate(docs):
-    x = 0.42 + i * (card_w + 0.16)
-
-    # Card background
-    rect(slide, x, card_y, card_w, card_h, fill=WHITE,
-         line=0.75, line_color=RGBColor(0xC0, 0xCC, 0xE4))
-
-    # Header band
-    rect(slide, x, card_y, card_w, 0.55, fill=hdr_color)
-    tb(slide, x + 0.12, card_y + 0.1, card_w - 0.24, 0.38,
-       title, size=11.5, bold=True, color=WHITE)
-
-    # Filename chip
-    rect(slide, x + 0.12, card_y + 0.65, card_w - 0.24, 0.28,
-         fill=RGBColor(0xEE, 0xF2, 0xFA))
-    tb(slide, x + 0.18, card_y + 0.69, card_w - 0.36, 0.22,
-       filename, size=8, bold=True, color=NAVY)
-
-    # Description
-    tb(slide, x + 0.12, card_y + 1.06, card_w - 0.24, 1.6,
-       desc, size=9.5, color=RGBColor(0x3A, 0x4B, 0x6B))
-
-    # Meta rows
-    my = card_y + 2.75
-    for label, val in meta:
-        tb(slide, x + 0.12, my, 0.9, 0.28,
-           label + ":", size=8, bold=True, color=MID_GREY)
-        tb(slide, x + 1.0, my, card_w - 1.1, 0.28,
-           val, size=8, color=DARK_TEXT)
-        my += 0.32
-
-    # "All in mockups/" tag at bottom of card
-    tb(slide, x + 0.12, card_y + card_h - 0.32, card_w - 0.24, 0.26,
-       "mockups/  ·  FirstAgent repo", size=7.5, color=MID_GREY, italic=True)
+# Legend
+tb(slide, 0.42, matrix_y + 0.08, 8, 0.24,
+   "R = Responsible (does the work)   A = Accountable (owns the outcome)   C = Consulted   — = Not in scope for this activity",
+   size=7.5, color=MID_GREY, italic=True)
 
 footnote(slide)
 
@@ -302,16 +376,24 @@ footnote(slide)
 # ═══════════════════════════════════════════════════════════════════════════════
 # SLIDE TEMPLATE FUNCTION — simulation modules
 # ═══════════════════════════════════════════════════════════════════════════════
-def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_outputs):
+def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_outputs,
+                  phase=1, aevah_raci="", built_raci=""):
     slide = prs.slides.add_slide(BLANK)
     rect(slide, 0, 0, 13.333, 7.5, fill=OFF_WHITE)
     rect(slide, 0, 0, 13.333, 1.4, fill=NAVY)
     rect(slide, 0, 0, 0.08, 7.5, fill=BLUE)
 
+    # Phase 2 muted overlay banner
+    if phase == 2:
+        rect(slide, 0, 0, 13.333, 1.4, fill=GREY_MID)
+
     tb(slide, 0.5, 0.1, 2, 0.3, num_label, size=9, bold=True, color=BLUE_LIGHT)
     tb(slide, 0.5, 0.38, 7, 0.6, name, size=22, bold=True, color=WHITE)
     tb(slide, 7.8, 0.38, 5.3, 0.8, f'"{answer}"',
        size=11, color=RGBColor(0xC0, 0xD5, 0xFF), italic=True)
+
+    # Phase badge (top right)
+    phase_badge(slide, phase)
 
     left_x = 0.45
     left_w = 5.0
@@ -338,7 +420,7 @@ def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_
         tb(slide, left_x + 2.58, y + 0.06, 1.0, row_h - 0.06,
            source, size=8, color=BLUE, bold=True)
         tb(slide, left_x + 3.68, y + 0.06, 1.22, row_h - 0.06,
-           purpose, size=7.5, color=MID_GREY)
+           purpose, size=7, color=MID_GREY)
         y += row_h
 
     y += 0.12
@@ -383,6 +465,10 @@ def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_
            f"›  {lv_out}", size=9.5, color=AMBER)
         y_r += 0.35
 
+    # Per-module RACI strip
+    if aevah_raci or built_raci:
+        raci_strip(slide, aevah_raci, built_raci)
+
     footnote(slide)
 
 
@@ -420,10 +506,13 @@ add_sim_slide(
     ],
     live_outputs=[
         "Actual weekly demand trend for focal and donor SKUs",
-        "Distribution (TDP) trend — stores stocking each SKU over time  [FML-05]",
+        "Distribution (TDP) trend — stores stocking each SKU over time",
         "Geography heatmap — which markets show the strongest demand transfer",
         "Launch ramp chart — weeks 1–16 of distribution build vs. category norms",
     ],
+    phase=1,
+    aevah_raci="Comparison pool build · Pairing model · Risk scoring · Publish to Mo UI · Monitor model drift",
+    built_raci="SPINS export deposit · Review risk labels — do the identified donor pairs make business sense? · Validate threshold cutoffs with Brian",
 )
 
 add_sim_slide(
@@ -434,32 +523,35 @@ add_sim_slide(
         ("Average retail price", "SPINS", "Measure price level across accounts and weeks"),
         ("Weekly units sold", "SPINS", "Measure demand response to price changes"),
         ("Base price (non-promo ARP)", "SPINS", "Separate everyday price from promo price"),
-        ("Promo discount depth (%)", "SPINS", "Quantify the magnitude of promotional price drops"),
+        ("Promo discount depth (%)", "SPINS", "Quantify magnitude of promotional price drops"),
         ("Incremental units (promo-driven)", "SPINS", "Isolate promoted demand from baseline"),
-        ("Distribution (TDP)", "SPINS", "Control for distribution changes that mimic price effects"),
+        ("Distribution (TDP)", "SPINS", "Control for distribution changes vs. price effects"),
         ("Competitor price (same flavor)", "SPINS", "Separate own-price from competitive pressure"),
     ],
     operations=[
-        "Normalize price to $/bar so singles and 12-packs are comparable  [FML-02]",
-        "Build 13-week log-log regression windows per SKU × account  [FML-01]",
+        "Normalize price to $/bar so singles and 12-packs are comparable",
+        "Build 13-week log-log regression windows per SKU × account",
         "Separate promotional price changes from everyday price changes",
         "Compare BUILT $/bar vs. same-flavor competitor in the same account and week",
         "Compare $/bar across BUILT own pack sizes of the same flavor (pack-ladder check)",
-        "Reject windows where price moved >40% in one week — data artifact guardrail  [GRD-01]",
+        "Reject windows where price moved >40% in one week — data artifact guardrail",
     ],
     ml_outputs=[
-        "Own-price elasticity ε with confidence range (q10 / q50 / q90)  [FML-01]",
+        "Own-price elasticity ε with confidence range (q10 / q50 / q90)",
         "Cross-price elasticity — demand response to competitor price changes",
-        "Promo elasticity curve — lift at each discount depth  [FML-04]",
+        "Promo elasticity curve — lift at each discount depth",
         "What-if demand curves — projected units at alternative price points",
         "Pricing event queue — active competitive gaps or pack-ladder compression",
     ],
     live_outputs=[
         "Current $/bar and 52-week price trend by retailer account",
-        "Pack price ladder — single / 4pk / 12pk side-by-side in the same account",
+        "Pack price ladder — single / 4-pack / 12-pack side-by-side in the same account",
         "Competitive price gap chart — BUILT vs. Tier 1 competitor in the same flavor",
-        "Category benchmark — BUILT $/bar vs. MULO FOOD category average  [GEO-01]",
+        "Category benchmark — BUILT $/bar vs. MULO FOOD category average",
     ],
+    phase=1,
+    aevah_raci="$/bar normalization · Elasticity regression models · Score publishing · Pack-ladder + competitor comparisons · Publish to Mo UI",
+    built_raci="SPINS export deposit · Validate elasticity values — do they match BUILT's commercial experience? · Confirm price-point recommendations with Brian",
 )
 
 add_sim_slide(
@@ -468,15 +560,15 @@ add_sim_slide(
     answer="How much incremental demand does a promotion generate — and what depth maximizes return?",
     inputs=[
         ("Incremental units", "SPINS", "SPINS-attributed demand above non-promo baseline"),
-        ("Base units (non-promo)", "SPINS", "Denominator for promo lift ratio  [FML-03]"),
+        ("Base units (non-promo)", "SPINS", "Denominator for promo lift ratio"),
         ("% units sold on promotion", "SPINS", "Measure how promo-dependent a SKU is"),
         ("Promo discount depth (%)", "SPINS", "Quantify the price concession driving lift"),
         ("Channel (grocery / mass / c-store)", "SPINS", "Response curves differ by channel"),
-        ("Pack count", "SPINS", "12pk cliff behavior differs from single bar"),
-        ("Distribution on promo (TDP, Any Promo)", "SPINS", "Separate display from pure price promo"),
+        ("Pack count", "SPINS", "12-pack cliff behavior differs from single bar"),
+        ("Distribution on promo (TDP, Any Promo)", "SPINS", "Separate display from price promo"),
     ],
     operations=[
-        "Calculate promo lift ratio: incremental units ÷ base units, per SKU × account × event  [FML-03]",
+        "Calculate promo lift ratio: incremental units ÷ base units, per SKU × account × event",
         "Group events into discount depth buckets (0–10%, 10–20%, 20–30%, 30%+)",
         "Separate response curves by channel — grocery and c-store show distinct lift profiles",
         "Separate response curves by pack size — 12-packs show a 30%+ discount cliff",
@@ -493,6 +585,9 @@ add_sim_slide(
         "% weeks on promo trend — is this SKU becoming promo-dependent?",
         "Channel comparison — lift curve across grocery / mass / c-store for this SKU",
     ],
+    phase=2,
+    aevah_raci="Lift curve modeling · Depth optimization scoring · Channel × pack separation · Publish to Mo UI",
+    built_raci="SPINS export deposit (including promo flags) · Review lift projections · Confirm discount depth guidance with trade marketing team",
 )
 
 add_sim_slide(
@@ -508,9 +603,9 @@ add_sim_slide(
         ("Week end date", "SPINS", "Derive seasonality index and calendar features"),
     ],
     operations=[
-        "Normalize to non-zero TDP weeks — eliminate false troughs from shelf-presence gaps  [FML-05]",
+        "Normalize to non-zero TDP weeks — eliminate false troughs from shelf-presence gaps",
         "Compute rolling averages (4-week, 13-week) to smooth noise while preserving trend",
-        "Build 12-month seasonality index from category raw monthly averages (not STL)  [FML-08 / NRM-04]",
+        "Build 12-month seasonality index from category raw monthly averages",
         "Flag promo weeks so model learns baseline vs. promo-lifted demand separately",
         "Train separate forecast per SKU × retailer — Kroger velocity ≠ Target velocity",
         "Fall back to exponential smoothing (ETS) for SKUs with <8 weeks of history",
@@ -519,14 +614,17 @@ add_sim_slide(
         "13-week demand forecast per SKU × retailer account",
         "Confidence bands (low / base / high scenario)",
         "Promo-uplift scenario — demand if a promotion is planned in the forecast window",
-        "Forecast accuracy benchmark: 4% wMAPE vs. 7–10% industry baseline  [FML-07]",
+        "Forecast accuracy benchmark: 4% wMAPE vs. 7–10% industry baseline",
     ],
     live_outputs=[
         "52-week actual demand trend by SKU and retailer account",
         "Distribution (stores stocking) trend over the same period",
-        "Category average velocity — how this SKU compares to 13-week category norm  [FML-06]",
-        "Seasonal index overlay — expected lift or drag on the forecast period  [ANO-04]",
+        "Category average velocity — how this SKU compares to 13-week category norm",
+        "Seasonal index overlay — expected lift or drag on the forecast period",
     ],
+    phase=2,
+    aevah_raci="Seasonality index · Forecast model training · ETS fallback · Confidence bands · Publish 13-week projections to Mo UI",
+    built_raci="SPINS export deposit · Connor validates 13-week forecasts against FP&A actuals · Share actuals data for backtesting and accuracy measurement",
 )
 
 add_sim_slide(
@@ -535,17 +633,17 @@ add_sim_slide(
     answer="Is this new product ramping as expected — in enough stores, with the right velocity?",
     inputs=[
         ("% of stores selling", "SPINS", "Measure distribution build week over week"),
-        ("Total distribution points (TDP)", "SPINS", "Primary ramp metric — store count × shelf presence"),
-        ("Avg weekly units per store selling", "SPINS", "Velocity independent of distribution level  [FML-06]"),
+        ("Total distribution points (TDP)", "SPINS", "Primary ramp metric — store count × presence"),
+        ("Avg weekly units per store selling", "SPINS", "Velocity independent of distribution level"),
         ("First week selling", "SPINS", "Anchor the ramp monitoring window"),
         ("Number of weeks selling", "SPINS", "Track position in the launch lifecycle"),
     ],
     operations=[
         "Track weeks 1–16 of distribution build and velocity ramp for each new BUILT UPC",
         "Compare each SKU's ramp against category norms for the same pack type",
-        "Classify new UPCs: new pack size, new flavor, or duplicate/relaunch  [QS1 gate / GRD-04]",
+        "Classify new UPCs: new pack size, new flavor, or duplicate/relaunch",
         "Flag underperformance at 4, 8, and 13 weeks post-launch vs. expected ramp curve",
-        "Suppress cannibalization scoring during ramp — avoids penalizing distribution-driven transfer  [GRD-02]",
+        "Suppress cannibalization scoring during ramp — avoids penalizing distribution-driven transfer",
     ],
     ml_outputs=[
         "Launch status at current week: On Track · Watch · Underperforming",
@@ -555,10 +653,13 @@ add_sim_slide(
     ],
     live_outputs=[
         "Actual TDP ramp week by week since first week selling",
-        "Actual velocity per store — is the product pulling through where it is stocked?",
+        "Actual velocity per store — is the product pulling through where stocked?",
         "Comparable launch benchmarks — similar BUILT or category launches in same retailer",
-        "Data-maturity status — weeks until QS1 gate clears for active scoring  [GRD-04]",
+        "Data-maturity status — weeks until data gate clears for active scoring",
     ],
+    phase=2,
+    aevah_raci="Ramp monitoring model · Category benchmark comparisons · UPC classification gate · Launch status scoring · Publish to Mo UI",
+    built_raci="SPINS export deposit · Confirm new UPC classifications (new SKU vs. relaunch) · Review launch status assessments with brand team",
 )
 
 
@@ -573,7 +674,7 @@ rect(slide, 0, 0, 0.08, 7.5, fill=BLUE)
 tb(slide, 0.5, 0.18, 10, 0.6,
    "Mo Trends & External Signal Integration", size=22, bold=True, color=WHITE)
 tb(slide, 0.5, 0.72, 12, 0.32,
-   "Sections 06 + 07 of the customer overview — competitive dashboard tiles and external macro/market data feeds (FRED + roadmap).",
+   "Competitive dashboard tiles showing velocity, price, distribution, and macro signals — all queried live, available from day one.",
    size=10.5, color=BLUE_LIGHT)
 
 # ── Left: Mo Trends tiles ──
@@ -582,7 +683,7 @@ tile_w = 5.9
 
 rect(slide, left_x, 1.2, tile_w, 0.32, fill=NAVY)
 tb(slide, left_x + 0.12, 1.24, tile_w - 0.24, 0.24,
-   "06  ·  MO TRENDS — all data queried live from Druid, no ML scoring table",
+   "06  ·  MO TRENDS — all data queried live, no ML scoring table",
    size=8, bold=True, color=BLUE_LIGHT)
 
 tiles = [
@@ -590,7 +691,7 @@ tiles = [
     ("2 — Demand Forecast",  "13-week forward projection with confidence bands  [ML scoring table]"),
     ("3 — Pack Crossover",   "Single vs. multipack demand split across the BUILT product line"),
     ("4 — Price & Promo",    "ARP trend with promo event overlays and discount depth markers"),
-    ("5 — Distribution Arc", "TDP build trajectory and ramp vs. category launch norms  [FML-05]"),
+    ("5 — Distribution Arc", "TDP build trajectory and ramp vs. category launch norms"),
     ("6 — Flavor Demand",    "Flavor-level velocity comparison across full BUILT flavor range"),
     ("7 — Macro Context",    "FRED GASDESW + UMCSENT — gas prices + U of Michigan consumer confidence"),
     ("8 — Velocity + Macro", "Stacked chart: brand velocity trend alongside macro signal overlay"),
@@ -614,7 +715,7 @@ tb(slide, left_x + 0.12, tile_y + 0.14, tile_w - 0.24, 0.26,
    "Filter bar:  Product · Brand · Channel (FOOD / MASS / C-STORE) · Account · Units / $ toggle",
    size=8.5, color=DARK_TEXT)
 tb(slide, left_x + 0.12, tile_y + 0.31, tile_w - 0.24, 0.16,
-   "Demo defaults: BUILT Puff  +  KROGER  +  WALMART    |    MULO excluded from all Trends views  [GEO-01]",
+   "Demo defaults: BUILT Puff  +  KROGER  +  WALMART    |    MULO excluded from all Trends views",
    size=7.5, color=MID_GREY, italic=True)
 
 # ── Right: External Signal Integration ──
@@ -623,7 +724,7 @@ right_w  = 6.25
 
 rect(slide, right_x, 1.2, right_w, 0.32, fill=GREEN)
 tb(slide, right_x + 0.12, 1.24, right_w - 0.24, 0.24,
-   "07  ·  EXTERNAL SIGNALS — commercial redistribution required for all  [EXT-02]",
+   "07  ·  EXTERNAL SIGNALS — commercial redistribution required for all",
    size=8, bold=True, color=WHITE)
 
 # Live section
@@ -632,8 +733,8 @@ tb(slide, right_x + 0.12, 1.55, right_w - 0.24, 0.2,
    "LIVE IN PRODUCTION", size=7.5, bold=True, color=GREEN)
 
 live_sigs = [
-    ("FRED — GASDESW",  "Weekly U.S. gas price index (St. Louis Fed)  ·  EXT-01"),
-    ("FRED — UMCSENT",  "U. of Michigan consumer confidence index  ·  EXT-01"),
+    ("FRED — GASDESW",  "Weekly U.S. gas price index (St. Louis Fed)"),
+    ("FRED — UMCSENT",  "U. of Michigan consumer confidence index"),
 ]
 sig_y = 1.78
 for name, desc in live_sigs:
@@ -650,15 +751,15 @@ for name, desc in live_sigs:
 sig_y += 0.1
 rect(slide, right_x, sig_y, right_w, 0.26, fill=AMBER_LIGHT)
 tb(slide, right_x + 0.12, sig_y + 0.04, right_w - 0.24, 0.2,
-   "PLANNED — OPEN ITEMS  (EXT-04 through EXT-08)", size=7.5, bold=True, color=AMBER)
+   "PLANNED — OPEN ITEMS", size=7.5, bold=True, color=AMBER)
 sig_y += 0.26
 
 planned_sigs = [
-    ("Open-Meteo Weather",    "Regional precip + temperature for seasonal demand context  ·  EXT-04"),
-    ("BLS CPI — Food",        "CPI food sub-indices for consumer price-pressure signal  ·  EXT-05"),
-    ("Kalshi Markets",        "Prediction market odds for macro events (recession, rates)  ·  EXT-06"),
-    ("Amazon BSR / Helium 10","Digital shelf velocity proxy for e-commerce demand  ·  EXT-07"),
-    ("EIA / USDA Commodities","Cocoa, whey, oat prices — ingredient cost-pressure signal  ·  EXT-08"),
+    ("Open-Meteo Weather",    "Regional precip + temperature for seasonal demand context"),
+    ("BLS CPI — Food",        "CPI food sub-indices for consumer price-pressure signal"),
+    ("Kalshi Markets",        "Prediction market odds for macro events (recession, rates)"),
+    ("Amazon BSR / Helium 10","Digital shelf velocity proxy for e-commerce demand"),
+    ("EIA / USDA Commodities","Cocoa, whey, oat prices — ingredient cost-pressure signal"),
 ]
 for name, desc in planned_sigs:
     rect(slide, right_x, sig_y, right_w, 0.36, fill=WHITE, line=0.5,
@@ -670,121 +771,170 @@ for name, desc in planned_sigs:
        desc, size=8, color=MID_GREY)
     sig_y += 0.36
 
-# Licensing rule callout
-sig_y += 0.06
-rect(slide, right_x, sig_y, right_w, 0.44, fill=RED_LIGHT,
-     line=0.5, line_color=RGBColor(0xDD, 0xAA, 0xAA))
-tb(slide, right_x + 0.12, sig_y + 0.06, right_w - 0.24, 0.34,
-   "Licensing rule: all signals must permit commercial redistribution before integration  [EXT-02]\n"
-   "Google Trends / pytrends: internal analysis only — never redistribute  [EXT-03]",
-   size=8, color=RED)
-
 footnote(slide)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 10 — AUTOMATION ROADMAP
+# SLIDE 10 — PHASE 1 PROJECT TIMELINE
 # ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 rect(slide, 0, 0, 13.333, 7.5, fill=OFF_WHITE)
 rect(slide, 0, 0, 13.333, 1.1, fill=NAVY)
 rect(slide, 0, 0, 0.08, 7.5, fill=BLUE)
 
-tb(slide, 0.5, 0.22, 10, 0.6,
-   "Automation Roadmap", size=24, bold=True, color=WHITE)
-tb(slide, 0.5, 0.72, 12, 0.32,
-   "Five priorities to remove manual steps from the pipeline — ordered by impact-to-risk ratio. No changes implemented yet; design only.",
-   size=11, color=BLUE_LIGHT)
+tb(slide, 0.5, 0.18, 10, 0.6,
+   "Phase 1 Project Timeline", size=24, bold=True, color=WHITE)
+tb(slide, 0.5, 0.72, 12.5, 0.32,
+   "Duration estimates are a starting point — to be validated with Brian before committing to dates. "
+   "Durations reflect data readiness, not Aevah engineering capacity.",
+   size=10.5, color=BLUE_LIGHT)
 
-items = [
-    (GREEN,  "badge-green",  "P1  ·  Low risk · High impact",
-     "Incremental Ingest Watermark",
-     "Load only new weeks via OVERWRITE WHERE — never re-process full history. "
-     "Requires a watermark metadata store and verification that all Q-series queries are window-safe."),
-    (BLUE,   "badge-blue",   "P2  ·  Foundation for P3",
-     "Shell Orchestration — run_data_ops.sh",
-     "Chain Q-series and P-series scripts with per-stage gate assertions and halt-on-failure logic. "
-     "Same pattern as run_fpa_report.sh. Manual execution first; trigger integration added in P3."),
-    (BLUE,   "badge-blue",   "P3  ·  Requires P2",
-     "File-Watch Trigger — MinIO bucket event",
-     "Wire MinIO bucket notification to fire run_data_ops.sh when a new SPINS export lands. "
-     "Aevah owns the entire run from deposit to scored output — no manual step required."),
-    (PURPLE, "badge-purple", "P4  ·  Testing",
-     "Smoke Test Suite — pinned test cases",
-     "Define Stage 4 pinned test cases: known UPC × account pairs with expected direction and magnitude bands. "
-     "Use FOOD-channel accounts only — never MULO. Assert direction, not exact values.  [GEO-04 / ANO-01]"),
-    (AMBER,  "badge-amber",  "P5  ·  Benchmark required first",
-     "Druid Segment Tuning",
-     "Baseline query-time benchmark on built_filtered_weekly and ml_training_features. "
-     "Evaluate segment granularity and partition changes on a copy before touching live specs. "
-     "MULO exclusion logic and OVERWRITE WHERE pattern must be preserved.  [GEO-01]"),
+# Horizontal timeline arrow
+arrow_y = 2.05
+rect(slide, 0.5, arrow_y, 12.35, 0.06, fill=BLUE)
+tb(slide, 12.7, arrow_y - 0.12, 0.4, 0.3, "▶", size=14, color=BLUE)
+
+# Four milestone nodes
+milestones = [
+    ("Weeks 1–2",  "Data Commitment\n& Handoff",
+     "BUILT confirms SPINS export format and schedule\n"
+     "Aevah confirms storage, file-watch trigger, and QA gate configuration\n"
+     "Both teams agree on data scope and contact points",
+     BLUE, LIGHT_BLUE),
+    ("Weeks 3–6",  "Data Onboarding\n& Validation",
+     "Aevah: ingest → QA → feature engineering → model training → scoring\n"
+     "Aevah delivers QA report for BUILT review\n"
+     "BUILT validates: does the data look right?",
+     GREEN, GREEN_LIGHT),
+    ("Weeks 7–10", "Phase 1 Preview\n& Feedback",
+     "Cannibalization Risk + Price Elasticity live in Mo UI\n"
+     "Live demo with Brian + Connor — FOOD-channel accounts\n"
+     "Connor + team provide UI feedback and projection validation",
+     AMBER, AMBER_LIGHT),
+    ("Weeks 11+",  "Iterate &\nPhase 2 Scope",
+     "Address feedback; tune models based on BUILT market knowledge\n"
+     "Phase 1 milestone sign-off by both teams\n"
+     "Begin scoping Modules 3–5 and automation roadmap for Phase 2",
+     PURPLE, PURPLE_LIGHT),
 ]
 
-item_w = 2.3
-item_h = 4.7
-for i, (color, badge_cls, tag, title, desc) in enumerate(items):
-    x = 0.38 + i * (item_w + 0.15)
-    y = 1.28
+node_x_positions = [0.5, 3.75, 7.0, 10.25]
+node_w = 2.85
+node_h = 4.5
+node_top = 1.35
 
-    rect(slide, x, y, item_w, item_h, fill=WHITE,
+for (week_label, title, body, header_color, body_color), nx in zip(milestones, node_x_positions):
+    # Circle on timeline
+    cx = nx + node_w / 2
+    circle = slide.shapes.add_shape(9, Inches(cx - 0.16), Inches(arrow_y - 0.14),
+                                     Inches(0.32), Inches(0.32))
+    circle.fill.solid()
+    circle.fill.fore_color.rgb = header_color
+    circle.line.fill.background()
+
+    # Card
+    rect(slide, nx, node_top, node_w, node_h, fill=WHITE,
          line=0.75, line_color=RGBColor(0xC0, 0xCC, 0xE4))
-    rect(slide, x, y, item_w, 0.5, fill=color)
-    tb(slide, x + 0.1, y + 0.1, item_w - 0.2, 0.32,
-       tag, size=8, bold=True, color=WHITE)
+    rect(slide, nx, node_top, node_w, 0.5, fill=header_color)
+    tb(slide, nx + 0.12, node_top + 0.06, node_w - 0.24, 0.18,
+       week_label, size=7.5, bold=True, color=WHITE)
+    tb(slide, nx + 0.12, node_top + 0.24, node_w - 0.24, 0.3,
+       title, size=11, bold=True, color=WHITE)
 
-    rect(slide, x + 0.12, y + 0.6, item_w - 0.24, 0.06, fill=color)
+    # Body
+    rect(slide, nx, node_top + 0.5, node_w, node_h - 0.5, fill=body_color,
+         line=0.5, line_color=RGBColor(0xC0, 0xCC, 0xE4))
+    tb(slide, nx + 0.14, node_top + 0.6, node_w - 0.28, node_h - 0.7,
+       body, size=9, color=DARK_TEXT)
 
-    tb(slide, x + 0.12, y + 0.74, item_w - 0.24, 0.7,
-       title, size=11, bold=True, color=DARK_TEXT)
-
-    tb(slide, x + 0.12, y + 1.48, item_w - 0.24, item_h - 1.58,
-       desc, size=8.5, color=MID_GREY)
-
-# Caveat box at bottom
-rect(slide, 0.38, 6.22, 12.55, 0.78, fill=LIGHT_BLUE)
-tb(slide, 0.55, 6.28, 12.2, 0.28,
-   "TESTING PRINCIPLE", size=8, bold=True, color=BLUE)
-tb(slide, 0.55, 6.53, 12.2, 0.42,
-   "No spec or script changes go live without a before/after benchmark. "
-   "New methods run in parallel against the existing method on a copy first. "
-   "Any coverage drop >10% from prior run halts and alerts — degenerate output detection runs on every automated run, not just at release.  "
-   "See: mo_automation_design.html and mo_decisions_register.html for full gate logic.",
-   size=9.5, color=DARK_TEXT)
+# Bottom note
+rect(slide, 0.5, 6.18, 12.35, 0.52, fill=LIGHT_BLUE)
+tb(slide, 0.65, 6.24, 12.1, 0.42,
+   "Phase 2 (Modules 3–5: Promotional Response, Demand Forecast, Launch Monitoring) begins after Phase 1 sign-off milestone. "
+   "Automation roadmap (incremental ingest, orchestration shell, file-watch trigger) runs in parallel as an Aevah-internal engineering sprint — no BUILT action required.",
+   size=9, color=DARK_TEXT)
 
 footnote(slide)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 11 — NEXT STEPS
+# SLIDE 11 — KICKOFF ALIGNMENT & NEXT STEPS
 # ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 rect(slide, 0, 0, 13.333, 7.5, fill=NAVY_DEEP)
 rect(slide, 0, 0, 0.08, 7.5, fill=BLUE)
 rect(slide, 0, 0, 13.333, 1.4, fill=RGBColor(0x14, 0x28, 0x50))
 
-tb(slide, 0.5, 0.3, 10, 0.7,
-   "Kickoff Agenda & Next Steps", size=26, bold=True, color=WHITE)
+tb(slide, 0.5, 0.28, 10, 0.7,
+   "Kickoff Alignment & Next Steps", size=26, bold=True, color=WHITE)
+tb(slide, 0.5, 0.9, 12, 0.38,
+   "The goal of this meeting: leave with a shared understanding of who owns what, "
+   "what each team is committing to, and a validated path to Phase 1 delivery.",
+   size=11, color=BLUE_LIGHT, italic=True)
 
-steps_next = [
-    ("Data Handoff",           "BUILT confirms 214-column SPINS extract and deposits to MinIO — Aevah file-watch triggers ingest"),
-    ("Ingest & QA",            "Aevah ingests to spins_full (incremental watermark); validates field coverage and QS1 new-UPC gate"),
-    ("Q-Series Feature Eng.",  "Aevah runs Q0–Q22 Druid feature engineering; smoke-test gate checks row counts, null rates, date range"),
-    ("P-Series Training",      "Aevah trains cannibalization, price elasticity, and rate forecast models — conditional on drift/schedule"),
-    ("Scoring & Publish",      "Aevah scores all combos; Stage 3/4 gates pass; scoring tables promoted to live query path"),
-    ("BUILT Walkthrough",      "Live demo with Brian + Connor — cannibalization + price elasticity suites; use FOOD-channel accounts"),
-    ("FP&A Handoff",           "Connor receives 13-week forecast outputs; actuals data shared; temporal backtesting initiated"),
-    ("Automation P1–P2",       "Implement incremental watermark + run_data_ops.sh orchestration script as next engineering sprint"),
+# Two columns: What we need to align on (left) + What happens after (right)
+left_x, left_w = 0.5, 5.8
+right_x, right_w = 6.7, 6.2
+col_top = 1.55
+
+rect(slide, left_x, col_top, left_w, 0.32, fill=BLUE)
+tb(slide, left_x + 0.14, col_top + 0.06, left_w - 0.28, 0.22,
+   "WHAT WE NEED TO AGREE IN THIS MEETING", size=9, bold=True, color=WHITE)
+
+align_items = [
+    ("Data scope",
+     "Which SPINS fields are we using? What supplemental data (ERP, DW) is in scope for Phase 1?"),
+    ("Data handoff mechanics",
+     "Who deposits the SPINS export? Where? On what cadence? Who confirms receipt?"),
+    ("RACI sign-off",
+     "Both teams confirm the responsibility matrix — who does what at each stage."),
+    ("Timeline validation",
+     "Are the week estimates realistic? Brian to flag any constraints (data availability, staff)."),
+    ("Stakeholder map",
+     "Who else needs to be in the loop? Are there voices we haven't heard from yet?"),
+    ("Phase 1 success criteria",
+     "What does a successful Phase 1 look like? How will we know we're ready for Phase 2?"),
 ]
 
-col1_x, col2_x = 0.5, 4.6
-y = 1.6
-for step, desc in steps_next:
-    rect(slide, col1_x, y, 3.8, 0.52, fill=RGBColor(0x20, 0x40, 0x70))
-    tb(slide, col1_x + 0.14, y + 0.11, 3.6, 0.33,
-       step, size=10.5, bold=True, color=BLUE_LIGHT)
-    tb(slide, col2_x, y + 0.11, 8.4, 0.33,
-       desc, size=10, color=RGBColor(0xB0, 0xC8, 0xF0))
-    y += 0.63
+item_y = col_top + 0.38
+for label, desc in align_items:
+    rect(slide, left_x + 0.12, item_y + 0.1, 0.08, 0.08, fill=BLUE)
+    tb(slide, left_x + 0.28, item_y + 0.02, left_w - 0.38, 0.22,
+       label, size=10, bold=True, color=WHITE)
+    tb(slide, left_x + 0.28, item_y + 0.24, left_w - 0.38, 0.26,
+       desc, size=9, color=BLUE_LIGHT)
+    item_y += 0.6
+
+rect(slide, right_x, col_top, right_w, 0.32, fill=GREEN)
+tb(slide, right_x + 0.14, col_top + 0.06, right_w - 0.28, 0.22,
+   "WHAT HAPPENS AFTER THIS MEETING", size=9, bold=True, color=WHITE)
+
+next_items = [
+    ("1",  "Data Commitment confirmed",
+     "BUILT provides written confirmation of SPINS export format and deposit timeline"),
+    ("2",  "Aevah configures ingest pipeline",
+     "File-watch trigger set up; QA gates defined against agreed field list"),
+    ("3",  "First data deposit",
+     "BUILT deposits initial SPINS extract; Aevah runs ingest + QA; report shared with BUILT"),
+    ("4",  "Feature engineering + model training",
+     "Aevah runs Phase 1 models (cannibalization risk + price elasticity) — no BUILT action needed"),
+    ("5",  "Phase 1 live demo",
+     "Aevah hosts Mo walkthrough with Brian + Connor; projection validation session"),
+    ("6",  "Feedback + iteration",
+     "Connor's team reviews findings; UI adjustments made; Phase 2 scoping begins"),
+]
+
+item_y = col_top + 0.38
+for num, title, desc in next_items:
+    rect(slide, right_x + 0.12, item_y + 0.06, 0.26, 0.26,
+         fill=RGBColor(0x20, 0x40, 0x70))
+    tb(slide, right_x + 0.12, item_y + 0.07, 0.26, 0.22,
+       num, size=9, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+    tb(slide, right_x + 0.46, item_y + 0.02, right_w - 0.56, 0.22,
+       title, size=10, bold=True, color=WHITE)
+    tb(slide, right_x + 0.46, item_y + 0.24, right_w - 0.56, 0.22,
+       desc, size=8.5, color=BLUE_LIGHT)
+    item_y += 0.56
 
 tb(slide, 0.5, 7.1, 12.5, 0.3,
    "Mo by Aevah  ·  BUILT Kickoff  ·  August 2026  ·  Confidential",
