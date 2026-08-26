@@ -171,32 +171,32 @@ tb(slide, 0.5, 3.35, 8.5, 1.2,
    "and what appears on screen.",
    size=14, color=BLUE_LIGHT)
 
-rect(slide, 0.5, 4.75, 6, 0.03, fill=BLUE)
-
-# Phase 1 modules (active — bright blue)
 phase1_modules = ["Cannibalization Risk", "Price Elasticity"]
 phase2_modules = ["Promotional Response", "Demand Forecast", "Launch Monitoring"]
 
-# Phase label
-tb(slide, 0.5, 4.9, 4.7, 0.22,
-   "PHASE 1  ·  NOW THROUGH DEC 2026", size=7.5, bold=True, color=BLUE)
-tb(slide, 5.25, 4.9, 6.8, 0.22,
-   "PHASE 2  ·  PLANNED 2027", size=7.5, bold=True, color=GREY_MID)
-
-col_w = 2.3
+# Phase 1 — header band above module boxes
+p1_y = 4.3
+rect(slide, 0.5, p1_y, 12.4, 0.34, fill=RGBColor(0x1A, 0x34, 0x62))
+tb(slide, 0.65, p1_y + 0.07, 11.5, 0.22,
+   "PHASE 1  ·  NOW THROUGH DEC 2026", size=11, bold=True, color=BLUE_LIGHT)
 for i, mod in enumerate(phase1_modules):
-    x = 0.5 + i * col_w
-    rect(slide, x, 5.1, col_w - 0.12, 0.5, fill=RGBColor(0x20, 0x40, 0x70))
-    tb(slide, x + 0.1, 5.15, col_w - 0.22, 0.4,
-       mod, size=10, bold=True, color=BLUE_LIGHT, align=PP_ALIGN.CENTER)
+    x = 0.5 + i * 6.3
+    rect(slide, x, p1_y + 0.34, 6.1, 0.75, fill=RGBColor(0x20, 0x40, 0x70))
+    tb(slide, x + 0.15, p1_y + 0.57, 5.8, 0.38,
+       mod, size=15, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 
+# Phase 2 — header band above module boxes
+p2_y = p1_y + 0.34 + 0.75 + 0.2
+rect(slide, 0.5, p2_y, 12.4, 0.34, fill=RGBColor(0x28, 0x32, 0x44))
+tb(slide, 0.65, p2_y + 0.07, 11.5, 0.22,
+   "PHASE 2  ·  PLANNED 2027", size=11, bold=True, color=GREY_LIGHT)
 for i, mod in enumerate(phase2_modules):
-    x = 0.5 + (len(phase1_modules) + i) * col_w
-    rect(slide, x, 5.1, col_w - 0.12, 0.5, fill=RGBColor(0x2E, 0x38, 0x4A))
-    tb(slide, x + 0.1, 5.15, col_w - 0.22, 0.4,
-       mod, size=10, bold=True, color=GREY_LIGHT, align=PP_ALIGN.CENTER)
+    x = 0.5 + i * 4.2
+    rect(slide, x, p2_y + 0.34, 4.0, 0.65, fill=RGBColor(0x2E, 0x38, 0x4A))
+    tb(slide, x + 0.1, p2_y + 0.52, 3.8, 0.34,
+       mod, size=12, bold=True, color=GREY_LIGHT, align=PP_ALIGN.CENTER)
 
-tb(slide, 9.0, 6.8, 4, 0.4,
+tb(slide, 9.0, 7.1, 4, 0.3,
    "aevah.ai  ·  Confidential",
    size=9, color=MID_GREY, align=PP_ALIGN.RIGHT)
 
@@ -387,13 +387,14 @@ def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_
     if phase == 2:
         rect(slide, 0, 0, 13.333, 1.4, fill=GREY_MID)
 
-    tb(slide, 0.5, 0.1, 2, 0.3, num_label, size=9, bold=True, color=BLUE_LIGHT)
+    phase_str = "PHASE 1 — NOW THROUGH DEC 2026" if phase == 1 else "PHASE 2 — PLANNED 2027"
+    phase_col = BLUE if phase == 1 else GREY_LIGHT
+    tb(slide, 0.5, 0.1, 3.5, 0.28, num_label, size=9, bold=True, color=BLUE_LIGHT)
+    tb(slide, 4.0, 0.1, 9.0, 0.28, phase_str, size=9, bold=True, color=phase_col,
+       align=PP_ALIGN.RIGHT)
     tb(slide, 0.5, 0.38, 7, 0.6, name, size=22, bold=True, color=WHITE)
     tb(slide, 7.8, 0.38, 5.3, 0.8, f'"{answer}"',
        size=11, color=RGBColor(0xC0, 0xD5, 0xFF), italic=True)
-
-    # Phase badge (top right)
-    phase_badge(slide, phase)
 
     left_x = 0.45
     left_w = 5.0
@@ -481,13 +482,13 @@ add_sim_slide(
     name="Cannibalization Risk",
     answer="Is this new SKU pulling demand from an existing one, or adding net-new buyers?",
     inputs=[
-        ("Weekly units sold", "SPINS", "Measure demand before/after launch"),
-        ("Base units (non-promo)", "SPINS", "Separate promo from organic demand"),
-        ("Distribution — stores selling", "SPINS", "Distinguish demand drop from distribution loss"),
-        ("Average retail price", "SPINS", "Detect whether price changes explain the shift"),
-        ("First week selling (launch date)", "SPINS", "Anchor the before/after comparison window"),
-        ("Pack count, flavor, brand line", "SPINS", "Identify likely substitute SKUs"),
-        ("Weeks on promotion", "SPINS", "Flag confounding promotional periods"),
+        ("Weekly units sold", "SPINS", "Before/after demand"),
+        ("Base units (non-promo)", "SPINS", "Isolate organic demand"),
+        ("Distribution — stores selling", "SPINS", "Demand vs. distrib. loss"),
+        ("Average retail price", "SPINS", "Rule out price effect"),
+        ("First week selling (launch date)", "SPINS", "Launch anchor date"),
+        ("Pack count, flavor, brand line", "SPINS", "Find substitute SKUs"),
+        ("Weeks on promotion", "SPINS", "Flag promo periods"),
     ],
     operations=[
         "Build before/after windows (4-week, 13-week, 26-week) around each product launch",
@@ -520,13 +521,13 @@ add_sim_slide(
     name="Price Elasticity",
     answer="If we change price by X%, how much does demand change — and what is the optimal price point?",
     inputs=[
-        ("Average retail price", "SPINS", "Measure price level across accounts and weeks"),
-        ("Weekly units sold", "SPINS", "Measure demand response to price changes"),
-        ("Base price (non-promo ARP)", "SPINS", "Separate everyday price from promo price"),
-        ("Promo discount depth (%)", "SPINS", "Quantify magnitude of promotional price drops"),
-        ("Incremental units (promo-driven)", "SPINS", "Isolate promoted demand from baseline"),
-        ("Distribution (TDP)", "SPINS", "Control for distribution changes vs. price effects"),
-        ("Competitor price (same flavor)", "SPINS", "Separate own-price from competitive pressure"),
+        ("Average retail price", "SPINS", "Price level measure"),
+        ("Weekly units sold", "SPINS", "Demand response"),
+        ("Base price (non-promo ARP)", "SPINS", "Everyday vs. promo"),
+        ("Promo discount depth (%)", "SPINS", "Quantify promo depth"),
+        ("Incremental units (promo-driven)", "SPINS", "Isolate promo demand"),
+        ("Distribution (TDP)", "SPINS", "Distribution control"),
+        ("Competitor price (same flavor)", "SPINS", "Own vs. competitor"),
     ],
     operations=[
         "Normalize price to $/bar so singles and 12-packs are comparable",
@@ -559,13 +560,13 @@ add_sim_slide(
     name="Promotional Response",
     answer="How much incremental demand does a promotion generate — and what depth maximizes return?",
     inputs=[
-        ("Incremental units", "SPINS", "SPINS-attributed demand above non-promo baseline"),
-        ("Base units (non-promo)", "SPINS", "Denominator for promo lift ratio"),
-        ("% units sold on promotion", "SPINS", "Measure how promo-dependent a SKU is"),
-        ("Promo discount depth (%)", "SPINS", "Quantify the price concession driving lift"),
-        ("Channel (grocery / mass / c-store)", "SPINS", "Response curves differ by channel"),
-        ("Pack count", "SPINS", "12-pack cliff behavior differs from single bar"),
-        ("Distribution on promo (TDP, Any Promo)", "SPINS", "Separate display from price promo"),
+        ("Incremental units", "SPINS", "Above-baseline demand"),
+        ("Base units (non-promo)", "SPINS", "Lift denominator"),
+        ("% units sold on promotion", "SPINS", "Promo dependency"),
+        ("Promo discount depth (%)", "SPINS", "Quantify discount"),
+        ("Channel (grocery / mass / c-store)", "SPINS", "Channel response"),
+        ("Pack count", "SPINS", "Pack size behavior"),
+        ("Distribution on promo (TDP, Any Promo)", "SPINS", "Display vs. price"),
     ],
     operations=[
         "Calculate promo lift ratio: incremental units ÷ base units, per SKU × account × event",
@@ -595,12 +596,12 @@ add_sim_slide(
     name="Demand Velocity & Forecast",
     answer="What will this SKU sell in the next 13 weeks, by retailer account?",
     inputs=[
-        ("52-week weekly units sold", "SPINS", "Training history for demand patterns"),
-        ("Distribution (stores selling)", "SPINS", "Normalize velocity to exclude distribution gaps"),
-        ("Average retail price", "SPINS", "Capture price-demand relationship in forecast"),
-        ("% weeks on promotion", "SPINS", "Separate promoted from non-promoted baseline"),
-        ("Retail account", "SPINS", "Train a separate model per account"),
-        ("Week end date", "SPINS", "Derive seasonality index and calendar features"),
+        ("52-week weekly units sold", "SPINS", "Demand history"),
+        ("Distribution (stores selling)", "SPINS", "Distribution control"),
+        ("Average retail price", "SPINS", "Price signal"),
+        ("% weeks on promotion", "SPINS", "Promo flag"),
+        ("Retail account", "SPINS", "Per-account model"),
+        ("Week end date", "SPINS", "Seasonality features"),
     ],
     operations=[
         "Normalize to non-zero TDP weeks — eliminate false troughs from shelf-presence gaps",
@@ -632,11 +633,11 @@ add_sim_slide(
     name="Distribution & Launch Monitoring",
     answer="Is this new product ramping as expected — in enough stores, with the right velocity?",
     inputs=[
-        ("% of stores selling", "SPINS", "Measure distribution build week over week"),
-        ("Total distribution points (TDP)", "SPINS", "Primary ramp metric — store count × presence"),
-        ("Avg weekly units per store selling", "SPINS", "Velocity independent of distribution level"),
-        ("First week selling", "SPINS", "Anchor the ramp monitoring window"),
-        ("Number of weeks selling", "SPINS", "Track position in the launch lifecycle"),
+        ("% of stores selling", "SPINS", "Distribution growth"),
+        ("Total distribution points (TDP)", "SPINS", "Primary ramp metric"),
+        ("Avg weekly units per store selling", "SPINS", "Velocity per store"),
+        ("First week selling", "SPINS", "Launch anchor date"),
+        ("Number of weeks selling", "SPINS", "Lifecycle position"),
     ],
     operations=[
         "Track weeks 1–16 of distribution build and velocity ramp for each new BUILT UPC",
