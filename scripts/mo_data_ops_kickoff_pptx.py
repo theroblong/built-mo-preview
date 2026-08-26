@@ -411,30 +411,30 @@ def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_
     tb(slide, left_x + 3.7, y + 0.04, 1.2, 0.2, "Purpose", size=8, bold=True, color=DARK_TEXT)
     y += 0.27
 
-    row_h = 0.31
+    row_h = 0.29
     for i, (field, source, purpose) in enumerate(inputs):
         bg = RGBColor(0xF8, 0xFA, 0xFD) if i % 2 == 0 else WHITE
         rect(slide, left_x, y, left_w, row_h, fill=bg, line=0.5,
              line_color=RGBColor(0xCC, 0xD8, 0xEE))
-        tb(slide, left_x + 0.08, y + 0.06, 2.4, row_h - 0.06,
+        tb(slide, left_x + 0.08, y + 0.05, 2.4, row_h - 0.05,
            field, size=8.5, bold=True, color=DARK_TEXT)
-        tb(slide, left_x + 2.58, y + 0.06, 1.0, row_h - 0.06,
+        tb(slide, left_x + 2.58, y + 0.05, 1.0, row_h - 0.05,
            source, size=8, color=BLUE, bold=True)
-        tb(slide, left_x + 3.68, y + 0.06, 1.22, row_h - 0.06,
-           purpose, size=7, color=MID_GREY)
+        tb(slide, left_x + 3.68, y + 0.05, 1.22, row_h - 0.05,
+           purpose, size=7.5, color=MID_GREY)
         y += row_h
 
-    y += 0.12
+    y += 0.08
     rect(slide, left_x, y, left_w, 0.28, fill=NAVY)
     tb(slide, left_x + 0.1, y + 0.04, left_w - 0.2, 0.22,
        "OPERATIONS PERFORMED", size=8, bold=True, color=BLUE_LIGHT)
     y += 0.28
 
     for op in operations:
-        rect(slide, left_x + 0.1, y + 0.1, 0.08, 0.08, fill=BLUE)
-        tb(slide, left_x + 0.28, y + 0.02, left_w - 0.38, 0.3,
+        rect(slide, left_x + 0.1, y + 0.09, 0.08, 0.08, fill=BLUE)
+        tb(slide, left_x + 0.28, y + 0.02, left_w - 0.38, 0.26,
            op, size=8.5, color=DARK_TEXT)
-        y += 0.3
+        y += 0.27
 
     right_x = 5.85
     right_w  = 7.1
@@ -711,33 +711,35 @@ for i, (name, desc) in enumerate(tiles):
     tile_y += row_h
 
 # Filter bar note
-rect(slide, left_x, tile_y + 0.08, tile_w, 0.36, fill=LIGHT_BLUE)
-tb(slide, left_x + 0.12, tile_y + 0.14, tile_w - 0.24, 0.26,
-   "Filter bar:  Product · Brand · Channel (FOOD / MASS / C-STORE) · Account · Units / $ toggle",
+rect(slide, left_x, tile_y + 0.08, tile_w, 0.54, fill=LIGHT_BLUE)
+tb(slide, left_x + 0.12, tile_y + 0.13, tile_w - 0.24, 0.22,
+   "Filter bar:  Product  ·  Brand  ·  Channel (FOOD / MASS / C-STORE)  ·  Account  ·  Units / $ toggle",
    size=8.5, color=DARK_TEXT)
-tb(slide, left_x + 0.12, tile_y + 0.31, tile_w - 0.24, 0.16,
-   "Demo defaults: BUILT Puff  +  KROGER  +  WALMART    |    MULO excluded from all Trends views",
-   size=7.5, color=MID_GREY, italic=True)
+tb(slide, left_x + 0.12, tile_y + 0.35, tile_w - 0.24, 0.22,
+   "Demo defaults:  BUILT Puff  ·  KROGER + WALMART    |    MULO excluded from all Trends views",
+   size=8, color=MID_GREY, italic=True)
 
 # ── Right: External Signal Integration ──
 right_x = 6.7
 right_w  = 6.25
 
-rect(slide, right_x, 1.2, right_w, 0.32, fill=GREEN)
-tb(slide, right_x + 0.12, 1.24, right_w - 0.24, 0.24,
-   "07  ·  EXTERNAL SIGNALS — commercial redistribution required for all",
-   size=8, bold=True, color=WHITE)
+rect(slide, right_x, 1.2, right_w, 0.48, fill=GREEN)
+tb(slide, right_x + 0.12, 1.24, right_w - 0.24, 0.22,
+   "07  ·  EXTERNAL SIGNALS", size=9, bold=True, color=WHITE)
+tb(slide, right_x + 0.12, 1.44, right_w - 0.24, 0.20,
+   "Commercial redistribution license required for all sources listed.",
+   size=7.5, color=RGBColor(0xB0, 0xE0, 0xC0))
 
 # Live section
-rect(slide, right_x, 1.52, right_w, 0.26, fill=GREEN_LIGHT)
-tb(slide, right_x + 0.12, 1.55, right_w - 0.24, 0.2,
+rect(slide, right_x, 1.68, right_w, 0.26, fill=GREEN_LIGHT)
+tb(slide, right_x + 0.12, 1.71, right_w - 0.24, 0.2,
    "LIVE IN PRODUCTION", size=7.5, bold=True, color=GREEN)
 
 live_sigs = [
     ("FRED — GASDESW",  "Weekly U.S. gas price index (St. Louis Fed)"),
     ("FRED — UMCSENT",  "U. of Michigan consumer confidence index"),
 ]
-sig_y = 1.78
+sig_y = 1.94
 for name, desc in live_sigs:
     rect(slide, right_x, sig_y, right_w, 0.36, fill=WHITE, line=0.5,
          line_color=RGBColor(0xCC, 0xD8, 0xEE))
