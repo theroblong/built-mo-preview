@@ -848,8 +848,14 @@ for i, (week_label, title, body, deliverable, header_color, body_color) in enume
     # Body
     rect(slide, nx, node_top + header_h, node_w, body_area_h,
          fill=body_color, line=0.5, line_color=RGBColor(0xC0, 0xCC, 0xE4))
-    tb(slide, nx + 0.14, node_top + header_h + 0.12, node_w - 0.28,
-       body_area_h - 0.18, body, size=9.5, color=DARK_TEXT)
+    body_lines = body.split('\n')
+    bsp = (body_area_h - 0.24) / len(body_lines)
+    by = node_top + header_h + 0.12
+    for line in body_lines:
+        rect(slide, nx + 0.14, by + 0.11, 0.07, 0.07, fill=header_color)
+        tb(slide, nx + 0.28, by + 0.02, node_w - 0.42, bsp - 0.05,
+           line, size=9.5, color=DARK_TEXT)
+        by += bsp
 
     # Deliverable strip at card bottom
     rect(slide, nx, node_top + node_h - deliv_h, node_w, deliv_h, fill=header_color)
