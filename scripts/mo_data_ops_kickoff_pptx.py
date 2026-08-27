@@ -367,7 +367,7 @@ for row_i, (activity, *cells) in enumerate(raci_rows):
 
 # Legend
 tb(slide, 0.42, matrix_y + 0.08, 8, 0.24,
-   "R = Responsible (does the work)   A = Accountable (owns the outcome)   C = Consulted   — = Not in scope for this activity",
+   "R = Responsible (does the work)   A = Accountable (owns the outcome)   C = Consulted   I = Informed (kept in the loop)   — = Not in scope",
    size=7.5, color=MID_GREY, italic=True)
 
 footnote(slide)
