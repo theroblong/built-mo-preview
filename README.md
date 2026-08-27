@@ -6,6 +6,34 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 86: PPTX kickoff deck — full visual polish pass (2026-08-27)
+
+Multiple rounds of visual and formatting fixes applied to `scripts/mo_data_ops_kickoff_pptx.py` after reviewing slides in PowerPoint. All fixes regenerated to `mockups/mo_data_ops_kickoff.pptx`.
+
+**Title slide (Slide 1):**
+- Phase section completely redesigned: "PHASE 1 · NOW THROUGH DEC 2026" is now a navy header band sitting directly above the two Phase 1 module boxes; same structure for Phase 2 in dark grey. Labels are 11pt and clearly legible. Previously they were 7.5pt text in a cramped horizontal row.
+
+**Module slides (Slides 4–8):**
+- Phase badge removed from top-right corner (was covering the italic question text). Phase now appears as right-aligned eyebrow text on the same header line as "MODULE 01" — visible without overlap.
+- Purpose column: all 30 descriptions shortened to ≤20 chars so they fit one line at 7.5pt (up from 7pt). No more text overflow.
+- Row height compacted (0.31→0.29") and operations spacing tightened (0.30→0.27") to prevent the operations section from overflowing into the RACI strip on slides with 7 inputs + 6 ops.
+
+**Slide 9 (Mo Trends):**
+- Filter bar rect height: 0.36→0.54" so both lines (filter list + demo defaults) render inside the box.
+- External signals header split into "07 · EXTERNAL SIGNALS" (9pt bold) + redistribution license note (7.5pt subtitle) instead of one cramped 8pt line.
+
+**Slide 3 (RACI):**
+- Legend now defines all four letters: R = Responsible · A = Accountable · C = Consulted · I = Informed (kept in the loop) · — = Not in scope. Previously I was missing.
+
+**Slide 10 (Phase 1 Project Timeline) — full redesign:**
+- Removed horizontal arrow + colored circles (looked out of place). Replaced with → connectors between cards.
+- Header height: 0.5→0.72", title font: 11→13pt. All two-line titles ("Iterate &\nPhase 2 Scope") now render without clipping.
+- Card height: 4.5→3.8" to eliminate ~3" of blank space below the content.
+- 4th bullet added to each card; each bullet rendered individually with a colored square dot matching the card's header color (consistent with RACI and pipeline slides). Bullets are evenly spaced to fill the card body.
+- Deliverable strip added at the bottom of each card in the card's header color ("Deliverable: …") — gives every card a clear outcome.
+
+---
+
 ## README update 85: PPTX kickoff deck reworked after Rob/Jason transcript review (2026-08-26)
 
 Major rework of `scripts/mo_data_ops_kickoff_pptx.py` based on transcript from Rob and Jason's August 26 presentation review call. PPTX regenerated (11 slides).
