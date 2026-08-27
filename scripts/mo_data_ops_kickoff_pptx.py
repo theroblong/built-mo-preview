@@ -792,69 +792,82 @@ tb(slide, 0.5, 0.72, 12.5, 0.32,
    "Durations reflect data readiness, not Aevah engineering capacity.",
    size=10.5, color=BLUE_LIGHT)
 
-# Horizontal timeline arrow
-arrow_y = 2.05
-rect(slide, 0.5, arrow_y, 12.35, 0.06, fill=BLUE)
-tb(slide, 12.7, arrow_y - 0.12, 0.4, 0.3, "▶", size=14, color=BLUE)
-
-# Four milestone nodes
 milestones = [
     ("Weeks 1–2",  "Data Commitment\n& Handoff",
-     "BUILT confirms SPINS export format and schedule\n"
-     "Aevah confirms storage, file-watch trigger, and QA gate configuration\n"
-     "Both teams agree on data scope and contact points",
+     "BUILT confirms SPINS export format and deposit schedule\n"
+     "Aevah configures storage, file-watch trigger, and QA gates\n"
+     "Both teams agree on data scope and stakeholder map\n"
+     "Kickoff RACI reviewed and signed off by both teams",
+     "Deliverable:  Data Commitment confirmed + storage access granted",
      BLUE, LIGHT_BLUE),
     ("Weeks 3–6",  "Data Onboarding\n& Validation",
-     "Aevah: ingest → QA → feature engineering → model training → scoring\n"
-     "Aevah delivers QA report for BUILT review\n"
-     "BUILT validates: does the data look right?",
+     "Aevah: ingest → QA → feature engineering → model training\n"
+     "Aevah delivers QA report for BUILT data team review\n"
+     "BUILT validates data looks right for Modules 01–02\n"
+     "Data issues flagged and resolved before UI deployment",
+     "Deliverable:  QA report delivered; Module 01–02 models trained",
      GREEN, GREEN_LIGHT),
     ("Weeks 7–10", "Phase 1 Preview\n& Feedback",
      "Cannibalization Risk + Price Elasticity live in Mo UI\n"
-     "Live demo with Brian + Connor — FOOD-channel accounts\n"
-     "Connor + team provide UI feedback and projection validation",
+     "Live walkthrough with Brian + Connor — FOOD-channel accounts\n"
+     "Connor + team validate projections against market knowledge\n"
+     "Priority UI feedback addressed in follow-up sprint",
+     "Deliverable:  Phase 1 live in Mo; validation session complete",
      AMBER, AMBER_LIGHT),
     ("Weeks 11+",  "Iterate &\nPhase 2 Scope",
-     "Address feedback; tune models based on BUILT market knowledge\n"
+     "Address feedback; tune models on BUILT market knowledge\n"
      "Phase 1 milestone sign-off by both teams\n"
-     "Begin scoping Modules 3–5 and automation roadmap for Phase 2",
+     "Begin scoping Modules 3–5 for Phase 2\n"
+     "Connor's actuals data shared for forecast backtesting",
+     "Deliverable:  Phase 1 signed off; Phase 2 roadmap agreed",
      PURPLE, PURPLE_LIGHT),
 ]
 
 node_x_positions = [0.5, 3.75, 7.0, 10.25]
-node_w = 2.85
-node_h = 4.5
-node_top = 1.35
+node_w   = 2.85
+node_h   = 3.8
+node_top = 1.3
+header_h = 0.72
+deliv_h  = 0.44
 
-for (week_label, title, body, header_color, body_color), nx in zip(milestones, node_x_positions):
-    # Circle on timeline
-    cx = nx + node_w / 2
-    circle = slide.shapes.add_shape(9, Inches(cx - 0.16), Inches(arrow_y - 0.14),
-                                     Inches(0.32), Inches(0.32))
-    circle.fill.solid()
-    circle.fill.fore_color.rgb = header_color
-    circle.line.fill.background()
+for i, (week_label, title, body, deliverable, header_color, body_color) in enumerate(milestones):
+    nx = node_x_positions[i]
+    body_area_h = node_h - header_h - deliv_h  # 2.64"
 
-    # Card
+    # Full card border
     rect(slide, nx, node_top, node_w, node_h, fill=WHITE,
          line=0.75, line_color=RGBColor(0xC0, 0xCC, 0xE4))
-    rect(slide, nx, node_top, node_w, 0.5, fill=header_color)
-    tb(slide, nx + 0.12, node_top + 0.06, node_w - 0.24, 0.18,
-       week_label, size=7.5, bold=True, color=WHITE)
-    tb(slide, nx + 0.12, node_top + 0.24, node_w - 0.24, 0.3,
-       title, size=11, bold=True, color=WHITE)
+
+    # Colored header
+    rect(slide, nx, node_top, node_w, header_h, fill=header_color)
+    tb(slide, nx + 0.12, node_top + 0.07, node_w - 0.24, 0.2,
+       week_label, size=8, bold=True, color=WHITE)
+    tb(slide, nx + 0.12, node_top + 0.27, node_w - 0.24, 0.48,
+       title, size=13, bold=True, color=WHITE)
 
     # Body
-    rect(slide, nx, node_top + 0.5, node_w, node_h - 0.5, fill=body_color,
-         line=0.5, line_color=RGBColor(0xC0, 0xCC, 0xE4))
-    tb(slide, nx + 0.14, node_top + 0.6, node_w - 0.28, node_h - 0.7,
-       body, size=9, color=DARK_TEXT)
+    rect(slide, nx, node_top + header_h, node_w, body_area_h,
+         fill=body_color, line=0.5, line_color=RGBColor(0xC0, 0xCC, 0xE4))
+    tb(slide, nx + 0.14, node_top + header_h + 0.12, node_w - 0.28,
+       body_area_h - 0.18, body, size=9.5, color=DARK_TEXT)
+
+    # Deliverable strip at card bottom
+    rect(slide, nx, node_top + node_h - deliv_h, node_w, deliv_h, fill=header_color)
+    tb(slide, nx + 0.12, node_top + node_h - deliv_h + 0.09,
+       node_w - 0.24, deliv_h - 0.12, deliverable, size=8, color=WHITE)
+
+    # Connector arrow between cards
+    if i < len(milestones) - 1:
+        arrow_mid_y = node_top + node_h / 2 - 0.12
+        tb(slide, nx + node_w + 0.02, arrow_mid_y, 0.36, 0.28,
+           "→", size=16, bold=True, color=BLUE, align=PP_ALIGN.CENTER)
 
 # Bottom note
-rect(slide, 0.5, 6.18, 12.35, 0.52, fill=LIGHT_BLUE)
-tb(slide, 0.65, 6.24, 12.1, 0.42,
-   "Phase 2 (Modules 3–5: Promotional Response, Demand Forecast, Launch Monitoring) begins after Phase 1 sign-off milestone. "
-   "Automation roadmap (incremental ingest, orchestration shell, file-watch trigger) runs in parallel as an Aevah-internal engineering sprint — no BUILT action required.",
+note_y = node_top + node_h + 0.22
+rect(slide, 0.5, note_y, 12.35, 0.54, fill=LIGHT_BLUE)
+tb(slide, 0.65, note_y + 0.06, 12.1, 0.44,
+   "Phase 2 (Modules 3–5: Promotional Response, Demand Forecast, Launch Monitoring) begins after Phase 1 sign-off. "
+   "Automation roadmap (incremental ingest, orchestration shell, file-watch trigger) runs as an Aevah-internal engineering sprint — no BUILT action required.",
    size=9, color=DARK_TEXT)
 
 footnote(slide)
