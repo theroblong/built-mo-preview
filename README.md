@@ -6,6 +6,36 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 87: PPTX kickoff deck — Brian meeting feedback incorporated (2026-08-28)
+
+Phase 1 restructured and PPTX updated after live kickoff meeting with Brian Cluster (BUILT VP Sales / GM). Both the meeting transcript (`docs/Built _ Aevah Kickoff!!.docx`) and Rob's in-meeting edited PPTX (`docs/Built Phase 1 Plan.pptx`) were reconciled into the following changes in `scripts/mo_data_ops_kickoff_pptx.py`:
+
+**Phase restructuring:**
+- Module 04 (Demand Velocity & Forecast) pulled from Phase 2 into Phase 1 — Brian's explicit #1 priority. Rob: "Module 4 is going to be the first thing we focus on. Cannibalization, price elasticity — those just come along for the ride because they're already built."
+- Phase 1 now = Modules 01, 02, 04 (Demand Forecast, Cannibalization Risk, Price Elasticity)
+- Phase 2 now = Modules 03, 05 (Promotional Response, Launch Monitoring)
+
+**Slide structure:**
+- Module 04 now leads the module section (Slide 4); Module 01 → Slide 5, Module 02 → Slide 6, etc.
+- Title slide Phase 1 updated: 3 boxes (Demand Forecast, Cannibalization Risk, Price Elasticity); Phase 2 now shows 2 boxes (Promotional Response, Launch Monitoring)
+
+**RACI changes:**
+- Connor changed from Responsible → Consulted on "Projection review & business validation" and "UI feedback sessions" rows. Brian confirmed Connor will be in the background; Brian will be hands-on.
+- Slide 3 BUILT PROVIDES: added "Product master data + regional seasonality indexes — supplemental inputs for Phase 1 demand forecast"
+- Slide 3 AEVAH DELIVERS: added demand forecast to Phase 1 model list
+- Module 04 BUILT PROVIDES RACI strip: updated to include actuals data sharing + supplemental data items
+
+**Module 04 content:**
+- Phase label: changed Phase 2 → Phase 1
+- Seasonality operation: noted that regional granularity is available when BUILT provides geographic breakdown
+- BUILT PROVIDES strip: added product data + regional seasonality indexes from Brian's offer
+
+**Timeline slide (Slide 10):**
+- Card 2 (Data Onboarding): updated to reference "all three Phase 1 modules" (not just 01–02)
+- Card 3 (Phase 1 Preview): updated to show all three Phase 1 modules live in Mo UI
+
+---
+
 ## README update 86: PPTX kickoff deck — full visual polish pass (2026-08-27)
 
 Multiple rounds of visual and formatting fixes applied to `scripts/mo_data_ops_kickoff_pptx.py` after reviewing slides in PowerPoint. All fixes regenerated to `mockups/mo_data_ops_kickoff.pptx`.

@@ -171,29 +171,29 @@ tb(slide, 0.5, 3.35, 8.5, 1.2,
    "and what appears on screen.",
    size=14, color=BLUE_LIGHT)
 
-phase1_modules = ["Cannibalization Risk", "Price Elasticity"]
-phase2_modules = ["Promotional Response", "Demand Forecast", "Launch Monitoring"]
+phase1_modules = ["Demand Forecast", "Cannibalization Risk", "Price Elasticity"]
+phase2_modules = ["Promotional Response", "Launch Monitoring"]
 
-# Phase 1 — header band above module boxes
+# Phase 1 — header band above module boxes (3 modules)
 p1_y = 4.3
 rect(slide, 0.5, p1_y, 12.4, 0.34, fill=RGBColor(0x1A, 0x34, 0x62))
 tb(slide, 0.65, p1_y + 0.07, 11.5, 0.22,
    "PHASE 1  ·  NOW THROUGH DEC 2026", size=11, bold=True, color=BLUE_LIGHT)
 for i, mod in enumerate(phase1_modules):
-    x = 0.5 + i * 6.3
-    rect(slide, x, p1_y + 0.34, 6.1, 0.75, fill=RGBColor(0x20, 0x40, 0x70))
-    tb(slide, x + 0.15, p1_y + 0.57, 5.8, 0.38,
-       mod, size=15, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+    x = 0.5 + i * 4.17
+    rect(slide, x, p1_y + 0.34, 3.97, 0.75, fill=RGBColor(0x20, 0x40, 0x70))
+    tb(slide, x + 0.1, p1_y + 0.57, 3.77, 0.38,
+       mod, size=13, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 
-# Phase 2 — header band above module boxes
+# Phase 2 — header band above module boxes (2 modules)
 p2_y = p1_y + 0.34 + 0.75 + 0.2
 rect(slide, 0.5, p2_y, 12.4, 0.34, fill=RGBColor(0x28, 0x32, 0x44))
 tb(slide, 0.65, p2_y + 0.07, 11.5, 0.22,
    "PHASE 2  ·  PLANNED 2027", size=11, bold=True, color=GREY_LIGHT)
 for i, mod in enumerate(phase2_modules):
-    x = 0.5 + i * 4.2
-    rect(slide, x, p2_y + 0.34, 4.0, 0.65, fill=RGBColor(0x2E, 0x38, 0x4A))
-    tb(slide, x + 0.1, p2_y + 0.52, 3.8, 0.34,
+    x = 0.5 + i * 6.3
+    rect(slide, x, p2_y + 0.34, 6.1, 0.65, fill=RGBColor(0x2E, 0x38, 0x4A))
+    tb(slide, x + 0.15, p2_y + 0.52, 5.8, 0.34,
        mod, size=12, bold=True, color=GREY_LIGHT, align=PP_ALIGN.CENTER)
 
 tb(slide, 9.0, 7.1, 4, 0.3,
@@ -287,7 +287,7 @@ aevah_items = [
     "Platform setup, hosting, and data ingestion pipeline",
     "Data quality gates at every stage — no bad data reaches the UI",
     "Feature engineering: raw SPINS rows compressed into ML-ready tables per module",
-    "Model training and scoring: cannibalization risk + price elasticity (Phase 1)",
+    "Model training and scoring: demand velocity & forecast + cannibalization risk + price elasticity (Phase 1)",
     "Mo UI deployment: all screens, filters, and visualizations",
     "Model monitoring: drift detection and automatic retraining on schedule",
     "Customer-facing overview and reference documentation, updated each session",
@@ -307,6 +307,7 @@ tb(slide, right_x + 0.12, 1.26, right_w - 0.24, 0.24,
 
 built_items = [
     "Weekly SPINS export (214 columns) deposited to shared storage on agreed schedule",
+    "Product master data + regional seasonality indexes — supplemental inputs for Phase 1 demand forecast",
     "ERP / data warehouse access — for Phase 2 data sources and Connor's actuals",
     "Stakeholder availability: kickoff, data QA review, demo sessions, and sign-off",
     "Projection validation: Connor + Brian confirm whether findings match their market knowledge",
@@ -344,9 +345,9 @@ raci_rows = [
     ("Model training, scoring & Mo UI deployment",
      "R", "I", "—", "—", "Week 4–6"),
     ("Projection review & business validation",
-     "C", "A", "R", "—", "Week 6–8"),
+     "C", "A", "C", "—", "Week 6–8"),
     ("UI feedback sessions",
-     "C", "A", "R", "—", "Week 7–10"),
+     "C", "A", "C", "—", "Week 7–10"),
     ("Phase 1 milestone sign-off",
      "A", "A", "C", "—", "Week 10–12"),
 ]
@@ -478,6 +479,43 @@ def add_sim_slide(num_label, name, answer, inputs, operations, ml_outputs, live_
 # ═══════════════════════════════════════════════════════════════════════════════
 
 add_sim_slide(
+    num_label="MODULE 04",
+    name="Demand Velocity & Forecast",
+    answer="What will this SKU sell in the next 13 weeks, by retailer account?",
+    inputs=[
+        ("52-week weekly units sold", "SPINS", "Demand history"),
+        ("Distribution (stores selling)", "SPINS", "Distribution control"),
+        ("Average retail price", "SPINS", "Price signal"),
+        ("% weeks on promotion", "SPINS", "Promo flag"),
+        ("Retail account", "SPINS", "Per-account model"),
+        ("Week end date", "SPINS", "Seasonality features"),
+    ],
+    operations=[
+        "Normalize to non-zero TDP weeks — eliminate false troughs from shelf-presence gaps",
+        "Compute rolling averages (4-week, 13-week) to smooth noise while preserving trend",
+        "Build 12-month seasonality index — regional granularity available when BUILT provides geographic breakdown",
+        "Flag promo weeks so model learns baseline vs. promo-lifted demand separately",
+        "Train separate forecast per SKU × retailer — Kroger velocity ≠ Target velocity",
+        "Fall back to exponential smoothing (ETS) for SKUs with <8 weeks of history",
+    ],
+    ml_outputs=[
+        "13-week demand forecast per SKU × retailer account",
+        "Confidence bands (low / base / high scenario)",
+        "Promo-uplift scenario — demand if a promotion is planned in the forecast window",
+        "Forecast accuracy benchmark: 4% wMAPE vs. 7–10% industry baseline",
+    ],
+    live_outputs=[
+        "52-week actual demand trend by SKU and retailer account",
+        "Distribution (stores stocking) trend over the same period",
+        "Category average velocity — how this SKU compares to 13-week category norm",
+        "Seasonal index overlay — expected lift or drag on the forecast period",
+    ],
+    phase=1,
+    aevah_raci="Seasonality index · Forecast model training · ETS fallback · Confidence bands · Publish 13-week projections to Mo UI",
+    built_raci="SPINS export deposit · Share actuals data for forecast backtesting · Provide product data + regional seasonality indexes as supplemental inputs · Connor validates 13-week forecasts against FP&A actuals",
+)
+
+add_sim_slide(
     num_label="MODULE 01",
     name="Cannibalization Risk",
     answer="Is this new SKU pulling demand from an existing one, or adding net-new buyers?",
@@ -589,43 +627,6 @@ add_sim_slide(
     phase=2,
     aevah_raci="Lift curve modeling · Depth optimization scoring · Channel × pack separation · Publish to Mo UI",
     built_raci="SPINS export deposit (including promo flags) · Review lift projections · Confirm discount depth guidance with trade marketing team",
-)
-
-add_sim_slide(
-    num_label="MODULE 04",
-    name="Demand Velocity & Forecast",
-    answer="What will this SKU sell in the next 13 weeks, by retailer account?",
-    inputs=[
-        ("52-week weekly units sold", "SPINS", "Demand history"),
-        ("Distribution (stores selling)", "SPINS", "Distribution control"),
-        ("Average retail price", "SPINS", "Price signal"),
-        ("% weeks on promotion", "SPINS", "Promo flag"),
-        ("Retail account", "SPINS", "Per-account model"),
-        ("Week end date", "SPINS", "Seasonality features"),
-    ],
-    operations=[
-        "Normalize to non-zero TDP weeks — eliminate false troughs from shelf-presence gaps",
-        "Compute rolling averages (4-week, 13-week) to smooth noise while preserving trend",
-        "Build 12-month seasonality index from category raw monthly averages",
-        "Flag promo weeks so model learns baseline vs. promo-lifted demand separately",
-        "Train separate forecast per SKU × retailer — Kroger velocity ≠ Target velocity",
-        "Fall back to exponential smoothing (ETS) for SKUs with <8 weeks of history",
-    ],
-    ml_outputs=[
-        "13-week demand forecast per SKU × retailer account",
-        "Confidence bands (low / base / high scenario)",
-        "Promo-uplift scenario — demand if a promotion is planned in the forecast window",
-        "Forecast accuracy benchmark: 4% wMAPE vs. 7–10% industry baseline",
-    ],
-    live_outputs=[
-        "52-week actual demand trend by SKU and retailer account",
-        "Distribution (stores stocking) trend over the same period",
-        "Category average velocity — how this SKU compares to 13-week category norm",
-        "Seasonal index overlay — expected lift or drag on the forecast period",
-    ],
-    phase=2,
-    aevah_raci="Seasonality index · Forecast model training · ETS fallback · Confidence bands · Publish 13-week projections to Mo UI",
-    built_raci="SPINS export deposit · Connor validates 13-week forecasts against FP&A actuals · Share actuals data for backtesting and accuracy measurement",
 )
 
 add_sim_slide(
@@ -803,12 +804,12 @@ milestones = [
     ("Weeks 3–6",  "Data Onboarding\n& Validation",
      "Aevah: ingest → QA → feature engineering → model training\n"
      "Aevah delivers QA report for BUILT data team review\n"
-     "BUILT validates data looks right for Modules 01–02\n"
+     "BUILT validates data looks right for all three Phase 1 modules\n"
      "Data issues flagged and resolved before UI deployment",
-     "Deliverable:  QA report delivered; Module 01–02 models trained",
+     "Deliverable:  QA report delivered; Phase 1 models trained",
      GREEN, GREEN_LIGHT),
     ("Weeks 7–10", "Phase 1 Preview\n& Feedback",
-     "Cannibalization Risk + Price Elasticity live in Mo UI\n"
+     "Demand Forecast + Cannibalization Risk + Price Elasticity live in Mo UI\n"
      "Live walkthrough with Brian + Connor — FOOD-channel accounts\n"
      "Connor + team validate projections against market knowledge\n"
      "Priority UI feedback addressed in follow-up sprint",
