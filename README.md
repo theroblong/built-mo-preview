@@ -6,6 +6,22 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 90: Sizzle reel designer overhaul — Scene 6 stat block, cold-start fix, animation polish (2026-09-01)
+
+Visual design overhaul of the Aevah Intelligence conference sizzle reel (artifact `b2aee95c`). Changes address three specific issues: cold-start proxy animation conflict, Scene 6 being visually thin, and overall layout inconsistency.
+
+**Cold-start proxy (Scene 5):** Removed `fu` class from the proxy note — the `fadeUp` animation and `coldPulse` class were conflicting, resetting opacity and causing the element to disappear. Now uses JS-driven opacity reveal (2.2s) + separate `lit` class trigger (3s) so the element is fully visible before the pulse animation starts.
+
+**Scene 6 (Close) — complete redesign:** Replaced the flat wordmark + chips layout with a three-metric stat block: 3.8% Forecast Accuracy · &lt;8s Time to Insight · 6 Intelligence Modules. Gradient divider between wordmark and tagline. Radial blue glow behind the composition.
+
+**Scene 1 (Hook):** Two-column split layout. Right column shows a faint animated velocity spark line (draws in at 1.8s, 15% opacity) giving the slide visual texture without distracting from the message.
+
+**Scene 4 (Elasticity):** Column-first restructure with eyebrow + headline above the chart split. Metric cards now have semantic left borders: blue (Elasticity), teal (Optimal Price), amber (Price Sensitivity).
+
+**Animation fix — Scene 6 stutter:** Changed `animation-fill-mode` from `forwards` to `both` globally so elements hold their from-keyframe position during the delay (no pop on start). Metrics block staggered to 1.6s so the tagline fully lands before the metrics animate in — eliminates the blink/jump caused by simultaneous flex-column reflow.
+
+---
+
 ## README update 89: Aevah Intelligence sizzle reel — GroceryShop / ShopTalk conference demo (2026-09-01)
 
 Generic CPG-agnostic animated HTML sizzle reel built for conference use. No BUILT data or real brand names — fully synthetic scenario. Branded as "Aevah Intelligence" throughout (Mo is BUILT's mascot; the generic demo uses Aevah branding only).
