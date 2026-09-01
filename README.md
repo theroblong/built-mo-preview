@@ -6,6 +6,22 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 89: Aevah Intelligence sizzle reel — GroceryShop / ShopTalk conference demo (2026-09-01)
+
+Generic CPG-agnostic animated HTML sizzle reel built for conference use. No BUILT data or real brand names — fully synthetic scenario. Branded as "Aevah Intelligence" throughout (Mo is BUILT's mascot; the generic demo uses Aevah branding only).
+
+**Two formats:** booth loop (silent, ~70s auto-play) and active pitch (narrator-driven, 2–3 min with storyboard).
+
+**6 scenes:** Hook → Aevah Chat + stacked velocity/distribution/macro chart (the hot take) → Cannibalization risk table → Price elasticity curve → Demand forecast + cold-start proxy → Close (aevah.com CTA).
+
+**Causal Impact** added as a verbal bridge in the active pitch — quantified attribution talking point between Scene 2 and 3.
+
+**Cold-start proxy note** in the forecast scene pulses teal and grows text size to draw attention in the booth loop.
+
+Artifacts: sizzle HTML `b2aee95c`, storyboard `30e07ce9`. Wiki `13-competitive-landscape.md` updated with conference demo section.
+
+---
+
 ## README update 88: BUILT signed — Phase 1 launch checklist (2026-09-01)
 
 BUILT signed and sent first payment on September 1, 2026. Phase 1 launch checklist created at `mockups/built_launch_checklist.html` — an interactive HTML punch-list covering everything needed to get Mo live in BUILT's environment.
