@@ -1,0 +1,786 @@
+<title>BUILT × Aevah Launch Checklist</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:    #F2F5FA;
+    --surface:   #FFFFFF;
+    --surface-2: #EAF0F8;
+    --ink:       #0D1B2E;
+    --ink-2:     #4A5F78;
+    --ink-3:     #8498B0;
+    --border:    #CDD8E6;
+    --navy:      #1B3566;
+    --blue:      #3B72C8;
+    --blue-bg:   #E8F0FC;
+    --green:     #0E5E38;
+    --green-bg:  #E0F4EC;
+    --amber:     #7A4000;
+    --amber-bg:  #FFF0DC;
+    --purple:    #5B2D8A;
+    --purple-bg: #F0E8FC;
+    --red:       #7B1A1A;
+    --red-bg:    #FEF0F0;
+    --check:     #3B72C8;
+    --radius:    5px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #0B1622;
+      --surface:   #132030;
+      --surface-2: #1A2C40;
+      --ink:       #DDE8F4;
+      --ink-2:     #7A9AB8;
+      --ink-3:     #4A6880;
+      --border:    #243548;
+      --navy:      #3A5CA0;
+      --blue:      #6090E0;
+      --blue-bg:   #1A2E4A;
+      --green:     #1A8A56;
+      --green-bg:  #0D2A1E;
+      --amber:     #D07820;
+      --amber-bg:  #2A1A08;
+      --purple:    #8A52D0;
+      --purple-bg: #1E1030;
+      --red:       #C04040;
+      --red-bg:    #2A0E0E;
+      --check:     #6090E0;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:    #0B1622;
+    --surface:   #132030;
+    --surface-2: #1A2C40;
+    --ink:       #DDE8F4;
+    --ink-2:     #7A9AB8;
+    --ink-3:     #4A6880;
+    --border:    #243548;
+    --navy:      #3A5CA0;
+    --blue:      #6090E0;
+    --blue-bg:   #1A2E4A;
+    --green:     #1A8A56;
+    --green-bg:  #0D2A1E;
+    --amber:     #D07820;
+    --amber-bg:  #2A1A08;
+    --purple:    #8A52D0;
+    --purple-bg: #1E1030;
+    --red:       #C04040;
+    --red-bg:    #2A0E0E;
+    --check:     #6090E0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    background: var(--navy);
+    color: #B8CFF0;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .topbar-brand { color: #E8F0FF; font-weight: 500; }
+  .topbar-sep { opacity: 0.3; }
+  .topbar-date { opacity: 0.7; margin-left: auto; }
+  .badge-signed {
+    background: var(--green);
+    color: #fff;
+    padding: 2px 10px 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .badge-signed::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #7EFFC0;
+    border-radius: 50%;
+  }
+
+  /* ── Page ── */
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .page-header { margin-bottom: 40px; }
+  .page-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .page-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 34px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.2;
+    text-wrap: balance;
+    margin-bottom: 10px;
+  }
+  .page-sub {
+    color: var(--ink-2);
+    font-size: 14.5px;
+    max-width: 600px;
+    line-height: 1.65;
+  }
+
+  /* ── Progress bar ── */
+  .progress-bar-wrap {
+    margin: 28px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .progress-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+
+  /* ── Section ── */
+  .section { margin-bottom: 44px; }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .section-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Sub-section ── */
+  .subsection { margin-bottom: 20px; }
+  .subsection-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* ── Task item ── */
+  .task-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.12s;
+    background: transparent;
+    position: relative;
+  }
+  .task:hover { background: var(--surface-2); }
+
+  .task input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    min-width: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    margin-top: 2px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .task input[type="checkbox"]:checked {
+    background: var(--check);
+    border-color: var(--check);
+  }
+  .task input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px; top: 1px;
+    width: 5px; height: 9px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(40deg);
+  }
+
+  .task-body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .task-text {
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.5;
+    transition: color 0.2s;
+  }
+  .task.done .task-text {
+    color: var(--ink-3);
+    text-decoration: line-through;
+    text-decoration-color: var(--border);
+  }
+  .task-note {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    font-style: italic;
+  }
+
+  /* ── Question item (no checkbox) ── */
+  .question-list { display: flex; flex-direction: column; gap: 2px; }
+  .question {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    background: transparent;
+  }
+  .question:hover { background: var(--surface-2); }
+  .question-bullet {
+    width: 16px; min-width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .question-bullet::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+    display: block;
+  }
+  .question-body { flex: 1; }
+  .question-text {
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .question-note {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  /* ── Owner chips ── */
+  .chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+  .chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .chip-aevah  { background: var(--blue-bg);   color: var(--blue);   }
+  .chip-built  { background: var(--green-bg);  color: var(--green);  }
+  .chip-both   { background: var(--surface-2); color: var(--ink-2);  border: 1px solid var(--border); }
+  .chip-sam    { background: var(--purple-bg); color: var(--purple); }
+  .chip-brian  { background: var(--amber-bg);  color: var(--amber);  }
+  .chip-open   { background: var(--red-bg);    color: var(--red);    }
+
+  /* ── Deliverable callout ── */
+  .deliverable {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 12px 16px;
+    margin-top: 16px;
+  }
+  .deliverable-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+  .deliverable-text {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+
+  /* ── Focus ── */
+  .task input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .progress-fill, .task, .task input[type="checkbox"] { transition: none; }
+  }
+</style>
+
+<div class="topbar">
+  <span class="topbar-brand">BUILT × Aevah</span>
+  <span class="topbar-sep">·</span>
+  <span>Phase 1 Engagement</span>
+  <span class="badge-signed">SIGNED &amp; PAID</span>
+  <span class="topbar-date">September 1, 2026</span>
+</div>
+
+<div class="page">
+
+  <header class="page-header">
+    <p class="page-eyebrow">Mo by Aevah &nbsp;·&nbsp; BUILT Kickoff</p>
+    <h1 class="page-title">Launch Checklist</h1>
+    <p class="page-sub">
+      Everything needed to get Mo live in BUILT's environment. Check items off as they're confirmed — state saves in your browser.
+    </p>
+    <div class="progress-bar-wrap">
+      <div class="progress-track"><div class="progress-fill" id="globalFill"></div></div>
+      <span class="progress-label" id="globalLabel">0 / 0 done</span>
+    </div>
+  </header>
+
+  <!-- ── SECTION 1: Environment Setup ── -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Environment Setup</h2>
+      <span class="section-count" id="count-env"></span>
+    </div>
+
+    <div class="task-list" data-group="env">
+
+      <label class="task" for="t-e1">
+        <input type="checkbox" id="t-e1">
+        <div class="task-body">
+          <span class="task-text">Confirm BUILT's primary cloud infrastructure — Azure or AWS?</span>
+          <span class="task-note">Brian mentioned Azure AD, so Azure is the working assumption for storage and hosting.</span>
+          <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e2">
+        <input type="checkbox" id="t-e2">
+        <div class="task-body">
+          <span class="task-text">Decide: Aevah-hosted storage vs. storage inside BUILT's Azure tenant</span>
+          <span class="task-note">Affects data residency, compliance posture, and SPINS deposit setup.</span>
+          <div class="chips"><span class="chip chip-both">BOTH</span><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e3">
+        <input type="checkbox" id="t-e3">
+        <div class="task-body">
+          <span class="task-text">Provision shared storage for weekly SPINS deposit (S3 bucket or Azure Blob)</span>
+          <div class="chips"><span class="chip chip-aevah">AEVAH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e4">
+        <input type="checkbox" id="t-e4">
+        <div class="task-body">
+          <span class="task-text">BUILT data team confirms SPINS export format and column scope (214-column POS extract)</span>
+          <div class="chips"><span class="chip chip-built">BUILT DATA TEAM</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e5">
+        <input type="checkbox" id="t-e5">
+        <div class="task-body">
+          <span class="task-text">BUILT data team sets a weekly deposit schedule — day, time, and file-naming convention</span>
+          <div class="chips"><span class="chip chip-built">BUILT DATA TEAM</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e6">
+        <input type="checkbox" id="t-e6">
+        <div class="task-body">
+          <span class="task-text">Aevah configures file-watch trigger: detects new SPINS drop → kicks off ingest pipeline</span>
+          <div class="chips"><span class="chip chip-aevah">AEVAH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e7">
+        <input type="checkbox" id="t-e7">
+        <div class="task-body">
+          <span class="task-text">Aevah configures QA gates: row-count checks, missing UPC detection, schema drift alerts</span>
+          <span class="task-note">No bad data reaches the models — QA failures halt ingest and notify both teams.</span>
+          <div class="chips"><span class="chip chip-aevah">AEVAH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e8">
+        <input type="checkbox" id="t-e8">
+        <div class="task-body">
+          <span class="task-text">Confirm Mo hosting URL and network access model — public URL vs. BUILT internal network</span>
+          <div class="chips"><span class="chip chip-both">BOTH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-e9">
+        <input type="checkbox" id="t-e9">
+        <div class="task-body">
+          <span class="task-text">Configure Mo defaults for BUILT: FOOD/MASS channel filters, BUILT brand scope, initial demo views</span>
+          <div class="chips"><span class="chip chip-aevah">AEVAH</span></div>
+        </div>
+      </label>
+
+    </div>
+
+    <div class="deliverable">
+      <span class="deliverable-label">Deliverable</span>
+      <span class="deliverable-text">Storage access granted, file-watch live, QA gates active — BUILT can deposit their first SPINS file and Aevah can confirm clean ingestion end-to-end.</span>
+    </div>
+  </section>
+
+  <!-- ── SECTION 2: SSO & Access ── -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">SSO &amp; User Access</h2>
+      <span class="section-count" id="count-sso"></span>
+    </div>
+
+    <div class="subsection">
+      <p class="subsection-label">Phase A — Manual accounts (start here, Day 1)</p>
+      <div class="task-list" data-group="sso">
+
+        <label class="task" for="t-s1">
+          <input type="checkbox" id="t-s1">
+          <div class="task-body">
+            <span class="task-text">Brian provides initial user list — names, email addresses, and roles</span>
+            <span class="task-note">Expected: Brian + a small group. Connor is Consulted, not a primary daily user.</span>
+            <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s2">
+          <input type="checkbox" id="t-s2">
+          <div class="task-body">
+            <span class="task-text">Aevah provisions manual login credentials for each named user</span>
+            <div class="chips"><span class="chip chip-aevah">AEVAH</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s3">
+          <input type="checkbox" id="t-s3">
+          <div class="task-body">
+            <span class="task-text">Confirm Mo loads correctly for Brian — full walkthrough before handing off credentials</span>
+            <div class="chips"><span class="chip chip-aevah">AEVAH</span><span class="chip chip-brian">BRIAN</span></div>
+          </div>
+        </label>
+
+      </div>
+    </div>
+
+    <div class="subsection">
+      <p class="subsection-label">Phase B — Azure AD SSO (Week 2–3 target)</p>
+      <div class="task-list" data-group="sso">
+
+        <label class="task" for="t-s4">
+          <input type="checkbox" id="t-s4">
+          <div class="task-body">
+            <span class="task-text">Brian introduces Aevah to Sam (BUILT IT) — email or call</span>
+            <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s5">
+          <input type="checkbox" id="t-s5">
+          <div class="task-body">
+            <span class="task-text">Sam provides Azure AD tenant ID and confirms allowed email domains</span>
+            <div class="chips"><span class="chip chip-sam">SAM / BUILT IT</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s6">
+          <input type="checkbox" id="t-s6">
+          <div class="task-body">
+            <span class="task-text">Confirm auth flow preference: OIDC (recommended) or SAML 2.0</span>
+            <div class="chips"><span class="chip chip-sam">SAM</span><span class="chip chip-aevah">AEVAH</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s7">
+          <input type="checkbox" id="t-s7">
+          <div class="task-body">
+            <span class="task-text">Aevah registers app in BUILT's Azure AD tenant — client ID, redirect URIs, scopes</span>
+            <div class="chips"><span class="chip chip-aevah">AEVAH</span><span class="chip chip-sam">SAM</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s8">
+          <input type="checkbox" id="t-s8">
+          <div class="task-body">
+            <span class="task-text">Test SSO login in staging — confirm token flow and user provisioning</span>
+            <div class="chips"><span class="chip chip-aevah">AEVAH</span><span class="chip chip-sam">SAM</span></div>
+          </div>
+        </label>
+
+        <label class="task" for="t-s9">
+          <input type="checkbox" id="t-s9">
+          <div class="task-body">
+            <span class="task-text">Cut over from manual accounts to SSO — retire manual credentials</span>
+            <div class="chips"><span class="chip chip-aevah">AEVAH</span><span class="chip chip-sam">SAM</span></div>
+          </div>
+        </label>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION 3: Open Questions ── -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Open Questions</h2>
+      <span class="section-count">Need answers before we can proceed</span>
+    </div>
+
+    <div class="question-list">
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">Is SSO a Day 1 requirement, or can we launch with manual accounts and add SSO in Week 2–3?</p>
+          <p class="question-note">This determines whether we're blocked on Sam before we can onboard Brian.</p>
+          <div class="chips"><span class="chip chip-brian">BRIAN</span><span class="chip chip-sam">SAM</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">Does BUILT IT need to review Aevah's security posture before go-live?</p>
+          <p class="question-note">SOC 2 status, data handling policy, encryption at rest/in transit — does Sam need these?</p>
+          <div class="chips"><span class="chip chip-sam">SAM</span><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">Who beyond Brian gets Mo access at launch — and what are their roles?</p>
+          <p class="question-note">Need names + email addresses. Connor is Consulted; his access tier may differ from Brian's.</p>
+          <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">When can Brian provide supplemental data — product master file + regional seasonality indexes?</p>
+          <p class="question-note">Both were offered during the kickoff call. These feed the Phase 1 demand forecast directly.</p>
+          <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">When can Connor share FP&amp;A actuals for forecast backtesting?</p>
+          <p class="question-note">This is the key trust-builder: predicted vs. actual side-by-side. We can't build it without their data.</p>
+          <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">Does BUILT's data team know to notify Aevah when a SPINS data restatement occurs?</p>
+          <p class="question-note">SPINS restatements happen ~3–4× per year. Next one is ~December 15. Each triggers a full re-ingest — we need a heads-up.</p>
+          <div class="chips"><span class="chip chip-built">BUILT DATA TEAM</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">What does "consuming the forecast" look like for Brian's team — how does it flow into FP&amp;A?</p>
+          <p class="question-note">Does Mo export a CSV they pick up, or does the Mo UI replace their Excel step? Shapes the export and rollup features we build.</p>
+          <div class="chips"><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="question-bullet"></div>
+        <div class="question-body">
+          <p class="question-text">Agreed stakeholder map: who else at BUILT needs to be in the loop, and at what cadence?</p>
+          <p class="question-note">RACI was signed off in the deck — confirm names map to actual people and that everyone accepts their role.</p>
+          <div class="chips"><span class="chip chip-both">BOTH</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SECTION 4: Week 1–2 Commitments ── -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Week 1–2 Commitments</h2>
+      <span class="section-count" id="count-w12"></span>
+    </div>
+    <p style="font-size:13.5px; color:var(--ink-2); margin-bottom:18px; line-height:1.6;">
+      From the agreed kickoff timeline. The Deliverable at the end of Week 2 is a signed Data Commitment — both teams have confirmed scope, storage access is live, and Aevah can receive the first SPINS file.
+    </p>
+
+    <div class="task-list" data-group="w12">
+
+      <label class="task" for="t-w1">
+        <input type="checkbox" id="t-w1">
+        <div class="task-body">
+          <span class="task-text">BUILT confirms SPINS export format and deposit schedule</span>
+          <div class="chips"><span class="chip chip-built">BUILT DATA TEAM</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-w2">
+        <input type="checkbox" id="t-w2">
+        <div class="task-body">
+          <span class="task-text">Aevah configures storage, file-watch trigger, and QA gates</span>
+          <div class="chips"><span class="chip chip-aevah">AEVAH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-w3">
+        <input type="checkbox" id="t-w3">
+        <div class="task-body">
+          <span class="task-text">Both teams agree on data scope: which SKUs, which retailers, which date range</span>
+          <div class="chips"><span class="chip chip-both">BOTH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-w4">
+        <input type="checkbox" id="t-w4">
+        <div class="task-body">
+          <span class="task-text">Stakeholder map finalized: names mapped to RACI roles, everyone confirms their part</span>
+          <div class="chips"><span class="chip chip-both">BOTH</span></div>
+        </div>
+      </label>
+
+      <label class="task" for="t-w5">
+        <input type="checkbox" id="t-w5">
+        <div class="task-body">
+          <span class="task-text">Kickoff RACI reviewed and signed off by both teams</span>
+          <div class="chips"><span class="chip chip-both">BOTH</span><span class="chip chip-brian">BRIAN</span></div>
+        </div>
+      </label>
+
+    </div>
+
+    <div class="deliverable">
+      <span class="deliverable-label">Deliverable</span>
+      <span class="deliverable-text">Data Commitment confirmed + storage access granted. Aevah can receive the first SPINS file; BUILT has access to Mo with initial credentials.</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'built-launch-checklist-v1';
+
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveState(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  }
+
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  const state = loadState();
+
+  // Restore state
+  checkboxes.forEach(cb => {
+    if (state[cb.id]) {
+      cb.checked = true;
+      cb.closest('.task').classList.add('done');
+    }
+  });
+
+  // Handle changes
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const task = cb.closest('.task');
+      if (cb.checked) {
+        task.classList.add('done');
+        state[cb.id] = true;
+      } else {
+        task.classList.remove('done');
+        delete state[cb.id];
+      }
+      saveState(state);
+      updateProgress();
+    });
+  });
+
+  function updateProgress() {
+    const total = checkboxes.length;
+    const done = [...checkboxes].filter(cb => cb.checked).length;
+    const pct = total > 0 ? (done / total) * 100 : 0;
+    document.getElementById('globalFill').style.width = pct + '%';
+    document.getElementById('globalLabel').textContent = done + ' / ' + total + ' done';
+
+    // Section counts
+    const groups = {
+      env:  { id: 'count-env',  label: 'Environment Setup' },
+      sso:  { id: 'count-sso',  label: 'SSO & Access' },
+      w12:  { id: 'count-w12',  label: 'Week 1–2' },
+    };
+    Object.entries(groups).forEach(([group, cfg]) => {
+      const el = document.getElementById(cfg.id);
+      if (!el) return;
+      const items = document.querySelectorAll('[data-group="' + group + '"] input[type="checkbox"]');
+      const doneCount = [...items].filter(cb => cb.checked).length;
+      el.textContent = doneCount + ' / ' + items.length;
+    });
+  }
+
+  updateProgress();
+</script>

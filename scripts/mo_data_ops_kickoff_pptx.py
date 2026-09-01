@@ -940,11 +940,11 @@ next_items = [
     ("3",  "First data deposit",
      "BUILT deposits initial SPINS extract; Aevah runs ingest + QA; report shared with BUILT"),
     ("4",  "Feature engineering + model training",
-     "Aevah runs Phase 1 models (cannibalization risk + price elasticity) — no BUILT action needed"),
+     "Aevah trains Phase 1 models: demand forecast, cannibalization risk, price elasticity — no BUILT action needed"),
     ("5",  "Phase 1 live demo",
-     "Aevah hosts Mo walkthrough with Brian + Connor; projection validation session"),
+     "Aevah hosts Mo walkthrough with Brian — demand forecast review + FOOD-channel account walkthrough"),
     ("6",  "Feedback + iteration",
-     "Connor's team reviews findings; UI adjustments made; Phase 2 scoping begins"),
+     "Brian + team validate projections; UI adjustments made; Phase 2 scoping begins"),
 ]
 
 item_y = col_top + 0.38
@@ -959,6 +959,10 @@ for num, title, desc in next_items:
        desc, size=8.5, color=BLUE_LIGHT)
     item_y += 0.56
 
+rect(slide, 0.5, 6.65, 12.4, 0.3, fill=RGBColor(0x14, 0x28, 0x50))
+tb(slide, 0.64, 6.67, 9.5, 0.26,
+   "Companion document:  BUILT × Aevah Launch Checklist  ·  Environment setup · SSO & access · Open questions · Week 1–2 commitments",
+   size=8, color=BLUE_LIGHT)
 tb(slide, 0.5, 7.1, 12.5, 0.3,
    "Mo by Aevah  ·  BUILT Kickoff  ·  August 2026  ·  Confidential",
    size=8, color=MID_GREY, align=PP_ALIGN.RIGHT)
