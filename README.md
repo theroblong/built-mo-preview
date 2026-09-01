@@ -6,6 +6,23 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 88: BUILT signed — Phase 1 launch checklist (2026-09-01)
+
+BUILT signed and sent first payment on September 1, 2026. Phase 1 launch checklist created at `mockups/built_launch_checklist.html` — an interactive HTML punch-list covering everything needed to get Mo live in BUILT's environment.
+
+**Checklist sections:**
+- **Environment setup**: confirm cloud/storage, provision SPINS deposit bucket, configure file-watch trigger + QA gates, Mo hosting URL, Mo defaults for BUILT
+- **SSO & access**: Phase A manual accounts (Day 1) → Phase B Azure AD SSO via Sam / BUILT IT (Week 2–3 target)
+- **Open questions**: 8 items needing answers from Brian or Sam before go-live (SSO timing, IT security review, user list, supplemental data, FP&A actuals, SPINS restatement notifications, forecast export format, stakeholder map)
+- **Week 1–2 commitments**: the 5 deliverables agreed in the signed kickoff RACI
+
+**Also updated:**
+- `mockups/mo_artifact_navigator.html`: checklist added to Customer-Facing category; kickoff deck description updated to reflect module ordering
+- `scripts/mo_data_ops_kickoff_pptx.py` (Slide 11): Step 4 now names all three Phase 1 models; companion document callout added at slide bottom
+- PPTX regenerated at `mockups/mo_data_ops_kickoff.pptx`
+
+---
+
 ## README update 87: PPTX kickoff deck — Brian meeting feedback incorporated (2026-08-28)
 
 Phase 1 restructured and PPTX updated after live kickoff meeting with Brian Cluster (BUILT VP Sales / GM). Both the meeting transcript (`docs/Built _ Aevah Kickoff!!.docx`) and Rob's in-meeting edited PPTX (`docs/Built Phase 1 Plan.pptx`) were reconciled into the following changes in `scripts/mo_data_ops_kickoff_pptx.py`:
