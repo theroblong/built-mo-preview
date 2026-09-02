@@ -1,0 +1,709 @@
+<title>Aevah Intelligence Sizzle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#060D1B;--surface:#0F1C30;--s2:#162436;--navy:#1B3566;
+  --blue:#4B85E0;--blue-lt:#7AABF8;--green:#1A8A56;--green-lt:#3FC88A;
+  --amber:#D07820;--amber-lt:#FFA040;--teal:#2CC8A8;
+  --text:#E2EAF8;--t2:#8AAAC8;--t3:#3A5878;--border:#1A3050;
+  --serif:'DM Serif Display',serif;--mono:'JetBrains Mono',monospace;
+  --sans:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--sans);overflow:hidden;}
+#root{
+  position:relative;
+  width:min(100vw,177.78vh);
+  height:min(56.25vw,100vh);
+  background:var(--bg);
+  overflow:hidden;
+  cursor:pointer;
+  user-select:none;
+}
+#scene-slot{position:absolute;inset:0;display:flex;}
+#progress-rail{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--border);}
+#progress-fill{height:100%;background:var(--blue);width:0%;transition:none;}
+#scene-dots{position:absolute;bottom:clamp(10px,1.5vh,18px);left:50%;transform:translateX(-50%);display:flex;gap:clamp(6px,0.8vw,10px);align-items:center;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--t3);transition:transform 0.3s,background 0.3s;cursor:pointer;}
+.dot.active{background:var(--blue);transform:scale(1.5);}
+#mo-corner{position:absolute;top:clamp(10px,1.5vh,18px);right:clamp(12px,1.8vw,22px);font-family:var(--serif);font-size:clamp(14px,1.8vw,22px);color:var(--t3);letter-spacing:0.05em;pointer-events:none;}
+#pause-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:clamp(11px,1.4vw,18px);color:var(--text);letter-spacing:0.18em;background:rgba(6,13,27,0.72);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+#pause-hint.vis{opacity:1;}
+
+/* ── scene base ── */
+.scene{width:100%;height:100%;padding:clamp(28px,4vh,56px) clamp(28px,4vw,60px);display:flex;flex-direction:column;justify-content:center;}
+.scene.split{flex-direction:row;gap:clamp(16px,2.5vw,36px);align-items:stretch;}
+.eyebrow{font-family:var(--mono);font-size:clamp(11px,1.1vw,16px);letter-spacing:0.2em;color:var(--blue);margin-bottom:clamp(10px,1.6vh,20px);}
+.h1{font-family:var(--serif);font-size:clamp(26px,3.4vw,56px);color:var(--text);line-height:1.18;margin-bottom:clamp(12px,2vh,28px);}
+.sub{font-size:clamp(14px,1.5vw,22px);color:var(--t2);line-height:1.6;max-width:62ch;}
+.kicker{font-family:var(--mono);font-size:clamp(10px,0.95vw,14px);letter-spacing:0.22em;color:var(--t3);margin-top:clamp(18px,3vh,40px);}
+
+/* fade-up animation */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+.fu{opacity:0;animation:fadeUp 0.7s ease both;}
+.fu1{animation-delay:0.3s;}.fu2{animation-delay:0.9s;}.fu3{animation-delay:1.8s;}.fu4{animation-delay:3.1s;}
+
+/* ── scene 2 chat ── */
+.chat-panel{width:36%;background:var(--surface);border:1px solid var(--border);border-radius:clamp(8px,1vw,14px);display:flex;flex-direction:column;overflow:hidden;}
+.chat-header{padding:clamp(8px,1.2vh,16px) clamp(10px,1.4vw,18px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:clamp(7px,0.9vw,12px);}
+.chat-avatar{width:clamp(22px,2.8vw,38px);height:clamp(22px,2.8vw,38px);border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:clamp(11px,1.4vw,18px);color:var(--blue-lt);}
+.chat-title{font-size:clamp(12px,1.2vw,17px);font-weight:600;color:var(--text);}
+.chat-sub{font-size:clamp(10px,0.9vw,13px);color:var(--t2);}
+.chat-body{flex:1;overflow-y:auto;padding:clamp(8px,1.2vh,16px);display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px);}
+.bubble{padding:clamp(8px,1vh,13px) clamp(10px,1.3vw,16px);border-radius:10px;font-size:clamp(11px,1.1vw,16px);line-height:1.6;max-width:92%;}
+.bubble.user{background:var(--navy);color:var(--text);align-self:flex-end;font-style:italic;}
+.bubble.mo{background:var(--s2);color:var(--text);align-self:flex-start;border:1px solid var(--border);}
+.typing{display:flex;gap:5px;align-items:center;padding:clamp(7px,1vh,13px);}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--t2);animation:bounce 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.chart-area{flex:1;display:flex;flex-direction:column;min-width:0;}
+.chart-label{font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);letter-spacing:0.14em;color:var(--t2);margin-bottom:clamp(5px,0.8vh,10px);}
+.chart-area svg{flex:1;width:100%;height:auto;}
+.svg-legend{display:flex;gap:clamp(12px,1.6vw,22px);margin-top:clamp(5px,0.7vh,10px);}
+.leg-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);color:var(--t2);}
+.leg-swatch{width:22px;height:2px;}
+
+/* annotations */
+.ann{opacity:0;transition:opacity 0.5s ease;}
+
+/* ── scene 3 cannibal ── */
+.table-wrap{border:1px solid var(--border);border-radius:clamp(6px,0.8vw,10px);overflow:hidden;margin-top:clamp(8px,1.2vh,16px);}
+.t-head{display:grid;grid-template-columns:1fr 1fr 1fr 130px;background:var(--s2);padding:clamp(9px,1.1vh,14px) clamp(12px,1.6vw,20px);font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);letter-spacing:0.12em;color:var(--t2);}
+.t-row{display:grid;grid-template-columns:1fr 1fr 1fr 130px;padding:clamp(10px,1.3vh,16px) clamp(12px,1.6vw,20px);border-top:1px solid var(--border);align-items:center;gap:clamp(8px,1vw,14px);}
+.t-row:hover{background:rgba(75,133,224,0.04);}
+.cell-name{font-size:clamp(12px,1.2vw,17px);color:var(--text);font-weight:500;}
+.cell-units{font-family:var(--mono);font-size:clamp(12px,1.15vw,16px);font-weight:500;}
+.risk-col{display:flex;flex-direction:column;gap:4px;}
+.risk-bar-wrap{height:7px;background:var(--border);border-radius:3px;overflow:hidden;}
+.risk-bar{height:100%;border-radius:3px;width:0%;transition:width 0.9s ease;}
+.risk-pct{font-family:var(--mono);font-size:clamp(10px,0.95vw,13px);color:var(--t2);}
+.level-badge{font-family:var(--mono);font-size:clamp(11px,1vw,14px);letter-spacing:0.1em;padding:5px 14px;border-radius:4px;text-align:center;font-weight:500;}
+.level-high{background:rgba(255,60,60,0.15);color:#FF6060;border:1px solid rgba(255,60,60,0.3);}
+.level-med{background:rgba(208,120,32,0.15);color:var(--amber-lt);border:1px solid rgba(208,120,32,0.3);}
+.level-low{background:rgba(26,138,86,0.15);color:var(--green-lt);border:1px solid rgba(26,138,86,0.3);}
+.sku-row{background:var(--navy);border:1px solid var(--blue);border-radius:clamp(6px,0.8vw,10px);padding:clamp(10px,1.4vh,18px) clamp(12px,1.6vw,20px);display:flex;align-items:center;gap:clamp(10px,1.4vw,18px);margin-bottom:clamp(8px,1.2vh,14px);}
+.eval-badge{font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);letter-spacing:0.1em;background:rgba(75,133,224,0.2);color:var(--blue-lt);border:1px solid var(--blue);padding:4px 10px;border-radius:4px;white-space:nowrap;}
+.sku-name{font-size:clamp(13px,1.3vw,18px);font-weight:600;color:var(--text);}
+.sku-meta{font-size:clamp(11px,1.05vw,15px);color:var(--t2);margin-left:auto;}
+.insight-box{background:var(--s2);border-left:3px solid var(--amber);border-radius:0 clamp(6px,0.8vw,10px) clamp(6px,0.8vw,10px) 0;padding:clamp(10px,1.4vh,18px) clamp(12px,1.6vw,20px);font-size:clamp(13px,1.3vw,18px);color:var(--text);line-height:1.6;margin-top:clamp(8px,1.2vh,16px);}
+
+/* ── scene 4 elasticity ── */
+.metric-cards{width:36%;display:flex;flex-direction:column;gap:clamp(8px,1.2vh,16px);}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:clamp(6px,0.8vw,10px);padding:clamp(10px,1.5vh,20px) clamp(10px,1.4vw,18px);}
+.metric-val{font-family:var(--serif);font-size:clamp(26px,3vw,50px);color:var(--text);line-height:1;}
+.metric-label{font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);letter-spacing:0.15em;color:var(--t2);margin-top:5px;margin-bottom:7px;}
+.metric-sub{font-size:clamp(11px,1.05vw,15px);color:var(--t2);}
+.metric-sub .pos{color:var(--green-lt);}
+.metric-sub .neg{color:#FF6060;}
+
+/* ── scene 5 forecast ── */
+.kpi-row{display:flex;gap:clamp(10px,1.5vw,22px);margin-bottom:clamp(10px,1.5vh,20px);}
+.kpi-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:clamp(6px,0.8vw,10px);padding:clamp(8px,1.2vh,16px) clamp(10px,1.4vw,16px);}
+.kpi-val{font-family:var(--serif);font-size:clamp(22px,2.6vw,42px);color:var(--text);}
+.kpi-lbl{font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);letter-spacing:0.14em;color:var(--t2);margin-top:4px;}
+.kpi-sub{font-size:clamp(11px,1vw,14px);color:var(--t2);margin-top:4px;}
+.proxy-note{background:var(--s2);border-left:3px solid var(--teal);border-radius:0 clamp(6px,0.8vw,10px) clamp(6px,0.8vw,10px) 0;padding:clamp(6px,1vh,13px) clamp(10px,1.4vw,16px);font-size:clamp(8px,1vw,13px);color:var(--t2);line-height:1.6;margin-top:clamp(6px,1vh,13px);transition:font-size 0.5s ease,color 0.5s ease,padding 0.5s ease;}
+@keyframes coldPulse{0%,100%{background:var(--s2);box-shadow:inset 4px 0 0 var(--teal);}50%{background:rgba(44,200,168,0.1);box-shadow:inset 4px 0 0 var(--teal),0 0 18px rgba(44,200,168,0.18);}}
+.proxy-note.lit{border-left:none;animation:coldPulse 2.2s ease-in-out infinite;font-size:clamp(11px,1.35vw,18px);color:var(--text);padding:clamp(10px,1.4vh,18px) clamp(14px,1.8vw,22px);}
+
+/* ── scene 6 close ── */
+.wordmark{font-family:var(--serif);font-size:clamp(52px,8vw,128px);color:var(--text);text-align:center;line-height:1;}
+.tagline{font-size:clamp(15px,1.6vw,24px);color:var(--text);text-align:center;max-width:56ch;margin:clamp(12px,1.8vh,24px) auto;line-height:1.5;opacity:0.88;}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(6px,0.9vw,12px);margin:clamp(14px,1.8vh,24px) auto;}
+.chip{font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);letter-spacing:0.1em;padding:6px 16px;border-radius:20px;border:1px solid var(--border);color:var(--t2);background:var(--surface);}
+.cta-block{background:var(--navy);border:1px solid var(--blue);border-radius:clamp(8px,1vw,14px);padding:clamp(14px,2vh,28px) clamp(20px,3vw,44px);text-align:center;margin-top:clamp(14px,2vh,26px);}
+.cta-block p{font-size:clamp(13px,1.4vw,21px);color:var(--text);}
+.cta-block small{font-family:var(--mono);font-size:clamp(10px,0.9vw,13px);color:var(--t3);margin-top:8px;display:block;}
+
+/* ── scene 6 metrics ── */
+.s6-metrics{display:flex;align-items:center;gap:clamp(20px,3vw,44px);margin:clamp(16px,2.2vh,30px) auto;padding:clamp(14px,2vh,26px) clamp(20px,3vw,44px);background:var(--surface);border:1px solid var(--border);border-radius:clamp(8px,1vw,14px);}
+.s6-metric{text-align:center;}
+.s6-mval{font-family:var(--serif);font-size:clamp(32px,4.5vw,66px);line-height:1;margin-bottom:6px;}
+.s6-mlbl{font-family:var(--mono);font-size:clamp(10px,0.95vw,14px);letter-spacing:0.14em;color:var(--text);margin-bottom:4px;text-transform:uppercase;}
+.s6-msub{font-size:clamp(10px,0.95vw,13px);color:var(--t2);}
+.s6-mdivider{width:1px;height:clamp(40px,6vh,70px);background:var(--border);}
+</style>
+
+<div id="root">
+  <div id="scene-slot"></div>
+  <div id="progress-rail"><div id="progress-fill"></div></div>
+  <div id="scene-dots"></div>
+  <div id="mo-corner">Aevah</div>
+  <div id="pause-hint">PAUSED · click to resume</div>
+</div>
+
+<script>
+// ── helpers ──────────────────────────────────────────────────────────────────
+function linePath(pts){return pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');}
+function areaPath(pts,bY){
+  const top=linePath(pts);
+  const back=[...pts].reverse().map(p=>'L'+p[0].toFixed(1)+' '+bY.toFixed(1)).join(' ');
+  return top+' '+back+' Z';
+}
+function clrStop(col,op){return `<stop offset="${op}" stop-color="${col}"/>`;}
+
+// ── scene controller ─────────────────────────────────────────────────────────
+let cur=0,paused=false;
+let sceneTimers=[],advanceTimer=null,rafId=null;
+let progStart=null,progDur=0,progElapsed=0;
+
+function st(fn,ms){const id=setTimeout(fn,ms);sceneTimers.push(id);return id;}
+function clearST(){sceneTimers.forEach(clearTimeout);sceneTimers=[];}
+
+function showAnn(id){
+  const el=document.getElementById(id);
+  if(el){el.style.transition='opacity 0.5s ease';el.style.opacity='1';}
+}
+
+function goTo(i){
+  cur=i;clearST();clearTimeout(advanceTimer);cancelAnimationFrame(rafId);
+  const sc=SCENES[cur];
+  document.getElementById('scene-slot').innerHTML=sc.render();
+  if(sc.init)sc.init();
+  updateDots(cur);
+  startProg(sc.duration);
+  advanceTimer=setTimeout(()=>goTo((cur+1)%SCENES.length),sc.duration);
+}
+
+function startProg(dur){
+  progDur=dur;progStart=performance.now();progElapsed=0;
+  const fill=document.getElementById('progress-fill');
+  fill.style.width='0%';
+  const tick=now=>{
+    if(paused)return;
+    const pct=Math.min(100,(now-progStart)/dur*100);
+    fill.style.width=pct+'%';
+    if(pct<100)rafId=requestAnimationFrame(tick);
+  };
+  rafId=requestAnimationFrame(tick);
+}
+
+function togglePause(){
+  paused=!paused;
+  const hint=document.getElementById('pause-hint');
+  hint.classList.toggle('vis',paused);
+  if(paused){
+    progElapsed=performance.now()-progStart;
+    clearTimeout(advanceTimer);
+    cancelAnimationFrame(rafId);
+  } else {
+    const remaining=progDur-progElapsed;
+    progStart=performance.now()-progElapsed;
+    advanceTimer=setTimeout(()=>goTo((cur+1)%SCENES.length),remaining);
+    const fill=document.getElementById('progress-fill');
+    const tick=now=>{
+      if(paused)return;
+      const pct=Math.min(100,(now-progStart)/progDur*100);
+      fill.style.width=pct+'%';
+      if(pct<100)rafId=requestAnimationFrame(tick);
+    };
+    rafId=requestAnimationFrame(tick);
+    // re-schedule queued scene timers won't be here; annotations already shown
+  }
+}
+
+function updateDots(i){
+  document.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+}
+
+function typeWriter(el,html,msPerChar){
+  msPerChar=msPerChar||16;
+  const plain=html.replace(/<[^>]+>/g,'');
+  let i=0;
+  const tick=()=>{
+    if(i>=plain.length){el.innerHTML=html;return;}
+    el.textContent=plain.slice(0,++i);
+    sceneTimers.push(setTimeout(tick,msPerChar));
+  };
+  tick();
+}
+
+document.getElementById('root').addEventListener('click',togglePause);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){clearST();clearTimeout(advanceTimer);cancelAnimationFrame(rafId);goTo((cur+1)%SCENES.length);}
+  if(e.key==='ArrowLeft'){clearST();clearTimeout(advanceTimer);cancelAnimationFrame(rafId);goTo((cur-1+SCENES.length)%SCENES.length);}
+  if(e.key===' '){e.preventDefault();togglePause();}
+});
+
+// ── data ─────────────────────────────────────────────────────────────────────
+const VEL  = [210,215,222,230,238,248,262,270,274,278,280,284,288,286,282,276,268,260,252,245,238,226,214,206,198,192,189,187,188,190,195,202,212,222,230,237,242,246,249,252,254,257,260,262,260,257,254,251,248,246,244,242];
+const DIST = [62,64,66,68,70,72,73,74,75,76,76,77,78,78,79,79,78,78,77,78,78,77,76,75,74,74,73,73,72,72,72,73,74,75,75,76,76,77,77,78,78,78,79,79,79,80,80,80,79,79,79,79];
+const GAS  = [95,97,100,104,108,113,118,122,126,130,133,137,140,143,144,145,144,142,139,136,132,128,123,118,113,109,106,103,101,99,97,95,94,93,92,91,91,92,93,94,95,96,97,98,98,97,96,95,94,93,92,91];
+
+const PRICES  = [2.49,2.59,2.69,2.79,2.89,2.99,3.09,3.19,3.29];
+const UNITS_K = [60.8,57.2,53.6,50.2,47.0,43.7,40.6,37.8,36.5];
+
+const HIST       = [228,232,238,244,250,258,264,269,272,274,276,278,280,278,274,270,265,262,260,258,260,262,264,266,268,270];
+const FCST_BASE  = [272,274,276,278,280,281,282,283,284,284,284,283,282];
+const FCST_LOW   = [248,250,251,252,253,254,255,254,254,253,252,251,250];
+const FCST_HIGH  = [296,300,302,304,306,308,309,312,314,314,313,315,314];
+const FCST_PROMO = [272,274,276,308,338,330,320,283,284,284,284,283,282];
+
+// ── SCENE 1 teaser SVG ───────────────────────────────────────────────────────
+function buildS1Teaser(){
+  const W=400,H=280,pT=20,pR=10,pB=20,pL=10;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const minV=Math.min(...VEL),maxV=Math.max(...VEL);
+  const xS=i=>pL+i/51*cW;
+  const yV=v=>pT+cH-(v-minV)/(maxV-minV)*cH;
+  const pts=VEL.map((_,i)=>[xS(i),yV(VEL[i])]);
+  const path=linePath(pts);
+  const area=areaPath(pts,pT+cH);
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;opacity:0.15;">
+    <defs>
+      <linearGradient id="gS1" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4B85E0" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#4B85E0" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#gS1)" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="1.2s" fill="freeze"/>
+    </path>
+    <path d="${path}" fill="none" stroke="#4B85E0" stroke-width="2.5" stroke-dasharray="3000" stroke-dashoffset="3000">
+      <animate attributeName="stroke-dashoffset" from="3000" to="0" begin="1.8s" dur="2s" fill="freeze"/>
+    </path>
+  </svg>`;
+}
+
+// ── SCENE 1 ───────────────────────────────────────────────────────────────────
+const S1={id:'s1',duration:8000,label:'Hook',
+  render:()=>`
+  <div class="scene" style="position:relative;flex-direction:row;gap:clamp(16px,2.5vw,36px);align-items:center;justify-content:flex-start;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%, rgba(75,133,224,0.08) 0%, transparent 65%);pointer-events:none;"></div>
+    <div style="flex:0 0 55%;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;">
+      <div class="eyebrow fu fu1">AEVAH INTELLIGENCE</div>
+      <div class="h1 fu fu2" style="max-width:22ch;">Your category data is full of answers. Getting to them shouldn't take a week.</div>
+      <div class="sub fu fu3">Aevah reads your SPINS data, layers in macro signals, and surfaces the insight — in seconds, in plain language.</div>
+      <div class="kicker fu fu4">DEMAND · CANNIBALIZATION · ELASTICITY · FORECAST · MACRO SIGNALS</div>
+    </div>
+    <div class="fu fu3" style="flex:0 0 45%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;">
+      ${buildS1Teaser()}
+    </div>
+  </div>`,
+  init:()=>{}
+};
+
+// ── SCENE 2 ───────────────────────────────────────────────────────────────────
+function buildScene2Chart(){
+  const W=620,H=300,pT=28,pR=14,pB=40,pL=14,cW=592,cH=232;
+  const xS=i=>pL+i/51*cW;
+  const yV=v=>pT+cH-(v-185)/110*cH;
+  const yD=v=>pT+(1-(v-58)/26)*cH*0.5; // upper 50% zone, domain 58-84
+  const yG=v=>pT+cH-(v-88)/60*cH;
+
+  const vPts=VEL.map((_,i)=>[xS(i),yV(VEL[i])]);
+  const dPts=DIST.map((_,i)=>[xS(i),yD(DIST[i])]);
+  const gPts=GAS.map((_,i)=>[xS(i),yG(GAS[i])]);
+  const bY=pT+cH;
+
+  // total path length approximation for dasharray
+  const vPath=linePath(vPts);
+  const dPath=linePath(dPts);
+  const gPath=linePath(gPts);
+  const vArea=areaPath(vPts,bY);
+  const dArea=areaPath(dPts,pT);
+
+  // annotation positions
+  const week30=30; const txD=xS(week30); const tyD=yD(DIST[30]);
+  const week27=26; const txT=xS(week27); const tyT=yV(VEL[26]);
+  const week15=14; const txG=xS(week15); const tyG=yG(GAS[14]);
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+  <defs>
+    <linearGradient id="gV" x1="0" y1="0" x2="0" y2="1">${clrStop('#4B85E0','0%')}${clrStop('rgba(75,133,224,0)','100%')}</linearGradient>
+    <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1">${clrStop('rgba(63,200,138,0.22)','0%')}${clrStop('rgba(63,200,138,0)','100%')}</linearGradient>
+  </defs>
+  <!-- dist area -->
+  <path d="${dArea}" fill="url(#gD)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="0.4s" dur="1s" fill="freeze"/>
+  </path>
+  <!-- dist line -->
+  <path d="${dPath}" fill="none" stroke="#3FC88A" stroke-width="1.5" stroke-dasharray="2000" stroke-dashoffset="2000" opacity="0.85">
+    <animate attributeName="stroke-dashoffset" from="2000" to="0" begin="0.4s" dur="1.8s" fill="freeze"/>
+  </path>
+  <!-- gas line -->
+  <path d="${gPath}" fill="none" stroke="#FFA040" stroke-width="1.5" stroke-dasharray="4,4" opacity="0">
+    <animate attributeName="opacity" from="0" to="0.72" begin="2.5s" dur="0.5s" fill="freeze"/>
+  </path>
+  <!-- vel area -->
+  <path d="${vArea}" fill="url(#gV)" opacity="0">
+    <animate attributeName="opacity" from="0" to="0.3" begin="1.0s" dur="1s" fill="freeze"/>
+  </path>
+  <!-- vel line -->
+  <path d="${vPath}" fill="none" stroke="#4B85E0" stroke-width="2" stroke-dasharray="3000" stroke-dashoffset="3000">
+    <animate attributeName="stroke-dashoffset" from="3000" to="0" begin="1.0s" dur="2s" fill="freeze"/>
+  </path>
+  <!-- x axis ticks -->
+  ${[0,12,25,38,51].map(i=>`<text x="${xS(i)}" y="${pT+cH+14}" font-family="JetBrains Mono" font-size="8" fill="#3A5878" text-anchor="middle">Wk ${i+1}</text>`).join('')}
+  <!-- annotations -->
+  <g id="ann-d" class="ann">
+    <line x1="${txD-30}" y1="${tyD}" x2="${txD+30}" y2="${tyD}" stroke="#3FC88A" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+    <text x="${txD}" y="${tyD-7}" font-family="JetBrains Mono" font-size="9" fill="#3FC88A" text-anchor="middle">↔ distribution stable</text>
+  </g>
+  <g id="ann-t" class="ann">
+    <circle cx="${txT}" cy="${tyT}" r="5" fill="none" stroke="#7AABF8" stroke-width="1.5"/>
+    <rect x="${txT+8}" y="${tyT-16}" width="90" height="22" rx="4" fill="#0F1C30" stroke="#1A3050"/>
+    <text x="${txT+53}" y="${tyT-1}" font-family="JetBrains Mono" font-size="9" fill="#7AABF8" text-anchor="middle">velocity −18%</text>
+  </g>
+  <g id="ann-g" class="ann">
+    <circle cx="${txG}" cy="${tyG}" r="4" fill="#FFA040" opacity="0.8"/>
+    <rect x="${txG+7}" y="${tyG-16}" width="76" height="22" rx="4" fill="#0F1C30" stroke="#1A3050"/>
+    <text x="${txG+45}" y="${tyG-1}" font-family="JetBrains Mono" font-size="9" fill="#FFA040" text-anchor="middle">gas +$1.34</text>
+  </g>
+</svg>`;
+}
+
+const S2={id:'s2',duration:16000,label:'Aevah',
+  render:()=>`
+  <div class="scene split" style="padding:clamp(18px,3vh,40px) clamp(18px,3vw,44px);">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="chat-avatar">A</div>
+        <div><div class="chat-title">Aevah</div><div class="chat-sub">Velocity Analysis</div></div>
+      </div>
+      <div class="chat-body" id="chat-body">
+        <div class="bubble user fu" style="animation-delay:0.4s">"Why did velocity drop 18% at Grocery in Q3?"</div>
+        <div id="typing-ind" class="bubble mo" style="opacity:0;">
+          <div class="typing"><span></span><span></span><span></span></div>
+        </div>
+        <div id="mo-reply" class="bubble mo" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="chart-area">
+      <div class="chart-label">WEEKLY VELOCITY &amp; DISTRIBUTION — GROCERY CHANNEL · 52 WEEKS</div>
+      ${buildScene2Chart()}
+      <div class="svg-legend">
+        <div class="leg-item"><div class="leg-swatch" style="background:#4B85E0;"></div>Velocity</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#3FC88A;"></div>Distribution %</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#FFA040;height:1px;border-top:2px dashed #FFA040;"></div>Gas Index</div>
+      </div>
+    </div>
+  </div>`,
+  init:()=>{
+    st(()=>{
+      const ti=document.getElementById('typing-ind');
+      if(ti)ti.style.opacity='1';
+    },1200);
+    st(()=>{showAnn('ann-d');},3800);
+    st(()=>{showAnn('ann-t');},5200);
+    st(()=>{showAnn('ann-g');},6000);
+    st(()=>{
+      const ti=document.getElementById('typing-ind');
+      const mr=document.getElementById('mo-reply');
+      if(!ti||!mr)return;
+      ti.style.display='none';
+      mr.style.display='block';
+      const html=`Distribution held steady at 77–78% through Q3 — shelf presence isn't the culprit.\n\nThe macro overlay tells the real story: <span style="color:var(--amber-lt)">gas prices rose $1.34/gallon through Q2–Q3</span>, compressing discretionary spend across FOOD channel.\n\nVelocity lags a macro recovery by 4–6 weeks. The trough peaked at <span style="color:var(--blue-lt)">Week 27</span> — recovery confirmed by Week 31.\n\n<span style="color:var(--green-lt)">This is a macro correction, not a product issue.</span>`;
+      typeWriter(mr,html,18);
+    },6800);
+  }
+};
+
+// ── SCENE 3 ───────────────────────────────────────────────────────────────────
+const S3={id:'s3',duration:13000,label:'Cannibalization',
+  render:()=>`
+  <div class="scene" style="justify-content:center;">
+    <div class="eyebrow">CANNIBALIZATION INTELLIGENCE</div>
+    <div class="h1" style="margin-bottom:clamp(8px,1.2vh,16px);">Know before you launch.</div>
+    <div class="sku-row fu" style="opacity:0;animation-delay:1.2s;">
+      <div class="eval-badge">EVALUATING</div>
+      <div class="sku-name">Peanut Butter Crunch · 4-Pack</div>
+      <div class="sku-meta">projected: <strong style="color:var(--amber-lt)">3,200 units/wk</strong> cannibalized → <strong style="color:var(--green-lt)">1,840 incremental</strong></div>
+    </div>
+    <div class="table-wrap">
+      <div class="t-head"><span>Activity</span><span>Units Cannibalized</span><span>Cannib Risk Score</span><span>Level</span></div>
+      <div class="t-row fu" style="opacity:0;animation-delay:1.8s;border-left:3px solid #FF6060;" id="row0">
+        <div class="cell-name">Chocolate Crunch 4-Pack</div>
+        <div class="cell-units" style="color:#FF6060;">−1,540/wk</div>
+        <div class="risk-col"><div class="risk-bar-wrap"><div class="risk-bar" id="rb0" data-w="72" style="background:#FF6060;"></div></div><div class="risk-pct">72%</div></div>
+        <div class="level-badge level-high">HIGH</div>
+      </div>
+      <div class="t-row fu" style="opacity:0;animation-delay:2.2s;border-left:3px solid var(--amber-lt);" id="row1">
+        <div class="cell-name">Vanilla Bean 4-Pack</div>
+        <div class="cell-units" style="color:var(--amber-lt);">−920/wk</div>
+        <div class="risk-col"><div class="risk-bar-wrap"><div class="risk-bar" id="rb1" data-w="44" style="background:var(--amber-lt);"></div></div><div class="risk-pct">44%</div></div>
+        <div class="level-badge level-med">MED</div>
+      </div>
+      <div class="t-row fu" style="opacity:0;animation-delay:2.6s;border-left:3px solid var(--green-lt);" id="row2">
+        <div class="cell-name">Strawberry 1-Pack</div>
+        <div class="cell-units" style="color:var(--green-lt);">−300/wk</div>
+        <div class="risk-col"><div class="risk-bar-wrap"><div class="risk-bar" id="rb2" data-w="18" style="background:var(--green-lt);"></div></div><div class="risk-pct">18%</div></div>
+        <div class="level-badge level-low">LOW</div>
+      </div>
+    </div>
+    <div class="insight-box fu" style="opacity:0;animation-delay:3.5s;">This launch cannibalizes <strong style="color:var(--amber-lt)">2,760 units/week</strong> from existing lineup — but drives <strong style="color:var(--green-lt)">1,840 units</strong> of true incremental volume. Net: positive, but marginal. Consider staggered intro in Mass before Grocery.</div>
+  </div>`,
+  init:()=>{
+    st(()=>{
+      ['rb0','rb1','rb2'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el)el.style.width=el.dataset.w+'%';
+      });
+    },2000);
+  }
+};
+
+// ── SCENE 4 ───────────────────────────────────────────────────────────────────
+function buildElasticityChart(){
+  const W=520,H=300,pT=24,pR=20,pB=44,pL=48;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const minP=2.49,maxP=3.29,minU=36,maxU=63;
+  const xP=p=>pL+(p-minP)/(maxP-minP)*cW;
+  const yU=u=>pT+cH-(u-minU)/(maxU-minU)*cH;
+
+  const pts=PRICES.map((p,i)=>[xP(p),yU(UNITS_K[i])]);
+  const curve=linePath(pts);
+  const area=areaPath(pts,pT+cH);
+
+  // competitor band: indices 3-6 ($2.79–$3.09)
+  const bx1=xP(2.79),bx2=xP(3.09);
+  // optimal at index 4
+  const ox=xP(2.89),oy=yU(47.0);
+
+  const yLabels=[[60,60],[47,47],[37,37]];
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+  <defs>
+    <linearGradient id="gE" x1="0" y1="0" x2="0" y2="1">
+      ${clrStop('rgba(75,133,224,0.35)','0%')}${clrStop('rgba(75,133,224,0.0)','100%')}
+    </linearGradient>
+  </defs>
+  <!-- demand area -->
+  <path d="${area}" fill="url(#gE)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="0.3s" dur="0.8s" fill="freeze"/>
+  </path>
+  <!-- demand curve -->
+  <path d="${curve}" fill="none" stroke="#4B85E0" stroke-width="2.5" stroke-dasharray="1000" stroke-dashoffset="1000">
+    <animate attributeName="stroke-dashoffset" from="1000" to="0" begin="0.3s" dur="1.4s" fill="freeze"/>
+  </path>
+  <!-- competitor band -->
+  <rect x="${bx1}" y="${pT}" width="${bx2-bx1}" height="${cH}" fill="rgba(208,120,32,0.08)" stroke="rgba(208,120,32,0.2)" stroke-width="1" stroke-dasharray="3,2" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="2.5s" dur="0.5s" fill="freeze"/>
+  </rect>
+  <text x="${(bx1+bx2)/2}" y="${pT-6}" font-family="JetBrains Mono" font-size="8" fill="rgba(208,120,32,0.6)" text-anchor="middle" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="2.5s" dur="0.5s" fill="freeze"/>
+    competitor band
+  </text>
+  <!-- optimal vertical line -->
+  <line x1="${ox}" y1="${pT}" x2="${ox}" y2="${pT+cH}" stroke="#2CC8A8" stroke-width="1.5" stroke-dasharray="4,3" opacity="0">
+    <animate attributeName="opacity" from="0" to="0.8" begin="1.8s" dur="0.4s" fill="freeze"/>
+  </line>
+  <!-- optimal dot -->
+  <circle cx="${ox}" cy="${oy}" r="6" fill="#2CC8A8" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="0.4s" fill="freeze"/>
+  </circle>
+  <!-- optimal callout -->
+  <rect x="${ox+10}" y="${oy-18}" width="148" height="30" rx="5" fill="#0F1C30" stroke="#2CC8A8" stroke-width="1" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="0.4s" fill="freeze"/>
+  </rect>
+  <text x="${ox+14}" y="${oy-4}" font-family="JetBrains Mono" font-size="8.5" fill="#2CC8A8" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="0.4s" fill="freeze"/>
+    Optimal $2.89 / ε = −1.8 · 47k u/wk
+  </text>
+  <!-- x axis -->
+  ${PRICES.map((p,i)=>`<text x="${xP(p)}" y="${pT+cH+14}" font-family="JetBrains Mono" font-size="8" fill="${p===2.89?'#2CC8A8':'#3A5878'}" text-anchor="middle">$${p.toFixed(2)}</text>`).join('')}
+  <!-- y axis -->
+  ${yLabels.map(([v,l])=>`<text x="${pL-5}" y="${yU(v)+3}" font-family="JetBrains Mono" font-size="8" fill="#3A5878" text-anchor="end">${l}k</text><line x1="${pL-3}" y1="${yU(v)}" x2="${pL}" y2="${yU(v)}" stroke="#3A5878" stroke-width="1"/>`).join('')}
+  <!-- axes -->
+  <line x1="${pL}" y1="${pT}" x2="${pL}" y2="${pT+cH}" stroke="#1A3050" stroke-width="1"/>
+  <line x1="${pL}" y1="${pT+cH}" x2="${pL+cW}" y2="${pT+cH}" stroke="#1A3050" stroke-width="1"/>
+  <text x="${pL+cW/2}" y="${H-4}" font-family="JetBrains Mono" font-size="8" fill="#3A5878" text-anchor="middle">Price Per Unit</text>
+  <text x="${pL-36}" y="${pT+cH/2}" font-family="JetBrains Mono" font-size="8" fill="#3A5878" text-anchor="middle" transform="rotate(-90,${pL-36},${pT+cH/2})">Units/wk (k)</text>
+</svg>`;
+}
+
+const S4={id:'s4',duration:11000,label:'Elasticity',
+  render:()=>`
+  <div class="scene" style="gap:clamp(10px,1.4vh,18px);padding:clamp(18px,3vh,40px) clamp(18px,3vw,44px);">
+    <div class="eyebrow fu fu1">PRICE ELASTICITY</div>
+    <div class="h1 fu fu1" style="margin-bottom:0;font-size:clamp(22px,2.8vw,44px);">Find the exact price that maximizes revenue.</div>
+    <div style="flex:1;display:flex;gap:clamp(16px,2.5vw,36px);min-height:0;align-items:stretch;">
+      <div class="metric-cards fu fu2">
+        <div class="metric-card" style="border-left:3px solid var(--blue);">
+          <div class="metric-val">−1.8</div>
+          <div class="metric-label">PRICE ELASTICITY</div>
+          <div class="metric-sub">Grocery Channel · 4-Pack format</div>
+        </div>
+        <div class="metric-card" style="border-left:3px solid var(--teal);">
+          <div class="metric-val">$2.89</div>
+          <div class="metric-label">OPTIMAL PRICE</div>
+          <div class="metric-sub">peak revenue × volume trade-off<br><span class="pos">+$0.10 from current</span></div>
+        </div>
+        <div class="metric-card" style="border-left:3px solid var(--amber);">
+          <div class="metric-val">2,400</div>
+          <div class="metric-label">PRICE SENSITIVITY</div>
+          <div class="metric-sub">units lost per $0.10 beyond optimal<br><span class="neg">↓ at Grocery · Mass is less sensitive</span></div>
+        </div>
+      </div>
+      <div class="chart-area fu fu2">
+        ${buildElasticityChart()}
+      </div>
+    </div>
+  </div>`,
+  init:()=>{}
+};
+
+// ── SCENE 5 ───────────────────────────────────────────────────────────────────
+function buildForecastChart(){
+  const W=760,H=190,pT=16,pR=16,pB=34,pL=12;
+  const cW=W-pL-pR,cH=H-pT-pB;
+  const total=39;
+  const histN=HIST.length; // 26
+  const allMin=Math.min(...HIST,...FCST_LOW)-10;
+  const allMax=Math.max(...HIST,...FCST_HIGH)+10;
+  const xI=i=>pL+i/(total-1)*cW;
+  const yV=v=>pT+cH-(v-allMin)/(allMax-allMin)*cH;
+
+  // history points
+  const hPts=HIST.map((v,i)=>[xI(i),yV(v)]);
+  const hPath=linePath(hPts);
+  const hArea=areaPath(hPts,pT+cH);
+
+  // forecast points (start at index 25 = last hist point)
+  const fOffset=histN-1; // 25
+  const fbPts=FCST_BASE.map((v,i)=>[xI(fOffset+i),yV(v)]);
+  const flPts=FCST_LOW.map((v,i)=>[xI(fOffset+i),yV(v)]);
+  const fhPts=FCST_HIGH.map((v,i)=>[xI(fOffset+i),yV(v)]);
+  const fpPts=FCST_PROMO.map((v,i)=>[xI(fOffset+i),yV(v)]);
+
+  const fbPath=linePath(fbPts);
+  const fpPath=linePath(fpPts);
+
+  // confidence band polygon
+  const bandPoly=[...fhPts,...[...flPts].reverse()].map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+
+  const cutX=xI(fOffset);
+  const labelWks=[0,13,25,38].map(i=>({i,x:xI(i),lbl:i===0?'Wk 1':i===13?'Wk 14':i===25?'Now':'Wk 39'}));
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;flex:1;">
+  <defs>
+    <linearGradient id="gH" x1="0" y1="0" x2="0" y2="1">
+      ${clrStop('rgba(75,133,224,0.3)','0%')}${clrStop('rgba(75,133,224,0)','100%')}
+    </linearGradient>
+  </defs>
+  <!-- forecast bg -->
+  <rect x="${cutX}" y="${pT}" width="${xI(38)-cutX}" height="${cH}" fill="rgba(75,133,224,0.04)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="0.5s" fill="freeze"/>
+  </rect>
+  <!-- confidence band -->
+  <polygon points="${bandPoly}" fill="rgba(75,133,224,0.12)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="0.5s" fill="freeze"/>
+  </polygon>
+  <!-- hist area -->
+  <path d="${hArea}" fill="url(#gH)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="0.3s" dur="0.8s" fill="freeze"/>
+  </path>
+  <!-- hist line -->
+  <path d="${hPath}" fill="none" stroke="#4B85E0" stroke-width="2" stroke-dasharray="2000" stroke-dashoffset="2000">
+    <animate attributeName="stroke-dashoffset" from="2000" to="0" begin="0.3s" dur="1.4s" fill="freeze"/>
+  </path>
+  <!-- base forecast dashed -->
+  <path d="${fbPath}" fill="none" stroke="#7AABF8" stroke-width="1.5" stroke-dasharray="5,3" opacity="0">
+    <animate attributeName="opacity" from="0" to="0.9" begin="1.8s" dur="0.4s" fill="freeze"/>
+  </path>
+  <!-- promo line -->
+  <path d="${fpPath}" fill="none" stroke="#FFA040" stroke-width="1.5" stroke-dasharray="4,3" opacity="0">
+    <animate attributeName="opacity" from="0" to="0.9" begin="3.2s" dur="0.4s" fill="freeze"/>
+  </path>
+  <!-- promo label -->
+  <text x="${xI(fOffset+4)+5}" y="${yV(FCST_PROMO[3])-7}" font-family="JetBrains Mono" font-size="8" fill="#FFA040" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="3.4s" dur="0.3s" fill="freeze"/>
+    promo uplift +8.4k
+  </text>
+  <!-- cutoff line -->
+  <line x1="${cutX}" y1="${pT}" x2="${cutX}" y2="${pT+cH}" stroke="#3A5878" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="${cutX-6}" y="${pT+10}" font-family="JetBrains Mono" font-size="7.5" fill="#3A5878" text-anchor="end">← actuals</text>
+  <text x="${cutX+6}" y="${pT+10}" font-family="JetBrains Mono" font-size="7.5" fill="#3A5878">13-wk forecast →</text>
+  <!-- x labels -->
+  ${labelWks.map(({x,lbl})=>`<text x="${x}" y="${pT+cH+14}" font-family="JetBrains Mono" font-size="8" fill="#3A5878" text-anchor="middle">${lbl}</text>`).join('')}
+  <!-- baseline -->
+  <line x1="${pL}" y1="${pT+cH}" x2="${pL+cW}" y2="${pT+cH}" stroke="#1A3050" stroke-width="1"/>
+</svg>`;
+}
+
+const S5={id:'s5',duration:13000,label:'Forecast',
+  render:()=>`
+  <div class="scene" style="padding:clamp(18px,3vh,36px) clamp(18px,3vw,44px);">
+    <div class="eyebrow">DEMAND FORECAST</div>
+    <div class="h1" style="margin-bottom:clamp(8px,1.2vh,16px);">13 weeks ahead. Every SKU. Every account.</div>
+    <div class="kpi-row">
+      <div class="kpi-card fu" style="animation-delay:0.5s;">
+        <div class="kpi-val">47.2k</div>
+        <div class="kpi-lbl">BASE FORECAST</div>
+        <div class="kpi-sub">units/week · Grocery</div>
+      </div>
+      <div class="kpi-card fu" style="animation-delay:0.75s;">
+        <div class="kpi-val" style="color:var(--amber-lt);">+8.4k</div>
+        <div class="kpi-lbl">PROMO UPLIFT SCENARIO</div>
+        <div class="kpi-sub">at 20% depth · 4-week window</div>
+      </div>
+      <div class="kpi-card fu" style="animation-delay:1.0s;">
+        <div class="kpi-val" style="color:var(--green-lt);">3.8%</div>
+        <div class="kpi-lbl">FORECAST ACCURACY</div>
+        <div class="kpi-sub">wMAPE vs. 7–10% industry avg</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;min-height:0;">
+      ${buildForecastChart()}
+      <div class="proxy-note" id="proxy-note" style="opacity:0;transition:opacity 0.5s ease,font-size 0.5s ease,color 0.5s ease,padding 0.5s ease;">
+        <strong style="color:var(--teal);">Cold-start coverage:</strong> New items with &lt;8 weeks of history get a proxy forecast from distribution ramp curves + category velocity peers — no gaps, no blank cells.
+      </div>
+    </div>
+  </div>`,
+  init:()=>{
+    st(()=>{ const el=document.getElementById('proxy-note'); if(el) el.style.opacity='1'; },2200);
+    st(()=>{ const el=document.getElementById('proxy-note'); if(el) el.classList.add('lit'); },3000);
+  }
+};
+
+// ── SCENE 6 ───────────────────────────────────────────────────────────────────
+const S6={id:'s6',duration:9000,label:'Close',
+  render:()=>`
+  <div class="scene" style="align-items:center;justify-content:center;gap:0;position:relative;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%, rgba(75,133,224,0.1) 0%, transparent 65%);pointer-events:none;"></div>
+    <div class="wordmark fu fu1">Aevah</div>
+    <div class="fu fu1" style="width:clamp(120px,18vw,260px);height:1px;background:linear-gradient(90deg,transparent,var(--blue),transparent);margin:clamp(12px,1.8vh,22px) auto;"></div>
+    <div class="tagline fu fu2">CPG intelligence that reads your data, layers in the signals that matter, and tells you what to do next.</div>
+    <div class="s6-metrics fu" style="animation-delay:1.6s;">
+      <div class="s6-metric">
+        <div class="s6-mval" style="color:var(--green-lt);">3.8%</div>
+        <div class="s6-mlbl">Forecast Accuracy</div>
+        <div class="s6-msub">wMAPE · 2× industry avg</div>
+      </div>
+      <div class="s6-mdivider"></div>
+      <div class="s6-metric">
+        <div class="s6-mval" style="color:var(--blue-lt);">&lt;8s</div>
+        <div class="s6-mlbl">Time to Insight</div>
+        <div class="s6-msub">question → answer in seconds</div>
+      </div>
+      <div class="s6-mdivider"></div>
+      <div class="s6-metric">
+        <div class="s6-mval" style="color:var(--teal);">6</div>
+        <div class="s6-mlbl">Intelligence Modules</div>
+        <div class="s6-msub">velocity · cannib · price · forecast</div>
+      </div>
+    </div>
+    <div class="cta-block fu fu3">
+      <p>See a live demo at GroceryShop &nbsp;·&nbsp; <strong>aevah.com</strong> &nbsp;·&nbsp; Booth conversations welcome</p>
+      <small>Aevah Intelligence &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; Not for distribution</small>
+    </div>
+  </div>`,
+  init:()=>{}
+};
+
+// ── boot ──────────────────────────────────────────────────────────────────────
+const SCENES=[S1,S2,S3,S4,S5,S6];
+
+// build dots
+const dotWrap=document.getElementById('scene-dots');
+SCENES.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.addEventListener('click',e=>{e.stopPropagation();clearST();clearTimeout(advanceTimer);cancelAnimationFrame(rafId);goTo(i);});
+  dotWrap.appendChild(d);
+});
+
+goTo(0);
+</script>
