@@ -6,6 +6,29 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 92: Sept 2 Brian/Rob/Jason working session — forecast requirements finalized, PPTX edits (2026-09-02)
+
+43-minute working session (Rob Long, Brian Cluster, Jason Brazeal) reviewing the edited data ops kickoff deck and finalizing Phase 1 scope. Three new docs committed: `docs/Built _ Aevah.docx` (main transcript), `docs/Built _ Aevah (1).docx` (91-second wrap-up), `docs/mo_data_ops_kickoff BC+Aevah edits.pptx` (Brian's PPTX edits).
+
+**Module order locked**: Demand Forecast = #1, Cannibalization Risk = #2, Price Elasticity = #3. Promotional Response and Launch Monitoring moved to Phase 2 appendix (2027).
+
+**Forecast output format confirmed**: sellable units (not EQ), retailer × SKU detail + retailer rollup + total BUILT corporate, 13-week horizon, two toggleable views (base velocity + promo-inclusive), confidence bands low/base/high.
+
+**Key decisions**:
+- SPINS pull: full pull (all history), Brian targeting this week; Rob provisioning MinIO Spins Landing bucket same day
+- Nutrient columns (protein, sugar, calories, fiber, carbs) added to Module 03 Price Elasticity BUILT PROVIDES — fields already in `built_filtered_weekly`, not yet in model training
+- External signals priority: gas prices (GASDESW, live) → consumer confidence (UMCSENT, live) → CPI/BLS (planned); all other signals = Phase 2
+- Dark retailer caveat (WinCo, TJ's, Aldi) acknowledged and accepted for Phase 1
+- Geographic seasonality: deferred enhancement — use standard seasonality for now
+- Margin analysis on promotions: deprioritized by Brian; forecast accuracy is the priority
+- Timeline target: end of November 2026 delivery; Jason starts SPINS ingestion next week
+
+**PPTX edits**: Module 01 header → "#1 FOCUS"; asterisk notes on all Phase 1 modules; promo calendar + pricing data added to Module 01 BUILT PROVIDES; nutrient columns note added to Module 03; timeline slide qualified with "duration estimates are a starting point"; Kickoff Alignment Next Steps slide removed for socialized version.
+
+Project memory: `project_sept2_built_meeting.md` created. Wiki `14-demand-planning-cockpit.md` updated with all confirmed requirements.
+
+---
+
 ## README update 91: Sizzle reel committed to repo as shareable HTML (2026-09-02)
 
 `mockups/aevah_sizzle_reel.html` — the Aevah Intelligence conference sizzle reel is now a committed project file. Self-contained: open directly in any browser or share as a download. No server, no external deps beyond Google Fonts.
