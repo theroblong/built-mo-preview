@@ -217,6 +217,27 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);overflow:hid
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:var(--s2);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* screentips */
+[data-tip]{position:relative;}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#0D1829;color:#E8EFF8;font-family:'JetBrains Mono',monospace;font-size:9.5px;line-height:1.5;padding:6px 10px;border-radius:5px;white-space:pre-wrap;max-width:260px;min-width:140px;z-index:99;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,0.2);}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0D1829;z-index:99;pointer-events:none;}
+.phase-pill[data-tip]:hover::after{left:0;transform:none;}
+.phase-pill[data-tip]:hover::before{left:12px;transform:none;}
+.hk-lbl[data-tip]:hover::after{left:0;transform:none;}
+.hk-lbl[data-tip]:hover::before{left:10px;transform:none;}
+
+/* focus mode */
+#fbtn{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;padding:4px 10px;border-radius:5px;cursor:pointer;color:var(--t2);background:transparent;border:1px solid var(--border);transition:all 0.12s;white-space:nowrap;flex-shrink:0;}
+#fbtn:hover{border-color:var(--blue);color:var(--blue);}
+body.focus #fbtn{background:rgba(47,111,216,0.1);border-color:var(--blue);color:var(--blue);}
+#focus-sku{display:none;font-family:var(--mono);font-size:11px;color:var(--t2);align-items:center;margin-left:auto;padding-right:12px;}
+body.focus #focus-sku{display:flex;}
+body.focus #topnav{height:38px;padding:0 14px;}
+body.focus .nav-tabs,body.focus .nav-sep,body.focus .nav-right{display:none;}
+body.focus #health-bar{display:none;}
+body.focus #left{width:28px;}
+body.focus #right{width:28px;}
 </style>
 
 <div id="topnav">
@@ -228,6 +249,7 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);overflow:hid
     <div class="ntab">Forecast</div>
     <div class="ntab">Calendar</div>
   </div>
+  <span id="focus-sku"></span>
   <div class="nav-right">
     <div class="nf"><label>RETAILER</label>
       <select><option>Kroger</option><option>Target</option><option>Walmart</option><option>Whole Foods</option><option>All Accounts</option></select>
@@ -237,23 +259,24 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);overflow:hid
     </div>
     <div class="wchip">Week 38 · 2026</div>
   </div>
+  <button id="fbtn" onclick="toggleFocus()" title="Focus mode — hides side panels and health bar for a clean full-screen view  (F)">⊡ Focus</button>
 </div>
 
 <div id="health-bar">
-  <div class="hkpi"><div class="hk-val">$2.4M</div><div class="hk-right"><div class="hk-lbl">13-WK REV FORECAST</div><div class="hk-delta pos">+$340K vs plan</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,16 9,14 18,11 27,13 36,8 45,6 54,4" fill="none" stroke="#128040" stroke-width="1.8" opacity="0.8"/></svg></div>
-  <div class="hkpi"><div class="hk-val">18.6</div><div class="hk-right"><div class="hk-lbl">PORTFOLIO EQ VELOCITY</div><div class="hk-delta pos">+2.4% 4-wk</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,15 9,14 18,11 27,13 36,10 45,9 54,7" fill="none" stroke="#2F6FD8" stroke-width="1.8" opacity="0.8"/></svg></div>
-  <div class="hkpi"><div class="hk-val" style="color:var(--green-lt)">83%</div><div class="hk-right"><div class="hk-lbl">AVG FORECAST CONFIDENCE</div><div class="hk-delta neu">stable 4 weeks</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,11 9,12 18,10 27,11 36,10 45,9 54,10" fill="none" stroke="#128040" stroke-width="1.8" opacity="0.5"/></svg></div>
-  <div class="hkpi"><div class="hk-val" style="color:var(--amber)">3</div><div class="hk-right"><div class="hk-lbl">AT-RISK / DECLINING</div><div class="hk-delta neg">−$130K exposure</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,6 9,8 18,11 27,9 36,13 45,14 54,15" fill="none" stroke="#C83030" stroke-width="1.8" opacity="0.8"/></svg></div>
+  <div class="hkpi"><div class="hk-val">$2.4M</div><div class="hk-right"><div class="hk-lbl" data-tip="Sum of (EQ velocity × store count × ARP) across all 6 SKUs for the 13-week forward horizon.">13-WK REV FORECAST</div><div class="hk-delta pos">+$340K vs plan</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,16 9,14 18,11 27,13 36,8 45,6 54,4" fill="none" stroke="#128040" stroke-width="1.8" opacity="0.8"/></svg></div>
+  <div class="hkpi"><div class="hk-val">18.6</div><div class="hk-right"><div class="hk-lbl" data-tip="Weighted average EQ velocity across portfolio. EQ = base_units / store_count_selling, normalized to one bar. 4-pack = 4 EQ bars.">PORTFOLIO EQ VELOCITY</div><div class="hk-delta pos">+2.4% 4-wk</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,15 9,14 18,11 27,13 36,10 45,9 54,7" fill="none" stroke="#2F6FD8" stroke-width="1.8" opacity="0.8"/></svg></div>
+  <div class="hkpi"><div class="hk-val" style="color:var(--green-lt)">83%</div><div class="hk-right"><div class="hk-lbl" data-tip="wMAPE-derived confidence across all active forecasts. Green ≥88%, Amber ≥78%, Red below. New items use proxy confidence (±18% CI).">AVG FORECAST CONFIDENCE</div><div class="hk-delta neu">stable 4 weeks</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,11 9,12 18,10 27,11 36,10 45,9 54,10" fill="none" stroke="#128040" stroke-width="1.8" opacity="0.5"/></svg></div>
+  <div class="hkpi"><div class="hk-val" style="color:var(--amber)">3</div><div class="hk-right"><div class="hk-lbl" data-tip="SKUs with negative 4-week velocity trend or ACV decline. Dollar figure = cumulative 13-week revenue at risk vs. prior period run rate.">AT-RISK / DECLINING</div><div class="hk-delta neg">−$130K exposure</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,6 9,8 18,11 27,9 36,13 45,14 54,15" fill="none" stroke="#C83030" stroke-width="1.8" opacity="0.8"/></svg></div>
 </div>
 
 <div id="main">
   <!-- LEFT WING -->
   <div id="left">
-    <button id="ltgl" onclick="toggleLeft()" title="Hide SKU list  [">‹</button>
+    <button id="ltgl" onclick="toggleLeft()" title="Hide SKU panel — press [ to toggle">‹</button>
     <div id="exc-row">
-      <div class="exc-tile g"><div class="exc-count">3</div><div class="exc-lbl">ACCELERATING</div><div class="exc-sub">avg +6.4% vel</div></div>
-      <div class="exc-tile a"><div class="exc-count">2</div><div class="exc-lbl">AT RISK</div><div class="exc-sub">avg −3.8% fcst</div></div>
-      <div class="exc-tile r"><div class="exc-count">1</div><div class="exc-lbl">DECLINING</div><div class="exc-sub">−12% 4-wk</div></div>
+      <div class="exc-tile g" data-tip="SKUs with positive 4-week velocity trend. Green left border in the list below."><div class="exc-count">3</div><div class="exc-lbl">ACCELERATING</div><div class="exc-sub">avg +6.4% vel</div></div>
+      <div class="exc-tile a" data-tip="SKUs with declining ACV or forecast below baseline. Amber left border. Needs attention before next S&OP."><div class="exc-count">2</div><div class="exc-lbl">AT RISK</div><div class="exc-sub">avg −3.8% fcst</div></div>
+      <div class="exc-tile r" data-tip="SKUs with ≥4 consecutive quarters of ACV decline. Red left border. Escalate or intervene."><div class="exc-count">1</div><div class="exc-lbl">DECLINING</div><div class="exc-sub">−12% 4-wk</div></div>
     </div>
     <div id="fmt-chips">
       <div class="fchip active" onclick="setFmt('all',this)">All</div>
@@ -270,21 +293,21 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);overflow:hid
   <!-- CENTER -->
   <div id="center">
     <div class="phase det" id="determine">
-      <div class="phase-hdr"><div class="phase-pill">DETERMINE</div><div class="phase-reason" id="det-reason"></div></div>
+      <div class="phase-hdr"><div class="phase-pill" data-tip="DETERMINE — What is happening?\nEQ velocity vs. baseline, 4-week trend, 13-week forecast with confidence interval. Click any SKU to reload all three phases.">DETERMINE</div><div class="phase-reason" id="det-reason"></div></div>
       <div id="det-body">
         <div id="kpi-row"></div>
         <div id="spark-wrap"></div>
       </div>
     </div>
     <div class="phase diag" id="diagnose">
-      <div class="phase-hdr"><div class="phase-pill">DIAGNOSE</div><div class="phase-reason" id="diag-reason"></div></div>
+      <div class="phase-hdr"><div class="phase-pill" data-tip="DIAGNOSE — Why is it happening?\nDecomposes velocity change into drivers: distribution, promo, seasonality, and price effect. Inline signals for cannibalization risk, price elasticity, and macro context.">DIAGNOSE</div><div class="phase-reason" id="diag-reason"></div></div>
       <div id="diag-body">
         <div id="decomp-section"></div>
         <div id="insights"></div>
       </div>
     </div>
     <div class="phase dec" id="decide">
-      <div class="phase-hdr"><div class="phase-pill">DECIDE</div><div class="phase-reason" id="dec-reason"></div></div>
+      <div class="phase-hdr"><div class="phase-pill" data-tip="DECIDE — What should we do?\nScenario modeling (What if extend promo?) or price measures. Recommended actions with Accept / Dismiss — each ties to a specific procurement or calendar decision.">DECIDE</div><div class="phase-reason" id="dec-reason"></div></div>
       <div id="dec-body">
         <div id="scenario-section"></div>
         <div id="act-list"></div>
@@ -294,16 +317,16 @@ body{background:var(--bg);font-family:var(--sans);color:var(--text);overflow:hid
 
   <!-- RIGHT WING -->
   <div id="right">
-    <button id="rtgl" onclick="toggleRight()" title="Hide signals  ]">›</button>
+    <button id="rtgl" onclick="toggleRight()" title="Hide signals panel — press ] to toggle">›</button>
     <div id="right-inner">
       <div id="macro-strip">
         <div class="mt">
-          <div class="mt-lbl">GAS PRICE · FRED GASDESW</div>
+          <div class="mt-lbl" data-tip="US weekly retail gas price (FRED: GASDESW). Lower gas → more convenience store trips and snack purchases. Addresses Connor's pain point #6.">GAS PRICE · FRED GASDESW</div>
           <div class="mt-val-row"><span class="mt-val">$3.42</span><span class="mt-delta pos">−$0.08</span></div>
           <div class="mt-impact">↑ Slight demand tailwind</div>
         </div>
         <div class="mt">
-          <div class="mt-lbl">CONSUMER SENTIMENT · UMCSENT</div>
+          <div class="mt-lbl" data-tip="U of Michigan Consumer Sentiment Index (FRED: UMCSENT). Falling sentiment → consumers trade down or defer discretionary snack purchases. Watch threshold: &lt;65.">CONSUMER SENTIMENT · UMCSENT</div>
           <div class="mt-val-row"><span class="mt-val">68.2</span><span class="mt-delta neg">−1.4 pts</span></div>
           <div class="mt-impact">↓ Softness risk · watch</div>
         </div>
@@ -526,6 +549,7 @@ ${!s.promo?`<div class="promo-note">Upload promotional calendar to enable "What 
 }
 
 function render(s){
+  document.getElementById('focus-sku').textContent=s.name+' · '+s.pack;
   document.getElementById('det-reason').innerHTML=`<strong>${s.name}</strong> · ${s.detReason}`;
   const dd=s.dlt>0?'+':'';const dc=s.dlt>1.5?'pos':s.dlt<-1?'neg':'neu';
   const cc=s.conf>=88?'var(--green-lt)':s.conf>=78?'var(--amber)':'var(--red-lt)';
@@ -590,10 +614,26 @@ function toggleRight(){
   b.title=c?'Show signals  ]':'Hide signals  ]';
 }
 
+let focusActive=false;
+function toggleFocus(){
+  focusActive=!focusActive;
+  document.body.classList.toggle('focus',focusActive);
+  const btn=document.getElementById('fbtn');
+  btn.innerHTML=focusActive?'⊡ Exit Focus':'⊡ Focus';
+  btn.title=focusActive?'Exit focus mode  (F)':'Focus mode — hides side panels and health bar for a clean full-screen view  (F)';
+  if(focusActive){
+    const lp=document.getElementById('left'),rp=document.getElementById('right');
+    if(!lp.classList.contains('collapsed')){lp.classList.add('collapsed');document.getElementById('ltgl').textContent='›';}
+    if(!rp.classList.contains('collapsed')){rp.classList.add('collapsed');document.getElementById('rtgl').textContent='‹';}
+  }
+  setTimeout(rerenderSpark,240);
+}
+
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT')return;
   if(e.key==='[')toggleLeft();
   if(e.key===']')toggleRight();
+  if(e.key==='f'||e.key==='F')toggleFocus();
 });
 
 ['left','right'].forEach(id=>{
