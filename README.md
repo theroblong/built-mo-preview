@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 91: Sizzle reel committed to repo as shareable HTML (2026-09-02)
+
+`mockups/aevah_sizzle_reel.html` — the Aevah Intelligence conference sizzle reel is now a committed project file. Self-contained: open directly in any browser or share as a download. No server, no external deps beyond Google Fonts.
+
+---
+
 ## README update 90: Sizzle reel designer overhaul — Scene 6 stat block, cold-start fix, animation polish (2026-09-01)
 
 Visual design overhaul of the Aevah Intelligence conference sizzle reel (artifact `b2aee95c`). Changes address three specific issues: cold-start proxy animation conflict, Scene 6 being visually thin, and overall layout inconsistency.
