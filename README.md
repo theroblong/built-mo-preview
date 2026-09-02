@@ -61,6 +61,22 @@ BUILT signed and sent first payment on September 1, 2026. Phase 1 launch checkli
 
 ---
 
+## README update 88: Demand Planning cockpit mockup (2026-09-02)
+
+New mockup at `mockups/mo_demand_planning.html` (artifact f558a9bb) — a no-scroll single-pane cockpit applying Mo's Determine → Diagnose → Decide framework to demand planning. Designed ahead of Brian review (2026-09-02 afternoon) to explore the UX direction for the Phase 1 Demand Forecast module.
+
+**Key design decisions:**
+- Six BUILT SKUs at Kroger in left wing (288px, collapsible to 28px strip via `[` key)
+- Center panel: DETERMINE (26% — EQ velocity KPIs + spark chart), DIAGNOSE (42% — velocity decomposition bars + cannibalization/elasticity/macro insight chips inline), DECIDE (32% — scenario table or price measures + recommended actions)
+- Right wing (276px, collapsible via `]` key): FRED macro strip (GASDESW + UMCSENT), What Changed ranked list, Ask Mo input
+- Light theme (`#EEF2FA` ground, white surfaces) matching Mo's established palette
+- Wings collapse/expand via edge toggle buttons or `[` / `]` keyboard shortcuts; center fills full screen when both hidden
+- Spark chart re-renders after wing transition via `transitionend` listener
+
+**Connor coverage addressed:** cold-start proxy (Puff C&C), distribution signal, cannibalization modeling inline, macro signals (Connor's explicit pain point #6), Ask Mo. Calendar tab (promo planner replacing 100 Excel files) and data-dark proxy (Winco/HEB) remain to be designed.
+
+Wiki: `customer-built-doc/wiki/14-demand-planning-cockpit.md`
+
 ## README update 87: PPTX kickoff deck — Brian meeting feedback incorporated (2026-08-28)
 
 Phase 1 restructured and PPTX updated after live kickoff meeting with Brian Cluster (BUILT VP Sales / GM). Both the meeting transcript (`docs/Built _ Aevah Kickoff!!.docx`) and Rob's in-meeting edited PPTX (`docs/Built Phase 1 Plan.pptx`) were reconciled into the following changes in `scripts/mo_data_ops_kickoff_pptx.py`:

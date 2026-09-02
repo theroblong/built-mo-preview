@@ -1,0 +1,610 @@
+<title>Mo · Demand Planning</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF2FA;--surface:#FFFFFF;--s2:#F4F7FD;--navy:#E0EAF8;
+  --blue:#2F6FD8;--blue-lt:#1A5BC8;--green:#157840;--green-lt:#128040;
+  --amber:#B86E10;--amber-lt:#C07A14;--teal:#1A9070;
+  --red-lt:#C83030;--text:#0D1829;--t2:#3A5870;--t3:#8AACC0;--border:#CAD6E8;
+  --serif:'DM Serif Display',serif;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:var(--sans);color:var(--text);overflow:hidden;height:100vh;display:flex;flex-direction:column;}
+
+/* nav */
+#topnav{height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:22px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.nav-brand{font-family:var(--serif);font-size:20px;color:var(--blue);}
+.nav-sep{color:var(--t3);}
+.nav-tabs{display:flex;gap:2px;}
+.ntab{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;padding:5px 11px;border-radius:5px;cursor:pointer;color:var(--t2);transition:all 0.12s;background:transparent;border:none;}
+.ntab:hover{background:var(--s2);color:var(--text);}
+.ntab.act{background:rgba(47,111,216,0.12);color:var(--blue);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.nf{display:flex;align-items:center;gap:6px;}
+.nf label{font-family:var(--mono);font-size:8.5px;letter-spacing:0.14em;color:var(--t3);}
+.nf select{background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;}
+.wchip{font-family:var(--mono);font-size:10px;background:var(--s2);border:1px solid var(--border);padding:4px 10px;border-radius:4px;color:var(--t2);}
+
+/* health bar */
+#health-bar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;flex-shrink:0;}
+.hkpi{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px;border-right:1px solid var(--border);}
+.hkpi:last-child{border-right:none;}
+.hk-val{font-family:var(--serif);font-size:21px;line-height:1;}
+.hk-right{display:flex;flex-direction:column;gap:2px;}
+.hk-lbl{font-family:var(--mono);font-size:7.5px;letter-spacing:0.15em;color:var(--t3);}
+.hk-delta{font-family:var(--mono);font-size:10.5px;font-weight:500;}
+.hk-spark{width:54px;height:20px;margin-left:auto;}
+
+/* main */
+#main{flex:1;display:flex;overflow:hidden;min-height:0;}
+
+/* LEFT PANEL — collapsible wing */
+#left{
+  width:288px;flex-shrink:0;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;background:var(--surface);
+  position:relative;padding-right:28px;
+  transition:width 0.22s ease;
+}
+#left.collapsed{width:28px;}
+#ltgl{
+  position:absolute;right:0;top:0;bottom:0;width:28px;
+  background:var(--s2);border-left:1px solid var(--border);border-top:none;border-right:none;border-bottom:none;
+  color:var(--t3);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 0.12s,color 0.12s;z-index:2;
+}
+#ltgl:hover{background:var(--navy);color:var(--blue);}
+
+/* RIGHT PANEL — collapsible wing */
+#right{
+  width:276px;flex-shrink:0;border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;background:var(--surface);
+  position:relative;
+  transition:width 0.22s ease;
+}
+#right.collapsed{width:28px;}
+#rtgl{
+  position:absolute;left:0;top:0;bottom:0;width:28px;
+  background:var(--s2);border-right:1px solid var(--border);border-top:none;border-left:none;border-bottom:none;
+  color:var(--t3);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 0.12s,color 0.12s;z-index:2;
+}
+#rtgl:hover{background:var(--navy);color:var(--blue);}
+#right-inner{
+  margin-left:28px;flex:1;display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* left panel content */
+#exc-row{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);}
+.exc-tile{flex:1;padding:10px 12px;border-right:1px solid var(--border);}
+.exc-tile:last-child{border-right:none;}
+.exc-count{font-family:var(--serif);font-size:22px;line-height:1;}
+.exc-lbl{font-family:var(--mono);font-size:8px;letter-spacing:0.15em;margin-top:2px;}
+.exc-sub{font-size:10px;color:var(--t2);margin-top:2px;}
+.g .exc-count,.g .exc-lbl{color:var(--green-lt);}
+.a .exc-count,.a .exc-lbl{color:var(--amber);}
+.r .exc-count,.r .exc-lbl{color:var(--red-lt);}
+#fmt-chips{display:flex;gap:5px;padding:8px 11px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.fchip{font-family:var(--mono);font-size:9px;letter-spacing:0.08em;padding:4px 10px;border-radius:12px;border:1px solid var(--border);color:var(--t2);cursor:pointer;background:transparent;transition:all 0.12s;}
+.fchip:hover{border-color:var(--blue);color:var(--blue);}
+.fchip.active{background:rgba(47,111,216,0.1);border-color:var(--blue);color:var(--blue);}
+#sku-table{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.thead{display:grid;grid-template-columns:1fr 60px 50px;padding:6px 12px;background:var(--s2);font-family:var(--mono);font-size:8px;letter-spacing:0.13em;color:var(--t3);flex-shrink:0;border-bottom:1px solid var(--border);}
+#tbody{flex:1;overflow-y:auto;}
+.trow{display:grid;grid-template-columns:1fr 60px 50px;padding:9px 12px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background 0.1s;border-left:3px solid transparent;}
+.trow:hover{background:var(--s2);}
+.trow.sel{background:rgba(47,111,216,0.07);border-left-color:var(--blue);}
+.trow.acc{border-left-color:var(--green-lt);}
+.trow.risk{border-left-color:var(--amber);}
+.trow.dec{border-left-color:var(--red-lt);}
+.sname{font-size:12.5px;font-weight:500;line-height:1.3;}
+.spack{font-family:var(--mono);font-size:8.5px;color:var(--t2);margin-top:2px;}
+.spromo{font-family:var(--mono);font-size:8.5px;color:var(--amber);margin-top:2px;}
+.svel{font-family:var(--serif);font-size:17px;color:var(--text);}
+.svlbl{font-family:var(--mono);font-size:7px;color:var(--t3);}
+.sdlt{font-family:var(--mono);font-size:11px;font-weight:500;}
+.pos{color:var(--green-lt);}.neg{color:var(--red-lt);}.neu{color:var(--t2);}
+
+/* center */
+#center{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.phase{display:flex;flex-direction:column;overflow:hidden;}
+#determine{flex:0 0 26%;border-bottom:2px solid var(--border);}
+#diagnose{flex:0 0 42%;border-bottom:2px solid var(--border);}
+#decide{flex:1;}
+.phase-hdr{display:flex;align-items:center;gap:11px;padding:7px 15px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.phase-pill{font-family:var(--mono);font-size:9px;letter-spacing:0.18em;padding:3px 9px;border-radius:8px;font-weight:500;}
+.det .phase-pill{background:rgba(26,144,112,0.12);color:var(--teal);}
+.diag .phase-pill{background:rgba(47,111,216,0.12);color:var(--blue);}
+.dec .phase-pill{background:rgba(18,128,64,0.12);color:var(--green-lt);}
+.phase-reason{font-family:var(--mono);font-size:10px;color:var(--t2);}
+.phase-reason strong{color:var(--text);font-weight:500;}
+
+/* DETERMINE */
+#det-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+#kpi-row{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);}
+.kcard{flex:1;padding:9px 13px;border-right:1px solid var(--border);}
+.kcard:last-child{border-right:none;}
+.kval{font-family:var(--serif);font-size:22px;line-height:1;}
+.klbl{font-family:var(--mono);font-size:7.5px;letter-spacing:0.14em;color:var(--t3);margin-top:4px;text-transform:uppercase;}
+.ksub{font-size:9.5px;color:var(--t2);margin-top:2px;}
+#spark-wrap{flex:1;overflow:hidden;}
+#spark-wrap svg{width:100%;height:100%;display:block;}
+
+/* DIAGNOSE */
+#diag-body{flex:1;display:flex;flex-direction:column;padding:10px 15px;gap:7px;overflow:hidden;}
+.dslbl{font-family:var(--mono);font-size:9px;letter-spacing:0.16em;color:var(--t3);flex-shrink:0;}
+.dbase{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.db-lbl{font-family:var(--mono);font-size:9.5px;color:var(--t2);}
+.db-val{font-family:var(--mono);font-size:11px;color:var(--text);font-weight:500;}
+.drow{display:grid;grid-template-columns:96px 1fr 46px 58px;align-items:center;gap:6px;flex-shrink:0;}
+.dlbl{font-family:var(--mono);font-size:9px;color:var(--t2);}
+.dbar-track{height:9px;background:var(--navy);border-radius:3px;overflow:hidden;}
+.dbar{height:100%;border-radius:3px;}
+.dbar.pos{background:var(--green-lt);}
+.dbar.neg{background:var(--red-lt);}
+.dbar.zero{background:var(--t3);}
+.dval{font-family:var(--mono);font-size:10.5px;font-weight:500;text-align:right;}
+.dpct{font-family:var(--mono);font-size:8.5px;color:var(--t3);text-align:right;}
+.d-no-promo{font-family:var(--mono);font-size:9px;color:var(--t3);font-style:italic;grid-column:2/-1;}
+.dtotal{display:flex;align-items:baseline;gap:8px;padding-top:6px;border-top:1px solid var(--border);flex-shrink:0;}
+.dt-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;color:var(--t2);}
+.dt-val{font-family:var(--serif);font-size:19px;}
+.dt-unit{font-family:var(--mono);font-size:8.5px;color:var(--t3);}
+.dt-chg{font-family:var(--mono);font-size:11px;font-weight:500;margin-left:auto;}
+#insights{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.insight-chip{display:flex;align-items:flex-start;gap:9px;background:var(--s2);border-radius:6px;padding:6px 11px;border:1px solid var(--border);}
+.ic-icon{font-family:var(--mono);font-size:11px;width:20px;text-align:center;flex-shrink:0;padding-top:1px;}
+.ic-icon.cannb{color:var(--amber);}
+.ic-icon.elast{color:var(--blue);font-style:italic;}
+.ic-icon.macro{color:var(--teal);}
+.ic-title{font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.4;}
+.ic-sub{font-size:10px;color:var(--t2);margin-top:2px;}
+
+/* DECIDE */
+#dec-body{flex:1;display:flex;flex-direction:column;padding:10px 15px;gap:8px;overflow:hidden;}
+.scen-title{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;color:var(--t3);flex-shrink:0;}
+.scen-table{display:flex;flex-direction:column;flex-shrink:0;}
+.scen-hdr{display:grid;grid-template-columns:90px 1fr 1fr 1fr;padding:5px 7px;background:var(--s2);border-radius:5px 5px 0 0;border:1px solid var(--border);border-bottom:none;font-family:var(--mono);font-size:8.5px;color:var(--t3);letter-spacing:0.09em;}
+.scen-row{display:grid;grid-template-columns:90px 1fr 1fr 1fr;padding:5px 7px;border:1px solid var(--border);border-top:none;font-family:var(--mono);font-size:10px;}
+.scen-row:last-child{border-radius:0 0 5px 5px;}
+.scen-row.warn{background:rgba(184,110,16,0.05);}
+.scen-row span:first-child{color:var(--t2);font-size:9px;}
+.price-row{display:flex;gap:18px;flex-wrap:wrap;flex-shrink:0;}
+.price-item{display:flex;flex-direction:column;gap:3px;}
+.pi-lbl{font-family:var(--mono);font-size:8.5px;letter-spacing:0.12em;color:var(--t3);text-transform:uppercase;}
+.pi-val{font-family:var(--serif);font-size:17px;}
+.pi-sub{font-size:10px;color:var(--t2);}
+.promo-note{font-family:var(--mono);font-size:9.5px;background:var(--s2);padding:7px 10px;border-radius:5px;border:1px solid var(--border);color:var(--t2);flex-shrink:0;}
+#act-list{display:flex;flex-direction:column;gap:6px;flex:1;overflow:hidden;}
+.act-item{border-radius:7px;padding:8px 11px;display:flex;align-items:center;gap:10px;flex-shrink:0;border:1px solid var(--border);}
+.act-item.amber{border-left:3px solid var(--amber);background:rgba(184,110,16,0.05);}
+.act-item.blue{border-left:3px solid var(--blue);background:rgba(47,111,216,0.05);}
+.act-item.red{border-left:3px solid var(--red-lt);background:rgba(200,48,48,0.05);}
+.act-text{flex:1;min-width:0;}
+.act-title{font-size:12.5px;font-weight:500;color:var(--text);}
+.act-impact{font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:3px;}
+.act-btns{display:flex;gap:5px;flex-shrink:0;}
+.abtn{font-family:var(--mono);font-size:8.5px;letter-spacing:0.07em;padding:5px 11px;border-radius:5px;cursor:pointer;transition:all 0.12s;white-space:nowrap;border:none;}
+.abtn.pri{background:var(--blue);color:#fff;}.abtn.pri:hover{background:var(--blue-lt);}
+.abtn.sec{background:transparent;border:1px solid var(--border);color:var(--t2);}.abtn.sec:hover{border-color:var(--t2);color:var(--text);}
+
+/* right panel content */
+#macro-strip{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);}
+.mt{flex:1;padding:9px 13px;border-right:1px solid var(--border);}
+.mt:last-child{border-right:none;}
+.mt-lbl{font-family:var(--mono);font-size:8px;letter-spacing:0.12em;color:var(--t3);margin-bottom:4px;}
+.mt-val-row{display:flex;align-items:baseline;gap:6px;}
+.mt-val{font-family:var(--serif);font-size:19px;}
+.mt-delta{font-family:var(--mono);font-size:10px;}
+.mt-impact{font-size:10.5px;color:var(--t2);margin-top:3px;}
+#whatchanged{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.wc-head{font-family:var(--mono);font-size:8.5px;letter-spacing:0.16em;color:var(--t3);padding:9px 13px 5px;flex-shrink:0;}
+#wc-list{flex:1;overflow-y:auto;padding:0 13px 8px;}
+.wc-item{padding:6px 0;border-bottom:1px solid var(--border);}
+.wc-item:last-child{border-bottom:none;}
+.wc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.wc-lbl{font-size:12px;font-weight:500;}
+.wc-impact{font-family:var(--mono);font-size:11px;font-weight:500;}
+.wc-note{font-family:var(--mono);font-size:8.5px;color:var(--t3);margin-bottom:4px;}
+.wc-bar-track{height:4px;background:var(--navy);border-radius:2px;overflow:hidden;}
+.wc-bar{height:100%;border-radius:2px;}
+#ask-mo{flex-shrink:0;padding:8px 13px;display:flex;gap:6px;border-top:1px solid var(--border);}
+#ask-input{flex:1;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10.5px;padding:6px 10px;border-radius:5px;outline:none;}
+#ask-input::placeholder{color:var(--t3);}
+#ask-input:focus{border-color:var(--blue);}
+#ask-send{font-family:var(--mono);font-size:9px;padding:6px 11px;background:var(--blue);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--s2);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+
+<div id="topnav">
+  <span class="nav-brand">Mo</span><span class="nav-sep">·</span>
+  <div class="nav-tabs">
+    <div class="ntab">Overview</div>
+    <div class="ntab act">Demand Planning</div>
+    <div class="ntab">Velocity</div>
+    <div class="ntab">Forecast</div>
+    <div class="ntab">Calendar</div>
+  </div>
+  <div class="nav-right">
+    <div class="nf"><label>RETAILER</label>
+      <select><option>Kroger</option><option>Target</option><option>Walmart</option><option>Whole Foods</option><option>All Accounts</option></select>
+    </div>
+    <div class="nf"><label>HORIZON</label>
+      <select><option>13-Week</option><option>8-Week</option><option>4-Week</option></select>
+    </div>
+    <div class="wchip">Week 38 · 2026</div>
+  </div>
+</div>
+
+<div id="health-bar">
+  <div class="hkpi"><div class="hk-val">$2.4M</div><div class="hk-right"><div class="hk-lbl">13-WK REV FORECAST</div><div class="hk-delta pos">+$340K vs plan</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,16 9,14 18,11 27,13 36,8 45,6 54,4" fill="none" stroke="#128040" stroke-width="1.8" opacity="0.8"/></svg></div>
+  <div class="hkpi"><div class="hk-val">18.6</div><div class="hk-right"><div class="hk-lbl">PORTFOLIO EQ VELOCITY</div><div class="hk-delta pos">+2.4% 4-wk</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,15 9,14 18,11 27,13 36,10 45,9 54,7" fill="none" stroke="#2F6FD8" stroke-width="1.8" opacity="0.8"/></svg></div>
+  <div class="hkpi"><div class="hk-val" style="color:var(--green-lt)">83%</div><div class="hk-right"><div class="hk-lbl">AVG FORECAST CONFIDENCE</div><div class="hk-delta neu">stable 4 weeks</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,11 9,12 18,10 27,11 36,10 45,9 54,10" fill="none" stroke="#128040" stroke-width="1.8" opacity="0.5"/></svg></div>
+  <div class="hkpi"><div class="hk-val" style="color:var(--amber)">3</div><div class="hk-right"><div class="hk-lbl">AT-RISK / DECLINING</div><div class="hk-delta neg">−$130K exposure</div></div><svg class="hk-spark" viewBox="0 0 54 20"><polyline points="0,6 9,8 18,11 27,9 36,13 45,14 54,15" fill="none" stroke="#C83030" stroke-width="1.8" opacity="0.8"/></svg></div>
+</div>
+
+<div id="main">
+  <!-- LEFT WING -->
+  <div id="left">
+    <button id="ltgl" onclick="toggleLeft()" title="Hide SKU list  [">‹</button>
+    <div id="exc-row">
+      <div class="exc-tile g"><div class="exc-count">3</div><div class="exc-lbl">ACCELERATING</div><div class="exc-sub">avg +6.4% vel</div></div>
+      <div class="exc-tile a"><div class="exc-count">2</div><div class="exc-lbl">AT RISK</div><div class="exc-sub">avg −3.8% fcst</div></div>
+      <div class="exc-tile r"><div class="exc-count">1</div><div class="exc-lbl">DECLINING</div><div class="exc-sub">−12% 4-wk</div></div>
+    </div>
+    <div id="fmt-chips">
+      <div class="fchip active" onclick="setFmt('all',this)">All</div>
+      <div class="fchip" onclick="setFmt('1-Pack',this)">1-Pack</div>
+      <div class="fchip" onclick="setFmt('4-Pack',this)">4-Pack</div>
+      <div class="fchip" onclick="setFmt('12-Pack',this)">12-Pack</div>
+    </div>
+    <div id="sku-table">
+      <div class="thead"><span>SKU</span><span>EQ VEL</span><span>4W Δ</span></div>
+      <div id="tbody"></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div class="phase det" id="determine">
+      <div class="phase-hdr"><div class="phase-pill">DETERMINE</div><div class="phase-reason" id="det-reason"></div></div>
+      <div id="det-body">
+        <div id="kpi-row"></div>
+        <div id="spark-wrap"></div>
+      </div>
+    </div>
+    <div class="phase diag" id="diagnose">
+      <div class="phase-hdr"><div class="phase-pill">DIAGNOSE</div><div class="phase-reason" id="diag-reason"></div></div>
+      <div id="diag-body">
+        <div id="decomp-section"></div>
+        <div id="insights"></div>
+      </div>
+    </div>
+    <div class="phase dec" id="decide">
+      <div class="phase-hdr"><div class="phase-pill">DECIDE</div><div class="phase-reason" id="dec-reason"></div></div>
+      <div id="dec-body">
+        <div id="scenario-section"></div>
+        <div id="act-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT WING -->
+  <div id="right">
+    <button id="rtgl" onclick="toggleRight()" title="Hide signals  ]">›</button>
+    <div id="right-inner">
+      <div id="macro-strip">
+        <div class="mt">
+          <div class="mt-lbl">GAS PRICE · FRED GASDESW</div>
+          <div class="mt-val-row"><span class="mt-val">$3.42</span><span class="mt-delta pos">−$0.08</span></div>
+          <div class="mt-impact">↑ Slight demand tailwind</div>
+        </div>
+        <div class="mt">
+          <div class="mt-lbl">CONSUMER SENTIMENT · UMCSENT</div>
+          <div class="mt-val-row"><span class="mt-val">68.2</span><span class="mt-delta neg">−1.4 pts</span></div>
+          <div class="mt-impact">↓ Softness risk · watch</div>
+        </div>
+      </div>
+      <div id="whatchanged">
+        <div class="wc-head">WHAT CHANGED · VS LAST WEEK</div>
+        <div id="wc-list"></div>
+      </div>
+      <div id="ask-mo">
+        <input id="ask-input" type="text" placeholder="Ask Mo: lift at Kroger 20% TPR?">
+        <button id="ask-send">Ask</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SKUS=[
+  {id:'cc4',name:'BUILT Bar Cookies & Cream',pack:'4-Pack',eq:4,upc:'850026473412',status:'acc',
+   vel:22.4,dlt:4.2,fcst:25.8,peak:31.0,stores:967,sdlt:147,acv:84.2,conf:91,rev13:198000,
+   baseP:9.99,arp:8.76,promoP:7.49,nonPromoP:9.99,
+   promo:{wks:'W39–42',depth:'20% TPR',lift:'+38%'},
+   decomp:{base:22.4,dist:2.8,promo:6.2,season:1.4,price:-1.8,total:31.0},
+   cannib:{donor:'C&C 1-Pack',rate:0.31,netLift:0.27},
+   elast:{e:-1.8,opt_lo:7.20,opt_hi:7.80},
+   wif:{rev_c:198000,rev_e:228000,units_c:22600,units_e:26100,gp_c:38400,gp_e:44200,stock_c:21,stock_e:34},
+   detReason:'Promo W39–42 confirmed + 147 new stores',
+   diagReason:'Decomposing +38.4% velocity gain',
+   decReason:'2 actions need a response before W39',
+   actions:[
+     {type:'amber',title:'Adjust safety stock at Kroger',impact:'Promo lift historically 12% below plan — stock for 90% of modeled lift'},
+     {type:'blue',title:'Submit incremental production PO',impact:'W39–42 needs +18% EQ bars → PO now to hit shelf on time'}
+   ],
+   hist:[19.2,19.8,20.1,20.4,21.2,22.0,21.8,22.4,22.1,21.6,20.8,20.2,19.8,20.1,20.6,21.4,22.2,23.1,22.8,22.4,21.9,21.2,20.8,21.4,22.0,22.4],
+   fp:[22.6,22.8,23.0,29.2,31.0,30.4,29.8,24.0,24.0,23.8,23.6,23.4,23.2],
+   fl:[20.1,20.3,20.5,26.4,28.0,27.5,27.1,21.5,21.5,21.3,21.1,20.9,20.7],
+   fh:[25.1,25.3,25.5,32.0,34.0,33.3,32.5,26.5,26.5,26.3,26.1,25.9,25.7]},
+  {id:'cdcd1',name:'BUILT Bar Choc Chip Cookie Dough',pack:'1-Pack',eq:1,upc:'850026473023',status:'stable',
+   vel:18.6,dlt:1.8,fcst:19.4,peak:19.4,stores:1240,sdlt:28,acv:91.4,conf:88,rev13:48000,
+   baseP:2.79,arp:2.61,promoP:1.99,nonPromoP:2.79,promo:null,
+   decomp:{base:18.6,dist:0.8,promo:0,season:0.4,price:-0.4,total:19.4},
+   cannib:null,elast:{e:-1.4,opt_lo:2.49,opt_hi:2.79},wif:null,
+   detReason:'Stable baseline · ARP trending down',diagReason:'Marginal distribution and seasonality lift',decReason:'Monitor ARP erosion trend',
+   actions:[{type:'blue',title:'Monitor ARP trend',impact:'−8¢/bar over 12 weeks — at current rate margin erosion in ~6 weeks'}],
+   hist:[17.2,17.4,17.8,17.9,18.0,18.2,18.1,18.4,18.6,18.4,18.2,18.0,18.1,18.3,18.5,18.6,18.7,18.8,18.9,18.8,18.7,18.6,18.5,18.6,18.6,18.6],
+   fp:[18.7,18.8,18.9,19.0,19.1,19.2,19.3,19.4,19.5,19.5,19.5,19.4,19.4],
+   fl:[17.2,17.3,17.4,17.5,17.6,17.7,17.8,17.9,18.0,18.0,18.0,17.9,17.9],
+   fh:[20.2,20.3,20.4,20.5,20.6,20.7,20.8,20.9,21.0,21.0,21.0,20.9,20.9]},
+  {id:'bc4',name:'BUILT Bar Birthday Cake',pack:'4-Pack',eq:4,upc:'850026473238',status:'risk',
+   vel:15.2,dlt:-3.1,fcst:14.0,peak:14.0,stores:842,sdlt:-18,acv:68.4,conf:82,rev13:-41000,
+   baseP:10.49,arp:9.12,promoP:7.99,nonPromoP:10.49,promo:null,
+   decomp:{base:15.2,dist:-0.6,promo:0,season:0.2,price:-0.8,total:14.0},
+   cannib:null,elast:{e:-1.6,opt_lo:8.99,opt_hi:9.49},wif:null,
+   detReason:'ACV declining 3 of 4 quarters · price headwind',diagReason:'Distribution loss + price elasticity drag',decReason:'Intervention needed to halt decline',
+   actions:[
+     {type:'red',title:'Review Birthday Cake distribution at Kroger',impact:'−18 stores in 13 weeks · evaluate buyer relationship or promo support'},
+     {type:'amber',title:'Price elasticity alert — ARP above threshold',impact:'ARP $9.12 vs optimal $8.99–$9.49 · elasticity −1.6 accelerating volume loss'}
+   ],
+   hist:[18.1,17.8,17.4,17.0,16.8,16.6,16.2,16.0,15.8,15.6,15.4,15.2,15.0,15.2,15.3,15.2,15.1,15.0,15.2,15.3,15.2,15.2,15.1,15.0,15.2,15.2],
+   fp:[15.1,15.0,14.9,14.8,14.8,14.7,14.7,14.6,14.6,14.5,14.5,14.5,14.4],
+   fl:[13.6,13.5,13.4,13.3,13.3,13.2,13.2,13.1,13.1,13.0,13.0,13.0,12.9],
+   fh:[16.6,16.5,16.4,16.3,16.3,16.2,16.2,16.1,16.1,16.0,16.0,16.0,15.9]},
+  {id:'pcc1',name:'BUILT Puff Cookies & Cream',pack:'1-Pack',eq:1,upc:'850026474821',status:'acc',
+   vel:24.8,dlt:8.4,fcst:27.2,peak:27.2,stores:412,sdlt:412,acv:32.1,conf:74,rev13:94000,
+   baseP:2.99,arp:2.99,promoP:2.99,nonPromoP:2.99,promo:null,
+   decomp:{base:14.2,dist:8.6,promo:0,season:0.8,price:0,total:23.6},
+   cannib:{donor:'C&C 4-Pack',rate:0.28,netLift:null},elast:null,wif:null,
+   detReason:'New launch — 11 weeks of history, proxy forecast',diagReason:'Distribution ramp driving all velocity growth',decReason:'Proxy CI ±18% — widen cover and watch cannib',
+   actions:[
+     {type:'amber',title:'Carry 2 extra weeks of safety stock',impact:'New item — proxy CI ±18% · sell history too short for full confidence'},
+     {type:'blue',title:'Monitor cannib vs C&C 4pk in 2 weeks',impact:'28% cannib modeled · net bar consumption unclear at 20 stores/wk expansion'}
+   ],
+   hist:[0,0,0,0,0,0,0,0,0,0,0,0,0,14.2,15.8,17.4,18.9,20.1,21.2,22.0,22.6,23.1,23.8,24.2,24.5,24.8],
+   fp:[25.1,25.4,25.7,25.9,26.1,26.4,26.6,26.8,27.0,27.1,27.2,27.2,27.2],
+   fl:[20.5,20.8,21.1,21.3,21.5,21.8,22.0,22.2,22.4,22.5,22.6,22.6,22.6],
+   fh:[29.7,30.0,30.3,30.5,30.7,31.0,31.2,31.4,31.6,31.7,31.8,31.8,31.8]},
+  {id:'dc12',name:'BUILT Bar Double Chocolate',pack:'12-Pack',eq:12,upc:'850026473481',status:'dec',
+   vel:11.4,dlt:-12.4,fcst:10.6,peak:10.6,stores:384,sdlt:-22,acv:28.8,conf:79,rev13:-89000,
+   baseP:27.99,arp:25.40,promoP:21.99,nonPromoP:27.99,promo:null,
+   decomp:{base:12.8,dist:-0.8,promo:0,season:-0.4,price:-0.6,total:11.0},
+   cannib:{donor:'DC 4-Pack',rate:0.38,netLift:null},elast:{e:-1.4,opt_lo:24.99,opt_hi:26.99},wif:null,
+   detReason:'ACV declining 4 consecutive quarters',diagReason:'Distribution, seasonality, and price all dragging',decReason:'Escalate — 4-quarter decline pattern',
+   actions:[
+     {type:'red',title:'Escalate Double Choc 12pk to leadership',impact:'4 qtrs ACV decline → assess discontinue, promo support, or price reset'},
+     {type:'amber',title:'Evaluate pack-mix cannibalization',impact:'38% of 12pk consumers migrating to 4pk · 12pk price reset may slow shift'}
+   ],
+   hist:[14.8,14.4,14.2,13.8,13.6,13.4,13.2,13.0,12.8,12.6,12.4,12.2,12.1,12.0,11.9,11.8,11.7,11.6,11.6,11.5,11.5,11.4,11.4,11.4,11.4,11.4],
+   fp:[11.2,11.1,11.0,10.9,10.8,10.7,10.7,10.6,10.6,10.5,10.5,10.4,10.4],
+   fl:[9.7,9.6,9.5,9.4,9.3,9.2,9.2,9.1,9.1,9.0,9.0,8.9,8.9],
+   fh:[12.7,12.6,12.5,12.4,12.3,12.2,12.2,12.1,12.1,12.0,12.0,11.9,11.9]},
+  {id:'pb4',name:'BUILT Bar Peanut Butter',pack:'4-Pack',eq:4,upc:'850026473351',status:'stable',
+   vel:13.9,dlt:0.6,fcst:14.2,peak:14.2,stores:768,sdlt:4,acv:62.1,conf:86,rev13:8000,
+   baseP:9.99,arp:9.14,promoP:7.99,nonPromoP:9.99,promo:null,
+   decomp:{base:13.9,dist:0.2,promo:0,season:0.3,price:-0.2,total:14.2},
+   cannib:null,elast:{e:-1.3,opt_lo:8.79,opt_hi:9.49},wif:null,
+   detReason:'Baseline stable · no promo in 13-week horizon',diagReason:'Marginal distribution and seasonality lift only',decReason:'Upload promo calendar to unlock scenario modeling',
+   actions:[{type:'blue',title:'Upload promotional calendar',impact:'No promos modeled — forecast is baseline only · promo lift could add +$40–60K'}],
+   hist:[13.2,13.3,13.4,13.4,13.5,13.6,13.6,13.7,13.7,13.8,13.8,13.8,13.9,13.9,13.9,14.0,14.0,14.0,14.0,13.9,13.9,13.9,13.9,13.9,13.9,13.9],
+   fp:[14.0,14.0,14.1,14.1,14.1,14.2,14.2,14.2,14.2,14.2,14.2,14.2,14.2],
+   fl:[12.5,12.5,12.6,12.6,12.6,12.7,12.7,12.7,12.7,12.7,12.7,12.7,12.7],
+   fh:[15.5,15.5,15.6,15.6,15.6,15.7,15.7,15.7,15.7,15.7,15.7,15.7,15.7]}
+];
+
+const WHATCHANGED=[
+  {lbl:'C&C 4pk · Kroger',note:'Promo W39–42 confirmed',val:126400},
+  {lbl:'Puff C&C 1pk · Kroger',note:'Distribution ramp +147 stores',val:94200},
+  {lbl:'CDCD 1pk · Kroger',note:'Baseline momentum',val:12400},
+  {lbl:'PB 4pk · Kroger',note:'Flat — no change',val:0},
+  {lbl:'Birthday Cake 4pk',note:'Price headwind −3.1% velocity',val:-41200},
+  {lbl:'DC 12pk · Kroger',note:'ACV declining −22 stores',val:-89400},
+];
+
+let selId='cc4',fmtFilter='all';
+
+function lp(pts){return pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');}
+
+function buildSpark(s){
+  const el=document.getElementById('spark-wrap');
+  const W=el.clientWidth||600,H=el.clientHeight||100;
+  if(W<10||H<10)return'';
+  const pT=8,pR=10,pB=16,pL=10;
+  const cH=H-pT-pB,cW=W-pL-pR;
+  const firstNZ=s.hist.findIndex(v=>v>0);
+  const hV=s.hist.slice(firstNZ);
+  const allV=[...hV,...s.fh].filter(v=>v>0);
+  const minV=Math.min(...allV)-1.5,maxV=Math.max(...allV)+1.5;
+  const total=hV.length+s.fp.length;
+  const xi=i=>pL+i/(total-1)*cW;
+  const yv=v=>pT+cH-(v-minV)/(maxV-minV)*cH;
+  const hO=hV.length-1;
+  const hPts=hV.map((v,i)=>[xi(i),yv(v)]);
+  const fpPts=s.fp.map((v,i)=>[xi(hO+i),yv(v)]);
+  const flPts=s.fl.map((v,i)=>[xi(hO+i),yv(v)]);
+  const fhPts=s.fh.map((v,i)=>[xi(hO+i),yv(v)]);
+  const band=flPts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')+' '+[...fhPts].reverse().map(p=>'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')+' Z';
+  const hArea=hPts.map((p,i)=>i===0?`M${p[0].toFixed(1)} ${(pT+cH).toFixed(1)} L${p[0].toFixed(1)} ${p[1].toFixed(1)}`:`L${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join('')+` L${hPts[hPts.length-1][0].toFixed(1)} ${(pT+cH).toFixed(1)} Z`;
+  const cutX=xi(hO);
+  const hasPromo=!!s.promo;
+  const pX1=hasPromo?xi(hO+3):0,pX2=hasPromo?xi(hO+6):0;
+  const wLbls=[];
+  for(let i=0;i<total;i+=4)wLbls.push(`<text x="${xi(i).toFixed(1)}" y="${H-2}" font-family="JetBrains Mono" font-size="7.5" fill="#8AACC0" text-anchor="middle">W${13+firstNZ+i}</text>`);
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+<defs>
+  <linearGradient id="gh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2F6FD8" stop-opacity="0.15"/><stop offset="100%" stop-color="#2F6FD8" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2F6FD8" stop-opacity="0.06"/><stop offset="100%" stop-color="#2F6FD8" stop-opacity="0"/></linearGradient>
+</defs>
+${hasPromo?`<rect x="${pX1.toFixed(1)}" y="${pT}" width="${(pX2-pX1).toFixed(1)}" height="${cH}" fill="rgba(184,110,16,0.08)"/><text x="${((pX1+pX2)/2).toFixed(1)}" y="${pT+9}" font-family="JetBrains Mono" font-size="7.5" fill="#B86E10" text-anchor="middle">${s.promo.wks} ${s.promo.depth}</text>`:''}
+<path d="${hArea}" fill="url(#gh)"/>
+<path d="${band}" fill="url(#gc)"/>
+<path d="${lp(hPts)}" fill="none" stroke="#2F6FD8" stroke-width="2.2"/>
+<path d="${lp(fpPts)}" fill="none" stroke="${hasPromo?'#C07A14':'#1A5BC8'}" stroke-width="2" stroke-dasharray="${hasPromo?'none':'4,3'}"/>
+<line x1="${cutX.toFixed(1)}" y1="${pT}" x2="${cutX.toFixed(1)}" y2="${(pT+cH).toFixed(1)}" stroke="#CAD6E8" stroke-width="1" stroke-dasharray="3,2"/>
+<line x1="${pL}" y1="${(pT+cH).toFixed(1)}" x2="${(pL+cW).toFixed(1)}" y2="${(pT+cH).toFixed(1)}" stroke="#CAD6E8" stroke-width="0.8"/>
+${wLbls.join('')}
+</svg>`;
+}
+
+function rerenderSpark(){
+  const s=SKUS.find(x=>x.id===selId);
+  requestAnimationFrame(()=>{ document.getElementById('spark-wrap').innerHTML=buildSpark(s); });
+}
+
+function buildDecomp(s){
+  const d=s.decomp;
+  const items=[{lbl:'Distribution',val:d.dist},{lbl:'Planned promo',val:d.promo},{lbl:'Seasonality',val:d.season},{lbl:'Price effect',val:d.price}];
+  const maxAbs=Math.max(...items.map(i=>Math.abs(i.val)),0.1);
+  const net=d.total-d.base;
+  let h=`<div class="dslbl">VELOCITY DECOMPOSITION</div>
+<div class="dbase"><span class="db-lbl">Base velocity</span><span class="db-val">${d.base} EQ bars/store/wk</span></div>`;
+  for(const it of items){
+    const w=(Math.abs(it.val)/maxAbs*100).toFixed(1);
+    const sign=it.val>0?'pos':it.val<0?'neg':'zero';
+    const pre=it.val>0?'+':'';
+    const pct=net!==0?`${pre}${(it.val/Math.abs(net)*100).toFixed(0)}% of chg`:'—';
+    if(it.lbl==='Planned promo'&&it.val===0){
+      h+=`<div class="drow"><span class="dlbl">${it.lbl}</span><span class="d-no-promo">no promo modeled · upload calendar</span></div>`;continue;
+    }
+    h+=`<div class="drow"><span class="dlbl">${it.lbl}</span><div class="dbar-track"><div class="dbar ${sign}" style="width:${w}%"></div></div><span class="dval ${sign}">${pre}${it.val.toFixed(1)}</span><span class="dpct">${pct}</span></div>`;
+  }
+  const cs=net>0?'pos':'neg';
+  h+=`<div class="dtotal"><span class="dt-lbl">FORECAST</span><span class="dt-val">${d.total}</span><span class="dt-unit">EQ bars/store/wk</span><span class="dt-chg ${cs}">${net>0?'+':''}${net.toFixed(1)} (${net>0?'+':''}${(net/d.base*100).toFixed(0)}%)</span></div>`;
+  return h;
+}
+
+function buildInsights(s){
+  let h='';
+  if(s.cannib){
+    const netStr=s.cannib.netLift?`net category lift +${(s.cannib.netLift*100).toFixed(0)}% after cannib`:`net gain unclear — monitor category consumption`;
+    h+=`<div class="insight-chip"><span class="ic-icon cannb">⇄</span><div><div class="ic-title">Cannibalization · <strong>${(s.cannib.rate*100).toFixed(0)}%</strong> from ${s.cannib.donor}</div><div class="ic-sub">${s.promo?`Gross lift ${s.promo.lift} · ${netStr}`:`Cross-SKU volume shift · ${netStr}`}</div></div></div>`;
+  }
+  if(s.elast){
+    const e=s.elast;
+    const p=s.promo?s.promoP:s.arp;
+    const ok=p>=e.opt_lo&&p<=e.opt_hi;
+    h+=`<div class="insight-chip"><span class="ic-icon elast">ε</span><div><div class="ic-title">Price elasticity · <strong>ε = ${e.e}</strong> · ${s.promo?'promo':'ARP'} $${p.toFixed(2)}/pkg</div><div class="ic-sub">${ok?`✓ Within optimal $${e.opt_lo.toFixed(2)}–$${e.opt_hi.toFixed(2)}`:`⚠ Outside optimal $${e.opt_lo.toFixed(2)}–$${e.opt_hi.toFixed(2)} — volume loss accelerating`}</div></div></div>`;
+  }
+  h+=`<div class="insight-chip"><span class="ic-icon macro">~</span><div><div class="ic-title">Macro context · Gas −$0.08/gal this week · Consumer sentiment 68.2 (−1.4 pts)</div><div class="ic-sub">Gas decline → slight convenience channel tailwind · sentiment softness is a watch signal, not an alert yet</div></div></div>`;
+  return h;
+}
+
+function buildScenario(s){
+  if(s.wif){
+    const w=s.wif;
+    return`<div class="scen-title">WHAT IF WE EXTEND PROMO 2 MORE WEEKS? <span style="color:var(--t3)">(${s.promo.wks} → ${s.promo.wks.replace('42','44')})</span></div>
+<div class="scen-table">
+  <div class="scen-hdr"><span></span><span>Current Plan</span><span>Extend +2 wks</span><span>Change</span></div>
+  <div class="scen-row"><span>Revenue</span><span>$${(w.rev_c/1e3).toFixed(1)}K</span><span>$${(w.rev_e/1e3).toFixed(1)}K</span><span class="pos">+$${((w.rev_e-w.rev_c)/1e3).toFixed(1)}K</span></div>
+  <div class="scen-row"><span>EQ Units</span><span>${w.units_c.toLocaleString()}</span><span>${w.units_e.toLocaleString()}</span><span class="pos">+${(w.units_e-w.units_c).toLocaleString()}</span></div>
+  <div class="scen-row"><span>Gross Profit</span><span>$${(w.gp_c/1e3).toFixed(1)}K</span><span>$${(w.gp_e/1e3).toFixed(1)}K</span><span class="pos">+$${((w.gp_e-w.gp_c)/1e3).toFixed(1)}K</span></div>
+  <div class="scen-row warn"><span>Stockout Risk</span><span>${w.stock_c}%</span><span>${w.stock_e}%</span><span class="neg">+${w.stock_e-w.stock_c}pp ⚠</span></div>
+</div>`;
+  }
+  return`<div class="scen-title">PRICE MEASURES · ${s.pack.toUpperCase()} · $${(s.baseP/s.eq).toFixed(2)}/BAR BASE</div>
+<div class="price-row">
+  <div class="price-item"><div class="pi-lbl">Base Price</div><div class="pi-val">$${s.baseP.toFixed(2)}</div><div class="pi-sub">EDLP shelf</div></div>
+  <div class="price-item"><div class="pi-lbl">ARP (blended)</div><div class="pi-val">$${s.arp.toFixed(2)}</div><div class="pi-sub">${((s.arp-s.baseP)/s.baseP*100).toFixed(1)}% vs base</div></div>
+  <div class="price-item"><div class="pi-lbl">Promo Price</div><div class="pi-val">$${s.promoP.toFixed(2)}</div><div class="pi-sub">$${(s.promoP/s.eq).toFixed(2)}/bar at TPR</div></div>
+</div>
+${!s.promo?`<div class="promo-note">Upload promotional calendar to enable "What if?" scenario modeling for this SKU</div>`:''}`;
+}
+
+function render(s){
+  document.getElementById('det-reason').innerHTML=`<strong>${s.name}</strong> · ${s.detReason}`;
+  const dd=s.dlt>0?'+':'';const dc=s.dlt>1.5?'pos':s.dlt<-1?'neg':'neu';
+  const cc=s.conf>=88?'var(--green-lt)':s.conf>=78?'var(--amber)':'var(--red-lt)';
+  document.getElementById('kpi-row').innerHTML=`
+    <div class="kcard"><div class="kval">${s.vel}</div><div class="klbl">EQ VELOCITY · BASE</div><div class="ksub">bars/store/wk · non-promo</div></div>
+    <div class="kcard"><div class="kval ${dc}">${dd}${s.dlt}%</div><div class="klbl">4-WEEK Δ</div><div class="ksub">vs prior 4 weeks</div></div>
+    <div class="kcard"><div class="kval">${s.fcst}${s.peak>s.fcst?` <span style="font-size:14px;color:var(--amber)">↑${s.peak}</span>`:''}</div><div class="klbl">13-WK FORECAST</div><div class="ksub">avg${s.peak>s.fcst?' · peak shown':''}</div></div>
+    <div class="kcard"><div class="kval" style="color:${cc}">${s.conf}%</div><div class="klbl">CONFIDENCE</div><div class="ksub">wMAPE ${(100-s.conf).toFixed(1)}%</div></div>
+    <div class="kcard"><div class="kval ${s.rev13>=0?'pos':'neg'}">${s.rev13>=0?'+':''}$${Math.abs(s.rev13/1e3).toFixed(0)}K</div><div class="klbl">13-WK REV IMPACT</div><div class="ksub">vs prior 13 weeks</div></div>`;
+  requestAnimationFrame(()=>{ document.getElementById('spark-wrap').innerHTML=buildSpark(s); });
+  document.getElementById('diag-reason').innerHTML=`<strong>${s.diagReason}</strong>`;
+  document.getElementById('decomp-section').innerHTML=buildDecomp(s);
+  document.getElementById('insights').innerHTML=buildInsights(s);
+  document.getElementById('dec-reason').innerHTML=`<strong>${s.decReason}</strong>`;
+  document.getElementById('scenario-section').innerHTML=buildScenario(s);
+  document.getElementById('act-list').innerHTML=(s.actions||[]).map(a=>`
+    <div class="act-item ${a.type}">
+      <div class="act-text"><div class="act-title">${a.title}</div><div class="act-impact">${a.impact}</div></div>
+      <div class="act-btns"><button class="abtn pri">Accept</button><button class="abtn sec">Dismiss</button></div>
+    </div>`).join('');
+}
+
+function renderTable(){
+  const rows=fmtFilter==='all'?SKUS:SKUS.filter(s=>s.pack===fmtFilter);
+  document.getElementById('tbody').innerHTML=rows.map(s=>{
+    const dc=s.dlt>1.5?'pos':s.dlt<-1?'neg':'neu';const ds=s.dlt>0?'+':'';
+    const rc=s.id===selId?'sel':s.status;
+    return`<div class="trow ${rc}" onclick="sel('${s.id}')">
+      <div><div class="sname">${s.name}</div><div class="spack">${s.pack} · EQ×${s.eq}</div>${s.promo?`<div class="spromo">📅 ${s.promo.depth}</div>`:''}</div>
+      <div><div class="svel">${s.vel}</div><div class="svlbl">bars/store/wk</div></div>
+      <div><div class="sdlt ${dc}">${ds}${s.dlt}%</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderWC(){
+  const maxAbs=Math.max(...WHATCHANGED.map(w=>Math.abs(w.val)));
+  document.getElementById('wc-list').innerHTML=WHATCHANGED.map(w=>{
+    const sign=w.val>0?'pos':w.val<0?'neg':'neu';const pre=w.val>0?'+':'';
+    const barW=maxAbs>0?(Math.abs(w.val)/maxAbs*100).toFixed(0)+'%':'4px';
+    const barCol=w.val>0?'var(--green-lt)':w.val<0?'var(--red-lt)':'var(--border)';
+    const vs=w.val===0?'flat':`${pre}$${Math.abs(w.val/1e3).toFixed(0)}K`;
+    return`<div class="wc-item"><div class="wc-top"><span class="wc-lbl">${w.lbl}</span><span class="wc-impact ${sign}">${vs}</span></div><div class="wc-note">${w.note}</div><div class="wc-bar-track"><div class="wc-bar" style="width:${barW};background:${barCol}"></div></div></div>`;
+  }).join('');
+}
+
+function sel(id){selId=id;const s=SKUS.find(x=>x.id===id);renderTable();render(s);}
+function setFmt(f,el){fmtFilter=f;document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTable();}
+
+function toggleLeft(){
+  const p=document.getElementById('left');
+  const b=document.getElementById('ltgl');
+  const c=p.classList.toggle('collapsed');
+  b.textContent=c?'›':'‹';
+  b.title=c?'Show SKU list  [':'Hide SKU list  [';
+}
+function toggleRight(){
+  const p=document.getElementById('right');
+  const b=document.getElementById('rtgl');
+  const c=p.classList.toggle('collapsed');
+  b.textContent=c?'‹':'›';
+  b.title=c?'Show signals  ]':'Hide signals  ]';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.key==='[')toggleLeft();
+  if(e.key===']')toggleRight();
+});
+
+['left','right'].forEach(id=>{
+  document.getElementById(id).addEventListener('transitionend',rerenderSpark);
+});
+
+document.getElementById('ask-send').onclick=()=>{
+  const v=document.getElementById('ask-input').value.trim();
+  if(v){document.getElementById('ask-input').value='';alert('Mo Chat: "'+v+'" — routes to demand planning context with current SKU + promo data.');}
+};
+document.getElementById('ask-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('ask-send').click();});
+
+renderTable();render(SKUS[0]);renderWC();
+</script>
