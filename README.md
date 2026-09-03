@@ -6,6 +6,31 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 93: Phase 1 Module 01 requirements lists + two standup transcripts (2026-09-03)
+
+Processed two standup transcripts from Rob and Jason: `docs/Aevah Standup 090226.docx` (Sept 2, 32 min) and `docs/Aevah Standup 090326.docx` (Sept 3, 2 min — today). Both committed to repo.
+
+**Rob's two asks from today's standup (Sept 3):**
+
+1. "A list of things you think we need from Brian and his team, Connor, Chase, everybody behind him."
+2. "A list of the data points that agree with the demand planning or whatever we've got for the first step of phase one, that first module."
+
+**Delivered as:** `mockups/mo_phase1_requirements.html` — interactive two-panel HTML document with color-coded status chips (✓ HAVE / ⚡ BUILD / ▶ NEED / ? ASK). Saved to repo for durable reference.
+
+**Key framing from Rob's Sept 2 standup:** "they live in a world of reports today" — initial delivery must give BUILT back the same Excel/PDF report they're used to, then layer in the live tool. Rob's specific architecture (Sept 3): dated PDF on a button, plus a report archive that piles up in the tool over time, tagged by date/SKU/retailer.
+
+**Also confirmed:** `mockups/mo_demand_planning.html` is already committed to the project (commit `7debcb4`) — the demand planning cockpit mockup has a durable repo version.
+
+**What we have (pull forward):** velocity spark chart, decomposition bars, promo uplift toggle, cold-start proxy, FRED GASDESW + UMCSENT, cannibalization + elasticity chips.
+
+**What to build:** sellable-unit conversion (not EQ), retailer + corporate rollups, two-view toggle (base vs. promo-inclusive), confidence bands, BLS CPI tile, PDF export, report archive.
+
+**What we need from BUILT:** SPINS full pull (Brian this week), historical promo calendars, pricing data, Connor's current Excel output (for backtesting), product master data, user list for provisioning, Azure AD setup.
+
+**Open questions:** what does Connor's current report look like; who receives it and how often; RACI (Connor/Chase/Jeff); default SKU/retailer on first load; Brian's terminology for the two forecast views.
+
+---
+
 ## README update 92: Sept 2 Brian/Rob/Jason working session — forecast requirements finalized, PPTX edits (2026-09-02)
 
 43-minute working session (Rob Long, Brian Cluster, Jason Brazeal) reviewing the edited data ops kickoff deck and finalizing Phase 1 scope. Three new docs committed: `docs/Built _ Aevah.docx` (main transcript), `docs/Built _ Aevah (1).docx` (91-second wrap-up), `docs/mo_data_ops_kickoff BC+Aevah edits.pptx` (Brian's PPTX edits).

@@ -1,0 +1,528 @@
+<title>Phase 1 · Module 01 Requirements</title>
+<style>
+  :root {
+    --bg: #EEF2FA;
+    --surface: #FFFFFF;
+    --s2: #F4F7FD;
+    --navy: #E0EAF8;
+    --blue: #2F6FD8;
+    --blue-dk: #1A4FA0;
+    --text: #0D1829;
+    --t2: #3A5870;
+    --t3: #6B88A0;
+    --border: #CAD6E8;
+    --green: #128040;
+    --green-bg: #EBF6F0;
+    --amber: #B86E10;
+    --amber-bg: #FDF3E3;
+    --red: #C83030;
+    --red-bg: #FDEAEA;
+    --purple: #5C2D91;
+    --purple-bg: #F0EAF8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1829;
+      --surface: #152034;
+      --s2: #1C2B42;
+      --navy: #1E3050;
+      --blue: #4D8FEF;
+      --blue-dk: #7AAFF5;
+      --text: #E8EFF8;
+      --t2: #9AB4CC;
+      --t3: #6B88A0;
+      --border: #2A3F58;
+      --green: #4ABA7A;
+      --green-bg: #0E2A1C;
+      --amber: #E09044;
+      --amber-bg: #2C1C06;
+      --red: #E05858;
+      --red-bg: #2C0E0E;
+      --purple: #9B72D4;
+      --purple-bg: #1E0F36;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1829;
+    --surface: #152034;
+    --s2: #1C2B42;
+    --navy: #1E3050;
+    --blue: #4D8FEF;
+    --blue-dk: #7AAFF5;
+    --text: #E8EFF8;
+    --t2: #9AB4CC;
+    --t3: #6B88A0;
+    --border: #2A3F58;
+    --green: #4ABA7A;
+    --green-bg: #0E2A1C;
+    --amber: #E09044;
+    --amber-bg: #2C1C06;
+    --red: #E05858;
+    --red-bg: #2C0E0E;
+    --purple: #9B72D4;
+    --purple-bg: #1E0F36;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 24px 20px 48px;
+  }
+
+  code, .mono {
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--blue);
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .page-meta {
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: var(--t2);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .page-meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* ── Legend ── */
+  .legend {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .chip-have  { background: var(--green-bg);  color: var(--green);  }
+  .chip-build { background: var(--navy);       color: var(--blue);   }
+  .chip-need  { background: var(--amber-bg);   color: var(--amber);  }
+  .chip-ask   { background: var(--purple-bg);  color: var(--purple); }
+
+  /* ── Two-column layout ── */
+  .two-col {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 780px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  /* ── Panel ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--s2);
+  }
+  .panel-head h2 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 2px;
+  }
+  .panel-head p {
+    font-size: 12px;
+    color: var(--t2);
+    line-height: 1.4;
+  }
+
+  /* ── Sections within panels ── */
+  .section-label {
+    padding: 9px 16px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--t3);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Rows ── */
+  .row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: var(--s2); }
+
+  .row-status { padding-top: 1px; flex-shrink: 0; }
+  .row-body {}
+  .row-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .row-label .mono {
+    color: var(--blue);
+  }
+  .row-note {
+    font-size: 11.5px;
+    color: var(--t2);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  /* ── Count badge ── */
+  .count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--navy);
+    color: var(--blue);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<div class="page-header">
+  <div class="eyebrow">Mo by Aevah · Phase 1 · Module 01</div>
+  <div class="page-title">Demand Velocity &amp; Forecast — Requirements</div>
+  <div class="page-meta">
+    <span>📅 2026-09-03</span>
+    <span>👤 Rob Long · Jason Brazeal</span>
+    <span>🏷 Working Document — not for external distribution</span>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="chip chip-have">✓ HAVE — already in Mo</span>
+  <span class="chip chip-build">⚡ BUILD — engineering needed</span>
+  <span class="chip chip-need">▶ NEED — BUILT to provide</span>
+  <span class="chip chip-ask">? ASK — open question</span>
+</div>
+
+<div class="two-col">
+
+  <!-- ═══ LIST 1: WHAT WE NEED FROM BUILT ═══ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2>List 1 — What We Need From BUILT</h2>
+      <p>Brian Cluster · Connor Lain · Chase · Jeff — inputs required before or during Phase 1 delivery</p>
+    </div>
+
+    <div class="section-label">Data Deliverables</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">SPINS full data pull</div>
+        <div class="row-note">All available history (2024–2026), same 214-col shape as prior pull. Brian targeting this week — Rob provisioned MinIO Spins Landing bucket.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">Historical promotion calendars</div>
+        <div class="row-note">Brian has some. Need: promotion period, retailer, SKU, planned lift %, actuals where available. Used for back-test of promo-inclusive forecast view.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">Pricing data by SKU × retailer</div>
+        <div class="row-note">Base price, incremental price, promo price, non-promo price. Needed to separate base velocity from promoted velocity in the two-view toggle.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">FP&amp;A forecast actuals</div>
+        <div class="row-note">Connor's current 13-week Excel output — the numbers they're already sending to buyers/Jeff. Used to back-test Mo's accuracy vs. existing process.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">Product master data</div>
+        <div class="row-note">Item-level attributes: pack size, flavor, launch date, retailer listings. Brian committed to this at the Aug 28 kickoff.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Workflow &amp; Process Input</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-ask">? ASK</span></div>
+      <div class="row-body">
+        <div class="row-label">What does the report they hand out look like today?</div>
+        <div class="row-note">Rob: "they live in a world of reports today." What fields are in Connor's 13-week Excel? What does Brian actually carry into a buyer meeting or send to Jeff?</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-ask">? ASK</span></div>
+      <div class="row-body">
+        <div class="row-label">Who receives the forecast, and how often?</div>
+        <div class="row-note">Is it weekly? Before buyer meetings? Sent to Jeff / Bracken? Connor to sales team? Understanding cadence shapes the export / archive design.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-ask">? ASK</span></div>
+      <div class="row-body">
+        <div class="row-label">RACI confirmation — Connor vs. Chase vs. Jeff</div>
+        <div class="row-note">Brian flagged Sept 2: "I need to get alignment on who's going to get involved from our side." Need to know: who validates the forecast? Who distributes it?</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-ask">? ASK</span></div>
+      <div class="row-body">
+        <div class="row-label">Default view — which SKUs and retailers on first load?</div>
+        <div class="row-note">Mockup currently shows 6 BUILT SKUs at Kroger. Is Kroger the right default? Does Brian want a different retailer or portfolio view on first load?</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-ask">? ASK</span></div>
+      <div class="row-body">
+        <div class="row-label">How do they want the two forecast views labeled?</div>
+        <div class="row-note">"Base velocity" and "promo-inclusive" are Aevah's terms. What does BUILT call these internally? Matching their language reduces adoption friction.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Access &amp; Technical</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">Azure AD / SSO setup — Sam + BUILT IT</div>
+        <div class="row-note">Phase A: manual accounts (Day 1). Phase B: Azure AD SSO target Week 2–3. Need Brian to connect Rob/Jason with Sam and BUILT IT.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-need">▶ NEED</span></div>
+      <div class="row-body">
+        <div class="row-label">User list — who gets access on Day 1</div>
+        <div class="row-note">Brian, Connor, Chase, Jeff at minimum. Any read-only stakeholders (Bracken, buyers)? Need names + emails before account provisioning.</div>
+      </div>
+    </div>
+
+  </div><!-- /panel 1 -->
+
+  <!-- ═══ LIST 2: WHAT GOES ON THE SCREEN ═══ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2>List 2 — What Goes On The Screen</h2>
+      <p>Data points for Phase 1 · Module 01 · Demand Velocity &amp; Forecast — confirmed by Brian Sept 2, 2026</p>
+    </div>
+
+    <div class="section-label">Core Forecast Data — Confirmed by Brian</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">SKU × Retailer selector</div>
+        <div class="row-note">Left panel SKU list — click to update all three phases. Retailer filter in topnav. Already in mockup.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Sellable units — actuals + 13-week forecast</div>
+        <div class="row-note">Brian: <em>"units are sellable units, not EQ units."</em> Currently showing EQ velocity. Need: <code class="mono">pack_count × base_units / store_count_selling</code> converted to sellable units. 13-week ML forecast to match.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Retailer rollup + Total BUILT corporate rollup</div>
+        <div class="row-note">Brian: "a retail level and a total corporate level." Need aggregation queries: sum sellable units across SKUs at retailer level, and across all retailers for BUILT total.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Two forecast views — toggle</div>
+        <div class="row-note">Base velocity forecast (no promo lift) ↔ promo-inclusive forecast (base + uplift). Brian: "I think that would be good to be able to toggle that." ETS/LightGBM base exists; promo overlay is MO_73 lift model.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Confidence bands — low / base / high</div>
+        <div class="row-note">Brian: "what's the top? What's the potential? Where does it land and what's the high and low?" Derived from model prediction intervals. Spark chart CI band already in mockup; needs real model output.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Already Built in Mo — Pull Forward</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Velocity trend spark chart (26-week history)</div>
+        <div class="row-note">Already in Mo SKU view and the demand planning mockup. Promo overlay (amber shading) exists. Cold-start proxy for new SKUs &lt;11 weeks of history.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Velocity decomposition bars</div>
+        <div class="row-note">Base → + Distribution → + Promo → + Seasonality → + Price effect = Forecast. Already in DIAGNOSE phase of the mockup. Connects the "why" to the "what."</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Promo uplift toggle (show/hide)</div>
+        <div class="row-note">Already in Mo Forecast Drawer. MO_73 has 59,746 promo event weeks scored. Brian said this is the right feature — just needs to surface in the demand planning module.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Cold-start proxy for new / thin-history SKUs</div>
+        <div class="row-note">ETS fallback (MO_75) for ≥4 actuals. Proxy overlay for &lt;4 actuals — pulls from similar SKU velocity. Shown as "PROXY FORECAST" chip with ±CI in mockup.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Macro signals — gas prices + consumer sentiment</div>
+        <div class="row-note"><code class="mono">FRED GASDESW</code> + <code class="mono">FRED UMCSENT</code> live in Mo Trends. Brian's #1 and #2 priority external signals. Already wired in right wing of demand planning mockup.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Cannibalization insight chip</div>
+        <div class="row-note">60,695+ scored pairs in Druid. Inline chip in DIAGNOSE phase: donor SKU, rate %, gross vs. net category lift. Already in mockup.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-have">✓ HAVE</span></div>
+      <div class="row-body">
+        <div class="row-label">Price elasticity insight chip</div>
+        <div class="row-note">ε value, whether ARP/promo price is in optimal range. Inline in DIAGNOSE. Phase 1 Module 03 adds nutrient columns (protein, sugar, calories) as features.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Export &amp; Report — Rob's "World of Reports" Requirement</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Dated PDF export — push-button report</div>
+        <div class="row-note">Rob (Sept 3): "here's the focused report that you can push the button, and here's your PDF that's dated. So now they can hand these PDFs out." Must match the format BUILT uses today.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Report archive / directory in Mo</div>
+        <div class="row-note">Rob (Sept 3): "those can just pile up in the tool over time in a directory there that, you know, where they're tagged. And people can always come back to them." Tagged by date + SKU + retailer.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Excel / CSV export of 13-week forecast</div>
+        <div class="row-note">Brian: "I want to export the data." Brian asked for the velocity extract in July (MO_70 — already built as standalone). Needs to surface as a download button in the demand planning module.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Still To Build — Engineering Items</div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">Velocity forecast ML pipeline (sellable units)</div>
+        <div class="row-note">Jason (Sept 2): "we may need to add a little bit to the machine learning pipeline to forecast the velocity." MO_70 extract has forecasted velocity; needs to be productionized as a Mo data feed, converted to sellable units.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-build">⚡ BUILD</span></div>
+      <div class="row-body">
+        <div class="row-label">BLS CPI macro tile</div>
+        <div class="row-note">Brian's #3 external signal priority. <code class="mono">FRED CPIAUCSL</code> available via FRED API (same integration as GASDESW + UMCSENT). Add as third tile in right wing.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-status"><span class="chip chip-ask">? ASK</span></div>
+      <div class="row-body">
+        <div class="row-label">What should the "What if extend promo?" scenario table look like?</div>
+        <div class="row-note">Current mockup shows: Revenue / EQ Units / Gross Profit / Stockout Risk — current vs. extended. Does Brian want a slider, a dropdown for scenarios, or a fixed table? Needs validation.</div>
+      </div>
+    </div>
+
+  </div><!-- /panel 2 -->
+
+</div><!-- /two-col -->
