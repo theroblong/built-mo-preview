@@ -6,6 +6,27 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 94: Sample demand planning report — pre-kickoff (2026-09-04)
+
+Sample dated report format for the BUILT Bar demand planning module, built ahead of the 12:30 kickoff with Brian, Justin, Connor, and Chase. Recipe draws from Connor's current Excel process (July 22 transcript) and Brian's confirmed requirements (Sept 2 session).
+
+**Seven sections:**
+1. Portfolio summary — total BUILT at Kroger, 13-week rollup, confidence bands
+2. SKU-level 13-week forecast table — sellable units/store/week (not EQ), all 6 SKUs, status chips
+3. Velocity decomposition — Base + Distribution ± Promo ± Seasonality ± Macro ± Cannibalization = Forecast
+4. Promo calendar — 13-week grid, which SKUs are on promo which weeks, lift estimate source
+5. Macro context — FRED GASDESW + UMCSENT tiles; CPI placeholder for Phase 1
+6. Flags & overrides needed — Winco data-dark, Puff proxy forecast, Birthday Cake cannibalization, shopper marketing confirm
+7. Gross revenue estimate — list price × units, with GTN deduction note
+
+**Toggle:** base velocity forecast ↔ promo-inclusive forecast (Brian's confirmed two-view requirement)
+
+**Connor's process reflected:** L12W base velocity, seasonality index, promo lift from sales planners, +5% shopper marketing spread, cannibalization adjustment, shipment timing (month T → ships month T-1), gross-to-net deduction notes
+
+**File:** `mockups/mo_demand_report_sample.html` · Artifact: `e3675977`
+
+---
+
 ## README update 93: Phase 1 Module 01 requirements lists + two standup transcripts (2026-09-03)
 
 Processed two standup transcripts from Rob and Jason: `docs/Aevah Standup 090226.docx` (Sept 2, 32 min) and `docs/Aevah Standup 090326.docx` (Sept 3, 2 min — today). Both committed to repo.

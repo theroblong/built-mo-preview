@@ -1,0 +1,837 @@
+<title>BUILT Bar — Demand Planning Report</title>
+<style>
+  :root {
+    --blue: #2F6FD8;
+    --blue-dk: #1A4FA0;
+    --navy: #0D1829;
+    --t2: #3A5870;
+    --t3: #6B88A0;
+    --border: #CAD6E8;
+    --s2: #F4F7FD;
+    --bg: #FFFFFF;
+    --green: #128040; --green-bg: #EBF6F0; --green-bd: #A3D4B8;
+    --amber: #B86E10; --amber-bg: #FDF3E3; --amber-bd: #F0C070;
+    --red: #C83030;   --red-bg: #FDEAEA;   --red-bd: #F0A0A0;
+    --purple: #5C2D91; --purple-bg: #F0EAF8;
+    --teal: #0E7490; --teal-bg: #E0F5F8;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --navy: #E8EFF8; --t2: #9AB4CC; --t3: #6B88A0; --bg: #0D1829;
+    --s2: #152034; --border: #2A3F58; --blue: #4D8FEF; --blue-dk: #7AAFF5;
+    --green: #4ABA7A; --green-bg: #0E2A1C; --green-bd: #2A6040;
+    --amber: #E09044; --amber-bg: #2C1C06; --amber-bd: #7A4010;
+    --red: #E05858; --red-bg: #2C0E0E; --red-bd: #7A2020;
+    --purple: #9B72D4; --purple-bg: #1E0F36;
+    --teal: #38B2CC; --teal-bg: #0A2A32;
+  }}
+  :root[data-theme="dark"] {
+    --navy: #E8EFF8; --t2: #9AB4CC; --t3: #6B88A0; --bg: #0D1829;
+    --s2: #152034; --border: #2A3F58; --blue: #4D8FEF; --blue-dk: #7AAFF5;
+    --green: #4ABA7A; --green-bg: #0E2A1C; --green-bd: #2A6040;
+    --amber: #E09044; --amber-bg: #2C1C06; --amber-bd: #7A4010;
+    --red: #E05858; --red-bg: #2C0E0E; --red-bd: #7A2020;
+    --purple: #9B72D4; --purple-bg: #1E0F36;
+    --teal: #38B2CC; --teal-bg: #0A2A32;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--navy);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .num  { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ── Page wrapper ── */
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 28px 56px;
+  }
+
+  /* ── Report header ── */
+  .rpt-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--blue);
+    margin-bottom: 20px;
+  }
+  .rpt-lockup {}
+  .rpt-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .rpt-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.15;
+  }
+  .rpt-sub {
+    font-size: 12.5px;
+    color: var(--t2);
+    margin-top: 5px;
+  }
+  .rpt-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .rpt-stamp {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--t2);
+    line-height: 1.8;
+  }
+  .rpt-badge {
+    display: inline-block;
+    margin-top: 8px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 3px;
+  }
+
+  /* ── View toggle ── */
+  .toggle-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    width: fit-content;
+  }
+  .tog {
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: var(--s2);
+    color: var(--t2);
+    transition: background 0.15s, color 0.15s;
+    border-right: 1px solid var(--border);
+    user-select: none;
+  }
+  .tog:last-child { border-right: none; }
+  .tog.active { background: var(--blue); color: #fff; }
+  .tog-note { font-size: 11.5px; color: var(--t2); margin-left: 12px; }
+
+  /* ── Section ── */
+  .section { margin-bottom: 28px; }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sec-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+  .sec-note { font-size: 11.5px; color: var(--t2); }
+
+  /* ── Portfolio summary tiles ── */
+  .summary-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .tile {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 14px;
+  }
+  .tile-label { font-size: 10.5px; color: var(--t2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .tile-val { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; color: var(--navy); font-variant-numeric: tabular-nums; line-height: 1; }
+  .tile-sub { font-size: 11px; color: var(--t2); margin-top: 4px; }
+  .tile-delta { font-size: 12px; font-weight: 600; }
+  .up   { color: var(--green); }
+  .dn   { color: var(--red); }
+  .flat { color: var(--t2); }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--t2);
+    padding: 7px 10px;
+    background: var(--s2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th.num { text-align: right; }
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--s2); }
+  .tbl-wrap { border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+
+  /* ── Status chips ── */
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .chip-accel { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+  .chip-stable { background: var(--s2); color: var(--t2); border: 1px solid var(--border); }
+  .chip-risk { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+  .chip-dec { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+  .chip-proxy { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal); }
+  .chip-flag { background: var(--purple-bg); color: var(--purple); }
+
+  /* ── Decomp bars ── */
+  .decomp-table td { padding: 6px 10px; }
+  .bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .bar-track { width: 120px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .pos { background: var(--blue); }
+  .neg { background: var(--red); }
+  .bar-pct { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--t2); }
+
+  /* ── Promo calendar ── */
+  .cal-wrap { overflow-x: auto; }
+  .cal-table { min-width: 680px; }
+  .cal-table th { font-size: 9.5px; padding: 5px 6px; text-align: center; }
+  .cal-table td { padding: 5px 6px; text-align: center; font-size: 11px; }
+  .promo-on { background: var(--amber-bg); color: var(--amber); font-weight: 700; border-radius: 3px; }
+  .promo-hi { background: var(--blue); color: #fff; font-weight: 700; border-radius: 3px; }
+
+  /* ── Macro strip ── */
+  .macro-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .macro-tile {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 14px;
+    background: var(--s2);
+  }
+  .macro-src { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--t3); margin-bottom: 3px; }
+  .macro-name { font-size: 12.5px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .macro-val { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .macro-interp { font-size: 11px; color: var(--t2); margin-top: 5px; line-height: 1.4; }
+
+  /* ── Flags ── */
+  .flag-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .flag-row:last-child { border-bottom: none; }
+  .flag-icon { font-size: 16px; flex-shrink: 0; width: 22px; }
+  .flag-body {}
+  .flag-title { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .flag-note { font-size: 11.5px; color: var(--t2); margin-top: 2px; }
+
+  /* ── Confidence band note ── */
+  .band-note {
+    display: flex;
+    gap: 16px;
+    padding: 9px 12px;
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--t2);
+  }
+  .band-item { display: flex; align-items: center; gap: 6px; }
+  .band-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Totals row ── */
+  .tot td { font-weight: 700; background: var(--s2); border-top: 2px solid var(--border); }
+
+  /* ── Footer ── */
+  .rpt-footer {
+    margin-top: 36px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--t3);
+  }
+
+  /* ── View switching ── */
+  .view-base .promo-col { display: none; }
+  .view-promo .base-col  { display: none; }
+
+  @media (max-width: 640px) {
+    .summary-tiles { grid-template-columns: 1fr 1fr; }
+    .macro-strip { grid-template-columns: 1fr; }
+    .rpt-header { flex-direction: column; }
+    .rpt-meta { text-align: left; }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+<div class="page" id="rpt">
+
+  <!-- ══ HEADER ══ -->
+  <div class="rpt-header">
+    <div class="rpt-lockup">
+      <div class="rpt-eyebrow">Mo by Aevah · Demand Planning</div>
+      <div class="rpt-title">13-Week Demand Forecast</div>
+      <div class="rpt-sub">BUILT Bar · Kroger · All SKUs &nbsp;·&nbsp; Base: L12W SPINS through Wk 35 (Aug 30, 2026)</div>
+    </div>
+    <div class="rpt-meta">
+      <div class="rpt-stamp">
+        Report date: 2026-09-04<br>
+        Data through: 2026-08-30 (Wk 35)<br>
+        Forecast horizon: Wk 36 – Wk 48<br>
+        Account: Kroger · ~412 stores
+      </div>
+      <div class="rpt-badge">Confidential · Internal Use Only</div>
+    </div>
+  </div>
+
+  <!-- ══ VIEW TOGGLE ══ -->
+  <div style="display:flex;align-items:center;margin-bottom:20px;gap:12px;">
+    <div class="toggle-bar">
+      <div class="tog active" id="tog-base" onclick="setView('base')">Base Velocity Forecast</div>
+      <div class="tog" id="tog-promo" onclick="setView('promo')">Promo-Inclusive Forecast</div>
+    </div>
+    <span class="tog-note" id="tog-note">Showing baseline demand — no promotional lift applied</span>
+  </div>
+
+  <!-- ══ SECTION 1: PORTFOLIO SUMMARY ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">01 — Portfolio Summary</span>
+      <span class="sec-note">Total BUILT at Kroger · 13-week rollup · sellable units</span>
+    </div>
+    <div class="summary-tiles">
+      <div class="tile">
+        <div class="tile-label">13-Wk Forecast (Base)</div>
+        <div class="tile-val mono">147,200</div>
+        <div class="tile-sub">sellable units · all SKUs</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">13-Wk Forecast (Promo)</div>
+        <div class="tile-val mono">163,800</div>
+        <div class="tile-sub">+11.3% vs. base</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">vs. Prior 13-Week Actual</div>
+        <div class="tile-val mono tile-delta up">+4.7%</div>
+        <div class="tile-sub">prior period: 140,600 units</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Forecast Confidence</div>
+        <div class="tile-val mono">wMAPE 4.1%</div>
+        <div class="tile-sub">Mo model · L12W backtest</div>
+      </div>
+    </div>
+    <div class="band-note">
+      <span style="font-weight:600;color:var(--navy);">Confidence bands:</span>
+      <span class="band-item"><span class="band-dot" style="background:var(--green)"></span>High: 171,400 units</span>
+      <span class="band-item"><span class="band-dot" style="background:var(--blue)"></span>Base: 147,200 units</span>
+      <span class="band-item"><span class="band-dot" style="background:var(--amber)"></span>Low: 128,900 units</span>
+      <span style="margin-left:auto;font-style:italic;">Connor — compare against your model for back-test calibration</span>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2: SKU-LEVEL FORECAST TABLE ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">02 — SKU-Level 13-Week Forecast</span>
+      <span class="sec-note">Sellable units/store/week · retailer grain · Kroger</span>
+    </div>
+    <div class="tbl-wrap" id="sku-table">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Format</th>
+            <th class="num">Vel.<br><span style="font-weight:400;text-transform:none;">(units/str/wk)</span></th>
+            <th class="num">4-Wk Δ</th>
+            <th class="num base-col">13-Wk Fcst<br><span style="font-weight:400;text-transform:none;">Base (units)</span></th>
+            <th class="num promo-col">13-Wk Fcst<br><span style="font-weight:400;text-transform:none;">Promo (units)</span></th>
+            <th class="num">vs. Plan</th>
+            <th>Confidence</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div style="font-weight:600;">BUILT Bar Cookies &amp; Cream</div>
+              <div class="mono" style="color:var(--t3);font-size:10.5px;">850026473412</div>
+            </td>
+            <td>4-Pack</td>
+            <td class="num mono">5.6</td>
+            <td class="num mono up">+4.2%</td>
+            <td class="num mono base-col">29,200</td>
+            <td class="num mono promo-col">31,800 <span style="color:var(--amber);font-size:10px;">+TPR</span></td>
+            <td class="num mono up">+6.2%</td>
+            <td><span class="chip chip-accel">Accelerating</span></td>
+            <td><span class="mono" style="color:var(--t2);">3.8%</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:600;">BUILT Bar Choc Chip Cookie Dough</div>
+              <div class="mono" style="color:var(--t3);font-size:10.5px;">850026473023</div>
+            </td>
+            <td>1-Pack</td>
+            <td class="num mono">18.6</td>
+            <td class="num mono up">+1.8%</td>
+            <td class="num mono base-col">41,900</td>
+            <td class="num mono promo-col">41,900 <span style="color:var(--t3);font-size:10px;">no promo</span></td>
+            <td class="num mono flat">+0.4%</td>
+            <td><span class="chip chip-stable">Stable</span></td>
+            <td><span class="mono" style="color:var(--t2);">4.3%</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:600;">BUILT Bar Birthday Cake</div>
+              <div class="mono" style="color:var(--t3);font-size:10.5px;">850026473238</div>
+            </td>
+            <td>4-Pack</td>
+            <td class="num mono">3.8</td>
+            <td class="num mono dn">−3.1%</td>
+            <td class="num mono base-col">18,600</td>
+            <td class="num mono promo-col">21,200 <span style="color:var(--amber);font-size:10px;">+TPR</span></td>
+            <td class="num mono dn">−4.1%</td>
+            <td><span class="chip chip-risk">At Risk</span></td>
+            <td><span class="mono" style="color:var(--t2);">5.1%</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:600;">BUILT Puff Cookies &amp; Cream</div>
+              <div class="mono" style="color:var(--t3);font-size:10.5px;">850026474821</div>
+            </td>
+            <td>1-Pack</td>
+            <td class="num mono">24.8</td>
+            <td class="num mono up">+8.4%</td>
+            <td class="num mono base-col">27,100</td>
+            <td class="num mono promo-col">28,900 <span style="color:var(--amber);font-size:10px;">+feature</span></td>
+            <td class="num mono up">+12.0%</td>
+            <td><span class="chip chip-proxy">New · Proxy</span></td>
+            <td><span class="mono" style="color:var(--teal);">±18%</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:600;">BUILT Bar Double Chocolate</div>
+              <div class="mono" style="color:var(--t3);font-size:10.5px;">850026473481</div>
+            </td>
+            <td>12-Pack</td>
+            <td class="num mono">0.95</td>
+            <td class="num mono dn">−12.4%</td>
+            <td class="num mono base-col">14,800</td>
+            <td class="num mono promo-col">14,800 <span style="color:var(--t3);font-size:10px;">no promo</span></td>
+            <td class="num mono dn">−10.8%</td>
+            <td><span class="chip chip-dec">Declining</span></td>
+            <td><span class="mono" style="color:var(--t2);">6.2%</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:600;">BUILT Bar Peanut Butter</div>
+              <div class="mono" style="color:var(--t3);font-size:10.5px;">850026473351</div>
+            </td>
+            <td>4-Pack</td>
+            <td class="num mono">3.5</td>
+            <td class="num mono flat">+0.6%</td>
+            <td class="num mono base-col">15,600</td>
+            <td class="num mono promo-col">25,200 <span style="color:var(--blue);font-size:10px;">+display</span></td>
+            <td class="num mono flat">+1.1%</td>
+            <td><span class="chip chip-stable">Stable</span></td>
+            <td><span class="mono" style="color:var(--t2);">4.7%</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="2"><strong>Total · All SKUs · Kroger</strong></td>
+            <td class="num mono">—</td>
+            <td class="num mono up">+2.4%</td>
+            <td class="num mono base-col">147,200</td>
+            <td class="num mono promo-col">163,800</td>
+            <td class="num mono up">+4.7%</td>
+            <td><span class="chip chip-accel">On Track</span></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px;">
+      Velocity = sellable units/store/week (not EQ bars). 4-Pack: velocity = packs; 12-Pack: velocity = cases. Stores: ~412 Kroger doors. Confidence = wMAPE on L12W holdout. Proxy CI ±18% for thin-history SKU (&lt;11 weeks).
+    </div>
+  </div>
+
+  <!-- ══ SECTION 3: VELOCITY DECOMPOSITION ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">03 — Velocity Decomposition</span>
+      <span class="sec-note">Why is demand where it is? — two featured SKUs</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="decomp-table">
+        <thead>
+          <tr>
+            <th>Driver</th>
+            <th>C&amp;C 4-Pack</th>
+            <th>Birthday Cake 4-Pack</th>
+            <th style="width:200px;">Direction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--t2);font-weight:600;">Base velocity (L12W)</td>
+            <td class="num mono">5.6 u/str/wk</td>
+            <td class="num mono">3.8 u/str/wk</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill pos" style="width:80%"></div></div><span class="bar-pct">starting point</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>± Distribution (TDP Δ)</td>
+            <td class="num mono up">+0.3</td>
+            <td class="num mono dn">−0.2</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill pos" style="width:25%"></div></div><span class="bar-pct up">gaining doors</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>± Promo lift (TPR)</td>
+            <td class="num mono up">+0.6</td>
+            <td class="num mono">—</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill pos" style="width:40%"></div></div><span class="bar-pct up">Wk 38–41 display</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>± Seasonality (Sep–Dec)</td>
+            <td class="num mono dn">−0.2</td>
+            <td class="num mono dn">−0.3</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill neg" style="width:20%"></div></div><span class="bar-pct dn">Q4 seasonal softness</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>± Macro (gas + sentiment)</td>
+            <td class="num mono dn">−0.1</td>
+            <td class="num mono dn">−0.1</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill neg" style="width:10%"></div></div><span class="bar-pct dn">gas +$0.14/gal</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>± Cannibalization</td>
+            <td class="num mono flat">—</td>
+            <td class="num mono dn">−0.4</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill neg" style="width:30%"></div></div><span class="bar-pct dn">donor to C&amp;C + Puff</span></div>
+            </td>
+          </tr>
+          <tr style="background:var(--s2);font-weight:700;">
+            <td>= Forecast velocity</td>
+            <td class="num mono">6.2 u/str/wk</td>
+            <td class="num mono">2.8 u/str/wk</td>
+            <td>
+              <div class="bar-wrap"><div class="bar-track"><div class="bar-fill pos" style="width:60%"></div></div><span class="bar-pct">net 13-wk avg</span></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px;">
+      Shopper marketing (macro influencer / brand campaigns): +5% spread across all SKUs this period per marketing team input. Not shown as a separate row — included in Base.
+    </div>
+  </div>
+
+  <!-- ══ SECTION 4: PROMO CALENDAR ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">04 — Promo Calendar</span>
+      <span class="sec-note">Next 13 weeks · Wk 36–48 · Kroger · planned events</span>
+    </div>
+    <div class="cal-wrap">
+      <div class="tbl-wrap">
+        <table class="cal-table">
+          <thead>
+            <tr>
+              <th style="text-align:left;width:180px;">SKU</th>
+              <th>Wk 36<br>Sep 6</th>
+              <th>Wk 37<br>Sep 13</th>
+              <th>Wk 38<br>Sep 20</th>
+              <th>Wk 39<br>Sep 27</th>
+              <th>Wk 40<br>Oct 4</th>
+              <th>Wk 41<br>Oct 11</th>
+              <th>Wk 42<br>Oct 18</th>
+              <th>Wk 43<br>Oct 25</th>
+              <th>Wk 44<br>Nov 1</th>
+              <th>Wk 45<br>Nov 8</th>
+              <th>Wk 46<br>Nov 15</th>
+              <th>Wk 47<br>Nov 22</th>
+              <th>Wk 48<br>Nov 29</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align:left;font-size:11px;font-weight:600;">C&amp;C 4-Pack</td>
+              <td>—</td><td>—</td>
+              <td class="promo-on">TPR<br>10%</td>
+              <td class="promo-on">TPR<br>10%</td>
+              <td class="promo-hi">Display<br>+40%</td>
+              <td class="promo-hi">Display<br>+40%</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-size:11px;font-weight:600;">Cookie Dough 1-Pack</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-size:11px;font-weight:600;">Birthday Cake 4-Pack</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+              <td class="promo-on">TPR<br>10%</td>
+              <td class="promo-on">TPR<br>10%</td>
+              <td class="promo-on">TPR<br>10%</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-size:11px;font-weight:600;">Puff C&amp;C 1-Pack</td>
+              <td>—</td><td>—</td>
+              <td class="promo-on">Feature<br>5%</td>
+              <td class="promo-on">Feature<br>5%</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-size:11px;font-weight:600;">Double Choc 12-Pack</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-size:11px;font-weight:600;">Peanut Butter 4-Pack</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+              <td class="promo-hi">Display<br>+35%</td>
+              <td class="promo-hi">Display<br>+35%</td>
+              <td>—</td><td>—</td><td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px;">
+      TPR = temporary price reduction. Display = feature + display. Lift estimates from sales team planners (source: Kroger account planner). Mo back-tests lift actuals vs. estimates after each event.
+      <span style="color:var(--amber);font-weight:600;"> ⚠ Override needed:</span> Wk 40–41 C&amp;C display is unconfirmed — sales team to validate.
+    </div>
+  </div>
+
+  <!-- ══ SECTION 5: MACRO CONTEXT ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">05 — Macro Context</span>
+      <span class="sec-note">External signals · FRED API · as of Sep 4, 2026</span>
+    </div>
+    <div class="macro-strip">
+      <div class="macro-tile">
+        <div class="macro-src">FRED · GASDESW</div>
+        <div class="macro-name">Weekly US Retail Gas Price</div>
+        <div class="macro-val dn">$3.74/gal</div>
+        <div class="tile-delta dn" style="font-size:12px;margin-top:4px;">▲ +$0.14 vs. prior week</div>
+        <div class="macro-interp">Mild headwind. Brian: "one of our worst weeks was when we had the highest gas prices." Monitor for sustained increase above $4.00.</div>
+      </div>
+      <div class="macro-tile">
+        <div class="macro-src">FRED · UMCSENT</div>
+        <div class="macro-name">Consumer Sentiment Index</div>
+        <div class="macro-val up">68.4</div>
+        <div class="tile-delta up" style="font-size:12px;margin-top:4px;">▲ +2.1 vs. prior month</div>
+        <div class="macro-interp">Improving. Above 65 = favorable demand environment for premium bars. Supports the promo-inclusive forecast for Wk 38–41.</div>
+      </div>
+      <div class="macro-tile" style="border-style:dashed;opacity:0.7;">
+        <div class="macro-src">BLS · CPIAUCSL</div>
+        <div class="macro-name">CPI / Inflation Index</div>
+        <div class="macro-val" style="color:var(--t3);">Planned</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:6px;">Brian's #3 external signal. Coming in Phase 1. FRED API integration in queue.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 6: FLAGS & OVERRIDES NEEDED ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">06 — Flags &amp; Manual Overrides Needed</span>
+      <span class="sec-note">Review before distributing to sales team or production</span>
+    </div>
+    <div class="tbl-wrap" style="padding:10px 14px;">
+      <div class="flag-row">
+        <div class="flag-icon">⚠️</div>
+        <div class="flag-body">
+          <div class="flag-title">Winco — Data Dark · Manual Override Required</div>
+          <div class="flag-note">Winco does not report to SPINS. Connor: "Winco is probably the number one retailer where we struggle the most with forecasting." No category view available. Current forecast uses sales team input only. Action: validate with account planner before finalizing.</div>
+        </div>
+      </div>
+      <div class="flag-row">
+        <div class="flag-icon">🔵</div>
+        <div class="flag-body">
+          <div class="flag-title">BUILT Puff C&amp;C — Proxy Forecast (11 weeks history)</div>
+          <div class="flag-note">Insufficient SPINS history for a full model. Proxy uses BUILT Bar C&amp;C velocity curve as nearest neighbor. CI ±18%. Connor: "we default to the sales team estimate and they look at how other items performed when they first launched." Mo agrees — recommend validating against Kroger buyer estimate.</div>
+        </div>
+      </div>
+      <div class="flag-row">
+        <div class="flag-icon">🔴</div>
+        <div class="flag-body">
+          <div class="flag-title">Birthday Cake 4-Pack — Cannibalization Risk</div>
+          <div class="flag-note">Mo scores this SKU as a donor to BUILT Bar C&amp;C 4-Pack and BUILT Puff C&amp;C. Estimated cannibalization drag: −0.4 units/store/week. Category is net-positive (+3.2% lift from new Puff launch), but Birthday Cake shelf placement review may be warranted.</div>
+        </div>
+      </div>
+      <div class="flag-row">
+        <div class="flag-icon">🟡</div>
+        <div class="flag-body">
+          <div class="flag-title">Shopper Marketing Input — Confirm with Marketing Team</div>
+          <div class="flag-note">Connor's model applies +5% shopper marketing lift spread across all retailers when brand campaigns are active. Please confirm with marketing team whether any influencer or media campaigns are running in Wks 36–48 and update accordingly.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 7: GROSS REVENUE ESTIMATE ══ -->
+  <div class="section">
+    <div class="sec-head">
+      <span class="sec-label">07 — Revenue Estimate (13 Weeks)</span>
+      <span class="sec-note">Kroger · list price basis · before gross-to-net deductions</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Format</th>
+            <th class="num">List Price</th>
+            <th class="num base-col">Base Units</th>
+            <th class="num promo-col">Promo Units</th>
+            <th class="num base-col">Gross Rev (Base)</th>
+            <th class="num promo-col">Gross Rev (Promo)</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">BUILT Bar Cookies &amp; Cream</td>
+            <td>4-Pack</td>
+            <td class="num mono">$9.99</td>
+            <td class="num mono base-col">29,200</td>
+            <td class="num mono promo-col">31,800</td>
+            <td class="num mono base-col">$291,700</td>
+            <td class="num mono promo-col">$317,700</td>
+            <td style="font-size:11px;color:var(--t2);">TPR −10% Wk 38–39</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">BUILT Bar Cookie Dough</td>
+            <td>1-Pack</td>
+            <td class="num mono">$2.99</td>
+            <td class="num mono base-col">41,900</td>
+            <td class="num mono promo-col">41,900</td>
+            <td class="num mono base-col">$125,300</td>
+            <td class="num mono promo-col">$125,300</td>
+            <td style="font-size:11px;color:var(--t2);">No promo planned</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">BUILT Bar Birthday Cake</td>
+            <td>4-Pack</td>
+            <td class="num mono">$9.99</td>
+            <td class="num mono base-col">18,600</td>
+            <td class="num mono promo-col">21,200</td>
+            <td class="num mono base-col">$185,800</td>
+            <td class="num mono promo-col">$211,900</td>
+            <td style="font-size:11px;color:var(--red);">At Risk — monitor velocity</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">BUILT Puff C&amp;C</td>
+            <td>1-Pack</td>
+            <td class="num mono">$2.99</td>
+            <td class="num mono base-col">27,100</td>
+            <td class="num mono promo-col">28,900</td>
+            <td class="num mono base-col">$81,000</td>
+            <td class="num mono promo-col">$86,400</td>
+            <td style="font-size:11px;color:var(--teal);">Proxy ±18%</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">BUILT Bar Double Chocolate</td>
+            <td>12-Pack</td>
+            <td class="num mono">$27.99</td>
+            <td class="num mono base-col">14,800</td>
+            <td class="num mono promo-col">14,800</td>
+            <td class="num mono base-col">$414,300</td>
+            <td class="num mono promo-col">$414,300</td>
+            <td style="font-size:11px;color:var(--red);">Declining — watch closely</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">BUILT Bar Peanut Butter</td>
+            <td>4-Pack</td>
+            <td class="num mono">$9.99</td>
+            <td class="num mono base-col">15,600</td>
+            <td class="num mono promo-col">25,200</td>
+            <td class="num mono base-col">$155,800</td>
+            <td class="num mono promo-col">$251,700</td>
+            <td style="font-size:11px;color:var(--blue);">Display Wk 44–45 +35%</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="2"><strong>Total Kroger · 13 Weeks</strong></td>
+            <td class="num mono">—</td>
+            <td class="num mono base-col">147,200</td>
+            <td class="num mono promo-col">163,800</td>
+            <td class="num mono base-col"><strong>$1,253,900</strong></td>
+            <td class="num mono promo-col"><strong>$1,407,300</strong></td>
+            <td style="font-size:11px;color:var(--t2);">Gross · before GTN deductions</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px;">
+      Gross-to-net deductions (off invoice, slotting, distributor allowance, early pay, spoilage, returns) not applied here — apply Connor's GTN assumptions from the customer index tab for net revenue. Production shipment timing: assumes sell-through in month T ships in month T−1.
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══ -->
+  <div class="rpt-footer">
+    <span>Mo by Aevah · mo_demand_report_sample.html · Generated 2026-09-04</span>
+    <span>Data: SPINS Wk 35 (2026-08-30) · FRED API 2026-09-04 · Kroger ~412 stores</span>
+    <span>Confidential · Internal Use Only · Not for external distribution</span>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  let curView = 'base';
+  function setView(v) {
+    curView = v;
+    document.getElementById('rpt').className = 'view-' + v;
+    document.getElementById('tog-base').className  = 'tog' + (v === 'base'  ? ' active' : '');
+    document.getElementById('tog-promo').className = 'tog' + (v === 'promo' ? ' active' : '');
+    document.getElementById('tog-note').textContent = v === 'base'
+      ? 'Showing baseline demand — no promotional lift applied'
+      : 'Showing promo-inclusive forecast — lift from confirmed events applied';
+  }
+  setView('base');
+</script>
