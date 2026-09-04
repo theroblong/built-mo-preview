@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 96: Brian's master model + Measure Dictionary analyzed; Connor next-meeting focus documented (2026-09-04)
+
+Brian shared two Excel files ahead of and after the Sept 4 kickoff:
+
+**`docs/Built Brands_2025-2030 Retail LE (MASTER) 1.xlsx`** — 40-tab master financial model updated Sept 4, 2026. Key findings:
+
+- **Retail_Build tab** — the main forecast computation tab (was not in Connor's 4-tab extract). Column structure: Retailer → Built Item No. → UPC → Channel → Method (L52W/L24W/**L12W**/L4W) → Adj. Factor → Override → Starting Base → monthly Gross Revenue → Promo Velocity Lift %. L12W is the default velocity anchor. Chase maintains specific rows.
+- **General_Assumptions switches** — eight named ranges toggle model components: `Promo_Switch`, `Seasonality_Switch`, `Brand_Lift_Switch`, `Ramp_Up_Switch`, `Dilution_Switch` (cannibalization), `Shopper_Marketing_Switch`. These map directly to Mo's cockpit scenario controls. Load_In = 1.5×, Demand_Dip = 0.5×.
+- **Macro_Index** — 17 macro indicators with empirical r values against BUILT demand (updated through June 2026). CPI is #1 at r=0.983 (negative) — matches Brian's Phase 1 priority #3. GLP-1 users r=0.904 (positive) — confirms Mo's existing tracking. Gas price r=0.438 — weakest of Brian's top 3 by r; don't weight equally with CPI. Consumer Sentiment actual r = −0.679 (counter to its labeled direction).
+- **Item_Assumptions** — maps every Built Item No. to its SPINS UPC; the join key for integrating BUILT financial data with SPINS consumption data.
+- **Costco_Build** — pallet-based forecasting, not U/S/W × store count. Mo's Costco module must handle this separately.
+- Also contains: TB Actual Rev (NetSuite GL through Aug 2026), Gross to Net realized rates, LRP through 2030 (HH Pen 6.7% → 20%), Club Promos, Target VG Ladder, Walmart velocity dashboard, ALDI, Minions product launch, Sours line.
+
+**`docs/Built Measure Dictionary.xlsx`** — BUILT's internal glossary, 85 measures across SPINS, NetSuite, Shopify, Numerator, and production. Confirms: Velocity = Total Units / Total Stores; Kroger = Retail–Mass; Costco = Retail–Club; Bars Sold ≠ Units Sold (different case quantities). Power BI is already live at BUILT for logistics (OTIF) and production — not a new category, but not used for FP&A/demand.
+
+**Next Connor meeting** will focus on his workflow process — how he moves from SPINS data to the Monday morning email — not just the model mechanics. Key questions: when does he use the Override column vs. L12W anchor? How is work divided with Chase? How do promo events enter the model? What does the output look like before it goes out? Wiki updated at `customer-built-doc/wiki/14-demand-planning-cockpit.md`.
+
+---
+
 ## README update 95: Demand report v2 — forecast graph + buyer language + Excel export (2026-09-04)
 
 Revised `mockups/mo_demand_report_sample.html` per pre-kickoff feedback. Key changes:
