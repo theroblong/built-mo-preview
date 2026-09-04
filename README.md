@@ -6,6 +6,32 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 97: Connor workflow meeting transcript — model walkthrough, outputs, pain points, action items (2026-09-04)
+
+Meeting: "Review Current Retail Data Model: BUILT, Discuss reference data" — 33m 42s, Sept 4 2026, 5:30 PM. Attendees: Brian Cluster, Connor Lain, Robert Long, Jason Brazeal, Justin Fisher. Transcript committed to `docs/`.
+
+**Three core outputs confirmed (Connor verbatim: "gross revenue, net revenue, and bars by flavor"):**
+- Sales team: gross revenue + net revenue by retailer — current + forecast
+- Production (S&OP): bars by flavor, 1 month prior — staffing + production line decisions
+- Procurement: bars by flavor, 2 months prior — raw materials purchasing
+- Finance/CapEx: multi-year bars + revenue for capacity and machinery investment
+
+**Customer-retailer-distributor mapping gap:** BUILT has two levels of customer — Level 1 (Built Customer = who they ship to: DotFoods, UNFI, Coremark) and Level 2 (Retailer = end destination: YesWay, etc.). Revenue is only visible at Level 1. SPINS maps to Level 2. Connor's Customer_Assumptions tab is a manually maintained bridge, built from sales team conversations. The mapping changes when retailers switch distributors. Mo must hold this with effective dates. Direct-ship accounts (Publix, BJ's, Trader Joe's) have Level 1 = Level 2 — Connor's "holy grail" for data quality. NetSuite is the agreed target system of record for this mapping (Justin Fisher's active project).
+
+**Connor's pain points (verbatim):** "There are so many manual inputs on these gray tabs." Specific: (1) SPINS extract → copy-paste → date change → model refresh, every cycle; (2) new customer row added for every sales win; (3) new item row added for every NPI; (4) "things that update without my knowledge" — stale data he can't detect. His ask: "If we can get NetSuite to be the source of truth and then link that to Aevah, that would be really great."
+
+**Seasonality index being superseded:** Connor explicitly: "I don't think we'll be using this because it's pretty high level versus what Brian has in mind." Mo replaces it.
+
+**Circana / Costco:** Data not yet in MinIO as of this meeting. Justin Fisher is the BUILT Circana contact. Action items: create Circana folder in MinIO + give Justin and Connor access. Brian: "SPINS first, then Costco immediately behind it."
+
+**Rob's trust framework:** "The replacement has to earn its keep by basically you being able to say, this has everything this has in it, I trust the data." Connor is the trust gatekeeper — if he can click any number and trace it to its source, he can vouch for Mo to every downstream consumer (production, procurement, finance). Click-to-source audit trail is the adoption mechanism, not a nice-to-have.
+
+**New contacts:** Justin Fisher = Circana + NetSuite project; Jeff (SVP Finance) = full consumer register for the model; Connor on vacation Sept 7–13.
+
+Wiki updated: `customer-built-doc/wiki/14-demand-planning-cockpit.md`
+
+---
+
 ## README update 96: Brian's master model + Measure Dictionary analyzed; Connor next-meeting focus documented (2026-09-04)
 
 Brian shared two Excel files ahead of and after the Sept 4 kickoff:
