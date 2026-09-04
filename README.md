@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 98: Circana Costco CSV schema confirmed — 32 columns, 5.4M rows, Jan 2023–Aug 2026 (2026-09-04)
+
+Received and locally analyzed `(BP222) Daily Inventory Status by Warehouse_Aevah (1-1-2023_8-30-2026).csv` — BUILT's full Costco Circana warehouse-level POS file. Internal data; not committed to repo.
+
+**File dimensions:** 5,410,368 rows × 32 columns; 192 weeks (Jan 2023–Aug 2026); 909 Costco warehouses; 29 item variants; 11 regions (E-Commerce is the largest).
+
+**All 32 columns confirmed:** Item | Venue | Time | Region | Dollar Sales | Unit Sales | Days of Supply | Inventory Turns | Inventory On Hand | On Order | In Transit | Quantity Received | OOS | Warehouses Selling | Number of Warehouses | Flavor | Flavor / Scent | % Discount | Average Coupon Value | Average Promoted Price | Coupon Dollars | Coupon Units | Non Promoted Dollars | Non Promoted Units | Promoted Dollars | Promoted Units | Total Discount Dollars | Average Diesel Fuel Price per gallon | Average Regular Gas Price per gallon | Average Mid-grade Gas Price per gallon | Average Premium Gas Price per gallon | In Stock %
+
+**Key data quality issues for ingest planning:** (1) Dollar columns are string-formatted with `$` and `()` for negatives — strip before casting; (2) Days of Supply, OOS, In Stock % are 100% null; Dollar Sales is null in ~98% of rows — useful signal lives in a ~86K-row dense subset; (3) same SKU appears under placeholder UPCs (`000120000000000`, `999999999999999`, etc.) and an actual UPC — deduplicate before joining to Item_Assumptions; (4) On Order / Quantity Received / Inventory On Hand are multiples of 525 = pallet-level ordering (525 = BUILT's Costco warehouse footprint), consistent with Brands LE Costco_Build pallet basis.
+
+**Promo structure:** Coupon values are $4 or $5 (Costco instant savings). Negative Promoted Dollars/Units = discount amount backed out. No traditional TPR/scan-down promo signal.
+
+**Gas price signal:** All 4 fuel grades embedded by Circana (diesel, regular, mid-grade, premium) — ~93K of 5.4M rows have non-null values. Consistent with Brands LE Macro_Index finding: gas price is the weakest macro signal (r=0.438) vs. CPI #1 (r=0.983).
+
+**Circana field map memory updated to UNBLOCKED.** Wiki `14-demand-planning-cockpit.md` updated with full 32-column schema and data quality notes.
+
+---
+
 ## README update 97: Connor workflow meeting transcript — model walkthrough, outputs, pain points, action items (2026-09-04)
 
 Meeting: "Review Current Retail Data Model: BUILT, Discuss reference data" — 33m 42s, Sept 4 2026, 5:30 PM. Attendees: Brian Cluster, Connor Lain, Robert Long, Jason Brazeal, Justin Fisher. Transcript committed to `docs/`.
