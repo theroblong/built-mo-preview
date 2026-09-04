@@ -6,6 +6,22 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 95: Demand report v2 — forecast graph + buyer language + Excel export (2026-09-04)
+
+Revised `mockups/mo_demand_report_sample.html` per pre-kickoff feedback. Key changes:
+
+**Added forecast graph** — SVG chart showing 27 weeks of actual sales (solid blue) + 13-week forecast (dashed blue) + scenario range shading (light blue band) + promo-week highlighting (amber). Shows the portfolio total at Kroger week by week. Brian's "weather map" framing.
+
+**Plain business language throughout** — removed all statistical terminology (wMAPE, holdout, backtest). Confidence is now shown as High / Medium / New Item with plain footnote: "High = established SKU with 12+ months of history." Scenario bands labeled Conservative / Expected / Best case.
+
+**Excel export** — "Export to Excel" button generates a 4-worksheet workbook: SKU Forecast, Demand Drivers, Promo Calendar, Market Signals. Works from local file; demonstrates the capability for the kickoff.
+
+**Audience:** category managers and buyers — people who make money-spending decisions, not statistics readers.
+
+**File:** `mockups/mo_demand_report_sample.html` · Artifact: `e3675977` (updated in place)
+
+---
+
 ## README update 94: Sample demand planning report — pre-kickoff (2026-09-04)
 
 Sample dated report format for the BUILT Bar demand planning module, built ahead of the 12:30 kickoff with Brian, Justin, Connor, and Chase. Recipe draws from Connor's current Excel process (July 22 transcript) and Brian's confirmed requirements (Sept 2 session).
