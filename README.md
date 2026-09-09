@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 103: Aevah process strategy — shareable HTML visual document (2026-09-09)
+
+Created `docs/aevah_process_strategy.html` — the visual, shareable HTML version of `docs/aevah_full_process_description.md`. Published as a private artifact for Rob to use in meetings with Brian, Jeff, and Bracken.
+
+**Document structure:** 6 parts with sticky left nav, pipeline overview diagram (SPINS → Druid → 4 ML Models → Output Layer → 10 Personas), data table cards with phase badges, model cards (2-column grid), non-ML output cards (labeled "the missing chunk" from prior plan versions), 10-persona table, Monday cadence vertical timeline, and build status table with green/amber/red pills per component.
+
+**Artifact URL:** https://claude.ai/code/artifact/7fc4b015-0443-47b8-a7a5-92834ecd0071
+
+The markdown source (`docs/aevah_full_process_description.md`) remains the source of record; the HTML is the presentation layer for sharing.
+
+---
+
 ## README update 102: Full process description — models + outputs + per-persona delivery (2026-09-09)
 
 Created `docs/aevah_full_process_description.md` — the comprehensive end-to-end process description Rob asked for. Covers all 6 parts:

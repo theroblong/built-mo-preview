@@ -1,0 +1,1213 @@
+<title>Aevah Process Strategy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg: #F8F7F5;
+    --surface: #FFFFFF;
+    --surface-alt: #F2F1EE;
+    --border: #E0DED9;
+    --text-primary: #1A1916;
+    --text-secondary: #6B6760;
+    --text-tertiary: #9A9690;
+    --accent: #2E5FA3;
+    --accent-bg: #E8EEF7;
+    --accent-mid: #4A7DC0;
+    --done-text: #1A5C35;
+    --done-bg: #E6F4EC;
+    --warn-text: #7A5A10;
+    --warn-bg: #FDF3DC;
+    --blocked-text: #7A2020;
+    --blocked-bg: #FDEDED;
+    --phase-1: #2E5FA3;
+    --phase-2: #7A5A10;
+    --phase-3: #5A3080;
+    --connector: #C8C5BF;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16151A;
+      --surface: #1E1D24;
+      --surface-alt: #252430;
+      --border: #2E2D38;
+      --text-primary: #E8E6E0;
+      --text-secondary: #9A9890;
+      --text-tertiary: #6A6860;
+      --accent: #6B9FD4;
+      --accent-bg: #1A2535;
+      --accent-mid: #4A7DC0;
+      --done-text: #5AC888;
+      --done-bg: #0E2A1C;
+      --warn-text: #D4A840;
+      --warn-bg: #2A2010;
+      --blocked-text: #D46060;
+      --blocked-bg: #2A1010;
+      --phase-1: #6B9FD4;
+      --phase-2: #D4A840;
+      --phase-3: #A87ADA;
+      --connector: #3A3848;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #16151A;
+    --surface: #1E1D24;
+    --surface-alt: #252430;
+    --border: #2E2D38;
+    --text-primary: #E8E6E0;
+    --text-secondary: #9A9890;
+    --text-tertiary: #6A6860;
+    --accent: #6B9FD4;
+    --accent-bg: #1A2535;
+    --accent-mid: #4A7DC0;
+    --done-text: #5AC888;
+    --done-bg: #0E2A1C;
+    --warn-text: #D4A840;
+    --warn-bg: #2A2010;
+    --blocked-text: #D46060;
+    --blocked-bg: #2A1010;
+    --phase-1: #6B9FD4;
+    --phase-2: #D4A840;
+    --phase-3: #A87ADA;
+    --connector: #3A3848;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+
+  /* Nav */
+  .sidenav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 48px 24px 48px 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .sidenav-brand {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+  }
+
+  .sidenav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sidenav li a {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .sidenav li a:hover,
+  .sidenav li a.active {
+    color: var(--text-primary);
+    background: var(--surface-alt);
+  }
+
+  .sidenav .nav-part {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    padding: 16px 10px 4px;
+  }
+
+  /* Main */
+  main {
+    padding: 48px 48px 80px 48px;
+    max-width: 760px;
+    min-width: 0;
+  }
+
+  /* Header */
+  .page-header {
+    margin-bottom: 56px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .page-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .page-header h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 38px;
+    font-weight: 300;
+    line-height: 1.2;
+    margin: 0 0 16px;
+    text-wrap: balance;
+    color: var(--text-primary);
+  }
+
+  .page-header p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin: 0 0 28px;
+    max-width: 560px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-value {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+  }
+
+  /* Section */
+  section {
+    margin-bottom: 60px;
+    scroll-margin-top: 24px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  section h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 24px;
+    font-weight: 300;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+    margin: 28px 0 8px;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  section p {
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+    max-width: 640px;
+  }
+
+  /* Pipeline diagram */
+  .pipeline {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin: 24px 0 32px;
+  }
+
+  .pipe-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .pipe-box {
+    width: 100%;
+    padding: 10px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .pipe-box.accent {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pipe-sub {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .pipe-arrow {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 18px;
+    color: var(--connector);
+    font-size: 18px;
+    padding-left: 4px;
+    padding-right: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Data table cards */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .table-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .table-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .table-card-subtitle {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  .phase-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .phase-1 { background: rgba(46,95,163,0.12); color: var(--phase-1); }
+  .phase-2 { background: rgba(122,90,16,0.12); color: var(--phase-2); }
+  .phase-3 { background: rgba(90,48,128,0.12); color: var(--phase-3); }
+
+  .kv-list {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 6px 16px;
+    font-size: 13px;
+  }
+
+  .kv-key {
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+
+  .kv-val {
+    color: var(--text-secondary);
+  }
+
+  /* Model cards */
+  .model-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .model-card.new {
+    border-color: var(--accent);
+    border-style: dashed;
+  }
+
+  .model-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .model-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .model-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .model-row {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .model-row-label {
+    color: var(--text-tertiary);
+    min-width: 72px;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+
+  .model-row-val {
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* Non-ML outputs */
+  .output-card {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .output-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .output-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+
+  .output-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .output-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .output-body strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Persona table */
+  .persona-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: var(--surface-alt);
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  tbody td {
+    padding: 12px 14px;
+    color: var(--text-secondary);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tbody td:first-child {
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--surface-alt);
+  }
+
+  /* Monday cadence timeline */
+  .cadence {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 16px 0 8px;
+    position: relative;
+  }
+
+  .cadence::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .cadence-step {
+    display: flex;
+    gap: 16px;
+    padding: 8px 0;
+    position: relative;
+  }
+
+  .cadence-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    flex-shrink: 0;
+    margin-top: 3px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+
+  .cadence-dot.trigger {
+    background: var(--done-text);
+    box-shadow: 0 0 0 1px var(--done-text);
+  }
+
+  .cadence-dot.output {
+    background: var(--accent-mid);
+    box-shadow: 0 0 0 1px var(--accent-mid);
+  }
+
+  .cadence-content {
+    padding-bottom: 8px;
+  }
+
+  .cadence-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .cadence-detail {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Build status */
+  .status-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .status-done { background: var(--done-bg); color: var(--done-text); }
+  .status-partial { background: var(--warn-bg); color: var(--warn-text); }
+  .status-blocked { background: var(--blocked-bg); color: var(--blocked-text); }
+
+  /* Divider */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 0 60px;
+  }
+
+  /* Highlight box */
+  .note-box {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin: 16px 0 24px;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .note-box p {
+    margin: 0;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-secondary);
+  }
+
+  .note-box p strong {
+    font-style: normal;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Meta footer */
+  .page-footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-tertiary);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidenav { display: none; }
+    main { padding: 32px 20px 60px; }
+    .model-grid { grid-template-columns: 1fr; }
+    .header-stats { gap: 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="layout">
+  <nav class="sidenav">
+    <div class="sidenav-brand">Aevah · BUILT</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li class="nav-part">Part 1</li>
+      <li><a href="#data-druid">Data into Druid</a></li>
+      <li class="nav-part">Part 2</li>
+      <li><a href="#ml-models">ML Models</a></li>
+      <li class="nav-part">Part 3</li>
+      <li><a href="#outputs">Non-ML Outputs</a></li>
+      <li class="nav-part">Part 4</li>
+      <li><a href="#personas">Personas</a></li>
+      <li class="nav-part">Part 5</li>
+      <li><a href="#cadence">Monday Cadence</a></li>
+      <li class="nav-part">Part 6</li>
+      <li><a href="#build-status">Build Status</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="page-header" id="overview">
+      <div class="page-eyebrow">Aevah Intelligence · BUILT Brands</div>
+      <h1>Platform Process Strategy</h1>
+      <p>End-to-end description of data in → models → outputs, including what each persona receives and in what form. To be reviewed before design or build begins.</p>
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-value">3</span>
+          <span class="stat-label">Druid tables</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">4</span>
+          <span class="stat-label">ML models</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">3</span>
+          <span class="stat-label">Non-ML outputs</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">10</span>
+          <span class="stat-label">Personas</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">7</span>
+          <span class="stat-label">Experiences</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline overview diagram -->
+    <section>
+      <div class="section-label">End-to-end flow</div>
+      <div class="pipeline">
+        <div class="pipe-node">
+          <div class="pipe-box">SPINS<br>Weekly POS</div>
+          <div class="pipe-sub">~95M rows<br>214 columns</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">
+          <div class="pipe-box accent">Druid</div>
+          <div class="pipe-sub">3 tables</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">
+          <div class="pipe-box">4 ML<br>Models</div>
+          <div class="pipe-sub">E1 · E2a · E2b</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">
+          <div class="pipe-box">Output<br>Layer</div>
+          <div class="pipe-sub">reports · UI · API</div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">
+          <div class="pipe-box accent">10<br>Personas</div>
+          <div class="pipe-sub">Connor → Bracken</div>
+        </div>
+      </div>
+
+      <div class="note-box">
+        <p><strong>The models are largely in hand.</strong> What was missing from prior versions of this plan is the output layer — the reports, velocity metrics, and delivery cadence that turn model numbers into decisions. Brian named this explicitly: <em>"You need to know the context"</em> and <em>"So what, now what?"</em></p>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- Part 1: Data into Druid -->
+    <section id="data-druid">
+      <div class="section-label">Part 1</div>
+      <h2>Data into Druid</h2>
+      <p>Three tables feed everything downstream. They load in phases — Phase 1 is available now, Phase 2 and 3 are gated on crosswalks and ERP access.</p>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <div>
+            <div class="table-card-title"><code>built_filtered_weekly</code> — SPINS</div>
+            <div class="table-card-subtitle">UPC × Retail Account × week · ~80 retailers · BUILT + competitors</div>
+          </div>
+          <span class="phase-badge phase-1">Phase 1 · Live</span>
+        </div>
+        <div class="kv-list">
+          <span class="kv-key">Source</span><span class="kv-val">SPINS weekly POS export → MinIO → Druid</span>
+          <span class="kv-key">Key columns</span><span class="kv-val">EQ Units, Base Units, Incr Units, TDP, ARP, ARP Promo, # Stores Selling, First Week Selling, Dollars, 214 total</span>
+          <span class="kv-key">Refresh</span><span class="kv-val">Weekly (SPINS monthly export, processed weekly)</span>
+          <span class="kv-key">Feeds</span><span class="kv-val">E1 Global, E2a, E2b, Base Velocity query, all 7 experiences</span>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <div>
+            <div class="table-card-title"><code>costco_warehouse_weekly</code> — Circana CRX</div>
+            <div class="table-card-subtitle">Item × Warehouse × week · 909 warehouses · Circana WMS/EDI feed (not POS scan)</div>
+          </div>
+          <span class="phase-badge phase-1">Phase 1 · Pipeline needed</span>
+        </div>
+        <div class="kv-list">
+          <span class="kv-key">Source</span><span class="kv-val">BP222 CSV → pre-processing script → MinIO → Druid</span>
+          <span class="kv-key">Pre-processing</span><span class="kv-val">Strip $ formatting · resolve UPC duplicates · parse week-ending date · normalize Unit Sales → bars (× PACK COUNT)</span>
+          <span class="kv-key">Key columns</span><span class="kv-val">unit_sales_bars, inventory_on_hand, on_order, quantity_received, warehouses_selling, avg_coupon_value, gas price (EIA series × 4)</span>
+          <span class="kv-key">Refresh</span><span class="kv-val">Monthly on new CRX file receipt</span>
+          <span class="kv-key">Action owner</span><span class="kv-val">Justin Fisher — get file into MinIO</span>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-card-header">
+          <div>
+            <div class="table-card-title">ERP tables — NetSuite</div>
+            <div class="table-card-subtitle">Gross/net revenue · COGS · shipment units · by customer</div>
+          </div>
+          <span class="phase-badge phase-2">Phase 2 · Crosswalks required</span>
+        </div>
+        <div class="kv-list">
+          <span class="kv-key">Tables</span><span class="kv-val"><code>erp_invoices</code>, <code>erp_shipments</code>, <code>erp_cost</code></span>
+          <span class="kv-key">Gate</span><span class="kv-val">3 crosswalks must exist in Druid with effective dates first (see below)</span>
+          <span class="kv-key">Crosswalk 1</span><span class="kv-val">SKU ↔ UPC with pack hierarchy and effective dates</span>
+          <span class="kv-key">Crosswalk 2</span><span class="kv-val">Customer ↔ Retail Account (ERP bill-to → SPINS Retail Account name)</span>
+          <span class="kv-key">Crosswalk 3</span><span class="kv-val">Customer-Retailer-Distributor bridge (DotFoods/UNFI → YesWay/etc.) with effective dates — the most critical architectural gap</span>
+          <span class="kv-key">Action owner</span><span class="kv-val">Justin Fisher (NetSuite) + Connor (crosswalk data)</span>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- Part 2: ML Models -->
+    <section id="ml-models">
+      <div class="section-label">Part 2</div>
+      <h2>The 4 ML models</h2>
+      <p>All 7 experiences share these 3 engines. Costco gets a separate E1 because its feature set (WMS supply chain signals, club-pack units, coupon-only promotions) doesn't mix cleanly with the global model.</p>
+
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="model-name">E1 Global — Demand Forecast</div>
+          <div class="model-desc">Bars by SKU × retailer × week, 13 weeks forward with confidence bands. ETS fallback for items &lt;52 weeks old.</div>
+          <div class="model-rows">
+            <div class="model-row"><span class="model-row-label">Algorithm</span><span class="model-row-val">LightGBM (MO_53)</span></div>
+            <div class="model-row"><span class="model-row-label">Target</span><span class="model-row-val">eq_units (bars)</span></div>
+            <div class="model-row"><span class="model-row-label">Key features</span><span class="model-row-val">lagged units, TDP, ARP, Base Units, Incr Units, promo flag, # Stores Selling, FRED macros</span></div>
+            <div class="model-row"><span class="model-row-label">Rows</span><span class="model-row-val">~1M (156 SKUs × 80 retailers × 78 weeks)</span></div>
+            <div class="model-row"><span class="model-row-label">Cadence</span><span class="model-row-val">Weekly on SPINS refresh</span></div>
+            <div class="model-row"><span class="model-row-label">Status</span><span class="model-row-val"><span class="status-pill status-done">Done — MO_53</span></span></div>
+          </div>
+        </div>
+
+        <div class="model-card new">
+          <div class="model-name">E1 Costco — Demand Forecast</div>
+          <div class="model-desc">Bars by BUILT item × week at Costco aggregate, using supply chain signals SPINS doesn't have.</div>
+          <div class="model-rows">
+            <div class="model-row"><span class="model-row-label">Algorithm</span><span class="model-row-val">LightGBM (separate from MO_53)</span></div>
+            <div class="model-row"><span class="model-row-label">Target</span><span class="model-row-val">unit_sales_bars</span></div>
+            <div class="model-row"><span class="model-row-label">Key features</span><span class="model-row-val">warehouses_selling, on_order (lag 1), qty_received, inventory_on_hand, coupon flag, gas prices</span></div>
+            <div class="model-row"><span class="model-row-label">Rows</span><span class="model-row-val">~5,600 (29 items × 192 weeks) — use regularization</span></div>
+            <div class="model-row"><span class="model-row-label">Cadence</span><span class="model-row-val">Monthly on new CRX file</span></div>
+            <div class="model-row"><span class="model-row-label">Status</span><span class="model-row-val"><span class="status-pill status-blocked">Blocked — CRX ingest</span></span></div>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-name">E2a — Cannibalization Rates</div>
+          <div class="model-desc">Cross-SKU displacement matrix. For each (focal, donor) pair: what share of donor volume loss is attributable to the focal SKU?</div>
+          <div class="model-rows">
+            <div class="model-row"><span class="model-row-label">Algorithm</span><span class="model-row-val">LightGBM classifier + ranker (MO_55)</span></div>
+            <div class="model-row"><span class="model-row-label">Features</span><span class="model-row-val">Cross-UPC lagged units, distribution overlap, promo confound flag, weeks since launch, comparison distance</span></div>
+            <div class="model-row"><span class="model-row-label">Output</span><span class="model-row-val">cannibalization_rates table (focal × donor × retailer × rate)</span></div>
+            <div class="model-row"><span class="model-row-label">Cadence</span><span class="model-row-val">Weekly with SPINS refresh</span></div>
+            <div class="model-row"><span class="model-row-label">Status</span><span class="model-row-val"><span class="status-pill status-partial">48% scored — MO_55</span></span></div>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-name">E2b — Price Elasticity</div>
+          <div class="model-desc">Own-price elasticity (ε) per SKU. For every $0.10 ARP increase, how many units are lost? Batch of ~156 per-SKU regressions.</div>
+          <div class="model-rows">
+            <div class="model-row"><span class="model-row-label">Algorithm</span><span class="model-row-val">Per-SKU regression (MO_16/17)</span></div>
+            <div class="model-row"><span class="model-row-label">Features</span><span class="model-row-val">ARP, ARP Promo, ARP Non-Promo, EQ Units, TDP, promo_week, First Week Selling</span></div>
+            <div class="model-row"><span class="model-row-label">Output</span><span class="model-row-val">elasticity_estimates table (upc × retailer × ε × optimal price range)</span></div>
+            <div class="model-row"><span class="model-row-label">Cadence</span><span class="model-row-val">Monthly (price changes slowly)</span></div>
+            <div class="model-row"><span class="model-row-label">Status</span><span class="model-row-val"><span class="status-pill status-partial">~156 fits — temporal holdout pending</span></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- Part 3: Non-ML Outputs -->
+    <section id="outputs">
+      <div class="section-label">Part 3 — The missing chunk</div>
+      <h2>3 non-ML outputs</h2>
+      <p>These are Druid queries and pipeline scripts, not trained models. They were absent from prior versions of this plan but are what Brian's team uses day-to-day. Brian named all three explicitly across multiple standups.</p>
+
+      <div class="output-card">
+        <div class="output-card-header">
+          <span class="output-tag">Druid query</span>
+          <span class="output-title">A — Base Velocity</span>
+        </div>
+        <div class="output-body">
+          <strong>Formula:</strong> Base Units ÷ # Stores Selling = non-promoted demand rate per store per week.<br><br>
+          <strong>Why it matters:</strong> Brian asked for this in two separate meetings ("base units per store, that strips out the promo"). It's the number Connor's Excel process starts from. When velocity goes down as new items launch, base velocity isolates whether that's real demand erosion or a promo comparison artifact.<br><br>
+          <strong>Source:</strong> <code>built_filtered_weekly</code> — columns <code>base_units</code> + <code>stores_selling</code>.<br>
+          <strong>Feeds:</strong> Experiences 1 (Sales), 2 (Production context), 6 (BI baseline).<br>
+          <strong>Format:</strong> Mo UI time-series view + CSV download, by SKU × retailer × time window (4w / 13w / 26w / 52w) with trend direction and YoY delta.
+        </div>
+      </div>
+
+      <div class="output-card">
+        <div class="output-card-header">
+          <span class="output-tag">Lookup table</span>
+          <span class="output-title">B — Launch Ramp Benchmarks</span>
+        </div>
+        <div class="output-body">
+          <strong>What it is:</strong> Historical median velocity curves by segment / format / pack size — built from every BUILT launch in <code>built_filtered_weekly</code> grouped by <code>First Week Selling</code>. Answers: "Is this new item tracking above or below what a comparable launch looked like at this point?"<br><br>
+          <strong>Why it matters:</strong> BUILT went from 3.5 to 7.5 SKUs in one year. New items don't have 52 weeks of history for E1. The ETS fallback handles forecasting; this benchmark answers "is the launch working?" — a different question.<br><br>
+          <strong>Output table:</strong> <code>launch_benchmarks</code> — segment × format × pack × weeks_since_launch → median velocity (p25 / p50 / p75).<br>
+          <strong>Feeds:</strong> Experience 7 (Marketing launch tracker), Experience 2 (Production ramp planning), Experience 1 (Sales velocity vs. benchmark per account).<br>
+          <strong>Refresh:</strong> Quarterly. Data to build it is available in <code>built_filtered_weekly</code> today.
+        </div>
+      </div>
+
+      <div class="output-card">
+        <div class="output-card-header">
+          <span class="output-tag">Report pipeline</span>
+          <span class="output-title">C — Demand Intelligence Report</span>
+        </div>
+        <div class="output-body">
+          <strong>What it is:</strong> Auto-generated after every SPINS refresh and model training run. Brian: <em>"gets generated automatically every time data came in."</em> Rob: <em>"replaces Connor's manual Monday process."</em><br><br>
+          <strong>Contents each run:</strong> (1) Forecast accuracy this cycle vs. prior vs. baseline — model is improving; (2) Base velocity trends — top movers up and down; (3) Cannibalization alerts — pairs where rate changed materially; (4) Distribution changes — SKUs that gained or lost ≥5 TDP points; (5) New item ramp status vs. benchmark; (6) Promo performance — lift this cycle vs. historical; (7) Forecast vs. actuals reconciliation — what was forecast, what happened, why the gap.<br><br>
+          <strong>Two versions:</strong><br>
+          — <strong>Full (Connor / Chase / Jeff):</strong> HTML with drill-down, downloadable as PDF and section-level CSV. Audit trail embedded — every number traces to its source query and training run date.<br>
+          — <strong>Executive summary (Brian / Bracken):</strong> One-page PDF. Structured as <em>What / So What / Now What</em>. No more than 5 items. Action-oriented.<br><br>
+          <strong>Cadence:</strong> Every 4 weeks (SPINS monthly cycle).<br>
+          <strong>Status:</strong> 22-script <code>run_fpa_report.sh</code> produces 50-page HTML (v2.2.0). Needs: auto-trigger wiring, base velocity section, executive summary version, delivery mechanism.
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- Part 4: Personas -->
+    <section id="personas">
+      <div class="section-label">Part 4</div>
+      <h2>10 personas — primary question, outputs, format</h2>
+      <p>Prior plans described 7 experiences. The Sales experience alone covers 5 distinct people with distinct needs. Here they are separated.</p>
+
+      <div class="persona-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Persona</th>
+              <th>Primary question</th>
+              <th>Primary output</th>
+              <th>Format</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Connor<br><span style="font-weight:400;color:var(--text-tertiary);font-size:11px">Demand Planner</span></td>
+              <td>What is the forecast by customer × SKU for 13 weeks, and what changed?</td>
+              <td>Monday demand table + base velocity + distribution changes + Mo Chat per account</td>
+              <td>Live UI + scheduled CSV download (replaces his Excel)</td>
+            </tr>
+            <tr>
+              <td>Chase<br><span style="font-weight:400;color:var(--text-tertiary);font-size:11px">Sales Analyst</span></td>
+              <td>Which SKUs are at risk vs. plan across all accounts?</td>
+              <td>Cross-account portfolio view, ordered by forecast vs. plan gap + distribution events</td>
+              <td>Live UI + CSV export</td>
+            </tr>
+            <tr>
+              <td>Ethan<br><span style="font-weight:400;color:var(--text-tertiary);font-size:11px">Forecast Ops</span></td>
+              <td>What is the official locked forecast to hand to Jeff this week?</td>
+              <td>Consolidated demand view with version lock + audit trail per number</td>
+              <td>Named forecast snapshot + one-click PDF</td>
+            </tr>
+            <tr>
+              <td>Jeff<br><span style="font-weight:400;color:var(--text-tertiary);font-size:11px">FSVP Finance</span></td>
+              <td>Is the forecast credible? What are the risks? How accurate have we been?</td>
+              <td>Accuracy KPI trend over time + risk flags + scenario view + demand intelligence report (full)</td>
+              <td>Live UI executive view + full report every 4 weeks</td>
+            </tr>
+            <tr>
+              <td>Bracken<br><span style="font-weight:400;color:var(--text-tertiary);font-size:11px">CFO</span></td>
+              <td>Are we going to hit revenue plan? What do I need to know this month?</td>
+              <td>One-page executive summary: <em>What / So What / Now What</em> — revenue vs. plan, key variance drivers, 1–3 recommended actions</td>
+              <td>Auto-generated one-page PDF by email / shared link</td>
+            </tr>
+            <tr>
+              <td>Production S&OP</td>
+              <td>How many bars of each SKU do I need to produce in the next 13 weeks?</td>
+              <td>Bars by SKU × week (masked — no retailer names), converted to cases and pallets</td>
+              <td>Live UI (masked) + production planning CSV</td>
+            </tr>
+            <tr>
+              <td>Procurement</td>
+              <td>What raw materials do I need to order, and by when?</td>
+              <td>BOM explosion (Phase 3): ingredient requirements × week, coverage gaps, order-by date alerts</td>
+              <td>Live UI + BOM requirements CSV (Phase 3)</td>
+            </tr>
+            <tr>
+              <td>Finance<br><span style="font-weight:400;color:var(--text-tertiary);font-size:11px">Scenario</span></td>
+              <td>What does revenue look like if we change price? What's the net cannibalization impact?</td>
+              <td>Scenario Studio: price lever → E2b demand response → E2a cannibalization → net revenue + margin delta</td>
+              <td>Live interactive UI + Excel scenario export (budget submission format)</td>
+            </tr>
+            <tr>
+              <td>BI Team</td>
+              <td>Why did our share change? Is our promo working? Where is the competitive pressure?</td>
+              <td>Competitive dashboard (share / TDP / velocity / price index), promo post-mortem, cannibalization heat map</td>
+              <td>Live UI (richest data access) + CSV export</td>
+            </tr>
+            <tr>
+              <td>Marketing</td>
+              <td>Is our launch working? How are competitors responding? What is the price opportunity?</td>
+              <td>Launch tracker vs. benchmark, net incremental contribution (post-cannibalization), competitive response around launch window</td>
+              <td>Live UI + launch report PDF (shareable per launch)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- Part 5: Monday cadence -->
+    <section id="cadence">
+      <div class="section-label">Part 5</div>
+      <h2>The Monday morning cadence</h2>
+      <p>Brian: <em>"If we get data on Monday, how will that affect what Connor does now versus what he used to do? I think that's enough of a use case."</em> Here is that use case, step by step.</p>
+
+      <div class="cadence">
+        <div class="cadence-step">
+          <div class="cadence-dot trigger"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">SPINS weekly export arrives → MinIO</div>
+            <div class="cadence-detail">Trigger event. File lands in object storage, ingest job kicks off automatically.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Druid ingestion runs — Q0 through Q9 query chain</div>
+            <div class="cadence-detail">~2–4 hours. Normalizes raw SPINS to <code>built_filtered_weekly</code>. Builds comparison pairs, feature table, rolling stats.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">E1 Global retrains · E2a rates update</div>
+            <div class="cadence-detail">E1 LightGBM: ~30 min. E2a cannibalization: ~60 min. Both run after Druid ingestion completes.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Forecast, base velocity, and distribution change queries run</div>
+            <div class="cadence-detail">Reads fresh model output tables. Flags items with &gt;15% forecast change vs. prior week as anomalies.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot output"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Demand intelligence report auto-generates</div>
+            <div class="cadence-detail">No manual trigger. Full report for Connor/Jeff; executive summary for Brian/Bracken.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot output"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Connor receives updated demand table (CSV) + report link</div>
+            <div class="cadence-detail">Replaces the spreadsheet Connor updates manually today. Same output shape as his current process so it drops into downstream systems.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Connor reviews → overrides if needed → locks version</div>
+            <div class="cadence-detail">Named, immutable snapshot (e.g., "2026-09 v3"). Planning experiences (Production, Procurement) lock to this version.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot output"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Production and Procurement see updated bars (masked)</div>
+            <div class="cadence-detail">From the locked version — no retailer detail. Converted to cases and pallets. Costco track updates separately on monthly CRX cadence.</div>
+          </div>
+        </div>
+        <div class="cadence-step">
+          <div class="cadence-dot trigger"></div>
+          <div class="cadence-content">
+            <div class="cadence-title">Every 4 weeks — full demand intelligence report → Brian / Bracken</div>
+            <div class="cadence-detail">Accuracy trend over the training cycle. Executive one-pager to Bracken. Brian's team no longer does this manually.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- Part 6: Build status -->
+    <section id="build-status">
+      <div class="section-label">Part 6</div>
+      <h2>Build status</h2>
+      <p>What exists, what needs to be built, and what is blocked — and on what.</p>
+
+      <div class="persona-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Blocked on</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>E1 Global demand forecast</td>
+              <td><span class="status-pill status-done">Done — MO_53</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>ETS fallback (new items)</td>
+              <td><span class="status-pill status-done">Done — MO_75</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>E2a cannibalization rates</td>
+              <td><span class="status-pill status-partial">48% scored — MO_55</span></td>
+              <td>Data maturity on remaining pairs (≥8 weeks required)</td>
+            </tr>
+            <tr>
+              <td>E2b price elasticity</td>
+              <td><span class="status-pill status-partial">~156 fits — MO_16/17</span></td>
+              <td>Temporal holdout validation pending</td>
+            </tr>
+            <tr>
+              <td>E1 Costco demand forecast</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>CRX → Druid ingest pipeline</td>
+            </tr>
+            <tr>
+              <td>CRX ingest pipeline (BP222)</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>Justin Fisher: get file into MinIO</td>
+            </tr>
+            <tr>
+              <td>Base velocity (Output A)</td>
+              <td><span class="status-pill status-partial">Prototype only — MO_70</span></td>
+              <td>Needs permanent Mo UI integration</td>
+            </tr>
+            <tr>
+              <td>Launch ramp benchmarks (Output B)</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>Data available; design + build needed</td>
+            </tr>
+            <tr>
+              <td>Demand intelligence report — full (Output C)</td>
+              <td><span class="status-pill status-partial">v2.2.0 — run_fpa_report.sh</span></td>
+              <td>Auto-trigger wiring; base velocity section; audit trail per number</td>
+            </tr>
+            <tr>
+              <td>Executive summary — one-page PDF (Output C)</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>Design first; What / So What / Now What structure</td>
+            </tr>
+            <tr>
+              <td>Monday delivery mechanism</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>Email / URL delivery wiring</td>
+            </tr>
+            <tr>
+              <td>Forecast version locking</td>
+              <td><span class="status-pill status-partial">Architecture defined</span></td>
+              <td>Implementation</td>
+            </tr>
+            <tr>
+              <td>Scenario Studio (price × cannibalization)</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>E2b + E2a wired to UI</td>
+            </tr>
+            <tr>
+              <td>NetSuite ERP ingest (Phase 2)</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>Justin Fisher + 3 crosswalks in Druid</td>
+            </tr>
+            <tr>
+              <td>BOM explosion — Procurement (Phase 3)</td>
+              <td><span class="status-pill status-blocked">Not built</span></td>
+              <td>BOM/recipes data → Druid</td>
+            </tr>
+            <tr>
+              <td>Audit trail / lineage</td>
+              <td><span class="status-pill status-partial">Architecture defined</span></td>
+              <td>Implementation per report number</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="page-footer">
+      <span>Prepared September 9, 2026</span>
+      <span>Aevah Intelligence · BUILT Brands</span>
+      <span>For review with Rob Long before design or build begins</span>
+    </div>
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id], .page-header[id]');
+  const navLinks = document.querySelectorAll('.sidenav a');
+
+  function onScroll() {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
