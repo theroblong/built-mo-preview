@@ -6,6 +6,41 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 99: 7 Aevah experiences analyzed — 3 ML engines, not 21 models; phase sequencing and data wrangling roadmap (2026-09-09)
+
+Sept 9 standup (Rob + Jason, 1m 54s). Rob's question: "For each of these use cases, what is the process — data into Druid, data to extract for each model, how many models to train?"
+
+**Bottom line: 3 ML engines serve all 7 experiences.** Not 21 models. Each engine is trained once and rendered differently per audience.
+
+| Engine | What it does | Status |
+|--------|-------------|--------|
+| E1 Demand Forecast | Bars by SKU × week, 13-week + CI | Done (MO_53 global LightGBM) |
+| E2a Cannibalization | Cross-SKU displacement matrix N×N | 48% scored (MO_55) |
+| E2b Price Elasticity | ε per SKU, optimal price range | MO_16/17, ~156 fits |
+
+Everything else (baseline/lift, competitive share, BOM explosion, accuracy metrics) is deterministic SQL against Druid — no models needed.
+
+**The 7 experiences and what's blocking each:**
+1. Sales (Customer Growth) — E1 + **ERP invoices** (NetSuite, Justin Fisher's project)
+2. Production (Build Plan) — E1 only, masked — **Phase 1 ready now**
+3. Procurement (Material Plan) — E1 + BOM data → Druid
+4. Finance (Plan & Scenario) — All 3 engines + ERP cost/AOP
+5. Accounting (Trade Accrual) — E1 + trade contracts/deduction ledger
+6. BI (Analytics Workbench) — All 3 engines + SPINS competitive — **Phase 1 ready now**
+7. Marketing (Brand & Launch) — E1 + E2 + SPINS — **Phase 1 ready now**
+
+**Three crosswalks gate ERP data usage:** SKU↔UPC, Customer↔Retail Account, and the Customer-Retailer-Distributor bridge (Connor's Customer_Assumptions tab → must live in Druid with effective dates). The bridge is the most important architectural gap.
+
+**Phase sequencing:**
+- Phase 1 (SPINS now): Experiences 2, 6, 7 fully; Experience 1 SPINS side
+- Phase 2 (NetSuite → Druid): Experiences 1 (full), 4, 5
+- Phase 3 (BOM → Druid): Experience 3 full
+- Costco/Circana (parallel): 32-column CSV → Druid → E1 only (pallet basis)
+
+Source docs: `docs/aevah-packaged-experiences-v2_Clauderesponse.md`, `docs/aevah_client_internal_data_request.md`, `docs/aevah_spins_kpi_source_mapping.md`. All three committed to repo. Wiki page `15-aevah-platform-architecture.md` created with full detail.
+
+---
+
 ## README update 98: Circana Costco CSV schema confirmed — 32 columns, 5.4M rows, Jan 2023–Aug 2026 (2026-09-04)
 
 Received and locally analyzed `(BP222) Daily Inventory Status by Warehouse_Aevah (1-1-2023_8-30-2026).csv` — BUILT's full Costco Circana warehouse-level POS file. Internal data; not committed to repo.
