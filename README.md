@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 100: Aevah platform model summary — shareable doc for Rob (2026-09-09)
+
+Created `docs/aevah_platform_model_summary.md` — a clean, standalone doc summarizing the 3-engine architecture for Rob. Written at the audience level: no internal tool names, plain tables, one-page answer to "how many models and what goes into each." Covers 3 engines, 7-experience phase table, Druid extract per engine, the 3 crosswalks, and the data wrangling sequence. Linked from wiki page 15 and data request spec.
+
+---
+
 ## README update 99: 7 Aevah experiences analyzed — 3 ML engines, not 21 models; phase sequencing and data wrangling roadmap (2026-09-09)
 
 Sept 9 standup (Rob + Jason, 1m 54s). Rob's question: "For each of these use cases, what is the process — data into Druid, data to extract for each model, how many models to train?"
