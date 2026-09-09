@@ -6,6 +6,21 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 102: Full process description — models + outputs + per-persona delivery (2026-09-09)
+
+Created `docs/aevah_full_process_description.md` — the comprehensive end-to-end process description Rob asked for. Covers all 6 parts:
+
+1. **Data into Druid** — 3 tables (`built_filtered_weekly`, `costco_warehouse_weekly`, ERP tables), with pre-processing steps for CRX ingest and Phase 2 crosswalk gates
+2. **4 ML models** — E1 Global, E1 Costco, E2a Cannibalization, E2b Elasticity — with exact Druid extract columns, row counts, training cadence, and status
+3. **3 non-ML outputs** — Base Velocity (Brian's twice-requested metric), Launch Ramp Benchmarks, Demand Intelligence Report — the missing chunk from prior plan versions
+4. **10 personas mapped** — Connor / Chase / Ethan / Jeff / Bracken / Production / Procurement / Finance Scenario / BI / Marketing — primary question, primary outputs, format, cadence for each
+5. **Monday morning cadence** — step-by-step from SPINS arrival to Connor's download to locked forecast flowing to Production
+6. **Build status table** — what exists vs. what needs to be built vs. what's blocked and on what
+
+Key finding added to plan: the demand intelligence report, base velocity query, and "What / So What / Now What" narrative structure are as important as the models themselves — Brian has named all three explicitly.
+
+---
+
 ## README update 101: Circana Costco field glossary — all 32 fields defined (2026-09-09)
 
 Created `docs/circana_costco_field_glossary.md` — full field-by-field definitions for the BP222 "Daily Inventory Status by Warehouse" file.
