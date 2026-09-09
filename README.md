@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 101: Circana Costco field glossary — all 32 fields defined (2026-09-09)
+
+Created `docs/circana_costco_field_glossary.md` — full field-by-field definitions for the BP222 "Daily Inventory Status by Warehouse" file.
+
+**Key finding:** The BP222 file is from **Circana CRX** (Costco-specific WMS/EDI data product), not standard Circana OmniMarket/InfoScan syndicated POS. The inventory fields (Days of Supply, On Hand, On Order, In Transit, Quantity Received, OOS, In Stock %) come from Costco's warehouse management system — there is no equivalent in any standard Circana or SPINS POS export.
+
+**Sources combined:** Circana Liquid Data Go CPG Dictionary · CPG Data Insights · EIA Gasoline and Diesel Fuel Update · other-project IRI Liquid Data export schema (30 standard POS fields) · BUILT Measure Dictionary SPINS Measures tab · `cpg_canonical_glossary_v3` (LLM-generated, April 2026, 108 terms) · pandas profiling of BP222 file.
+
+**EIA gas price series confirmed:**
+- Diesel: `EMD_EPD2D_PTE_NUS_DPG` — Regular: `EMM_EPMR_PTE_NUS_DPG` — Mid-grade: `EMM_EPMM_PTE_NUS_DPG` — Premium: `EMM_EPMP_PTE_NUS_DPG`
+- All are weekly national averages. FRED `GASDESW` is a usable proxy for regular.
+
+**6 open questions for Justin Fisher** in the glossary: grain (daily vs. weekly), venue scope (US vs. international count), In Transit leg definition, why OOS/In Stock%/Days of Supply are 100% null, Costco item number → UPC crosswalk, and coupon event flagging method.
+
+Also committed: `cpg_canonical_glossary_v3.md/.json/.xlsx` (April 2026 LLM-generated CPG glossary, 108 terms) and `CPG_AI_ML_Insights_Full.docx` (Rob's CPG AI/ML framework doc — demand forecasting, promo lift, elasticity use cases, 9-section overview).
+
+---
+
 ## README update 100: Aevah platform model summary — shareable doc for Rob (2026-09-09)
 
 Created `docs/aevah_platform_model_summary.md` — a clean, standalone doc summarizing the 3-engine architecture for Rob. Written at the audience level: no internal tool names, plain tables, one-page answer to "how many models and what goes into each." Covers 3 engines, 7-experience phase table, Druid extract per engine, the 3 crosswalks, and the data wrangling sequence. Linked from wiki page 15 and data request spec.

@@ -1,0 +1,3346 @@
+{
+  "metadata": {
+    "title": "Canonical CPG Data Vendor Glossary",
+    "version": "3.0.0",
+    "description": "Unified glossary mapping natural language definitions and metadata across SPINS, Circana (IRI), and NielsenIQ for ML model training and cross-vendor data alignment.",
+    "sources": [
+      "SPINS CPG Learning Center",
+      "NielsenIQ CPG Dictionary",
+      "Circana Liquid Data Go Dictionary",
+      "CPG Data Tip Sheet (cpgdatainsights.com)",
+      "SPINS Market Level Measures (uploaded xlsx)",
+      "Natural Language Descriptions / IRI Export Schema (uploaded docx)",
+      "NielsenIQ CPG Dictionary (microsites.nielseniq.com/cpg-dictionary)",
+      "SPINS SQL Export (sqllab CSV \u2014 real production column headers)",
+      "Circana Druid Export (results CSV \u2014 real production column headers)"
+    ],
+    "domains": [
+      "distribution",
+      "measures_metrics",
+      "channel_geography",
+      "hierarchy_classification",
+      "promotions_pricing",
+      "panel_shopper",
+      "product_attributes"
+    ],
+    "last_updated": "2026-04-06"
+  },
+  "terms": [
+    {
+      "canonical_id": "DIST_001",
+      "canonical_term": "ACV",
+      "canonical_full_name": "All Commodity Volume",
+      "domain": "distribution",
+      "definition": "The total annual dollar sales of all products sold through a given store or set of stores, regardless of category. Used as a size-weighting factor for stores when calculating distribution measures. A single store's ACV is the sum of all scanned sales across every category it carries.",
+      "formula": "Sum of all dollar sales across all categories in a store (or group of stores) over a defined period",
+      "data_type": "currency (USD)",
+      "reporting_level": [
+        "store",
+        "retailer",
+        "market",
+        "channel"
+      ],
+      "vendor_aliases": {
+        "SPINS": "ACV",
+        "Circana": "ACV",
+        "NielsenIQ": "ACV",
+        "legacy_IRI": "ACV",
+        "legacy_Nielsen": "Est Market ACV"
+      },
+      "vendor_notes": {
+        "NielsenIQ": "Also referred to as %ACV when used as a distribution measure. Total store ACV is the denominator for weighted distribution calculations.",
+        "SPINS": "Inherited from Circana partnership for conventional channel data; used identically."
+      },
+      "related_terms": [
+        "DIST_002",
+        "DIST_003",
+        "DIST_007"
+      ],
+      "example": "A grocery store with $50M in annual total sales has an ACV of $50M.",
+      "tags": [
+        "distribution",
+        "store_size",
+        "weighting",
+        "foundational"
+      ]
+    },
+    {
+      "canonical_id": "DIST_002",
+      "canonical_term": "% ACV Distribution",
+      "canonical_full_name": "Percent All Commodity Volume Distribution",
+      "domain": "distribution",
+      "definition": "The percentage of total market ACV represented by stores where a given product is sold (i.e., scanned at least once) during a defined period. Weights stores by size rather than count, so a product in large stores registers higher % ACV than one in small stores with the same count.",
+      "formula": "ACV of stores where the product scans / Total ACV of all stores in market \u00d7 100",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "% ACV Distribution",
+        "Circana": "% ACV Distribution",
+        "NielsenIQ": "% ACV Distribution",
+        "legacy_IRI": "% ACV",
+        "legacy_Nielsen": "% ACV"
+      },
+      "vendor_notes": {
+        "all": "Requires at least one scan during the period to be counted as 'in distribution.' Authorization alone does not count.",
+        "NielsenIQ": "Not additive across products, markets, or time periods."
+      },
+      "related_terms": [
+        "DIST_001",
+        "DIST_003",
+        "DIST_007"
+      ],
+      "example": "A product selling in stores representing 65% of all grocery dollar volume has 65% ACV Distribution.",
+      "tags": [
+        "distribution",
+        "weighted",
+        "foundational",
+        "buyer_meeting"
+      ]
+    },
+    {
+      "canonical_id": "DIST_003",
+      "canonical_term": "TDP",
+      "canonical_full_name": "Total Distribution Points",
+      "domain": "distribution",
+      "definition": "The sum of the % ACV Distribution values for all individual items (SKUs) in a brand's portfolio within a market. Captures both the breadth (how many stores carry the brand) and depth (how many items per store) of distribution in a single number.",
+      "formula": "Sum of Max % ACV for each SKU in the defined product set",
+      "data_type": "numeric (unbounded; 100 per item if fully distributed)",
+      "reporting_level": [
+        "brand",
+        "product_group",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "TDP",
+        "Circana": "TDP",
+        "NielsenIQ": "TDP",
+        "legacy_IRI": "TDP",
+        "legacy_Nielsen": "TDP"
+      },
+      "vendor_notes": {
+        "SPINS": "Illustrated as: 3 SKUs each at 100% ACV = 300 TDP.",
+        "NielsenIQ": "Items per store = TDP / % ACV Distribution."
+      },
+      "related_terms": [
+        "DIST_002",
+        "METR_003"
+      ],
+      "example": "A brand with 3 SKUs each at 100% ACV has 300 TDP. If one SKU is only at 50% ACV, TDP = 250.",
+      "tags": [
+        "distribution",
+        "portfolio",
+        "depth",
+        "breadth",
+        "foundational"
+      ]
+    },
+    {
+      "canonical_id": "DIST_004",
+      "canonical_term": "Numeric Distribution",
+      "canonical_full_name": "Numeric Distribution (% Stores Selling)",
+      "domain": "distribution",
+      "definition": "The percentage of stores in a market where a product scans at least once during the defined period, counting each store equally regardless of size.",
+      "formula": "Number of stores selling the product / Total number of stores in market \u00d7 100",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "% Stores Selling",
+        "Circana": "% Stores Selling",
+        "NielsenIQ": "% Stores Selling",
+        "legacy_IRI": "% Stores Selling",
+        "legacy_Nielsen": "% Stores Selling"
+      },
+      "vendor_notes": {
+        "all": "Contrast with % ACV Distribution which weights by store size. Numeric distribution treats a corner store equally with a Walmart Supercenter."
+      },
+      "related_terms": [
+        "DIST_002"
+      ],
+      "example": "A product in 400 of 1,000 stores = 40% numeric distribution, regardless of store size.",
+      "tags": [
+        "distribution",
+        "unweighted",
+        "store_count"
+      ]
+    },
+    {
+      "canonical_id": "DIST_005",
+      "canonical_term": "PCV Distribution",
+      "canonical_full_name": "Product Category Volume Distribution",
+      "domain": "distribution",
+      "definition": "Distribution measure weighted by the category's own dollar sales in each store, rather than total store ACV. Shows what percentage of category volume is covered by stores carrying the product.",
+      "formula": "Category sales of stores where product scans / Total category sales across all stores \u00d7 100",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "PCV Distribution",
+        "Circana": "PCV Distribution",
+        "NielsenIQ": "PCV Weighted Distribution",
+        "legacy_Nielsen": "PCV"
+      },
+      "vendor_notes": {
+        "NielsenIQ": "PCV stands for Product Class Value. More relevant than % ACV when category distribution within a store type varies widely."
+      },
+      "related_terms": [
+        "DIST_002"
+      ],
+      "example": "A specialty tea brand in stores representing 80% of all tea sales has 80% PCV Distribution.",
+      "tags": [
+        "distribution",
+        "category_weighted"
+      ]
+    },
+    {
+      "canonical_id": "DIST_006",
+      "canonical_term": "Max % ACV",
+      "canonical_full_name": "Maximum Percent ACV Distribution",
+      "domain": "distribution",
+      "definition": "The highest point of % ACV distribution reached by a product at any point within the reporting period. Represents peak distribution, useful for identifying items that expanded and then contracted.",
+      "formula": "Peak weekly % ACV observed during the defined time window",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Max % ACV",
+        "Circana": "Max % ACV",
+        "NielsenIQ": "Max % ACV",
+        "legacy_Nielsen": "Max % ACV"
+      },
+      "vendor_notes": {
+        "SPINS": "Used in TDP calculation. Max ACV captures peak shelf presence and is preferred for TDP over average ACV."
+      },
+      "related_terms": [
+        "DIST_002",
+        "DIST_003"
+      ],
+      "tags": [
+        "distribution",
+        "peak",
+        "item_health"
+      ]
+    },
+    {
+      "canonical_id": "DIST_007",
+      "canonical_term": "Avg % ACV",
+      "canonical_full_name": "Average Percent ACV Distribution",
+      "domain": "distribution",
+      "definition": "The average of weekly % ACV Distribution values across all weeks in a reporting period. Shows how consistently a product was available\u2014lower than Max % ACV if the product had gaps in distribution during the period.",
+      "formula": "Sum of weekly % ACV values / Number of weeks in period",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Avg ACV",
+        "Circana": "Avg % ACV",
+        "NielsenIQ": "Average % ACV"
+      },
+      "related_terms": [
+        "DIST_002",
+        "DIST_006"
+      ],
+      "tags": [
+        "distribution",
+        "average",
+        "consistency"
+      ]
+    },
+    {
+      "canonical_id": "METR_001",
+      "canonical_term": "Dollar Sales",
+      "canonical_full_name": "Dollar Sales (Retail)",
+      "domain": "measures_metrics",
+      "definition": "The total retail dollar value of products scanned at the register during a defined period and market. Represents consumer spending at the shelf price, not manufacturer revenue or cost.",
+      "formula": "Units Sold \u00d7 Average Retail Price",
+      "data_type": "currency (USD)",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category",
+        "total store"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollars / Dollar Sales",
+        "Circana": "Dollar Sales",
+        "NielsenIQ": "$ Sales",
+        "legacy_IRI": "Dollar Sales",
+        "legacy_Nielsen": "$ Sales"
+      },
+      "vendor_notes": {
+        "all": "One of five core POS facts (alongside units, price, UPC, and store location) from which all other measures derive."
+      },
+      "related_terms": [
+        "METR_002",
+        "METR_004",
+        "PRCE_001"
+      ],
+      "tags": [
+        "sales",
+        "revenue",
+        "foundational",
+        "pos"
+      ]
+    },
+    {
+      "canonical_id": "METR_002",
+      "canonical_term": "Unit Sales",
+      "canonical_full_name": "Unit Sales",
+      "domain": "measures_metrics",
+      "definition": "The total number of individual product packages (each-count units, not cases) sold during a defined period and market.",
+      "formula": "Count of scanned individual product units at register",
+      "data_type": "integer",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Units",
+        "Circana": "Units",
+        "NielsenIQ": "Units",
+        "legacy_IRI": "Units",
+        "legacy_Nielsen": "Units"
+      },
+      "related_terms": [
+        "METR_001",
+        "METR_004"
+      ],
+      "tags": [
+        "sales",
+        "volume",
+        "foundational",
+        "pos"
+      ]
+    },
+    {
+      "canonical_id": "METR_003",
+      "canonical_term": "Velocity",
+      "canonical_full_name": "Velocity (Sales per Point of Distribution)",
+      "domain": "measures_metrics",
+      "definition": "A measure of how quickly a product sells relative to its distribution footprint. Normalizes sales by distribution so products in fewer stores can be compared fairly against broadly distributed items.",
+      "formula": "Dollar Sales / TDP   OR   Dollar Sales / % ACV Distribution   OR   Units per Store per Week",
+      "data_type": "currency per distribution point OR units per store-week",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Velocity / Sales per TDP",
+        "Circana": "$/TDP",
+        "NielsenIQ": "$/TDP (Dollars per TDP) / Unit Sales per MM ACV / SPPD",
+        "legacy_IRI": "$/TDP",
+        "legacy_Nielsen": "Sales per $MM ACV / Velocity"
+      },
+      "vendor_notes": {
+        "NielsenIQ": "Also expressed as 'unit sales per $MM ACV' for buyer meetings.",
+        "Circana": "$/TDP is the dominant form in Liquid Data outputs.",
+        "SPINS": "Satori platform shows velocity as Sales per TDP."
+      },
+      "related_terms": [
+        "DIST_003",
+        "METR_001",
+        "METR_002"
+      ],
+      "example": "$500K in sales / 250 TDP = $2,000 per TDP velocity.",
+      "tags": [
+        "velocity",
+        "productivity",
+        "distribution",
+        "buyer_meeting",
+        "foundational"
+      ]
+    },
+    {
+      "canonical_id": "METR_004",
+      "canonical_term": "Market Share",
+      "canonical_full_name": "Market Share",
+      "domain": "measures_metrics",
+      "definition": "The percentage of total dollar (or unit) sales in a defined category, channel, and market that is held by a given brand or product.",
+      "formula": "Brand Dollar Sales / Total Category Dollar Sales \u00d7 100",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "brand",
+        "manufacturer"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Market Share",
+        "Circana": "Market Share",
+        "NielsenIQ": "Market Share / $ Share"
+      },
+      "related_terms": [
+        "METR_001",
+        "METR_002"
+      ],
+      "tags": [
+        "share",
+        "competitive",
+        "category_management"
+      ]
+    },
+    {
+      "canonical_id": "METR_005",
+      "canonical_term": "ARP",
+      "canonical_full_name": "Average Retail Price",
+      "domain": "measures_metrics",
+      "definition": "The average price consumers actually paid at the register for a product over a defined period, blending promoted and non-promoted transactions weighted by volume.",
+      "formula": "Total Dollar Sales / Total Units Sold",
+      "data_type": "currency (USD) per unit",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "ARP (Average Retail Price)",
+        "Circana": "Average Price",
+        "NielsenIQ": "Average Price",
+        "legacy_Nielsen": "Average Price"
+      },
+      "vendor_notes": {
+        "all": "Reflects the blended price across all promotions and regular price weeks, weighted by units sold."
+      },
+      "related_terms": [
+        "PRCE_001",
+        "PRCE_002"
+      ],
+      "tags": [
+        "price",
+        "average",
+        "consumer_paid"
+      ]
+    },
+    {
+      "canonical_id": "METR_006",
+      "canonical_term": "BDI",
+      "canonical_full_name": "Brand Development Index",
+      "domain": "measures_metrics",
+      "definition": "An index comparing a brand's share of sales in a specific market to that market's share of total US population (or ACV). Values above 100 indicate the brand over-indexes in that market; below 100 means under-index.",
+      "formula": "% of Brand's US Sales in Market / % of US Population (or ACV) in Market \u00d7 100",
+      "data_type": "index (base 100 = national average)",
+      "reporting_level": [
+        "brand",
+        "market"
+      ],
+      "vendor_aliases": {
+        "SPINS": "BDI",
+        "Circana": "BDI",
+        "NielsenIQ": "Brand Development Index (BDI)",
+        "legacy_Nielsen": "BDI"
+      },
+      "vendor_notes": {
+        "legacy_Nielsen": "Historically calculated on population; now more commonly uses ACV as denominator.",
+        "all": "Run on 52-week periods to eliminate seasonality. Opportunity signal: high CDI + low BDI."
+      },
+      "related_terms": [
+        "METR_007"
+      ],
+      "tags": [
+        "index",
+        "regionality",
+        "brand_strength"
+      ]
+    },
+    {
+      "canonical_id": "METR_007",
+      "canonical_term": "CDI",
+      "canonical_full_name": "Category Development Index",
+      "domain": "measures_metrics",
+      "definition": "An index comparing a category's share of sales in a specific market to that market's share of total US population (or ACV). Identifies markets where a category is underdeveloped relative to population size.",
+      "formula": "% of Category's US Sales in Market / % of US Population (or ACV) in Market \u00d7 100",
+      "data_type": "index (base 100)",
+      "reporting_level": [
+        "category",
+        "market"
+      ],
+      "vendor_aliases": {
+        "SPINS": "CDI",
+        "Circana": "CDI",
+        "NielsenIQ": "Category Development Index (CDI)",
+        "legacy_Nielsen": "CDI"
+      },
+      "related_terms": [
+        "METR_006"
+      ],
+      "tags": [
+        "index",
+        "category",
+        "regionality"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_001",
+      "canonical_term": "Base Price",
+      "canonical_full_name": "Base Price (Non-Promoted Price)",
+      "domain": "promotions_pricing",
+      "definition": "The estimated regular (non-promoted) shelf price of a product. Modeled from historical scan data by removing periods of promotional activity. Serves as the reference point for measuring promotional lift and depth of discount.",
+      "formula": "Modeled average price excluding weeks with feature, display, or price reduction activity",
+      "data_type": "currency (USD) per unit",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Base Price",
+        "Circana": "Base Price / Non-Promoted Price",
+        "NielsenIQ": "Base Price",
+        "legacy_IRI": "Non-Promoted Price",
+        "legacy_Nielsen": "Base Price"
+      },
+      "vendor_notes": {
+        "legacy_Nielsen": "Modeled measure; may degrade accuracy if promotions run longer than 8 consecutive weeks."
+      },
+      "related_terms": [
+        "PRCE_002",
+        "PRCE_003",
+        "PRCE_004"
+      ],
+      "tags": [
+        "price",
+        "baseline",
+        "promotion",
+        "modeling"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_002",
+      "canonical_term": "Promoted Price",
+      "canonical_full_name": "Promoted Price",
+      "domain": "promotions_pricing",
+      "definition": "The average price paid by consumers during promotional periods (feature, display, or TPR). Contrast with base price.",
+      "formula": "Total dollar sales during promoted weeks / Units sold during promoted weeks",
+      "data_type": "currency (USD) per unit",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Promoted Price",
+        "Circana": "Promoted Price",
+        "NielsenIQ": "Promoted Price",
+        "legacy_Nielsen": "Promoted Price"
+      },
+      "related_terms": [
+        "PRCE_001",
+        "PRCE_003"
+      ],
+      "tags": [
+        "price",
+        "promotion"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_003",
+      "canonical_term": "Depth of Discount",
+      "canonical_full_name": "Depth of Discount",
+      "domain": "promotions_pricing",
+      "definition": "The percentage price reduction from base price to promoted price. Measures how deeply a product is discounted when on promotion.",
+      "formula": "1 \u2212 (Promoted Price / Base Price)",
+      "data_type": "percentage (0\u20131 or 0\u2013100%)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "% Discount / Depth of Discount",
+        "Circana": "Depth of Discount",
+        "NielsenIQ": "Depth of Discount",
+        "legacy_IRI": "% Discount"
+      },
+      "related_terms": [
+        "PRCE_001",
+        "PRCE_002"
+      ],
+      "tags": [
+        "price",
+        "promotion",
+        "discount"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_004",
+      "canonical_term": "Incremental Volume",
+      "canonical_full_name": "Incremental Volume (Promotional Lift)",
+      "domain": "promotions_pricing",
+      "definition": "The additional unit or dollar sales generated by a promotion above the expected baseline volume. Calculated as actual promoted sales minus modeled base sales during the same period.",
+      "formula": "Actual Sales During Promotion \u2212 Modeled Base Sales",
+      "data_type": "units or currency",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Incremental Volume",
+        "Circana": "Incremental Volume / Incremental $ Lift",
+        "NielsenIQ": "Incremental Volume",
+        "legacy_IRI": "Incremental Volume",
+        "legacy_Nielsen": "Incremental Volume"
+      },
+      "vendor_notes": {
+        "Circana": "Also reported as 'Incremental $ lift per week of support' (lift divided by weeks of promotion).",
+        "all": "Subsidized volume = promoted sales \u2212 incremental volume; represents sales that would have occurred anyway."
+      },
+      "related_terms": [
+        "PRCE_001",
+        "PRCE_005"
+      ],
+      "tags": [
+        "promotion",
+        "lift",
+        "baseline",
+        "efficiency"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_005",
+      "canonical_term": "% Subsidized Volume",
+      "canonical_full_name": "Percent Subsidized Volume",
+      "domain": "promotions_pricing",
+      "definition": "The share of promoted sales that would have been purchased at regular price even without the promotion. High subsidized volume indicates an inefficient promotion that mainly discounts loyal buyers rather than driving incremental trips.",
+      "formula": "(Promoted Sales \u2212 Incremental Sales) / Promoted Sales \u00d7 100",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "% Subsidized Volume",
+        "Circana": "% Subsidized Volume",
+        "NielsenIQ": "% Subsidized Volume",
+        "legacy_Nielsen": "% Subsidized"
+      },
+      "related_terms": [
+        "PRCE_004"
+      ],
+      "tags": [
+        "promotion",
+        "efficiency",
+        "subsidy"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_006",
+      "canonical_term": "EDLP",
+      "canonical_full_name": "Everyday Low Price",
+      "domain": "promotions_pricing",
+      "definition": "A pricing strategy in which a retailer or brand maintains consistently low prices without running temporary price promotions. Common in mass/club formats (e.g., Walmart, Costco).",
+      "data_type": "categorical (pricing strategy flag)",
+      "reporting_level": [
+        "retailer",
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "EDLP",
+        "Circana": "EDLP",
+        "NielsenIQ": "Everyday Low Price (EDLP)"
+      },
+      "tags": [
+        "price",
+        "strategy",
+        "retailer_type"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_007",
+      "canonical_term": "Price Elasticity",
+      "canonical_full_name": "Price Elasticity of Demand",
+      "domain": "promotions_pricing",
+      "definition": "The estimated percentage change in unit volume for every 1% change in price, holding all other variables constant. Negative values are typical (price up \u2192 volume down). Used in trade promotion optimization.",
+      "formula": "% Volume Change / % Price Change",
+      "data_type": "numeric (typically \u22120.5 to \u22125.0 for CPG)",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Elasticity",
+        "Circana": "Elasticity",
+        "NielsenIQ": "Elasticity",
+        "legacy_Nielsen": "Price Elasticity"
+      },
+      "tags": [
+        "price",
+        "modeling",
+        "sensitivity"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_001",
+      "canonical_term": "MULO",
+      "canonical_full_name": "Multi-Outlet",
+      "domain": "channel_geography",
+      "definition": "A multi-channel retail aggregate covering Grocery/Food, Drug, Mass Merchandise (including Walmart), Club (excluding Costco for IRI), Dollar, and Military stores. Represents the broadest conventional retail view for CPG performance. Does not include natural/specialty retailers covered exclusively by SPINS.",
+      "data_type": "channel definition / geographic scope",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "MULO (sourced from Circana)",
+        "Circana": "MULO",
+        "NielsenIQ": "xAOC (equivalent)",
+        "legacy_IRI": "MULO"
+      },
+      "vendor_notes": {
+        "Circana": "MULO-C adds Convenience channel. MULO is the standard multi-outlet market.",
+        "NielsenIQ": "xAOC (extended All Outlet Combined) is the NIQ equivalent of MULO. Both include Walmart. SPINS receives its conventional data from Circana, so SPINS MULO = Circana MULO.",
+        "SPINS": "Natural/Specialty channels are additive to MULO; they do NOT overlap."
+      },
+      "related_terms": [
+        "CHAN_002",
+        "CHAN_003",
+        "CHAN_004"
+      ],
+      "example": "A brand's MULO sales + SPINS Natural + SPINS Specialty Gourmet = Total US approximation.",
+      "tags": [
+        "channel",
+        "multi_outlet",
+        "aggregate",
+        "conventional",
+        "geography"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_002",
+      "canonical_term": "xAOC",
+      "canonical_full_name": "Extended All Outlet Combined",
+      "domain": "channel_geography",
+      "definition": "NielsenIQ's broadest US retail aggregate, equivalent to Circana's MULO. Includes Food/Grocery, Drug, Mass (Walmart included), Club, Dollar, and Military. The 'x' historically indicated the extension to include Walmart once they joined the NIQ panel.",
+      "data_type": "channel definition / geographic scope",
+      "reporting_level": [
+        "channel_total"
+      ],
+      "vendor_aliases": {
+        "NielsenIQ": "xAOC",
+        "Circana": "MULO (equivalent)",
+        "SPINS": "N/A (uses Circana MULO for conventional)"
+      },
+      "vendor_notes": {
+        "NielsenIQ": "xAOC + Convenience = xAOC Incl Conv. xAOC + WFM = a common custom market for brands with Whole Foods distribution.",
+        "legacy_Nielsen": "Preceded by FDMx (Food-Drug-Mass excluding Walmart). xAOC replaced this once Walmart cooperated."
+      },
+      "related_terms": [
+        "CHAN_001"
+      ],
+      "tags": [
+        "channel",
+        "NielsenIQ",
+        "multi_outlet",
+        "aggregate",
+        "geography"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_003",
+      "canonical_term": "Natural Channel",
+      "canonical_full_name": "Natural Supermarket Channel",
+      "domain": "channel_geography",
+      "definition": "A SPINS-exclusive retail channel definition covering full-format supermarkets with more than $2M in annual sales where at least 50% of sales derive from natural and organic products (as defined by SPINS), and less than 50% from supplements. Does not include Whole Foods Market.",
+      "data_type": "channel definition / geographic scope",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Natural Channel / Natural Supermarkets / SPINSscan Natural",
+        "Circana": "N/A (not covered)",
+        "NielsenIQ": "N/A (not covered)"
+      },
+      "vendor_notes": {
+        "SPINS": "Includes retailers such as Sprouts Farmers Market, Earth Fare, Natural Grocers. Whole Foods is NOT included here; it appears in NIQ/Circana Food totals.",
+        "cross_vendor_conflict": "Whole Foods is in Circana/NIQ Food channel, NOT in SPINS Natural. Sprouts is in SPINS Natural, NOT in Circana/NIQ totals."
+      },
+      "related_terms": [
+        "CHAN_004",
+        "CHAN_001"
+      ],
+      "tags": [
+        "channel",
+        "SPINS_exclusive",
+        "natural",
+        "organic",
+        "geography"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_004",
+      "canonical_term": "Specialty Gourmet Channel",
+      "canonical_full_name": "Specialty Gourmet Supermarket Channel",
+      "domain": "channel_geography",
+      "definition": "A SPINS-exclusive channel covering high-end, experiential full-format supermarkets with more than $2M in annual sales featuring full-service and fresh departments (prepared foods, butcher, on-site bakery). Distinct from the Natural channel by emphasis on premium/gourmet rather than natural/organic as primary positioning.",
+      "data_type": "channel definition / geographic scope",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Specialty Gourmet / SPINSscan Specialty Gourmet",
+        "Circana": "N/A",
+        "NielsenIQ": "N/A"
+      },
+      "vendor_notes": {
+        "SPINS": "Example retailers: The Fresh Market, Bristol Farms, King's, Fairway Market. Not in Circana/NIQ universe."
+      },
+      "related_terms": [
+        "CHAN_003"
+      ],
+      "tags": [
+        "channel",
+        "SPINS_exclusive",
+        "specialty",
+        "gourmet",
+        "geography"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_005",
+      "canonical_term": "Grocery Channel",
+      "canonical_full_name": "Grocery / Food Channel",
+      "domain": "channel_geography",
+      "definition": "Stores primarily focused on selling food and consumable products with annual sales above $2M. The foundational channel for CPG measurement. Excludes natural/specialty-only retailers covered by SPINS.",
+      "data_type": "channel definition",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Conventional (via Circana)",
+        "Circana": "Grocery / Food",
+        "NielsenIQ": "Total Food",
+        "legacy_IRI": "Grocery",
+        "legacy_Nielsen": "Total Food"
+      },
+      "vendor_notes": {
+        "cross_vendor_conflict": "NielsenIQ calls this 'Total Food'; Circana calls it 'Grocery.' Functionally identical market. Both exclude non-cooperators Aldi and Trader Joe's from direct data (estimates used for totals). NIQ receives WFM data directly; Circana projects it.",
+        "SPINS": "Conventional channel in SPINS is powered by Circana data, so coverage is equivalent."
+      },
+      "related_terms": [
+        "CHAN_001",
+        "CHAN_002"
+      ],
+      "tags": [
+        "channel",
+        "grocery",
+        "food",
+        "conventional"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_006",
+      "canonical_term": "Drug Channel",
+      "canonical_full_name": "Drug / Pharmacy Channel",
+      "domain": "channel_geography",
+      "definition": "Retail stores primarily focused on pharmacy and health products, including major chains such as CVS, Walgreens, and Rite Aid. Included in both MULO (Circana) and xAOC (NielsenIQ).",
+      "data_type": "channel definition",
+      "vendor_aliases": {
+        "SPINS": "Drug (via Circana)",
+        "Circana": "Drug",
+        "NielsenIQ": "Drug"
+      },
+      "tags": [
+        "channel",
+        "drug",
+        "pharmacy",
+        "conventional"
+      ]
+    },
+    {
+      "canonical_id": "CHAN_007",
+      "canonical_term": "Mass Channel",
+      "canonical_full_name": "Mass Merchandise Channel",
+      "domain": "channel_geography",
+      "definition": "Large-format retailers selling general merchandise and grocery products at scale, including Walmart, Target, and similar chains. Walmart is the dominant component and is included in both MULO and xAOC.",
+      "data_type": "channel definition",
+      "vendor_aliases": {
+        "SPINS": "Mass (via Circana)",
+        "Circana": "Mass Merchandise / Mass",
+        "NielsenIQ": "Mass / Walmart + Mass"
+      },
+      "tags": [
+        "channel",
+        "mass",
+        "walmart",
+        "conventional"
+      ]
+    },
+    {
+      "canonical_id": "HIER_001",
+      "canonical_term": "UPC",
+      "canonical_full_name": "Universal Product Code",
+      "domain": "hierarchy_classification",
+      "definition": "A 12-digit numeric barcode printed on consumer product packaging that uniquely identifies a specific product-size-variant combination at the point of sale. The most granular level of product hierarchy in syndicated CPG data. One of five core POS facts captured at the register.",
+      "data_type": "string (12-digit numeric)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "UPC",
+        "Circana": "UPC",
+        "NielsenIQ": "UPC"
+      },
+      "vendor_notes": {
+        "all": "An EAN-13 (European Article Number, 13 digits) is the international equivalent. In NIQ/Circana global data, EAN is used."
+      },
+      "related_terms": [
+        "HIER_002",
+        "HIER_003"
+      ],
+      "tags": [
+        "product_id",
+        "barcode",
+        "item_level",
+        "foundational",
+        "pos"
+      ]
+    },
+    {
+      "canonical_id": "HIER_002",
+      "canonical_term": "SKU",
+      "canonical_full_name": "Stock Keeping Unit",
+      "domain": "hierarchy_classification",
+      "definition": "A retailer-specific internal identifier for a product variant at a given store or chain. While UPC is universal, SKUs vary by retailer. In syndicated data, UPC is the cross-retailer standard; SKU is used in retailer direct data.",
+      "data_type": "string (alphanumeric, retailer-defined)",
+      "reporting_level": [
+        "item",
+        "retailer"
+      ],
+      "vendor_aliases": {
+        "SPINS": "SKU",
+        "Circana": "SKU / Item",
+        "NielsenIQ": "SKU / Item"
+      },
+      "vendor_notes": {
+        "cross_vendor_conflict": "SKU is not universal; the same physical product has different SKUs at Target vs. Kroger. UPC is the canonical join key across vendors."
+      },
+      "related_terms": [
+        "HIER_001"
+      ],
+      "tags": [
+        "product_id",
+        "retailer_specific",
+        "item_level"
+      ]
+    },
+    {
+      "canonical_id": "HIER_003",
+      "canonical_term": "Product Hierarchy",
+      "canonical_full_name": "CPG Product Classification Hierarchy",
+      "domain": "hierarchy_classification",
+      "definition": "The nested classification structure used to organize products from broadest to most granular level. All three vendors use a similar multi-level hierarchy, though naming and levels differ.",
+      "data_type": "categorical taxonomy",
+      "levels": {
+        "SPINS": [
+          "Department",
+          "Category",
+          "Sub-Category",
+          "Segment",
+          "Sub-Segment",
+          "UPC"
+        ],
+        "Circana": [
+          "Department",
+          "Category",
+          "Sub-Category",
+          "Brand",
+          "UPC"
+        ],
+        "NielsenIQ": [
+          "Super Category",
+          "Category",
+          "Segment",
+          "Sub-Segment",
+          "Brand",
+          "UPC"
+        ]
+      },
+      "vendor_notes": {
+        "cross_vendor_conflict": "The same product may sit in different categories or segments depending on vendor taxonomy. Example: a kombucha may be in 'Functional Beverages' (SPINS) vs. 'Refrigerated Beverages' (Circana) vs. 'Shelf-Stable Juice' (NIQ). Category alignment is a critical pre-processing step for cross-vendor ML.",
+        "SPINS": "SPINS applies its own proprietary coding, distinct from Circana, even for the same conventional products."
+      },
+      "related_terms": [
+        "HIER_001",
+        "HIER_004"
+      ],
+      "tags": [
+        "hierarchy",
+        "classification",
+        "taxonomy",
+        "cross_vendor_alignment"
+      ]
+    },
+    {
+      "canonical_id": "HIER_004",
+      "canonical_term": "Brand",
+      "canonical_full_name": "Brand",
+      "domain": "hierarchy_classification",
+      "definition": "A named product line under a single manufacturer identity. Sits above UPC and below manufacturer in the product hierarchy. Cross-vendor brand naming can differ in capitalization, abbreviation, and grouping of sub-brands.",
+      "data_type": "string",
+      "reporting_level": [
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Brand",
+        "Circana": "Brand",
+        "NielsenIQ": "Brand"
+      },
+      "vendor_notes": {
+        "cross_vendor_conflict": "Brand strings may differ across vendors (e.g., 'KIND' vs. 'Kind' vs. 'Kind Snacks'). Requires normalization/entity resolution for cross-vendor ML."
+      },
+      "related_terms": [
+        "HIER_001",
+        "HIER_003"
+      ],
+      "tags": [
+        "brand",
+        "hierarchy",
+        "entity_resolution"
+      ]
+    },
+    {
+      "canonical_id": "PANEL_001",
+      "canonical_term": "Household Penetration",
+      "canonical_full_name": "Household Penetration",
+      "domain": "panel_shopper",
+      "definition": "The percentage of households that purchase a given category, brand, or product at least once during a defined time period. Derived from consumer panel (household) data, not POS scan data.",
+      "formula": "Households buying the product at least once / Total measured households \u00d7 100",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Household Penetration",
+        "Circana": "Household Penetration / HH Penetration",
+        "NielsenIQ": "Household Penetration"
+      },
+      "vendor_notes": {
+        "all": "Panel-derived metric; requires panel data subscription separate from POS. Not available in basic scan data purchases.",
+        "SPINS": "Available through TriLens Panel product."
+      },
+      "related_terms": [
+        "PANEL_002",
+        "PANEL_003"
+      ],
+      "tags": [
+        "panel",
+        "shopper",
+        "penetration",
+        "consumer"
+      ]
+    },
+    {
+      "canonical_id": "PANEL_002",
+      "canonical_term": "Buy Rate",
+      "canonical_full_name": "Buy Rate",
+      "domain": "panel_shopper",
+      "definition": "The average amount a buying household spends (or number of units they purchase) in a given category or for a given brand over a set time period. Measures the depth of purchase among buyers.",
+      "formula": "Total Dollar Sales to Buyers / Number of Buying Households",
+      "data_type": "currency (USD) or units per buying household",
+      "reporting_level": [
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Buy Rate",
+        "Circana": "Buy Rate / $ per Buying HH",
+        "NielsenIQ": "Buy Rate / $ per Buyer"
+      },
+      "related_terms": [
+        "PANEL_001",
+        "PANEL_003"
+      ],
+      "tags": [
+        "panel",
+        "shopper",
+        "spend_per_buyer"
+      ]
+    },
+    {
+      "canonical_id": "PANEL_003",
+      "canonical_term": "Purchase Frequency",
+      "canonical_full_name": "Purchase Frequency",
+      "domain": "panel_shopper",
+      "definition": "The average number of times per year that a buying household purchases a given product, brand, or category. Measures how often loyal buyers return.",
+      "formula": "Total Purchase Occasions / Number of Buying Households",
+      "data_type": "numeric (times per year)",
+      "reporting_level": [
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Purchase Frequency",
+        "Circana": "Purchase Frequency / Trips per Buyer",
+        "NielsenIQ": "Frequency / Purchase Frequency"
+      },
+      "related_terms": [
+        "PANEL_001",
+        "PANEL_002"
+      ],
+      "tags": [
+        "panel",
+        "shopper",
+        "loyalty",
+        "repeat_purchase"
+      ]
+    },
+    {
+      "canonical_id": "ATTR_001",
+      "canonical_term": "Product Attribute",
+      "canonical_full_name": "Product Attribute (SPINS)",
+      "domain": "product_attributes",
+      "definition": "A structured tag applied to a product UPC describing a specific characteristic beyond standard category classification. SPINS maintains the industry's most extensive attribute taxonomy for health and wellness products, covering certifications, diet compatibility, ingredients, label claims, and more.",
+      "data_type": "categorical flag (boolean or multi-value)",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Product Attributes / Attribute Flags",
+        "Circana": "Product Attributes (limited)",
+        "NielsenIQ": "Product Attributes (limited)"
+      },
+      "vendor_notes": {
+        "SPINS": "Attribute types include: Certification (e.g., Non-GMO Project Verified, Certified Organic), Diet (e.g., Keto Compatible, Vegan), Ingredient (e.g., contains adaptogens, free-from gluten), Label Claim (e.g., Sustainably Sourced, Fair Trade), and Brand Positioning attributes. SPINS Product Intelligence applies thousands of attributes per UPC.",
+        "cross_vendor_conflict": "Attribute coverage is SPINS's primary differentiator. Circana and NIQ have attribute systems but with far less granularity in natural/organic/wellness dimensions."
+      },
+      "related_terms": [
+        "ATTR_002",
+        "ATTR_003"
+      ],
+      "tags": [
+        "attributes",
+        "SPINS_exclusive",
+        "health_wellness",
+        "natural",
+        "organic"
+      ]
+    },
+    {
+      "canonical_id": "ATTR_002",
+      "canonical_term": "Certification Attribute",
+      "canonical_full_name": "Certification Attribute (SPINS)",
+      "domain": "product_attributes",
+      "definition": "An attribute flag indicating that a product has received third-party verified certification against a defined standard. Examples include Non-GMO Project Verified, USDA Organic, Certified Paleo, and Rainforest Alliance.",
+      "data_type": "categorical flag (certified / not certified)",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Certification Attribute",
+        "Circana": "Certification (limited)",
+        "NielsenIQ": "Certification (limited)"
+      },
+      "related_terms": [
+        "ATTR_001"
+      ],
+      "tags": [
+        "attributes",
+        "certification",
+        "third_party",
+        "organic",
+        "GMO"
+      ]
+    },
+    {
+      "canonical_id": "ATTR_003",
+      "canonical_term": "Label Claim Attribute",
+      "canonical_full_name": "Label Claim Attribute (SPINS)",
+      "domain": "product_attributes",
+      "definition": "An attribute flag capturing on-pack marketing language related to sustainability, corporate responsibility, or consumer lifestyle positioning that goes beyond ingredient or nutrition content (e.g., 'Woman-Owned,' 'Recyclable Packaging,' 'B-Corp Certified').",
+      "data_type": "categorical flag",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Label Claim Attribute",
+        "Circana": "N/A",
+        "NielsenIQ": "N/A"
+      },
+      "related_terms": [
+        "ATTR_001",
+        "ATTR_002"
+      ],
+      "tags": [
+        "attributes",
+        "SPINS_exclusive",
+        "label_claim",
+        "sustainability",
+        "positioning"
+      ]
+    },
+    {
+      "canonical_id": "REPORT_001",
+      "canonical_term": "POS Data",
+      "canonical_full_name": "Point of Sale Data",
+      "domain": "measures_metrics",
+      "definition": "Transaction data captured at the checkout register when a product barcode is scanned. The five raw POS facts are: UPC, product description, dollar amount, unit quantity, and store location. All syndicated retail measures are derived from these five elements.",
+      "data_type": "transactional record",
+      "reporting_level": [
+        "transaction",
+        "store",
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "POS Data / RMS (Retail Measurement Services)",
+        "Circana": "POS Data / Retail Point of Sale",
+        "NielsenIQ": "POS Data / Retail Measurement"
+      },
+      "related_terms": [
+        "HIER_001",
+        "METR_001",
+        "METR_002"
+      ],
+      "tags": [
+        "data_type",
+        "source",
+        "foundational",
+        "scanner",
+        "pos"
+      ]
+    },
+    {
+      "canonical_id": "REPORT_002",
+      "canonical_term": "Syndicated Data",
+      "canonical_full_name": "Syndicated Retail Sales Data",
+      "domain": "measures_metrics",
+      "definition": "POS data aggregated from hundreds of retailers by a third-party vendor (SPINS, Circana, NielsenIQ) and sold to manufacturers and retailers as standardized reports. Enables cross-retailer performance benchmarking. Distinct from retailer direct data (one retailer only) or panel data (household-level).",
+      "data_type": "aggregated report / data feed",
+      "vendor_aliases": {
+        "SPINS": "Syndicated Data / SPINS Data",
+        "Circana": "Syndicated Data / Circana Data",
+        "NielsenIQ": "Syndicated Data / NIQ Data"
+      },
+      "related_terms": [
+        "REPORT_001"
+      ],
+      "tags": [
+        "data_type",
+        "source",
+        "multi_retailer",
+        "foundational"
+      ]
+    },
+    {
+      "canonical_id": "REPORT_003",
+      "canonical_term": "Category Review",
+      "canonical_full_name": "Category Review",
+      "domain": "measures_metrics",
+      "definition": "A periodic data-driven assessment of how a product category is performing within a retailer or market. Typically conducted by retailer buyers and category captains to make decisions on assortment, shelf space, pricing, and promotions.",
+      "data_type": "analytical deliverable / process",
+      "vendor_aliases": {
+        "SPINS": "Category Review",
+        "Circana": "Category Review",
+        "NielsenIQ": "Category Review"
+      },
+      "tags": [
+        "category_management",
+        "retail",
+        "assortment",
+        "buyer_meeting"
+      ]
+    },
+    {
+      "canonical_id": "DIST_008",
+      "canonical_term": "At-Risk Items",
+      "canonical_full_name": "At-Risk Items (Delist Risk)",
+      "domain": "distribution",
+      "definition": "Products with a high probability of being removed from a retailer's assortment at the next line review. Typically identified by scoring below average on a combination of velocity, trend, and distribution metrics.",
+      "data_type": "categorical flag / score",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "At-Risk Items",
+        "Circana": "At-Risk Items / Dollars at Risk",
+        "NielsenIQ": "At-Risk Items"
+      },
+      "related_terms": [
+        "DIST_002",
+        "METR_003"
+      ],
+      "tags": [
+        "assortment",
+        "delist",
+        "item_health"
+      ]
+    },
+    {
+      "canonical_id": "DIST_009",
+      "canonical_term": "Dropped Items",
+      "canonical_full_name": "Dropped / Discontinued Items",
+      "domain": "distribution",
+      "definition": "Products that have been discontinued or removed from distribution in a given geography, either due to manufacturer supply chain rationalization or retailer delist decisions.",
+      "data_type": "categorical flag",
+      "reporting_level": [
+        "item",
+        "retailer"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dropped Items",
+        "Circana": "Dropped Items",
+        "NielsenIQ": "Dropped Items"
+      },
+      "related_terms": [
+        "DIST_008"
+      ],
+      "tags": [
+        "assortment",
+        "delist",
+        "discontinuation"
+      ]
+    },
+    {
+      "canonical_id": "METR_008",
+      "canonical_term": "EQ Units",
+      "canonical_full_name": "Equivalized Units",
+      "domain": "measures_metrics",
+      "definition": "Unit sales converted to a common volume equivalent so that products of different package sizes can be compared fairly. Each unit is multiplied by its volume equivalency factor (e.g., ounces, liters) before summing. Should not be used when comparing products with different volume types (e.g., ounces vs. count items).",
+      "formula": "Sum(Units \u00d7 Volume Equivalency Factor)",
+      "data_type": "numeric (equivalized volume units)",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "EQ Units",
+        "Circana": "Equivalized Units / EQ Units",
+        "NielsenIQ": "Equivalized Units / Volume"
+      },
+      "vendor_notes": {
+        "SPINS": "Do not use EQ Units across product sets that mix different volume types (oz vs. count)."
+      },
+      "related_terms": [
+        "METR_002",
+        "METR_003"
+      ],
+      "tags": [
+        "volume",
+        "equivalized",
+        "size_normalized",
+        "measures"
+      ]
+    },
+    {
+      "canonical_id": "METR_009",
+      "canonical_term": "Dollars SPM",
+      "canonical_full_name": "Dollar Sales Per $MM ACV",
+      "domain": "measures_metrics",
+      "definition": "Total dollar sales during a period per million dollars of annualized ACV of stores selling the product. Normalizes sales by the size-weighted distribution footprint, enabling comparison across geographies of different sizes. Because the denominator is always annualized (52-week ACV), do not use this measure to compare sales rates across periods of varying length.",
+      "formula": "Dollar Sales / Sum(ACV of stores selling the product in $MM)",
+      "data_type": "currency per $MM ACV",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollars SPM / Base Dollars SPM",
+        "Circana": "$ per MM ACV",
+        "NielsenIQ": "Unit Sales per $MM ACV / Sales Rate per $MM ACV",
+        "legacy_Nielsen": "Sales per $MM ACV"
+      },
+      "vendor_notes": {
+        "SPINS": "Combined outlet geographies (e.g. MULO) report a weighted average of individual outlets based on all-item dollar sales. Denominator always = 52-week ACV regardless of period length.",
+        "NielsenIQ": "NIQ commonly expresses this in units rather than dollars for buyer meetings."
+      },
+      "related_terms": [
+        "DIST_001",
+        "METR_001",
+        "METR_003"
+      ],
+      "example": "$500K in sales in stores with $250MM total ACV = $2,000 per $MM ACV.",
+      "tags": [
+        "velocity",
+        "distribution_normalized",
+        "sales_rate",
+        "cross_geography"
+      ]
+    },
+    {
+      "canonical_id": "METR_010",
+      "canonical_term": "Dollars SPP",
+      "canonical_full_name": "Dollar Sales Per Point of ACV",
+      "domain": "measures_metrics",
+      "definition": "Total dollar sales during a period per percentage point of Max % ACV. Controls for distribution within a single geography. Unlike SPM, SPP cannot be used to compare sales rates across geographies of different sizes.",
+      "formula": "Dollar Sales / Max % ACV",
+      "data_type": "currency per ACV point",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollars SPP",
+        "Circana": "$ per Point of ACV",
+        "NielsenIQ": "$ per Point of Distribution"
+      },
+      "vendor_notes": {
+        "SPINS": "Use SPM (not SPP) for cross-geography comparisons. SPP is only valid within a single geography."
+      },
+      "related_terms": [
+        "DIST_006",
+        "METR_001",
+        "METR_009"
+      ],
+      "tags": [
+        "velocity",
+        "distribution_normalized",
+        "within_geography"
+      ]
+    },
+    {
+      "canonical_id": "METR_011",
+      "canonical_term": "Avg Weekly Dollars Per Store Selling Per Item",
+      "canonical_full_name": "Average Weekly Dollar Sales Per Store Selling Per Item",
+      "domain": "measures_metrics",
+      "definition": "Total dollar sales per store selling per item carried, averaged across weeks. Controls simultaneously for both the number of stores carrying a product and the number of distinct UPCs scanning within those stores. Useful for comparing brands with different assortment depths or geographies with different store counts.",
+      "formula": "(Average Weekly Dollars / # Stores Selling) / (TDP / Max % ACV)",
+      "data_type": "currency per store per item per week",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Average Weekly Dollars Per Store Selling Per Item",
+        "Circana": "Avg Weekly $ per Store Selling per Item",
+        "NielsenIQ": "Avg Weekly $ per Store Selling (item-adjusted)"
+      },
+      "vendor_notes": {
+        "SPINS": "Also available in Unit and EQ Unit variants. Most useful when comparing brands with different numbers of UPCs."
+      },
+      "related_terms": [
+        "METR_003",
+        "DIST_003",
+        "DIST_004"
+      ],
+      "tags": [
+        "velocity",
+        "store_level",
+        "item_adjusted",
+        "weekly"
+      ]
+    },
+    {
+      "canonical_id": "METR_012",
+      "canonical_term": "Number of Weeks Selling",
+      "canonical_full_name": "Number of Weeks Selling",
+      "domain": "measures_metrics",
+      "definition": "The count of distinct weeks within a reporting period in which a product recorded at least one unit of sales in the specified market. Used to assess product continuity and identify gaps in scanning (e.g., out-of-stocks, seasonal items).",
+      "formula": "Sum across weeks (1 if Units > 0, else 0)",
+      "data_type": "integer (weeks)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Number of Weeks Selling",
+        "Circana": "Weeks Selling",
+        "NielsenIQ": "Weeks Selling"
+      },
+      "tags": [
+        "distribution",
+        "continuity",
+        "item_health",
+        "time"
+      ]
+    },
+    {
+      "canonical_id": "METR_013",
+      "canonical_term": "First Week Selling",
+      "canonical_full_name": "First Week Selling",
+      "domain": "measures_metrics",
+      "definition": "The earliest week in which a product recorded any sales anywhere in the database. Returns the same value regardless of the selected time period. If a product was selling before the database's first available week, the database start date is returned instead.",
+      "formula": "First recorded week of sales across all available history",
+      "data_type": "date (week ending)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "First Week Selling",
+        "Circana": "First Week of Sales",
+        "NielsenIQ": "First Sale Date"
+      },
+      "vendor_notes": {
+        "SPINS": "Value is constant across all time period selections. Cannot go earlier than the database start date."
+      },
+      "related_terms": [
+        "METR_012"
+      ],
+      "tags": [
+        "item_age",
+        "new_item",
+        "innovation",
+        "time"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_008",
+      "canonical_term": "Promo Effectiveness Index",
+      "canonical_full_name": "Promotional Effectiveness Index",
+      "domain": "promotions_pricing",
+      "definition": "Index expressing the ratio of total promoted sales to the base (non-promoted) sales that would have occurred during the same promoted period. A value of 200 means promoted sales were twice the expected baseline. Equal to (% Lift + 100).",
+      "formula": "100 \u00d7 (Dollar Sales / Base Dollar Sales) with any promotion  |  Promo Effect Index = % Lift + 100",
+      "data_type": "index (base 100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollars, Promo Effect Index / Units, Promo Effect Index / EQ Units, Promo Effect Index",
+        "Circana": "Promo Effectiveness Index",
+        "NielsenIQ": "Promo Lift Index"
+      },
+      "vendor_notes": {
+        "SPINS": "Available in Dollar, Unit, and EQ Unit variants. Subtracting 100 yields % Lift."
+      },
+      "related_terms": [
+        "PRCE_004",
+        "PRCE_009"
+      ],
+      "tags": [
+        "promotion",
+        "efficiency",
+        "lift",
+        "index"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_009",
+      "canonical_term": "% Lift",
+      "canonical_full_name": "Percent Promotional Lift",
+      "domain": "promotions_pricing",
+      "definition": "The percentage by which promoted sales exceeded the expected base sales during a promotional period. A 50% lift means the promotion drove 50% more volume than baseline. Equal to (Promo Effectiveness Index \u2212 100).",
+      "formula": "100 \u00d7 (Incremental Sales / Base Sales with any promotion)  |  % Lift = Promo Effect Index \u2212 100",
+      "data_type": "percentage",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollars, % Lift / Units, % Lift / EQ Units, % Lift",
+        "Circana": "% Lift",
+        "NielsenIQ": "Incremental % Lift"
+      },
+      "related_terms": [
+        "PRCE_008",
+        "PRCE_004"
+      ],
+      "tags": [
+        "promotion",
+        "efficiency",
+        "lift"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_010",
+      "canonical_term": "Base Sales",
+      "canonical_full_name": "Base Sales (Dollars / Units / EQ Units)",
+      "domain": "promotions_pricing",
+      "definition": "Modeled estimate of the dollar, unit, or EQ unit sales that would have occurred in the absence of any retailer promotion activity. Serves as the baseline from which incremental sales and promotional lift are calculated. Available in three variants: Base Dollars, Base Units, Base EQ Units.",
+      "formula": "Sum(modeled base sales) \u2014 derived by removing promotion effects from actual sales",
+      "data_type": "currency (Base Dollars) or units (Base Units / Base EQ Units)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Base Dollars / Base Units / Base EQ Units",
+        "Circana": "Base Dollar Sales / Base Unit Sales",
+        "NielsenIQ": "Base Sales / Baseline",
+        "legacy_Nielsen": "Base"
+      },
+      "vendor_notes": {
+        "SPINS": "Also reported as 'Base Dollars, Promo' (base during promoted weeks only) and 'Base Dollars SPM/SPP' (distribution-normalized variants)."
+      },
+      "related_terms": [
+        "PRCE_004",
+        "PRCE_001",
+        "PRCE_008"
+      ],
+      "tags": [
+        "baseline",
+        "promotion",
+        "modeling",
+        "foundational"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_011",
+      "canonical_term": "ARP, Promo",
+      "canonical_full_name": "Average Retail Price, Promoted",
+      "domain": "promotions_pricing",
+      "definition": "The average unit price for units sold when any promotion (feature, display, or TPR) was present. Weighted by dollar sales, not a simple average across stores and weeks.",
+      "formula": "(Dollar Sales / Unit Sales) with any promotion",
+      "data_type": "currency (USD) per unit",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "ARP, Promo",
+        "Circana": "Promoted Price",
+        "NielsenIQ": "Promoted Price"
+      },
+      "related_terms": [
+        "METR_005",
+        "PRCE_012",
+        "PRCE_001"
+      ],
+      "tags": [
+        "price",
+        "promoted",
+        "average"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_012",
+      "canonical_term": "ARP, Non-Promo",
+      "canonical_full_name": "Average Retail Price, Non-Promoted",
+      "domain": "promotions_pricing",
+      "definition": "The average unit price for units sold when no promotion was present. Weighted by dollar sales. Closely related to Base ARP but represents actual scanned prices in non-promoted weeks rather than a modeled baseline.",
+      "formula": "(Dollar Sales / Unit Sales) with no promotion",
+      "data_type": "currency (USD) per unit",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "ARP, Non-Promo",
+        "Circana": "Non-Promoted Price",
+        "NielsenIQ": "Non-Promoted Price / Base Price (approximate)"
+      },
+      "vendor_notes": {
+        "all": "ARP Non-Promo reflects actual scanned prices in non-promoted weeks; Base ARP is a modeled estimate of what price would have been in the absence of promotion even where promotion occurred."
+      },
+      "related_terms": [
+        "PRCE_011",
+        "PRCE_001",
+        "METR_005"
+      ],
+      "tags": [
+        "price",
+        "non_promoted",
+        "average"
+      ]
+    },
+    {
+      "canonical_id": "PRCE_013",
+      "canonical_term": "Base ARP",
+      "canonical_full_name": "Base Average Retail Price",
+      "domain": "promotions_pricing",
+      "definition": "Modeled unit price that would be expected in the complete absence of retailer promotion. Calculated as (Dollars + Markdown Dollars) / Units, incorporating markdown dollars to reconstruct the full non-promoted price even in weeks with a promotion.",
+      "formula": "(Dollar Sales + Markdown Dollars) / Units",
+      "data_type": "currency (USD) per unit",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Base ARP",
+        "Circana": "Base Price",
+        "NielsenIQ": "Base Price"
+      },
+      "related_terms": [
+        "PRCE_001",
+        "PRCE_012"
+      ],
+      "tags": [
+        "price",
+        "baseline",
+        "modeled"
+      ]
+    },
+    {
+      "canonical_id": "DIST_010",
+      "canonical_term": "TDP, Any Promo",
+      "canonical_full_name": "Total Distribution Points, Any Promotion",
+      "domain": "distribution",
+      "definition": "Sum of Max % ACV across UPCs that had any promotional activity. Measures the promotional reach of a brand's portfolio \u2014 how many distribution points had at least one promotion during the period.",
+      "formula": "Sum(Max % ACV across UPCs with any promotion)",
+      "data_type": "numeric",
+      "reporting_level": [
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "TDP, Any Promo",
+        "Circana": "TDP on Promotion",
+        "NielsenIQ": "TDP, Promoted"
+      },
+      "related_terms": [
+        "DIST_003",
+        "DIST_011"
+      ],
+      "tags": [
+        "distribution",
+        "promotion",
+        "tdp"
+      ]
+    },
+    {
+      "canonical_id": "DIST_011",
+      "canonical_term": "TDP, Non-Promo",
+      "canonical_full_name": "Total Distribution Points, Non-Promoted",
+      "domain": "distribution",
+      "definition": "Sum of Max % ACV across UPCs that had no promotional activity. Measures the non-promoted reach of a brand's distribution footprint.",
+      "formula": "Sum(Max % ACV across UPCs with no promotion)",
+      "data_type": "numeric",
+      "reporting_level": [
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "TDP, Non-Promo",
+        "Circana": "TDP Non-Promoted",
+        "NielsenIQ": "TDP, Non-Promoted"
+      },
+      "related_terms": [
+        "DIST_003",
+        "DIST_010"
+      ],
+      "tags": [
+        "distribution",
+        "non_promoted",
+        "tdp"
+      ]
+    },
+    {
+      "canonical_id": "GEO_001",
+      "canonical_term": "Market ACV",
+      "canonical_full_name": "Market All Commodity Volume",
+      "domain": "channel_geography",
+      "definition": "Total annualized dollar sales of all products across all stores in a selected geography, expressed in millions of dollars ($MM). Used to measure the relative size of geographies. Always represents a 52-week annualized figure regardless of the selected reporting period. For key accounts and RMAs, SPINS reports the midpoint of a predetermined ACV range rather than the actual retailer ACV.",
+      "formula": "Sum(Annualized ACV across all stores in the geography)",
+      "data_type": "currency ($MM, annualized)",
+      "reporting_level": [
+        "geography",
+        "channel"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Market ACV",
+        "Circana": "Market ACV",
+        "NielsenIQ": "Market ACV / Est Market ACV"
+      },
+      "vendor_notes": {
+        "SPINS": "Retail agreements prevent release of exact chain-level ACV; SPINS reports the midpoint of a predetermined range for key accounts."
+      },
+      "related_terms": [
+        "DIST_001",
+        "CHAN_001"
+      ],
+      "tags": [
+        "geography",
+        "market_size",
+        "acv",
+        "annualized"
+      ]
+    },
+    {
+      "canonical_id": "GEO_002",
+      "canonical_term": "# Stores",
+      "canonical_full_name": "Number of Stores",
+      "domain": "channel_geography",
+      "definition": "The total count of stores within a specified geography. Used as a denominator in numeric distribution calculations and to contextualize the size of a market.",
+      "formula": "Sum(# Stores in geography)",
+      "data_type": "integer",
+      "reporting_level": [
+        "geography",
+        "channel"
+      ],
+      "vendor_aliases": {
+        "SPINS": "# Stores",
+        "Circana": "Store Count",
+        "NielsenIQ": "Store Count / # Stores"
+      },
+      "related_terms": [
+        "DIST_004",
+        "GEO_001"
+      ],
+      "tags": [
+        "geography",
+        "store_count"
+      ]
+    },
+    {
+      "canonical_id": "GEO_003",
+      "canonical_term": "Households",
+      "canonical_full_name": "Households (Geography)",
+      "domain": "channel_geography",
+      "definition": "The number of households within a specified geography, sourced from the U.S. Census Bureau and updated annually. Returns the same value for all product hierarchy levels. Not available for Key Accounts or Retail Marketing Areas (RMAs).",
+      "formula": "U.S. Census Bureau household count (annual)",
+      "data_type": "integer",
+      "reporting_level": [
+        "geography"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Households",
+        "Circana": "Households",
+        "NielsenIQ": "Households / HH"
+      },
+      "vendor_notes": {
+        "SPINS": "Value is identical across all product levels. Not available for Key Accounts or RMAs."
+      },
+      "related_terms": [
+        "GEO_004",
+        "PANEL_001"
+      ],
+      "tags": [
+        "geography",
+        "demographics",
+        "census"
+      ]
+    },
+    {
+      "canonical_id": "GEO_004",
+      "canonical_term": "Population",
+      "canonical_full_name": "Population (Geography)",
+      "domain": "channel_geography",
+      "definition": "The number of people within a specified geography, sourced from the U.S. Census Bureau and updated annually. Returns the same value for all product hierarchy levels. Not available for Key Accounts or RMAs.",
+      "formula": "U.S. Census Bureau population count (annual)",
+      "data_type": "integer",
+      "reporting_level": [
+        "geography"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Population",
+        "Circana": "Population",
+        "NielsenIQ": "Population"
+      },
+      "related_terms": [
+        "GEO_003"
+      ],
+      "tags": [
+        "geography",
+        "demographics",
+        "census"
+      ]
+    },
+    {
+      "canonical_id": "SHARE_001",
+      "canonical_term": "Dollar Share, Category",
+      "canonical_full_name": "Dollar Market Share, Category",
+      "domain": "measures_metrics",
+      "definition": "A product's or brand's total dollar sales expressed as a percentage of total category dollar sales in the same geography and period.",
+      "formula": "100 \u00d7 (Dollar Sales of selected product / Dollar Sales of Category)",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dol Shr, Category",
+        "Circana": "$ Share, Category",
+        "NielsenIQ": "Market Share / $ Share"
+      },
+      "related_terms": [
+        "SHARE_002",
+        "SHARE_003",
+        "METR_004"
+      ],
+      "tags": [
+        "share",
+        "category",
+        "competitive"
+      ]
+    },
+    {
+      "canonical_id": "SHARE_002",
+      "canonical_term": "Dollar Share, Sub-Category",
+      "canonical_full_name": "Dollar Market Share, Sub-Category",
+      "domain": "measures_metrics",
+      "definition": "A product's or brand's total dollar sales expressed as a percentage of total sub-category dollar sales.",
+      "formula": "100 \u00d7 (Dollar Sales of selected product / Dollar Sales of Sub-Category)",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dol Shr, Sub-Cat",
+        "Circana": "$ Share, Sub-Category",
+        "NielsenIQ": "$ Share, Sub-Category"
+      },
+      "related_terms": [
+        "SHARE_001",
+        "SHARE_003"
+      ],
+      "tags": [
+        "share",
+        "sub_category",
+        "competitive"
+      ]
+    },
+    {
+      "canonical_id": "SHARE_003",
+      "canonical_term": "Dollar Share, Department",
+      "canonical_full_name": "Dollar Market Share, Department",
+      "domain": "measures_metrics",
+      "definition": "A product's or brand's total dollar sales expressed as a percentage of total department dollar sales.",
+      "formula": "100 \u00d7 (Dollar Sales of selected product / Dollar Sales of Department)",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dol Shr, Department",
+        "Circana": "$ Share, Department",
+        "NielsenIQ": "$ Share, Department"
+      },
+      "related_terms": [
+        "SHARE_001",
+        "SHARE_002"
+      ],
+      "tags": [
+        "share",
+        "department",
+        "competitive"
+      ]
+    },
+    {
+      "canonical_id": "SCHEMA_001",
+      "canonical_term": "WeekEnding",
+      "canonical_full_name": "Week Ending Date",
+      "domain": "measures_metrics",
+      "definition": "The date of the Saturday (or last day of the measurement week) that closes a syndicated data reporting week. All major vendors (SPINS, Circana, NielsenIQ) use Saturday week endings for US retail data. Serves as the primary time key in syndicated data exports.",
+      "data_type": "date (YYYY-MM-DD, Saturday)",
+      "reporting_level": [
+        "transaction",
+        "weekly"
+      ],
+      "vendor_aliases": {
+        "SPINS": "WeekEnding / Period Ending",
+        "Circana": "WeekEnding",
+        "NielsenIQ": "Period Ending"
+      },
+      "vendor_notes": {
+        "all": "All US syndicated vendors use Saturday week endings. IRI/Circana historically labeled this 'WeekEnding'; NIQ uses 'Period Ending' in some extracts."
+      },
+      "tags": [
+        "time",
+        "period",
+        "weekly",
+        "schema_field",
+        "IRI_export"
+      ]
+    },
+    {
+      "canonical_id": "SCHEMA_002",
+      "canonical_term": "ACV_Weighted_Dist",
+      "canonical_full_name": "ACV Weighted Distribution (Schema Field)",
+      "domain": "distribution",
+      "definition": "The column name used in IRI/Circana data exports for the % ACV Distribution measure. Identical in meaning to % ACV Distribution. The '_MM' variant (ACV_MM) expresses the ACV of distributing stores in millions of dollars rather than as a percentage.",
+      "data_type": "percentage (0\u2013100) for ACV_Weighted_Dist; currency ($MM) for ACV_MM",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "Circana": "ACV_Weighted_Dist (export field)",
+        "SPINS": "% ACV Distribution",
+        "NielsenIQ": "% ACV Distribution"
+      },
+      "vendor_notes": {
+        "Circana": "In IRI/Circana data exports the column is labeled 'ACV_Weighted_Dist'. The companion field 'ACV_MM' is the dollar ACV of distributing stores.",
+        "cross_vendor_alignment": "Map ACV_Weighted_Dist \u2192 canonical % ACV Distribution (DIST_002). Map ACV_MM \u2192 Market ACV subset (GEO_001 partial)."
+      },
+      "related_terms": [
+        "DIST_002",
+        "GEO_001"
+      ],
+      "tags": [
+        "schema_field",
+        "IRI_export",
+        "distribution",
+        "mapping"
+      ]
+    },
+    {
+      "canonical_id": "SCHEMA_003",
+      "canonical_term": "Dollar_Sales_Merch",
+      "canonical_full_name": "Dollar Sales with Merchandising (Schema Field)",
+      "domain": "promotions_pricing",
+      "definition": "Column in IRI/Circana exports representing dollar sales occurring when any merchandising support (feature, display, or price reduction) was active. Equivalent to 'Dollars, Any Promo' in SPINS terminology.",
+      "data_type": "currency (USD)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "Circana": "Dollar_Sales_Merch (export field)",
+        "SPINS": "Dollars, Promo",
+        "NielsenIQ": "$ w/ Any Merch"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "Map Dollar_Sales_Merch (Circana export) \u2192 Dollars, Promo (SPINS) \u2192 $ w/ Any Merch (NIQ)."
+      },
+      "related_terms": [
+        "PRCE_004"
+      ],
+      "tags": [
+        "schema_field",
+        "IRI_export",
+        "promotion",
+        "mapping"
+      ]
+    },
+    {
+      "canonical_id": "SCHEMA_004",
+      "canonical_term": "Geography_Type / Outlet_Type / Retailer_Type",
+      "canonical_full_name": "Geography, Outlet, and Retailer Type Fields (IRI Export)",
+      "domain": "channel_geography",
+      "definition": "Three related column fields in IRI/Circana data exports that classify the geographic and retail context of a record. Geography_Type indicates the aggregation level (e.g., Total US, Region, Market). Outlet_Type indicates the channel (e.g., Grocery, Drug, Mass). Retailer_Type provides a more granular retailer classification.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "geography",
+        "channel",
+        "retailer"
+      ],
+      "vendor_aliases": {
+        "Circana": "Geography_Type / Outlet_Type / Retailer_Type (export fields)",
+        "SPINS": "Geography Name / Channel / Outlet",
+        "NielsenIQ": "Geography Description / Geography Type / Channel"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "Geography_Name and Geography_Description are the human-readable equivalents; Geography_Key and Geography_Desciption [sic] are internal keys. Note the typo 'Desciption' (missing 'r') appears in the IRI export schema."
+      },
+      "related_terms": [
+        "CHAN_001",
+        "CHAN_002",
+        "CHAN_005"
+      ],
+      "tags": [
+        "schema_field",
+        "IRI_export",
+        "geography",
+        "channel",
+        "mapping"
+      ]
+    },
+    {
+      "canonical_id": "SCHEMA_005",
+      "canonical_term": "UPC_10 / UPC_13",
+      "canonical_full_name": "UPC-10 and UPC-13 (Schema Fields)",
+      "domain": "hierarchy_classification",
+      "definition": "Two UPC format fields in IRI/Circana exports. UPC_10 is the 10-digit code (check digit stripped, leading zero stripped). UPC_13 is the 13-digit EAN/GTIN format used internationally. Both refer to the same physical product. NielsenIQ exports typically use a 14-digit GTIN.",
+      "data_type": "string (numeric)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "Circana": "UPC_10 / UPC_13",
+        "SPINS": "UPC (12-digit)",
+        "NielsenIQ": "UPC / GTIN-14"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "Pad UPC_10 to 12 digits for SPINS join: add leading zero + check digit. UPC_13 = EAN-13 (international). NIQ uses 14-digit GTIN. Always confirm digit format before cross-vendor joins on UPC."
+      },
+      "related_terms": [
+        "HIER_001"
+      ],
+      "tags": [
+        "schema_field",
+        "IRI_export",
+        "UPC",
+        "GTIN",
+        "mapping",
+        "cross_vendor_alignment"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_001",
+      "canonical_term": "Assortment",
+      "canonical_full_name": "Retail Assortment",
+      "domain": "hierarchy_classification",
+      "definition": "The set of products (items/SKUs) a retailer carries in a given category. Assortment decisions \u2014 adds, deletes, and retains \u2014 are made during line reviews. Key terminology: Add = item not currently carried; Delete = item being removed; Retain = item staying on shelf.",
+      "data_type": "categorical/list",
+      "reporting_level": [
+        "retailer",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Assortment",
+        "Circana": "Assortment",
+        "NielsenIQ": "Assortment"
+      },
+      "tags": [
+        "assortment",
+        "category_management",
+        "retailer",
+        "line_review"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_002",
+      "canonical_term": "Hurdle Rate",
+      "canonical_full_name": "Hurdle Rate",
+      "domain": "measures_metrics",
+      "definition": "A retailer-defined minimum performance threshold that products must meet to be stocked or retained on shelf. Products scoring below the hurdle rate on velocity, distribution, or trend are candidates for delist.",
+      "data_type": "threshold (variable by retailer)",
+      "reporting_level": [
+        "item",
+        "retailer"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Hurdle Rate",
+        "Circana": "Hurdle Rate",
+        "NielsenIQ": "Hurdle Rate"
+      },
+      "related_terms": [
+        "DIST_008",
+        "METR_003"
+      ],
+      "tags": [
+        "assortment",
+        "delist",
+        "retailer",
+        "line_review",
+        "threshold"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_003",
+      "canonical_term": "Feature Weeks",
+      "canonical_full_name": "Feature Weeks (Ad Weeks)",
+      "domain": "promotions_pricing",
+      "definition": "The number of weeks during which a product appeared in a retailer's circular, leaflet, or weekly flyer (Feature Ad). Feature ads communicate promotional pricing to shoppers and are a primary driver of incremental sales lift.",
+      "formula": "Count of weeks with Feature Ad activity",
+      "data_type": "integer (weeks)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Feature Weeks / Ad Weeks",
+        "Circana": "Feature Weeks",
+        "NielsenIQ": "Feature Weeks"
+      },
+      "tags": [
+        "promotion",
+        "merchandising",
+        "feature",
+        "weekly"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_004",
+      "canonical_term": "Display Weeks",
+      "canonical_full_name": "Display Weeks",
+      "domain": "promotions_pricing",
+      "definition": "The number of weeks during which a product had in-store secondary display placement outside its everyday shelf location (e.g., end cap, floor stand, pallet display). Display activity typically drives immediate purchase lift.",
+      "formula": "Count of weeks with Display activity",
+      "data_type": "integer (weeks)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Display Weeks",
+        "Circana": "Display Weeks",
+        "NielsenIQ": "Display Weeks"
+      },
+      "related_terms": [
+        "NIQ_003",
+        "NIQ_005"
+      ],
+      "tags": [
+        "promotion",
+        "merchandising",
+        "display",
+        "weekly"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_005",
+      "canonical_term": "Feature and Display Weeks",
+      "canonical_full_name": "Feature and Display Weeks",
+      "domain": "promotions_pricing",
+      "definition": "The number of weeks during which a product had BOTH feature ad and in-store display support simultaneously. Feature + Display is the most powerful promotional condition and typically generates the highest incremental lift.",
+      "formula": "Count of weeks with both Feature AND Display activity",
+      "data_type": "integer (weeks)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Feature & Display Weeks",
+        "Circana": "Feature and Display Weeks",
+        "NielsenIQ": "Feature and Display Weeks"
+      },
+      "related_terms": [
+        "NIQ_003",
+        "NIQ_004"
+      ],
+      "tags": [
+        "promotion",
+        "merchandising",
+        "feature",
+        "display",
+        "weekly"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_006",
+      "canonical_term": "Loyal Shoppers",
+      "canonical_full_name": "Loyal Shoppers",
+      "domain": "panel_shopper",
+      "definition": "Panel-derived shopper segment: households that purchase in a given category at least twice during the period AND spend more than 65% of their category dollars on a single brand. Loyal shoppers are the most valuable segment for brand retention.",
+      "data_type": "shopper segment (count or % of buyers)",
+      "reporting_level": [
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Loyal Shoppers (TriLens)",
+        "Circana": "Loyal Shoppers",
+        "NielsenIQ": "Loyal Shoppers"
+      },
+      "related_terms": [
+        "NIQ_007",
+        "PANEL_001"
+      ],
+      "tags": [
+        "panel",
+        "shopper",
+        "loyalty",
+        "segmentation"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_007",
+      "canonical_term": "Exclusive Buyers",
+      "canonical_full_name": "Exclusive Buyers",
+      "domain": "panel_shopper",
+      "definition": "Panel-derived shopper segment: households that purchase in a category at least twice and buy exclusively from one brand (100% brand loyalty). Exclusive buyers represent the core loyalist base.",
+      "data_type": "shopper segment",
+      "reporting_level": [
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Exclusive Buyers",
+        "Circana": "Exclusive Buyers",
+        "NielsenIQ": "Exclusive Buyers"
+      },
+      "related_terms": [
+        "NIQ_006",
+        "PANEL_001"
+      ],
+      "tags": [
+        "panel",
+        "shopper",
+        "loyalty",
+        "segmentation",
+        "exclusive"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_008",
+      "canonical_term": "Leakage",
+      "canonical_full_name": "Leakage",
+      "domain": "panel_shopper",
+      "definition": "The dollar amount spent on a product by a retailer's own shoppers at competing retailers. High leakage indicates that a retailer is not capturing its shoppers' full category spending \u2014 a key argument for distribution expansion.",
+      "data_type": "currency (USD)",
+      "reporting_level": [
+        "retailer",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Leakage",
+        "Circana": "Leakage",
+        "NielsenIQ": "Leakage"
+      },
+      "tags": [
+        "panel",
+        "shopper",
+        "retailer",
+        "opportunity"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_009",
+      "canonical_term": "Demand Index",
+      "canonical_full_name": "Demand Index",
+      "domain": "measures_metrics",
+      "definition": "A NielsenIQ measure estimating the expected sales of a product in a given geography based on the demographic fit between that product's known shopper profile and the demographics of the geography's shoppers. Helps identify geographies where a brand is under- or over-performing relative to demographic potential.",
+      "data_type": "index (base 100 = perfect demographic fit)",
+      "reporting_level": [
+        "brand",
+        "geography"
+      ],
+      "vendor_aliases": {
+        "NielsenIQ": "Demand Index",
+        "SPINS": "N/A",
+        "Circana": "N/A"
+      },
+      "vendor_notes": {
+        "NielsenIQ": "Proprietary NIQ metric. No direct equivalent in SPINS or Circana standard outputs."
+      },
+      "related_terms": [
+        "METR_006",
+        "METR_007"
+      ],
+      "tags": [
+        "index",
+        "demographics",
+        "opportunity",
+        "NielsenIQ_exclusive"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_010",
+      "canonical_term": "Items per Store",
+      "canonical_full_name": "Items per Store",
+      "domain": "distribution",
+      "definition": "The average number of distinct UPCs or items selling per store within a market and product group. Measures the depth of assortment at shelf level. Calculated as TDP \u00f7 % ACV Distribution.",
+      "formula": "TDP / % ACV Distribution",
+      "data_type": "numeric",
+      "reporting_level": [
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Items per Store / Avg Items Carried",
+        "Circana": "Items per Store",
+        "NielsenIQ": "Items per Store"
+      },
+      "related_terms": [
+        "DIST_003",
+        "DIST_002"
+      ],
+      "tags": [
+        "distribution",
+        "depth",
+        "assortment",
+        "store_level"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_011",
+      "canonical_term": "FMCG Regions",
+      "canonical_full_name": "FMCG Geographic Regions (NielsenIQ)",
+      "domain": "channel_geography",
+      "definition": "NielsenIQ's four standard US geographic divisions used for regional performance analysis: East, South, Central, and West. Used to identify broad regional differences in brand or category performance.",
+      "data_type": "categorical (4 values: East, South, Central, West)",
+      "reporting_level": [
+        "region"
+      ],
+      "vendor_aliases": {
+        "NielsenIQ": "FMCG Regions",
+        "SPINS": "Census Regions (approximate)",
+        "Circana": "IRI Regions"
+      },
+      "vendor_notes": {
+        "cross_vendor_conflict": "NIQ uses 4 regions (East/South/Central/West). Circana uses a slightly different regional breakdown. Region definitions do not perfectly align across vendors."
+      },
+      "related_terms": [
+        "GEO_001"
+      ],
+      "tags": [
+        "geography",
+        "region",
+        "NielsenIQ"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_012",
+      "canonical_term": "Major Markets",
+      "canonical_full_name": "Major Markets (Metro Markets)",
+      "domain": "channel_geography",
+      "definition": "Geographic reporting units built around key US cities and their surrounding suburbs (~50 metro markets available from NielsenIQ and Circana). Used to understand city-level performance differences and target retail investment.",
+      "data_type": "categorical (geographic boundary)",
+      "reporting_level": [
+        "metro_market"
+      ],
+      "vendor_aliases": {
+        "NielsenIQ": "Major Markets",
+        "Circana": "IRI Markets / Metro Markets",
+        "SPINS": "Metro Markets"
+      },
+      "tags": [
+        "geography",
+        "metro",
+        "market",
+        "DMA"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_013",
+      "canonical_term": "Convenience Channel",
+      "canonical_full_name": "Convenience Store Channel",
+      "domain": "channel_geography",
+      "definition": "Small-format retail stores selling everyday and immediate-consumption items, often co-located with fuel stations. Included in MULO-C (Circana) and xAOC Incl Conv (NielsenIQ) but excluded from standard MULO / xAOC aggregates.",
+      "data_type": "channel definition",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Convenience (via Circana)",
+        "Circana": "Convenience / C-Store",
+        "NielsenIQ": "Convenience"
+      },
+      "vendor_notes": {
+        "Circana": "Add '-C' suffix to MULO for convenience inclusion (MULO-C).",
+        "NielsenIQ": "Add 'Incl Conv' to xAOC (xAOC Incl Conv)."
+      },
+      "related_terms": [
+        "CHAN_001",
+        "CHAN_002"
+      ],
+      "tags": [
+        "channel",
+        "convenience",
+        "c_store"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_014",
+      "canonical_term": "Club Channel",
+      "canonical_full_name": "Club / Warehouse Channel",
+      "domain": "channel_geography",
+      "definition": "Large-format membership retailers (e.g., Costco, Sam's Club, BJ's Wholesale) that sell larger package sizes at lower equivalized prices. Included in MULO (Circana) and xAOC (NielsenIQ). Note: Costco does not cooperate with Circana; NIQ includes Costco.",
+      "data_type": "channel definition",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Club (via Circana)",
+        "Circana": "Club (excludes Costco)",
+        "NielsenIQ": "Club (includes Costco)"
+      },
+      "vendor_notes": {
+        "cross_vendor_conflict": "Costco cooperates with NIQ but NOT Circana. This is a meaningful coverage gap for brands with heavy club distribution."
+      },
+      "related_terms": [
+        "CHAN_001",
+        "CHAN_002"
+      ],
+      "tags": [
+        "channel",
+        "club",
+        "warehouse",
+        "Costco"
+      ]
+    },
+    {
+      "canonical_id": "NIQ_015",
+      "canonical_term": "Dollar Store Channel",
+      "canonical_full_name": "Dollar / Value Channel",
+      "domain": "channel_geography",
+      "definition": "Small-format stores selling general merchandise and grocery in smaller packages at discounted price points. Major chains include Dollar General and Family Dollar. Included in both MULO and xAOC.",
+      "data_type": "channel definition",
+      "reporting_level": [
+        "channel_total",
+        "account"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollar (via Circana)",
+        "Circana": "Dollar",
+        "NielsenIQ": "Dollar"
+      },
+      "related_terms": [
+        "CHAN_001",
+        "CHAN_002"
+      ],
+      "tags": [
+        "channel",
+        "dollar",
+        "value",
+        "discount"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_001",
+      "canonical_term": "Geography (SPINS)",
+      "canonical_full_name": "Geography / Market Name (SPINS Column)",
+      "domain": "channel_geography",
+      "definition": "The named market or geographic scope of the data row in a SPINS export. Values represent predefined SPINS market definitions such as 'TOTAL US - FOOD', individual retail accounts, or regional composites. This is the human-readable market label; no separate geography_key column is present in standard SPINS exports (unlike Circana).",
+      "data_type": "string",
+      "reporting_level": [
+        "geography"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Geography",
+        "Circana": "geography + geography_description (two fields)",
+        "NielsenIQ": "Geography / Market"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "SPINS uses a single 'Geography' column. Circana splits this into 'geography' (display name) and 'geography_key' (integer FK) and 'geography_description' (often identical to geography). Map SPINS Geography \u2192 Circana geography / geography_description for joins.",
+        "SPINS": "Example value: 'TOTAL US - FOOD'. The suffix '-FOOD' indicates the grocery/food outlet type is embedded in the geography string itself \u2014 unlike Circana which separates outlet type into projected_outlet_type_name."
+      },
+      "related_terms": [
+        "CHAN_005",
+        "GEO_001",
+        "SPINS_COL_002"
+      ],
+      "example": "'TOTAL US - FOOD', 'EAST - FOOD', 'SPROUTS FARMERS MARKET'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "geography",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_002",
+      "canonical_term": "Time Period / Time Period End Date (SPINS)",
+      "canonical_full_name": "Time Period Type and End Date (SPINS Columns)",
+      "domain": "measures_metrics",
+      "definition": "Two companion columns in SPINS exports. 'Time Period' defines the aggregation type (e.g., 'WEEK', '4 WEEK', '52 WEEK', 'YTD'). 'Time Period End Date' is the date of the last day (Saturday) in the reporting window. Together they fully define the temporal scope of each data row.",
+      "data_type": "Time Period: categorical string; Time Period End Date: datetime (YYYY-MM-DD HH:MM:SS, always Saturday)",
+      "reporting_level": [
+        "weekly",
+        "periodic"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Time Period + Time Period End Date",
+        "Circana": "__time (ISO 8601 timestamp) + week_ending_raw (human label)",
+        "NielsenIQ": "Period + Period End Date"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "SPINS 'Time Period End Date' (YYYY-MM-DD 00:00:00) maps to Circana '__time' (ISO 8601: YYYY-MM-DDTHH:MM:SS.000Z) and 'week_ending_raw' (e.g. 'Week Ending 11-12-23'). Strip time component and normalize to YYYY-MM-DD Saturday for cross-vendor joins.",
+        "SPINS": "Time Period End Date always has a time of 00:00:00 \u2014 the date itself is the Saturday week-end."
+      },
+      "related_terms": [
+        "SCHEMA_001"
+      ],
+      "example": "Time Period='WEEK', Time Period End Date='2022-05-29 00:00:00'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "time",
+        "period",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_003",
+      "canonical_term": "Product Universe (SPINS)",
+      "canonical_full_name": "Product Universe (SPINS Column)",
+      "domain": "hierarchy_classification",
+      "definition": "A SPINS-specific column indicating the product universe or panel from which the data was pulled. Example value 'TPL' refers to Total Product Line \u2014 the broadest SPINS product scope. Used to distinguish data pulled from different SPINS product universes within the same export.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Product Universe",
+        "Circana": "N/A (no direct equivalent)",
+        "NielsenIQ": "N/A"
+      },
+      "vendor_notes": {
+        "SPINS": "Common values: 'TPL' (Total Product Line), channel-specific universes. This column is SPINS-exclusive and has no mapping in Circana or NielsenIQ exports."
+      },
+      "example": "'TPL'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "SPINS_exclusive",
+        "product_universe",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_004",
+      "canonical_term": "Product Level (SPINS)",
+      "canonical_full_name": "Product Hierarchy Level (SPINS Column)",
+      "domain": "hierarchy_classification",
+      "definition": "Indicates the granularity of the product dimension for the data row. Equivalent to 'standard_hierarchy_level' in Circana exports. Common values: 'UPC' (item level), 'BRAND', 'SUBCATEGORY', 'CATEGORY', 'DEPARTMENT'.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "item",
+        "brand",
+        "category"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Product Level",
+        "Circana": "standard_hierarchy_level",
+        "NielsenIQ": "Hierarchy Level"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "Direct mapping: SPINS 'Product Level' = Circana 'standard_hierarchy_level'. Both use 'UPC' as the item-level value."
+      },
+      "example": "'UPC', 'BRAND', 'SUBCATEGORY'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "hierarchy_level",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_005",
+      "canonical_term": "UPC (SPINS format)",
+      "canonical_full_name": "UPC \u2014 SPINS Formatted (Hyphenated 14-digit)",
+      "domain": "hierarchy_classification",
+      "definition": "The product barcode in SPINS exports formatted as a hyphenated string: '00-XXXXX-XXXXX' (two leading zeros, five-digit manufacturer code, five-digit item code, no check digit visible). This is SPINS's display format and must be normalized before joining to Circana (upc10/upc13) or NielsenIQ (GTIN-14).",
+      "data_type": "string (hyphenated: '00-XXXXX-XXXXX')",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "SPINS": "UPC (format: '00-52000-01016')",
+        "Circana": "upc10 (10-digit int) + upc13 (13-digit int)",
+        "NielsenIQ": "UPC (12-digit) / GTIN-14"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "To join SPINS UPC \u2192 Circana: strip hyphens \u2192 14-digit string \u2192 drop leading '00' + last digit (check) to get upc10 (10-digit). Or: strip hyphens \u2192 drop leading '0' \u2192 upc13 (13-digit). To join SPINS UPC \u2192 NIQ: strip hyphens \u2192 standard 12-digit UPC. Example: SPINS '00-52000-01016' \u2192 upc10 '5200001016' (drop leading 00, drop check digit 6... verify with Luhn). Always validate with actual check digit logic.",
+        "SPINS": "The leading '00' prefix in SPINS hyphenated UPCs corresponds to the GS1 company prefix format. The last digit shown is the check digit."
+      },
+      "related_terms": [
+        "HIER_001",
+        "SCHEMA_005"
+      ],
+      "example": "SPINS: '00-52000-01016' \u2192 Circana upc10: 5200001001 (strip hyphens, drop leading zeros and check digit)",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "UPC",
+        "GTIN",
+        "cross_vendor_alignment",
+        "join_key"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_006",
+      "canonical_term": "NFP Columns (SPINS)",
+      "canonical_full_name": "Nutrition Facts Panel Columns (SPINS)",
+      "domain": "product_attributes",
+      "definition": "A family of SPINS columns prefixed 'NFP -' that carry specific Nutrition Facts Panel values per UPC. Derived from SPINS Product Intelligence attribute coding of physical product labels. Examples: 'NFP - PROTEIN' (e.g., '20 g'), 'NFP - CALORIES' (e.g., '340 calories'), 'NFP - SUGARS' (e.g., '26 g'). Range-bucketed companion columns (prefix 'NFP RANGES -') group the raw values into standardized tiers for filtering and segmentation.",
+      "data_type": "string (e.g., '20 g', '340 calories') for NFP columns; string range (e.g., '20 TO < 25G PROTEIN') for NFP RANGES columns",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "NFP - [NUTRIENT] / NFP RANGES - [NUTRIENT] VALUE",
+        "Circana": "N/A (not included in standard POS exports)",
+        "NielsenIQ": "N/A (not included in standard POS exports)"
+      },
+      "vendor_notes": {
+        "SPINS": "NFP columns are SPINS Product Intelligence attributes \u2014 not available in Circana or NielsenIQ standard POS exports. They must be joined in separately via SPINS's product content database if needed for cross-vendor enrichment.",
+        "cross_vendor_alignment": "To add NFP attributes to Circana/NIQ data: join on normalized UPC from SPINS Product Intelligence content API or SPINS-provided product content file."
+      },
+      "example": "NFP - PROTEIN: '20 g', NFP RANGES - PROTEIN VALUE: '20 TO < 25G PROTEIN', NFP - CALORIES: '340 calories'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "SPINS_exclusive",
+        "nutrition",
+        "NFP",
+        "product_attribute"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_007",
+      "canonical_term": "UNIT OF MEASURE (SPINS)",
+      "canonical_full_name": "Unit of Measure (SPINS Column)",
+      "domain": "hierarchy_classification",
+      "definition": "The physical measurement unit for the product's primary size dimension in SPINS exports. Examples: 'OUNCE', 'FLUID OUNCE', 'COUNT'. Used as the basis for EQ Unit (equivalized unit) calculations \u2014 products with different unit-of-measure types should not be combined into EQ Unit aggregates.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "UNIT OF MEASURE",
+        "Circana": "N/A (not in standard export; embedded in product description)",
+        "NielsenIQ": "N/A"
+      },
+      "vendor_notes": {
+        "SPINS": "Critical for EQ Unit analysis \u2014 only aggregate EQ Units across products with the same UNIT OF MEASURE value."
+      },
+      "example": "'OUNCE', 'FLUID OUNCE', 'COUNT', 'POUND'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "unit_of_measure",
+        "EQ_units",
+        "product_attribute"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_008",
+      "canonical_term": "STORAGE (SPINS)",
+      "canonical_full_name": "Storage / Temperature Zone (SPINS Column)",
+      "domain": "product_attributes",
+      "definition": "SPINS product attribute indicating the temperature storage requirement of the product. Common values: 'SHELF STABLE', 'REFRIGERATED', 'FROZEN'. Used to classify products into grocery store temperature zones and for category management.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "STORAGE",
+        "Circana": "N/A (not in standard export)",
+        "NielsenIQ": "N/A"
+      },
+      "example": "'SHELF STABLE', 'REFRIGERATED', 'FROZEN'",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "SPINS_exclusive",
+        "storage",
+        "temperature_zone",
+        "product_attribute"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_009",
+      "canonical_term": "PACK COUNT (SPINS)",
+      "canonical_full_name": "Pack Count (SPINS Column)",
+      "domain": "hierarchy_classification",
+      "definition": "The number of individual servings, pieces, or sub-units included in one sellable consumer package as tracked in SPINS Product Intelligence. A value of 1 indicates a single-serve or single-unit pack.",
+      "data_type": "integer",
+      "reporting_level": [
+        "UPC"
+      ],
+      "vendor_aliases": {
+        "SPINS": "PACK COUNT",
+        "Circana": "N/A (not in standard export)",
+        "NielsenIQ": "N/A"
+      },
+      "example": "1 (single unit), 6 (6-pack), 24 (case pack)",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "SPINS_exclusive",
+        "pack_size",
+        "product_attribute"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_010",
+      "canonical_term": "Dollars Per Store Selling Per Item (SPINS)",
+      "canonical_full_name": "Dollar Sales Per Store Selling Per Item (SPINS Column)",
+      "domain": "measures_metrics",
+      "definition": "SPINS export column measuring total dollar sales normalized by stores selling AND items (UPCs) in the period \u2014 NOT averaged across weeks. Distinct from 'Average Weekly Dollars Per Store Selling Per Item' (METR_011) which divides by week count. Used to compare product productivity controlling for both distribution breadth and depth.",
+      "formula": "Dollar Sales / (# Stores Selling \u00d7 Items per Store)",
+      "data_type": "currency (USD)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "Dollars Per Store Selling Per Item",
+        "Circana": "$ per Store per Item",
+        "NielsenIQ": "$ per Store Selling (item-adjusted)"
+      },
+      "vendor_notes": {
+        "SPINS": "The weekly-averaged equivalent is 'Average Weekly Dollars per Store per Item' (column 33 in SPINS export). This non-averaged version represents the total-period figure."
+      },
+      "related_terms": [
+        "METR_011",
+        "METR_003"
+      ],
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "velocity",
+        "store_level",
+        "item_adjusted"
+      ]
+    },
+    {
+      "canonical_id": "SPINS_COL_011",
+      "canonical_term": "'% of Stores Selling (SPINS)",
+      "canonical_full_name": "Percent of Stores Selling \u2014 SPINS Column (note leading apostrophe)",
+      "domain": "distribution",
+      "definition": "The numeric distribution measure in SPINS exports \u2014 the percentage of stores in the geography where the product scanned at least once. IMPORTANT: The column name in SPINS SQL/API exports includes a leading apostrophe character (\"'% of Stores Selling\") which must be handled in query parsing to avoid syntax errors. This is distinct from % ACV Distribution (DIST_002) which weights by store size.",
+      "formula": "100 \u00d7 (# Stores Selling / # Total Stores in Geography)",
+      "data_type": "percentage (0\u2013100)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "SPINS": "'% of Stores Selling (note: leading apostrophe in column name)",
+        "Circana": "N/A (Circana uses acv_weighted_distribution, not numeric distribution, as primary column)",
+        "NielsenIQ": "% Stores Selling"
+      },
+      "vendor_notes": {
+        "SPINS": "\u26a0 The column header includes a leading single-quote character: \"'% of Stores Selling\". This is a data entry artifact in the SPINS SQL export system. Escape or strip this character in pandas (df.rename) or SQL before processing.",
+        "cross_vendor_alignment": "Circana's primary distribution column is 'acv_weighted_distribution' (ACV-weighted %, not store count). For a true numeric distribution equivalent from Circana, a separate calculation is required."
+      },
+      "related_terms": [
+        "DIST_004",
+        "DIST_002"
+      ],
+      "example": "Value of 1.4 means the product was selling in stores representing 1.4% of all stores in the geography",
+      "tags": [
+        "schema_field",
+        "SPINS_column",
+        "distribution",
+        "numeric_distribution",
+        "gotcha",
+        "leading_apostrophe"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_001",
+      "canonical_term": "__time (Circana)",
+      "canonical_full_name": "Timestamp Field \u2014 __time (Circana Column)",
+      "domain": "measures_metrics",
+      "definition": "Internal ISO 8601 timestamp column in Circana/Apache Druid exports representing the week ending date. Format: 'YYYY-MM-DDTHH:MM:SS.000Z' (UTC, always T00:00:00.000Z). The human-readable companion is 'week_ending_raw'. For date joins, normalize to YYYY-MM-DD by stripping the time component.",
+      "data_type": "string (ISO 8601 timestamp, UTC)",
+      "reporting_level": [
+        "weekly"
+      ],
+      "vendor_aliases": {
+        "Circana": "__time (Druid internal timestamp)",
+        "SPINS": "Time Period End Date",
+        "NielsenIQ": "Period End Date"
+      },
+      "vendor_notes": {
+        "Circana": "Double underscore prefix (__time) indicates this is an Apache Druid system column \u2014 the primary time dimension index. 'week_ending_raw' is the business-friendly label (e.g., 'Week Ending 11-12-23').",
+        "cross_vendor_alignment": "Strip 'T' and time component: '2023-11-12T00:00:00.000Z' \u2192 '2023-11-12'. Then match to SPINS 'Time Period End Date' (same Saturday date, stored as '2023-11-12 00:00:00')."
+      },
+      "related_terms": [
+        "SCHEMA_001",
+        "SPINS_COL_002"
+      ],
+      "example": "'2023-11-12T00:00:00.000Z' \u2192 week ending Saturday Nov 12, 2023",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "time",
+        "timestamp",
+        "Druid",
+        "dimension",
+        "join_key"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_002",
+      "canonical_term": "week_ending_raw (Circana)",
+      "canonical_full_name": "Week Ending Raw Label (Circana Column)",
+      "domain": "measures_metrics",
+      "definition": "Human-readable week ending label in Circana exports. Format: 'Week Ending MM-DD-YY'. Used for display purposes; use '__time' or a parsed date for programmatic joins.",
+      "data_type": "string ('Week Ending MM-DD-YY')",
+      "reporting_level": [
+        "weekly"
+      ],
+      "vendor_aliases": {
+        "Circana": "week_ending_raw",
+        "SPINS": "Time Period End Date (parsed)",
+        "NielsenIQ": "Period Label"
+      },
+      "example": "'Week Ending 11-12-23'",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "time",
+        "display_label"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_003",
+      "canonical_term": "acv_weighted_distribution (Circana)",
+      "canonical_full_name": "ACV Weighted Distribution \u2014 Circana Column",
+      "domain": "distribution",
+      "definition": "The primary distribution measure in Circana exports \u2014 equivalent to % ACV Distribution but expressed as a decimal proportion (0.0\u20131.0) rather than a percentage (0\u2013100). Value of 0.015258 means the product is distributed in stores representing ~1.53% of total market ACV. Must be multiplied by 100 to match the SPINS '% of Stores Selling' scale (though note those measure different things \u2014 ACV-weighted vs. numeric).",
+      "formula": "ACV of stores where product scans / Total Market ACV",
+      "data_type": "decimal proportion (0.0 to 1.0)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "Circana": "acv_weighted_distribution",
+        "SPINS": "% ACV (via Max % ACV / Avg % ACV \u2014 in percent form, not decimal)",
+        "NielsenIQ": "% ACV Distribution (in percent form)"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "\u26a0 SCALE MISMATCH: Circana 'acv_weighted_distribution' is a decimal (0\u20131). SPINS and NielsenIQ express % ACV as a percentage (0\u2013100). Multiply Circana value \u00d7 100 before comparison. Also note: Circana's ACV distribution is ACV-weighted; SPINS ''% of Stores Selling' is count-weighted (numeric). These are different measures \u2014 do not equate them.",
+        "Circana": "The companion field 'acv_millions' is the total ACV of the geography (denominator), not the distributing stores' ACV."
+      },
+      "related_terms": [
+        "DIST_002",
+        "DIST_004",
+        "CIRC_COL_004"
+      ],
+      "example": "0.015258 \u2192 1.53% ACV Distribution (multiply by 100)",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "distribution",
+        "ACV",
+        "decimal_vs_percent",
+        "gotcha",
+        "cross_vendor_alignment"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_004",
+      "canonical_term": "acv_millions (Circana)",
+      "canonical_full_name": "Market ACV in Millions \u2014 Circana Column",
+      "domain": "channel_geography",
+      "definition": "Total annualized ACV of the entire geography in the Circana export, expressed in dollars (despite the 'millions' name, the raw value appears to be in actual dollars \u2014 e.g., 125760.57 = ~$125K, not $125M). Serves as the denominator for ACV distribution calculations. Returns the same value for all product rows within the same geography-week combination.",
+      "data_type": "numeric (dollars \u2014 verify scale against known market ACV)",
+      "reporting_level": [
+        "geography"
+      ],
+      "vendor_aliases": {
+        "Circana": "acv_millions",
+        "SPINS": "Market ACV (GEO_001)",
+        "NielsenIQ": "Est Market ACV"
+      },
+      "vendor_notes": {
+        "Circana": "\u26a0 Despite the column name 'acv_millions', the mock data shows values like 125760.57 for an Ahold account \u2014 confirm whether this is actual dollars, thousands, or millions based on your specific data feed contract. The field name is misleading in small-account exports.",
+        "cross_vendor_alignment": "Same concept as SPINS Market ACV (GEO_001) and NIQ Est Market ACV, but scale/unit requires verification."
+      },
+      "related_terms": [
+        "GEO_001",
+        "CIRC_COL_003"
+      ],
+      "example": "125760.565591 (verify unit: dollars vs. thousands vs. millions)",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "market_ACV",
+        "geography",
+        "scale_warning"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_005",
+      "canonical_term": "volume_sales (Circana)",
+      "canonical_full_name": "Volume Sales \u2014 Circana Column",
+      "domain": "measures_metrics",
+      "definition": "Equivalized volume sales in Circana exports \u2014 the EQ Units equivalent. Represents unit sales converted to a standardized volume measure (e.g., ounces or fluid ounces) based on each product's pack size. Equivalent to SPINS 'EQ Units'.",
+      "data_type": "numeric (equivalized volume)",
+      "reporting_level": [
+        "item",
+        "brand"
+      ],
+      "vendor_aliases": {
+        "Circana": "volume_sales",
+        "SPINS": "EQ Units",
+        "NielsenIQ": "Equivalized Units / Volume"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "Map volume_sales (Circana) \u2194 EQ Units (SPINS) \u2194 Equivalized Units (NielsenIQ). Verify the volume equivalency base unit (ounces vs. lbs vs. liters) matches across products before aggregating."
+      },
+      "related_terms": [
+        "METR_008"
+      ],
+      "example": "4.478 (ounces equivalized for a 33oz jar purchased at fractional unit sales)",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "EQ_units",
+        "volume",
+        "equivalized"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_006",
+      "canonical_term": "dollar_sales_change_vs_ya / unit_sales_change_vs_ya (Circana)",
+      "canonical_full_name": "Dollar / Unit Sales Change vs. Year Ago (Circana Columns)",
+      "domain": "measures_metrics",
+      "definition": "Change in dollar or unit sales versus the same week in the prior year. In Circana exports these appear to be expressed as the absolute dollar/unit change (not percentage), based on the mock data values. A value of -59.70 on a $11.92 base would imply a prior-year value \u2014 confirm whether this is absolute change or percentage change in your specific extract.",
+      "data_type": "numeric (absolute change in dollars/units \u2014 verify if % or absolute per feed)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "Circana": "dollar_sales_change_vs_ya / unit_sales_change_vs_ya",
+        "SPINS": "Dollar Sales % Change YA / Unit Sales % Change YA",
+        "NielsenIQ": "$ Sales Chg YA / Unit Sales Chg YA"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "\u26a0 Confirm unit (absolute vs. %) per data feed contract. In the mock data, dollar_sales_change_vs_ya = -59.70 on a current dollar_sales = 11.92, suggesting this is an absolute $ change, not a percentage."
+      },
+      "related_terms": [
+        "METR_001",
+        "METR_002"
+      ],
+      "example": "dollar_sales_change_vs_ya = -59.70 (current $11.92 vs. ~$71.62 a year ago)",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "year_over_year",
+        "change",
+        "verify_units"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_007",
+      "canonical_term": "projected_geography_type_name (Circana)",
+      "canonical_full_name": "Projected Geography Type Name (Circana Column)",
+      "domain": "channel_geography",
+      "definition": "Circana's geographic hierarchy classification for the row's geography. Indicates the type of geographic aggregation used. Example value 'CRMA' (Customer Retail Market Area) indicates a retailer-defined geographic zone. Other values include 'Total US', 'Region', 'Market'.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "geography"
+      ],
+      "vendor_aliases": {
+        "Circana": "projected_geography_type_name",
+        "SPINS": "N/A (embedded in Geography string suffix)",
+        "NielsenIQ": "Geography Type"
+      },
+      "vendor_notes": {
+        "Circana": "CRMA = Customer Retail Market Area \u2014 a Circana-specific geographic unit representing a retailer's trading zone. This column differentiates account-level geographies from channel totals.",
+        "cross_vendor_alignment": "Maps to SPINS Geography string parsing and NielsenIQ Geography Type. In SPINS, the geography type is embedded in the Geography column value (e.g., 'TOTAL US - FOOD' \u2192 type=Total US, outlet=FOOD)."
+      },
+      "related_terms": [
+        "CHAN_001",
+        "GEO_001",
+        "CIRC_COL_008"
+      ],
+      "example": "'CRMA', 'Total US', 'Region', 'Market'",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "geography_type",
+        "CRMA",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_008",
+      "canonical_term": "projected_outlet_type_name (Circana)",
+      "canonical_full_name": "Projected Outlet Type Name \u2014 Channel (Circana Column)",
+      "domain": "channel_geography",
+      "definition": "The retail channel classification for the geography in a Circana export. Equivalent to the outlet type embedded in SPINS Geography strings. Example: 'FOOD' = Grocery/Food channel. Other values include 'DRUG', 'MASS', 'CLUB', 'DOLLAR', 'MILITARY', 'CONVENIENCE'.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "channel"
+      ],
+      "vendor_aliases": {
+        "Circana": "projected_outlet_type_name",
+        "SPINS": "Embedded in Geography string (e.g., 'TOTAL US - FOOD')",
+        "NielsenIQ": "Channel"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "In SPINS exports, channel is embedded in the Geography column (suffix after ' - '). In Circana, it is a separate column. Parse SPINS Geography string to extract outlet type for cross-vendor channel alignment."
+      },
+      "related_terms": [
+        "CHAN_005",
+        "CIRC_COL_007",
+        "CIRC_COL_009"
+      ],
+      "example": "'FOOD', 'DRUG', 'MASS', 'CLUB'",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "channel",
+        "outlet_type",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_009",
+      "canonical_term": "projected_retailer_type_name (Circana)",
+      "canonical_full_name": "Projected Retailer Type Name (Circana Column)",
+      "domain": "channel_geography",
+      "definition": "The specific retailer or retailer group for the data row in Circana exports. More granular than outlet type \u2014 identifies the actual retailer chain (e.g., 'AHOLD DELHAIZE', 'KROGER', 'WALMART'). Combined with projected_outlet_type_name and projected_geography_type_name, fully defines the retail context.",
+      "data_type": "categorical string",
+      "reporting_level": [
+        "retailer"
+      ],
+      "vendor_aliases": {
+        "Circana": "projected_retailer_type_name",
+        "SPINS": "Embedded in Geography string",
+        "NielsenIQ": "Retailer / Account"
+      },
+      "example": "'AHOLD DELHAIZE', 'KROGER', 'WALMART', 'CVS'",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "retailer",
+        "account",
+        "dimension"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_010",
+      "canonical_term": "product_fully_qualified_description (Circana)",
+      "canonical_full_name": "Product Fully Qualified Description (Circana Column)",
+      "domain": "hierarchy_classification",
+      "definition": "A dot-delimited string in Circana exports encoding the complete product hierarchy path from Standard Hierarchy root down to the individual UPC. Format: 'Standard Hierarchy.{Category}.{SubCategory}.{Manufacturer-SubCat}.{Manufacturer-SubCat}.{Brand-SubCat}.{Brand-SubCat}.{UPC Description}'. Each level is repeated with a manufacturer/brand suffix. Equivalent to SPINS 'Description' at UPC level but encodes the full ancestry path.",
+      "data_type": "string (dot-delimited hierarchy path)",
+      "reporting_level": [
+        "item"
+      ],
+      "vendor_aliases": {
+        "Circana": "product_fully_qualified_description",
+        "SPINS": "Description (UPC level only; no path encoding)",
+        "NielsenIQ": "Product Full Description / FQD"
+      },
+      "vendor_notes": {
+        "Circana": "Can be parsed by splitting on '.' to extract hierarchy levels. Example: 'Standard Hierarchy.PICKLES/RELISH/OLIVES.MARINATED VEGETABLE/FRUIT.ZAKUSON INC-MARINATED VEGETABLE/FRUIT.[...].3AKYCOH PICKLED CUCUMBER 33 OZ - 0838396000591'. The UPC is embedded in the last segment after ' - '.",
+        "cross_vendor_alignment": "The UPC can be extracted from this field as the substring after the last ' - ' separator in the final segment, providing a fallback UPC extraction method."
+      },
+      "related_terms": [
+        "HIER_003",
+        "HIER_001",
+        "SPINS_COL_005"
+      ],
+      "example": "'Standard Hierarchy.PICKLES/RELISH/OLIVES.MARINATED VEGETABLE/FRUIT.ZAKUSON INC-...3AKYCOH PICKLED CUCUMBER 33 OZ - 0838396000591'",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "hierarchy_path",
+        "FQD",
+        "UPC_extraction"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_011",
+      "canonical_term": "brand_franchise_name (Circana)",
+      "canonical_full_name": "Brand Franchise Name (Circana Column)",
+      "domain": "hierarchy_classification",
+      "definition": "The parent brand family or franchise in Circana's hierarchy, sitting above brand_name. Represents a brand umbrella that may contain multiple distinct brand names. Example: 'GATORADE' franchise may contain 'GATORADE G RECOVER', 'GATORADE ZERO', etc. as brand_name values.",
+      "data_type": "string",
+      "reporting_level": [
+        "brand_family"
+      ],
+      "vendor_aliases": {
+        "Circana": "brand_franchise_name",
+        "SPINS": "Brand (approximate \u2014 SPINS Brand maps closer to brand_franchise_name)",
+        "NielsenIQ": "Brand Family / Major Brand"
+      },
+      "vendor_notes": {
+        "cross_vendor_alignment": "SPINS 'Brand' column maps more closely to Circana 'brand_franchise_name' than to 'brand_name'. Verify level alignment for your specific categories before joining."
+      },
+      "related_terms": [
+        "HIER_004",
+        "CIRC_COL_012"
+      ],
+      "example": "'3AKYCOH', 'GATORADE', 'KIND'",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "brand_family",
+        "franchise",
+        "hierarchy"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_012",
+      "canonical_term": "brand_name (Circana)",
+      "canonical_full_name": "Brand Name (Circana Column)",
+      "domain": "hierarchy_classification",
+      "definition": "The specific brand name at the most granular brand level in Circana's hierarchy, below brand_franchise_name. In the mock data, brand_name and brand_franchise_name are identical, which is common for single-brand companies but diverges for large CPG portfolios.",
+      "data_type": "string",
+      "reporting_level": [
+        "brand"
+      ],
+      "vendor_aliases": {
+        "Circana": "brand_name",
+        "SPINS": "Brand (sub-franchise level)",
+        "NielsenIQ": "Brand"
+      },
+      "related_terms": [
+        "CIRC_COL_011",
+        "HIER_004"
+      ],
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "brand",
+        "hierarchy"
+      ]
+    },
+    {
+      "canonical_id": "CIRC_COL_013",
+      "canonical_term": "row_count (Circana)",
+      "canonical_full_name": "Row Count \u2014 Druid Aggregation Count (Circana Column)",
+      "domain": "measures_metrics",
+      "definition": "An internal Apache Druid aggregation counter indicating how many underlying source records were combined into each output row. A value of 1 indicates the row is a single atomic record. Values greater than 1 indicate rolled-up records. This is a system/ETL artifact and has no business meaning for CPG analysis; it should be dropped before model training.",
+      "data_type": "integer",
+      "reporting_level": [
+        "record"
+      ],
+      "vendor_aliases": {
+        "Circana": "row_count (Druid internal)",
+        "SPINS": "N/A",
+        "NielsenIQ": "N/A"
+      },
+      "vendor_notes": {
+        "Circana": "Druid system field. Drop this column in ETL preprocessing \u2014 it is not a CPG business measure."
+      },
+      "example": "1 (single record, no rollup)",
+      "tags": [
+        "schema_field",
+        "Circana_column",
+        "system_field",
+        "ETL_artifact",
+        "drop_before_training"
+      ]
+    }
+  ],
+  "cross_vendor_conflict_registry": [
+    {
+      "conflict_id": "CVC_001",
+      "topic": "Whole Foods Market coverage",
+      "description": "Whole Foods Market (WFM) appears in NielsenIQ's Food/Total Food channel (NIQ has direct data partnership). Circana projects WFM sales; it is included in their Grocery/MULO totals but cannot be accessed separately from Circana. SPINS does NOT cover WFM in any channel.",
+      "resolution": "For WFM-specific data, use NielsenIQ exclusively. When summing SPINS + Circana for total US, WFM is captured in the Circana portion (projected).",
+      "affected_terms": [
+        "CHAN_001",
+        "CHAN_002",
+        "CHAN_003",
+        "CHAN_005"
+      ]
+    },
+    {
+      "conflict_id": "CVC_002",
+      "topic": "Grocery channel naming",
+      "description": "Circana calls the supermarket/food channel 'Grocery'. NielsenIQ calls the identical universe 'Total Food.' Both have $2M ACV minimum threshold and are functionally equivalent.",
+      "resolution": "Map 'Grocery' (Circana) \u2194 'Total Food' (NielsenIQ) as the same canonical channel.",
+      "affected_terms": [
+        "CHAN_005"
+      ]
+    },
+    {
+      "conflict_id": "CVC_003",
+      "topic": "MULO vs. xAOC naming",
+      "description": "Circana's multi-outlet aggregate is MULO. NielsenIQ's equivalent is xAOC. Both include Food, Drug, Mass (with Walmart), Club, Dollar, and Military. SPINS obtains its conventional data from Circana, so SPINS MULO = Circana MULO.",
+      "resolution": "Map MULO (Circana/SPINS) \u2194 xAOC (NielsenIQ) as canonical equivalents.",
+      "affected_terms": [
+        "CHAN_001",
+        "CHAN_002"
+      ]
+    },
+    {
+      "conflict_id": "CVC_004",
+      "topic": "Product category taxonomy misalignment",
+      "description": "SPINS, Circana, and NielsenIQ use proprietary classification hierarchies. The same product may be classified into different categories or segments across vendors. This is the most impactful data alignment challenge for ML model training.",
+      "resolution": "Require UPC as the cross-vendor join key; never rely on category strings for cross-vendor joins. Build a UPC-to-canonical-category mapping table as a pre-processing step.",
+      "affected_terms": [
+        "HIER_003"
+      ]
+    },
+    {
+      "conflict_id": "CVC_005",
+      "topic": "Velocity metric formula variation",
+      "description": "SPINS and Circana express velocity primarily as $/TDP (dollars per total distribution point). NielsenIQ also uses 'Unit Sales per $MM ACV' and 'SPPD (Sales Per Point of Distribution)' interchangeably. The denominators differ: TDP is a sum of %ACV values; $MM ACV weights by store ACV volume.",
+      "resolution": "Standardize to $/TDP for cross-vendor comparisons. When NIQ outputs use per $MM ACV, convert: $/TDP \u2248 ($/MM ACV \u00d7 TDP / Total Market ACV in $MM). Document which formula was used in all training data.",
+      "affected_terms": [
+        "METR_003"
+      ]
+    },
+    {
+      "conflict_id": "CVC_006",
+      "topic": "Sprouts Farmers Market coverage",
+      "description": "Sprouts is covered exclusively by SPINS (Natural Channel). It is NOT included in Circana or NielsenIQ totals.",
+      "resolution": "Brands with significant Sprouts volume must use SPINS for Sprouts data. Cannot be obtained from Circana or NIQ.",
+      "affected_terms": [
+        "CHAN_003"
+      ]
+    },
+    {
+      "conflict_id": "CVC_007",
+      "topic": "Costco coverage",
+      "description": "Costco cooperates with NielsenIQ but does NOT provide data to Circana. This means xAOC (NIQ) captures Costco; MULO (Circana/SPINS) does not. Brands with significant Costco volume will show higher sales in NIQ than Circana.",
+      "resolution": "Use NielsenIQ exclusively for Costco-inclusive club channel total. When comparing MULO vs. xAOC, account for the Costco delta in the club channel.",
+      "affected_terms": [
+        "NIQ_014",
+        "CHAN_001",
+        "CHAN_002"
+      ]
+    },
+    {
+      "conflict_id": "CVC_008",
+      "topic": "UPC digit format variation across vendors",
+      "description": "SPINS uses 12-digit UPC. Circana exports contain both UPC_10 (10-digit) and UPC_13 (EAN-13). NielsenIQ uses 14-digit GTIN. Joining on UPC across vendors without normalization causes missed matches.",
+      "resolution": "Normalize all UPCs to GTIN-14 (pad left with zeros to 14 digits) as the canonical join key before any cross-vendor merge. Document the padding logic in the ETL pipeline.",
+      "affected_terms": [
+        "HIER_001",
+        "SCHEMA_005"
+      ]
+    },
+    {
+      "conflict_id": "CVC_009",
+      "topic": "Regional boundary misalignment (NIQ vs. Circana)",
+      "description": "NielsenIQ divides the US into 4 FMCG Regions (East, South, Central, West). Circana uses its own regional definitions that do not map 1:1. State-level or metro-market data is the only level at which both vendors can be precisely aligned geographically.",
+      "resolution": "Avoid region-level cross-vendor comparisons. Use state or metro market as the common geographic join key.",
+      "affected_terms": [
+        "NIQ_011",
+        "GEO_001"
+      ]
+    },
+    {
+      "conflict_id": "CVC_010",
+      "topic": "IRI export schema field name discrepancies",
+      "description": "The IRI/Circana raw export schema uses column names (e.g., ACV_Weighted_Dist, Dollar_Sales_Merch, Geography_Desciption [sic]) that differ from the human-readable measure names used in SPINS and NIQ interfaces. The field 'Geography_Desciption' contains a typo ('Desciption' vs. 'Description') that appears in production exports.",
+      "resolution": "Maintain a field-name mapping table: ACV_Weighted_Dist \u2192 % ACV Distribution; Dollar_Sales_Merch \u2192 Dollars, Any Promo; Geography_Desciption \u2192 Geography Description. Flag the typo in ETL documentation.",
+      "affected_terms": [
+        "SCHEMA_002",
+        "SCHEMA_003",
+        "SCHEMA_004"
+      ]
+    },
+    {
+      "conflict_id": "CVC_011",
+      "topic": "ACV distribution decimal vs. percentage scale mismatch",
+      "description": "Circana 'acv_weighted_distribution' is a decimal proportion (0.0\u20131.0). SPINS % ACV measures and NielsenIQ % ACV Distribution are expressed as percentages (0\u2013100). Combining without conversion yields values 100x too small for Circana.",
+      "resolution": "Multiply Circana acv_weighted_distribution \u00d7 100 to align with SPINS/NIQ scale before any cross-vendor distribution comparison or model training feature.",
+      "affected_terms": [
+        "DIST_002",
+        "CIRC_COL_003",
+        "SPINS_COL_011"
+      ]
+    },
+    {
+      "conflict_id": "CVC_012",
+      "topic": "SPINS '% of Stores Selling' is count-weighted; Circana acv_weighted_distribution is ACV-weighted",
+      "description": "These are fundamentally different distribution measures. SPINS ''% of Stores Selling' counts stores equally (numeric distribution). Circana 'acv_weighted_distribution' weights stores by their ACV share (weighted distribution). They will always differ, sometimes substantially, for the same product.",
+      "resolution": "Never directly compare or join SPINS '% of Stores Selling' to Circana 'acv_weighted_distribution' as if they measure the same thing. For cross-vendor distribution comparison, use % ACV Distribution from SPINS (Max % ACV or Avg % ACV), which is the ACV-weighted equivalent.",
+      "affected_terms": [
+        "DIST_002",
+        "DIST_004",
+        "CIRC_COL_003",
+        "SPINS_COL_011"
+      ]
+    },
+    {
+      "conflict_id": "CVC_013",
+      "topic": "SPINS UPC hyphenated format vs. Circana upc10/upc13 integer format",
+      "description": "SPINS exports UPC as a hyphenated string ('00-52000-01016'). Circana exports two integer fields: upc10 (10-digit, no check digit, no leading zeros) and upc13 (13-digit EAN). These require different normalization steps to produce a common join key. The leading apostrophe in SPINS column name ''% of Stores Selling' is an additional parsing hazard.",
+      "resolution": "For SPINS\u2192Circana join: strip hyphens from SPINS UPC \u2192 14-digit string. Drop first two chars ('00') and last char (check digit) \u2192 validate as upc10 (10-digit). Or strip hyphens, drop leading '0' \u2192 compare to upc13. Use upc13 (EAN-13) as the preferred join key. For SPINS\u2192NIQ: strip hyphens \u2192 12-digit standard UPC.",
+      "affected_terms": [
+        "HIER_001",
+        "SCHEMA_005",
+        "SPINS_COL_005"
+      ]
+    },
+    {
+      "conflict_id": "CVC_014",
+      "topic": "Geography channel embedded in SPINS string vs. separate Circana columns",
+      "description": "In SPINS exports, the outlet/channel type is embedded in the Geography string (e.g., 'TOTAL US - FOOD' where 'FOOD' = grocery channel). In Circana exports, this information is split across three columns: geography, projected_geography_type_name, projected_outlet_type_name, and projected_retailer_type_name.",
+      "resolution": "Parse SPINS Geography string by splitting on ' - ' to extract: [0]=geography_scope, [1]=outlet_type. Map SPINS outlet_type ('FOOD','DRUG','MASS' etc.) to Circana projected_outlet_type_name values for cross-vendor channel grouping.",
+      "affected_terms": [
+        "SPINS_COL_001",
+        "CIRC_COL_007",
+        "CIRC_COL_008",
+        "CHAN_005"
+      ]
+    },
+    {
+      "conflict_id": "CVC_015",
+      "topic": "Week ending date format differences across vendors",
+      "description": "SPINS: 'Time Period End Date' as 'YYYY-MM-DD 00:00:00' (datetime string). Circana: '__time' as 'YYYY-MM-DDTHH:MM:SS.000Z' (ISO 8601 UTC) + 'week_ending_raw' as 'Week Ending MM-DD-YY'. NielsenIQ: 'Period End Date' varies by extract. All are Saturday dates but string formats differ.",
+      "resolution": "Normalize all week-ending dates to ISO date string YYYY-MM-DD: strip time from SPINS, strip 'T...' from Circana __time. Use this as the temporal join key. Build a shared calendar table mapping all three formats.",
+      "affected_terms": [
+        "SCHEMA_001",
+        "SPINS_COL_002",
+        "CIRC_COL_001",
+        "CIRC_COL_002"
+      ]
+    },
+    {
+      "conflict_id": "CVC_016",
+      "topic": "SPINS NFP/attribute columns absent from Circana and NielsenIQ exports",
+      "description": "SPINS exports include product intelligence attributes directly in the data export (NFP - PROTEIN, NFP RANGES - PROTEIN VALUE, NFP - CALORIES, NFP - SUGARS, UNIT OF MEASURE, STORAGE, PACK COUNT). These columns do not exist in standard Circana or NielsenIQ exports.",
+      "resolution": "Treat SPINS NFP/attribute columns as a separate product content layer. To enrich Circana/NIQ data with these attributes, build a UPC-keyed product content table from SPINS Product Intelligence and join on normalized UPC. Do not assume these fields will auto-populate in cross-vendor merged datasets.",
+      "affected_terms": [
+        "SPINS_COL_006",
+        "SPINS_COL_007",
+        "SPINS_COL_008",
+        "SPINS_COL_009",
+        "ATTR_001"
+      ]
+    }
+  ]
+}
