@@ -621,6 +621,103 @@ svg.chart { display: block; width: 100%; }
     </div>
   </div>
 
+  <!-- When it's NOT advised -->
+  <div>
+    <div class="slabel">When It's Not Advised — The Cannibalizing Signal</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="background:#1E293B;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:#F1F5F9">Pattern: Own-Brand Rate Does Not Settle</div>
+          <div style="font-size:11px;color:#64748B;margin-top:3px">The shape below is what Aevah surfaces as a "Cannibalizing" verdict requiring action</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span style="background:#FEF3C7;color:#92400E;font-family:var(--font-h);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:12px;border:1px solid #D97706">Illustrative Pattern</span>
+          <span class="chip r"><span class="dot r"></span>Cannibalizing</span>
+        </div>
+      </div>
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <!-- Chart -->
+        <div>
+          <div class="chart-box">
+            <div class="chart-head">
+              <div class="chart-lbl">Cannibalization Rate · 12 Weeks</div>
+              <div style="font-size:10px;color:var(--text3)">illustrative pattern</div>
+            </div>
+            <!-- rate: [100,28,32,29,31,27,33,29,30,28,31,29] -->
+            <!-- x: 28+n*22.2; y: 105-rate*0.95 -->
+            <svg class="chart" viewBox="0 0 300 115" aria-label="Illustrative cannibalizing rate pattern">
+              <line x1="28" y1="10" x2="272" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="58" x2="272" y2="58" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="105" x2="272" y2="105" stroke="#E2E8F0" stroke-width="0.5"/>
+              <text x="26" y="13" font-size="7" fill="#94A3B8" text-anchor="end">100%</text>
+              <text x="26" y="61" font-size="7" fill="#94A3B8" text-anchor="end">50%</text>
+              <text x="26" y="108" font-size="7" fill="#94A3B8" text-anchor="end">0%</text>
+              <line x1="28" y1="8" x2="28" y2="107" stroke="#E2E8F0" stroke-width="1"/>
+              <!-- 10% line (safe zone) -->
+              <line x1="28" y1="96" x2="272" y2="96" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <text x="273" y="98" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
+              <!-- 25% danger line -->
+              <line x1="28" y1="82" x2="272" y2="82" stroke="#DC2626" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+              <text x="273" y="84" font-size="7" fill="#DC2626" opacity="0.8">25%</text>
+              <!-- danger zone shading -->
+              <rect x="50" y="72" width="222" height="10" fill="#DC2626" opacity="0.07"/>
+              <!-- own-brand annotation -->
+              <rect x="55" y="46" width="110" height="26" fill="#FEE2E2" rx="4" opacity="0.95"/>
+              <text x="110" y="57" font-size="7" fill="#991B1B" text-anchor="middle" font-weight="600">2 own-brand donors</text>
+              <text x="110" y="67" font-size="7" fill="#991B1B" text-anchor="middle">active velocity, dist-1 + dist-3</text>
+              <!-- data -->
+              <polyline
+                points="28,10 50,79 72,75 95,77 117,76 139,79 161,74 183,77 206,76 228,79 250,76 272,77"
+                fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="272" cy="77" r="3" fill="#DC2626"/>
+              <text x="155" y="71" font-size="7" fill="#DC2626" font-weight="600" text-anchor="middle">Stays 27–33% · never settles</text>
+              <text x="28" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 1</text>
+              <text x="117" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 5</text>
+              <text x="206" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 9</text>
+              <text x="272" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 12</text>
+            </svg>
+          </div>
+          <div class="ibox r" style="margin-top:10px">
+            <div class="ibox-head">Verdict · Cannibalizing</div>
+            Two own-brand donors at active velocity — a dist-1 sibling (same flavor, different pack size) and a dist-3 sibling (different flavor, same brand). Both continue to sell normally alongside the new item. Rate does not collapse; it stabilizes in the 27–33% range and holds there through week 12. <strong>This is a net-zero or negative addition — the new flavor is not creating incremental volume, it is redistributing it from items already on shelf.</strong>
+          </div>
+        </div>
+        <!-- Diagnosis panel -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="background:var(--ground);border-radius:8px;padding:14px;border:1px solid var(--border)">
+            <div style="font-family:var(--font-h);font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px">What Aevah Is Detecting</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text2)">
+              <div style="display:flex;gap:8px;align-items:flex-start">
+                <span style="color:#DC2626;font-weight:700;flex-shrink:0">→</span>
+                <span><strong>Donor 1 (dist-1):</strong> Same-flavor sibling in a different pack size. Still selling. Velocity unchanged before and after launch.</span>
+              </div>
+              <div style="display:flex;gap:8px;align-items:flex-start">
+                <span style="color:#DC2626;font-weight:700;flex-shrink:0">→</span>
+                <span><strong>Donor 2 (dist-3):</strong> Cross-flavor BUILT item in the same format. Slowing but not going to zero — not a planned phase-out.</span>
+              </div>
+              <div style="display:flex;gap:8px;align-items:flex-start">
+                <span style="color:#DC2626;font-weight:700;flex-shrink:0">→</span>
+                <span><strong>Rate plateau:</strong> No sign of settling through 12 weeks. Healthy items settle by week 3–4; this one has not moved.</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--red-l);border:1px solid #FCA5A5;border-radius:8px;padding:14px">
+            <div style="font-family:var(--font-h);font-size:11px;font-weight:700;color:var(--red-b);margin-bottom:8px">Recommended Action</div>
+            <div style="font-size:12px;color:var(--red-b);line-height:1.6">Proactively offer the buyer a swap: replace the underperforming own-brand sibling with the new item at the same shelf position, rather than adding a door. This converts an internal conflict into a clean format upgrade and preserves the buyer relationship.</div>
+          </div>
+          <div style="background:var(--ground);border-radius:8px;padding:12px;border:1px solid var(--border)">
+            <div style="font-family:var(--font-h);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px">Decision Rules</div>
+            <div style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:4px">
+              <div><span class="chip g" style="font-size:9px;padding:2px 7px"><span class="dot g"></span>Incremental</span> &nbsp;0 own-brand donors → add without swapping</div>
+              <div><span class="chip a" style="font-size:9px;padding:2px 7px"><span class="dot a"></span>Watch</span> &nbsp;1–2 donors, rate settles &lt;10% → add + monitor</div>
+              <div><span class="chip r" style="font-size:9px;padding:2px 7px"><span class="dot r"></span>Cannibalizing</span> &nbsp;2+ donors, rate &gt;20% sustained → offer a swap</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Application to Dreamwich -->
   <div>
     <div class="slabel">Application to Dreamwich + How This Becomes a Live Feature</div>

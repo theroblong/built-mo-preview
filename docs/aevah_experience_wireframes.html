@@ -1,0 +1,1165 @@
+<title>Aevah Platform Wireframes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --chrome:  #0F172A; --chrome2: #1E293B;
+  --ground:  #EEF2F7; --surface: #FFFFFF;
+  --accent:  #3B5BDB;
+  --text:    #0F172A; --text2: #475569; --text3: #94A3B8;
+  --border:  #D1D9E6;
+  --p1-bg: #ECFDF5; --p1: #065F46;
+  --p2-bg: #EDE9FE; --p2: #5B21B6;
+  --p3-bg: #FEF3C7; --p3: #92400E;
+  --mask-bg: #FEE2E2; --mask: #991B1B;
+  --font-h: 'Space Grotesk', system-ui, sans-serif;
+  --font-b: 'DM Sans', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0B0F1C; --surface: #111827; --text: #F1F5F9;
+    --text2: #94A3B8; --text3: #475569; --border: #1E293B;
+    --chrome: #020617; --chrome2: #0F172A;
+    --p1-bg: #022C22; --p2-bg: #2E1065; --p3-bg: #1C0A00;
+    --mask-bg: #450A0A;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0B0F1C; --surface: #111827; --text: #F1F5F9;
+  --text2: #94A3B8; --text3: #475569; --border: #1E293B;
+  --chrome: #020617; --chrome2: #0F172A;
+  --p1-bg: #022C22; --p2-bg: #2E1065; --p3-bg: #1C0A00;
+  --mask-bg: #450A0A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-b); background: var(--ground); color: var(--text); font-size: 13px; line-height: 1.5; }
+
+.hdr { background: var(--chrome); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+.hdr-brand { font-family: var(--font-h); font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -.02em; }
+.hdr-brand span { color: #6366F1; }
+.hdr-meta { font-size: 11px; color: #475569; }
+.hdr-meta strong { color: #94A3B8; }
+
+.tabs { background: var(--chrome2); border-bottom: 1px solid #0F172A; display: flex; padding: 0 28px; gap: 2px; overflow-x: auto; }
+.tab { font-family: var(--font-h); font-size: 11px; font-weight: 600; color: #64748B; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: .02em; transition: color .15s; }
+.tab.active { color: #E2E8F0; border-bottom-color: #6366F1; }
+.tab:hover:not(.active) { color: #94A3B8; }
+
+.panel { display: none; height: calc(100vh - 90px); overflow: hidden; }
+.panel.active { display: flex; }
+
+.spec { width: 38%; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.wf { flex: 1; background: var(--ground); padding: 20px; overflow: auto; display: flex; align-items: flex-start; justify-content: center; }
+.wf svg { max-width: 100%; border-radius: 6px; box-shadow: 0 2px 12px rgba(0,0,0,.12); }
+
+.spec-sec { display: flex; flex-direction: column; gap: 6px; }
+.spec-lbl { font-family: var(--font-h); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); }
+.spec-val { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-family: var(--font-h); font-weight: 600; }
+.chip.p1 { background: var(--p1-bg); color: var(--p1); }
+.chip.p2 { background: var(--p2-bg); color: var(--p2); }
+.chip.p3 { background: var(--p3-bg); color: var(--p3); }
+.chip.mask { background: var(--mask-bg); color: var(--mask); }
+.chip.persona { background: #EFF6FF; color: #1E40AF; }
+.chip.tab-c { background: #F1F5F9; color: #475569; }
+.kpi-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.kpi-list li { font-size: 11px; color: var(--text2); display: flex; gap: 6px; align-items: baseline; }
+.kpi-n { font-family: var(--font-h); font-size: 9px; font-weight: 700; color: var(--text3); min-width: 14px; }
+.spec-title { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: var(--text); }
+.spec-sub { font-size: 11px; color: var(--text3); }
+
+/* Overview only */
+.ov { flex: 1; background: var(--ground); padding: 28px; overflow: auto; }
+.ov-inner { max-width: 860px; margin: 0 auto; }
+.ov-title { font-family: var(--font-h); font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.ov-sub { font-size: 12px; color: var(--text3); margin-bottom: 24px; }
+.ov svg { width: 100%; }
+</style>
+
+<div class="hdr">
+  <div class="hdr-brand">Ae<span>vah</span></div>
+  <div class="hdr-meta">Platform Wireframes &nbsp;·&nbsp; <strong>Rev 1 · Sept 10 2026</strong> &nbsp;·&nbsp; Rob Long + Jason Brazeal</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('ov')">Overview</div>
+  <div class="tab" onclick="show('e1')">E1 · Customer Growth</div>
+  <div class="tab" onclick="show('e2')">E2 · Build Plan</div>
+  <div class="tab" onclick="show('e3')">E3 · Material Plan</div>
+  <div class="tab" onclick="show('e4')">E4 · Plan &amp; Scenario</div>
+  <div class="tab" onclick="show('e5')">E5 · Trade Accrual</div>
+  <div class="tab" onclick="show('e6')">E6 · Analytics WB</div>
+  <div class="tab" onclick="show('e7')">E7 · Brand &amp; Launch</div>
+</div>
+
+<!-- Overview -->
+<div class="panel active" id="ov" style="display:block">
+<div class="ov"><div class="ov-inner">
+  <div class="ov-title">Aevah — 7 Packaged Experiences</div>
+  <div class="ov-sub">3 shared ML engines · 3 data phases · 10 personas across 7 role-scoped views</div>
+  <svg viewBox="0 0 820 480" aria-label="Aevah platform map">
+    <!-- DATA SOURCES row -->
+    <text x="10" y="18" font-size="9" font-weight="700" fill="#94A3B8" font-family="DM Sans,sans-serif" letter-spacing="1">DATA SOURCES</text>
+    <rect x="10" y="26" width="220" height="44" rx="6" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="120" y="45" font-size="11" font-weight="600" fill="#1E40AF" text-anchor="middle" font-family="DM Sans,sans-serif">SPINS / Druid</text>
+    <text x="120" y="60" font-size="9" fill="#3B82F6" text-anchor="middle" font-family="DM Sans,sans-serif">Consumption · POS · Competitor</text>
+    <rect x="300" y="26" width="220" height="44" rx="6" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="410" y="45" font-size="11" font-weight="600" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">ERP / NetSuite</text>
+    <text x="410" y="60" font-size="9" fill="#D97706" text-anchor="middle" font-family="DM Sans,sans-serif">Shipments · Trade $ · G2N  · Phase 2</text>
+    <rect x="590" y="26" width="220" height="44" rx="6" fill="#F3E8FF" stroke="#C4B5FD" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="700" y="45" font-size="11" font-weight="600" fill="#5B21B6" text-anchor="middle" font-family="DM Sans,sans-serif">BOM / Ops</text>
+    <text x="700" y="60" font-size="9" fill="#7C3AED" text-anchor="middle" font-family="DM Sans,sans-serif">Ingredients · Capacity · Cost  · Phase 3</text>
+
+    <!-- arrows down to engines -->
+    <line x1="120" y1="70" x2="120" y2="108" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="120" y1="70" x2="280" y2="108" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="none"/>
+    <line x1="410" y1="70" x2="280" y2="108" stroke="#FCD34D" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,3"/>
+    <line x1="700" y1="70" x2="440" y2="108" stroke="#C4B5FD" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,3"/>
+
+    <!-- ML ENGINES -->
+    <text x="10" y="105" font-size="9" font-weight="700" fill="#94A3B8" font-family="DM Sans,sans-serif" letter-spacing="1">ML ENGINES</text>
+    <rect x="10" y="112" width="250" height="50" rx="6" fill="#F0FDF4" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="135" y="130" font-size="11" font-weight="700" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">E1 · Demand Forecast</text>
+    <text x="135" y="147" font-size="9" fill="#059669" text-anchor="middle" font-family="DM Sans,sans-serif">LightGBM · customer × SKU × week · versioned</text>
+    <text x="135" y="158" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Phase 1</text>
+    <rect x="283" y="112" width="250" height="50" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="408" y="130" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle" font-family="DM Sans,sans-serif">E2a · Cannibalization</text>
+    <text x="408" y="147" font-size="9" fill="#3B82F6" text-anchor="middle" font-family="DM Sans,sans-serif">MO_55 · pair scoring · dist 1–5 · weekly</text>
+    <text x="408" y="158" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Phase 1</text>
+    <rect x="556" y="112" width="254" height="50" rx="6" fill="#FDF4FF" stroke="#E9D5FF" stroke-width="1.5"/>
+    <text x="683" y="130" font-size="11" font-weight="700" fill="#6B21A8" text-anchor="middle" font-family="DM Sans,sans-serif">E2b · Price Elasticity</text>
+    <text x="683" y="147" font-size="9" fill="#9333EA" text-anchor="middle" font-family="DM Sans,sans-serif">MO_16 · own + cross · per SKU × retailer</text>
+    <text x="683" y="158" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Phase 1</text>
+
+    <!-- arrows down to experiences -->
+    <line x1="135" y1="162" x2="55" y2="230" stroke="#6EE7B7" stroke-width="1" marker-end="url(#arr)"/>
+    <line x1="135" y1="162" x2="175" y2="230" stroke="#6EE7B7" stroke-width="1" marker-end="url(#arr)"/>
+    <line x1="135" y1="162" x2="290" y2="230" stroke="#6EE7B7" stroke-width="1" marker-end="url(#arr)"/>
+    <line x1="135" y1="162" x2="405" y2="230" stroke="#6EE7B7" stroke-width="1" marker-end="url(#arr)"/>
+    <line x1="408" y1="162" x2="55" y2="230" stroke="#93C5FD" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+    <line x1="408" y1="162" x2="405" y2="230" stroke="#93C5FD" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+    <line x1="408" y1="162" x2="520" y2="230" stroke="#93C5FD" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+    <line x1="408" y1="162" x2="634" y2="230" stroke="#93C5FD" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+    <line x1="683" y1="162" x2="405" y2="230" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+    <line x1="683" y1="162" x2="634" y2="230" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+    <line x1="683" y1="162" x2="750" y2="230" stroke="#E9D5FF" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+    <!-- EXPERIENCES -->
+    <text x="10" y="226" font-size="9" font-weight="700" fill="#94A3B8" font-family="DM Sans,sans-serif" letter-spacing="1">7 EXPERIENCES</text>
+    <!-- E1 -->
+    <rect x="10" y="234" width="100" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="60" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E1</text>
+    <text x="60" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Customer</text>
+    <text x="60" y="275" font-size="9" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Growth</text>
+    <text x="60" y="289" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Connor · Chase · Ethan</text>
+    <text x="60" y="299" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Jeff · Bracken</text>
+    <!-- E2 -->
+    <rect x="120" y="234" width="100" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="170" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E2</text>
+    <text x="170" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Build Plan</text>
+    <text x="170" y="278" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Production</text>
+    <rect x="128" y="286" width="84" height="10" rx="3" fill="#FEE2E2"/>
+    <text x="170" y="294" font-size="7.5" font-weight="600" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">⊘ Masked</text>
+    <!-- E3 -->
+    <rect x="230" y="234" width="100" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="280" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E3</text>
+    <text x="280" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Material Plan</text>
+    <text x="280" y="278" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Procurement</text>
+    <rect x="238" y="286" width="84" height="10" rx="3" fill="#FEE2E2"/>
+    <text x="280" y="294" font-size="7.5" font-weight="600" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">⊘ Masked</text>
+    <!-- E4 -->
+    <rect x="340" y="234" width="100" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="390" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E4</text>
+    <text x="390" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Plan &amp;</text>
+    <text x="390" y="275" font-size="9" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Scenario</text>
+    <text x="390" y="289" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Finance · CFO</text>
+    <text x="390" y="299" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Full visibility</text>
+    <!-- E5 -->
+    <rect x="450" y="234" width="100" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="500" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E5</text>
+    <text x="500" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Trade Accrual</text>
+    <text x="500" y="278" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Accounting</text>
+    <text x="500" y="289" font-size="8" fill="#F59E0B" text-anchor="middle" font-family="DM Sans,sans-serif">Phase 2</text>
+    <!-- E6 -->
+    <rect x="560" y="234" width="110" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="615" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E6</text>
+    <text x="615" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Analytics</text>
+    <text x="615" y="275" font-size="9" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Workbench</text>
+    <text x="615" y="289" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">BI · Full visibility</text>
+    <!-- E7 -->
+    <rect x="680" y="234" width="130" height="64" rx="6" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1.5"/>
+    <text x="745" y="252" font-size="9" font-weight="700" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">E7</text>
+    <text x="745" y="264" font-size="9" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Brand &amp; Launch</text>
+    <text x="745" y="278" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Marketing · Innovation</text>
+    <text x="745" y="289" font-size="8" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Trade $ masked</text>
+
+    <!-- Phase legend -->
+    <rect x="10" y="318" width="800" height="1" fill="#E2E8F0"/>
+    <text x="10" y="334" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Phase 1 = SPINS/Druid only (available now)   ·   Phase 2 = ERP/NetSuite + crosswalks (dashed border)   ·   Phase 3 = BOM/Ops data</text>
+    <text x="10" y="348" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Masked experiences (E2, E3): no customer names, prices, $, trade, or competitor detail — same forecast, different role lens</text>
+
+    <!-- arrow marker -->
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L6,3 z" fill="#94A3B8"/>
+      </marker>
+    </defs>
+  </svg>
+</div></div>
+</div>
+
+<!-- E1 Customer Growth -->
+<div class="panel" id="e1">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E1 · Customer Growth</div>
+      <div class="spec-sub">Book of Business landing · Chase's default view</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips">
+        <span class="chip persona">Connor — Demand Planner</span>
+        <span class="chip persona">Chase — Sales Analyst</span>
+        <span class="chip persona">Ethan — Forecast Ops</span>
+        <span class="chip persona">Jeff — FSVP Finance</span>
+        <span class="chip persona">Bracken — CFO (PDF only)</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Book of Business, sorted by forecast vs. plan gap (worst first). Connor lands on Customer Scorecard at last-viewed account.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Override customer forecast · log distribution events · tag risks / opportunities · lock forecast version · download Monday CSV</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Net sales by customer — actual + 13-wk forecast</li>
+        <li><span class="kpi-n">2</span>Gross sales / Gross-to-Net bridge</li>
+        <li><span class="kpi-n">3</span>Distribution: doors, TDP, wins/losses/delists</li>
+        <li><span class="kpi-n">4</span>Forecast vs. committed version (% gap)</li>
+        <li><span class="kpi-n">5</span>Sell-in vs. sell-through gap (implied retailer WoS)</li>
+        <li><span class="kpi-n">6</span>Velocity (units ÷ stores × weeks)</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Book of Business</span>
+        <span class="chip tab-c">Customer Scorecard</span>
+        <span class="chip tab-c">Distribution Tracker</span>
+        <span class="chip tab-c">Gross-to-Net Bridge ★ P2</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Phase</div>
+      <div class="chips">
+        <span class="chip p1">Phase 1 — Book of Business, Scorecard, Distribution</span>
+        <span class="chip p2">Phase 2 — Gross-to-Net tab requires ERP</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Masking</div>
+      <div class="spec-val">Not masked. Full customer + trade detail. COGS + BOM hidden.</div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E1 Customer Growth wireframe">
+      <!-- Nav bar -->
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah</text>
+      <text x="48" y="18" font-size="9" fill="#64748B" font-family="DM Sans,sans-serif">·  E1 Customer Growth</text>
+      <text x="430" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Version: 2026-09 v3 ✓ current</text>
+      <!-- Sub-tab bar -->
+      <rect x="0" y="28" width="560" height="22" fill="#0F172A"/>
+      <rect x="8" y="32" width="95" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="55" y="42" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Book of Business</text>
+      <text x="120" y="42" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Customer Scorecard</text>
+      <text x="227" y="42" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Distribution Tracker</text>
+      <text x="330" y="42" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Gross-to-Net ···</text>
+      <!-- KPI Tiles row -->
+      <rect x="8" y="58" width="118" height="42" rx="4" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1"/>
+      <text x="16" y="71" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Total Forecast Δ vs prior wk</text>
+      <text x="16" y="87" font-size="13" font-weight="700" fill="#DC2626" font-family="DM Sans,sans-serif">−4.2%</text>
+      <rect x="134" y="58" width="118" height="42" rx="4" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1"/>
+      <text x="142" y="71" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Accounts with Distrib. Events</text>
+      <text x="142" y="87" font-size="13" font-weight="700" fill="#D97706" font-family="DM Sans,sans-serif">3</text>
+      <rect x="260" y="58" width="118" height="42" rx="4" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1"/>
+      <text x="268" y="71" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Accounts at Risk vs Plan</text>
+      <text x="268" y="87" font-size="13" font-weight="700" fill="#DC2626" font-family="DM Sans,sans-serif">2</text>
+      <rect x="386" y="58" width="166" height="42" rx="4" fill="#FFFFFF" stroke="#D1D9E6" stroke-width="1"/>
+      <text x="394" y="71" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Mo Chat</text>
+      <rect x="394" y="76" width="150" height="18" rx="3" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+      <text x="469" y="88" font-size="7" fill="#3B5BDB" text-anchor="middle" font-family="DM Sans,sans-serif">Ask about this week's changes…</text>
+      <!-- Sort/filter bar -->
+      <rect x="8" y="108" width="544" height="20" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="121" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Sort: Forecast gap ▼   Filter: All accounts   SKUs: All   Weeks: 4 / 13</text>
+      <rect x="490" y="111" width="56" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="518" y="121" font-size="7" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">+ Log event</text>
+      <!-- Table header -->
+      <rect x="8" y="132" width="544" height="16" rx="0" fill="#F1F5F9"/>
+      <text x="16" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Customer</text>
+      <text x="160" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Forecast 4w</text>
+      <text x="230" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">vs. Prior Δ</text>
+      <text x="295" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Stores</text>
+      <text x="345" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Distrib. Events</text>
+      <text x="440" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Velocity 4w</text>
+      <text x="510" y="143" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Flags</text>
+      <!-- Row 1 - risk -->
+      <rect x="8" y="148" width="544" height="22" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.5"/>
+      <text x="16" y="162" font-size="8" font-weight="600" fill="#0F172A" font-family="DM Sans,sans-serif">Kroger</text>
+      <text x="160" y="162" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif" font-variant-numeric="tabular-nums">142,800 u</text>
+      <text x="230" y="162" font-size="8" fill="#DC2626" font-family="DM Sans,sans-serif">−11.4%</text>
+      <text x="295" y="162" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif">2,847</text>
+      <rect x="345" y="152" width="66" height="13" rx="10" fill="#FEE2E2"/>
+      <text x="378" y="161" font-size="7" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">2 delists</text>
+      <text x="440" y="162" font-size="8" fill="#D97706" font-family="DM Sans,sans-serif">$3.18/s/w</text>
+      <rect x="510" y="152" width="38" height="13" rx="10" fill="#FEE2E2"/>
+      <text x="529" y="161" font-size="7" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">⚠ risk</text>
+      <!-- Row 2 -->
+      <rect x="8" y="170" width="544" height="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="184" font-size="8" font-weight="600" fill="#0F172A" font-family="DM Sans,sans-serif">Walmart</text>
+      <text x="160" y="184" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif" font-variant-numeric="tabular-nums">98,400 u</text>
+      <text x="230" y="184" font-size="8" fill="#16A34A" font-family="DM Sans,sans-serif">+2.1%</text>
+      <text x="295" y="184" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif">3,214</text>
+      <text x="345" y="184" font-size="8" fill="#94A3B8" font-family="DM Sans,sans-serif">—</text>
+      <text x="440" y="184" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif">$2.94/s/w</text>
+      <!-- Row 3 -->
+      <rect x="8" y="192" width="544" height="22" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="206" font-size="8" font-weight="600" fill="#0F172A" font-family="DM Sans,sans-serif">Target</text>
+      <text x="160" y="206" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif" font-variant-numeric="tabular-nums">61,200 u</text>
+      <text x="230" y="206" font-size="8" fill="#D97706" font-family="DM Sans,sans-serif">−7.8%</text>
+      <text x="295" y="206" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif">1,622</text>
+      <rect x="345" y="196" width="52" height="13" rx="10" fill="#FEF3C7"/>
+      <text x="371" y="205" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">1 win</text>
+      <text x="440" y="206" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif">$2.61/s/w</text>
+      <!-- Row 4 -->
+      <rect x="8" y="214" width="544" height="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="228" font-size="8" font-weight="600" fill="#0F172A" font-family="DM Sans,sans-serif">Costco</text>
+      <text x="160" y="228" font-size="8" fill="#94A3B8" font-family="DM Sans,sans-serif">Circana source</text>
+      <text x="295" y="228" font-size="8" fill="#0F172A" font-family="DM Sans,sans-serif">612 whs</text>
+      <!-- more rows indicator -->
+      <text x="16" y="250" font-size="8" fill="#94A3B8" font-family="DM Sans,sans-serif">↓ 14 more accounts · scroll to load</text>
+      <!-- Download strip -->
+      <rect x="8" y="260" width="544" height="24" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+      <text x="16" y="275" font-size="7.5" font-weight="600" fill="#1E40AF" font-family="DM Sans,sans-serif">⬇ Download cross-account demand summary (SKU × customer × week, 13 wks)   |   Connor's Monday CSV →</text>
+      <!-- Distribution event feed -->
+      <rect x="8" y="292" width="544" height="20" rx="0" fill="#F1F5F9"/>
+      <text x="16" y="305" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">DISTRIBUTION EVENTS THIS WEEK</text>
+      <rect x="8" y="312" width="174" height="28" rx="4" fill="#FFFFFF" stroke="#FCA5A5" stroke-width="1"/>
+      <text x="16" y="324" font-size="7" font-weight="600" fill="#DC2626" font-family="DM Sans,sans-serif">Delist — Kroger</text>
+      <text x="16" y="334" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Cookies &amp; Cream 4pk · 312 stores · eff 10/05</text>
+      <rect x="190" y="312" width="174" height="28" rx="4" fill="#FFFFFF" stroke="#FCA5A5" stroke-width="1"/>
+      <text x="198" y="324" font-size="7" font-weight="600" fill="#DC2626" font-family="DM Sans,sans-serif">Delist — Kroger</text>
+      <text x="198" y="334" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Birthday Cake 4pk · 118 stores · eff 10/05</text>
+      <rect x="372" y="312" width="174" height="28" rx="4" fill="#FFFFFF" stroke="#6EE7B7" stroke-width="1"/>
+      <text x="380" y="324" font-size="7" font-weight="600" fill="#065F46" font-family="DM Sans,sans-serif">Auth — Target</text>
+      <text x="380" y="334" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Green Apple Crush 4pk · 1,622 stores</text>
+      <!-- Zone labels -->
+      <text x="550" y="80" font-size="7" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">KPI tiles</text>
+      <text x="550" y="125" font-size="7" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">filter bar</text>
+      <text x="550" y="195" font-size="7" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">customer table</text>
+      <text x="550" y="275" font-size="7" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">CSV export</text>
+      <text x="550" y="325" font-size="7" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">event feed</text>
+    </svg>
+  </div>
+</div>
+
+<!-- E2 Build Plan -->
+<div class="panel" id="e2">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E2 · Build Plan</div>
+      <div class="spec-sub">Demand Signal landing · Production planners</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips"><span class="chip persona">Production Planner</span><span class="chip persona">Plant Scheduling</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Demand Signal tab. SKU × week bar chart. Locked to current named forecast version. Frozen window (wks 0–4) highlighted.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Acknowledge version · set safety stock policy per SKU · flag capacity constraints to Sales/Finance · publish build plan</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Forecast units by SKU × week (shipment basis)</li>
+        <li><span class="kpi-n">2</span>Net production requirement (forecast − on-hand − WIP)</li>
+        <li><span class="kpi-n">3</span>Line load / capacity utilization %</li>
+        <li><span class="kpi-n">4</span>Forecast accuracy at 4-week planning lag</li>
+        <li><span class="kpi-n">5</span>Forecast churn inside frozen window</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Demand Signal</span>
+        <span class="chip tab-c">Net Requirements</span>
+        <span class="chip tab-c">Line Load &amp; Capacity</span>
+        <span class="chip tab-c">Forecast Health</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Masking</div>
+      <div class="chips"><span class="chip mask">⊘ Customer names · prices · $ · retailer · competitor</span></div>
+      <div class="spec-val" style="margin-top:6px">Promo spikes shown as "demand events" with timing + magnitude only — no mechanic or customer.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Phase</div>
+      <div class="chips"><span class="chip p1">Phase 1 — Demand Signal, Net Req, Forecast Health</span><span class="chip p3">Phase 3 — Line Load needs BOM + capacity data</span></div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E2 Build Plan wireframe">
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah</text>
+      <text x="48" y="18" font-size="9" fill="#64748B" font-family="DM Sans,sans-serif">·  E2 Build Plan</text>
+      <text x="380" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Locked: 2026-09 v3  ·  Acknowledged ✓</text>
+      <!-- masked banner -->
+      <rect x="0" y="28" width="560" height="20" fill="#450A0A"/>
+      <text x="280" y="41" font-size="8" font-weight="700" fill="#FCA5A5" text-anchor="middle" font-family="DM Sans,sans-serif">⊘  CUSTOMER, PRICE AND RETAILER DATA MASKED FOR THIS ROLE</text>
+      <!-- subtabs -->
+      <rect x="0" y="48" width="560" height="20" fill="#0F172A"/>
+      <rect x="8" y="51" width="84" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="50" y="61" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Demand Signal</text>
+      <text x="112" y="61" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Net Requirements</text>
+      <text x="208" y="61" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Line Load &amp; Capacity</text>
+      <text x="320" y="61" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Forecast Health</text>
+      <!-- SKU filter -->
+      <rect x="8" y="76" width="544" height="20" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="89" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">SKUs: All active (23)   Horizon: 13 wks   Frozen: Wks 0–4 (locked)   Confidence: ±15%</text>
+      <!-- Frozen window label -->
+      <rect x="8" y="104" width="100" height="160" rx="0" fill="#FEF3C7" opacity="0.4"/>
+      <text x="58" y="122" font-size="7" font-weight="700" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">FROZEN</text>
+      <text x="58" y="132" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">Wks 0–4</text>
+      <!-- bar chart area -->
+      <rect x="8" y="104" width="544" height="160" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="280" y="116" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Forecast Units by SKU × Week (shipment basis)</text>
+      <!-- bars: sample bars for 3 SKUs over 5 weeks visible -->
+      <rect x="16" y="140" width="16" height="60" fill="#3B5BDB" rx="2"/>
+      <rect x="34" y="148" width="16" height="52" fill="#6366F1" rx="2"/>
+      <rect x="52" y="155" width="16" height="45" fill="#818CF8" rx="2"/>
+      <rect x="74" y="135" width="16" height="65" fill="#3B5BDB" rx="2"/>
+      <rect x="92" y="143" width="16" height="57" fill="#6366F1" rx="2"/>
+      <rect x="110" y="150" width="16" height="50" fill="#818CF8" rx="2"/>
+      <!-- confidence band (dotted area) -->
+      <rect x="116" y="128" width="432" height="114" fill="#DBEAFE" opacity="0.3" rx="2"/>
+      <line x1="116" y1="200" x2="548" y2="180" stroke="#93C5FD" stroke-width="1" stroke-dasharray="4,2"/>
+      <line x1="116" y1="220" x2="548" y2="205" stroke="#93C5FD" stroke-width="1" stroke-dasharray="4,2"/>
+      <polyline points="116,210 180,202 240,196 300,200 360,192 420,188 480,184 548,180" fill="none" stroke="#3B5BDB" stroke-width="2"/>
+      <!-- demand event spike annotation -->
+      <rect x="354" y="140" width="60" height="18" rx="3" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1"/>
+      <text x="384" y="152" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">Demand event Wk 8</text>
+      <line x1="384" y1="158" x2="384" y2="172" stroke="#D97706" stroke-width="1" stroke-dasharray="3,2"/>
+      <!-- x-axis labels -->
+      <text x="16" y="272" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 0</text>
+      <text x="116" y="272" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 4</text>
+      <text x="236" y="272" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 8</text>
+      <text x="356" y="272" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 12</text>
+      <text x="490" y="272" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 18</text>
+      <!-- Net req table -->
+      <rect x="8" y="278" width="544" height="18" fill="#F1F5F9"/>
+      <text x="16" y="290" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">NET PRODUCTION REQUIREMENT</text>
+      <text x="200" y="290" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Forecast</text>
+      <text x="280" y="290" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">On-Hand</text>
+      <text x="360" y="290" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">WIP</text>
+      <text x="420" y="290" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Net Req</text>
+      <text x="490" y="290" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Days Supply</text>
+      <rect x="8" y="296" width="544" height="18" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.5"/>
+      <text x="16" y="308" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Chocolate Chip Cookie 4pk</text>
+      <text x="200" y="308" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">48,200</text>
+      <text x="280" y="308" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">6,400</text>
+      <text x="360" y="308" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">2,100</text>
+      <text x="420" y="308" font-size="7.5" font-weight="600" fill="#DC2626" font-family="DM Sans,sans-serif">39,700</text>
+      <text x="490" y="308" font-size="7.5" fill="#DC2626" font-family="DM Sans,sans-serif">3.2d ⚠</text>
+      <rect x="8" y="314" width="544" height="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="326" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Green Apple Crush Sour 4pk</text>
+      <text x="200" y="326" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">22,800</text>
+      <text x="280" y="326" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">8,100</text>
+      <text x="360" y="326" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">1,400</text>
+      <text x="420" y="326" font-size="7.5" fill="#16A34A" font-family="DM Sans,sans-serif">13,300</text>
+      <text x="490" y="326" font-size="7.5" fill="#16A34A" font-family="DM Sans,sans-serif">14.6d</text>
+      <text x="16" y="350" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">↓ 21 more SKUs</text>
+      <rect x="400" y="356" width="152" height="20" rx="4" fill="#3B5BDB"/>
+      <text x="476" y="369" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Publish Build Plan →</text>
+    </svg>
+  </div>
+</div>
+
+<!-- E3 Material Plan -->
+<div class="panel" id="e3">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E3 · Material Plan</div>
+      <div class="spec-sub">Material Requirements landing · Procurement / Buyers</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips"><span class="chip persona">Buyers</span><span class="chip persona">Supply Planners</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Material Requirements tab. Material × week net requirement grid. Locked to same version as Production. Order-by dates sorted soonest first.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Accept/adjust requirements · generate PO recommendations · flag supply risk → Build Plan</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Material requirement by ingredient × period</li>
+        <li><span class="kpi-n">2</span>Coverage: on-hand + open POs vs. requirement</li>
+        <li><span class="kpi-n">3</span>Order-by date / lead-time risk</li>
+        <li><span class="kpi-n">4</span>Forecast delta vs. prior version (in material units)</li>
+        <li><span class="kpi-n">5</span>Shared-ingredient exposure (multi-SKU risk)</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Material Requirements</span>
+        <span class="chip tab-c">Coverage &amp; Order Board</span>
+        <span class="chip tab-c">Shared-Ingredient Exposure</span>
+        <span class="chip tab-c">Cost Watch</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Masking</div>
+      <div class="chips"><span class="chip mask">⊘ Same as E2 — customer, price, $, retailer</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Phase</div>
+      <div class="chips"><span class="chip p3">Phase 3 — requires BOM explosion + lead-time data</span></div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E3 Material Plan wireframe">
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah  ·  E3 Material Plan</text>
+      <text x="370" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Version: 2026-09 v3 (locked)  ·  Phase 3</text>
+      <rect x="0" y="28" width="560" height="20" fill="#450A0A"/>
+      <text x="280" y="41" font-size="8" font-weight="700" fill="#FCA5A5" text-anchor="middle" font-family="DM Sans,sans-serif">⊘  CUSTOMER, PRICE AND RETAILER DATA MASKED FOR THIS ROLE</text>
+      <rect x="0" y="48" width="560" height="20" fill="#0F172A"/>
+      <rect x="8" y="51" width="110" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="63" y="61" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Material Requirements</text>
+      <text x="138" y="61" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Coverage &amp; Order Board</text>
+      <text x="256" y="61" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Shared-Ingredient Exposure</text>
+      <text x="390" y="61" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Cost Watch</text>
+      <!-- Filter bar -->
+      <rect x="8" y="76" width="544" height="18" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="88" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Horizon: 13 wks   ·   Material type: All   ·   Risk: Show at-risk only</text>
+      <!-- Heatmap header -->
+      <rect x="8" y="100" width="544" height="14" fill="#F1F5F9"/>
+      <text x="130" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Material</text>
+      <text x="220" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Wk 0</text>
+      <text x="256" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Wk 1</text>
+      <text x="292" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Wk 2</text>
+      <text x="328" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Wk 3</text>
+      <text x="364" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Wk 4</text>
+      <text x="412" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Order-by</text>
+      <text x="480" y="110" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Coverage</text>
+      <!-- Heatmap rows -->
+      <rect x="8" y="114" width="544" height="20" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="0.5"/>
+      <text x="16" y="127" font-size="7.5" fill="#991B1B" font-weight="600" font-family="DM Sans,sans-serif">Whey Protein Isolate</text>
+      <rect x="216" y="116" width="32" height="16" rx="2" fill="#FCA5A5"/>
+      <text x="232" y="127" font-size="7" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">4,200</text>
+      <rect x="250" y="116" width="32" height="16" rx="2" fill="#FCA5A5"/>
+      <text x="266" y="127" font-size="7" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">4,200</text>
+      <rect x="286" y="116" width="32" height="16" rx="2" fill="#FCD34D"/>
+      <text x="302" y="127" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">3,800</text>
+      <rect x="322" y="116" width="32" height="16" rx="2" fill="#D1FAE5"/>
+      <text x="338" y="127" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">3,800</text>
+      <rect x="358" y="116" width="32" height="16" rx="2" fill="#D1FAE5"/>
+      <text x="374" y="127" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">3,200</text>
+      <text x="412" y="127" font-size="7.5" font-weight="700" fill="#DC2626" font-family="DM Sans,sans-serif">⚠ Sep 14</text>
+      <rect x="472" y="117" width="54" height="14" rx="3" fill="#FEE2E2"/>
+      <text x="499" y="127" font-size="7" fill="#991B1B" text-anchor="middle" font-family="DM Sans,sans-serif">2.1 wks</text>
+      <rect x="8" y="134" width="544" height="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="147" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Erythritol</text>
+      <rect x="216" y="136" width="32" height="16" rx="2" fill="#D1FAE5"/>
+      <text x="232" y="147" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">2,100</text>
+      <rect x="250" y="136" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="266" y="147" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">2,100</text>
+      <rect x="286" y="136" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="302" y="147" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">2,100</text>
+      <rect x="322" y="136" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="338" y="147" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">2,100</text>
+      <rect x="358" y="136" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="374" y="147" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">1,800</text>
+      <text x="412" y="147" font-size="7.5" fill="#16A34A" font-family="DM Sans,sans-serif">Oct 12</text>
+      <rect x="472" y="137" width="54" height="14" rx="3" fill="#D1FAE5"/>
+      <text x="499" y="147" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">11.4 wks</text>
+      <rect x="8" y="154" width="544" height="20" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.5"/>
+      <text x="16" y="167" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Cocoa Powder — shared (4 SKUs)</text>
+      <rect x="216" y="156" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="232" y="167" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">1,600</text>
+      <rect x="250" y="156" width="32" height="16" rx="2" fill="#FCD34D"/><text x="266" y="167" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">1,900</text>
+      <rect x="286" y="156" width="32" height="16" rx="2" fill="#FCD34D"/><text x="302" y="167" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">2,100</text>
+      <rect x="322" y="156" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="338" y="167" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">1,600</text>
+      <rect x="358" y="156" width="32" height="16" rx="2" fill="#D1FAE5"/><text x="374" y="167" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">1,200</text>
+      <text x="412" y="167" font-size="7.5" fill="#D97706" font-family="DM Sans,sans-serif">Sep 28</text>
+      <rect x="472" y="157" width="54" height="14" rx="3" fill="#FEF3C7"/>
+      <text x="499" y="167" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">4.8 wks</text>
+      <text x="16" y="190" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">↓ 38 more ingredients · scroll</text>
+      <!-- Legend -->
+      <rect x="8" y="200" width="200" height="30" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <rect x="16" y="208" width="12" height="12" rx="2" fill="#FEE2E2"/><text x="32" y="217" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Critical (&lt;4 wks)</text>
+      <rect x="88" y="208" width="12" height="12" rx="2" fill="#FCD34D"/><text x="104" y="217" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Watch (4–8 wks)</text>
+      <rect x="168" y="208" width="12" height="12" rx="2" fill="#D1FAE5"/><text x="184" y="217" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">OK</text>
+      <!-- Order alerts list -->
+      <rect x="8" y="240" width="544" height="16" fill="#F1F5F9"/>
+      <text x="16" y="251" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">ORDER ALERTS — sorted by order-by date</text>
+      <rect x="8" y="256" width="268" height="28" rx="4" fill="#FFFFFF" stroke="#FCA5A5" stroke-width="1"/>
+      <text x="16" y="268" font-size="7" font-weight="600" fill="#DC2626" font-family="DM Sans,sans-serif">⚠ ORDER NOW — Whey Protein Isolate</text>
+      <text x="16" y="280" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Need 4,200 kg · Order-by Sep 14 · Lead time 14d</text>
+      <rect x="284" y="256" width="268" height="28" rx="4" fill="#FFFFFF" stroke="#FCD34D" stroke-width="1"/>
+      <text x="292" y="268" font-size="7" font-weight="600" fill="#D97706" font-family="DM Sans,sans-serif">Watch — Cocoa Powder (shared)</text>
+      <text x="292" y="280" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Coverage tightening wk 2 · Review by Sep 28</text>
+    </svg>
+  </div>
+</div>
+
+<!-- E4 Plan & Scenario -->
+<div class="panel" id="e4">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E4 · Plan &amp; Scenario</div>
+      <div class="spec-sub">Scenario Studio landing · Finance / FP&amp;A / CFO</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips"><span class="chip persona">Jeff — FSVP Finance</span><span class="chip persona">Bracken — CFO</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Scenario Studio tab. Base case P&amp;L left. Scenario controls right. Scenarios branch from locked plan version — never overwrite.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Lock plan version · run and compare scenarios (price, launch, delist, promo intensity) · export to FP&amp;A/ERP · set capacity threshold → capex review</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Net revenue forecast vs. budget/AOP</li>
+        <li><span class="kpi-n">2</span>Contribution margin by SKU</li>
+        <li><span class="kpi-n">3</span>Price elasticity + revenue-optimal price</li>
+        <li><span class="kpi-n">4</span>Net incremental volume (post-cannibalization)</li>
+        <li><span class="kpi-n">5</span>Scenario delta vs. base (revenue + margin)</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Revenue Forecast Feed</span>
+        <span class="chip tab-c">Gross-to-Net Waterfall</span>
+        <span class="chip tab-c">Scenario Studio</span>
+        <span class="chip tab-c">Portfolio Net Growth</span>
+        <span class="chip tab-c">Capacity &amp; Capex Trigger</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Masking / Phase</div>
+      <div class="chips">
+        <span class="chip p2">Phase 2 — full $ view requires ERP + G2N crosswalk</span>
+      </div>
+      <div class="spec-val" style="margin-top:6px">Full visibility. No masking.</div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E4 Plan and Scenario wireframe">
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah  ·  E4 Plan &amp; Scenario</text>
+      <text x="380" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Plan: 2026 AOP v2  ·  Full visibility</text>
+      <rect x="0" y="28" width="560" height="20" fill="#0F172A"/>
+      <rect x="8" y="31" width="84" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="50" y="41" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Scenario Studio</text>
+      <text x="112" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Revenue Forecast Feed</text>
+      <text x="230" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Gross-to-Net Waterfall</text>
+      <text x="340" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Portfolio Net Growth</text>
+      <text x="450" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Capacity &amp; Capex</text>
+      <!-- Split layout -->
+      <!-- Base case left panel -->
+      <rect x="8" y="56" width="270" height="350" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="143" y="70" font-size="8" font-weight="700" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Base Case — 2026 AOP v2</text>
+      <rect x="16" y="76" width="254" height="1" fill="#E2E8F0"/>
+      <!-- Revenue row -->
+      <text x="16" y="92" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Net Revenue (12-month forecast)</text>
+      <text x="254" y="92" font-size="10" font-weight="700" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">$18.4M</text>
+      <text x="16" y="106" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">vs. AOP Budget</text>
+      <text x="254" y="106" font-size="9" font-weight="600" fill="#D97706" text-anchor="end" font-family="DM Sans,sans-serif">−$0.9M (−4.7%)</text>
+      <rect x="16" y="112" width="254" height="1" fill="#E2E8F0"/>
+      <!-- Mini forecast line chart -->
+      <rect x="16" y="118" width="254" height="80" rx="3" fill="#F8FAFC"/>
+      <text x="143" y="130" font-size="7" fill="#94A3B8" text-anchor="middle" font-family="DM Sans,sans-serif">Net Revenue Forecast vs. AOP — monthly</text>
+      <polyline points="30,185 50,178 70,172 90,170 110,168 130,165 150,162 170,158 190,155 210,152 230,150 255,148" fill="none" stroke="#3B5BDB" stroke-width="2"/>
+      <polyline points="30,182 50,175 70,167 90,172 110,163 130,160 150,158 170,162 190,155 210,148 230,145 255,143" fill="none" stroke="#6EE7B7" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <text x="258" y="150" font-size="6.5" fill="#3B5BDB" font-family="DM Sans,sans-serif">Fcst</text>
+      <text x="258" y="160" font-size="6.5" fill="#059669" font-family="DM Sans,sans-serif">AOP</text>
+      <rect x="16" y="204" width="254" height="1" fill="#E2E8F0"/>
+      <!-- Key metrics -->
+      <text x="16" y="218" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Contribution Margin</text>
+      <text x="254" y="218" font-size="9" font-weight="600" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">38.2%</text>
+      <text x="16" y="234" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Net Incremental Volume (post-cannib.)</text>
+      <text x="254" y="234" font-size="9" font-weight="600" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">+1.4M bars</text>
+      <text x="16" y="250" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Capacity Utilization (peak)</text>
+      <text x="254" y="250" font-size="9" font-weight="600" fill="#D97706" text-anchor="end" font-family="DM Sans,sans-serif">88.4% (wk 32)</text>
+      <rect x="16" y="256" width="254" height="1" fill="#E2E8F0"/>
+      <rect x="16" y="264" width="254" height="18" rx="3" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+      <text x="143" y="276" font-size="7.5" fill="#1E40AF" text-anchor="middle" font-family="DM Sans,sans-serif">⬇ Export to FP&amp;A system (locked version)</text>
+      <!-- Scenario controls right panel -->
+      <rect x="286" y="56" width="266" height="350" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="419" y="70" font-size="8" font-weight="700" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Scenario: "Q4 Price Increase"</text>
+      <rect x="294" y="76" width="250" height="1" fill="#E2E8F0"/>
+      <!-- Scenario controls -->
+      <text x="294" y="92" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Price change — Kroger 4pk</text>
+      <rect x="294" y="96" width="180" height="8" rx="4" fill="#DBEAFE"/>
+      <rect x="294" y="96" width="120" height="8" rx="4" fill="#3B5BDB"/>
+      <text x="484" y="103" font-size="7.5" font-weight="600" fill="#0F172A" font-family="DM Sans,sans-serif">+$0.40</text>
+      <text x="294" y="118" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Elasticity curve: −0.8 (own-price)</text>
+      <rect x="294" y="130" width="250" height="1" fill="#E2E8F0"/>
+      <text x="294" y="144" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Launch: Dreamwich SKU (date)</text>
+      <rect x="294" y="148" width="180" height="8" rx="4" fill="#E9D5FF"/>
+      <rect x="294" y="148" width="60" height="8" rx="4" fill="#7C3AED"/>
+      <text x="484" y="155" font-size="7.5" font-weight="600" fill="#0F172A" font-family="DM Sans,sans-serif">Wk 6</text>
+      <text x="294" y="170" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Cannibalization adj. (auto, MO_55)</text>
+      <rect x="294" y="182" width="250" height="1" fill="#E2E8F0"/>
+      <!-- Delta results -->
+      <text x="294" y="196" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">SCENARIO DELTA vs. BASE</text>
+      <rect x="294" y="202" width="118" height="40" rx="4" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1"/>
+      <text x="303" y="216" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Net Revenue Δ</text>
+      <text x="303" y="234" font-size="12" font-weight="700" fill="#065F46" font-family="DM Sans,sans-serif">+$1.1M</text>
+      <rect x="420" y="202" width="118" height="40" rx="4" fill="#FFF7ED" stroke="#FED7AA" stroke-width="1"/>
+      <text x="429" y="216" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Volume Δ (units)</text>
+      <text x="429" y="234" font-size="11" font-weight="700" fill="#D97706" font-family="DM Sans,sans-serif">−82K</text>
+      <rect x="294" y="250" width="250" height="54" rx="3" fill="#DBEAFE" opacity="0.6"/>
+      <text x="419" y="266" font-size="7" font-weight="600" fill="#1E40AF" text-anchor="middle" font-family="DM Sans,sans-serif">Scenario revenue line chart vs. base</text>
+      <polyline points="300,294 330,286 360,278 390,272 420,266 450,261 480,258 520,254" fill="none" stroke="#3B5BDB" stroke-width="2"/>
+      <polyline points="300,296 330,289 360,284 390,280 420,276 450,272 480,269 520,266" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <rect x="294" y="312" width="250" height="24" rx="4" fill="#3B5BDB"/>
+      <text x="419" y="327" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Save Scenario → Compare with base ▸</text>
+      <text x="294" y="350" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Saved scenarios: "Q4 Price +0.20" · "Delist Cookie 12pk" · "Launch Dreamwich"</text>
+    </svg>
+  </div>
+</div>
+
+<!-- E5 Trade Accrual -->
+<div class="panel" id="e5">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E5 · Trade Accrual Planner</div>
+      <div class="spec-sub">Accrual Schedule landing · Accounting / Controller</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips"><span class="chip persona">Revenue Accounting</span><span class="chip persona">Controller</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Accrual Schedule tab. Customer × trade mechanic × month grid. Locked to Finance's plan version. Current month highlighted.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Approve accrual amounts · adjust rates · map to GL accounts · export journal entries · match deductions to promos</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Forecast trade expense by customer × period × mechanic</li>
+        <li><span class="kpi-n">2</span>Trade rate % of gross by customer</li>
+        <li><span class="kpi-n">3</span>Accrual vs. actual variance (last close)</li>
+        <li><span class="kpi-n">4</span>Promo → deduction timing lag</li>
+        <li><span class="kpi-n">5</span>Open/unapplied deductions + aging</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Accrual Schedule</span>
+        <span class="chip tab-c">Promo Calendar Driver</span>
+        <span class="chip tab-c">Accrual vs. Actual Reconciliation</span>
+        <span class="chip tab-c">Deduction Aging</span>
+        <span class="chip tab-c">GL Mapping</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Phase</div>
+      <div class="chips"><span class="chip p2">Phase 2 — requires ERP invoices + trade deduction records</span></div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E5 Trade Accrual wireframe">
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah  ·  E5 Trade Accrual Planner</text>
+      <text x="370" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Plan: 2026 AOP v2  ·  Full visibility</text>
+      <rect x="0" y="28" width="560" height="20" fill="#0F172A"/>
+      <rect x="8" y="31" width="90" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="53" y="41" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Accrual Schedule</text>
+      <text x="118" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Promo Calendar</text>
+      <text x="204" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Reconciliation</text>
+      <text x="286" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Deduction Aging</text>
+      <text x="376" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">GL Mapping</text>
+      <!-- Filter -->
+      <rect x="8" y="56" width="544" height="18" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="68" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Period: Sep–Dec 2026  ·  Customer: All  ·  Mechanic: All  ·  Show: Unapproved only</text>
+      <rect x="470" y="58" width="80" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="510" y="68" font-size="7" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Export Journal →</text>
+      <!-- Table -->
+      <rect x="8" y="80" width="544" height="16" fill="#F1F5F9"/>
+      <text x="16" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Customer</text>
+      <text x="116" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Mechanic</text>
+      <text x="200" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Sep</text>
+      <text x="248" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Oct</text>
+      <text x="296" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Nov</text>
+      <text x="344" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Dec</text>
+      <text x="400" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Trade Rate</text>
+      <text x="468" y="91" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">Status</text>
+      <!-- Rows -->
+      <rect x="8" y="96" width="544" height="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="108" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Kroger</text>
+      <text x="116" y="108" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Off-invoice</text>
+      <text x="200" y="108" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$42,100</text>
+      <text x="248" y="108" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$44,200</text>
+      <text x="296" y="108" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$48,900</text>
+      <text x="344" y="108" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$52,100</text>
+      <text x="400" y="108" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">12.4%</text>
+      <rect x="466" y="99" width="54" height="12" rx="3" fill="#D1FAE5"/>
+      <text x="493" y="108" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">Approved</text>
+      <rect x="8" y="114" width="544" height="18" fill="#FFF7ED" stroke="#FED7AA" stroke-width="0.5"/>
+      <text x="16" y="126" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Kroger</text>
+      <text x="116" y="126" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Scan-back</text>
+      <text x="200" y="126" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$18,400</text>
+      <text x="248" y="126" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$22,600</text>
+      <text x="296" y="126" font-size="7.5" fill="#D97706" font-family="DM Sans,sans-serif">$31,200</text>
+      <text x="344" y="126" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$24,800</text>
+      <text x="400" y="126" font-size="7.5" fill="#D97706" font-family="DM Sans,sans-serif">18.1%</text>
+      <rect x="466" y="117" width="54" height="12" rx="3" fill="#FEF3C7"/>
+      <text x="493" y="126" font-size="7" fill="#92400E" text-anchor="middle" font-family="DM Sans,sans-serif">⚠ Review</text>
+      <rect x="8" y="132" width="544" height="18" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="144" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">Walmart</text>
+      <text x="116" y="144" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Off-invoice</text>
+      <text x="200" y="144" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$36,800</text>
+      <text x="248" y="144" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$38,400</text>
+      <text x="296" y="144" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$41,200</text>
+      <text x="344" y="144" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">$44,600</text>
+      <text x="400" y="144" font-size="7.5" fill="#0F172A" font-family="DM Sans,sans-serif">11.8%</text>
+      <rect x="466" y="135" width="54" height="12" rx="3" fill="#D1FAE5"/>
+      <text x="493" y="144" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">Approved</text>
+      <text x="16" y="166" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">↓ 22 more rows</text>
+      <!-- Deduction Aging chart -->
+      <rect x="8" y="178" width="544" height="16" fill="#F1F5F9"/>
+      <text x="16" y="189" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">DEDUCTION AGING — open balance $214,800</text>
+      <rect x="8" y="194" width="544" height="100" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <!-- Horizontal bar chart -->
+      <text x="16" y="210" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">0–30d</text>
+      <rect x="70" y="202" width="280" height="12" rx="2" fill="#D1FAE5"/>
+      <text x="354" y="212" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">$98,400</text>
+      <text x="16" y="228" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">31–60d</text>
+      <rect x="70" y="220" width="140" height="12" rx="2" fill="#FEF3C7"/>
+      <text x="214" y="230" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">$62,200</text>
+      <text x="16" y="246" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">61–90d</text>
+      <rect x="70" y="238" width="76" height="12" rx="2" fill="#FED7AA"/>
+      <text x="150" y="248" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">$38,700</text>
+      <text x="16" y="264" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">&gt;90d</text>
+      <rect x="70" y="256" width="36" height="12" rx="2" fill="#FCA5A5"/>
+      <text x="110" y="266" font-size="7" fill="#991B1B" font-family="DM Sans,sans-serif">$15,500 ⚠</text>
+      <rect x="8" y="302" width="544" height="70" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="316" font-size="7" font-weight="700" fill="#475569" font-family="DM Sans,sans-serif">PROMO → DEDUCTION TIMING LAG</text>
+      <text x="16" y="330" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Avg lag: 47 days  ·  Kroger scan-back: 62d  ·  Walmart off-invoice: 14d</text>
+      <text x="16" y="344" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Nov promo event → deduction expected week of Jan 6 (62d avg for this mechanic)</text>
+    </svg>
+  </div>
+</div>
+
+<!-- E6 Analytics Workbench -->
+<div class="panel" id="e6">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E6 · Analytics Workbench</div>
+      <div class="spec-sub">Competitive Landscape landing · BI / Analytics</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips"><span class="chip persona">BI / Analytics</span><span class="chip persona">Model Stewards</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Competitive Landscape tab. Share trend for defined competitor set. Multi-line chart trailing 52 weeks. KPI comparison panel right.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Define competitor sets · run baselines · publish findings → Marketing + Finance · monitor model drift · manage data feeds</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Incremental volume + ROI per promo event</li>
+        <li><span class="kpi-n">2</span>Market share vs. defined competitor sets</li>
+        <li><span class="kpi-n">3</span>Cannibalization rate (own-brand donor count)</li>
+        <li><span class="kpi-n">4</span>Baseline velocity trend (promo-stripped)</li>
+        <li><span class="kpi-n">5</span>Price index vs. competitors</li>
+        <li><span class="kpi-n">6</span>Model accuracy / drift + data freshness</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Competitive Landscape</span>
+        <span class="chip tab-c">Promo Post-Mortem</span>
+        <span class="chip tab-c">Incrementality Lab</span>
+        <span class="chip tab-c">Cannibalization Matrix</span>
+        <span class="chip tab-c">Model Health &amp; Data Ops</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Masking / Phase</div>
+      <div class="spec-val">Full visibility including model internals. No masking.</div>
+      <div class="chips" style="margin-top:6px"><span class="chip p1">Phase 1</span></div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E6 Analytics Workbench wireframe">
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah  ·  E6 Analytics Workbench</text>
+      <text x="380" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Full visibility  ·  Latest data</text>
+      <rect x="0" y="28" width="560" height="20" fill="#0F172A"/>
+      <rect x="8" y="31" width="104" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="60" y="41" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Competitive Landscape</text>
+      <text x="128" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Promo Post-Mortem</text>
+      <text x="232" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Incrementality Lab</text>
+      <text x="330" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Cannibalization Matrix</text>
+      <text x="444" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Model Health</text>
+      <!-- Filter bar -->
+      <rect x="8" y="56" width="544" height="18" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="68" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Set: Protein Bars — defined competitor set  ·  Channel: MULO  ·  Period: 52w  ·  SKU grain</text>
+      <rect x="440" y="58" width="108" height="14" rx="3" fill="#EDE9FE"/>
+      <text x="494" y="68" font-size="7" fill="#5B21B6" text-anchor="middle" font-family="DM Sans,sans-serif">+ Edit competitor set</text>
+      <!-- Share trend chart -->
+      <rect x="8" y="80" width="340" height="160" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="178" y="94" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Share of Category — Protein Bar Sour/Fruit Segment</text>
+      <!-- Multi-line chart -->
+      <line x1="20" y1="100" x2="340" y2="100" stroke="#F1F5F9" stroke-width="1"/>
+      <line x1="20" y1="120" x2="340" y2="120" stroke="#F1F5F9" stroke-width="1"/>
+      <line x1="20" y1="140" x2="340" y2="140" stroke="#F1F5F9" stroke-width="1"/>
+      <line x1="20" y1="160" x2="340" y2="160" stroke="#F1F5F9" stroke-width="1"/>
+      <text x="18" y="103" font-size="6.5" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">40%</text>
+      <text x="18" y="123" font-size="6.5" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">30%</text>
+      <text x="18" y="143" font-size="6.5" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">20%</text>
+      <text x="18" y="163" font-size="6.5" fill="#94A3B8" text-anchor="end" font-family="DM Sans,sans-serif">10%</text>
+      <!-- BUILT line (growing) -->
+      <polyline points="22,158 60,152 100,146 140,140 180,134 220,128 260,122 300,116 330,112" fill="none" stroke="#3B5BDB" stroke-width="2.5"/>
+      <!-- Comp A (declining) -->
+      <polyline points="22,128 60,130 100,132 140,134 180,136 220,138 260,140 300,142 330,143" fill="none" stroke="#EF4444" stroke-width="1.5"/>
+      <!-- Comp B (flat) -->
+      <polyline points="22,140 60,141 100,139 140,140 180,141 220,140 260,139 300,140 330,141" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <!-- Legend -->
+      <rect x="22" y="228" width="6" height="6" rx="1" fill="#3B5BDB"/>
+      <text x="32" y="235" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">BUILT (+3.2pp YoY)</text>
+      <rect x="120" y="228" width="6" height="6" rx="1" fill="#EF4444"/>
+      <text x="130" y="235" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Comp A (−2.1pp)</text>
+      <rect x="222" y="228" width="6" height="6" rx="1" fill="#F59E0B"/>
+      <text x="232" y="235" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Comp B (flat)</text>
+      <text x="22" y="234" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif" x="22" y="234"/>
+      <!-- KPI comparison panel -->
+      <rect x="356" y="80" width="196" height="160" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="454" y="94" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">KPI vs. Competitors</text>
+      <rect x="364" y="100" width="180" height="1" fill="#E2E8F0"/>
+      <text x="364" y="114" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Velocity ($/s/w)</text>
+      <text x="536" y="114" font-size="8" font-weight="600" fill="#3B5BDB" text-anchor="end" font-family="DM Sans,sans-serif">$3.18 ↑</text>
+      <text x="364" y="128" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Comp A velocity</text>
+      <text x="536" y="128" font-size="8" fill="#EF4444" text-anchor="end" font-family="DM Sans,sans-serif">$2.44 ↓</text>
+      <text x="364" y="142" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Distribution (TDP)</text>
+      <text x="536" y="142" font-size="8" font-weight="600" fill="#3B5BDB" text-anchor="end" font-family="DM Sans,sans-serif">1,842 ↑</text>
+      <text x="364" y="156" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">ARP vs. Comp A</text>
+      <text x="536" y="156" font-size="8" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">+$0.18</text>
+      <text x="364" y="170" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Price index</text>
+      <text x="536" y="170" font-size="8" fill="#D97706" text-anchor="end" font-family="DM Sans,sans-serif">104.2</text>
+      <text x="364" y="184" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Promo depth avg</text>
+      <text x="536" y="184" font-size="8" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">21.4%</text>
+      <text x="364" y="198" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Baseline velocity</text>
+      <text x="536" y="198" font-size="8" font-weight="600" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">$2.91 ↑</text>
+      <text x="364" y="212" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Cannib. own-brand</text>
+      <text x="536" y="212" font-size="8" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">0 donors</text>
+      <!-- Cannibalization matrix thumbnail -->
+      <rect x="8" y="252" width="262" height="100" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="139" y="266" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Cannibalization Matrix (thumbnail)</text>
+      <!-- Mini heatmap 4×4 -->
+      <rect x="20" y="272" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="54" y="272" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="88" y="272" width="30" height="18" rx="2" fill="#FEF3C7"/>
+      <rect x="122" y="272" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="20" y="294" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="54" y="294" width="30" height="18" rx="2" fill="#FEE2E2"/>
+      <rect x="88" y="294" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="122" y="294" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="20" y="316" width="30" height="18" rx="2" fill="#FEF3C7"/>
+      <rect x="54" y="316" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="88" y="316" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <rect x="122" y="316" width="30" height="18" rx="2" fill="#D1FAE5"/>
+      <text x="160" y="295" font-size="7" fill="#DC2626" font-family="DM Sans,sans-serif">⚠ 1 red pair</text>
+      <text x="160" y="308" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Click → full matrix</text>
+      <!-- Model health -->
+      <rect x="278" y="252" width="274" height="100" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="415" y="266" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Model Health &amp; Data Freshness</text>
+      <text x="286" y="282" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">E1 Demand Forecast wMAPE (4-wk lag)</text>
+      <rect x="286" y="286" width="140" height="8" rx="4" fill="#E2E8F0"/>
+      <rect x="286" y="286" width="94" height="8" rx="4" fill="#3B5BDB"/>
+      <text x="430" y="294" font-size="7.5" font-weight="700" fill="#3B5BDB" font-family="DM Sans,sans-serif">4.2%</text>
+      <text x="286" y="306" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Cannib. coverage (≥8 wks)</text>
+      <rect x="286" y="310" width="140" height="8" rx="4" fill="#E2E8F0"/>
+      <rect x="286" y="310" width="68" height="8" rx="4" fill="#6366F1"/>
+      <text x="430" y="318" font-size="7.5" fill="#6366F1" font-family="DM Sans,sans-serif">48%</text>
+      <text x="286" y="330" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">SPINS last refresh</text>
+      <text x="430" y="330" font-size="7.5" fill="#16A34A" font-family="DM Sans,sans-serif">Sep 9 ✓</text>
+      <text x="286" y="344" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Druid ingestion lag</text>
+      <text x="430" y="344" font-size="7.5" fill="#16A34A" font-family="DM Sans,sans-serif">&lt; 2h ✓</text>
+    </svg>
+  </div>
+</div>
+
+<!-- E7 Brand & Launch -->
+<div class="panel" id="e7">
+  <div class="spec">
+    <div>
+      <div class="spec-title">E7 · Brand &amp; Launch</div>
+      <div class="spec-sub">Launch Command Center landing · Marketing / Innovation</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Personas</div>
+      <div class="chips"><span class="chip persona">Brand Managers</span><span class="chip persona">Innovation</span></div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Landing State</div>
+      <div class="spec-val">Launch Command Center tab. Active launch selected. Velocity vs. benchmark chart (P25/P50/P75 bands). Incrementality verdict panel right. CCO incrementality question lives here.</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Primary Actions</div>
+      <div class="spec-val">Create launch plans (input to E1) · set launch benchmarks · request promo analyses from BI · compare price scenarios</div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Top KPIs (ranked)</div>
+      <ul class="kpi-list">
+        <li><span class="kpi-n">1</span>Launch performance vs. benchmark (dist ramp, velocity, repeat)</li>
+        <li><span class="kpi-n">2</span>Net incremental contribution (post-cannibalization)</li>
+        <li><span class="kpi-n">3</span>Share of category / segment</li>
+        <li><span class="kpi-n">4</span>Price elasticity by item</li>
+        <li><span class="kpi-n">5</span>Velocity trend by item</li>
+        <li><span class="kpi-n">6</span>Competitor launch + price activity</li>
+      </ul>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Sub-tabs</div>
+      <div class="chips">
+        <span class="chip tab-c">Item Trends</span>
+        <span class="chip tab-c">Launch Command Center</span>
+        <span class="chip tab-c">Pricing Lens</span>
+        <span class="chip tab-c">Competitor Watch</span>
+        <span class="chip tab-c">Category Trends</span>
+      </div>
+    </div>
+    <div class="spec-sec">
+      <div class="spec-lbl">Masking / Phase</div>
+      <div class="chips"><span class="chip mask">⊘ Trade $ · customer-level net sales</span></div>
+      <div class="chips" style="margin-top:4px"><span class="chip p1">Phase 1</span></div>
+    </div>
+  </div>
+  <div class="wf">
+    <svg viewBox="0 0 560 420" aria-label="E7 Brand and Launch wireframe">
+      <rect x="0" y="0" width="560" height="28" fill="#1E293B"/>
+      <text x="10" y="18" font-size="9" fill="#94A3B8" font-family="DM Sans,sans-serif">Aevah  ·  E7 Brand &amp; Launch</text>
+      <text x="360" y="18" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Trade $ masked  ·  Consumption grain  ·  Phase 1</text>
+      <rect x="0" y="28" width="560" height="20" fill="#0F172A"/>
+      <text x="60" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Item Trends</text>
+      <rect x="108" y="31" width="130" height="14" rx="3" fill="#3B5BDB"/>
+      <text x="173" y="41" font-size="8" fill="#fff" text-anchor="middle" font-family="DM Sans,sans-serif">Launch Command Center</text>
+      <text x="260" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Pricing Lens</text>
+      <text x="325" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Competitor Watch</text>
+      <text x="425" y="41" font-size="8" fill="#475569" font-family="DM Sans,sans-serif">Category Trends</text>
+      <!-- Launch selector -->
+      <rect x="8" y="56" width="544" height="18" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="16" y="68" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Launch: Built Green Apple Crush Sour Puff 4pk (08-40229-30656)  ·  Launched Feb 1 2026  ·  Account: Kroger</text>
+      <rect x="470" y="58" width="78" height="14" rx="3" fill="#EFF6FF"/>
+      <text x="509" y="68" font-size="7" fill="#1E40AF" text-anchor="middle" font-family="DM Sans,sans-serif">+ New launch</text>
+      <!-- Velocity chart left -->
+      <rect x="8" y="80" width="320" height="160" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="168" y="94" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Velocity vs. Launch Benchmark — Wks 1–12</text>
+      <!-- P75 band -->
+      <polygon points="22,108 60,106 100,104 140,103 180,102 220,102 260,101 300,100 316,100 316,118 300,118 260,118 220,118 180,118 140,118 100,118 60,118 22,118" fill="#DBEAFE" opacity="0.5"/>
+      <!-- P25 band -->
+      <polygon points="22,126 60,124 100,122 140,121 180,120 220,120 260,119 300,119 316,119 316,134 300,134 260,134 220,134 180,134 140,134 100,134 60,134 22,134" fill="#DBEAFE" opacity="0.3"/>
+      <!-- P50 line -->
+      <polyline points="22,118 60,116 100,114 140,113 180,112 220,112 260,111 300,111 316,110" fill="none" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <!-- BUILT actual line (above P75 = outperforming) -->
+      <polyline points="22,106 60,102 100,99 140,97 180,95 220,93 260,92 300,90 316,89" fill="none" stroke="#3B5BDB" stroke-width="2.5"/>
+      <circle cx="316" cy="89" r="3" fill="#3B5BDB"/>
+      <!-- Labels -->
+      <text x="318" y="94" font-size="7" fill="#3B5BDB" font-family="DM Sans,sans-serif">actual</text>
+      <text x="318" y="114" font-size="7" fill="#93C5FD" font-family="DM Sans,sans-serif">P50</text>
+      <text x="318" y="124" font-size="7" fill="#BFDBFE" font-family="DM Sans,sans-serif">P25</text>
+      <!-- Above P75 annotation -->
+      <rect x="100" y="96" width="90" height="14" rx="3" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1"/>
+      <text x="145" y="106" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">Tracking above P75</text>
+      <!-- X-axis -->
+      <text x="22" y="156" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 1</text>
+      <text x="115" y="156" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 4</text>
+      <text x="210" y="156" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 8</text>
+      <text x="300" y="156" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Wk 12</text>
+      <!-- Dist ramp below chart -->
+      <rect x="8" y="168" width="320" height="26" rx="0" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="0.5"/>
+      <text x="16" y="179" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Distribution ramp</text>
+      <rect x="16" y="182" width="60" height="8" rx="3" fill="#3B5BDB"/>
+      <rect x="78" y="182" width="80" height="8" rx="3" fill="#3B5BDB"/>
+      <rect x="160" y="182" width="140" height="8" rx="3" fill="#3B5BDB"/>
+      <text x="312" y="189" font-size="7" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">2,847 stores</text>
+      <!-- Incrementality verdict panel -->
+      <rect x="336" y="80" width="216" height="160" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="444" y="94" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Incrementality Verdict</text>
+      <rect x="344" y="100" width="200" height="1" fill="#E2E8F0"/>
+      <rect x="344" y="106" width="200" height="28" rx="4" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1"/>
+      <text x="444" y="119" font-size="10" font-weight="700" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">● Incremental</text>
+      <text x="444" y="130" font-size="7" fill="#065F46" text-anchor="middle" font-family="DM Sans,sans-serif">0 own-brand donors · 83.6% incr. share</text>
+      <text x="344" y="150" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Own-brand donors</text>
+      <text x="536" y="150" font-size="9" font-weight="700" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">0</text>
+      <text x="344" y="164" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Rate at wk 11</text>
+      <text x="536" y="164" font-size="9" font-weight="600" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">&lt;4%</text>
+      <text x="344" y="178" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Competitor donors</text>
+      <text x="536" y="178" font-size="8" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">9 pairs</text>
+      <text x="344" y="192" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Incremental share</text>
+      <text x="536" y="192" font-size="8" font-weight="600" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">83.6%</text>
+      <text x="344" y="206" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Model: MO_55  ·  Scored weekly</text>
+      <rect x="344" y="212" width="200" height="20" rx="3" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+      <text x="444" y="225" font-size="7" fill="#1E40AF" text-anchor="middle" font-family="DM Sans,sans-serif">→ View all Dreamwich SKUs · filter by account</text>
+      <!-- Bottom section: competitor watch + pricing -->
+      <rect x="8" y="252" width="262" height="100" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="139" y="266" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Competitor Activity — this week</text>
+      <text x="16" y="282" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Clif Bar Zing · price cut −$0.30 · Kroger / Target</text>
+      <text x="16" y="296" font-size="7" fill="#475569" font-family="DM Sans,sans-serif">Rxbar Protein · new flavor auth · Walmart (640 stores)</text>
+      <text x="16" y="310" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Quest Bar · no change</text>
+      <text x="16" y="340" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">↓ 4 more competitors in this set</text>
+      <rect x="278" y="252" width="274" height="100" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="415" y="266" font-size="8" font-weight="600" fill="#0F172A" text-anchor="middle" font-family="DM Sans,sans-serif">Pricing Lens — Green Apple Crush 4pk</text>
+      <text x="286" y="282" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Own-price elasticity</text>
+      <text x="544" y="282" font-size="8" font-weight="600" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">−1.14</text>
+      <text x="286" y="296" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Revenue-optimal ARP</text>
+      <text x="544" y="296" font-size="8" font-weight="600" fill="#3B5BDB" text-anchor="end" font-family="DM Sans,sans-serif">$9.49</text>
+      <text x="286" y="310" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Current ARP</text>
+      <text x="544" y="310" font-size="8" fill="#0F172A" text-anchor="end" font-family="DM Sans,sans-serif">$9.18</text>
+      <text x="286" y="324" font-size="7" fill="#94A3B8" font-family="DM Sans,sans-serif">Revenue at optimal vs. current</text>
+      <text x="544" y="324" font-size="8" fill="#16A34A" text-anchor="end" font-family="DM Sans,sans-serif">+$1,840/wk</text>
+      <rect x="286" y="332" width="250" height="14" rx="3" fill="#EDE9FE"/>
+      <text x="411" y="342" font-size="7" fill="#5B21B6" text-anchor="middle" font-family="DM Sans,sans-serif">→ Run price scenario in E4 ▸</text>
+    </svg>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = ['ov','e1','e2','e3','e4','e5','e6','e7'].indexOf(id);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+}
+</script>
