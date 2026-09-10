@@ -406,6 +406,93 @@ tbody tr:last-child td { border-bottom: none; }
     </div>
   </div>
 
+  <!-- SEASONAL TIMING -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-label">Seasonal Launch Timing — When in the Year to Introduce a New Flavor</span>
+      <span class="card-note">cannibalization_rate_weekly + built_filtered_weekly · 74 BUILT focal UPCs · Sep 2024 – Apr 2026</span>
+    </div>
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Season table -->
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:7px 10px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)">Season</th>
+              <th style="text-align:left;padding:7px 10px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)">Months</th>
+              <th style="text-align:center;padding:7px 10px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)">Settled Cannib Rate<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(wk 9–16 avg)</span></th>
+              <th style="text-align:center;padding:7px 10px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)">Ramp to 50% Plateau</th>
+              <th style="text-align:left;padding:7px 10px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)">Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);background:var(--green-l)">
+              <td style="padding:8px 10px;font-weight:600;color:var(--green-d)">Apr–May · Q2 Shoulder</td>
+              <td style="padding:8px 10px;color:var(--text2)">Apr · May</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--green-d)">~12%</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">8–10 wks</td>
+              <td style="padding:8px 10px;color:var(--text2)">Category growing into summer; net-new buyers entering; distribution builds before peak. Apr 2025 cohort = 0% settled cannib.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:8px 10px;font-weight:600">Jan–Feb · Q1 Peak</td>
+              <td style="padding:8px 10px;color:var(--text2)">Jan · Feb</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--amber)">~62%</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">1–4 wks ⚡</td>
+              <td style="padding:8px 10px;color:var(--text2)">New Year demand surge drives fastest ramp in the dataset. But peak-season buyers are existing BUILT customers switching flavors — cannib settles high. Good for velocity targets, not for net-new demand.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:8px 10px;font-weight:600">Jul–Sep · Q3 Summer</td>
+              <td style="padding:8px 10px;color:var(--text2)">Jul · Aug · Sep</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--amber)">~52%</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">7–16 wks</td>
+              <td style="padding:8px 10px;color:var(--text2)">Back-to-school activity helps, but launch during summer means competing with full shelf resets. Moderate ramp; cannib depends heavily on format overlap with existing SKUs.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:8px 10px;font-weight:600">Oct–Nov · Q4 Early</td>
+              <td style="padding:8px 10px;color:var(--text2)">Oct · Nov</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--amber)">~20%</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">15–17 wks</td>
+              <td style="padding:8px 10px;color:var(--text2)">Builds distribution quietly through the trough; one Nov 2025 SKU showed only 7% settled cannib. Slow ramp but can set up for Q1 peak with established TDP.</td>
+            </tr>
+            <tr style="background:var(--red-l)">
+              <td style="padding:8px 10px;font-weight:600;color:var(--red-d)">Dec · Q4 Trough</td>
+              <td style="padding:8px 10px;color:var(--text2)">Dec</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--red-d)">~89%</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">—</td>
+              <td style="padding:8px 10px;color:var(--text2)">Worst window in the data. 8 SKUs launched Dec 2025 all settled at ~88% cannib rate by week 9–16. Category demand at annual low concentrates all purchases among existing buyers — new SKU shuffles existing demand with zero net-new contribution.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Objective-based recommendation -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+        <div style="background:var(--ground);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
+          <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green-d);margin-bottom:6px">Minimize Cannibalization</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">Launch <strong>Apr–May</strong>. Category demand rising into summer attracts net-new buyers. Build distribution before the June–July peak so the SKU enters at full TDP when category is growing fastest.</div>
+        </div>
+        <div style="background:var(--ground);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
+          <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber-d);margin-bottom:6px">Maximize Early Velocity</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">Launch <strong>Jan–Feb</strong>. New Year demand surge drives 1–4 week ramp to plateau — fastest in the dataset. Accept ~60% cannibalization as the cost of hitting early volume targets.</div>
+        </div>
+        <div style="background:var(--ground);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
+          <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Quiet TDP Build</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">Launch <strong>Oct–Nov</strong>. Slow ramp (15–17 wks) through the trough. Lower pressure on early performance metrics, and the SKU enters Q1 peak with established distribution. Avoid December specifically.</div>
+        </div>
+        <div style="background:var(--ground);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
+          <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red-d);margin-bottom:6px">Avoid: December</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">89% avg settled cannib rate — highest in the dataset. Every new SKU launched in Dec 2025 showed ~88% by week 9. The trough concentrates all demand among existing buyers with no new occasions to capture.</div>
+        </div>
+      </div>
+
+      <!-- Caveats -->
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;padding:0 2px">
+        <strong>Caveats:</strong> SPINS data starts Jan 2023; the large Jun 2024 cohort (33 UPCs) reflects the date cannibalization scoring was first run on mature SKUs, not true launch dates. Ramp speed analysis excludes the Jan 2023 cohort for the same reason. Sample sizes are small for most months — treat directional, not definitive. Ingredient availability, shelf reset cycles, and retailer promotional calendars may override demand timing in practice.
+      </div>
+    </div>
+  </div>
+
   <!-- MO RESPONSE -->
   <div style="display:flex;flex-direction:column;gap:8px">
     <div class="section-label">How Mo Handles This Question (Rob's Feedback)</div>
@@ -428,7 +515,7 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
 
   <div class="foot">
-    <div>Source: <code style="font-family:var(--fm)">cannibalization_rate_weekly</code> (all accounts, geography_level=CRMA) + <code style="font-family:var(--fm)">built_filtered_weekly</code> (SPINS MULO). 38 unique BUILT UPCs with Cannibalizing verdict at ≥1 account. Binary weekly rate (0%/100%) — averages reported over scored weeks. Own-brand = relationship_distance ≤ 3.</div>
+    <div>Source: <code style="font-family:var(--fm)">cannibalization_rate_weekly</code> (all accounts, geography_level=CRMA) + <code style="font-family:var(--fm)">built_filtered_weekly</code> (SPINS MULO). 38 unique BUILT UPCs with Cannibalizing verdict at ≥1 account · 74 UPCs with cannib scoring · 129 UPCs with velocity data. Binary weekly rate (0%/100%) — averages reported over scored weeks. Own-brand = relationship_distance ≤ 3. Seasonal timing: settled rate = wk 9–16 avg per UPC grouped by first-score month.</div>
     <div>Mo · Cannibalization Suite · Sep 2024 – Apr 2026 · BUILT BARS internal use only</div>
   </div>
 

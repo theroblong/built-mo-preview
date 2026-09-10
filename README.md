@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 107: Seasonal launch timing analysis added to flavor launch guide (2026-09-10)
+
+Extended `mockups/built_flavor_launch_guide.html` with a "Seasonal Launch Timing" section grounded in real SPINS data:
+
+- **74 BUILT focal UPCs** from `cannibalization_rate_weekly` grouped by first-signal month; settled rate computed at weeks 9–16 (post data-maturity)
+- **Apr–May = best window** (~12% settled cannib): category growing into summer draws net-new buyers; Apr 2025 cohort hit 0% cannibalization
+- **Dec = worst window** (~89% settled cannib): 8 SKUs launched Dec 2025 all hit ~88% by week 9–16; trough concentrates demand among existing buyers, no new occasions to capture
+- **Jan–Feb** = fastest ramp (1–4 wks to 50% plateau) but ~62% settled cannib; good for velocity targets, not for net-new demand
+- **Oct–Nov** = slow ramp (15–17 wks) but lower cannib (~20%); builds distribution before Q1 peak quietly
+
+Four objective-based recommendation tiles: Minimize Cannibalization / Maximize Early Velocity / Quiet TDP Build / Avoid December.
+
+---
+
 ## README update 106: Artifact sharing rule — HTML files are the deliverable (2026-09-10)
 
 **Rule established:** Claude artifact URLs (`claude.ai/code/artifact/...`) are private to Jason's account. Rob, Brian, Connor, and anyone at BUILT cannot open them. Every artifact must also be saved as an HTML file in `mockups/` or `docs/` so it can be emailed or shared as a file.
