@@ -152,10 +152,14 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="chart-wrap">
       <canvas id="beforeAfterChart" height="220"></canvas>
     </div>
+    <div class="chart-wrap" style="padding-top:4px">
+      <div style="font-family:var(--fh);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:6px">Bar-Equivalent Volume · 1pk = 1 bar · 4pk = 4 bars</div>
+      <canvas id="barsChart" height="120"></canvas>
+    </div>
     <div class="insight">
       <div class="ibox r">
         <div class="ibox-label">What Happened</div>
-        <div class="ibox-text">Single-serve (30573) dropped from a Jul peak of ~6,000 u/wk to under 700 u/wk by Oct 2025 — the same month the 4pk ramped. The 4pk added ~5,400 u/wk but the single-serve lost ~3,500 u/wk. Net total S&C gain: +1,900 u/wk.</div>
+        <div class="ibox-text">Single-serve (30573) dropped from a Jul peak of ~6,000 u/wk to under 700 u/wk by Oct 2025 — the same month the 4pk ramped. The 4pk added ~5,400 u/wk but the single-serve lost ~3,500 u/wk. Net total S&C unit gain: +1,900 u/wk. In bar volume (chart below) the picture is healthier: each 4pk unit = 4 bars, so the same 5,400 u/wk of 4pk represents ~21,600 bars/wk — total bars/wk roughly doubled even as unit cannibalization registers.</div>
       </div>
       <div class="ibox r">
         <div class="ibox-label">Why It Cannibalizes</div>
@@ -558,8 +562,10 @@ const fourPk = [
 // Smoothed series (compute once, reuse for both lines and total)
 const ss4 = roll4(singleServe);
 const fp4 = roll4(fourPk);
-// Total from smoothed — equals 1pk exactly before 4pk launch, then sums both
+// Total units from smoothed — equals 1pk exactly before 4pk launch, then sums both
 const total = ss4.map((v, i) => (v ?? 0) + (fp4[i] ?? 0));
+// Bar-equivalent volume: 1pk unit = 1 bar, 4pk unit = 4 bars
+const totalBars = ss4.map((v, i) => (v ?? 0) * 1 + (fp4[i] ?? 0) * 4);
 
 // Compute 4-week rolling averages
 function roll4(arr) {
@@ -716,7 +722,115 @@ function buildChart() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', buildChart);
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', buildChart);
-document.documentElement.addEventListener('data-theme-change', buildChart);
+function buildBarsChart() {
+  const c = getColors();
+  const ctx2 = document.getElementById('barsChart').getContext('2d');
+  if (window._barc) window._barc.destroy();
+
+  const launchIdx = 23;
+
+  window._barc = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: weeks,
+      datasets: [
+        {
+          label: 'Total S&C Bars (bar-equivalent)',
+          data: totalBars,
+          borderColor: '#16A34A',
+          backgroundColor: 'rgba(22,163,74,.08)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.35,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: c.textColor,
+            font: { family: 'IBM Plex Mono', size: 10 },
+            boxWidth: 14, boxHeight: 3, padding: 16,
+          }
+        },
+        tooltip: {
+          backgroundColor: c.surfaceColor,
+          borderColor: isDark() ? '#1E293B' : '#DAE0EC',
+          borderWidth: 1,
+          titleColor: c.textColor,
+          bodyColor: c.textColor,
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v === null || v === undefined) return null;
+              return `${ctx.dataset.label.split(' —')[0]}: ${Math.round(v).toLocaleString()} bars/wk`;
+            }
+          }
+        },
+        annotation: {},
+      },
+      scales: {
+        x: {
+          grid: { color: c.gridColor },
+          ticks: {
+            color: c.textColor,
+            font: { family: 'IBM Plex Mono', size: 9 },
+            maxTicksLimit: 13,
+          }
+        },
+        y: {
+          grid: { color: c.gridColor },
+          ticks: {
+            color: c.textColor,
+            font: { family: 'IBM Plex Mono', size: 9 },
+            callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v,
+          },
+          title: {
+            display: true,
+            text: 'Bars/Week (SPINS MULO)',
+            color: c.textColor,
+            font: { family: 'DM Sans', size: 10 },
+          }
+        }
+      }
+    }
+  });
+
+  // Match launch annotation to units chart
+  const meta2 = window._barc.getDatasetMeta(0);
+  const pt2 = meta2.data[launchIdx];
+  if (pt2) {
+    const origDraw = window._barc.draw.bind(window._barc);
+    window._barc.draw = function() {
+      origDraw();
+      const c2 = this.ctx;
+      const ca = this.chartArea;
+      const x = pt2.x;
+      c2.save();
+      c2.setLineDash([6, 4]);
+      c2.strokeStyle = isDark() ? '#4A6080' : '#9BA8BC';
+      c2.lineWidth = 1.5;
+      c2.beginPath();
+      c2.moveTo(x, ca.top);
+      c2.lineTo(x, ca.bottom);
+      c2.stroke();
+      c2.setLineDash([]);
+      c2.fillStyle = isDark() ? '#2563EB' : '#1D4ED8';
+      c2.font = 'bold 9px IBM Plex Mono,monospace';
+      c2.fillText('4pk launch', x + 4, ca.top + 14);
+      c2.restore();
+    };
+    window._barc.draw();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { buildChart(); buildBarsChart(); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { buildChart(); buildBarsChart(); });
+document.documentElement.addEventListener('data-theme-change', () => { buildChart(); buildBarsChart(); });
 </script>
