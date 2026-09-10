@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 106: Artifact sharing rule — HTML files are the deliverable (2026-09-10)
+
+**Rule established:** Claude artifact URLs (`claude.ai/code/artifact/...`) are private to Jason's account. Rob, Brian, Connor, and anyone at BUILT cannot open them. Every artifact must also be saved as an HTML file in `mockups/` or `docs/` so it can be emailed or shared as a file.
+
+- Artifact = iteration/preview tool for Jason only
+- HTML file in `mockups/` or `docs/` = the actual deliverable for Rob and BUILT
+- Commit + push = makes it available; email the file
+
+Also fixed the before/after velocity chart in `built_flavor_launch_guide.html`: removed the two raw (unsmoothed) series, recomputed Total from the 4-week smoothed averages so it equals the single-serve line exactly before the 4pk launch. Chart now shows 3 clean series: 1pk (red), 4pk (gold), Total (blue dashed).
+
+Wiki updated: `customer-built-doc/wiki/07-demo-guide.md` — sharing workflow + current deliverable file table.
+
+---
+
 ## README update 105: Cannibalization launch guide — CCO flavor-launch decision framework (2026-09-10)
 
 Created two artifacts for the CCO/Brian audience on own-brand flavor-launch cannibalization:

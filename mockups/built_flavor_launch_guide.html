@@ -468,8 +468,11 @@ const fourPk = [
   9226,6582,7104
 ];
 
-// Total S&C (single + 4pk)
-const total = singleServe.map((v, i) => fourPk[i] !== null ? v + fourPk[i] : v);
+// Smoothed series (compute once, reuse for both lines and total)
+const ss4 = roll4(singleServe);
+const fp4 = roll4(fourPk);
+// Total from smoothed — equals 1pk exactly before 4pk launch, then sums both
+const total = ss4.map((v, i) => (v ?? 0) + (fp4[i] ?? 0));
 
 // Compute 4-week rolling averages
 function roll4(arr) {
@@ -510,20 +513,8 @@ function buildChart() {
       labels: weeks,
       datasets: [
         {
-          label: 'S&C Single-Serve (30573) — raw',
-          data: singleServe,
-          borderColor: '#DC2626',
-          backgroundColor: 'rgba(220,38,38,.07)',
-          borderWidth: 1.2,
-          pointRadius: 1.5,
-          pointBackgroundColor: '#DC2626',
-          tension: 0.3,
-          fill: false,
-          order: 3,
-        },
-        {
-          label: 'S&C Single-Serve — 4-wk avg',
-          data: roll4(singleServe),
+          label: 'S&C Single-Serve (30573)',
+          data: ss4,
           borderColor: '#DC2626',
           borderWidth: 2.5,
           pointRadius: 0,
@@ -532,20 +523,8 @@ function buildChart() {
           order: 1,
         },
         {
-          label: 'S&C 4pk (30614) — raw',
-          data: fourPk,
-          borderColor: '#CA8A04',
-          backgroundColor: 'rgba(202,138,4,.07)',
-          borderWidth: 1.2,
-          pointRadius: 1.5,
-          pointBackgroundColor: '#CA8A04',
-          tension: 0.3,
-          fill: false,
-          order: 4,
-        },
-        {
-          label: 'S&C 4pk — 4-wk avg',
-          data: roll4(fourPk),
+          label: 'S&C 4pk (30614)',
+          data: fp4,
           borderColor: '#CA8A04',
           borderWidth: 2.5,
           pointRadius: 0,
@@ -555,7 +534,7 @@ function buildChart() {
         },
         {
           label: 'Total S&C at Kroger',
-          data: roll4(total),
+          data: total,
           borderColor: '#2563EB',
           borderWidth: 2,
           borderDash: [5,4],
