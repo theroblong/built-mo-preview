@@ -154,7 +154,7 @@ tbody tr:last-child td { border-bottom: none; }
     </div>
     <div class="chart-wrap" style="padding-top:4px">
       <div style="font-family:var(--fh);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:6px">Bar-Equivalent Volume · 1pk = 1 bar · 4pk = 4 bars</div>
-      <canvas id="barsChart" height="120"></canvas>
+      <canvas id="barsChart" height="260"></canvas>
     </div>
     <div class="insight">
       <div class="ibox r">
@@ -681,6 +681,7 @@ function buildChart() {
           ticks: {
             color: c.textColor,
             font: { family: 'IBM Plex Mono', size: 9 },
+            stepSize: 5000,
             callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v,
           },
           title: {
@@ -688,7 +689,7 @@ function buildChart() {
             text: 'Weekly Units (SPINS MULO)',
             color: c.textColor,
             font: { family: 'DM Sans', size: 10 },
-          }
+          },
         }
       }
     }
@@ -789,6 +790,7 @@ function buildBarsChart() {
           ticks: {
             color: c.textColor,
             font: { family: 'IBM Plex Mono', size: 9 },
+            stepSize: 5000,
             callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v,
           },
           title: {
@@ -796,7 +798,7 @@ function buildBarsChart() {
             text: 'Bars/Week (SPINS MULO)',
             color: c.textColor,
             font: { family: 'DM Sans', size: 10 },
-          }
+          },
         }
       }
     }
