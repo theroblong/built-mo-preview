@@ -135,6 +135,7 @@ svg.chart { display: block; width: 100%; }
 .ibox { padding: 10px 12px; border-radius: 7px; font-size: 12px; line-height: 1.6; }
 .ibox.g { background: var(--green-l); color: var(--green-b); border: 1px solid var(--green); }
 .ibox.a { background: var(--amber-l); color: var(--amber-b); border: 1px solid var(--amber); }
+.ibox.r { background: var(--red-l); color: var(--red-b); border: 1px solid var(--red); }
 .ibox-head { font-family: var(--font-h); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
 
 /* Donor mini */
@@ -559,7 +560,7 @@ svg.chart { display: block; width: 100%; }
 
   <!-- Scorecard table -->
   <div>
-    <div class="slabel">All Four Observations — Side by Side</div>
+    <div class="slabel">All Observations — Full Incrementality Scorecard</div>
     <div class="table-card">
       <div class="table-head">
         <div class="table-title">Incrementality Scorecard</div>
@@ -615,102 +616,148 @@ svg.chart { display: block; width: 100%; }
               <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--amber);font-weight:600">5–12% avg</td>
               <td><span class="chip a"><span class="dot a"></span>Watch</span></td>
             </tr>
+            <tr style="background:var(--red-l)">
+              <td><div class="sku-n">Built Puff Strawberries N Cream 1.41oz 4pk</div><div class="sku-u">08-40229-30614</div></td>
+              <td>Kroger</td>
+              <td>Sep 7, 2025</td>
+              <td style="text-align:center;color:var(--red);font-weight:700">1 (dist=1)</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--text2);font-weight:600">—</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--red);font-weight:600">61% avg · 33 wks</td>
+              <td><span class="chip r"><span class="dot r"></span>Cannibalizing</span></td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- When it's NOT advised -->
+  <!-- When it's NOT advised — Real Cannibalizing Case Study -->
   <div>
-    <div class="slabel">When It's Not Advised — The Cannibalizing Signal</div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <div style="background:#1E293B;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div class="slabel">Case Study 3 — When It's Not Advised: Real Cannibalizing Signal</div>
+    <div style="background:var(--surface);border:1px solid var(--red);border-radius:10px;overflow:hidden">
+      <!-- Header -->
+      <div style="background:#1E293B;padding:14px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div>
-          <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:#F1F5F9">Pattern: Own-Brand Rate Does Not Settle</div>
-          <div style="font-size:11px;color:#64748B;margin-top:3px">The shape below is what Aevah surfaces as a "Cannibalizing" verdict requiring action</div>
+          <div style="font-family:var(--font-h);font-size:14px;font-weight:700;color:#F1F5F9">Built Puff Strawberries N Cream Protein Bars 1.41oz (4pk)</div>
+          <div style="font-size:11px;color:#64748B;margin-top:3px">UPC 08-40229-30614 · Kroger · MULO CRMA · Sep 2025 – Apr 2026 · 33 weeks</div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span style="background:#FEF3C7;color:#92400E;font-family:var(--font-h);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:12px;border:1px solid #D97706">Illustrative Pattern</span>
-          <span class="chip r"><span class="dot r"></span>Cannibalizing</span>
-        </div>
+        <span class="chip r" style="flex-shrink:0;margin-top:2px"><span class="dot r"></span>Cannibalizing</span>
       </div>
+      <!-- Body -->
       <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <!-- Chart -->
+        <!-- Chart column -->
         <div>
           <div class="chart-box">
             <div class="chart-head">
-              <div class="chart-lbl">Cannibalization Rate · 12 Weeks</div>
-              <div style="font-size:10px;color:var(--text3)">illustrative pattern</div>
+              <div class="chart-lbl">Cannibalization Rate · First 16 Weeks (Sep–Dec 2025)</div>
+              <div class="chart-acct">Kroger</div>
             </div>
-            <!-- rate: [100,28,32,29,31,27,33,29,30,28,31,29] -->
-            <!-- x: 28+n*22.2; y: 105-rate*0.95 -->
-            <svg class="chart" viewBox="0 0 300 115" aria-label="Illustrative cannibalizing rate pattern">
+            <!-- Raw rates wk1-16: 100,100,100,100,18.4,90.3,100,100,76.5,17.3,100,59.6,100,15.6,9.3,100 -->
+            <!-- 4-wk rolling avg: 100,100,100,100,79.6,77.2,77.2,77.2,91.7,73.5,73.5,63.4,69.2,68.8,46.1,56.2 -->
+            <!-- viewBox 300×115; x=[28,272] w=244 step=16.27; y=105-rate*0.95 -->
+            <!-- Raw y: 10,10,10,10,88,19,10,10,32,89,10,48,10,90,96,10 -->
+            <!-- Roll y: 10,10,10,10,29,32,32,32,18,35,35,45,39,40,61,52 -->
+            <svg class="chart" viewBox="0 0 300 120" aria-label="Strawberries N Cream 4pk Kroger cannibalization rate 16 weeks">
+              <!-- grid -->
               <line x1="28" y1="10" x2="272" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
               <line x1="28" y1="58" x2="272" y2="58" stroke="#E2E8F0" stroke-width="0.5"/>
               <line x1="28" y1="105" x2="272" y2="105" stroke="#E2E8F0" stroke-width="0.5"/>
+              <!-- y-axis labels -->
               <text x="26" y="13" font-size="7" fill="#94A3B8" text-anchor="end">100%</text>
               <text x="26" y="61" font-size="7" fill="#94A3B8" text-anchor="end">50%</text>
               <text x="26" y="108" font-size="7" fill="#94A3B8" text-anchor="end">0%</text>
               <line x1="28" y1="8" x2="28" y2="107" stroke="#E2E8F0" stroke-width="1"/>
-              <!-- 10% line (safe zone) -->
-              <line x1="28" y1="96" x2="272" y2="96" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
-              <text x="273" y="98" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
-              <!-- 25% danger line -->
-              <line x1="28" y1="82" x2="272" y2="82" stroke="#DC2626" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
-              <text x="273" y="84" font-size="7" fill="#DC2626" opacity="0.8">25%</text>
+              <!-- 25% danger line at y=81 -->
+              <line x1="28" y1="81" x2="265" y2="81" stroke="#DC2626" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+              <text x="267" y="84" font-size="7" fill="#DC2626" opacity="0.9" text-anchor="start">25%</text>
               <!-- danger zone shading -->
-              <rect x="50" y="72" width="222" height="10" fill="#DC2626" opacity="0.07"/>
-              <!-- own-brand annotation -->
-              <rect x="55" y="46" width="110" height="26" fill="#FEE2E2" rx="4" opacity="0.95"/>
-              <text x="110" y="57" font-size="7" fill="#991B1B" text-anchor="middle" font-weight="600">2 own-brand donors</text>
-              <text x="110" y="67" font-size="7" fill="#991B1B" text-anchor="middle">active velocity, dist-1 + dist-3</text>
-              <!-- data -->
+              <rect x="28" y="81" width="237" height="24" fill="#DC2626" opacity="0.04"/>
+              <!-- raw weekly values as small hollow circles -->
+              <circle cx="28" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="44" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="60" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="77" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="93" cy="88" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="109" cy="19" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="126" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="142" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="158" cy="32" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="174" cy="89" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="191" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="207" cy="48" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="223" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="240" cy="90" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="256" cy="96" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <circle cx="272" cy="10" r="2" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <!-- 4-week rolling average — bold red line -->
               <polyline
-                points="28,10 50,79 72,75 95,77 117,76 139,79 161,74 183,77 206,76 228,79 250,76 272,77"
+                points="28,10 44,10 60,10 77,10 93,29 109,32 126,32 142,32 158,18 174,35 191,35 207,45 223,39 240,40 256,61 272,52"
                 fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-              <circle cx="272" cy="77" r="3" fill="#DC2626"/>
-              <text x="155" y="71" font-size="7" fill="#DC2626" font-weight="600" text-anchor="middle">Stays 27–33% · never settles</text>
-              <text x="28" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 1</text>
-              <text x="117" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 5</text>
-              <text x="206" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 9</text>
-              <text x="272" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 12</text>
+              <circle cx="272" cy="52" r="3" fill="#DC2626"/>
+              <!-- x-axis labels -->
+              <text x="28" y="119" font-size="7" fill="#94A3B8" text-anchor="middle">Sep '25</text>
+              <text x="109" y="119" font-size="7" fill="#94A3B8" text-anchor="middle">Oct '25</text>
+              <text x="191" y="119" font-size="7" fill="#94A3B8" text-anchor="middle">Nov '25</text>
+              <text x="272" y="119" font-size="7" fill="#94A3B8" text-anchor="middle">Dec '25</text>
+              <!-- legend -->
+              <circle cx="35" cy="7" r="2.5" fill="none" stroke="#FCA5A5" stroke-width="1.2"/>
+              <text x="40" y="10" font-size="6" fill="#94A3B8">weekly</text>
+              <line x1="75" y1="7" x2="86" y2="7" stroke="#DC2626" stroke-width="2.5"/>
+              <text x="89" y="10" font-size="6" fill="#DC2626">4-wk avg</text>
             </svg>
           </div>
           <div class="ibox r" style="margin-top:10px">
             <div class="ibox-head">Verdict · Cannibalizing</div>
-            Two own-brand donors at active velocity — a dist-1 sibling (same flavor, different pack size) and a dist-3 sibling (different flavor, same brand). Both continue to sell normally alongside the new item. Rate does not collapse; it stabilizes in the 27–33% range and holds there through week 12. <strong>This is a net-zero or negative addition — the new flavor is not creating incremental volume, it is redistributing it from items already on shelf.</strong>
+            The single-serve Strawberries N Cream (same flavor, dist=1) continued selling at unchanged velocity after the 4pk launched. The 4pk redistributed demand rather than growing category volume at Kroger. <strong>4-week rolling average stays above 46% for all 16 weeks of the initial window — no sign of settling. Not recommended for co-placement without a planogram swap.</strong>
           </div>
         </div>
         <!-- Diagnosis panel -->
         <div style="display:flex;flex-direction:column;gap:12px">
+          <!-- KPI tiles -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="background:var(--red-l);border:1px solid #FCA5A5;border-radius:7px;padding:8px 10px">
+              <div class="kpi-label">Own-Brand Donors</div>
+              <div class="kpi-val r">1</div>
+              <div class="kpi-sub">dist=1 · active velocity</div>
+            </div>
+            <div style="background:var(--red-l);border:1px solid #FCA5A5;border-radius:7px;padding:8px 10px">
+              <div class="kpi-label">Avg Rate</div>
+              <div class="kpi-val r">61%</div>
+              <div class="kpi-sub">33-week period</div>
+            </div>
+            <div style="background:var(--red-l);border:1px solid #FCA5A5;border-radius:7px;padding:8px 10px">
+              <div class="kpi-label">Weeks &gt;25%</div>
+              <div class="kpi-val r">22/33</div>
+              <div class="kpi-sub">above danger line</div>
+            </div>
+          </div>
           <div style="background:var(--ground);border-radius:8px;padding:14px;border:1px solid var(--border)">
             <div style="font-family:var(--font-h);font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px">What Aevah Is Detecting</div>
             <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text2)">
               <div style="display:flex;gap:8px;align-items:flex-start">
                 <span style="color:#DC2626;font-weight:700;flex-shrink:0">→</span>
-                <span><strong>Donor 1 (dist-1):</strong> Same-flavor sibling in a different pack size. Still selling. Velocity unchanged before and after launch.</span>
+                <span><strong>Donor (dist=1):</strong> Built Puff Strawberries N Cream 1.41oz single-serve — same flavor, single-serve format. Model prob = 0.9996. Velocity unchanged after 4pk launch.</span>
               </div>
               <div style="display:flex;gap:8px;align-items:flex-start">
                 <span style="color:#DC2626;font-weight:700;flex-shrink:0">→</span>
-                <span><strong>Donor 2 (dist-3):</strong> Cross-flavor BUILT item in the same format. Slowing but not going to zero — not a planned phase-out.</span>
+                <span><strong>18 total donors</strong> in the weekly scoring pool. The dominant own-brand signal is the single-serve — this is a pack-size conflict, not a cross-flavor issue.</span>
               </div>
               <div style="display:flex;gap:8px;align-items:flex-start">
                 <span style="color:#DC2626;font-weight:700;flex-shrink:0">→</span>
-                <span><strong>Rate plateau:</strong> No sign of settling through 12 weeks. Healthy items settle by week 3–4; this one has not moved.</span>
+                <span><strong>Rate plateau:</strong> Rolling avg never dips below 46% in the first 16 weeks. Healthy items settle below 10% by week 4. This one has not settled.</span>
               </div>
             </div>
           </div>
           <div style="background:var(--red-l);border:1px solid #FCA5A5;border-radius:8px;padding:14px">
             <div style="font-family:var(--font-h);font-size:11px;font-weight:700;color:var(--red-b);margin-bottom:8px">Recommended Action</div>
-            <div style="font-size:12px;color:var(--red-b);line-height:1.6">Proactively offer the buyer a swap: replace the underperforming own-brand sibling with the new item at the same shelf position, rather than adding a door. This converts an internal conflict into a clean format upgrade and preserves the buyer relationship.</div>
+            <div style="font-size:12px;color:var(--red-b);line-height:1.6">Offer the buyer a planogram swap: replace the single-serve Strawberries N Cream with the 4pk at the same shelf position. This converts an internal conflict into a clean format upgrade — better value per unit for the shopper, preserved category real estate for BUILT, and a clean story for the buyer.</div>
           </div>
           <div style="background:var(--ground);border-radius:8px;padding:12px;border:1px solid var(--border)">
             <div style="font-family:var(--font-h);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px">Decision Rules</div>
             <div style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:4px">
               <div><span class="chip g" style="font-size:9px;padding:2px 7px"><span class="dot g"></span>Incremental</span> &nbsp;0 own-brand donors → add without swapping</div>
               <div><span class="chip a" style="font-size:9px;padding:2px 7px"><span class="dot a"></span>Watch</span> &nbsp;1–2 donors, rate settles &lt;10% → add + monitor</div>
-              <div><span class="chip r" style="font-size:9px;padding:2px 7px"><span class="dot r"></span>Cannibalizing</span> &nbsp;2+ donors, rate &gt;20% sustained → offer a swap</div>
+              <div><span class="chip r" style="font-size:9px;padding:2px 7px"><span class="dot r"></span>Cannibalizing</span> &nbsp;1+ own-brand donors, rate &gt;25% sustained → offer a swap</div>
             </div>
           </div>
         </div>
