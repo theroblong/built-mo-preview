@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 104: Experience 1 screen spec + Sept 10 standup (2026-09-10)
+
+Processed Sept 10 standup (`Aevah Standup 091026.docx`). Rob's key direction:
+
+- **Focus on 7 experiences** (not 10 personas) — unit of delivery is the experience
+- **Experience 1 (Customer Growth) is first** — spec what each persona needs on screen before wireframing
+- **Compute-once engineering principle** — ML scoring results stored with the record; immutable writes via Druid `__time`; MinIO bucket-watch trigger for automated ingestion; no workstation scripts in production
+- **Rob's action items:** Load SPINS + CRX data into BUILT Druid instance; message Brian re: NetSuite data availability
+- **Joint action item:** Request crosswalk data from Brian (SKU↔UPC, Customer↔Retail Account, Customer-Retailer-Distributor bridge)
+
+Created `docs/experience_1_screen_spec.md` — pre-wireframe screen spec for Experience 1. Covers:
+- 4 tabs: Book of Business · Customer Scorecard · Distribution Tracker · Gross-to-Net Bridge (Phase 2)
+- 5 personas with landing states, primary actions, key metrics per persona
+- Phase 1 vs. Phase 2 split (what's available on SPINS alone vs. requires NetSuite + crosswalks)
+- Build status per component
+- Shared UI rules (anomaly flags, version badge, audit trail, Mo Chat, masking)
+
+---
+
 ## README update 103: Aevah process strategy — shareable HTML visual document (2026-09-09)
 
 Created `docs/aevah_process_strategy.html` — the visual, shareable HTML version of `docs/aevah_full_process_description.md`. Published as a private artifact for Rob to use in meetings with Brian, Jeff, and Bracken.
