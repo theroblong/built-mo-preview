@@ -46,6 +46,7 @@ body { font-family: var(--font-b); background: var(--ground); color: var(--text)
 
 .panel { display: none; height: calc(100vh - 90px); overflow: hidden; }
 .panel.active { display: flex; }
+#ov.active { display: block; }
 
 .spec { width: 38%; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
 .wf { flex: 1; background: var(--ground); padding: 20px; overflow: auto; display: flex; align-items: flex-start; justify-content: center; }
@@ -93,7 +94,7 @@ body { font-family: var(--font-b); background: var(--ground); color: var(--text)
 </div>
 
 <!-- Overview -->
-<div class="panel active" id="ov" style="display:block">
+<div class="panel active" id="ov">
 <div class="ov"><div class="ov-inner">
   <div class="ov-title">Aevah — 7 Packaged Experiences</div>
   <div class="ov-sub">3 shared ML engines · 3 data phases · 10 personas across 7 role-scoped views</div>
@@ -1156,7 +1157,7 @@ body { font-family: var(--font-b); background: var(--ground); color: var(--text)
 
 <script>
 function show(id) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = ''; });
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   const idx = ['ov','e1','e2','e3','e4','e5','e6','e7'].indexOf(id);

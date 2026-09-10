@@ -1,0 +1,656 @@
+<title>BUILT Flavor Launch Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --chrome:  #0B1120;
+  --ground:  #EDF0F7;
+  --surface: #FFFFFF;
+  --border:  #D8E0EE;
+  --accent:  #2563EB;
+  --muted:   #64748B;
+  --dim:     #9BA8BC;
+  --text:    #111827;
+  --text2:   #374151;
+  --green:   #16A34A; --green-l: #DCFCE7; --green-d: #14532D;
+  --amber:   #CA8A04; --amber-l: #FEF3C7; --amber-d: #713F12;
+  --red:     #DC2626; --red-l:   #FEE2E2; --red-d:   #7F1D1D;
+  --fh: 'Space Grotesk', system-ui, sans-serif;
+  --fb: 'DM Sans', system-ui, sans-serif;
+  --fm: 'IBM Plex Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #09101E; --surface: #101826; --border: #1E293B;
+    --text: #E2E8F4; --text2: #8A9BB5; --dim: #3D4F6A; --muted: #5B7090;
+    --green-l: #042B14; --amber-l: #1A1100; --red-l: #2D0808;
+    --green-d: #86EFAC; --amber-d: #FDE68A; --red-d: #FCA5A5;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #09101E; --surface: #101826; --border: #1E293B;
+  --text: #E2E8F4; --text2: #8A9BB5; --dim: #3D4F6A; --muted: #5B7090;
+  --green-l: #042B14; --amber-l: #1A1100; --red-l: #2D0808;
+  --green-d: #86EFAC; --amber-d: #FDE68A; --red-d: #FCA5A5;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--fb); background: var(--ground); color: var(--text); font-size: 13px; line-height: 1.6; }
+img { max-width: 100%; }
+.nav { background: var(--chrome); }
+.nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; height: 42px; gap: 12px; }
+.nav-brand { font-family: var(--fh); font-size: 16px; font-weight: 700; color: #F8FAFC; letter-spacing: -.025em; }
+.nav-brand em { color: var(--accent); font-style: normal; }
+.nav-label { font-size: 11px; color: #4A6080; font-family: var(--fh); font-weight: 500; }
+.page { max-width: 1200px; margin: 0 auto; padding: 20px 24px 56px; display: flex; flex-direction: column; gap: 20px; }
+.page-title { font-family: var(--fh); font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -.025em; }
+.page-sub { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.card-head { padding: 11px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-label { font-family: var(--fh); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); }
+.card-note { font-size: 10px; color: var(--dim); font-family: var(--fm); }
+.chart-wrap { padding: 16px 18px 8px; }
+canvas { display: block; width: 100%; }
+
+/* Insight boxes */
+.insight { display: flex; gap: 14px; padding: 14px 18px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.ibox { flex: 1; min-width: 180px; padding: 11px 14px; border-radius: 7px; }
+.ibox.g { background: var(--green-l); }
+.ibox.r { background: var(--red-l); }
+.ibox.a { background: var(--amber-l); }
+.ibox.n { background: var(--ground); border: 1px solid var(--border); }
+.ibox-label { font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.ibox.g .ibox-label { color: var(--green-d); }
+.ibox.r .ibox-label { color: var(--red-d); }
+.ibox.a .ibox-label { color: var(--amber-d); }
+.ibox.n .ibox-label { color: var(--dim); }
+.ibox-text { font-size: 11px; line-height: 1.5; }
+.ibox.g .ibox-text { color: var(--green-d); }
+.ibox.r .ibox-text { color: var(--red-d); }
+.ibox.a .ibox-text { color: var(--amber-d); }
+
+/* Framework table */
+.section-label { font-family: var(--fh); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 880px; }
+thead th { text-align: left; padding: 8px 14px; font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--dim); border-bottom: 2px solid var(--border); background: var(--ground); white-space: nowrap; }
+tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 11px; }
+tbody tr:last-child td { border-bottom: none; }
+.sku-name { font-weight: 600; color: var(--text); line-height: 1.35; }
+.sku-upc { font-family: var(--fm); font-size: 9px; color: var(--dim); margin-top: 1px; }
+.verdict-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 10px; font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.verdict-chip.g { background: var(--green-l); color: var(--green-d); }
+.verdict-chip.a { background: var(--amber-l); color: var(--amber-d); }
+.verdict-chip.r { background: var(--red-l); color: var(--red-d); }
+.cdot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.cdot.g { background: var(--green); }
+.cdot.a { background: var(--amber); }
+.cdot.r { background: var(--red); }
+.impact-bar-wrap { display: flex; align-items: center; gap: 6px; }
+.impact-bar-bg { width: 60px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.impact-bar-fill { height: 100%; border-radius: 3px; }
+.num-val { font-family: var(--fm); font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.num-val.g { color: var(--green); }
+.num-val.a { color: var(--amber); }
+.num-val.r { color: var(--red); }
+.signal-cell { line-height: 1.5; color: var(--text2); }
+.row-even td { background: rgba(0,0,0,.015); }
+
+/* Decision framework */
+.fw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.fw-cell { padding: 16px 20px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.fw-cell:nth-child(2n) { border-right: none; }
+.fw-cell:nth-last-child(-n+2) { border-bottom: none; }
+.fw-cell-head { font-family: var(--fh); font-size: 11px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+.fw-cell-head.g { color: var(--green-d); }
+.fw-cell-head.r { color: var(--red-d); }
+.fw-criteria { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.fw-criteria li { font-size: 11px; color: var(--text2); padding-left: 14px; position: relative; line-height: 1.5; }
+.fw-criteria li::before { content: '•'; position: absolute; left: 0; }
+.fw-criteria.g li::before { color: var(--green); }
+.fw-criteria.r li::before { color: var(--red); }
+
+/* Mo response box */
+.mo-box { background: var(--chrome); border-radius: 8px; padding: 16px 18px; }
+.mo-q { font-size: 11px; color: #8BAAD0; font-style: italic; margin-bottom: 10px; }
+.mo-r { font-size: 12px; color: #C8D8F0; line-height: 1.65; }
+.mo-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.mo-chip { font-family: var(--fh); font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: rgba(37,99,235,.25); color: #93C5FD; cursor: default; }
+
+/* foot */
+.foot { font-size: 10px; color: var(--dim); border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 3px; }
+@media (max-width: 700px) {
+  .fw-grid { grid-template-columns: 1fr; }
+  .fw-cell { border-right: none; }
+  .insight { flex-direction: column; }
+}
+</style>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="nav-brand">Mo<em>.</em></span>
+    <span class="nav-label">Cannibalization Suite · Launch Analysis</span>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div>
+    <div class="page-title">When Should BUILT Introduce a New Flavor?</div>
+    <div class="page-sub">
+      <strong>The core question:</strong> Does adding a new SKU grow total BUILT demand at that retailer — or just rearrange it?
+      Cannibalizing competitors is the growth engine. Cannibalizing your own siblings is just shuffling the same demand.
+      The analysis below covers all 38 BUILT UPCs with a confirmed cannibalizing signal across 12 accounts · SPINS MULO CRMA · Sep 2024 – Apr 2026.
+    </div>
+  </div>
+
+  <!-- BEFORE/AFTER CHART: S&C at Kroger -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-label">Example: Strawberries N Cream at Kroger — Before & After 4pk Introduction</span>
+      <span class="card-note">Weekly units · SPINS MULO CRMA · Apr 2025 – Apr 2026</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="beforeAfterChart" height="220"></canvas>
+    </div>
+    <div class="insight">
+      <div class="ibox r">
+        <div class="ibox-label">What Happened</div>
+        <div class="ibox-text">Single-serve (30573) dropped from a Jul peak of ~6,000 u/wk to under 700 u/wk by Oct 2025 — the same month the 4pk ramped. The 4pk added ~5,400 u/wk but the single-serve lost ~3,500 u/wk. Net total S&C gain: +1,900 u/wk.</div>
+      </div>
+      <div class="ibox r">
+        <div class="ibox-label">Why It Cannibalizes</div>
+        <div class="ibox-text">Both SKUs are placed in the same Kroger stores. The 4pk is the same flavor and same size bar — a shopper who bought one single-serve now buys the 4pk. The model assigns 42% of 4pk demand to the single-serve donor (dist=1, prob=0.9996).</div>
+      </div>
+      <div class="ibox n">
+        <div class="ibox-label">Better Path</div>
+        <div class="ibox-text">Retire the single-serve at Kroger before or at 4pk launch. Use the 4pk to expand into new Kroger stores where S&C had no presence. Both moves would keep the total demand figure the same while removing the internal conflict.</div>
+      </div>
+      <div class="ibox g">
+        <div class="ibox-label">Counter-Example (Mint Chip)</div>
+        <div class="ibox-text">Mint Chip single-serve (30432) kept growing from 12,000 → 18,000 u/wk AFTER the 4pk launched in Jan 2025. Why? The 4pk went to different stores (TDP 17% vs single-serve TDP 28%). No overlap = incremental.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL EXAMPLES TABLE -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="section-label">All Cannibalizing Signals — 38 BUILT UPCs with Own-Brand Conflict · Representative Accounts</div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>New SKU (Focal)</th>
+              <th>Pack</th>
+              <th>Sibling Being Cannibalized</th>
+              <th>Key Account(s)</th>
+              <th>Avg Rate</th>
+              <th>Duration</th>
+              <th>Verdict</th>
+              <th>Root Cause</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">1</td>
+              <td><div class="sku-name">Chocolatey Hazelnut</div><div class="sku-upc">30615 single / 30616 12pk</div></td>
+              <td style="font-family:var(--fm)">1.41oz single + 12pk</td>
+              <td>Own-brand siblings across all formats</td>
+              <td>Kroger 65.8%, Publix 64.3%,<br>Walmart 60.9% — all accounts</td>
+              <td><span class="num-val r">60–100%</span></td>
+              <td>22–28 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>New flavor intro into stores already carrying similar flavors at capacity. 12pk pulling 100% within 9 weeks.</td>
+              <td>Audit store overlap vs siblings. Expand only to whitespace stores.</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--fm);color:var(--dim)">2</td>
+              <td><div class="sku-name">Strawberries N Cream (4pk)</div><div class="sku-upc">30614 (4pk)</div></td>
+              <td style="font-family:var(--fm)">1.41oz 4pk</td>
+              <td>S&C single-serve (30573) — same flavor, diff format</td>
+              <td>12 accounts cannibalizing:<br>Kroger 61%, Giant Eagle 75%,<br>Publix 63%</td>
+              <td><span class="num-val r">42–75%</span></td>
+              <td>33 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>4pk placed in same stores as single-serve without retiring it. Same flavor → same shopper. Single-serve velocity fell 3,500 u/wk at Kroger.</td>
+              <td>Propose single-serve retirement or store-split with buyer. Never dual-stock same flavor × same account without a retirement plan.</td>
+            </tr>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">3</td>
+              <td><div class="sku-name">Cookies N Cream (12pk)</div><div class="sku-upc">30582</div></td>
+              <td style="font-family:var(--fm)">1.41oz 12pk</td>
+              <td>C&C single-serve (30550) and 4pk (30581)</td>
+              <td>Publix 88% for 42 wks,<br>Ahold 67%, Walmart 67%</td>
+              <td><span class="num-val r">62–88%</span></td>
+              <td>42–68 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>Three formats of same flavor active simultaneously. 12pk competes with both single and 4pk for the same consumers.</td>
+              <td>Retire 12pk or restrict to club/bulk-format retailers where multi-pack is the primary unit of purchase.</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--fm);color:var(--dim)">4</td>
+              <td><div class="sku-name">Salted Caramel (12pk)</div><div class="sku-upc">30578</div></td>
+              <td style="font-family:var(--fm)">1.41oz 12pk</td>
+              <td>SC single-serve (30577/30034) and 4pk</td>
+              <td>CVS 64%, Kroger 44%,<br>Walmart 55%, Giant Eagle 58%</td>
+              <td><span class="num-val r">38–64%</span></td>
+              <td>65–74 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>12pk format doesn't expand the consumer occasion — same SC flavour, higher pack value eats into single-serve velocity.</td>
+              <td>Confine 12pk to club channel. Protect single-serve at food/drug.</td>
+            </tr>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">5</td>
+              <td><div class="sku-name">Chocolate Milkshake</div><div class="sku-upc">30569</div></td>
+              <td style="font-family:var(--fm)">1.41oz single</td>
+              <td>Brownie Batter / other core chocolate family</td>
+              <td>CVS 74%, Walmart 74%,<br>Sam's 74%, Walgreens 73%</td>
+              <td><span class="num-val r">72–74%</span></td>
+              <td>59 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>Flavor redundancy: Chocolate Milkshake and existing chocolate Puffs occupy the same consumer decision. High probability that buyers substituted rather than added.</td>
+              <td>Before introducing a flavor, check if an existing chocolate flavor already has strong ACV at target account. Milkshake should have targeted whitespace accounts only.</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--fm);color:var(--dim)">6</td>
+              <td><div class="sku-name">Mint Chip (12pk)</div><div class="sku-upc">30467</div></td>
+              <td style="font-family:var(--fm)">1.41oz 12pk</td>
+              <td>Mint Chip single (30432) and 4pk (30571)</td>
+              <td>Kroger 46% for 85 wks,<br>Giant Eagle 55%, CVS 32%</td>
+              <td><span class="num-val r">46–55%</span></td>
+              <td>85 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>12pk at Kroger overlaps with single-serve and 4pk at the same stores. Mint Chip single continues growing (29K u/wk peak) despite the drag. Incremental would be larger without the 12pk conflict.</td>
+              <td>Retire 12pk at Kroger; direct Mint Chip 12pk exclusively to Sam's/Costco where multi-pack is the norm.</td>
+            </tr>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">7</td>
+              <td><div class="sku-name">Brownie Batter (12pk)</div><div class="sku-upc">30363</div></td>
+              <td style="font-family:var(--fm)">1.41oz 12pk</td>
+              <td>BB single-serve (30362) and 4pk (30380)</td>
+              <td>Publix 72% for 97 wks (!),<br>Ahold 52%, BJS 52%</td>
+              <td><span class="num-val r">52–72%</span></td>
+              <td>97 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>The longest-running cannibal signal in the dataset — 97 weeks at Publix. Three Brownie Batter formats have been cannibalizing each other for nearly 2 years.</td>
+              <td>This is the #1 portfolio rationalization opportunity. Retire 12pk at mainstream grocery accounts. The signal has been clear for 97 weeks with no sign of settling.</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--fm);color:var(--dim)">8</td>
+              <td><div class="sku-name">Cookie Dough Chunk (12pk)</div><div class="sku-upc">30334</div></td>
+              <td style="font-family:var(--fm)">1.55oz 12pk</td>
+              <td>CDC single (30333) and 4pk (30558)</td>
+              <td>Publix 71%, Giant Eagle 57%,<br>Ahold 52%, BJS 52%</td>
+              <td><span class="num-val r">44–71%</span></td>
+              <td>97 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>Same pattern as Brownie Batter 12pk — 97 weeks of cannibalizing the single-serve and 4pk at mainstream grocery.</td>
+              <td>Retire 12pk at food/drug. Club-only format.</td>
+            </tr>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">9</td>
+              <td><div class="sku-name">Candy Cane Brownie (12pk)</div><div class="sku-upc">30395</div></td>
+              <td style="font-family:var(--fm)">1.52oz 12pk</td>
+              <td>CC Brownie single (30394)</td>
+              <td>Kroger 44%, CVS 60%,<br>Walmart 54%</td>
+              <td><span class="num-val r">43–60%</span></td>
+              <td>36–43 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>Seasonal flavor (holiday-adjacent) offered in both single and 12pk at same accounts. The 12pk eats into single-serve for a flavor already in limited distribution windows.</td>
+              <td>Seasonal SKUs should ship in ONE format only. Choose the highest-velocity format per retailer. Offering both compresses the seasonal window further.</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--fm);color:var(--dim)">10</td>
+              <td><div class="sku-name">Peanut Butter Puff</div><div class="sku-upc">30449</div></td>
+              <td style="font-family:var(--fm)">1.41oz single</td>
+              <td>PB cup (30646) and PB Puff siblings</td>
+              <td>Kroger 45% for 97 wks</td>
+              <td><span class="num-val r">45%</span></td>
+              <td>97 wks</td>
+              <td><span class="verdict-chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td>PB Puff and PB Cup are close flavor cousins — both vanilla-peanut-butter profiles. At Kroger they've competed for 97 weeks. This is flavor redundancy, not format conflict.</td>
+              <td>Differentiate or retire one. PB Cup 4pk (30646) is clearly incremental and growing; PB Puff single may be the rationalization candidate.</td>
+            </tr>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">11</td>
+              <td><div class="sku-name">Mint Chip (4pk)</div><div class="sku-upc">30571</div></td>
+              <td style="font-family:var(--fm)">1.41oz 4pk</td>
+              <td>Mint Chip single-serve (30432)</td>
+              <td>Ahold 80%, BJS 54%, Publix 54%,<br>Kroger Watch (30%)</td>
+              <td><span class="num-val a">30–80%</span></td>
+              <td>31–68 wks</td>
+              <td><span class="verdict-chip a"><span class="cdot a"></span>Mixed</span></td>
+              <td>At Kroger and Walmart, 4pk appears largely incremental — single-serve kept growing. At Ahold and Publix, the 4pk overlaps with single-serve stores and shows higher cannib signal. Account-by-account variation.</td>
+              <td>Expand Mint Chip 4pk at Kroger (safe). Audit store overlap at Ahold before deepening 4pk distribution there.</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--fm);color:var(--dim)">12</td>
+              <td><div class="sku-name">Peanut Butter Cup (4pk)</div><div class="sku-upc">30646</div></td>
+              <td style="font-family:var(--fm)">1.41oz 4pk</td>
+              <td>No own-brand sibling at same stores</td>
+              <td>Kroger &lt;3% for 39 wks,<br>Ahold 2.6%, Walmart 2.6%</td>
+              <td><span class="num-val g">&lt;3%</span></td>
+              <td>39 wks</td>
+              <td><span class="verdict-chip g"><span class="cdot g"></span>Incremental</span></td>
+              <td>PB Cup 4pk has no pack-size sibling in the same stores. One launch-week spike (wk 1), then 0% for 38 weeks. Velocity growing to 14K u/wk.</td>
+              <td>Expand distribution aggressively. This is the gold standard: new format + no sibling overlap = pure demand addition.</td>
+            </tr>
+            <tr class="row-even">
+              <td style="font-family:var(--fm);color:var(--dim)">13</td>
+              <td><div class="sku-name">New Dec '25 Wave: Sour Peach, Sweet Peach, Smores, etc.</div><div class="sku-upc">30651–30680</div></td>
+              <td style="font-family:var(--fm)">1.45oz singles</td>
+              <td>Existing sour/fruit puff SKUs</td>
+              <td>Most accounts Watch–Cannibalizing,<br>18 wks data only</td>
+              <td><span class="num-val a">32–45%</span></td>
+              <td>18 wks</td>
+              <td><span class="verdict-chip a"><span class="cdot a"></span>Watch</span></td>
+              <td>New Dec 2025 launch wave (10+ SKUs simultaneous) showing elevated cannib rates at 18 weeks — the data-maturity window. These need re-scoring at wk 26.</td>
+              <td>Flag for re-scoring Mar 2026. Multiple simultaneous SKU introductions increase cannib probability. Stagger launches or sequence by account.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION FRAMEWORK -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="section-label">Decision Framework — When to Launch vs. When to Hold</div>
+    <div class="card">
+      <div class="fw-grid">
+        <div class="fw-cell">
+          <div class="fw-cell-head g">✓ Launch — Signals That Indicate Incremental Demand</div>
+          <ul class="fw-criteria g">
+            <li>No own-brand SKU in the same flavor family at the target account (whitespace)</li>
+            <li>New format goes to <em>different stores</em> than the existing format (TDP complement, not overlap)</li>
+            <li>Existing siblings are in decline or being actively retired — 4pk replaces a phasing-out single</li>
+            <li>Category is underpenetrated at that retailer — BUILT has &lt;15% ACV share</li>
+            <li>New flavor, not a pack-size variant of an existing one (flavor-adjacent, not pack-adjacent)</li>
+            <li>The new SKU targets a clearly different occasion (club bulk pack → Costco, not Kroger)</li>
+          </ul>
+        </div>
+        <div class="fw-cell">
+          <div class="fw-cell-head r">✗ Hold — Signals That Predict Internal Cannibalization</div>
+          <ul class="fw-criteria r">
+            <li>Same flavor already has strong ACV (&gt;15%) at the target account in any format</li>
+            <li>New SKU is a pack-size variant (single → 4pk → 12pk) without a retirement plan for the old format</li>
+            <li>Three or more formats of the same flavor at the same account — almost always cannibalizes</li>
+            <li>12-pack format at food/drug/mass retailers — multi-pack is a club format, not a grocery format</li>
+            <li>Simultaneous launch wave of 10+ SKUs — increases probability of mutual cannibalization</li>
+            <li>Existing sibling has stable or growing velocity — don't disrupt what's working</li>
+          </ul>
+        </div>
+        <div class="fw-cell" style="border-bottom:none">
+          <div class="fw-cell-head g">The Mint Chip Model (Gold Standard)</div>
+          <ul class="fw-criteria g">
+            <li>Single-serve first → build to 25%+ ACV and stable velocity</li>
+            <li>4pk launch targeted to stores where single had NOT been placed</li>
+            <li>Result: single-serve grew 12K → 18K u/wk AFTER the 4pk launched</li>
+            <li>Cannib rate at Kroger Watch (30%) — acceptable with complementary store-level TDP</li>
+            <li>12pk kept to club channel only → minimal conflict with food/drug</li>
+          </ul>
+        </div>
+        <div class="fw-cell" style="border-bottom:none">
+          <div class="fw-cell-head r">The S&C / 12pk Pattern (What to Avoid)</div>
+          <ul class="fw-criteria r">
+            <li>New format placed in <em>same stores</em> as existing format without retirement plan</li>
+            <li>S&C single-serve dropped 3,500 u/wk at Kroger within 8 weeks of 4pk launch</li>
+            <li>12pk formats at Brownie Batter, Cookie Dough, S&C — cannibalizing for 97 weeks with no end signal</li>
+            <li>Seasonal SKUs offered in 2 formats at same account — compresses the seasonal window</li>
+            <li>Multiple chocolate flavor variants at same account → Milkshake and Brownie Batter compete</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MO RESPONSE -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="section-label">How Mo Handles This Question (Rob's Feedback)</div>
+    <div class="mo-box">
+      <div class="mo-q">User: "Should we introduce a new flavor?"</div>
+      <div class="mo-r">
+        Great question — the answer depends on context. I can check the cannibalization signal for a specific account, format, or region to give you a concrete recommendation. Which would you like to start with?
+      </div>
+      <div class="mo-chips">
+        <span class="mo-chip">By account (Kroger, Walmart…)</span>
+        <span class="mo-chip">By format (single / 4pk / 12pk)</span>
+        <span class="mo-chip">By region or season</span>
+        <span class="mo-chip">Show all cannibalizing SKUs</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);padding:0 2px">
+      Mo asks for context before pulling data — not to delay, but because the same new SKU can be Incremental at Kroger and Cannibalizing at Ahold depending on what's already on shelf.
+      If the user names a specific account, Mo routes directly to the Launch Comparison screen for that account.
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>Source: <code style="font-family:var(--fm)">cannibalization_rate_weekly</code> (all accounts, geography_level=CRMA) + <code style="font-family:var(--fm)">built_filtered_weekly</code> (SPINS MULO). 38 unique BUILT UPCs with Cannibalizing verdict at ≥1 account. Binary weekly rate (0%/100%) — averages reported over scored weeks. Own-brand = relationship_distance ≤ 3.</div>
+    <div>Mo · Cannibalization Suite · Sep 2024 – Apr 2026 · BUILT BARS internal use only</div>
+  </div>
+
+</div>
+
+<script>
+// Real SPINS data from built_filtered_weekly — S&C family at Kroger
+// Weeks from Apr 20, 2025 to Apr 19, 2026 (53 weeks total)
+// Single-serve 30573 first, then 4pk 30614 starts Sep 7 2025 (week 21)
+
+const weeks = [
+  '04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08','06/15','06/22',
+  '06/29','07/06','07/13','07/20','07/27','08/03','08/10','08/17','08/24','08/31',
+  '09/07','09/14','09/21','09/28','10/05','10/12','10/19','10/26','11/02','11/09',
+  '11/16','11/23','11/30','12/07','12/14','12/21','12/28','01/04','01/11','01/18',
+  '01/25','02/01','02/08','02/15','02/22','03/01','03/08','03/15','03/22','03/29',
+  '04/05','04/12','04/19'
+];
+
+// Single-serve (30573) weekly units — all 53 weeks
+const singleServe = [
+  1871,2788,2498,3828,3351,2181,2289,2327,2201,2098,
+  1787,2322,5614,5994,5528,3625,2579,1897,1516,1200,
+  1365,1631,1437,992,1051,1028,690,1032,598,1246,
+  1250,1393,1208,572,1428,2332,1947,4460,2823,2851,
+  4305,3954,4239,6005,3870,3405,3347,2782,3745,3528,
+  3188,2983,3093
+];
+
+// 4pk (30614) — starts week 21 (Sep 7 2025), null before
+const fourPk = [
+  null,null,null,null,null,null,null,null,null,null,
+  null,null,null,null,null,null,null,null,null,null,
+  17,74,383,4218,6177,5593,5419,5362,4466,4492,
+  4567,3654,3305,4246,5303,5684,8472,21004,27165,18763,
+  14924,12072,18698,24092,8614,5457,6132,5817,5582,7625,
+  9226,6582,7104
+];
+
+// Total S&C (single + 4pk)
+const total = singleServe.map((v, i) => fourPk[i] !== null ? v + fourPk[i] : v);
+
+// Compute 4-week rolling averages
+function roll4(arr) {
+  return arr.map((v, i) => {
+    if (v === null) return null;
+    const window = arr.slice(Math.max(0, i - 3), i + 1).filter(x => x !== null);
+    return window.reduce((a, b) => a + b, 0) / window.length;
+  });
+}
+
+function isDark() {
+  if (document.documentElement.dataset.theme === 'dark') return true;
+  if (document.documentElement.dataset.theme === 'light') return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function getColors() {
+  const dark = isDark();
+  return {
+    gridColor: dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
+    textColor: dark ? '#9BA8BC' : '#64748B',
+    surfaceColor: dark ? '#101826' : '#FFFFFF',
+  };
+}
+
+function buildChart() {
+  const c = getColors();
+  const ctx = document.getElementById('beforeAfterChart').getContext('2d');
+
+  if (window._bac) window._bac.destroy();
+
+  // Launch annotation: week 20 (index 20 = Sep 7 onset, meaningful at index 23 = Sep 28)
+  const launchIdx = 23;
+
+  window._bac = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: weeks,
+      datasets: [
+        {
+          label: 'S&C Single-Serve (30573) — raw',
+          data: singleServe,
+          borderColor: '#DC2626',
+          backgroundColor: 'rgba(220,38,38,.07)',
+          borderWidth: 1.2,
+          pointRadius: 1.5,
+          pointBackgroundColor: '#DC2626',
+          tension: 0.3,
+          fill: false,
+          order: 3,
+        },
+        {
+          label: 'S&C Single-Serve — 4-wk avg',
+          data: roll4(singleServe),
+          borderColor: '#DC2626',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.35,
+          fill: false,
+          order: 1,
+        },
+        {
+          label: 'S&C 4pk (30614) — raw',
+          data: fourPk,
+          borderColor: '#CA8A04',
+          backgroundColor: 'rgba(202,138,4,.07)',
+          borderWidth: 1.2,
+          pointRadius: 1.5,
+          pointBackgroundColor: '#CA8A04',
+          tension: 0.3,
+          fill: false,
+          order: 4,
+        },
+        {
+          label: 'S&C 4pk — 4-wk avg',
+          data: roll4(fourPk),
+          borderColor: '#CA8A04',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.35,
+          fill: false,
+          order: 2,
+        },
+        {
+          label: 'Total S&C at Kroger',
+          data: roll4(total),
+          borderColor: '#2563EB',
+          borderWidth: 2,
+          borderDash: [5,4],
+          pointRadius: 0,
+          tension: 0.35,
+          fill: false,
+          order: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: c.textColor,
+            font: { family: 'IBM Plex Mono', size: 10 },
+            boxWidth: 14, boxHeight: 3, padding: 16,
+          }
+        },
+        tooltip: {
+          backgroundColor: c.surfaceColor,
+          borderColor: isDark() ? '#1E293B' : '#DAE0EC',
+          borderWidth: 1,
+          titleColor: c.textColor,
+          bodyColor: c.textColor,
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v === null || v === undefined) return null;
+              return `${ctx.dataset.label.split(' —')[0]}: ${Math.round(v).toLocaleString()} u/wk`;
+            }
+          }
+        },
+        annotation: {},
+      },
+      scales: {
+        x: {
+          grid: { color: c.gridColor },
+          ticks: {
+            color: c.textColor,
+            font: { family: 'IBM Plex Mono', size: 9 },
+            maxTicksLimit: 13,
+          }
+        },
+        y: {
+          grid: { color: c.gridColor },
+          ticks: {
+            color: c.textColor,
+            font: { family: 'IBM Plex Mono', size: 9 },
+            callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v,
+          },
+          title: {
+            display: true,
+            text: 'Weekly Units (SPINS MULO)',
+            color: c.textColor,
+            font: { family: 'DM Sans', size: 10 },
+          }
+        }
+      }
+    }
+  });
+
+  // Draw launch annotation manually after render
+  const meta = window._bac.getDatasetMeta(0);
+  const point = meta.data[launchIdx];
+  if (point) {
+    const orig = window._bac.draw.bind(window._bac);
+    window._bac.draw = function() {
+      orig();
+      const ctx2 = this.ctx;
+      const ca = this.chartArea;
+      const x = point.x;
+      ctx2.save();
+      ctx2.setLineDash([6, 4]);
+      ctx2.strokeStyle = isDark() ? '#4A6080' : '#9BA8BC';
+      ctx2.lineWidth = 1.5;
+      ctx2.beginPath();
+      ctx2.moveTo(x, ca.top);
+      ctx2.lineTo(x, ca.bottom);
+      ctx2.stroke();
+      ctx2.setLineDash([]);
+      ctx2.fillStyle = isDark() ? '#2563EB' : '#1D4ED8';
+      ctx2.font = 'bold 9px IBM Plex Mono,monospace';
+      ctx2.fillText('4pk launch', x + 4, ca.top + 14);
+      ctx2.restore();
+    };
+    window._bac.draw();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', buildChart);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', buildChart);
+document.documentElement.addEventListener('data-theme-change', buildChart);
+</script>

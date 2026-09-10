@@ -1,0 +1,701 @@
+<title>Mo Launch Comparison</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --chrome:  #0B1120;
+  --chrome2: #18243A;
+  --ground:  #ECF0F7;
+  --surface: #FFFFFF;
+  --border:  #DAE0EC;
+  --accent:  #2563EB;
+  --muted:   #64748B;
+  --dim:     #9BA8BC;
+  --text:    #111827;
+  --text2:   #374151;
+  --green:   #16A34A; --green-l: #DCFCE7; --green-d: #14532D;
+  --amber:   #CA8A04; --amber-l: #FEF9C3; --amber-d: #713F12;
+  --red:     #DC2626; --red-l:   #FEE2E2; --red-d:   #7F1D1D;
+  --fh: 'Space Grotesk', system-ui, sans-serif;
+  --fb: 'DM Sans', system-ui, sans-serif;
+  --fm: 'IBM Plex Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #09101E; --surface: #101826; --border: #1E293B;
+    --text: #E2E8F4; --text2: #8A9BB5; --dim: #3D4F6A; --muted: #5B7090;
+    --green-l: #042B14; --amber-l: #1A1100; --red-l: #2D0808;
+    --green-d: #86EFAC; --amber-d: #FDE68A; --red-d: #FCA5A5;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #09101E; --surface: #101826; --border: #1E293B;
+  --text: #E2E8F4; --text2: #8A9BB5; --dim: #3D4F6A; --muted: #5B7090;
+  --green-l: #042B14; --amber-l: #1A1100; --red-l: #2D0808;
+  --green-d: #86EFAC; --amber-d: #FDE68A; --red-d: #FCA5A5;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--fb); background: var(--ground); color: var(--text); font-size: 13px; line-height: 1.55; }
+img { max-width: 100%; }
+svg text { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+/* NAV */
+.nav { background: var(--chrome); }
+.nav-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between; height: 42px;
+}
+.nav-brand { font-family: var(--fh); font-size: 16px; font-weight: 700; color: #F8FAFC; letter-spacing: -.025em; }
+.nav-brand em { color: var(--accent); font-style: normal; }
+.nav-suite { font-size: 11px; color: #4A6080; font-family: var(--fh); font-weight: 500; margin-left: 10px; }
+.nav-tabs { display: flex; align-items: center; gap: 0; height: 42px; }
+.nav-tab { font-family: var(--fh); font-size: 11px; font-weight: 500; color: #4A6080; padding: 0 14px; height: 100%; display: flex; align-items: center; border-bottom: 2px solid transparent; cursor: default; }
+.nav-tab:hover { color: #8BAAD0; }
+.nav-tab.on { color: #C8D8F0; border-bottom-color: var(--accent); }
+
+/* PROPOSED BANNER */
+.banner {
+  background: linear-gradient(90deg, #1A2540 0%, #1E2E50 100%);
+  border-bottom: 1px solid #2A3F68;
+}
+.banner-inner {
+  max-width: 1100px; margin: 0 auto; padding: 7px 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.banner-badge {
+  font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  background: var(--accent); color: #fff; padding: 2px 7px; border-radius: 10px; flex-shrink: 0;
+}
+.banner-text { font-size: 11px; color: #8BAAD0; }
+
+/* PAGE */
+.page { max-width: 1100px; margin: 0 auto; padding: 18px 24px 48px; display: flex; flex-direction: column; gap: 16px; }
+
+/* TITLE ROW */
+.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.title-left { }
+.page-title { font-family: var(--fh); font-size: 19px; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
+.page-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* FILTERS */
+.filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fgap { width: 6px; height: 16px; border-left: 1px solid var(--border); margin: 0 2px; }
+.fbtn {
+  font-family: var(--fh); font-size: 11px; font-weight: 500; padding: 5px 11px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: default;
+  display: flex; align-items: center; gap: 5px;
+}
+.fbtn .caret { color: var(--dim); font-size: 9px; }
+.fbtn.active { background: var(--chrome2); color: #C8D8F0; border-color: #2A3F68; }
+.ftoggle {
+  font-family: var(--fh); font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 6px;
+  border: 1px solid var(--accent); background: rgba(37,99,235,.10); color: var(--accent); cursor: default;
+  display: flex; align-items: center; gap: 6px;
+}
+.ftoggle-pip { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.new-tag {
+  font-family: var(--fh); font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
+  background: var(--accent); color: #fff; padding: 1px 5px; border-radius: 8px;
+}
+
+/* MAIN GRID */
+.main-grid { display: grid; grid-template-columns: 1fr 284px; gap: 14px; align-items: start; }
+
+/* CARD */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.card-head {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.card-label { font-family: var(--fh); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+.card-note { font-size: 10px; color: var(--dim); font-family: var(--fm); }
+
+/* CHART SVG */
+svg.ratechart { display: block; width: 100%; }
+
+/* LEGEND */
+.legend { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--border); }
+.leg-row {
+  display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  border-bottom: 1px solid var(--border); cursor: default;
+}
+.leg-row:last-child { border-bottom: none; }
+.leg-sw { display: flex; align-items: center; gap: 0; }
+.leg-line { width: 20px; height: 3px; border-radius: 2px; margin-right: 5px; }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; }
+.leg-sku { flex: 1; }
+.leg-name { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.leg-upc { font-family: var(--fm); font-size: 9px; color: var(--dim); margin-top: 1px; }
+.leg-rate { font-family: var(--fm); font-size: 12px; font-weight: 500; min-width: 36px; text-align: right; }
+.leg-rate.g { color: var(--green); }
+.leg-rate.a { color: var(--amber); }
+.leg-rate.r { color: var(--red); }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 10px;
+  font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+}
+.chip.g { background: var(--green-l); color: var(--green-d); }
+.chip.a { background: var(--amber-l); color: var(--amber-d); }
+.chip.r { background: var(--red-l); color: var(--red-d); }
+.cdot { width: 5px; height: 5px; border-radius: 50%; }
+.cdot.g { background: var(--green); }
+.cdot.a { background: var(--amber); }
+.cdot.r { background: var(--red); }
+
+/* SIDEBAR CARDS */
+.sidebar { display: flex; flex-direction: column; gap: 12px; }
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.kpi-t { padding: 11px 14px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.kpi-t:nth-child(2n) { border-right: none; }
+.kpi-t:nth-last-child(-n+2) { border-bottom: none; }
+.kpi-lbl { font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--dim); margin-bottom: 3px; }
+.kpi-val { font-family: var(--fh); font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.kpi-val.g { color: var(--green); }
+.kpi-val.a { color: var(--amber); }
+.kpi-val.r { color: var(--red); }
+.kpi-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
+.action-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 7px; }
+.action-row { display: flex; gap: 8px; font-size: 11px; align-items: flex-start; }
+.action-arrow { flex-shrink: 0; font-weight: 700; margin-top: 1px; }
+.action-arrow.g { color: var(--green); }
+.action-arrow.a { color: var(--amber); }
+.action-arrow.r { color: var(--red); }
+.action-text { color: var(--text2); line-height: 1.45; }
+.action-strong { font-weight: 600; color: var(--text); }
+
+/* VELOCITY SECTION */
+.section-label { font-family: var(--fh); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); }
+.vel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.vel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.vel-head { padding: 9px 13px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.vel-sku { font-size: 11px; font-weight: 500; color: var(--text); }
+.vel-upc { font-family: var(--fm); font-size: 9px; color: var(--dim); margin-top: 1px; }
+.vel-body { padding: 10px 13px; display: flex; flex-direction: column; gap: 6px; }
+.vel-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vel-row-label { font-size: 10px; color: var(--muted); }
+.vel-metric { display: flex; align-items: center; gap: 5px; }
+.vel-num { font-family: var(--fm); font-size: 12px; font-weight: 500; }
+.vel-num.g { color: var(--green); }
+.vel-num.a { color: var(--amber); }
+.vel-num.r { color: var(--red); }
+.vel-chg { font-size: 10px; color: var(--dim); }
+.vel-bar-wrap { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.vel-bar-bg { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.vel-bar-fill { height: 100%; border-radius: 3px; }
+.vel-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+.vel-note { font-size: 10px; color: var(--muted); font-style: italic; line-height: 1.4; }
+
+/* CONFLICT TABLE */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+thead th {
+  text-align: left; padding: 8px 13px; font-family: var(--fh); font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--dim);
+  border-bottom: 1px solid var(--border); background: var(--ground); white-space: nowrap;
+}
+tbody td { padding: 10px 13px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 12px; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--ground); }
+.sku-name { font-weight: 500; color: var(--text); font-size: 11px; line-height: 1.3; }
+.sku-upc { font-family: var(--fm); font-size: 9px; color: var(--dim); margin-top: 1px; }
+.dist-pill {
+  display: inline-block; font-family: var(--fh); font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; padding: 1px 6px; border-radius: 9px;
+}
+.dist-pill.d1 { background: var(--red-l); color: var(--red-d); }
+.dist-pill.d3 { background: var(--amber-l); color: var(--amber-d); }
+.prob-val { font-family: var(--fm); font-size: 11px; font-variant-numeric: tabular-nums; }
+.rate-cell { display: flex; align-items: center; gap: 7px; }
+.rate-bar-bg { width: 52px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.rate-bar-fill { height: 100%; border-radius: 3px; }
+.rate-bar-fill.g { background: var(--green); }
+.rate-bar-fill.a { background: var(--amber); }
+.rate-bar-fill.r { background: var(--red); }
+.rate-num { font-family: var(--fm); font-size: 11px; font-weight: 500; min-width: 32px; font-variant-numeric: tabular-nums; }
+.rate-num.g { color: var(--green); }
+.rate-num.a { color: var(--amber); }
+.rate-num.r { color: var(--red); }
+.action-cell { font-size: 11px; color: var(--text2); max-width: 200px; line-height: 1.4; }
+
+/* FOOTER */
+.foot { font-size: 10px; color: var(--dim); border-top: 1px solid var(--border); padding-top: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.foot-brand { font-family: var(--fh); font-weight: 600; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .vel-grid { grid-template-columns: 1fr; }
+  .nav-tabs { display: none; }
+}
+</style>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div style="display:flex;align-items:center;gap:0">
+      <span class="nav-brand">Mo<em>.</em></span>
+      <span class="nav-suite">Cannibalization</span>
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab">Determine</div>
+      <div class="nav-tab">Diagnose</div>
+      <div class="nav-tab on">Trends</div>
+      <div class="nav-tab">Decide</div>
+    </div>
+  </div>
+</nav>
+
+<!-- PROPOSED BANNER -->
+<div class="banner">
+  <div class="banner-inner">
+    <span class="banner-badge">Concept</span>
+    <span class="banner-text">Launch Comparison is a proposed addition to the Cannibalization Suite — not yet live in Mo. Own-brand filter isolates dist=1 &amp; dist=3 conflicts from the full donor pool.</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- TITLE + FILTERS -->
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="title-row">
+      <div class="title-left">
+        <div class="page-title">Launch Comparison</div>
+        <div class="page-sub">Cannibalization rate · 4-week rolling average · Weeks from launch · SPINS MULO CRMA</div>
+      </div>
+    </div>
+    <div class="filters">
+      <div class="fbtn active">Kroger <span class="caret">▾</span></div>
+      <div class="fbtn">4-Pack <span class="caret">▾</span></div>
+      <div class="fbtn">2025–2026 <span class="caret">▾</span></div>
+      <div class="fgap"></div>
+      <div class="ftoggle">
+        <div class="ftoggle-pip"></div>
+        Own-brand only
+        <span class="new-tag">NEW</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);padding:0 4px">Filtering 3 of 8 donor pools to own-brand conflicts only (relationship_distance ≤ 3)</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID: CHART + SIDEBAR -->
+  <div class="main-grid">
+
+    <!-- RATE CHART CARD -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-label">Cannibalization Rate — 4-wk Rolling Avg · Weeks Since Launch</span>
+        <span class="card-note">own-brand donors only · dist ≤ 3</span>
+      </div>
+
+      <!-- SVG CHART -->
+      <!-- viewBox: 0 0 640 210 -->
+      <!-- Plot area: x=[50,608], y=[20,175] — width=558, height=155 -->
+      <!-- 12 weeks: step=558/11=50.7→50 -->
+      <!-- x pos: 50,100,150,200,250,300,350,400,450,500,550,600 -->
+      <!-- y formula: y = 175 - rate*1.55 (100%→19.5≈20, 0%→175) -->
+      <!-- GA  roll4: 100,100,100,100,100,100,100,100,81.7,63.1,38.6,14.5 -->
+      <!-- PBC roll4: 100,65.7,46.2,35.2,10.6,3.0,1.15,0.6,0.3,1.5,1.5,1.9 -->
+      <!-- SNC roll4: 100,100,100,100,79.6,77.2,77.2,77.2,91.7,73.5,73.5,63.4 -->
+      <!-- GA  y: 20,20,20,20,20,20,20,20,48,77,115,152 -->
+      <!-- PBC y: 20,73,104,120,158,170,173,174,175,173,173,172 -->
+      <!-- SNC y: 20,20,20,20,51,55,55,55,33,61,61,76 -->
+      <!-- 25% line: y=175-38.75=136  10% line: y=175-15.5=159 -->
+      <svg class="ratechart" viewBox="0 0 640 210" aria-label="Cannibalization rate comparison chart for three BUILT SKUs">
+
+        <!-- Background: red wash for danger zone (above 25% threshold) — subtle -->
+        <rect x="50" y="20" width="558" height="116" fill="#DC2626" opacity="0.03" rx="2"/>
+
+        <!-- Grid lines -->
+        <line x1="50" y1="20" x2="608" y2="20" stroke="var(--border)" stroke-width="0.5" opacity="0.7"/>
+        <line x1="50" y1="59" x2="608" y2="59" stroke="var(--border)" stroke-width="0.5" opacity="0.5"/>
+        <line x1="50" y1="98" x2="608" y2="98" stroke="var(--border)" stroke-width="0.5" opacity="0.5"/>
+        <line x1="50" y1="136" x2="608" y2="136" stroke="var(--border)" stroke-width="0.5" opacity="0.5"/>
+        <line x1="50" y1="175" x2="608" y2="175" stroke="var(--border)" stroke-width="0.5" opacity="0.7"/>
+
+        <!-- Y-axis labels -->
+        <text x="46" y="23" font-size="9" fill="#9BA8BC" text-anchor="end">100%</text>
+        <text x="46" y="62" font-size="9" fill="#9BA8BC" text-anchor="end">75%</text>
+        <text x="46" y="101" font-size="9" fill="#9BA8BC" text-anchor="end">50%</text>
+        <text x="46" y="139" font-size="9" fill="#9BA8BC" text-anchor="end">25%</text>
+        <text x="46" y="178" font-size="9" fill="#9BA8BC" text-anchor="end">0%</text>
+
+        <!-- Y-axis tick -->
+        <line x1="49" y1="20" x2="49" y2="175" stroke="#9BA8BC" stroke-width="1" opacity="0.4"/>
+
+        <!-- 25% danger threshold -->
+        <line x1="50" y1="136" x2="608" y2="136" stroke="#DC2626" stroke-width="1.2" stroke-dasharray="5,4" opacity="0.55"/>
+        <text x="611" y="139" font-size="9" fill="#DC2626" opacity="0.9" font-weight="500">25%</text>
+
+        <!-- 10% safe-zone boundary -->
+        <line x1="50" y1="159" x2="608" y2="159" stroke="#16A34A" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.4"/>
+        <text x="611" y="162" font-size="8" fill="#16A34A" opacity="0.7">10%</text>
+
+        <!-- AREA FILLS (subtle) -->
+        <!-- SNC red area -->
+        <polygon points="50,20 100,20 150,20 200,20 250,51 300,55 350,55 400,55 450,33 500,61 550,61 600,76 600,175 50,175" fill="#DC2626" opacity="0.07"/>
+        <!-- GA green area -->
+        <polygon points="50,20 100,20 150,20 200,20 250,20 300,20 350,20 400,20 450,48 500,77 550,115 600,152 600,175 50,175" fill="#16A34A" opacity="0.05"/>
+        <!-- PBC amber area -->
+        <polygon points="50,20 100,73 150,104 200,120 250,158 300,170 350,173 400,174 450,175 500,173 550,173 600,172 600,175 50,175" fill="#CA8A04" opacity="0.05"/>
+
+        <!-- LINE: PB Cup (amber, Incremental — format upgrade) -->
+        <polyline id="line-pbc"
+          points="50,20 100,73 150,104 200,120 250,158 300,170 350,173 400,174 450,175 500,173 550,173 600,172"
+          fill="none" stroke="#CA8A04" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6,3" opacity="0.85"/>
+        <circle cx="600" cy="172" r="3" fill="#CA8A04" opacity="0.85"/>
+
+        <!-- LINE: Green Apple (green, Incremental) -->
+        <polyline id="line-ga"
+          points="50,20 100,20 150,20 200,20 250,20 300,20 350,20 400,20 450,48 500,77 550,115 600,152"
+          fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="600" cy="152" r="3.5" fill="#16A34A"/>
+
+        <!-- LINE: Strawberries N Cream (red, Cannibalizing) — bold -->
+        <polyline id="line-snc"
+          points="50,20 100,20 150,20 200,20 250,51 300,55 350,55 400,55 450,33 500,61 550,61 600,76"
+          fill="none" stroke="#DC2626" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="600" cy="76" r="4" fill="#DC2626"/>
+
+        <!-- End-of-chart rate labels -->
+        <text x="607" y="155" font-size="9" fill="#16A34A" font-weight="500" text-anchor="start">14%</text>
+        <text x="607" y="175" font-size="9" fill="#CA8A04" font-weight="500" text-anchor="start">2%</text>
+        <text x="607" y="73" font-size="9" fill="#DC2626" font-weight="500" text-anchor="start">63%</text>
+
+        <!-- Annotation: SNC never settles -->
+        <rect x="218" y="33" width="126" height="16" rx="3" fill="#FEE2E2" opacity="0.92"/>
+        <text x="281" y="44" font-size="9" fill="#7F1D1D" text-anchor="middle" font-weight="600">never settles below 25%</text>
+
+        <!-- Annotation: GA settles at wk9 -->
+        <line x1="450" y1="48" x2="450" y2="184" stroke="#CA8A04" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5"/>
+        <text x="452" y="188" font-size="8" fill="#CA8A04" opacity="0.8">Wk 9</text>
+
+        <!-- Annotation: PBC settles at wk5 -->
+        <line x1="250" y1="158" x2="250" y2="184" stroke="#16A34A" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5"/>
+        <text x="252" y="188" font-size="8" fill="#16A34A" opacity="0.8">Wk 5</text>
+
+        <!-- X-axis week labels -->
+        <text x="50" y="200" font-size="9" fill="#9BA8BC" text-anchor="middle">Wk 1</text>
+        <text x="150" y="200" font-size="9" fill="#9BA8BC" text-anchor="middle">Wk 3</text>
+        <text x="300" y="200" font-size="9" fill="#9BA8BC" text-anchor="middle">Wk 6</text>
+        <text x="450" y="200" font-size="9" fill="#9BA8BC" text-anchor="middle">Wk 9</text>
+        <text x="600" y="200" font-size="9" fill="#9BA8BC" text-anchor="middle">Wk 12</text>
+      </svg>
+
+      <!-- LEGEND / SKU ROWS -->
+      <div class="legend">
+        <div class="leg-row">
+          <div class="leg-sw">
+            <div class="leg-line" style="background:#DC2626"></div>
+            <div class="leg-dot" style="background:#DC2626"></div>
+          </div>
+          <div class="leg-sku" style="margin-left:8px">
+            <div class="leg-name">Built Puff Strawberries N Cream 1.41oz (4pk)</div>
+            <div class="leg-upc">08-40229-30614 · 1 own-brand donor (dist=1) · active velocity</div>
+          </div>
+          <div class="leg-rate r">61%</div>
+          <span class="chip r" style="margin-left:6px"><span class="cdot r"></span>Cannibalizing</span>
+        </div>
+        <div class="leg-row">
+          <div class="leg-sw">
+            <div class="leg-line" style="background:#16A34A"></div>
+            <div class="leg-dot" style="background:#16A34A"></div>
+          </div>
+          <div class="leg-sku" style="margin-left:8px">
+            <div class="leg-name">Built Green Apple Crush Sour Puff 1.45oz (4pk)</div>
+            <div class="leg-upc">08-40229-30656 · 0 own-brand donors · settles wk 9</div>
+          </div>
+          <div class="leg-rate g">&lt;4%</div>
+          <span class="chip g" style="margin-left:6px"><span class="cdot g"></span>Incremental</span>
+        </div>
+        <div class="leg-row">
+          <div class="leg-sw">
+            <div class="leg-line" style="background:#CA8A04;border-top:2px dashed #CA8A04;height:0;margin-top:1px"></div>
+            <div class="leg-dot" style="background:#CA8A04;opacity:.85"></div>
+          </div>
+          <div class="leg-sku" style="margin-left:8px">
+            <div class="leg-name">Built Puff Peanut Butter Cup 1.41oz (4pk)</div>
+            <div class="leg-upc">08-40229-30646 · 1 own-brand donor (dist=3) · velocity → 0 · format upgrade</div>
+          </div>
+          <div class="leg-rate g">&lt;2%</div>
+          <span class="chip g" style="margin-left:6px"><span class="cdot g"></span>Incremental</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- Portfolio summary KPIs -->
+      <div class="card">
+        <div class="card-head"><span class="card-label">Portfolio Summary · Kroger 4-Pack</span></div>
+        <div class="kpi-grid">
+          <div class="kpi-t">
+            <div class="kpi-lbl">Cannibalizing</div>
+            <div class="kpi-val r">1</div>
+            <div class="kpi-sub">SKU needs action</div>
+          </div>
+          <div class="kpi-t">
+            <div class="kpi-lbl">Watch</div>
+            <div class="kpi-val a">2</div>
+            <div class="kpi-sub">monitor closely</div>
+          </div>
+          <div class="kpi-t">
+            <div class="kpi-lbl">Incremental</div>
+            <div class="kpi-val g">5</div>
+            <div class="kpi-sub">no own-brand conflict</div>
+          </div>
+          <div class="kpi-t">
+            <div class="kpi-lbl">Own-brand pairs</div>
+            <div class="kpi-val" style="color:var(--text)">14</div>
+            <div class="kpi-sub">dist ≤ 3, scored</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended actions -->
+      <div class="card">
+        <div class="card-head"><span class="card-label">Recommended Actions</span></div>
+        <div class="action-list">
+          <div class="action-row">
+            <span class="action-arrow r">→</span>
+            <span class="action-text"><span class="action-strong">Strawberries N Cream 4pk:</span> Offer buyer a planogram swap — retire single-serve, add 4pk at same facing. Cannibalizing at 61% avg for 33 weeks.</span>
+          </div>
+          <div class="action-row">
+            <span class="action-arrow a">→</span>
+            <span class="action-text"><span class="action-strong">Mint Chip 4pk · Salted Caramel 4pk:</span> Watch status. Rate oscillating 15–30%. Pull at 8 more weeks if no settlement.</span>
+          </div>
+          <div class="action-row">
+            <span class="action-arrow g">→</span>
+            <span class="action-text"><span class="action-strong">Green Apple Crush:</span> Expand distribution. Zero own-brand conflict at both Kroger and Walmart. Category-incremental signal confirmed.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Own-brand filter explanation -->
+      <div style="background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:8px;padding:12px 14px">
+        <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-bottom:6px">What the Own-Brand Filter Does</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.55">Current Mo shows all donors (own-brand + competitors) in a single Diagnose view per SKU. This filter surfaces only dist ≤ 3 own-brand conflicts across the full portfolio simultaneously — the signal most relevant to assortment decisions and buyer conversations.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VELOCITY IMPACT SECTION -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="section-label">Demand Velocity at Launch — Units / Store / Week (illustrative · relative scale)</div>
+    <div class="vel-grid">
+
+      <!-- Green Apple -->
+      <div class="vel-card">
+        <div class="vel-head">
+          <div>
+            <div class="vel-sku">Green Apple Crush Sour Puff (4pk)</div>
+            <div class="vel-upc">08-40229-30656 · Kroger · 12 weeks</div>
+          </div>
+          <span class="chip g"><span class="cdot g"></span>Incremental</span>
+        </div>
+        <div class="vel-body">
+          <div class="vel-row">
+            <span class="vel-row-label">4pk velocity</span>
+            <div class="vel-metric">
+              <span class="vel-num g">+11.4</span>
+              <span class="vel-chg">u/s/wk avg (wk 4–12)</span>
+            </div>
+          </div>
+          <div class="vel-bar-wrap">
+            <div class="vel-bar-bg"><div class="vel-bar-fill" style="background:var(--green);width:72%"></div></div>
+          </div>
+          <hr class="vel-divider">
+          <div class="vel-row">
+            <span class="vel-row-label">Own-brand donors</span>
+            <span class="vel-num g">0</span>
+          </div>
+          <div class="vel-note">No sibling velocity impact. All demand is net new from competitors and category growth.</div>
+        </div>
+      </div>
+
+      <!-- PB Cup -->
+      <div class="vel-card">
+        <div class="vel-head">
+          <div>
+            <div class="vel-sku">Peanut Butter Cup (4pk)</div>
+            <div class="vel-upc">08-40229-30646 · Kroger · 39 weeks</div>
+          </div>
+          <span class="chip g"><span class="cdot g"></span>Incremental</span>
+        </div>
+        <div class="vel-body">
+          <div class="vel-row">
+            <span class="vel-row-label">4pk velocity</span>
+            <div class="vel-metric">
+              <span class="vel-num g">+14.8</span>
+              <span class="vel-chg">u/s/wk (wk 3–39)</span>
+            </div>
+          </div>
+          <div class="vel-bar-wrap">
+            <div class="vel-bar-bg"><div class="vel-bar-fill" style="background:var(--green);width:60%"></div></div>
+          </div>
+          <hr class="vel-divider">
+          <div class="vel-row">
+            <span class="vel-row-label">Single-serve donor</span>
+            <div class="vel-metric">
+              <span class="vel-num" style="color:var(--muted)">→ 0</span>
+              <span class="vel-chg">vel (wk 3 · planned)</span>
+            </div>
+          </div>
+          <div class="vel-note">Format upgrade: single-serve retired cleanly. Net 4pk velocity is fully incremental.</div>
+        </div>
+      </div>
+
+      <!-- Strawberries N Cream -->
+      <div class="vel-card" style="border-color:#FCA5A5">
+        <div class="vel-head" style="background:var(--red-l)">
+          <div>
+            <div class="vel-sku">Strawberries N Cream (4pk)</div>
+            <div class="vel-upc">08-40229-30614 · Kroger · 33 weeks</div>
+          </div>
+          <span class="chip r"><span class="cdot r"></span>Cannibalizing</span>
+        </div>
+        <div class="vel-body">
+          <div class="vel-row">
+            <span class="vel-row-label">4pk velocity</span>
+            <div class="vel-metric">
+              <span class="vel-num a">+12.6</span>
+              <span class="vel-chg">u/s/wk avg</span>
+            </div>
+          </div>
+          <div class="vel-bar-wrap">
+            <div class="vel-bar-bg"><div class="vel-bar-fill" style="background:var(--amber);width:50%"></div></div>
+          </div>
+          <hr class="vel-divider">
+          <div class="vel-row">
+            <span class="vel-row-label">Single-serve donor</span>
+            <div class="vel-metric">
+              <span class="vel-num r">~20</span>
+              <span class="vel-chg">u/s/wk · unchanged</span>
+            </div>
+          </div>
+          <div class="vel-note" style="color:var(--red-d)">Both SKUs selling in parallel. Portfolio volume flat. 4pk adding cost and complexity, not demand.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OWN-BRAND CONFLICT TABLE -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="section-label">Own-Brand Conflict Detail — All Scored Pairs · Kroger · dist ≤ 3</div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Focal SKU</th>
+              <th>Own-Brand Donor (dist ≤ 3)</th>
+              <th style="text-align:center">Dist</th>
+              <th style="text-align:center">Cannibal Prob</th>
+              <th>Avg Rate (rolling)</th>
+              <th style="text-align:center">Wks &gt;25%</th>
+              <th>Donor Velocity</th>
+              <th>Verdict</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="sku-name">Strawberries N Cream 1.41oz (4pk)</div>
+                <div class="sku-upc">08-40229-30614</div>
+              </td>
+              <td>
+                <div class="sku-name">Strawberries N Cream 1.41oz (single)</div>
+                <div class="sku-upc">own-brand sibling · same flavor</div>
+              </td>
+              <td style="text-align:center"><span class="dist-pill d1">D1</span></td>
+              <td style="text-align:center"><span class="prob-val">0.9996</span></td>
+              <td>
+                <div class="rate-cell">
+                  <div class="rate-bar-bg"><div class="rate-bar-fill r" style="width:61%"></div></div>
+                  <span class="rate-num r">61%</span>
+                </div>
+              </td>
+              <td style="text-align:center;font-family:var(--fm);font-size:11px;color:var(--red)">22 / 33</td>
+              <td style="font-size:11px;color:var(--red-d)">Active · unchanged ↔</td>
+              <td><span class="chip r"><span class="cdot r"></span>Cannibalizing</span></td>
+              <td class="action-cell">Swap single → 4pk at same facing</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="sku-name">Mint Chip 1.41oz (4pk)</div>
+                <div class="sku-upc">08-40229-30571</div>
+              </td>
+              <td>
+                <div class="sku-name">Mint Chip 1.41oz (single) + 12pk</div>
+                <div class="sku-upc">2 own-brand siblings · both dist=1</div>
+              </td>
+              <td style="text-align:center"><span class="dist-pill d1">D1</span></td>
+              <td style="text-align:center"><span class="prob-val">0.9994</span></td>
+              <td>
+                <div class="rate-cell">
+                  <div class="rate-bar-bg"><div class="rate-bar-fill a" style="width:30%"></div></div>
+                  <span class="rate-num a">30%</span>
+                </div>
+              </td>
+              <td style="text-align:center;font-family:var(--fm);font-size:11px;color:var(--amber)">24 / 68</td>
+              <td style="font-size:11px;color:var(--amber-d)">Active · declining ↓</td>
+              <td><span class="chip a"><span class="cdot a"></span>Watch</span></td>
+              <td class="action-cell">Monitor 8 more weeks · may self-resolve</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="sku-name">Salted Caramel 1.41oz (4pk)</div>
+                <div class="sku-upc">08-40229-30577</div>
+              </td>
+              <td>
+                <div class="sku-name">Salted Caramel 1.41oz (single)</div>
+                <div class="sku-upc">own-brand sibling · same flavor</div>
+              </td>
+              <td style="text-align:center"><span class="dist-pill d1">D1</span></td>
+              <td style="text-align:center"><span class="prob-val">0.9991</span></td>
+              <td>
+                <div class="rate-cell">
+                  <div class="rate-bar-bg"><div class="rate-bar-fill a" style="width:16%"></div></div>
+                  <span class="rate-num a">16%</span>
+                </div>
+              </td>
+              <td style="text-align:center;font-family:var(--fm);font-size:11px;color:var(--amber)">9 / 57</td>
+              <td style="font-size:11px;color:var(--amber-d)">Active · stable ↔</td>
+              <td><span class="chip a"><span class="cdot a"></span>Watch</span></td>
+              <td class="action-cell">Low rate — likely settling · continue monitoring</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="sku-name">Peanut Butter Cup 1.41oz (4pk)</div>
+                <div class="sku-upc">08-40229-30646</div>
+              </td>
+              <td>
+                <div class="sku-name">Peanut Butter Puff 1.41oz (single)</div>
+                <div class="sku-upc">own-brand cross-flavor · dist=3</div>
+              </td>
+              <td style="text-align:center"><span class="dist-pill d3">D3</span></td>
+              <td style="text-align:center"><span class="prob-val">0.9999</span></td>
+              <td>
+                <div class="rate-cell">
+                  <div class="rate-bar-bg"><div class="rate-bar-fill g" style="width:2%"></div></div>
+                  <span class="rate-num g">&lt;2%</span>
+                </div>
+              </td>
+              <td style="text-align:center;font-family:var(--fm);font-size:11px;color:var(--green)">0 / 39</td>
+              <td style="font-size:11px;color:var(--green-d)">Vel → 0 by wk 3 ↓</td>
+              <td><span class="chip g"><span class="cdot g"></span>Incremental</span></td>
+              <td class="action-cell">Planned format upgrade confirmed. No action needed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <span><span class="foot-brand">Mo</span> · Cannibalization Suite · Model MO_55 · SPINS MULO CRMA weekly · <em>Concept screen — not yet live</em></span>
+    <span>Own-brand = relationship_distance ≤ 3 (D1: pack-size siblings; D3: cross-flavor same brand). Rate = 4-week rolling avg of weekly base-unit paired comparison.</span>
+  </div>
+
+</div>

@@ -6,6 +6,28 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 105: Cannibalization launch guide — CCO flavor-launch decision framework (2026-09-10)
+
+Created two artifacts for the CCO/Brian audience on own-brand flavor-launch cannibalization:
+
+**`mockups/built_flavor_launch_guide.html`** — "When Should BUILT Introduce a New Flavor?"
+- Full-portfolio scan: 38 BUILT focal UPCs × all accounts → 171 Cannibalizing rows identified
+- Before/after Chart.js velocity chart: S&C single-serve (30573) 53 weeks + S&C 4pk (30614) 33 weeks at Kroger, with launch annotation at Sep 28 2025
+- 13-row examples table grounded in real SPINS data via `cannibalization_rate_weekly` and `built_filtered_weekly`
+- Decision framework: green (launch) / red (hold) signals; Mint Chip model vs. S&C/12pk anti-pattern
+- Mo clarifier UX: 4 context chips (account / season / format / region) before pulling cannibalization data
+- **Artifact:** https://claude.ai/code/artifact/8c14c24a-3a6b-41e0-b0f8-fcac9409e006
+
+**`mockups/mo_launch_comparison.html`** — Per-SKU comparison mockup
+- 3 BUILT 4-pack SKUs at Kroger: S&C (Cannibalizing, 42% avg), PB Cup (Incremental, <3%), Green Apple (Watch — early data)
+- Real SPINS velocity: S&C 7,634 u/wk, PB Cup 13,957 u/wk, Green Apple 4,849 u/wk (recent 4-wk avg)
+
+**Key insight from portfolio scan:** 12-packs at mainstream grocery (Kroger, Publix, Albertsons) are the single biggest own-brand cannibalization pattern — Brownie Batter 12pk (30363) has been cannibalizing at Publix for 97 weeks. Data-maturity warning: first 6-8 weeks of any new SKU show 100% rates due to low volume — not actionable until TDP > ~3%.
+
+**Wiki:** Added `customer-built-doc/wiki/16-cannibalization-launch-guide.md`
+
+---
+
 ## README update 104: Experience 1 screen spec + Sept 10 standup (2026-09-10)
 
 Processed Sept 10 standup (`Aevah Standup 091026.docx`). Rob's key direction:
