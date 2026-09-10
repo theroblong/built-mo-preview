@@ -2,56 +2,45 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap">
 <style>
 :root {
-  --chrome:  #0F172A;
-  --chrome2: #1E293B;
-  --ground:  #F1F5F9;
-  --surface: #FFFFFF;
-  --accent:  #2563EB;
-  --green:   #16A34A;
-  --green-l: #DCFCE7;
-  --green-b: #14532D;
-  --red:     #DC2626;
-  --red-l:   #FEE2E2;
-  --red-b:   #991B1B;
-  --amber:   #D97706;
-  --amber-l: #FEF3C7;
-  --amber-b: #92400E;
-  --text:    #0F172A;
-  --text2:   #475569;
-  --text3:   #94A3B8;
-  --border:  #E2E8F0;
-  --font-h:  'Space Grotesk', system-ui, sans-serif;
-  --font-b:  'DM Sans', system-ui, sans-serif;
+  --chrome:   #0F172A;
+  --chrome2:  #1E293B;
+  --ground:   #F1F5F9;
+  --surface:  #FFFFFF;
+  --accent:   #2563EB;
+  --green:    #16A34A;
+  --green-l:  #DCFCE7;
+  --green-b:  #14532D;
+  --amber:    #D97706;
+  --amber-l:  #FEF3C7;
+  --amber-b:  #92400E;
+  --red:      #DC2626;
+  --red-l:    #FEE2E2;
+  --red-b:    #991B1B;
+  --text:     #0F172A;
+  --text2:    #475569;
+  --text3:    #94A3B8;
+  --border:   #E2E8F0;
+  --font-h:   'Space Grotesk', system-ui, sans-serif;
+  --font-b:   'DM Sans', system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ground:  #0A0E1A;
-    --surface: #131929;
-    --text:    #F1F5F9;
-    --text2:   #94A3B8;
-    --text3:   #475569;
-    --border:  #1E293B;
-    --green-l: #052E16;
-    --red-l:   #450A0A;
-    --amber-l: #1C0A00;
+    --ground:  #0A0E1A; --surface: #131929; --text: #F1F5F9;
+    --text2:   #94A3B8; --text3:   #475569; --border: #1E293B;
+    --green-l: #052E16; --amber-l: #1C0A00; --red-l: #450A0A;
   }
 }
 :root[data-theme="dark"] {
-  --ground:  #0A0E1A;
-  --surface: #131929;
-  --text:    #F1F5F9;
-  --text2:   #94A3B8;
-  --text3:   #475569;
-  --border:  #1E293B;
-  --green-l: #052E16;
-  --red-l:   #450A0A;
-  --amber-l: #1C0A00;
+  --ground:  #0A0E1A; --surface: #131929; --text: #F1F5F9;
+  --text2:   #94A3B8; --text3:   #475569; --border: #1E293B;
+  --green-l: #052E16; --amber-l: #1C0A00; --red-l: #450A0A;
 }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font-b); background: var(--ground); color: var(--text); font-size: 14px; line-height: 1.6; }
 img { max-width: 100%; }
+svg text { font-family: 'DM Sans', system-ui, sans-serif; }
 
-/* Header */
 .header { background: var(--chrome); }
 .header-inner {
   max-width: 980px; margin: 0 auto; padding: 20px 32px 16px;
@@ -71,121 +60,114 @@ img { max-width: 100%; }
 .doc-title { font-family: var(--font-h); font-size: 21px; font-weight: 700; color: #F1F5F9; letter-spacing: -.02em; text-wrap: balance; }
 .doc-sub { font-size: 13px; color: #64748B; margin-top: 4px; }
 
-/* Body */
-.body { max-width: 980px; margin: 0 auto; padding: 28px 32px 52px; display: flex; flex-direction: column; gap: 28px; }
+.body { max-width: 980px; margin: 0 auto; padding: 28px 32px 52px; display: flex; flex-direction: column; gap: 32px; }
 
-/* Section label */
 .slabel { font-family: var(--font-h); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 12px; }
 
-/* Insight bar */
-.insight-bar {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  padding: 18px 22px;
-}
-.insight-bar-title { font-family: var(--font-h); font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-.insight-bar-body { font-size: 13px; color: var(--text2); line-height: 1.7; }
-.insight-bar-body strong { color: var(--text); }
-
-/* Key question table */
-.kq-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
-.kq-cell { border-radius: 8px; padding: 14px 16px; border: 1px solid; }
-.kq-cell.g { background: var(--green-l); border-color: var(--green); }
-.kq-cell.a { background: var(--amber-l); border-color: var(--amber); }
-.kq-cell.r { background: var(--red-l);   border-color: var(--red); }
-.kq-verdict { font-family: var(--font-h); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
-.kq-verdict.g { color: var(--green-b); }
-.kq-verdict.a { color: var(--amber-b); }
-.kq-verdict.r { color: var(--red-b); }
-.kq-signal { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.kq-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
-.kq-action { font-size: 11px; font-weight: 600; margin-top: 6px; }
-.kq-action.g { color: var(--green-b); }
-.kq-action.a { color: var(--amber-b); }
-.kq-action.r { color: var(--red-b); }
-
-/* Case grid */
-.case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.case-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.case-head { padding: 14px 18px; border-bottom: 1px solid var(--border); }
-.case-head.g { border-left: 4px solid var(--green); }
-.case-head.a { border-left: 4px solid var(--amber); }
-.verdict-chip {
+/* Verdict chip — exactly 3 values */
+.chip {
   display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
   border-radius: 20px; font-family: var(--font-h); font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px;
+  text-transform: uppercase; letter-spacing: .07em;
 }
-.verdict-chip.g { background: var(--green-l); color: var(--green-b); }
-.verdict-chip.a { background: var(--amber-l); color: var(--amber-b); }
-.case-sku { font-family: var(--font-h); font-size: 14px; font-weight: 700; line-height: 1.3; }
-.case-meta { font-size: 11px; color: var(--text3); margin-top: 3px; }
-
-.case-body { padding: 16px 18px; }
-
-/* KPI tile row */
-.kpi-row { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
-.kpi-t { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border); }
-.kpi-t:last-child { border-right: none; }
-.kpi-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 2px; }
-.kpi-val { font-family: var(--font-h); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.kpi-val.g { color: var(--green); }
-.kpi-val.a { color: var(--amber); }
-.kpi-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
-
-/* Chart */
-.chart-box { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--ground); }
-.chart-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; }
-.chart-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); }
-.chart-acct { font-size: 11px; font-weight: 600; color: var(--text2); }
-svg.chart { display: block; width: 100%; }
-svg text { font-family: 'DM Sans', system-ui, sans-serif; }
-
-/* Insight box */
-.ibox { margin-top: 14px; padding: 11px 14px; border-radius: 7px; font-size: 12px; line-height: 1.6; }
-.ibox.g { background: var(--green-l); color: var(--green-b); border: 1px solid var(--green); }
-.ibox.a { background: var(--amber-l); color: var(--amber-b); border: 1px solid var(--amber); }
-.ibox-title { font-family: var(--font-h); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
-
-/* Donor row */
-.donor-row { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 6px 10px; border-radius: 6px; background: var(--ground); border: 1px solid var(--border); margin-top: 8px; }
-.dsq { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dsq.r { background: var(--red); }
-.dsq.g { background: var(--green); }
-.dname { flex: 1; color: var(--text2); }
-.dstat { font-weight: 600; font-size: 10px; }
-.dstat.r { color: var(--red-b); }
-.dstat.g { color: var(--green-b); }
-.dnote { font-size: 10px; color: var(--text3); }
-
-/* Walmart comparison */
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.compare-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-family: var(--font-h); font-size: 13px; font-weight: 700; }
-.compare-body { padding: 14px 16px; }
-
-/* Summary table */
-.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.table-head { padding: 14px 20px; border-bottom: 1px solid var(--border); }
-.table-title { font-family: var(--font-h); font-size: 14px; font-weight: 700; }
-.table-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
-.dtable { width: 100%; border-collapse: collapse; }
-.dtable th { text-align: left; padding: 8px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); border-bottom: 1px solid var(--border); background: var(--ground); }
-.dtable td { padding: 10px 14px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.dtable tr:last-child td { border-bottom: none; }
-.dtable tr:hover td { background: var(--ground); }
-.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-family: var(--font-h); font-size: 10px; font-weight: 700; }
 .chip.g { background: var(--green-l); color: var(--green-b); }
 .chip.a { background: var(--amber-l); color: var(--amber-b); }
 .chip.r { background: var(--red-l); color: var(--red-b); }
-.dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 .dot.g { background: var(--green); }
 .dot.a { background: var(--amber); }
 .dot.r { background: var(--red); }
-td.m { font-variant-numeric: tabular-nums; }
+
+/* Framework */
+.fw-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; }
+.fw-intro { font-size: 13px; color: var(--text2); line-height: 1.65; margin-bottom: 14px; }
+.fw-intro strong { color: var(--text); }
+.fw-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.fw-cell { border-radius: 8px; padding: 14px 16px; border: 1px solid; }
+.fw-cell.g { background: var(--green-l); border-color: var(--green); }
+.fw-cell.a { background: var(--amber-l); border-color: var(--amber); }
+.fw-cell.r { background: var(--red-l); border-color: var(--red); }
+.fw-signal { font-family: var(--font-h); font-size: 12px; font-weight: 600; color: var(--text); margin: 6px 0 4px; }
+.fw-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.fw-action { font-size: 11px; font-weight: 600; margin-top: 6px; }
+.fw-action.g { color: var(--green-b); }
+.fw-action.a { color: var(--amber-b); }
+.fw-action.r { color: var(--red-b); }
+
+/* SKU section */
+.sku-section { display: flex; flex-direction: column; gap: 12px; }
+.sku-header { border-radius: 8px; padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; justify-content: space-between; }
+.sku-header.g { background: var(--green-l); border: 1px solid var(--green); }
+.sku-header.a { background: var(--amber-l); border: 1px solid var(--amber); }
+.sku-name { font-family: var(--font-h); font-size: 15px; font-weight: 700; color: var(--text); }
+.sku-context { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.sku-upc { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+/* Account pair */
+.acct-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Account card */
+.acct-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.acct-head { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.acct-name { font-family: var(--font-h); font-size: 12px; font-weight: 700; color: var(--text); }
+.acct-meta { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.acct-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* KPI row */
+.kpi-row { display: flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.kpi-t { flex: 1; padding: 8px 10px; border-right: 1px solid var(--border); }
+.kpi-t:last-child { border-right: none; }
+.kpi-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 2px; }
+.kpi-val { font-family: var(--font-h); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.kpi-val.g { color: var(--green); }
+.kpi-val.a { color: var(--amber); }
+.kpi-val.r { color: var(--red); }
+.kpi-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+/* Chart */
+.chart-box { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--ground); }
+.chart-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 0; }
+.chart-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); }
+.chart-acct { font-size: 10px; font-weight: 600; color: var(--text2); }
+svg.chart { display: block; width: 100%; }
+
+/* Insight box */
+.ibox { padding: 10px 12px; border-radius: 7px; font-size: 12px; line-height: 1.6; }
+.ibox.g { background: var(--green-l); color: var(--green-b); border: 1px solid var(--green); }
+.ibox.a { background: var(--amber-l); color: var(--amber-b); border: 1px solid var(--amber); }
+.ibox-head { font-family: var(--font-h); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+
+/* Donor mini */
+.donor { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 5px 8px; border-radius: 5px; background: var(--ground); border: 1px solid var(--border); }
+.dsq { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dsq.r { background: var(--red); }
+.dname { flex: 1; color: var(--text2); }
+.dstat { font-size: 10px; font-weight: 600; color: var(--red-b); }
+.dnote { font-size: 10px; color: var(--text3); }
+.no-donor { font-size: 11px; color: var(--green-b); padding: 5px 8px; border-radius: 5px; background: var(--green-l); border: 1px solid var(--green); }
+
+/* Scorecard table */
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.table-head { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.table-title { font-family: var(--font-h); font-size: 14px; font-weight: 700; }
+.table-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.dtable { width: 100%; border-collapse: collapse; }
+.dtable th { text-align: left; padding: 8px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); border-bottom: 1px solid var(--border); background: var(--ground); }
+.dtable td { padding: 10px 14px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.dtable tr:last-child td { border-bottom: none; }
+.dtable tr:hover td { background: var(--ground); }
 .sku-n { font-weight: 500; }
 .sku-u { font-size: 10px; color: var(--text3); margin-top: 1px; }
 
+/* App note */
+.app-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; }
+.app-title { font-family: var(--font-h); font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.app-body { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.app-body strong { color: var(--text); }
+.app-body p + p { margin-top: 8px; }
+
 /* Footer */
-.footer { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px; font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.footer { border-top: 1px solid var(--border); padding-top: 14px; font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .footer-brand { font-family: var(--font-h); font-weight: 600; color: var(--accent); }
 </style>
 
@@ -197,64 +179,71 @@ td.m { font-variant-numeric: tabular-nums; }
       <div class="brand-suite">Cannibalization Suite</div>
     </div>
     <div class="header-meta">
-      <div class="header-meta-label">Account</div>
+      <div class="header-meta-label">Accounts</div>
       <div class="header-meta-val">Kroger · Walmart · September 2026</div>
     </div>
   </div>
 </header>
 <div class="title-band">
   <div class="title-inner">
-    <div class="doc-title">New Flavor Incrementality — What Mo Reveals at the Account Level</div>
-    <div class="doc-sub">Two BUILT launches analyzed at Kroger + Walmart · Own-brand vs. competitive cannibalization distinguished</div>
+    <div class="doc-title">New Flavor Incrementality — When Is Adding a New Flavor Not Advised?</div>
+    <div class="doc-sub">Two BUILT launches scored across Kroger + Walmart · Real data from Aevah's cannibalization model · Own-brand vs. competitive displacement distinguished</div>
   </div>
 </div>
 
 <div class="body">
 
-  <!-- Key question -->
+  <!-- Framework -->
   <div>
-    <div class="slabel">The Critical Distinction</div>
-    <div class="insight-bar">
-      <div class="insight-bar-title">Not all cannibalization is the same — competitive displacement is the goal, not the problem</div>
-      <div class="insight-bar-body">
-        Mo's cannibalization model scores every new BUILT SKU against both own-brand siblings <em>and</em> competitor SKUs. The model's "Cannibalizing" status means <em>something</em> is being displaced — but the relevant question for your business is <strong>what</strong> is being displaced. A new BUILT flavor stealing demand from a competitor is market share growth. A new BUILT flavor stealing from your existing shelf SKUs is portfolio reshuffling. Mo separates these automatically. <strong>Own-brand donor count is the diagnostic number: 0 means new territory, 1+ means investigate which sibling is overlapping.</strong>
-      </div>
-      <div class="kq-grid">
-        <div class="kq-cell g">
-          <div class="kq-verdict g">New territory</div>
-          <div class="kq-signal">Own-brand donors: 0</div>
-          <div class="kq-desc">No existing BUILT SKU conflicts. Any cannibalization is from competitors. This is share growth, not portfolio reshuffling.</div>
-          <div class="kq-action g">→ Approve without swapping</div>
+    <div class="slabel">The Diagnostic Framework</div>
+    <div class="fw-card">
+      <div class="fw-intro">Aevah scores every new SKU against both own-brand siblings and competitor SKUs. The critical question is not <em>whether</em> cannibalization is occurring — it always is at launch — but <strong>who is being displaced</strong>. A new BUILT flavor stealing from competitors is market share growth. A new BUILT flavor stealing from its own siblings is portfolio reshuffling. <strong>Own-brand donor count is the primary diagnostic. Rate trajectory is the confirmation.</strong></div>
+      <div class="fw-grid">
+        <div class="fw-cell g">
+          <div class="chip g"><span class="dot g"></span>Incremental</div>
+          <div class="fw-signal">Own-brand donors: 0 · Rate settles &lt;10%</div>
+          <div class="fw-desc">New flavor enters genuinely new demand territory. Competitive displacement is occurring — which is the goal. No existing BUILT SKU is materially affected.</div>
+          <div class="fw-action g">→ Approve distribution without offering a swap</div>
         </div>
-        <div class="kq-cell a">
-          <div class="kq-verdict a">Format / sibling overlap</div>
-          <div class="kq-signal">Own-brand donors: 1–2, settling &lt; 10%</div>
-          <div class="kq-desc">Minor own-brand overlap (e.g. 4-pack entering where single-serve lives). Often reflects a planned format upgrade.</div>
-          <div class="kq-action a">→ Approve; monitor the sibling SKU's trajectory</div>
+        <div class="fw-cell a">
+          <div class="chip a"><span class="dot a"></span>Watch</div>
+          <div class="fw-signal">Own-brand donors: 1–2 · Rate settles 10–25%</div>
+          <div class="fw-desc">Some own-brand overlap exists. May reflect a planned format upgrade or a sibling SKU being phased out. Monitor the sibling's trajectory before committing to full distribution.</div>
+          <div class="fw-action a">→ Approve; track sibling SKU velocity closely</div>
         </div>
-        <div class="kq-cell r">
-          <div class="kq-verdict r">Portfolio conflict</div>
-          <div class="kq-signal">Own-brand donors: multiple, rate stays &gt; 20%</div>
-          <div class="kq-desc">Flavor occupies space already served by existing BUILT SKUs. Net portfolio volume may not increase even if the new flavor sells.</div>
-          <div class="kq-action r">→ Proactively offer a swap; or hold for data</div>
+        <div class="fw-cell r">
+          <div class="chip r"><span class="dot r"></span>Cannibalizing</div>
+          <div class="fw-signal">Own-brand donors: multiple · Rate stays &gt;25%</div>
+          <div class="fw-desc">New flavor is primarily rearranging existing BUILT demand. Net portfolio volume will likely be flat or negative even if the new SKU posts strong individual numbers.</div>
+          <div class="fw-action r">→ Proactively propose a swap or hold for more data</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Case studies -->
-  <div>
-    <div class="slabel">Case Studies · Kroger MULO · Real Aevah Data</div>
-    <div class="case-grid">
+  <!-- SKU 1: Green Apple Crush -->
+  <div class="sku-section">
+    <div class="slabel">Case Study 1 of 2</div>
+    <div class="sku-header g">
+      <div>
+        <div class="sku-name">Built Green Apple Crush Sour Puff 1.45 oz · 4-Pack</div>
+        <div class="sku-context">New flavor in genuinely new taste territory — no sour/fruit analog in the existing BUILT portfolio</div>
+        <div class="sku-upc">UPC 08-40229-30656</div>
+      </div>
+      <div class="chip g" style="flex-shrink:0"><span class="dot g"></span>Incremental</div>
+    </div>
 
-      <!-- Green Apple Crush -->
-      <div class="case-card">
-        <div class="case-head g">
-          <div class="verdict-chip g">● New Territory</div>
-          <div class="case-sku">Built Green Apple Crush Sour Puff 1.45 oz · 4-Pack</div>
-          <div class="case-meta">UPC 08-40229-30656 · Launched Feb 1, 2026 · Kroger MULO · ARP $9.64</div>
+    <div class="acct-pair">
+      <!-- Kroger -->
+      <div class="acct-card">
+        <div class="acct-head">
+          <div>
+            <div class="acct-name">Kroger</div>
+            <div class="acct-meta">Launched Feb 1, 2026 · 12 weeks · ARP $9.64</div>
+          </div>
+          <div class="chip g"><span class="dot g"></span>Incremental</div>
         </div>
-        <div class="case-body">
+        <div class="acct-body">
           <div class="kpi-row">
             <div class="kpi-t">
               <div class="kpi-label">Own-Brand Donors</div>
@@ -268,100 +257,165 @@ td.m { font-variant-numeric: tabular-nums; }
             </div>
             <div class="kpi-t">
               <div class="kpi-label">Settled Rate</div>
-              <div class="kpi-val g">&lt; 4%</div>
+              <div class="kpi-val g">&lt;4%</div>
               <div class="kpi-sub">weeks 11–12</div>
             </div>
           </div>
-
           <div class="chart-box">
             <div class="chart-head">
-              <div class="chart-label">Weekly Cannibalization Rate · 12 Weeks Post-Launch</div>
+              <div class="chart-lbl">Cannibalization Rate · 12 Weeks</div>
               <div class="chart-acct">Kroger</div>
             </div>
-            <!-- 12 weeks: [100,100,100,100,100,100,100,100,26.7,25.8,1.9,3.4] -->
-            <!-- ViewBox 0 0 360 140; plot x=[40,340] width=300; y=[12,120] height=108 -->
-            <!-- x_step=300/11=27.3; y(rate)=120-rate*1.08 -->
-            <svg class="chart" viewBox="0 0 360 140" aria-label="Green Apple Crush Sour 4pk cannibalization rate at Kroger, 12 weeks">
-              <!-- Grid -->
-              <line x1="40" y1="12" x2="340" y2="12" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="66" x2="340" y2="66" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="120" x2="340" y2="120" stroke="#E2E8F0" stroke-width="0.5"/>
-              <!-- y axis labels -->
-              <text x="37" y="15" font-size="8" fill="#94A3B8" text-anchor="end">100%</text>
-              <text x="37" y="69" font-size="8" fill="#94A3B8" text-anchor="end">50%</text>
-              <text x="37" y="123" font-size="8" fill="#94A3B8" text-anchor="end">0%</text>
-              <!-- y axis line -->
-              <line x1="40" y1="10" x2="40" y2="122" stroke="#E2E8F0" stroke-width="1"/>
-
+            <!-- [100,100,100,100,100,100,100,100,26.7,25.8,1.9,3.4] -->
+            <!-- ViewBox 300×115; plot x=[28,272] w=244; y=[10,105] h=95 -->
+            <!-- x_step=244/11=22.2; y=105-rate*0.95 -->
+            <svg class="chart" viewBox="0 0 300 115" aria-label="Green Apple Crush rate Kroger 12 weeks">
+              <line x1="28" y1="10" x2="272" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="58" x2="272" y2="58" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="105" x2="272" y2="105" stroke="#E2E8F0" stroke-width="0.5"/>
+              <text x="26" y="13" font-size="7" fill="#94A3B8" text-anchor="end">100%</text>
+              <text x="26" y="61" font-size="7" fill="#94A3B8" text-anchor="end">50%</text>
+              <text x="26" y="108" font-size="7" fill="#94A3B8" text-anchor="end">0%</text>
+              <line x1="28" y1="8" x2="28" y2="107" stroke="#E2E8F0" stroke-width="1"/>
               <!-- 10% threshold -->
-              <line x1="40" y1="109" x2="340" y2="109" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
-              <text x="342" y="112" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
-
-              <!-- Settling annotation zone (wk 8-12) -->
-              <rect x="231" y="10" width="109" height="112" fill="#16A34A" opacity="0.04" rx="2"/>
-
-              <!-- Competitive-only band label -->
-              <text x="135" y="8" font-size="8" fill="#64748B" text-anchor="middle" font-style="italic">← competitor displacement only (no own-brand conflict)</text>
-
-              <!-- Data line: [100,100,100,100,100,100,100,100,26.7,25.8,1.9,3.4] -->
-              <!-- x: 40+w*27.3; y: 120-rate*1.08 -->
+              <line x1="28" y1="96" x2="272" y2="96" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <text x="273" y="98" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
+              <!-- competitor displacement label -->
+              <text x="128" y="8" font-size="7" fill="#64748B" text-anchor="middle" font-style="italic">← competitive displacement only (0 own-brand conflict)</text>
+              <!-- settlement zone -->
+              <rect x="206" y="10" width="66" height="88" fill="#16A34A" opacity="0.05" rx="2"/>
+              <!-- data [100,100,100,100,100,100,100,100,26.7,25.8,1.9,3.4] -->
+              <!-- x: 28+n*22.2; y: 105-rate*0.95 -->
               <polyline
-                points="40,12 67,12 95,12 122,12 150,12 177,12 204,12 231,12 259,91 286,92 313,118 340,116"
+                points="28,10 50,10 72,10 95,10 117,10 139,10 161,10 183,10 206,80 228,81 250,103 272,102"
                 fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-
-              <!-- Settlement drop annotation -->
-              <line x1="231" y1="12" x2="231" y2="128" stroke="#D97706" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
-              <text x="233" y="128" font-size="8" fill="#D97706">Wk 9 settles</text>
-
-              <!-- End point dot -->
-              <circle cx="340" cy="116" r="3.5" fill="#16A34A"/>
-
-              <!-- Settled annotation -->
-              <text x="327" y="110" font-size="8" fill="#16A34A" font-weight="600" text-anchor="middle">&lt;4%</text>
-
-              <!-- x week labels -->
-              <text x="40" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 1</text>
-              <text x="122" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 4</text>
-              <text x="204" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 7</text>
-              <text x="286" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 10</text>
-              <text x="340" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 12</text>
+              <circle cx="272" cy="102" r="3" fill="#16A34A"/>
+              <!-- settle annotation -->
+              <line x1="206" y1="10" x2="206" y2="109" stroke="#D97706" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+              <text x="208" y="109" font-size="7" fill="#D97706">Wk 9</text>
+              <text x="250" y="98" font-size="7" fill="#16A34A" font-weight="600" text-anchor="middle">&lt;4%</text>
+              <!-- x labels -->
+              <text x="28" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 1</text>
+              <text x="117" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 5</text>
+              <text x="206" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 9</text>
+              <text x="272" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 12</text>
             </svg>
           </div>
-
           <div class="ibox g">
-            <div class="ibox-title">Verdict · Approve — Pure Competitive Conquest</div>
-            No own-brand BUILT SKU was displaced. All 9 "Cannibalizing" pairs are competitors or distant legacy formats. The 100% rate in weeks 1–8 is entirely competitive displacement as the sour/fruit protein segment rebalances on shelf. By week 11 the rate drops below 4% and stays there. <strong>A new flavor in genuinely new taste territory with zero impact on the existing BUILT portfolio.</strong>
+            <div class="ibox-head">Verdict · Incremental</div>
+            Zero own-brand BUILT donors. All 9 "Cannibalizing" model pairs are competitors or distant legacy formats — competitive displacement, not portfolio reshuffling. Rate held at 100% for 8 weeks as the sour/fruit protein segment rebalanced on shelf, then dropped below 4% and held. <strong>No impact on the existing BUILT portfolio at Kroger.</strong>
           </div>
-
-          <div style="margin-top:10px">
-            <div class="kpi-label" style="font-size:9px;margin-bottom:4px">Scored Pairs Summary (55 total)</div>
-            <div class="donor-row">
-              <div class="dsq g"></div>
-              <div class="dname">46 pairs — competitor sour/fruit bars displaced</div>
-              <div class="dstat g">Incremental</div>
-            </div>
-            <div class="donor-row">
-              <div class="dsq r"></div>
-              <div class="dname">9 pairs — legacy/competitor formats (no active own-brand conflict)</div>
-              <div class="dstat r">Cannibalizing</div>
-            </div>
+          <div class="no-donor">✓ 0 own-brand donors — no own-brand SKU scored as a conflict</div>
+          <div style="font-size:11px;color:var(--text2);padding:5px 8px;background:var(--ground);border-radius:5px;border:1px solid var(--border)">
+            55 scored pairs: 46 Incremental, 9 Cannibalizing (all competitor/dist-5)
           </div>
         </div>
       </div>
 
-      <!-- PB Cup -->
-      <div class="case-card">
-        <div class="case-head a">
-          <div class="verdict-chip a">● Sibling Overlap · Settled</div>
-          <div class="case-sku">Built Puff Peanut Butter Cup 1.41 oz · 4-Pack</div>
-          <div class="case-meta">UPC 08-40229-30646 · Launched Jul 27, 2025 · Kroger MULO · ARP $8.98</div>
+      <!-- Walmart -->
+      <div class="acct-card">
+        <div class="acct-head">
+          <div>
+            <div class="acct-name">Walmart</div>
+            <div class="acct-meta">Launched Jan 25, 2026 · 8 weeks</div>
+          </div>
+          <div class="chip g"><span class="dot g"></span>Incremental</div>
         </div>
-        <div class="case-body">
+        <div class="acct-body">
+          <div class="kpi-row">
+            <div class="kpi-t">
+              <div class="kpi-label">Own-Brand Donors</div>
+              <div class="kpi-val g">0</div>
+              <div class="kpi-sub">no BUILT conflict</div>
+            </div>
+            <div class="kpi-t">
+              <div class="kpi-label">Incr. Share</div>
+              <div class="kpi-val g">86.7%</div>
+              <div class="kpi-sub">of scored pairs</div>
+            </div>
+            <div class="kpi-t">
+              <div class="kpi-label">Settled Rate</div>
+              <div class="kpi-val g">&lt;2%</div>
+              <div class="kpi-sub">week 6 onward</div>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-head">
+              <div class="chart-lbl">Cannibalization Rate · 8 Weeks</div>
+              <div class="chart-acct">Walmart</div>
+            </div>
+            <!-- [100,100,100,14.9,1.1,1.4,0.0,0.5] -->
+            <!-- x: 28+n*34.9; y: 105-rate*0.95 -->
+            <svg class="chart" viewBox="0 0 300 115" aria-label="Green Apple Crush rate Walmart 8 weeks">
+              <line x1="28" y1="10" x2="272" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="58" x2="272" y2="58" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="105" x2="272" y2="105" stroke="#E2E8F0" stroke-width="0.5"/>
+              <text x="26" y="13" font-size="7" fill="#94A3B8" text-anchor="end">100%</text>
+              <text x="26" y="61" font-size="7" fill="#94A3B8" text-anchor="end">50%</text>
+              <text x="26" y="108" font-size="7" fill="#94A3B8" text-anchor="end">0%</text>
+              <line x1="28" y1="8" x2="28" y2="107" stroke="#E2E8F0" stroke-width="1"/>
+              <line x1="28" y1="96" x2="272" y2="96" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <text x="273" y="98" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
+              <!-- competitive displacement label -->
+              <text x="88" y="8" font-size="7" fill="#64748B" text-anchor="middle" font-style="italic">← competitive displacement only</text>
+              <!-- settlement zone (wk 4 onward) -->
+              <rect x="133" y="96" width="139" height="12" fill="#16A34A" opacity="0.12" rx="2"/>
+              <!-- data [100,100,100,14.9,1.1,1.4,0.0,0.5] -->
+              <!-- x: 28,63,98,133,167,202,237,272; y: 10,10,10,91,104,104,105,105 -->
+              <polyline
+                points="28,10 63,10 98,10 133,91 167,104 202,104 237,105 272,105"
+                fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="272" cy="105" r="3" fill="#16A34A"/>
+              <!-- settle annotation -->
+              <line x1="133" y1="10" x2="133" y2="109" stroke="#D97706" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+              <text x="135" y="109" font-size="7" fill="#D97706">Wk 4</text>
+              <text x="210" y="101" font-size="7" fill="#16A34A" font-weight="600">&lt;2%</text>
+              <text x="28" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 1</text>
+              <text x="133" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 4</text>
+              <text x="272" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 8</text>
+            </svg>
+          </div>
+          <div class="ibox g">
+            <div class="ibox-head">Verdict · Incremental</div>
+            Same underlying story as Kroger: zero own-brand donors, competitive displacement only. Settles faster at Walmart — by week 4 (vs. week 9 at Kroger), reflecting different planogram reset timing. Incremental share is marginally higher at 86.7%. <strong>Consistent verdict across both accounts: no BUILT-on-BUILT impact.</strong>
+          </div>
+          <div class="no-donor">✓ 0 own-brand donors — no own-brand SKU scored as a conflict</div>
+          <div style="font-size:11px;color:var(--text2);padding:5px 8px;background:var(--ground);border-radius:5px;border:1px solid var(--border)">
+            The 5-week faster settlement vs. Kroger = account-level planogram difference, not a different cannibalization dynamic
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKU 2: PB Cup -->
+  <div class="sku-section">
+    <div class="slabel">Case Study 2 of 2</div>
+    <div class="sku-header a">
+      <div>
+        <div class="sku-name">Built Puff Peanut Butter Cup 1.41 oz · 4-Pack</div>
+        <div class="sku-context">New format for an existing flavor — 4-pack entering shelf alongside the existing single-serve PB Puff sibling</div>
+        <div class="sku-upc">UPC 08-40229-30646</div>
+      </div>
+      <div class="chip g" style="flex-shrink:0"><span class="dot g"></span>Incremental</div>
+    </div>
+
+    <div class="acct-pair">
+      <!-- Kroger -->
+      <div class="acct-card">
+        <div class="acct-head">
+          <div>
+            <div class="acct-name">Kroger</div>
+            <div class="acct-meta">Launched Jul 27, 2025 · 39 weeks · ARP $8.98</div>
+          </div>
+          <div class="chip g"><span class="dot g"></span>Incremental</div>
+        </div>
+        <div class="acct-body">
           <div class="kpi-row">
             <div class="kpi-t">
               <div class="kpi-label">Own-Brand Donors</div>
               <div class="kpi-val a">1</div>
-              <div class="kpi-sub">PB Puff single-serve</div>
+              <div class="kpi-sub">PB single-serve</div>
             </div>
             <div class="kpi-t">
               <div class="kpi-label">Incr. Share</div>
@@ -370,159 +424,146 @@ td.m { font-variant-numeric: tabular-nums; }
             </div>
             <div class="kpi-t">
               <div class="kpi-label">Settled Rate</div>
-              <div class="kpi-val g">&lt; 5%</div>
-              <div class="kpi-sub">by week 3, 36+ wks</div>
+              <div class="kpi-val g">&lt;5%</div>
+              <div class="kpi-sub">week 3 · 36+ wks</div>
             </div>
           </div>
-
           <div class="chart-box">
             <div class="chart-head">
-              <div class="chart-label">Weekly Cannibalization Rate · 12 Weeks Post-Launch</div>
+              <div class="chart-lbl">Cannibalization Rate · First 12 Weeks</div>
               <div class="chart-acct">Kroger</div>
             </div>
-            <!-- 12 weeks: [100, 31.4, 7.3, 2.2, 1.3, 1.0, 0.1, 0.1, 0.0, 5.7, 0.1, 1.6] -->
-            <!-- x: 40+w*27.3; y: 120-rate*1.08 -->
-            <svg class="chart" viewBox="0 0 360 140" aria-label="Built Puff PB Cup 4pk cannibalization rate at Kroger, 12 weeks">
-              <!-- Grid -->
-              <line x1="40" y1="12" x2="340" y2="12" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="66" x2="340" y2="66" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="120" x2="340" y2="120" stroke="#E2E8F0" stroke-width="0.5"/>
-              <text x="37" y="15" font-size="8" fill="#94A3B8" text-anchor="end">100%</text>
-              <text x="37" y="69" font-size="8" fill="#94A3B8" text-anchor="end">50%</text>
-              <text x="37" y="123" font-size="8" fill="#94A3B8" text-anchor="end">0%</text>
-              <line x1="40" y1="10" x2="40" y2="122" stroke="#E2E8F0" stroke-width="1"/>
-
-              <!-- 10% threshold -->
-              <line x1="40" y1="109" x2="340" y2="109" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
-              <text x="342" y="112" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
-
-              <!-- Settled zone green shading (wk 3 onward) -->
-              <rect x="95" y="102" width="245" height="20" fill="#16A34A" opacity="0.08" rx="2"/>
-              <text x="219" y="128" font-size="8" fill="#16A34A" font-weight="600" text-anchor="middle">Settled &lt;5% — remained here for 36+ weeks</text>
-
-              <!-- Data line -->
+            <!-- [100,31.4,7.3,2.2,1.3,1.0,0.1,0.1,0.0,5.7,0.1,1.6] -->
+            <!-- x: 28+n*22.2; y: 105-rate*0.95 -->
+            <svg class="chart" viewBox="0 0 300 115" aria-label="PB Cup rate Kroger 12 weeks">
+              <line x1="28" y1="10" x2="272" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="58" x2="272" y2="58" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="105" x2="272" y2="105" stroke="#E2E8F0" stroke-width="0.5"/>
+              <text x="26" y="13" font-size="7" fill="#94A3B8" text-anchor="end">100%</text>
+              <text x="26" y="61" font-size="7" fill="#94A3B8" text-anchor="end">50%</text>
+              <text x="26" y="108" font-size="7" fill="#94A3B8" text-anchor="end">0%</text>
+              <line x1="28" y1="8" x2="28" y2="107" stroke="#E2E8F0" stroke-width="1"/>
+              <line x1="28" y1="96" x2="272" y2="96" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <text x="273" y="98" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
+              <!-- settled zone wk 3 onward -->
+              <rect x="72" y="96" width="200" height="12" fill="#16A34A" opacity="0.10" rx="2"/>
+              <!-- 1 sibling annotation -->
+              <rect x="30" y="22" width="95" height="22" fill="var(--amber-l,#FEF3C7)" rx="4" opacity="0.95"/>
+              <text x="78" y="31" font-size="7" fill="#92400E" text-anchor="middle" font-weight="600">1 own-brand sibling</text>
+              <text x="78" y="40" font-size="7" fill="#92400E" text-anchor="middle">PB Puff single-serve</text>
+              <!-- data -->
               <polyline
-                points="40,12 67,86 95,112 122,118 150,119 177,119 204,120 231,120 259,120 286,114 313,120 340,118"
+                points="28,10 50,75 72,98 95,103 117,104 139,104 161,105 183,105 206,105 228,100 250,105 272,104"
                 fill="none" stroke="#D97706" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-
-              <!-- Rapid drop annotation -->
-              <line x1="95" y1="112" x2="95" y2="128" stroke="#D97706" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
-              <text x="97" y="128" font-size="8" fill="#D97706">Wk 3 &lt;8%</text>
-
-              <!-- 1 own-brand sibling note -->
-              <rect x="42" y="28" width="110" height="26" fill="var(--amber-l,#FEF3C7)" rx="4" opacity="0.9"/>
-              <text x="97" y="38" font-size="8" fill="#92400E" text-anchor="middle" font-weight="600">1 own-brand sibling</text>
-              <text x="97" y="48" font-size="8" fill="#92400E" text-anchor="middle">PB Puff single-serve</text>
-
-              <text x="40" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 1</text>
-              <text x="122" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 4</text>
-              <text x="204" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 7</text>
-              <text x="286" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 10</text>
-              <text x="340" y="135" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 12</text>
+              <circle cx="272" cy="104" r="3" fill="#16A34A"/>
+              <!-- settle -->
+              <line x1="72" y1="98" x2="72" y2="109" stroke="#D97706" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+              <text x="74" y="109" font-size="7" fill="#D97706">Wk 3</text>
+              <text x="175" y="101" font-size="7" fill="#16A34A" font-weight="600">Settled · 36+ wks</text>
+              <text x="28" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 1</text>
+              <text x="117" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 5</text>
+              <text x="206" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 9</text>
+              <text x="272" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 12</text>
             </svg>
           </div>
+          <div class="ibox g">
+            <div class="ibox-head">Verdict · Incremental</div>
+            One own-brand donor: Built Peanut Butter Puff 1.41oz single-serve (dist-3, 99.99% cannibalization probability). Its velocity went to zero post-launch — indicating a planned format transition, not unintended displacement. Rate collapsed to &lt;5% by week 3 and held across 36+ additional weeks. <strong>Format upgrade, not cannibalization. 39 weeks of data confirm it.</strong>
+          </div>
+          <div class="donor">
+            <div class="dsq r"></div>
+            <div class="dname">Built Peanut Butter Puff 1.41oz (single-serve) — dist-3</div>
+            <div class="dstat">99.99%</div>
+            <div class="dnote">vel → 0</div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Walmart -->
+      <div class="acct-card">
+        <div class="acct-head">
+          <div>
+            <div class="acct-name">Walmart</div>
+            <div class="acct-meta">Launched Jul 27, 2025 · 15 weeks</div>
+          </div>
+          <div class="chip a"><span class="dot a"></span>Watch</div>
+        </div>
+        <div class="acct-body">
+          <div class="kpi-row">
+            <div class="kpi-t">
+              <div class="kpi-label">Own-Brand Donors</div>
+              <div class="kpi-val g">0</div>
+              <div class="kpi-sub">no BUILT conflict</div>
+            </div>
+            <div class="kpi-t">
+              <div class="kpi-label">Incr. Share</div>
+              <div class="kpi-val a">50.0%</div>
+              <div class="kpi-sub">of scored pairs</div>
+            </div>
+            <div class="kpi-t">
+              <div class="kpi-label">Avg Rate</div>
+              <div class="kpi-val a">5–12%</div>
+              <div class="kpi-sub">weeks 2–15</div>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-head">
+              <div class="chart-lbl">Cannibalization Rate · First 15 Weeks</div>
+              <div class="chart-acct">Walmart</div>
+            </div>
+            <!-- [100,0.1,17.5,22.2,4.3,0.0,8.1,0.3,5.8,1.7,3.2,15.1,10.8,12.7,9.7] -->
+            <!-- x: 28+n*17.4 (14 steps → 244/14=17.4); y: 105-rate*0.95 -->
+            <!-- x vals: 28,45,63,80,98,115,133,150,168,185,202,220,237,255,272 -->
+            <!-- y vals: 10,105,89,84,101,105,97,105,100,103,102,91,95,93,96 -->
+            <svg class="chart" viewBox="0 0 300 115" aria-label="PB Cup rate Walmart 15 weeks">
+              <line x1="28" y1="10" x2="272" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="58" x2="272" y2="58" stroke="#E2E8F0" stroke-width="0.5"/>
+              <line x1="28" y1="105" x2="272" y2="105" stroke="#E2E8F0" stroke-width="0.5"/>
+              <text x="26" y="13" font-size="7" fill="#94A3B8" text-anchor="end">100%</text>
+              <text x="26" y="61" font-size="7" fill="#94A3B8" text-anchor="end">50%</text>
+              <text x="26" y="108" font-size="7" fill="#94A3B8" text-anchor="end">0%</text>
+              <line x1="28" y1="8" x2="28" y2="107" stroke="#E2E8F0" stroke-width="1"/>
+              <!-- 10% line -->
+              <line x1="28" y1="96" x2="272" y2="96" stroke="#16A34A" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+              <text x="273" y="98" font-size="7" fill="#16A34A" opacity="0.8">10%</text>
+              <!-- Watch zone shading (between 10% and 25%) -->
+              <rect x="28" y="82" width="244" height="14" fill="#D97706" opacity="0.08" rx="0"/>
+              <!-- 25% line -->
+              <line x1="28" y1="82" x2="272" y2="82" stroke="#D97706" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+              <text x="273" y="84" font-size="7" fill="#D97706" opacity="0.8">25%</text>
+              <!-- data -->
+              <polyline
+                points="28,10 45,105 63,89 80,84 98,101 115,105 133,97 150,105 168,100 185,103 202,102 220,91 237,95 255,93 272,96"
+                fill="none" stroke="#D97706" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="272" cy="96" r="3" fill="#D97706"/>
+              <text x="28" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 1</text>
+              <text x="115" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 6</text>
+              <text x="202" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 11</text>
+              <text x="272" y="114" font-size="7" fill="#94A3B8" text-anchor="middle">Wk 15</text>
+              <!-- annotation: fluctuating in watch zone -->
+              <text x="150" y="80" font-size="7" fill="#D97706" font-weight="600" text-anchor="middle">fluctuating in Watch zone (5–12% avg)</text>
+            </svg>
+          </div>
           <div class="ibox a">
-            <div class="ibox-title">Verdict · Approve — Looks Like a Planned Format Upgrade</div>
-            One own-brand donor: the PB Puff 1.41oz single-serve, with cannibalization probability of 99.99%. That sibling's velocity went to zero post-launch (−100% velocity change) — indicating it was phased off shelf as the 4-pack was introduced. The model correctly flags the overlap, but the rate collapsed to &lt;5% by week 3 and held there. <strong>This pattern — immediate settle + sibling going to zero — is a format upgrade, not unintended cannibalization.</strong> 27 additional weeks confirmed the verdict.
+            <div class="ibox-head">Verdict · Watch</div>
+            Zero own-brand donors at Walmart — the PB Puff single-serve did not appear as a conflict at this account. Rate drops immediately after launch but fluctuates 5–12% rather than settling cleanly below 5% the way it did at Kroger. <strong>Incremental in direction, but noisier. Needs more weeks of data before moving to an Incremental verdict.</strong> The account-level difference is itself an insight: Kroger's assortment was cleaner for this format.
           </div>
-
-          <div style="margin-top:10px">
-            <div class="kpi-label" style="font-size:9px;margin-bottom:4px">Own-Brand Donor</div>
-            <div class="donor-row">
-              <div class="dsq r"></div>
-              <div class="dname">Built Peanut Butter Puff 1.41oz (single-serve) — dist. 3</div>
-              <div class="dstat r">Cannib. 99.99%</div>
-              <div class="dnote">vel → 0</div>
-            </div>
+          <div class="no-donor">✓ 0 own-brand donors at Walmart</div>
+          <div style="font-size:11px;color:var(--text2);padding:5px 8px;background:var(--ground);border-radius:5px;border:1px solid var(--border)">
+            Rate variability at Walmart is common for newer formats finding their shelf position in a different planogram context
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Walmart comparison -->
-  <div>
-    <div class="slabel">Same Flavor, Different Account — Walmart</div>
-    <div class="two-col">
-      <div class="compare-card">
-        <div class="compare-head">Green Apple Crush at Walmart (8 weeks · Jan 25, 2026)</div>
-        <div class="compare-body">
-          <!-- Walmart GAC: [100, 100, 100, 14.9, 1.1, 1.4, 0.0, 0.5] -->
-          <!-- ViewBox 0 0 280 120; plot x=[40,260] w=220; y=[10,100] h=90 -->
-          <!-- x_step=220/7=31.4; y=100-rate*0.9 -->
-          <div class="chart-box">
-            <div class="chart-head" style="padding:6px 10px 0">
-              <div class="chart-label">Cannibalization Rate · 8 Weeks</div>
-              <div class="chart-acct">Walmart</div>
-            </div>
-            <svg class="chart" viewBox="0 0 280 110" aria-label="Green Apple Crush rate at Walmart">
-              <line x1="40" y1="10" x2="260" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="100" x2="260" y2="100" stroke="#E2E8F0" stroke-width="0.5"/>
-              <text x="37" y="13" font-size="8" fill="#94A3B8" text-anchor="end">100%</text>
-              <text x="37" y="103" font-size="8" fill="#94A3B8" text-anchor="end">0%</text>
-              <line x1="40" y1="8" x2="40" y2="102" stroke="#E2E8F0" stroke-width="1"/>
-              <!-- [100, 100, 100, 14.9, 1.1, 1.4, 0.0, 0.5] -->
-              <polyline
-                points="40,10 71,10 103,10 134,87 166,99 197,99 229,100 260,100"
-                fill="none" stroke="#16A34A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-              <circle cx="260" cy="100" r="3" fill="#16A34A"/>
-              <text x="40" y="108" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 1</text>
-              <text x="134" y="108" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 4</text>
-              <text x="260" y="108" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 8</text>
-              <text x="215" y="95" font-size="8" fill="#16A34A" font-weight="600">&lt;2%</text>
-            </svg>
-          </div>
-          <div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.6">
-            <strong>Incremental share: 86.7%</strong> &middot; 0 own-brand donors &middot; Settles by week 4 at Walmart vs. week 9 at Kroger — planogram reset timing differs by account. Same underlying verdict: no BUILT-on-BUILT conflict.
-          </div>
-        </div>
-      </div>
-
-      <div class="compare-card">
-        <div class="compare-head">PB Cup at Walmart (39 weeks · Jul 27, 2025)</div>
-        <div class="compare-body">
-          <!-- Walmart PB Cup: select representative weeks -->
-          <!-- [100, 0.1, 17.5, 22.2, 4.3, 0.0, 8.1, 0.3, 5.8, 1.7, 3.2, 15.1, 10.8, 12.7, 9.7] first 15 wks -->
-          <!-- ViewBox 0 0 280 110; x_step=220/14=15.7; y=100-rate*0.9 -->
-          <div class="chart-box">
-            <div class="chart-head" style="padding:6px 10px 0">
-              <div class="chart-label">Cannibalization Rate · First 15 Weeks</div>
-              <div class="chart-acct">Walmart</div>
-            </div>
-            <svg class="chart" viewBox="0 0 280 110" aria-label="PB Cup rate at Walmart first 15 weeks">
-              <line x1="40" y1="10" x2="260" y2="10" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="55" x2="260" y2="55" stroke="#E2E8F0" stroke-width="0.5"/>
-              <line x1="40" y1="100" x2="260" y2="100" stroke="#E2E8F0" stroke-width="0.5"/>
-              <text x="37" y="13" font-size="8" fill="#94A3B8" text-anchor="end">100%</text>
-              <text x="37" y="58" font-size="8" fill="#94A3B8" text-anchor="end">50%</text>
-              <text x="37" y="103" font-size="8" fill="#94A3B8" text-anchor="end">0%</text>
-              <line x1="40" y1="8" x2="40" y2="102" stroke="#E2E8F0" stroke-width="1"/>
-              <!-- wk 0=100, 1=0.1, 2=17.5, 3=22.2, 4=4.3, 5=0, 6=8.1, 7=0.3, 8=5.8, 9=1.7, 10=3.2, 11=15.1, 12=10.8, 13=12.7, 14=9.7 -->
-              <!-- y=100-rate*0.9 -->
-              <polyline
-                points="40,10 56,100 72,84 88,80 104,96 120,100 136,93 152,100 168,95 184,98 200,97 216,86 232,90 248,89 260,91"
-                fill="none" stroke="#D97706" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-              <text x="40" y="108" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 1</text>
-              <text x="150" y="108" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 8</text>
-              <text x="260" y="108" font-size="8" fill="#94A3B8" text-anchor="middle">Wk 15</text>
-            </svg>
-          </div>
-          <div style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.6">
-            <strong>Incremental share: 50.0%</strong> &middot; 0 own-brand donors at Walmart &middot; Rate is more variable at Walmart vs. Kroger — typical for a newer format finding its shelf position. Average rate 5–12% across weeks 2–15. Still incremental, but noisier data environment. <strong>This difference between accounts is itself an insight.</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Summary table -->
+  <!-- Scorecard table -->
   <div>
     <div class="slabel">All Four Observations — Side by Side</div>
     <div class="table-card">
       <div class="table-head">
         <div class="table-title">Incrementality Scorecard</div>
-        <div class="table-sub">All data from Aevah's live cannibalization scoring on SPINS MULO weekly refresh</div>
+        <div class="table-sub">All data from Aevah's live cannibalization scoring · SPINS MULO weekly refresh</div>
       </div>
       <div style="overflow-x:auto">
         <table class="dtable">
@@ -540,39 +581,39 @@ td.m { font-variant-numeric: tabular-nums; }
           <tbody>
             <tr>
               <td><div class="sku-n">Built Green Apple Crush Sour Puff 4pk</div><div class="sku-u">08-40229-30656</div></td>
-              <td class="m">Kroger</td>
-              <td class="m">Feb 1, 2026</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:700">0</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:600">83.6%</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:600">&lt; 4% (wk 11)</td>
-              <td><span class="chip g"><span class="dot g"></span> Approve</span></td>
+              <td>Kroger</td>
+              <td>Feb 1, 2026</td>
+              <td style="text-align:center;color:var(--green);font-weight:700">0</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--green);font-weight:600">83.6%</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--green);font-weight:600">&lt;4% (wk 11)</td>
+              <td><span class="chip g"><span class="dot g"></span>Incremental</span></td>
             </tr>
             <tr>
               <td><div class="sku-n">Built Green Apple Crush Sour Puff 4pk</div><div class="sku-u">08-40229-30656</div></td>
-              <td class="m">Walmart</td>
-              <td class="m">Jan 25, 2026</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:700">0</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:600">86.7%</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:600">&lt; 2% (wk 6)</td>
-              <td><span class="chip g"><span class="dot g"></span> Approve</span></td>
+              <td>Walmart</td>
+              <td>Jan 25, 2026</td>
+              <td style="text-align:center;color:var(--green);font-weight:700">0</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--green);font-weight:600">86.7%</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--green);font-weight:600">&lt;2% (wk 6)</td>
+              <td><span class="chip g"><span class="dot g"></span>Incremental</span></td>
             </tr>
             <tr>
               <td><div class="sku-n">Built Puff Peanut Butter Cup 1.41oz 4pk</div><div class="sku-u">08-40229-30646</div></td>
-              <td class="m">Kroger</td>
-              <td class="m">Jul 27, 2025</td>
-              <td class="m" style="text-align:center;color:var(--amber);font-weight:700">1</td>
-              <td class="m" style="text-align:center;color:var(--amber);font-weight:600">52.9%</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:600">&lt; 5% (wk 3)</td>
-              <td><span class="chip a"><span class="dot a"></span> Approve + monitor sibling</span></td>
+              <td>Kroger</td>
+              <td>Jul 27, 2025</td>
+              <td style="text-align:center;color:var(--amber);font-weight:700">1</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--amber);font-weight:600">52.9%</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--green);font-weight:600">&lt;5% (wk 3)</td>
+              <td><span class="chip g"><span class="dot g"></span>Incremental</span></td>
             </tr>
             <tr>
               <td><div class="sku-n">Built Puff Peanut Butter Cup 1.41oz 4pk</div><div class="sku-u">08-40229-30646</div></td>
-              <td class="m">Walmart</td>
-              <td class="m">Jul 27, 2025</td>
-              <td class="m" style="text-align:center;color:var(--green);font-weight:700">0</td>
-              <td class="m" style="text-align:center;color:var(--amber);font-weight:600">50.0%</td>
-              <td class="m" style="text-align:center;color:var(--amber);font-weight:600">5–12% avg</td>
-              <td><span class="chip a"><span class="dot a"></span> Incremental, noisy</span></td>
+              <td>Walmart</td>
+              <td>Jul 27, 2025</td>
+              <td style="text-align:center;color:var(--green);font-weight:700">0</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--amber);font-weight:600">50.0%</td>
+              <td style="text-align:center;font-variant-numeric:tabular-nums;color:var(--amber);font-weight:600">5–12% avg</td>
+              <td><span class="chip a"><span class="dot a"></span>Watch</span></td>
             </tr>
           </tbody>
         </table>
@@ -580,21 +621,22 @@ td.m { font-variant-numeric: tabular-nums; }
     </div>
   </div>
 
-  <!-- Dreamwich note -->
+  <!-- Application to Dreamwich -->
   <div>
-    <div class="slabel">Application to Dreamwich</div>
-    <div class="insight-bar">
-      <div class="insight-bar-title">What Aevah will tell the sales team for each Dreamwich flavor × account conversation</div>
-      <div class="insight-bar-body" style="margin-top:8px">
-        Once Dreamwich SKUs appear in SPINS data, Mo scores each one automatically on every weekly refresh — no setup required. The diagnostic is immediate: <strong>own-brand donor count</strong> and the cannibalization rate trajectory over the first 4–8 weeks. Flavors entering genuinely new taste territory (like the sour/fruit expansion shown above) will show 0 own-brand donors — a clean signal to bring to the buyer without offering a swap. Flavors adjacent to existing BUILT formats will surface their own-brand overlap by name and probability, letting the rep proactively decide whether to propose a trade-out before the buyer does.<br><br>
-        The account-level variation shown above — the same flavor settling at different rates at Kroger vs. Walmart — is also actionable: it tells the sales team which accounts are ready for expansion and which need more time.
+    <div class="slabel">Application to Dreamwich + How This Becomes a Live Feature</div>
+    <div class="app-card">
+      <div class="app-title">What Aevah will tell the sales team for each Dreamwich flavor × account</div>
+      <div class="app-body">
+        <p>Once Dreamwich SKUs appear in SPINS data, Aevah scores each one automatically on every weekly refresh — no setup required. The diagnostic the examples above demonstrate is the same one the model runs for every new SKU: <strong>own-brand donor count</strong> and the rate trajectory over the first 4–8 weeks. Flavors entering genuinely new taste territory (like the sour/fruit example above) show 0 own-brand donors immediately — a clean signal to bring to the buyer. Flavors adjacent to existing BUILT formats surface their own-brand overlap by name and probability, letting the rep proactively offer a trade-out before the buyer raises it.</p>
+        <p>The account-level difference shown above — the same flavor settling at different speeds at Kroger vs. Walmart — is also actionable: it tells the sales team which accounts are ready for distribution expansion and which need more runway.</p>
+        <p><strong>To bring this into Mo as a live filterable view:</strong> The underlying data is already live in Druid and the Mo API already has all the endpoints needed. The next step is building a UI experience within the Brand &amp; Launch module — a retailer selector + flavor picker that renders the rate chart, own-brand donor count, and verdict for any SKU × account combination on demand, updated each week when SPINS refreshes. The examples on this page are the template for what each card in that view would show.</p>
       </div>
     </div>
   </div>
 
   <div class="footer">
     <div><span class="footer-brand">Aevah</span> · Cannibalization Suite · Model MO_55 · SPINS MULO CRMA weekly</div>
-    <div>Own-brand = relationship_distance 1 (pack siblings) or 3 (cross-flavor). Rate = weighted weekly base-unit comparison. Data from scored_cannibalization and cannibalization_rate_weekly via Apache Druid.</div>
+    <div>Own-brand = relationship_distance 1 (pack siblings) or 3 (cross-flavor). Rate = weekly base-unit paired comparison. Verdicts: Incremental / Watch / Cannibalizing match live Aevah model output.</div>
   </div>
 
 </div>
