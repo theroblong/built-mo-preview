@@ -39,6 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fh);margin:0;paddi
 .pill.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .btn-sm{padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.7rem;cursor:pointer;}
 .btn-sm:hover{background:var(--border);}
+.btn-sm.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .filter-actions{margin-left:auto;display:flex;gap:4px;}
 
 /* ── CHART ── */
@@ -195,6 +196,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--fh);margin:0;paddi
   <div class="sku-row" data-upc="08-40229-30341" data-flavor="COCONUT" data-pack="1"><span class="dot" style="background:#65A30D"></span><label><input type="checkbox" class="sku-cb" data-upc="08-40229-30341" ><span class="sku-label">COCONUT (1pk)</span><span class="sku-pack"> · 1pk</span></label><span class="sku-upc">08-40229-30341</span><span class="sku-peak">peak: 1.0K bars/wk</span></div>
 </div>
 
+<div style="margin:20px 16px 8px;font-family:var(--fh,system-ui);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#64748B">4pk Launch Monitor — Ramp Trajectory by Flavor</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin:0 16px 20px;overflow:hidden">
+  <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-family:var(--fh,system-ui)">Window:</span>
+    <div id="lm-range-btns" style="display:flex;gap:4px">
+      <button class="btn-sm" data-weeks="13">13W</button>
+      <button class="btn-sm active" data-weeks="26">26W</button>
+    </div>
+    <span style="width:1px;height:14px;background:var(--border);margin:0 2px"></span>
+    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-family:var(--fh,system-ui)">Smoothing:</span>
+    <div id="lm-smooth-btns" style="display:flex;gap:4px">
+      <button class="btn-sm active" data-smooth="raw">Raw</button>
+      <button class="btn-sm" data-smooth="roll4">4-wk avg</button>
+    </div>
+  </div>
+  <div style="padding:12px 16px 8px">
+    <div style="position:relative;height:260px;overflow:hidden"><canvas id="launchMonitorChart" style="position:absolute;top:0;left:0;width:100%!important;height:100%!important"></canvas></div>
+  </div>
+  <div style="padding:10px 16px 14px;font-size:11px;color:var(--dim);line-height:1.55">
+    Bars/week from Week 1 of each flavor's 4pk launch at Walmart · Week 1 = first SPINS data point · actual launch dates differ by flavor
+  </div>
+</div>
 <div class="footer">
   Source: SPINS MULO · 172 weeks ending 2026-04-19 · 68 active BUILT SKUs · Walmart · Generated 2026-09-10
 </div>
@@ -471,4 +494,75 @@ window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change', buil
 
 // ── Initial render ──
 buildChart();
+
+// ── Launch Monitor ──
+const LM_DATA = [
+  { key: 'S&C (Sep 2025)', color: '#DC2626',
+    raw: [84,512.4,3022,29152,44544,40388,39452,38085.2,32921.2,32928,33575.2,25576,23260.4,30709.6,38404,40592.8,59145.2,146968,185692.4,132212.8,110294,81116,126854.4,164434.4,61815.2,40688.4] },
+  { key: 'PB Cup (Jul 2025)', color: '#7C3AED',
+    raw: [2736,83872,348872,403008,361285.2,317995.6,252894,266840,222984.4,301191.2,397927.2,347674,322051.6,279284.8,252484,235252,277662.4,294103.6,224461.6,218407.6,211250,203948,186757.6,204389.6,266463.2,287485.2] },
+  { key: 'Mint Chip (Dec 2024)', color: '#16A34A',
+    raw: [86,432.4,510,1178,1408.4,1628,1536,1541.2,704,1455.2,1892,3366,3751.2,4554.8,5180,2520.4,1837.6,2072.8,3265.2,4720,3720,4558,4376.4,3373.2,3504.4,3386.8] },
+  { key: 'Cookie Dough (Feb 2024)', color: '#EA580C',
+    raw: [212.8,622.4,621.2,719.6,861.6,750.8,948.8,946.8,1084.4,982.8,1066.4,983.6,1035.2,915.6,977.2,1319.6,2394.8,1834.8,1757.6,988,1870.4,6508.4,6754,7271.2,10474,27176.4] },
+  { key: 'Brownie Batter (Aug 2023)', color: '#92400E',
+    raw: [2024,5424,6664,7992,24984,56120,56744.8,51511.6,44610.8,65126.8,53853.2,58086.8,63911.2,50150.4,57600.4,62446,59915.6,58812.4,46071.2,67468,66798.8,67001.2,76251.6,80117.6,90483.6,71875.6] },
+];
+
+let lmWeeks = 26, lmSmooth = 'raw', _lmChart = null;
+
+function roll4lm(arr) {
+  return arr.map((_, i) => {
+    const w = arr.slice(Math.max(0, i - 3), i + 1).filter(v => v != null && !isNaN(v));
+    return w.length ? w.reduce((a, b) => a + b, 0) / w.length : null;
+  });
+}
+
+function buildLaunchMonitor() {
+  const labels = Array.from({length: lmWeeks}, (_, i) => 'Wk ' + (i + 1));
+  const isDark = document.documentElement.dataset.theme === 'dark' ||
+    (!document.documentElement.dataset.theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  const gridColor = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.07)';
+  const tickColor = isDark ? '#94A3B8' : '#64748B';
+  const datasets = LM_DATA.map(d => {
+    const vals = (lmSmooth === 'roll4' ? roll4lm(d.raw) : d.raw).slice(0, lmWeeks);
+    return { label: d.key, data: vals, borderColor: d.color, backgroundColor: d.color + '22',
+      borderWidth: 2, pointRadius: 2, tension: 0.3, fill: false };
+  });
+  if (_lmChart) _lmChart.destroy();
+  _lmChart = new Chart(document.getElementById('launchMonitorChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 }, color: tickColor, boxWidth: 12, padding: 10 } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + (c.parsed.y >= 1000 ? (c.parsed.y / 1000).toFixed(1) + 'K' : Math.round(c.parsed.y)) + ' bars/wk' } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 }, callback: v => v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v } }
+      }
+    }
+  });
+}
+
+document.getElementById('lm-range-btns').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-sm[data-weeks]');
+  if (!btn) return;
+  lmWeeks = +btn.dataset.weeks;
+  document.querySelectorAll('#lm-range-btns .btn-sm').forEach(b => b.classList.toggle('active', b === btn));
+  buildLaunchMonitor();
+});
+document.getElementById('lm-smooth-btns').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-sm[data-smooth]');
+  if (!btn) return;
+  lmSmooth = btn.dataset.smooth;
+  document.querySelectorAll('#lm-smooth-btns .btn-sm').forEach(b => b.classList.toggle('active', b === btn));
+  buildLaunchMonitor();
+});
+
+buildLaunchMonitor();
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change', buildLaunchMonitor);
 </script>

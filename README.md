@@ -6,6 +6,32 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 108: Mo→Aevah context integration architecture + BUILT reporting rules + SPINS data quality (2026-09-11)
+
+**Mo → Aevah context integration (Rob/Jason call Sept 11):**
+- Architecture direction established: extract Mo's domain context into Aevah's structured knowledge layer (catalog + glossary + guardrails) so any AI via MCP can answer CPG analytics questions repeatably
+- Three buckets defined: guardrails (domain constraints), catalog (entity types/data models/attributes), glossary (business vocabulary + term relationships)
+- MCP surface is the integration layer — vendor-agnostic (Claude, ChatGPT, Copilot)
+- Mo's SPINS-based analytics (demand, cannibalization, elasticity) become the first encoded analytics library in Aevah
+- Action item for Jason: extract structured list of all business terms, entities, and rules from Mo's context files as seed data for Aevah catalog/glossary
+- New wiki page: `customer-built-doc/wiki/17-reporting-productization.md`
+
+**BUILT reporting productization (Rob/Jason HTML review call Sept 11):**
+- Answer-first layout rule established: most direct answer at the very top of every report
+- No empty columns rule: populate, explain, or remove — empty columns decrease trust
+- Navigation: tabs or anchor links preferred over infinite scroll for multi-section reports
+- Shareability: all HTMLs should be shareable by URL (MinIO target architecture)
+- Versioning: reports carry generated date; layouts designed to repopulate with new data
+- Open question pending Brian: should Kroger/Walmart bar charts become one live interactive page (retailer selector) vs current static files?
+- Launch ramp view ("Wk 1, Wk 2...") confirmed highly valued by Rob — keep in all retailer chart files
+- `cannibalization_incrementality_analysis.html`: reordered so Case Study 3 (S&C cautionary) precedes the scorecard; labels updated to "1 of 3" / "2 of 3" / "3"
+
+**SPINS data quality findings (Druid exploration Sept 11):**
+- `spins_full` now has 113M rows; max week extended to 2026-08-09 (~16 new weeks added)
+- New data import (10.1M rows after 2026-04-19) is broken: Brand, UPC, Units, Pack Count, Flavor all NULL — column header mismatch between Brian's new CSV and the Druid ingestion spec
+- Only `Retail Account` partially mapped (2.3M rows); top accounts match existing data names
+- Action for Rob: check new CSV headers vs ingestion spec `dimensionsSpec`; drop bad segment and re-ingest with corrected field mapping
+
 ## README update 107: Seasonal launch timing analysis added to flavor launch guide (2026-09-10)
 
 Extended `mockups/built_flavor_launch_guide.html` with a "Seasonal Launch Timing" section grounded in real SPINS data:
