@@ -388,8 +388,20 @@ function updateSkuRows() {
   }
 }
 
+function autoCheckVisible() {
+  document.querySelectorAll('.sku-cb').forEach(cb => { cb.checked = false; });
+  let n = 0;
+  for (const row of document.querySelectorAll('.sku-row')) {
+    if (row.style.display !== 'none' && n < 8) {
+      const cb = row.querySelector('.sku-cb');
+      if (cb) { cb.checked = true; n++; }
+    }
+  }
+}
+
 function refresh() {
   updateSkuRows();
+  autoCheckVisible();
   buildChart();
 }
 
@@ -398,12 +410,23 @@ document.getElementById('flavor-pills').addEventListener('click', e => {
   const btn = e.target.closest('.flavor-pill');
   if (!btn) return;
   const fl = btn.dataset.flavor;
-  if (activeFlavors.has(fl)) {
-    activeFlavors.delete(fl);
-    btn.classList.remove('active');
+  const allFlavors = [...document.querySelectorAll('.flavor-pill')].map(b => b.dataset.flavor);
+
+  if (e.shiftKey) {
+    if (activeFlavors.has(fl) && activeFlavors.size > 1) {
+      activeFlavors.delete(fl); btn.classList.remove('active');
+    } else {
+      activeFlavors.add(fl); btn.classList.add('active');
+    }
   } else {
-    activeFlavors.add(fl);
-    btn.classList.add('active');
+    if (activeFlavors.size === 1 && activeFlavors.has(fl)) {
+      allFlavors.forEach(f => activeFlavors.add(f));
+      document.querySelectorAll('.flavor-pill').forEach(b => b.classList.add('active'));
+    } else {
+      activeFlavors.clear(); activeFlavors.add(fl);
+      document.querySelectorAll('.flavor-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
   }
   refresh();
 });
