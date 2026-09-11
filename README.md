@@ -6,6 +6,13 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 109: Pack retirement nuance — 1pk retirement on 4pk launch is not always the plan (2026-09-11)
+
+- Captured retailer/channel-specific pack strategy context: big-box may require full lineup (1pk+4pk+8pk+12pk); c-stores carry limited SKUs; club retailers prefer bulk; checkout vs. aisle co-placement zones are a real pattern
+- Updated `cannibalization_incrementality_analysis.html` S&C case study: hard "planogram swap" recommendation replaced with conditional Option A (limited shelf → swap) / Option B (full-lineup retailer → monitor for stabilization)
+- New project memory: `project_pack_retirement_nuance.md`
+- Wiki `16-cannibalization-launch-guide.md`: new "Pack retirement is not always the plan" section with channel table and Mo verdict card guidance
+
 ## README update 108: Mo→Aevah context integration architecture + BUILT reporting rules + SPINS data quality (2026-09-11)
 
 **Mo → Aevah context integration (Rob/Jason call Sept 11):**
