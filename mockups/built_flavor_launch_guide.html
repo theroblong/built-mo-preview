@@ -438,12 +438,26 @@ tbody tr:last-child td { border-bottom: none; }
               <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">8–10 wks</td>
               <td style="padding:8px 10px;color:var(--text2)">Category growing into summer; net-new buyers entering; distribution builds before peak. Apr 2025 cohort = 0% settled cannib.</td>
             </tr>
+            <tr style="border-bottom:1px solid var(--border);background:var(--green-l)">
+              <td style="padding:8px 10px;font-weight:600;color:var(--green-d)">Jun · Summer Onset</td>
+              <td style="padding:8px 10px;color:var(--text2)">Jun</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--green-d)">~20–30%*</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">8–12 wks</td>
+              <td style="padding:8px 10px;color:var(--text2)">Transition into summer peak; more net-new buyers vs. Q1 as fitness occasions expand. True-launch data is limited (see caveat). Directionally favorable — estimated similar to Apr–May for genuinely new taste territory. A June launch can reach full TDP by the August–September peak if distribution is secured at the April reset. <em>Dreamwich planned for this window.</em></td>
+            </tr>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:8px 10px;font-weight:600">Jan–Feb · Q1 Peak</td>
               <td style="padding:8px 10px;color:var(--text2)">Jan · Feb</td>
               <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--amber)">~62%</td>
               <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">1–4 wks ⚡</td>
               <td style="padding:8px 10px;color:var(--text2)">New Year demand surge drives fastest ramp in the dataset. But peak-season buyers are existing BUILT customers switching flavors — cannib settles high. Good for velocity targets, not for net-new demand.</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:8px 10px;font-weight:600">Mar · Late Q1</td>
+              <td style="padding:8px 10px;color:var(--text2)">Mar</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm);font-weight:600;color:var(--amber)">~45%</td>
+              <td style="padding:8px 10px;text-align:center;font-family:var(--fm)">5–8 wks</td>
+              <td style="padding:8px 10px;color:var(--text2)">Q1 peak tapering — New Year surge has passed but demand still elevated. Ramp is moderate; cannib lower than Jan–Feb because new buyers begin entering as spring approaches. Small sample; treat directional.</td>
             </tr>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:8px 10px;font-weight:600">Jul–Sep · Q3 Summer</td>
@@ -474,7 +488,7 @@ tbody tr:last-child td { border-bottom: none; }
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
         <div style="background:var(--ground);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
           <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green-d);margin-bottom:6px">Minimize Cannibalization</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.6">Launch <strong>Apr–May</strong>. Category demand rising into summer attracts net-new buyers. Build distribution before the June–July peak so the SKU enters at full TDP when category is growing fastest.</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">Launch <strong>Apr–May or Jun</strong>. Category demand rising into summer attracts net-new buyers. Build distribution at the April reset so the SKU reaches full TDP by the July–August peak. June launches are estimated similarly favorable — data limited, but the demand dynamic is comparable.</div>
         </div>
         <div style="background:var(--ground);border:1px solid var(--border);border-radius:6px;padding:12px 14px">
           <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--amber-d);margin-bottom:6px">Maximize Early Velocity</div>
@@ -492,7 +506,31 @@ tbody tr:last-child td { border-bottom: none; }
 
       <!-- Caveats -->
       <div style="font-size:11px;color:var(--muted);line-height:1.6;padding:0 2px">
-        <strong>Caveats:</strong> SPINS data starts Jan 2023; the large Jun 2024 cohort (33 UPCs) reflects the date cannibalization scoring was first run on mature SKUs, not true launch dates. Ramp speed analysis excludes the Jan 2023 cohort for the same reason. Sample sizes are small for most months — treat directional, not definitive. Ingredient availability, shelf reset cycles, and retailer promotional calendars may override demand timing in practice.
+        <strong>Caveats:</strong> SPINS data starts Jan 2023; the large Jun 2024 cohort (33 UPCs) reflects the date cannibalization scoring was first run on mature SKUs, not true launch dates — this is why June shows as "data-limited" and the rate is estimated rather than measured. Ramp speed analysis excludes the Jan 2023 cohort for the same reason. March has a small sample (3–4 SKUs). All estimates are directional, not definitive. Ingredient availability, shelf reset cycles, and retailer promotional calendars may override demand timing in practice.
+      </div>
+    </div>
+  </div>
+
+  <!-- BASE VELOCITY -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="section-label">Base Velocity — The Benchmark Behind the Cannibalization Number</div>
+    <div class="card">
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:13px;color:var(--text2);line-height:1.65"><strong style="color:var(--text)">Base velocity</strong> is the stable weekly unit run rate of an existing SKU at a given account, excluding promotional spikes and seasonal surges. It is the anchor metric for interpreting cannibalization: a new SKU that adds 5,000 bars/wk while the existing portfolio loses 4,800 bars/wk is near-neutral in bar volume terms — the cannibalization rate looks high, but bar volume barely moved. The S&C example above shows this dynamic explicitly in the two-chart view: the unit chart (top) shows the 1pk declining; the bars chart (bottom) shows total bar volume growing, because each 4pk unit = 4 bars.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          <div style="background:var(--ground);border:1px solid var(--border);border-radius:7px;padding:12px 14px">
+            <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:6px">What To Ask</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">Did base velocity of the existing BUILT portfolio at this account increase, stay flat, or decline in the 12 weeks after launch? If flat or up → incremental. If down → the new SKU redistributed demand.</div>
+          </div>
+          <div style="background:var(--ground);border:1px solid var(--border);border-radius:7px;padding:12px 14px">
+            <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:6px">How Aevah Computes It</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">4-week rolling average of weekly units (or bars), calculated from SPINS data, excluding weeks flagged as promotional. The benchmark is the pre-launch plateau average for the 8 weeks before launch week.</div>
+          </div>
+          <div style="background:var(--ground);border:1px solid var(--border);border-radius:7px;padding:12px 14px">
+            <div style="font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:6px">So What / Now What</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">If base velocity of the portfolio is down → bring the bar chart above to the buyer and propose a planogram swap. If up → use the bar growth number in the next QBR as proof of incremental lift from the new SKU.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

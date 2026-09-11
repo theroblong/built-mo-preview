@@ -305,6 +305,7 @@ svg.chart { display: block; width: 100%; }
           <div class="ibox g">
             <div class="ibox-head">Verdict · Incremental</div>
             Zero own-brand BUILT donors. All 9 "Cannibalizing" model pairs are competitors or distant legacy formats — competitive displacement, not portfolio reshuffling. Rate held at 100% for 8 weeks as the sour/fruit protein segment rebalanced on shelf, then dropped below 4% and held. <strong>No impact on the existing BUILT portfolio at Kroger.</strong>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(22,163,74,.25);font-size:11px"><strong>Now what:</strong> Proceed with full distribution. No planogram swap needed. Include the base velocity trend in the next Kroger QBR as evidence of net-new competitive wins.</div>
           </div>
           <div class="no-donor">✓ 0 own-brand donors — no own-brand SKU scored as a conflict</div>
           <div style="font-size:11px;color:var(--text2);padding:5px 8px;background:var(--ground);border-radius:5px;border:1px solid var(--border)">
@@ -379,6 +380,7 @@ svg.chart { display: block; width: 100%; }
           <div class="ibox g">
             <div class="ibox-head">Verdict · Incremental</div>
             Same underlying story as Kroger: zero own-brand donors, competitive displacement only. Settles faster at Walmart — by week 4 (vs. week 9 at Kroger), reflecting different planogram reset timing. Incremental share is marginally higher at 86.7%. <strong>Consistent verdict across both accounts: no BUILT-on-BUILT impact.</strong>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(22,163,74,.25);font-size:11px"><strong>Now what:</strong> Proceed with full distribution at Walmart. The faster settlement (Wk 4 vs. Wk 9) is a Walmart planogram dynamic, not a stronger signal — do not over-index on it. Flag the account-level difference to the Walmart rep as context for future resets.</div>
           </div>
           <div class="no-donor">✓ 0 own-brand donors — no own-brand SKU scored as a conflict</div>
           <div style="font-size:11px;color:var(--text2);padding:5px 8px;background:var(--ground);border-radius:5px;border:1px solid var(--border)">
@@ -470,6 +472,7 @@ svg.chart { display: block; width: 100%; }
           <div class="ibox g">
             <div class="ibox-head">Verdict · Incremental</div>
             One own-brand donor: Built Peanut Butter Puff 1.41oz single-serve (dist-3, 99.99% cannibalization probability). Its velocity went to zero post-launch — indicating a planned format transition, not unintended displacement. Rate collapsed to &lt;5% by week 3 and held across 36+ additional weeks. <strong>Format upgrade, not cannibalization. 39 weeks of data confirm it.</strong>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(22,163,74,.25);font-size:11px"><strong>Now what:</strong> The single-serve has already exited — no further action needed at Kroger. Document this as a successful format upgrade playbook: proactively delist the 1pk before or at 4pk launch to keep the cannib signal clean.</div>
           </div>
           <div class="donor">
             <div class="dsq r"></div>
@@ -548,6 +551,7 @@ svg.chart { display: block; width: 100%; }
           <div class="ibox a">
             <div class="ibox-head">Verdict · Watch</div>
             Zero own-brand donors at Walmart — the PB Puff single-serve did not appear as a conflict at this account. Rate drops immediately after launch but fluctuates 5–12% rather than settling cleanly below 5% the way it did at Kroger. <strong>Incremental in direction, but noisier. Needs more weeks of data before moving to an Incremental verdict.</strong> The account-level difference is itself an insight: Kroger's assortment was cleaner for this format.
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(217,119,6,.25);font-size:11px"><strong>Now what:</strong> Check back at week 22–25. If rate has settled below 5%, upgrade to Incremental and proceed with distribution expansion. If rate remains above 10%, investigate whether a competing format is on the Walmart planogram that isn't in SPINS — Circana/CRX data may show it once ingested.</div>
           </div>
           <div class="no-donor">✓ 0 own-brand donors at Walmart</div>
           <div style="font-size:11px;color:var(--text2);padding:5px 8px;background:var(--ground);border-radius:5px;border:1px solid var(--border)">
@@ -771,9 +775,10 @@ svg.chart { display: block; width: 100%; }
     <div class="app-card">
       <div class="app-title">What Aevah will tell the sales team for each Dreamwich flavor × account</div>
       <div class="app-body">
-        <p>Once Dreamwich SKUs appear in SPINS data, Aevah scores each one automatically on every weekly refresh — no setup required. The diagnostic the examples above demonstrate is the same one the model runs for every new SKU: <strong>own-brand donor count</strong> and the rate trajectory over the first 4–8 weeks. Flavors entering genuinely new taste territory (like the sour/fruit example above) show 0 own-brand donors immediately — a clean signal to bring to the buyer. Flavors adjacent to existing BUILT formats surface their own-brand overlap by name and probability, letting the rep proactively offer a trade-out before the buyer raises it.</p>
+        <p><strong>Timing note:</strong> Dreamwich is planned for a June launch. Based on the seasonal analysis in the BUILT Flavor Launch Guide, June is estimated in the same favorable range as Apr–May (~20–30% settled cannib vs. ~12% for April, but directional due to limited June data). Launching in June positions Dreamwich to reach full TDP by the August–September peak — the strongest volume window in the category calendar. As long as Dreamwich enters genuinely new taste territory (which, as a sandwich-style product, it likely does), the own-brand donor count should be 0 or near-0 from day one.</p>
+        <p>Once Dreamwich SKUs appear in SPINS data, Aevah scores each one automatically on every weekly refresh — no setup required. The diagnostic the examples above demonstrate is the same one the model runs for every new SKU: <strong>own-brand donor count</strong> and the rate trajectory over the first 4–8 weeks. Flavors entering genuinely new taste territory show 0 own-brand donors immediately — a clean signal to bring to the buyer. Flavors adjacent to existing BUILT formats surface their own-brand overlap by name and probability, letting the rep proactively offer a trade-out before the buyer raises it.</p>
         <p>The account-level difference shown above — the same flavor settling at different speeds at Kroger vs. Walmart — is also actionable: it tells the sales team which accounts are ready for distribution expansion and which need more runway.</p>
-        <p><strong>To bring this into Mo as a live filterable view:</strong> The underlying data is already live in Druid and the Mo API already has all the endpoints needed. The next step is building a UI experience within the Brand &amp; Launch module — a retailer selector + flavor picker that renders the rate chart, own-brand donor count, and verdict for any SKU × account combination on demand, updated each week when SPINS refreshes. The examples on this page are the template for what each card in that view would show.</p>
+        <p><strong>So what / now what:</strong> Share this framework with the sales team before the June Dreamwich push. The verdict cards above are exactly what will appear in Mo's Brand &amp; Launch module for each SKU × account. The next step is building that filterable UI experience — a retailer selector + flavor picker that renders the rate chart, donor count, and verdict for any combination on demand, updated weekly. <strong>If the first 4 weeks of Dreamwich data show 0 own-brand donors and a rate already declining from 100%, that is the signal to accelerate distribution expansion at that account.</strong></p>
       </div>
     </div>
   </div>
