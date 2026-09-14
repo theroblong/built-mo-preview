@@ -144,6 +144,61 @@ SELECT
       WHEN '08-40229-30550' THEN 'BUILT PUFF'
       WHEN '08-40229-30341' THEN 'BUILT PUFF'
       WHEN '08-40229-30334' THEN 'BUILT PUFF'
+      WHEN '08-40229-30285' THEN 'BUILT BAR'
+      WHEN '08-40229-30635' THEN 'BUILT PUFF'
+      WHEN '08-40229-30696' THEN 'BUILT PUFF'
+      WHEN '08-40229-30697' THEN 'BUILT PUFF'
+      WHEN '08-40229-30738' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30747' THEN 'BUILT PUFF'
+      WHEN '08-40229-30749' THEN 'BUILT PUFF'
+      WHEN '08-40229-30751' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30752' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30765' THEN 'BUILT PUFF'
+      WHEN '08-40229-30766' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30771' THEN 'BUILT PUFF'
+      WHEN '08-40229-30772' THEN 'BUILT PUFF'
+      WHEN '00-40962-48338' THEN 'BUILT BAR'
+      WHEN '00-40962-48362' THEN 'BUILT BAR'
+      WHEN '00-40962-48429' THEN 'BUILT BAR'
+      WHEN '00-40962-48458' THEN 'BUILT BAR'
+      WHEN '07-04817-52349' THEN 'BUILT BAR'
+      WHEN '07-04817-52363' THEN 'BUILT BAR'
+      WHEN '08-40229-30148' THEN 'BUILT BAR'
+      WHEN '08-40229-30254' THEN 'BUILT BAR'
+      WHEN '08-40229-30256' THEN 'BUILT BAR'
+      WHEN '08-40229-30284' THEN 'BUILT BAR'
+      WHEN '08-40229-30292' THEN 'BUILT BAR'
+      WHEN '08-40229-30322' THEN 'BUILT BAR'
+      WHEN '08-40229-30324' THEN 'BUILT BAR'
+      WHEN '08-40229-30328' THEN 'BUILT BAR'
+      WHEN '08-40229-30337' THEN 'BUILT PUFF'
+      WHEN '08-40229-30344' THEN 'BUILT PUFF'
+      WHEN '08-40229-30345' THEN 'BUILT BAR'
+      WHEN '08-40229-30347' THEN 'BUILT BAR'
+      WHEN '08-40229-30351' THEN 'BUILT BAR'
+      WHEN '08-40229-30355' THEN 'BUILT BAR'
+      WHEN '08-40229-30384' THEN 'BUILT BAR'
+      WHEN '08-40229-30387' THEN 'BUILT BAR'
+      WHEN '08-40229-30390' THEN 'BUILT BAR'
+      WHEN '08-40229-30493' THEN 'BUILT BAR'
+      WHEN '08-40229-30497' THEN 'BUILT BAR'
+      WHEN '08-40229-30503' THEN 'BUILT BAR'
+      WHEN '08-40229-30514' THEN 'BUILT BAR'
+      WHEN '08-40229-30520' THEN 'BUILT BAR'
+      WHEN '08-40229-30532' THEN 'BUILT BAR'
+      WHEN '08-40229-30533' THEN 'BUILT BAR'
+      WHEN '08-40229-30536' THEN 'BUILT BAR'
+      WHEN '08-40229-30563' THEN 'BUILT PUFF'
+      WHEN '08-40229-30576' THEN 'BUILT PUFF'
+      WHEN '08-40229-30584' THEN 'BUILT BAR'
+      WHEN '08-40229-30593' THEN 'BUILT PUFF'
+      WHEN '08-40229-30659' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30660' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30679' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30689' THEN 'BUILT PUFF'
+      WHEN '08-40229-30690' THEN 'BUILT PUFF'
+      WHEN '08-40229-30734' THEN 'BUILT PUFF'
+      WHEN '08-40229-30736' THEN 'BUILT SOUR PUFF'
       ELSE NULL
     END                    AS brand,
   "Description"                                AS description,
@@ -239,6 +294,61 @@ SELECT
       WHEN '08-40229-30550' THEN 'COOKIES AND CREAM'
       WHEN '08-40229-30341' THEN 'COCONUT'
       WHEN '08-40229-30334' THEN 'COOKIE DOUGH'
+      WHEN '08-40229-30285' THEN 'ORANGE CREAM'
+      WHEN '08-40229-30635' THEN 'MOCHA'
+      WHEN '08-40229-30696' THEN 'ROCKY ROAD'
+      WHEN '08-40229-30697' THEN 'ORANGE CREAM'
+      WHEN '08-40229-30738' THEN 'WATERMELON'
+      WHEN '08-40229-30747' THEN 'OTHER'
+      WHEN '08-40229-30749' THEN 'BANANA'
+      WHEN '08-40229-30751' THEN 'MANGO'
+      WHEN '08-40229-30752' THEN 'MANGO'
+      WHEN '08-40229-30765' THEN 'CINNAMON'
+      WHEN '08-40229-30766' THEN 'ASSORTED'
+      WHEN '08-40229-30771' THEN 'PEANUT BUTTER'
+      WHEN '08-40229-30772' THEN 'PEANUT BUTTER'
+      WHEN '00-40962-48338' THEN 'RASPBERRY'
+      WHEN '00-40962-48362' THEN 'CHOCOLATE PEANUT'
+      WHEN '00-40962-48429' THEN 'CHERRY'
+      WHEN '00-40962-48458' THEN 'ALMOND'
+      WHEN '07-04817-52349' THEN 'CHOCOLATE'
+      WHEN '07-04817-52363' THEN 'CHOCOLATE'
+      WHEN '08-40229-30148' THEN 'STRAWBERRY'
+      WHEN '08-40229-30254' THEN 'MINT'
+      WHEN '08-40229-30256' THEN 'RASPBERRY'
+      WHEN '08-40229-30284' THEN 'ORANGE CREAM'
+      WHEN '08-40229-30292' THEN 'ASSORTED'
+      WHEN '08-40229-30322' THEN 'COCONUT'
+      WHEN '08-40229-30324' THEN 'PEANUT BUTTER'
+      WHEN '08-40229-30328' THEN 'COOKIES AND CREAM'
+      WHEN '08-40229-30337' THEN 'CHOCOLATE'
+      WHEN '08-40229-30344' THEN 'SMORES'
+      WHEN '08-40229-30345' THEN 'OTHER'
+      WHEN '08-40229-30347' THEN 'SNICKERDOODLE'
+      WHEN '08-40229-30351' THEN 'OTHER'
+      WHEN '08-40229-30355' THEN 'ASSORTED'
+      WHEN '08-40229-30384' THEN 'ASSORTED'
+      WHEN '08-40229-30387' THEN 'COCONUT'
+      WHEN '08-40229-30390' THEN 'PEANUT BUTTER'
+      WHEN '08-40229-30493' THEN 'PEANUT BUTTER'
+      WHEN '08-40229-30497' THEN 'ASSORTED'
+      WHEN '08-40229-30503' THEN 'LEMON LIME'
+      WHEN '08-40229-30514' THEN 'OTHER'
+      WHEN '08-40229-30520' THEN 'SMORES'
+      WHEN '08-40229-30532' THEN 'OTHER'
+      WHEN '08-40229-30533' THEN 'CINNAMON'
+      WHEN '08-40229-30536' THEN 'STRAWBERRY'
+      WHEN '08-40229-30563' THEN 'ROCKY ROAD'
+      WHEN '08-40229-30576' THEN 'CHOCOLATE'
+      WHEN '08-40229-30584' THEN 'SMORES'
+      WHEN '08-40229-30593' THEN 'ASSORTED'
+      WHEN '08-40229-30659' THEN 'APPLE'
+      WHEN '08-40229-30660' THEN 'PEACH'
+      WHEN '08-40229-30679' THEN 'LEMON'
+      WHEN '08-40229-30689' THEN 'COOKIES AND CREAM'
+      WHEN '08-40229-30690' THEN 'CHOCOLATE MINT'
+      WHEN '08-40229-30734' THEN 'ASSORTED'
+      WHEN '08-40229-30736' THEN 'ASSORTED'
       ELSE NULL
     END            AS flavor_family,
     CASE upc
@@ -333,6 +443,61 @@ SELECT
       WHEN '08-40229-30550' THEN 'Cookies N Cream'
       WHEN '08-40229-30341' THEN 'Coconut Brownie'
       WHEN '08-40229-30334' THEN 'Cookie Dough'
+      WHEN '08-40229-30285' THEN 'Orange Cream Pop'
+      WHEN '08-40229-30635' THEN 'Mocha Chunk'
+      WHEN '08-40229-30696' THEN 'Rocky Road'
+      WHEN '08-40229-30697' THEN 'Orange Cream Pop'
+      WHEN '08-40229-30738' THEN 'Watermelon Splash'
+      WHEN '08-40229-30747' THEN 'Mystery Flavor'
+      WHEN '08-40229-30749' THEN 'Banana Cream Pie'
+      WHEN '08-40229-30751' THEN 'Tropical Mango Burst'
+      WHEN '08-40229-30752' THEN 'Tropical Mango Burst'
+      WHEN '08-40229-30765' THEN 'Cinnamon Cereal Milk'
+      WHEN '08-40229-30766' THEN 'Blue Razz & Green Apple'
+      WHEN '08-40229-30771' THEN 'Peanut Butter S''mores'
+      WHEN '08-40229-30772' THEN 'Peanut Butter S''mores'
+      WHEN '00-40962-48338' THEN 'Raspberry'
+      WHEN '00-40962-48362' THEN 'Chocolate Peanut Butter'
+      WHEN '00-40962-48429' THEN 'Cherry Barcia'
+      WHEN '00-40962-48458' THEN 'Toffee Almond'
+      WHEN '07-04817-52349' THEN 'Dark Chocolate Mousse'
+      WHEN '07-04817-52363' THEN 'Coconut Chocolate Cream'
+      WHEN '08-40229-30148' THEN 'Strawberry Chocolate'
+      WHEN '08-40229-30254' THEN 'Mint Brownie'
+      WHEN '08-40229-30256' THEN 'Raspberry'
+      WHEN '08-40229-30284' THEN 'Orange Dreamsicle'
+      WHEN '08-40229-30292' THEN 'Salted Caramel Cookies Cream Coconut Variety'
+      WHEN '08-40229-30322' THEN 'Coconut Granola'
+      WHEN '08-40229-30324' THEN 'Peanut Butter Granola'
+      WHEN '08-40229-30328' THEN 'Cookies & Cream'
+      WHEN '08-40229-30337' THEN 'Mud Pie'
+      WHEN '08-40229-30344' THEN 'S''mores Chunk'
+      WHEN '08-40229-30345' THEN 'White Chocolate Peppermint'
+      WHEN '08-40229-30347' THEN 'Snickerdoodle Chunk'
+      WHEN '08-40229-30351' THEN 'Cougartail'
+      WHEN '08-40229-30355' THEN 'Variety Pack'
+      WHEN '08-40229-30384' THEN 'Variety Pack'
+      WHEN '08-40229-30387' THEN 'Coconut Brownie'
+      WHEN '08-40229-30390' THEN 'Peanut Butter'
+      WHEN '08-40229-30493' THEN 'Peanut Butter'
+      WHEN '08-40229-30497' THEN 'Variety Pack'
+      WHEN '08-40229-30503' THEN 'Lemon Lime'
+      WHEN '08-40229-30514' THEN 'Frosted Sugar Cookie'
+      WHEN '08-40229-30520' THEN 'S''mores Chunk'
+      WHEN '08-40229-30532' THEN 'Red Velvet Creme'
+      WHEN '08-40229-30533' THEN 'Cinnamon Roll'
+      WHEN '08-40229-30536' THEN 'Strawberries & Cream'
+      WHEN '08-40229-30563' THEN 'Rocky Road'
+      WHEN '08-40229-30576' THEN 'Chocolate Milkshake'
+      WHEN '08-40229-30584' THEN 'Milk Chocolate S''mores'
+      WHEN '08-40229-30593' THEN 'Coconut & Brownie Batter Variety'
+      WHEN '08-40229-30659' THEN 'Green Apple Crush'
+      WHEN '08-40229-30660' THEN 'Sweet Peach Punch'
+      WHEN '08-40229-30679' THEN 'Pink Lemonade Squeeze'
+      WHEN '08-40229-30689' THEN 'Cookies & Cream'
+      WHEN '08-40229-30690' THEN 'Mint Chip'
+      WHEN '08-40229-30734' THEN 'Cookies N Cream & Cookie Dough Variety'
+      WHEN '08-40229-30736' THEN 'Sweet Peach & Green Apple Variety'
       ELSE NULL
     END      AS specific_flavor_raw,
     CASE upc
@@ -427,6 +592,61 @@ SELECT
       WHEN '08-40229-30550' THEN 'Cookies N Cream'
       WHEN '08-40229-30341' THEN 'Coconut Brownie'
       WHEN '08-40229-30334' THEN 'Cookie Dough'
+      WHEN '08-40229-30285' THEN 'Orange Cream Pop'
+      WHEN '08-40229-30635' THEN 'Mocha Chunk'
+      WHEN '08-40229-30696' THEN 'Rocky Road'
+      WHEN '08-40229-30697' THEN 'Orange Cream Pop'
+      WHEN '08-40229-30738' THEN 'Watermelon Splash'
+      WHEN '08-40229-30747' THEN 'Mystery Flavor'
+      WHEN '08-40229-30749' THEN 'Banana Cream Pie'
+      WHEN '08-40229-30751' THEN 'Tropical Mango Burst'
+      WHEN '08-40229-30752' THEN 'Tropical Mango Burst'
+      WHEN '08-40229-30765' THEN 'Cinnamon Cereal Milk'
+      WHEN '08-40229-30766' THEN 'Variety Pack'
+      WHEN '08-40229-30771' THEN 'Peanut Butter S''mores'
+      WHEN '08-40229-30772' THEN 'Peanut Butter S''mores'
+      WHEN '00-40962-48338' THEN 'Raspberry'
+      WHEN '00-40962-48362' THEN 'Chocolate Peanut Butter'
+      WHEN '00-40962-48429' THEN 'Cherry Barcia'
+      WHEN '00-40962-48458' THEN 'Toffee Almond'
+      WHEN '07-04817-52349' THEN 'Dark Chocolate Mousse'
+      WHEN '07-04817-52363' THEN 'Coconut Chocolate Cream'
+      WHEN '08-40229-30148' THEN 'Strawberry Chocolate'
+      WHEN '08-40229-30254' THEN 'Mint Brownie'
+      WHEN '08-40229-30256' THEN 'Raspberry'
+      WHEN '08-40229-30284' THEN 'Orange Dreamsicle'
+      WHEN '08-40229-30292' THEN 'Variety Pack'
+      WHEN '08-40229-30322' THEN 'Coconut Granola'
+      WHEN '08-40229-30324' THEN 'Peanut Butter Granola'
+      WHEN '08-40229-30328' THEN 'Cookies & Cream'
+      WHEN '08-40229-30337' THEN 'Mud Pie'
+      WHEN '08-40229-30344' THEN 'S''mores Chunk'
+      WHEN '08-40229-30345' THEN 'White Chocolate Peppermint'
+      WHEN '08-40229-30347' THEN 'Snickerdoodle Chunk'
+      WHEN '08-40229-30351' THEN 'Cougartail'
+      WHEN '08-40229-30355' THEN 'Variety Pack'
+      WHEN '08-40229-30384' THEN 'Variety Pack'
+      WHEN '08-40229-30387' THEN 'Coconut Brownie'
+      WHEN '08-40229-30390' THEN 'Peanut Butter'
+      WHEN '08-40229-30493' THEN 'Peanut Butter'
+      WHEN '08-40229-30497' THEN 'Variety Pack'
+      WHEN '08-40229-30503' THEN 'Lemon Lime'
+      WHEN '08-40229-30514' THEN 'Frosted Sugar Cookie'
+      WHEN '08-40229-30520' THEN 'S''mores Chunk'
+      WHEN '08-40229-30532' THEN 'Red Velvet Creme'
+      WHEN '08-40229-30533' THEN 'Cinnamon Roll'
+      WHEN '08-40229-30536' THEN 'Strawberries & Cream'
+      WHEN '08-40229-30563' THEN 'Rocky Road'
+      WHEN '08-40229-30576' THEN 'Chocolate Milkshake'
+      WHEN '08-40229-30584' THEN 'Milk Chocolate S''mores'
+      WHEN '08-40229-30593' THEN 'Variety Pack'
+      WHEN '08-40229-30659' THEN 'Green Apple Crush'
+      WHEN '08-40229-30660' THEN 'Sweet Peach Punch'
+      WHEN '08-40229-30679' THEN 'Pink Lemonade Squeeze'
+      WHEN '08-40229-30689' THEN 'Cookies & Cream'
+      WHEN '08-40229-30690' THEN 'Mint Chip'
+      WHEN '08-40229-30734' THEN 'Variety Pack'
+      WHEN '08-40229-30736' THEN 'Variety Pack'
       ELSE NULL
     END AS specific_flavor_normalized,
     CASE upc
@@ -521,6 +741,61 @@ SELECT
       WHEN '08-40229-30550' THEN CAST('1' AS BIGINT)
       WHEN '08-40229-30341' THEN CAST('1' AS BIGINT)
       WHEN '08-40229-30334' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30285' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30635' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30696' THEN CAST('4' AS BIGINT)
+      WHEN '08-40229-30697' THEN CAST('4' AS BIGINT)
+      WHEN '08-40229-30738' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30747' THEN CAST('4' AS BIGINT)
+      WHEN '08-40229-30749' THEN CAST('4' AS BIGINT)
+      WHEN '08-40229-30751' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30752' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30765' THEN CAST('4' AS BIGINT)
+      WHEN '08-40229-30766' THEN CAST('13' AS BIGINT)
+      WHEN '08-40229-30771' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30772' THEN CAST('12' AS BIGINT)
+      WHEN '00-40962-48338' THEN CAST('16' AS BIGINT)
+      WHEN '00-40962-48362' THEN CAST('18' AS BIGINT)
+      WHEN '00-40962-48429' THEN CAST('16' AS BIGINT)
+      WHEN '00-40962-48458' THEN CAST('16' AS BIGINT)
+      WHEN '07-04817-52349' THEN CAST('1' AS BIGINT)
+      WHEN '07-04817-52363' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30148' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30254' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30256' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30284' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30292' THEN CAST('13' AS BIGINT)
+      WHEN '08-40229-30322' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30324' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30328' THEN CAST('13' AS BIGINT)
+      WHEN '08-40229-30337' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30344' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30345' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30347' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30351' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30355' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30384' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30387' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30390' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30493' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30497' THEN CAST('14' AS BIGINT)
+      WHEN '08-40229-30503' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30514' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30520' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30532' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30533' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30536' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30563' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30576' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30584' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30593' THEN CAST('14' AS BIGINT)
+      WHEN '08-40229-30659' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30660' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30679' THEN CAST('1' AS BIGINT)
+      WHEN '08-40229-30689' THEN CAST('8' AS BIGINT)
+      WHEN '08-40229-30690' THEN CAST('8' AS BIGINT)
+      WHEN '08-40229-30734' THEN CAST('13' AS BIGINT)
+      WHEN '08-40229-30736' THEN CAST('13' AS BIGINT)
       ELSE NULL
     END AS pack_count,
     CASE upc
@@ -615,6 +890,61 @@ SELECT
       WHEN '08-40229-30550' THEN CAST('1.41' AS DOUBLE)
       WHEN '08-40229-30341' THEN CAST('1.52' AS DOUBLE)
       WHEN '08-40229-30334' THEN CAST('18.62' AS DOUBLE)
+      WHEN '08-40229-30285' THEN CAST('16.93' AS DOUBLE)
+      WHEN '08-40229-30635' THEN CAST('1.55' AS DOUBLE)
+      WHEN '08-40229-30696' THEN CAST('5.64' AS DOUBLE)
+      WHEN '08-40229-30697' THEN CAST('5.64' AS DOUBLE)
+      WHEN '08-40229-30738' THEN CAST('1.45' AS DOUBLE)
+      WHEN '08-40229-30747' THEN CAST('5.92' AS DOUBLE)
+      WHEN '08-40229-30749' THEN CAST('5.64' AS DOUBLE)
+      WHEN '08-40229-30751' THEN CAST('1.45' AS DOUBLE)
+      WHEN '08-40229-30752' THEN CAST('17.40' AS DOUBLE)
+      WHEN '08-40229-30765' THEN CAST('5.80' AS DOUBLE)
+      WHEN '08-40229-30766' THEN CAST('18.85' AS DOUBLE)
+      WHEN '08-40229-30771' THEN CAST('1.55' AS DOUBLE)
+      WHEN '08-40229-30772' THEN CAST('18.60' AS DOUBLE)
+      WHEN '00-40962-48338' THEN CAST('27.68' AS DOUBLE)
+      WHEN '00-40962-48362' THEN CAST('36.90' AS DOUBLE)
+      WHEN '00-40962-48429' THEN CAST('27.52' AS DOUBLE)
+      WHEN '00-40962-48458' THEN CAST('27.68' AS DOUBLE)
+      WHEN '07-04817-52349' THEN CAST('1.73' AS DOUBLE)
+      WHEN '07-04817-52363' THEN CAST('1.83' AS DOUBLE)
+      WHEN '08-40229-30148' THEN CAST('1.70' AS DOUBLE)
+      WHEN '08-40229-30254' THEN CAST('20.32' AS DOUBLE)
+      WHEN '08-40229-30256' THEN CAST('20.16' AS DOUBLE)
+      WHEN '08-40229-30284' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30292' THEN CAST('22.49' AS DOUBLE)
+      WHEN '08-40229-30322' THEN CAST('1.90' AS DOUBLE)
+      WHEN '08-40229-30324' THEN CAST('1.90' AS DOUBLE)
+      WHEN '08-40229-30328' THEN CAST('22.40' AS DOUBLE)
+      WHEN '08-40229-30337' THEN CAST('1.52' AS DOUBLE)
+      WHEN '08-40229-30344' THEN CAST('18.20' AS DOUBLE)
+      WHEN '08-40229-30345' THEN CAST('1.73' AS DOUBLE)
+      WHEN '08-40229-30347' THEN CAST('1.52' AS DOUBLE)
+      WHEN '08-40229-30351' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30355' THEN CAST('16.92' AS DOUBLE)
+      WHEN '08-40229-30384' THEN CAST('20.28' AS DOUBLE)
+      WHEN '08-40229-30387' THEN CAST('1.83' AS DOUBLE)
+      WHEN '08-40229-30390' THEN CAST('20.32' AS DOUBLE)
+      WHEN '08-40229-30493' THEN CAST('16.92' AS DOUBLE)
+      WHEN '08-40229-30497' THEN CAST('19.75' AS DOUBLE)
+      WHEN '08-40229-30503' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30514' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30520' THEN CAST('1.50' AS DOUBLE)
+      WHEN '08-40229-30532' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30533' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30536' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30563' THEN CAST('16.93' AS DOUBLE)
+      WHEN '08-40229-30576' THEN CAST('16.92' AS DOUBLE)
+      WHEN '08-40229-30584' THEN CAST('1.41' AS DOUBLE)
+      WHEN '08-40229-30593' THEN CAST('19.74' AS DOUBLE)
+      WHEN '08-40229-30659' THEN CAST('17.40' AS DOUBLE)
+      WHEN '08-40229-30660' THEN CAST('17.40' AS DOUBLE)
+      WHEN '08-40229-30679' THEN CAST('1.45' AS DOUBLE)
+      WHEN '08-40229-30689' THEN CAST('11.29' AS DOUBLE)
+      WHEN '08-40229-30690' THEN CAST('11.29' AS DOUBLE)
+      WHEN '08-40229-30734' THEN CAST('19.20' AS DOUBLE)
+      WHEN '08-40229-30736' THEN CAST('18.85' AS DOUBLE)
       ELSE NULL
     END       AS size,
   "UNIT OF MEASURE"                            AS unit_of_measure,
@@ -2744,16 +3074,15 @@ SELECT
   donor_post_13w_arp_discount, donor_pre_13w_arp_discount,
 
   -- ── DETERMINISTIC LABELS ─────────────────────────────────────
+  -- focal_pre_base_units is structurally 0 for all BUILT UPCs (SPINS first_week_selling
+  -- is the all-time first sell date; no pre-launch rows exist in our data window).
+  -- Label uses donor-side change only — asking "did the donor decline after focal launched?"
   CASE
     WHEN (donor_post_13w_base_units - donor_pre_13w_base_units)
            / NULLIF(donor_pre_13w_base_units, 0) < -0.10
-     AND  (post_13w_base_units - pre_13w_base_units)
-           / NULLIF(pre_13w_base_units, 0) > 0.03
       THEN 'CANNIBALIZING'
     WHEN (donor_post_13w_base_units - donor_pre_13w_base_units)
            / NULLIF(donor_pre_13w_base_units, 0) < -0.03
-     AND  (post_13w_base_units - pre_13w_base_units)
-           / NULLIF(pre_13w_base_units, 0) > 0
       THEN 'WATCH'
     WHEN (donor_post_13w_base_units - donor_pre_13w_base_units)
            / NULLIF(donor_pre_13w_base_units, 0) >= -0.03
@@ -2821,7 +3150,7 @@ CLUSTERED BY focal_upc, donor_upc, channel_outlet, retail_account, geography_raw
 
 **Design note — focal pre-window:** `pre_13w_base_units` and `pre_13w_weeks_count` are structurally 0 for all focal UPCs. SPINS has no data for a product before its `first_week_selling`, so `weeks_from_launch` is always ≥ 0 in `built_enriched_weekly`. Focal pre filters removed from WHERE. Labels and `cannibalization_rate` use donor pre/post and focal post only — all valid. Derived metrics dividing by focal pre (`focal_base_units_pct_chg`, `focal_base_units_yago_pct_chg`) are NULL for all rows — acceptable for ML.
 
-**Status: ✓ COMPLETE** — 60,695 rows. CANNIBALIZING: 28,344 (47%, avg rate 0.405). INCREMENTAL: 26,836 (44%, avg rate 0.013). WATCH: 5,515 (9%, avg rate 0.307). 86 focal UPCs, 1,586+ donor UPCs. Class balance near-ideal for 3-class classifier. Completed in ~2 minutes.
+**Status: ✓ COMPLETE (label logic updated 2026-09-14)** — Label rewritten to use donor-side change only. `focal_pre_base_units` is structurally 0 for all BUILT UPCs (SPINS `first_week_selling` is the all-time first sell date; no pre-launch rows exist in our data window). Previous label checked `focal_pct_chg > threshold`, which always evaluates NULL — CANNIBALIZING and WATCH never fired. Fixed label asks only "did donor decline after focal launched?" Previous row counts and class distribution no longer valid reference.
 
 ---
 
@@ -3747,6 +4076,10 @@ WITH windows AS (
     AND p.geography_raw  = w.geography_raw
     AND p.__time BETWEEN TIMESTAMPADD(WEEK,-25,w.__time) AND w.__time
   WHERE w.parent_brand = 'BUILT'
+    AND w.upc NOT IN (
+      '08-40229-30119',   -- duplicate rows: SPINS description typo ("Satled"→"Salted") + true dups; self-join 4× COUNT inflation
+      '08-40229-30593'    -- duplicate rows: same pattern, NORTHWEST GROCERS only
+    )
   GROUP BY
     w.__time, w.upc, w.description, w.channel_outlet,
     w.retail_account, w.geography_raw, w.geography_level,
