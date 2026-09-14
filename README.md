@@ -89,6 +89,50 @@ Created two artifacts for the CCO/Brian audience on own-brand flavor-launch cann
 
 ---
 
+## README update 105: ML retrain v4 complete + Mo Chat fixes (2026-09-14)
+
+### ML pipeline v4 retrain — MO_10→MO_29
+
+Full retrain complete with data through the Aug 2026 SPINS delivery. v4 models use 28 features (down from 32 in v3; pruned set confirmed via MO_53 ablation). All validation scripts re-run against v4 PKL files.
+
+**wMAPE: 6.1%** (temporal holdout, last 13 weeks)
+
+### Validation suite — MO_67b → MO_71
+
+All scripts fixed for v4 (hardcoded `load_models("v3")` → `"v4"` in MO_67b, MO_68, MO_69 before re-running):
+
+| Script | Result | Key finding |
+|---|---|---|
+| MO_67b — q90 Conformal Recalibration | **PASS** | Multiplicative 1.0059× restores q90 coverage 85.6% → 90.0% |
+| MO_68 — Per-Series Drift Detection | **FAIL** (monitoring) | 2/310 segments drifting (McKeever's 1.67×, McCaffrey's 1.42×) — both small regional retailers; no fix |
+| MO_69 — Residual Structure Audit | **PASS** | Zero bias (−0.07%), all segment cuts clean |
+| MO_71 — Distribution Shift Detection | **FAIL** (explainable) | TDP +148%, donor_count +800% — BUILT distribution expansion; schedule retrain at next SPINS drop |
+
+Calibration constants saved to `outputs/mo67_calibration_constants.json`. MO_27 re-run with constants applied; retailer_sales_forecast Druid re-ingest used `appendToExisting:false` to replace uncalibrated segments.
+
+**Rollback Baseline 3** recorded in `wiki/19-data-refresh-safety.md`: FirstAgent `0ff0afe`, wMAPE 6.1%, q90 90.0%, zero bias.
+
+### Mo UI smoke test — PASSED
+
+Three screens verified loading live Druid data post-retrain: Demand (SKU View + forecast drawer), Cannibalization (scored pairs), Elasticity (pack elasticity + summary).
+
+### Mo Chat bug fixes (customer-built-mo-api)
+
+Three root-cause fixes shipped across 8 commits:
+
+**1. model_dump HTTP 400 on tool-use round 2**  
+`model_dump()` on Anthropic streaming content blocks includes SDK-internal fields (`parsed_output`, `citations`, `caller`) rejected by the API when sent back as assistant content. Fixed with `_serialize_anthropic_block()` — manually extracts only `{type, text}` for text blocks and `{type, id, name, input}` for tool_use blocks.
+
+**2. No-UPC tool gate excluded get_product_list**  
+When no focal UPC was selected, `active_tools` was `["navigate_to", "update_filters"]` — `get_product_list` was excluded, so Mo failed to look up products by name. Fixed: all 3 gate locations now use `_ALWAYS = ["navigate_to", "update_filters", "get_channel_list", "get_account_list", "get_product_list"]`.
+
+**3. Product search LLM-driven matching**  
+Python substring matching was fragile ("razz" ≠ "raz"). Final approach: Python does a loose OR-token pre-filter (3-char prefix of each token); if <5 results, falls back to all 144 BUILT SKUs. LLM does final semantic match — handles nicknames, spelling variants, pack-size shorthand. Tool description updated to document this contract.
+
+**Additional fixes:** Reverted `ANTHROPIC_MODEL` default to `claude-haiku-4-5-20251001` (only model accessible on this API key); added no-narration rule to system prompt ("do not say 'I need to search first'").
+
+---
+
 ## README update 104: Experience 1 screen spec + Sept 10 standup (2026-09-10)
 
 Processed Sept 10 standup (`Aevah Standup 091026.docx`). Rob's key direction:
