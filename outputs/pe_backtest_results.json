@@ -1,0 +1,45 @@
+{
+  "temporal_cutoff": "2025-10-01",
+  "n_train": 37341,
+  "n_test": 30962,
+  "features_used": [
+    "pre_13w_avg_price_per_bar",
+    "post_13w_avg_price_per_bar",
+    "log_price_change",
+    "pre_13w_velocity_spm",
+    "pre_13w_weeks_count",
+    "post_13w_weeks_count",
+    "pack_count",
+    "pre_13w_tdp",
+    "post_13w_tdp",
+    "tdp_pct_chg",
+    "naive_price_elasticity",
+    "promo_confounded"
+  ],
+  "random_split_baseline": {
+    "r2": 0.981,
+    "mae": 0.0714,
+    "n": 69391,
+    "model_version": "v2"
+  },
+  "temporal_test_pretrained_v2": {
+    "r2": 0.9867,
+    "mae": 0.0624,
+    "direction_accuracy": 0.9761,
+    "n": 30962,
+    "verdict": "PASS"
+  },
+  "temporal_test_retrained": {
+    "r2": 0.9378,
+    "mae": 0.106,
+    "direction_accuracy": 0.9712,
+    "n": 30962,
+    "verdict": "PASS"
+  },
+  "r2_generalization_gap": -0.0057,
+  "pass_thresholds": {
+    "r2": 0.9,
+    "r2_warn": 0.8,
+    "direction_accuracy": 0.7
+  }
+}

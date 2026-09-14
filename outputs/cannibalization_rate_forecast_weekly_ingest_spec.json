@@ -1,0 +1,65 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "cannibalization_rate_forecast_weekly",
+      "timestampSpec": {
+        "column": "__time",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "focal_upc",
+          "focal_description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "geography_display",
+          "geography_level",
+          "anchor_cannibalization_rate",
+          "max_donor_cannibal_prob",
+          "donor_count",
+          "forecast_week_number",
+          "forecast_rate_low",
+          "forecast_rate_base",
+          "forecast_rate_high",
+          "model_version",
+          "scored_at"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/cannibalization_rate_forecast_weekly/2026-09-14/cannibalization_rate_forecast_weekly.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

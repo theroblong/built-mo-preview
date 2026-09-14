@@ -288,7 +288,7 @@ if __name__ == "__main__":
     print(f"\nFeature set: {len(feature_cols)} features (from {METRICS_IN.name})")
 
     print("\nLoading models …")
-    models = load_models("v3")
+    models = load_models("v4")
 
     print("\nLoading actuals parquet …")
     df = pd.read_parquet(PARQUET)

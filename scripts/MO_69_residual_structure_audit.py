@@ -148,7 +148,7 @@ if __name__ == "__main__":
         feature_cols = json.load(f)["features_used"]
 
     print("\nLoading v3 q50 model …")
-    model = load_model("q50", "v3")
+    model = load_model("q50", "v4")
 
     print("Loading parquet and building val set …")
     df = pd.read_parquet(PARQUET)

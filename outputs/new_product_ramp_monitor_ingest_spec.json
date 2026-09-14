@@ -1,0 +1,75 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "new_product_ramp_monitor",
+      "timestampSpec": {
+        "column": "__time",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "upc",
+          "description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "geography_display",
+          "geography_level",
+          "first_week_selling",
+          "weeks_since_launch",
+          "tdp",
+          "avg_weekly_units_spm",
+          "base_units",
+          "pct_stores_selling",
+          "arp",
+          "peak_tdp",
+          "rolling_4w_avg_velocity_spm",
+          "tdp_4w_change",
+          "velocity_vs_4w_avg_ratio",
+          "distribution_trend",
+          "scoring_status",
+          "ramp_confidence",
+          "ui_ramp_ribbon",
+          "underperforming_flag",
+          "tdp_ratio_to_peak",
+          "tdp_now_slash_peak",
+          "scored_at"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/new_product_ramp_monitor/2026-09-14/new_product_ramp_monitor.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "model_version": "v1",
+  "trained_at": "2026-09-14T19:01:05.691596+00:00",
+  "features_used": [
+    "base_units_roll4_avg",
+    "base_units_roll8_avg",
+    "base_units_roll8_std",
+    "base_units_roll13_avg",
+    "base_units_roll13_std",
+    "base_units_z8",
+    "base_units_z13",
+    "base_units_wow_delta",
+    "velocity_spm_roll8_avg",
+    "velocity_spm_roll13_avg",
+    "velocity_spm_z8",
+    "velocity_spm_z13",
+    "tdp",
+    "tdp_z8",
+    "max_donor_cannibal_prob",
+    "donor_count",
+    "week_of_year",
+    "cannibal_rate_lag1",
+    "cannibal_rate_lag4",
+    "cannibal_rate_lag8",
+    "channel_outlet"
+  ],
+  "train_rows": 128632,
+  "val_rows": 33548,
+  "train_date_range": [
+    "2024-09-22",
+    "2026-05-10"
+  ],
+  "val_date_range": [
+    "2026-05-17",
+    "2026-08-09"
+  ],
+  "quantile_metrics": {
+    "q10": {
+      "quantile": 0.1,
+      "best_iteration": 425,
+      "val_pinball_loss": 0.018981061021075964
+    },
+    "q50": {
+      "quantile": 0.5,
+      "best_iteration": 401,
+      "val_pinball_loss": 0.045002070758741956,
+      "val_mae": 0.09000414151748391
+    },
+    "q90": {
+      "quantile": 0.9,
+      "best_iteration": 296,
+      "val_pinball_loss": 0.0174673809509886
+    }
+  }
+}

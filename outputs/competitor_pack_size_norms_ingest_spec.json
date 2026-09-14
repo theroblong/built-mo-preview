@@ -1,0 +1,60 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "competitor_pack_size_norms",
+      "timestampSpec": {
+        "column": "__time",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "norm_scope",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "pack_count",
+          "pack_size_bucket",
+          "norm_sku_count",
+          "norm_median_price_bar",
+          "norm_median_velocity",
+          "step_discount_vs_1ct",
+          "scored_at"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/competitor_pack_size_norms/2026-09-14/competitor_pack_size_norms.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

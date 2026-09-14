@@ -1,100 +1,106 @@
 {
   "overall_verdict": "FAIL",
   "material_threshold_pp": 5.0,
-  "val_rows": 21803,
+  "val_rows": 27500,
   "portfolio": {
     "q10": {
       "target": 0.1,
-      "actual_coverage": 0.1185,
-      "error_pp": 1.85,
+      "actual_coverage": 0.1109,
+      "error_pp": 1.09,
       "verdict": "PASS"
     },
     "q50": {
       "target": 0.5,
-      "actual_coverage": 0.5356,
-      "error_pp": 3.56,
-      "verdict": "PASS"
+      "actual_coverage": 0.573,
+      "error_pp": 7.3,
+      "verdict": "FAIL"
     },
     "q90": {
       "target": 0.9,
-      "actual_coverage": 0.8215,
-      "error_pp": -7.85,
-      "verdict": "FAIL"
+      "actual_coverage": 0.8557,
+      "error_pp": -4.43,
+      "verdict": "PASS"
     }
   },
   "maturity_breakdown": {
     "new (<13w)": {
-      "n": 2597,
-      "q10": 12.7,
-      "q50": 51.3,
-      "q90": 83.9
+      "n": 2429,
+      "q10": 15.6,
+      "q50": 56.5,
+      "q90": 86.3
     },
     "growing (13\u201351w)": {
-      "n": 8663,
-      "q10": 11.5,
-      "q50": 52.0,
-      "q90": 83.4
+      "n": 11582,
+      "q10": 10.8,
+      "q50": 57.7,
+      "q90": 85.7
     },
     "mature (52w+)": {
-      "n": 10543,
-      "q10": 11.9,
-      "q50": 55.4,
-      "q90": 80.7
+      "n": 13489,
+      "q10": 10.5,
+      "q50": 57.1,
+      "q90": 85.4
     }
   },
   "channel_breakdown": {
+    "CONVENTIONAL|CLUB": {
+      "n": 104,
+      "q10": 5.8,
+      "q50": 72.1,
+      "q90": 90.4
+    },
     "CONVENTIONAL|CONVENIENCE": {
-      "n": 1212,
-      "q10": 9.8,
-      "q50": 66.2,
-      "q90": 91.6
+      "n": 1918,
+      "q10": 8.6,
+      "q50": 63.3,
+      "q90": 88.6
     },
     "CONVENTIONAL|DRUG": {
-      "n": 182,
-      "q10": 5.5,
-      "q50": 70.3,
-      "q90": 83.5
+      "n": 310,
+      "q10": 8.4,
+      "q50": 69.4,
+      "q90": 89.7
     },
     "CONVENTIONAL|FOOD": {
-      "n": 3813,
-      "q10": 10.0,
-      "q50": 55.6,
-      "q90": 84.7
+      "n": 4888,
+      "q10": 9.3,
+      "q50": 57.8,
+      "q90": 87.5
     },
     "CONVENTIONAL|MASS MERCH": {
-      "n": 630,
-      "q10": 8.4,
-      "q50": 57.8,
-      "q90": 85.6
+      "n": 931,
+      "q10": 11.9,
+      "q50": 70.1,
+      "q90": 90.9
     },
     "CONVENTIONAL|MULTI OUTLET": {
-      "n": 8609,
-      "q10": 11.4,
-      "q50": 55.9,
-      "q90": 78.7
+      "n": 10432,
+      "q10": 10.9,
+      "q50": 59.6,
+      "q90": 84.9
     },
     "NATURAL EXPANDED": {
-      "n": 2727,
-      "q10": 14.2,
-      "q50": 47.1,
-      "q90": 82.3
+      "n": 3519,
+      "q10": 13.8,
+      "q50": 51.6,
+      "q90": 85.5
     },
     "REGIONAL & INDEP GROCERY": {
-      "n": 4291,
-      "q10": 14.1,
-      "q50": 46.1,
-      "q90": 83.1
+      "n": 5040,
+      "q10": 12.4,
+      "q50": 50.8,
+      "q90": 82.5
     },
     "VITAMINS & SUPPLEMENTS": {
-      "n": 218,
-      "q10": 14.2,
-      "q50": 49.1,
-      "q90": 87.2
+      "n": 306,
+      "q10": 12.4,
+      "q50": 51.6,
+      "q90": 85.0
     }
   },
   "interval_width": {
-    "median_width_pct_of_actual": 7.2,
-    "pct_rows_q10_exceeds_actual": 11.8,
-    "pct_rows_q90_below_actual": 17.9
+    "median_width_pct_of_actual": 7.6,
+    "pct_rows_q10_exceeds_actual": 11.1,
+    "pct_rows_q90_below_actual": 14.4
   }
 }

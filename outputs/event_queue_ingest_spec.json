@@ -1,0 +1,64 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "event_queue",
+      "timestampSpec": {
+        "column": "assembled_at",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "focal_upc",
+          "focal_description",
+          "pack_count",
+          "size_oz",
+          "closest_pack_partner_upc",
+          "closest_pack_partner_description",
+          "flavor_taxonomy_conflict",
+          "manual_review_needed",
+          "event_type",
+          "event_label",
+          "event_color",
+          "cannibal_prob",
+          "cannibal_status",
+          "cannibal_confidence",
+          "model_version"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/event_queue/2026-09-14/event_queue.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

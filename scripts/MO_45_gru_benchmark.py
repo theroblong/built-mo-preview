@@ -40,8 +40,40 @@ logging.getLogger("lightning").setLevel(logging.ERROR)
 logging.getLogger("lightning_fabric").setLevel(logging.ERROR)
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
-from neuralforecast import NeuralForecast
-from neuralforecast.models import GRU
+try:
+    from neuralforecast import NeuralForecast
+    from neuralforecast.models import GRU
+    _NEURALFORECAST_OK = True
+except Exception as _nf_err:
+    _NEURALFORECAST_OK = False
+    print(f"[MO_45] WARNING: neuralforecast import failed ({_nf_err}). Patching report with placeholder.")
+    # Write placeholder HTML section and exit cleanly so the report chain continues.
+    _html_placeholder = """
+<section id="section-18" style="margin-bottom:3rem">
+<h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;border-bottom:2px solid #e2e8f0;padding-bottom:.5rem">
+  §18 GRU Neural Benchmark</h2>
+<p style="color:#64748b;font-style:italic">
+  GRU benchmark unavailable — neuralforecast/torchvision version mismatch in mo-ml environment.
+  LightGBM v4 results (§13–§16) remain the production model. Re-run after resolving
+  <code>torchvision::nms</code> operator registration error.
+</p>
+</section>
+"""
+    import os as _os
+    _html_in  = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "outputs", "built_demand_intelligence_report.html")
+    _html_out = _html_in
+    with open(_html_in, "r", encoding="utf-8") as _f:
+        _html = _f.read()
+    _anchor = "<!-- END SECTIONS -->"
+    if _anchor in _html:
+        _html = _html.replace(_anchor, _html_placeholder + "\n" + _anchor)
+    else:
+        _html = _html.replace("</body>", _html_placeholder + "\n</body>")
+    with open(_html_out, "w", encoding="utf-8") as _f:
+        _f.write(_html)
+    _size_mb = _os.path.getsize(_html_out) / 1_048_576
+    print(f"[MO_45] Placeholder patched → {_html_out}  ({_size_mb:.1f} MB)")
+    import sys as _sys; _sys.exit(0)
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

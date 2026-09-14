@@ -1,0 +1,730 @@
+[
+  {
+    "retail_account": "SUNSET FOODS",
+    "n": 13,
+    "r2": 0.1636,
+    "direction_accuracy": 0.6154,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "PLAID PANTRY",
+    "n": 9,
+    "r2": 0.7431,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MAVERIK",
+    "n": 14,
+    "r2": 0.7708,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "FOOD CITY MARKET",
+    "n": 28,
+    "r2": 0.7965,
+    "direction_accuracy": 0.963,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "GEISSLERS SUPERMARKETS",
+    "n": 17,
+    "r2": 0.8021,
+    "direction_accuracy": 0.875,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "K-VA-T",
+    "n": 39,
+    "r2": 0.8374,
+    "direction_accuracy": 0.9487,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "GELSONS MARKET",
+    "n": 367,
+    "r2": 0.8379,
+    "direction_accuracy": 0.9401,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SENDIKS",
+    "n": 118,
+    "r2": 0.853,
+    "direction_accuracy": 0.9831,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "DIERBERGS",
+    "n": 283,
+    "r2": 0.8618,
+    "direction_accuracy": 0.9788,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "REYNOLDS MARKET",
+    "n": 384,
+    "r2": 0.868,
+    "direction_accuracy": 0.9608,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BIG Y",
+    "n": 155,
+    "r2": 0.8766,
+    "direction_accuracy": 0.8968,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ROYAL FARMS",
+    "n": 44,
+    "r2": 0.8787,
+    "direction_accuracy": 0.9773,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BRUCES FOODLAND",
+    "n": 13,
+    "r2": 0.8789,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "TOWN AND COUNTRY",
+    "n": 166,
+    "r2": 0.8823,
+    "direction_accuracy": 0.988,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "YESWAY/ALLSUPS",
+    "n": 64,
+    "r2": 0.8929,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "COHN WHOLESALE",
+    "n": 55,
+    "r2": 0.8962,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HARDINGS MARKETS",
+    "n": 186,
+    "r2": 0.9046,
+    "direction_accuracy": 0.9785,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "AMERICAS FOOD BASKET",
+    "n": 37,
+    "r2": 0.9094,
+    "direction_accuracy": 0.973,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ASSOCIATED GROCERS OF NEW ENGLAND",
+    "n": 53,
+    "r2": 0.9108,
+    "direction_accuracy": 0.9811,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HIGHLAND PARK MARKET",
+    "n": 196,
+    "r2": 0.9138,
+    "direction_accuracy": 0.9487,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ROUSES MARKET",
+    "n": 90,
+    "r2": 0.9181,
+    "direction_accuracy": 0.9778,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "QUEENS PRICE CHOPPER",
+    "n": 241,
+    "r2": 0.9216,
+    "direction_accuracy": 0.9792,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HUCKS",
+    "n": 43,
+    "r2": 0.9218,
+    "direction_accuracy": 0.9535,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HARMONS NEIGHBORHOOD GROCER",
+    "n": 210,
+    "r2": 0.925,
+    "direction_accuracy": 0.9905,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "WEGMANS",
+    "n": 398,
+    "r2": 0.9251,
+    "direction_accuracy": 0.9799,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "LUNDS & BYERLYS",
+    "n": 16,
+    "r2": 0.9287,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ANDRONICOS COMMUNITY MARKETS",
+    "n": 119,
+    "r2": 0.9342,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NUGGET MARKET",
+    "n": 184,
+    "r2": 0.9378,
+    "direction_accuracy": 0.9728,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "FRESH THYME",
+    "n": 158,
+    "r2": 0.9407,
+    "direction_accuracy": 0.9684,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "GOOD FOOD HOLDINGS",
+    "n": 256,
+    "r2": 0.9443,
+    "direction_accuracy": 0.9336,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "REASORS",
+    "n": 114,
+    "r2": 0.9455,
+    "direction_accuracy": 0.9912,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ROTHS FRESH MARKETS",
+    "n": 108,
+    "r2": 0.9476,
+    "direction_accuracy": 0.9626,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "UNCLE GIUSEPPES MARKETPLACE",
+    "n": 146,
+    "r2": 0.9484,
+    "direction_accuracy": 0.9315,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "PYRAMID FOODS",
+    "n": 156,
+    "r2": 0.9487,
+    "direction_accuracy": 0.9608,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HAC INC",
+    "n": 158,
+    "r2": 0.9511,
+    "direction_accuracy": 0.9682,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ALEX LEE",
+    "n": 137,
+    "r2": 0.9524,
+    "direction_accuracy": 0.9854,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "B AND R STORES",
+    "n": 165,
+    "r2": 0.9524,
+    "direction_accuracy": 0.9576,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ROSAUERS SUPERMARKETS",
+    "n": 94,
+    "r2": 0.9533,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NCG",
+    "n": 163,
+    "r2": 0.9541,
+    "direction_accuracy": 0.9816,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NORTHWEST SUPERMARKETS",
+    "n": 141,
+    "r2": 0.9557,
+    "direction_accuracy": 0.9645,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "RALEYS",
+    "n": 135,
+    "r2": 0.9558,
+    "direction_accuracy": 0.9926,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HUGOS FAMILY MARKETPLACE",
+    "n": 177,
+    "r2": 0.958,
+    "direction_accuracy": 0.9548,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ASSOCIATED GROCERS NORTHEAST",
+    "n": 54,
+    "r2": 0.9609,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MCKEEVERS",
+    "n": 378,
+    "r2": 0.9618,
+    "direction_accuracy": 0.9788,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "COSENTINOS",
+    "n": 290,
+    "r2": 0.9623,
+    "direction_accuracy": 0.969,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "INFRA",
+    "n": 368,
+    "r2": 0.9642,
+    "direction_accuracy": 0.962,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "STRACK AND VAN TIL",
+    "n": 208,
+    "r2": 0.9649,
+    "direction_accuracy": 0.9952,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "C AND K MARKET",
+    "n": 59,
+    "r2": 0.9659,
+    "direction_accuracy": 0.9661,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SAVE MART",
+    "n": 192,
+    "r2": 0.968,
+    "direction_accuracy": 0.9948,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MCKAYS",
+    "n": 49,
+    "r2": 0.9692,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MARKET DISTRICT",
+    "n": 235,
+    "r2": 0.97,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NIEMANN FOODS",
+    "n": 173,
+    "r2": 0.971,
+    "direction_accuracy": 0.9364,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "TOMS FOOD MARKETS",
+    "n": 161,
+    "r2": 0.9741,
+    "direction_accuracy": 0.9814,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HARPS FOOD STORES",
+    "n": 300,
+    "r2": 0.9757,
+    "direction_accuracy": 0.9733,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "GIANT EAGLE",
+    "n": 1206,
+    "r2": 0.9771,
+    "direction_accuracy": 0.9743,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HOUCHENS FOOD GROUP",
+    "n": 258,
+    "r2": 0.9771,
+    "direction_accuracy": 0.9455,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NORTHWEST GROCERS",
+    "n": 289,
+    "r2": 0.9777,
+    "direction_accuracy": 0.9931,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SPROUTS FARMERS MARKET",
+    "n": 158,
+    "r2": 0.9777,
+    "direction_accuracy": 0.9747,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "WAKEFERN",
+    "n": 235,
+    "r2": 0.9782,
+    "direction_accuracy": 0.983,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BROOKSHIRE GROCERY",
+    "n": 179,
+    "r2": 0.9786,
+    "direction_accuracy": 0.9665,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "FAREWAY",
+    "n": 61,
+    "r2": 0.9788,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "DECICCO AND SONS",
+    "n": 156,
+    "r2": 0.9793,
+    "direction_accuracy": 0.9872,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SCHNUCKS",
+    "n": 407,
+    "r2": 0.9793,
+    "direction_accuracy": 0.9828,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NILSSENS",
+    "n": 111,
+    "r2": 0.9799,
+    "direction_accuracy": 0.964,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "TONYS FINER FOODS",
+    "n": 147,
+    "r2": 0.9802,
+    "direction_accuracy": 0.9592,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "CLARKS MARKET",
+    "n": 209,
+    "r2": 0.9803,
+    "direction_accuracy": 0.9617,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BUEHLERS",
+    "n": 155,
+    "r2": 0.9809,
+    "direction_accuracy": 0.9677,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BALLS FOODS",
+    "n": 197,
+    "r2": 0.9814,
+    "direction_accuracy": 0.9848,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ASSOCIATED FOOD STORES",
+    "n": 535,
+    "r2": 0.9821,
+    "direction_accuracy": 0.9664,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MCCAFFREYS",
+    "n": 97,
+    "r2": 0.9822,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "KINGS FOOD MARKETS",
+    "n": 207,
+    "r2": 0.9826,
+    "direction_accuracy": 0.9855,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "HY-VEE",
+    "n": 866,
+    "r2": 0.983,
+    "direction_accuracy": 0.9803,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "EXTRAMILE",
+    "n": 61,
+    "r2": 0.9834,
+    "direction_accuracy": 0.9508,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MURPHY USA",
+    "n": 51,
+    "r2": 0.9835,
+    "direction_accuracy": 0.9608,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MEIJER",
+    "n": 751,
+    "r2": 0.9838,
+    "direction_accuracy": 0.9867,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SOUTHEASTERN GROCERS",
+    "n": 512,
+    "r2": 0.9838,
+    "direction_accuracy": 0.9766,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "WAWA",
+    "n": 63,
+    "r2": 0.9856,
+    "direction_accuracy": 0.9683,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "CVS",
+    "n": 1100,
+    "r2": 0.9864,
+    "direction_accuracy": 0.9755,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "WEIS",
+    "n": 114,
+    "r2": 0.9866,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "COBORNS",
+    "n": 316,
+    "r2": 0.9867,
+    "direction_accuracy": 0.9905,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "MAPCO",
+    "n": 5,
+    "r2": 0.987,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "PUBLIX",
+    "n": 1087,
+    "r2": 0.987,
+    "direction_accuracy": 0.9862,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "THE FRESH MARKET",
+    "n": 70,
+    "r2": 0.987,
+    "direction_accuracy": 0.9286,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SKOGENS FOODLINER",
+    "n": 410,
+    "r2": 0.9877,
+    "direction_accuracy": 0.9902,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ALLEGIANCE RETAIL SERVICES",
+    "n": 287,
+    "r2": 0.9881,
+    "direction_accuracy": 0.9861,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "EG GROUP",
+    "n": 36,
+    "r2": 0.9881,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BROOKSHIRE BROTHERS",
+    "n": 154,
+    "r2": 0.9883,
+    "direction_accuracy": 0.9805,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NEW SEASONS MARKET",
+    "n": 279,
+    "r2": 0.9889,
+    "direction_accuracy": 0.9785,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "AHOLD DELHAIZE",
+    "n": 1134,
+    "r2": 0.989,
+    "direction_accuracy": 0.9806,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "KROGER",
+    "n": 1692,
+    "r2": 0.9892,
+    "direction_accuracy": 0.9793,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ASSOCIATED WHOLESALE GROCERS",
+    "n": 524,
+    "r2": 0.9893,
+    "direction_accuracy": 0.979,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "VITAMIN SHOPPE",
+    "n": 544,
+    "r2": 0.9902,
+    "direction_accuracy": 0.9871,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "UNFI",
+    "n": 1741,
+    "r2": 0.9904,
+    "direction_accuracy": 0.9713,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NORTHEAST GROCERY",
+    "n": 110,
+    "r2": 0.9908,
+    "direction_accuracy": 0.9636,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "ALBERTSONS COMPANIES",
+    "n": 1385,
+    "r2": 0.9909,
+    "direction_accuracy": 0.9805,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "BJS",
+    "n": 862,
+    "r2": 0.9914,
+    "direction_accuracy": 0.9756,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "REDNERS MARKETS",
+    "n": 31,
+    "r2": 0.9916,
+    "direction_accuracy": 0.9677,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "TARGET",
+    "n": 232,
+    "r2": 0.9922,
+    "direction_accuracy": 0.9871,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SPARTANNASH",
+    "n": 177,
+    "r2": 0.993,
+    "direction_accuracy": 0.9887,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "WALGREENS BOOTS ALLIANCE",
+    "n": 1044,
+    "r2": 0.993,
+    "direction_accuracy": 0.9741,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "WALMART",
+    "n": 1224,
+    "r2": 0.9936,
+    "direction_accuracy": 0.9771,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "SAMS",
+    "n": 995,
+    "r2": 0.9951,
+    "direction_accuracy": 0.9759,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "CIRCLE K",
+    "n": 281,
+    "r2": 0.9958,
+    "direction_accuracy": 0.9893,
+    "label": "v2 pre-trained"
+  },
+  {
+    "retail_account": "NORTH STATE GROCERY",
+    "n": 94,
+    "r2": 0.9958,
+    "direction_accuracy": 1.0,
+    "label": "v2 pre-trained"
+  }
+]

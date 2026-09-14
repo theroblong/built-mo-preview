@@ -1,0 +1,78 @@
+{
+  "type": "index_parallel",
+  "spec": {
+    "dataSchema": {
+      "dataSource": "cannibalization_rate_weekly",
+      "timestampSpec": {
+        "column": "__time",
+        "format": "iso"
+      },
+      "dimensionsSpec": {
+        "dimensions": [
+          "focal_upc",
+          "focal_description",
+          "channel_outlet",
+          "retail_account",
+          "geography_raw",
+          "geography_display",
+          "geography_level",
+          "base_units",
+          "base_units_wow_delta",
+          "avg_weekly_units_spm",
+          "base_units_roll4_avg",
+          "base_units_roll8_avg",
+          "base_units_roll8_std",
+          "base_units_roll13_avg",
+          "base_units_roll13_std",
+          "base_units_z8",
+          "base_units_z13",
+          "velocity_spm_roll8_avg",
+          "velocity_spm_roll13_avg",
+          "velocity_spm_z8",
+          "velocity_spm_z13",
+          "tdp",
+          "tdp_z8",
+          "base_units_outlier_class",
+          "cannibal_weighted_donor_loss",
+          "cannibalization_rate",
+          "donor_count",
+          "max_donor_cannibal_prob",
+          "scored_at"
+        ]
+      },
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "DAY",
+        "rollup": false
+      }
+    },
+    "ioConfig": {
+      "type": "index_parallel",
+      "inputSource": {
+        "type": "s3",
+        "uris": [
+          "s3://mo-ml/cannibalization_rate_weekly/2026-09-14/cannibalization_rate_weekly.parquet"
+        ],
+        "properties": {
+          "accessKeyId": "ingestion",
+          "secretAccessKey": "QWER1234!@#$qwer"
+        },
+        "endpointConfig": {
+          "url": "https://minio-api.pilot.builtaevah.com",
+          "signingRegion": "us-east-1",
+          "enablePathStyleAccess": true
+        }
+      },
+      "inputFormat": {
+        "type": "parquet"
+      },
+      "appendToExisting": true
+    },
+    "tuningConfig": {
+      "type": "index_parallel",
+      "partitionsSpec": {
+        "type": "dynamic"
+      }
+    }
+  }
+}

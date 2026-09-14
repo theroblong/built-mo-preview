@@ -95,7 +95,7 @@ if __name__ == "__main__":
     feature_cols = meta["features_used"]
 
     print("\nLoading models and actuals …")
-    models = load_models("v3")
+    models = load_models("v4")
     df     = pd.read_parquet(PARQUET)
 
     print("Building val set …")

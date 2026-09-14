@@ -19,8 +19,6 @@
           "anchor_date",
           "anchor_base_units",
           "anchor_arp",
-          "elasticity_band",
-          "max_donor_cannibal_prob",
           "arp_fallback",
           "forecast_week_number",
           "forecast_units_low",
@@ -48,7 +46,7 @@
       "inputSource": {
         "type": "s3",
         "uris": [
-          "s3://mo-ml/retailer_sales_forecast/2026-07-07/retailer_sales_forecast.parquet"
+          "s3://mo-ml/retailer_sales_forecast/2026-09-14/retailer_sales_forecast.parquet"
         ],
         "properties": {
           "accessKeyId": "ingestion",
@@ -63,7 +61,7 @@
       "inputFormat": {
         "type": "parquet"
       },
-      "appendToExisting": true
+      "appendToExisting": false
     },
     "tuningConfig": {
       "type": "index_parallel",

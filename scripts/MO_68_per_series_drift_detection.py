@@ -69,7 +69,7 @@ def seg_key(row):
 def load_v3_models():
     models = {}
     for tag in ["q50"]:   # median only needed for wMAPE
-        p = MODEL_DIR / f"model_retailer_sales_{tag}_v3.pkl"
+        p = MODEL_DIR / f"model_retailer_sales_{tag}_v4.pkl"
         if not p.exists():
             return None
         with open(p, "rb") as f:
