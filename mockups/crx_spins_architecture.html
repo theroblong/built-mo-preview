@@ -513,7 +513,7 @@
       <div class="flow-box">
         <span class="badge existing">&#x2705; File in hand locally</span>
         <div class="box-title">MinIO: BP222 CSV + item table</div>
-        <div class="box-sub">BP222 CSV available locally. Item table (Costco item# → UPC crosswalk) added to Circana bucket 2026-09-15 by Justin — <span style="color:var(--warn);font-weight:600;">MinIO path TBD.</span></div>
+        <div class="box-sub">BP222 CSV available locally. Item table received 2026-09-15 (<code>docs/Costco Item Table.csv</code>) — 9 BUILT items, all UPCs confirmed. Pack counts: 13-count (original bar), 14-count (all Puffs).</div>
       </div>
 
       <div class="arrow">&#x2193;</div>
@@ -551,7 +551,7 @@
       <div class="druid-table">
         <div class="tname">costco_crx_weekly</div>
         <div class="tdetail">
-          Join key: item_table.upc ⟵ <code>item_desc</code> <span style="color:var(--warn)">(item table pending)</span><br>
+          Join key: item_table.upc ⟵ <code>item_desc</code> <span style="color:var(--ok)">✓ item table confirmed</span><br>
           Time key: <code>week_ending</code> (Sunday — direct join, no offset)<br>
           Scope: Costco only, BUILT only<br>
           Grain: item × warehouse × week
@@ -565,8 +565,8 @@
         <div><strong>Week alignment:</strong> Both tables use Sunday as <code>week_ending</code>. CRX weeks end Sunday (Costco Mon–Sun). SPINS weeks end Sunday. <strong>Direct join on <code>week_ending</code> — no date offset needed.</strong></div>
       </div>
       <div class="join-note">
-        <span style="color:var(--warn);font-size:16px;">&#x26A0;</span>
-        <div><strong>UPC join — pending item table:</strong> CRX identifies products by description string (<code>item_desc</code>). The Costco item# → UPC crosswalk file (item table) from Justin is needed to resolve <code>item_desc</code> → <code>upc</code> for joining to <code>built_filtered_weekly</code>. Until then, CRX can be queried independently but not joined to SPINS.</div>
+        <span style="color:var(--ok);font-size:16px;">&#x2714;</span>
+        <div><strong>UPC join — item table confirmed:</strong> <code>docs/Costco Item Table.csv</code> received 2026-09-15. 9 BUILT items, all UPCs mapped. Join: <code>item_desc</code> → item table <code>Item</code> column (exact match) → <code>upc</code> → <code>built_filtered_weekly.upc</code>. Pack counts confirmed: 13-count (item 1664930), 14-count (all Puffs).</div>
       </div>
       <div class="join-note">
         <span style="color:var(--ok);font-size:16px;">&#x2714;</span>
@@ -613,9 +613,9 @@
       <div class="c-body">CRX is a brand-specific feed — BUILT products only. Cross-brand cannibalization and share-of-shelf analysis are impossible at Costco via CRX. Costco competitive benchmarks must come from SPINS CLUB channel (if subscribed).</div>
     </div>
 
-    <div class="caveat-card warn">
-      <div class="c-title">UPC crosswalk pending</div>
-      <div class="c-body">CRX identifies SKUs by description string, not UPC. The item table file (Justin added to Circana bucket 2026-09-15) is needed to join CRX to <code>built_filtered_weekly</code> by <code>upc</code>. MinIO path not yet shared.</div>
+    <div class="caveat-card" style="border-left-color:var(--ok)">
+      <div class="c-title">✅ UPC crosswalk confirmed</div>
+      <div class="c-body"><code>docs/Costco Item Table.csv</code> received 2026-09-15. 9 BUILT Costco items, all UPCs confirmed (all <code>840229XXXXXX</code> prefix). Join key: <code>Item</code> column matches BP222 exactly. Pack counts: 13 bars (original bar), 14 bars (all Puffs).</div>
     </div>
 
     <div class="caveat-card warn">
