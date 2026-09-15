@@ -89,6 +89,28 @@ Created two artifacts for the CCO/Brian audience on own-brand flavor-launch cann
 
 ---
 
+## README update 107: BUILT 2026 promo lift file ingested (2026-09-15)
+
+Processed `docs/2026 PROMO BUILT_PROMOTION_LIFT_08_07_2026.xlsx` (Brian Cluster). **Internal use only — not for external sharing.**
+
+8-tab Excel workbook: 596 raw promotion events → 151 qualified IDs (Use=Y, numeric lift) across 51 retailers and 5 channels (Grocery, Drug, Convenience, Club, Natural). Products: BUILT PUFF 1CT and 4CT. SPINS weekly scan data used as lift baseline.
+
+**Lift methodology:** Incremental Units ÷ Base Units. Base = SPINS scan data for same window at regular price. Weighted lift = total incremental ÷ total base (volume-weighted). Discount depth, promo price, duration, display, and deal type (TPR/Scan/AD/Digital Coupon/End Cap) all tracked per event.
+
+**Key benchmarks:**
+- Best efficiency: <5% discount = 19.0× lift per discount point
+- Most scale: 15–<25% band = 79.0% weighted lift, 769K incremental units
+- 1-week events: 165% weighted lift (highest per-week rate)
+- 4CT separate vs. concurrent: 76.5% vs. 49.0% — concurrent same-event 1CT+4CT suppresses both
+- PUBLIX: 368.7% avg lift, 557.8% weighted (far outperforms rest of portfolio)
+- 1CT at <$2.00: 465.9% weighted lift (step-change vs. $2.00+ price points)
+
+**Implications for Mo/MO_73:** Discount bands, duration, concurrent-pack flag, promo price thresholds, and retailer-level lift expectations are now calibrated from real BUILT data. Schedule compliance is poor (61.6% off-schedule) — use actual dates, not planned dates, for any promo feature engineering.
+
+**Saved:** `memory/project_built_promo_lift.md`
+
+---
+
 ## README update 106: Aevah Data Availability — Ebad Hashemi + NS2 schema (2026-09-15)
 
 Processed `docs/Aevah Data Availability.docx` — Sept 15 meeting. **Ebad Hashemi** (BUILT IT/data engineering, ebad@built.com) introduced and added to Friday standup cadence.
