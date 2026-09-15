@@ -6,13 +6,29 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 115: Costco Item Table analyzed — all 9 Costco item UPCs confirmed (2026-09-15)
+
+`docs/Costco Item Table.csv` received from Justin Fisher. 34 rows, 9 distinct Costco item numbers.
+
+**Key findings:**
+- Join key: `Item` column (format `UPC-Description`) matches BP222 `Item` column exactly — direct crosswalk, no fuzzy matching
+- Pack counts confirmed from `Total Count`: **13 bars** (item 1664930, original Built Bar); **14 bars** (all Puff variants). 1 CRX unit = 1 Club Pack = 13 or 14 bars.
+- Roadshow item (1798671, Segment W) separate from regular shelf items
+- Item 1664930 `UPC` column was Excel float-truncated (`8.40229E+11`); real UPC `840229303281` recovered from `Item` column string prefix
+
+**Full UPC crosswalk:** 1664930→`840229303281` | 1746091→`840229304875` | 1781648→`840229304974` | 1851141→`840229305933` | 1943119→`840229307197` | 1998317→`840229306855` | 4943119→`840229307111` | 1798671→`840229305728` | 2076164→N/A
+
+**Remaining open:** Rob loads BP222 Parquet into Druid; Justin confirms BP222 refresh cadence; Circana resolves OOS/In Stock%.
+
+---
+
 ## README update 114: Circana CRX × SPINS integration plan — MO_74 preprocessing script + Druid ingestion guide + architecture diagram (2026-09-15)
 
 Drafted the full CRX → Druid integration for Costco BP222 data:
 
 - `scripts/MO_74_crx_bp222_preprocess.py` — reads raw BP222 CSV (5.4M rows), parses Circana date/currency formatting, derives `is_mvm` and `dpwpw`, outputs Parquet ready for Druid batch ingestion
 - `docs/CRX_Druid_Ingestion_Guide.md` — step-by-step guide for Rob: run MO_74, upload Parquet to MinIO, apply Druid ingestion spec (full JSON included), verify with SQL queries
-- Architecture diagram published (HTML artifact) — two-lane swim lane showing SPINS and CRX pipelines converging in Druid, join logic, Mo output layer, and 8 caveats/limitations
+- Architecture diagram: `mockups/crx_spins_architecture.html` — two-lane swim lane showing SPINS and CRX pipelines converging in Druid, join logic, Mo output layer, and 8 caveats/limitations
 
 **Key design decisions:**
 - Target Druid table: `costco_crx_weekly` (item × warehouse × week grain; rollup=false)

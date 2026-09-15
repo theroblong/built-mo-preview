@@ -1,0 +1,652 @@
+<title>Circana CRX × SPINS Integration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg:          #F4F5FA;
+    --surface:     #FFFFFF;
+    --border:      #D8DCE8;
+
+    --spins-bg:    #EBF1FA;
+    --spins-mid:   #C8D9F0;
+    --spins-ink:   #1B3A6B;
+    --spins-light: #F0F5FC;
+
+    --crx-bg:      #FEF3E2;
+    --crx-mid:     #F5D9A8;
+    --crx-ink:     #8C4A0A;
+    --crx-light:   #FFFAF3;
+
+    --druid-bg:    #F0EDF8;
+    --druid-mid:   #D4CAF0;
+    --druid-ink:   #4A3580;
+    --druid-light: #F7F5FC;
+
+    --mo-bg:       #E8F5F1;
+    --mo-mid:      #B8DCCE;
+    --mo-ink:      #1A5C4A;
+    --mo-light:    #F2FAF7;
+
+    --ok:          #059669;
+    --warn:        #D97706;
+    --danger:      #DC2626;
+    --pending:     #7C3AED;
+
+    --text:        #1A1C2E;
+    --muted:       #5C5F7A;
+    --faint:       #9295AE;
+
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:          #12131E;
+      --surface:     #1C1E2E;
+      --border:      #2E3048;
+
+      --spins-bg:    #162038;
+      --spins-mid:   #1E3060;
+      --spins-ink:   #7AAEE8;
+      --spins-light: #111828;
+
+      --crx-bg:      #2A1C08;
+      --crx-mid:     #4A3010;
+      --crx-ink:     #F0A84A;
+      --crx-light:   #1E1408;
+
+      --druid-bg:    #1E1838;
+      --druid-mid:   #2E2458;
+      --druid-ink:   #A898E8;
+      --druid-light: #161228;
+
+      --mo-bg:       #0E2018;
+      --mo-mid:      #183828;
+      --mo-ink:      #5ABFA0;
+      --mo-light:    #0A1810;
+
+      --ok:          #34D399;
+      --warn:        #FBBF24;
+      --danger:      #F87171;
+      --pending:     #C084FC;
+
+      --text:        #E8E9F2;
+      --muted:       #9295AE;
+      --faint:       #5C5F7A;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:          #12131E;
+    --surface:     #1C1E2E;
+    --border:      #2E3048;
+    --spins-bg:    #162038;
+    --spins-mid:   #1E3060;
+    --spins-ink:   #7AAEE8;
+    --spins-light: #111828;
+    --crx-bg:      #2A1C08;
+    --crx-mid:     #4A3010;
+    --crx-ink:     #F0A84A;
+    --crx-light:   #1E1408;
+    --druid-bg:    #1E1838;
+    --druid-mid:   #2E2458;
+    --druid-ink:   #A898E8;
+    --druid-light: #161228;
+    --mo-bg:       #0E2018;
+    --mo-mid:      #183828;
+    --mo-ink:      #5ABFA0;
+    --mo-light:    #0A1810;
+    --ok:          #34D399;
+    --warn:        #FBBF24;
+    --danger:      #F87171;
+    --pending:     #C084FC;
+    --text:        #E8E9F2;
+    --muted:       #9295AE;
+    --faint:       #5C5F7A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 20px 48px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+  .page-header {
+    max-width: 1080px;
+    margin: 0 auto 32px;
+  }
+  .page-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .page-header p {
+    color: var(--muted);
+    margin-top: 6px;
+    font-size: 13px;
+    max-width: 680px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Main layout ─────────────────────────────────────────── */
+  .diagram {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Section labels ──────────────────────────────────────── */
+  .section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding: 0 0 8px;
+  }
+
+  /* ── Swim lanes ──────────────────────────────────────────── */
+  .swim-lanes {
+    display: grid;
+    grid-template-columns: 1fr 48px 1fr;
+    gap: 0;
+  }
+
+  .lane {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .lane.spins { background: var(--spins-bg); border: 1.5px solid var(--spins-mid); border-bottom: none; }
+  .lane.crx   { background: var(--crx-bg);   border: 1.5px solid var(--crx-mid);   border-bottom: none; }
+
+  .lane-header {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .lane.spins .lane-header { color: var(--spins-ink); }
+  .lane.crx   .lane-header { color: var(--crx-ink); }
+
+  .lane-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px;
+    color: var(--faint);
+    font-size: 18px;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  /* ── Flow boxes ──────────────────────────────────────────── */
+  .flow-box {
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    position: relative;
+  }
+  .flow-box .box-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  .flow-box .box-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .flow-box code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: rgba(0,0,0,0.07);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .spins .flow-box { background: var(--spins-light); border: 1px solid var(--spins-mid); }
+  .spins .flow-box .box-title { color: var(--spins-ink); }
+
+  .crx .flow-box { background: var(--crx-light); border: 1px solid var(--crx-mid); }
+  .crx .flow-box .box-title { color: var(--crx-ink); }
+
+  /* ── Connector arrows within lanes ──────────────────────── */
+  .arrow {
+    text-align: center;
+    color: var(--faint);
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 0;
+  }
+
+  /* ── Status badges ───────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+  .badge.existing  { background: rgba(5,150,105,0.12); color: var(--ok); }
+  .badge.new-build { background: rgba(139,92,246,0.12); color: var(--pending); }
+  .badge.pending   { background: rgba(217,119,6,0.12);  color: var(--warn); }
+  .badge.blocked   { background: rgba(220,38,38,0.10);  color: var(--danger); }
+
+  /* ── Druid merge layer ───────────────────────────────────── */
+  .druid-layer {
+    background: var(--druid-bg);
+    border: 1.5px solid var(--druid-mid);
+    border-top: none;
+    padding: 20px;
+    border-radius: 0 0 0 0;
+  }
+  .druid-layer .layer-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--druid-ink);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .druid-tables {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .druid-table {
+    background: var(--druid-light);
+    border: 1px solid var(--druid-mid);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .druid-table .tname {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--druid-ink);
+    margin-bottom: 6px;
+  }
+  .druid-table .tdetail {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .join-note {
+    background: var(--druid-light);
+    border: 1px dashed var(--druid-mid);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .join-note code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  /* ── Mo output layer ─────────────────────────────────────── */
+  .mo-layer {
+    background: var(--mo-bg);
+    border: 1.5px solid var(--mo-mid);
+    border-top: none;
+    padding: 20px;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .mo-layer .layer-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--mo-ink);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mo-outputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .mo-output {
+    background: var(--mo-light);
+    border: 1px solid var(--mo-mid);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .mo-output .out-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mo-ink);
+    margin-bottom: 5px;
+  }
+  .mo-output .out-detail {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ── Caveats grid ────────────────────────────────────────── */
+  .caveats-section {
+    margin-top: 32px;
+  }
+  .caveats-section h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .caveats-section .section-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .caveats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .caveat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    border-left: 3px solid;
+  }
+  .caveat-card.warn   { border-left-color: var(--warn); }
+  .caveat-card.danger { border-left-color: var(--danger); }
+  .caveat-card.info   { border-left-color: var(--pending); }
+
+  .caveat-card .c-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+  .caveat-card .c-body {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .caveat-card .c-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* ── Responsive ──────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .swim-lanes {
+      grid-template-columns: 1fr;
+    }
+    .lane-divider { display: none; }
+    .lane { border-radius: var(--radius); border-bottom: 1.5px solid; margin-bottom: 8px; }
+    .druid-tables, .mo-outputs { grid-template-columns: 1fr; }
+    .druid-layer, .mo-layer { border-radius: var(--radius); border-top: 1.5px solid; margin-top: 8px; }
+  }
+</style>
+
+<div class="page-header">
+  <h1>Circana CRX × SPINS — Mo Integration Architecture</h1>
+  <p>How Costco CRX (BP222) flows from Circana into Druid alongside SPINS, and what Mo surfaces from each. Includes caveats and known limitations before building.</p>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--ok)"></div> Existing / done</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--pending)"></div> New — to build</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div> Pending external</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> Out of scope</div>
+  </div>
+</div>
+
+<div class="diagram">
+
+  <!-- ── Swim lanes: SPINS | CRX ─────────────────────────── -->
+  <div class="swim-lanes">
+
+    <!-- SPINS lane -->
+    <div class="lane spins">
+      <div class="lane-header">&#x1F4CA; SPINS — Syndicated POS</div>
+
+      <div class="flow-box">
+        <span class="badge existing">&#x2705; Existing</span>
+        <div class="box-title">Source: Circana OmniMarket/InfoScan</div>
+        <div class="box-sub">Weekly syndicated POS across ~80 retailers. All channels: CONVENTIONAL FOOD, MASS MERCH, NATURAL, CLUB, C-STORE. Includes BUILT + all competitor brands.</div>
+      </div>
+
+      <div class="arrow">&#x2193;</div>
+
+      <div class="flow-box">
+        <span class="badge existing">&#x2705; Existing</span>
+        <div class="box-title">MinIO: SPINS weekly files</div>
+        <div class="box-sub">Parquet files deposited per SPINS refresh cycle. Rob loads to built Druid instance on each delivery.</div>
+      </div>
+
+      <div class="arrow">&#x2193;</div>
+
+      <div class="flow-box">
+        <span class="badge existing">&#x2705; Existing</span>
+        <div class="box-title">SPINS ingest pipeline</div>
+        <div class="box-sub">MO_01–MO_09 scripts: normalize, enrich, load. Runs automatically on MinIO file arrival.</div>
+      </div>
+
+      <div class="arrow">&#x2193;</div>
+
+      <div class="flow-box">
+        <span class="badge existing">&#x2705; Existing — 185 weeks</span>
+        <div class="box-title">Druid: <code>built_filtered_weekly</code></div>
+        <div class="box-sub">Full SPINS universe — BUILT + competitors. Fields: <code>upc</code>, <code>week_ending</code>, <code>retail_account</code>, <code>base_units</code>, <code>dollars</code>, <code>tdp</code>, <code>arp</code>, <code>incr_units</code>, <code>units_promo</code>, and 80+ more.</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="lane-divider">&#x2194;</div>
+
+    <!-- CRX lane -->
+    <div class="lane crx">
+      <div class="lane-header">&#x1F3EA; Circana CRX — Costco WMS/EDI</div>
+
+      <div class="flow-box">
+        <span class="badge existing">&#x2705; Received 2026-09-04</span>
+        <div class="box-title">Source: Circana CRX (BP222)</div>
+        <div class="box-sub">Costco-specific warehouse management feed. BUILT products only — no competitor data. 5.4M rows × 32 cols, Jan 2023–Aug 2026, 909 warehouses, 29 item SKUs.</div>
+      </div>
+
+      <div class="arrow">&#x2193;</div>
+
+      <div class="flow-box">
+        <span class="badge existing">&#x2705; File in hand locally</span>
+        <div class="box-title">MinIO: BP222 CSV + item table</div>
+        <div class="box-sub">BP222 CSV available locally. Item table (Costco item# → UPC crosswalk) added to Circana bucket 2026-09-15 by Justin — <span style="color:var(--warn);font-weight:600;">MinIO path TBD.</span></div>
+      </div>
+
+      <div class="arrow">&#x2193;</div>
+
+      <div class="flow-box">
+        <span class="badge new-build">&#x1F7E3; New — MO_74</span>
+        <div class="box-title">Preprocessing: <code>MO_74_crx_bp222_preprocess.py</code></div>
+        <div class="box-sub">Renames 32 columns, parses <code>"1 week ending MM-DD-YYYY"</code> → ISO date, strips Circana currency format (<code>$1,234.56</code> / <code>($19.99)</code>), derives <code>is_mvm</code> and <code>dpwpw</code>. Outputs Parquet.</div>
+      </div>
+
+      <div class="arrow">&#x2193;</div>
+
+      <div class="flow-box">
+        <span class="badge new-build">&#x1F7E3; New — Rob to ingest</span>
+        <div class="box-title">Druid: <code>costco_crx_weekly</code></div>
+        <div class="box-sub">Row-level grain: item × warehouse × week. rollup=false. Fields: <code>week_ending</code>, <code>item_desc</code>, <code>warehouse_name</code>, <code>region</code>, <code>unit_sales</code>, <code>dollar_sales</code>, <code>warehouses_selling</code>, <code>on_hand</code>, <code>is_mvm</code>, <code>dpwpw</code>, and more.<br><br>See <code>docs/CRX_Druid_Ingestion_Guide.md</code> for full spec.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Druid join layer ─────────────────────────────────── -->
+  <div class="druid-layer">
+    <div class="layer-title">&#x26A1; Druid Integration Layer — how the two tables connect</div>
+
+    <div class="druid-tables">
+      <div class="druid-table">
+        <div class="tname">built_filtered_weekly</div>
+        <div class="tdetail">
+          Join key: <code>upc</code><br>
+          Time key: <code>week_ending</code> (Sunday)<br>
+          Scope: all retailers, all brands<br>
+          Grain: UPC × retail_account × week
+        </div>
+      </div>
+      <div class="druid-table">
+        <div class="tname">costco_crx_weekly</div>
+        <div class="tdetail">
+          Join key: item_table.upc ⟵ <code>item_desc</code> <span style="color:var(--warn)">(item table pending)</span><br>
+          Time key: <code>week_ending</code> (Sunday — direct join, no offset)<br>
+          Scope: Costco only, BUILT only<br>
+          Grain: item × warehouse × week
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="join-note">
+        <span style="color:var(--ok);font-size:16px;">&#x2714;</span>
+        <div><strong>Week alignment:</strong> Both tables use Sunday as <code>week_ending</code>. CRX weeks end Sunday (Costco Mon–Sun). SPINS weeks end Sunday. <strong>Direct join on <code>week_ending</code> — no date offset needed.</strong></div>
+      </div>
+      <div class="join-note">
+        <span style="color:var(--warn);font-size:16px;">&#x26A0;</span>
+        <div><strong>UPC join — pending item table:</strong> CRX identifies products by description string (<code>item_desc</code>). The Costco item# → UPC crosswalk file (item table) from Justin is needed to resolve <code>item_desc</code> → <code>upc</code> for joining to <code>built_filtered_weekly</code>. Until then, CRX can be queried independently but not joined to SPINS.</div>
+      </div>
+      <div class="join-note">
+        <span style="color:var(--ok);font-size:16px;">&#x2714;</span>
+        <div><strong>Warehouse filter:</strong> Filter <code>costco_crx_weekly</code> to selling retail locations using <code>docs/Costco US Warehouses.xlsx</code> (Status=3 = 702 selling WHs). Exclude RCTR, DDC, MDO, INN patterns. WH 847 = e-commerce — report separately.</div>
+      </div>
+      <div class="join-note">
+        <span style="color:var(--ok);font-size:16px;">&#x2714;</span>
+        <div><strong>Unit conversion before SPINS join:</strong> 1 CRX unit = 1 Club Pack (16 or 18 BUILT Bars). Apply pack size multiplier before comparing <code>unit_sales</code> to SPINS <code>base_units</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Mo output layer ─────────────────────────────────── -->
+  <div class="mo-layer">
+    <div class="layer-title">&#x1F4F1; Mo — What each data source powers</div>
+
+    <div class="mo-outputs">
+      <div class="mo-output">
+        <div class="out-title">Book of Business</div>
+        <div class="out-detail">SPINS: all-retailer revenue, velocity, TDP trends + competitive share.<br><br>CRX adds: Costco row in retailer table with DPWPW velocity and Warehouses Selling as TDP proxy.</div>
+      </div>
+      <div class="mo-output">
+        <div class="out-title">Customer Scorecard</div>
+        <div class="out-detail">CRX: Costco-specific scorecard — weekly DPWPW, WH count, MVM event overlay, YoY trend.<br><br>SPINS Costco (CLUB channel) supplements for cross-brand context where available.</div>
+      </div>
+      <div class="mo-output">
+        <div class="out-title">Distribution Tracker</div>
+        <div class="out-detail">CRX: Warehouses Selling ÷ 702 = TDP proxy. Regional breakdown via 11 Costco regions. Launch ramp: WH count over time from authorization date.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Caveats & Limitations ─────────────────────────────── -->
+<div class="caveats-section" style="max-width:1080px;margin:32px auto 0;">
+  <h2>Caveats &amp; Limitations</h2>
+  <p class="section-sub">Known constraints before integrating CRX into Mo. Address before production use.</p>
+
+  <div class="caveats-grid">
+
+    <div class="caveat-card danger">
+      <div class="c-title">No competitor data in CRX</div>
+      <div class="c-body">CRX is a brand-specific feed — BUILT products only. Cross-brand cannibalization and share-of-shelf analysis are impossible at Costco via CRX. Costco competitive benchmarks must come from SPINS CLUB channel (if subscribed).</div>
+    </div>
+
+    <div class="caveat-card warn">
+      <div class="c-title">UPC crosswalk pending</div>
+      <div class="c-body">CRX identifies SKUs by description string, not UPC. The item table file (Justin added to Circana bucket 2026-09-15) is needed to join CRX to <code>built_filtered_weekly</code> by <code>upc</code>. MinIO path not yet shared.</div>
+    </div>
+
+    <div class="caveat-card warn">
+      <div class="c-title">1 CRX unit ≠ 1 bar</div>
+      <div class="c-body">1 CRX unit = 1 Club Pack = 16 or 18 BUILT Bars. Never compare <code>unit_sales</code> to SPINS <code>base_units</code> without applying pack multiplier. Use <code>dpwpw</code> (dollar-based) as the primary Costco velocity metric to avoid unit confusion.</div>
+    </div>
+
+    <div class="caveat-card warn">
+      <div class="c-title">Inventory multiples are pallets, not demand</div>
+      <div class="c-body"><code>on_hand</code>, <code>on_order</code>, <code>qty_received</code> appear in multiples of 525 — Costco's pallet unit count. These reflect ordering behavior, not consumer sell-through. Do not use for demand planning without conversion.</div>
+    </div>
+
+    <div class="caveat-card warn">
+      <div class="c-title">OOS / In Stock% unusable</div>
+      <div class="c-body"><code>oos</code> and <code>in_stock_pct</code> are ~100% null in BP222 (5.4M rows). Circana is investigating. Do not surface these fields in Mo until confirmed usable. Suppress or show "N/A".</div>
+    </div>
+
+    <div class="caveat-card warn">
+      <div class="c-title">Dollar fields are strings — must parse</div>
+      <div class="c-body">All currency columns in BP222 arrive as formatted strings: <code>"$2,258.87"</code> and <code>"($19.99)"</code> for negatives. MO_74 handles this. If loading BP222 directly (bypassing MO_74), every money column will be null or wrong.</div>
+    </div>
+
+    <div class="caveat-card warn">
+      <div class="c-title">BP222 refresh cadence TBD</div>
+      <div class="c-body">Current file covers Jan 2023–Aug 2026. How and when Circana delivers updated extracts to MinIO has not been confirmed with Justin. Pipeline can be built but the update trigger is unknown.</div>
+    </div>
+
+    <div class="caveat-card info">
+      <div class="c-title">No MVM baseline in CRX</div>
+      <div class="c-body">CRX has no built-in Base/Incremental split. MVM lift proxy = compare MVM-week <code>unit_sales</code> vs. prior-period or year-ago. <code>is_mvm</code> flag (<code>coupon_units &gt; 0</code>) marks the event weeks. TPRs and COMPs are not captured in CRX promo measures.</div>
+    </div>
+
+  </div>
+</div>
