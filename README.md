@@ -6,6 +6,35 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 113: NetSuite NS2 schema files received — analyzed and added to project memory (2026-09-15)
+
+Ebad Hashemi (BUILT IT/data engineering) delivered 5 NS2 schema files, added to `docs/`:
+- `Source_NetSuite_Schema.md` — architecture summary (ingested)
+- `Source_NetSuite_Schema_DDL.sql` — full SQL Server DDL, 31,768 lines (ns2 + dbo schemas)
+- `Source_NetSuite_Schema_ERD_Package.zip` — Copilot-generated ERD diagrams
+- `Source_NetSuite_Schema_Slides.pptx` — ERD slide deck
+- `Source_NetSuite_Schema_WordDoc.docx` — authoritative column-level data dictionary
+
+**DDL analysis — key tables for Mo:**
+- `ns2.transaction` — header; `cseg_bb_sales_chann`, `abbrevtype`, `actualshipdate`, `custbody_bb_pallets_shipped`
+- `ns2.transactionLine` — PK(transaction, id); `quantity`, `rate`, `netamount`, `mainline`(filter='F'), `custcolbars_per_line` (bars sold — key for sellable unit conversion)
+- `ns2.item` — `upccode` = **SPINS join key** (`item.upccode` → `built_filtered_weekly.upc`); `custitem_bars` (bars per pack)
+- `ns2.Customer` — `companyname`, `cseg_bb_sales_chann`, `firstsaledate/lastsaledate`
+- Custom segment lookups (`CUSTOMRECORD_CSEG_BB_SALES_CHANN`, `_PROD_LINE`, `_PRODUCT_TYPE`) — decode sales channel / product line / type IDs
+
+**Two layers of "AI-generated" risk flagged in Sept 15 meeting:**
+1. The NS2 schema itself — Brian: *"I felt like the NS2 tables were created by AI or something — not 100% validated."* Justin: *"What was produced and given to us from Oracle was, yeah, suspect."*
+2. Ebad's schema document — explicitly AI-generated (Microsoft Copilot from raw DDL). *"Subject to validation."*
+
+**Rule going forward:** Every column name and join candidate must be validated against live `bb-db` queries before production use in Mo pipeline.
+
+**ETL pattern:** 24 stored procs; `proc_FreqUpdate_transaction/transactionLine` drive incremental loads; `etl_upsert_log` for audit. Finance DB (Sales Cube, Retail Cube, views) is separate — pending from Ebad.
+
+**Memory:** `project_netsuite_schema.md` fully updated — DDL-confirmed table structures + double-AI-generated caveat  
+**Wiki:** `18-built-aevah-cadence.md` — AI-8 through AI-11 marked ✅ received; NS2 key tables section added; warning section added; Sept 19 agenda updated
+
+---
+
 ## README update 112: BP222 synthesis — all CRX Q&A fully resolved from existing files (2026-09-15)
 
 BP222 = `(BP222) Daily Inventory Status by Warehouse_Aevah (1-1-2023_8-30-2026).csv` is the actual Costco CRX data BUILT already has. Justin's 4 files today (FAQ, Warehouses, Measures Guide, Item table) are documentation/reference for it. With the Measures Guide and BP222 glossary together, all open Q&A items were resolved without asking anyone:
