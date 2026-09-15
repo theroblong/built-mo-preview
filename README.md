@@ -6,6 +6,42 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 110: Costco/Circana CRX data received + integration plan (2026-09-15)
+
+**Files from Justin Fisher (added to Circana bucket):**
+- `docs/Costco_FAQs_and_Data_Nuances_v6.md` — full Circana CRX FAQ (1277 lines)
+- `docs/Costco US Warehouses.xlsx` — 973 WH rows; 702 Status=3 retail selling locations; 11 regions
+- `docs/POS_SC Costco CRX Measures Guide - All Countries v02.2.xlsx` — full measures guide (25MB)
+- Item table file (Sept 15) — item descriptions and UPC crosswalk
+
+**6 CRX technical questions resolved (5/6):**
+1. Grain: **weekly** (report name says "Daily" — confirmed misnomer by Justin)
+2. Venue scope: non-selling WHs included; **filter Status=3 only**; WH 847 = e-Commerce (track separately)
+3. In Transit: **depot → warehouse** movement (not vendor → depot)
+4. OOS / In Stock% / Days of Supply: still pending — Justin investigating Circana capability
+5. Item→UPC crosswalk: **item table file added** to bucket
+6. Coupon timing: CRX = POS scan week; MVM auto-applied at register → aligns with Brian's actual event dates
+
+**Integration plan — 4 phases:**
+- Phase 1 (Ingest): `costco_crx_weekly` Druid table; Status=3 filter; exclude placeholder UPCs; align week boundary (Costco Mon-Sun vs SPINS Sun-Sat); confirm unit definition before treating as SPINS-comparable
+- Phase 2 (Mo demand screen): Costco as retail_account; DPWPW velocity; Warehouses Selling as TDP proxy; MVM flag annotations; extend LightGBM demand model (same 28 features + `mvm_flag`)
+- Phase 3 (Elasticity/promo): MVM on/off as event signal; intra-BUILT cannibalization (1CT vs 4CT) if both subscribed; no cross-brand
+- Phase 4 (Distribution tracker): Warehouses Selling over time; regional drill-down; WH 847 separate
+
+**Scope boundary (no competitor data):** CRX is a vendor-specific feed — BUILT SKUs only. Competitor benchmarking at Costco is out of scope. All BUILT-own performance (demand, price, distribution, promo response) is fully supported.
+
+**Still open before Phase 1 build:**
+- Unit definition: 1 CRX unit = 1 bar, 1 case pack, or other? (confirm with Justin)
+- Week-ending date convention: Mon or Sun as `week_ending` field anchor? (confirm with Justin)
+- MVM promo flag: included as a column in extract? (confirm with Justin)
+- Item table file path in MinIO
+- Costco "instant savings" events in Brian's promo file? (for Sept 19 meeting)
+
+**Memory:** `project_costco_crx_integration.md`
+**Wiki:** `customer-built-doc/wiki/18-built-aevah-cadence.md` — Costco integration plan section + AI-3 updated
+
+---
+
 ## README update 109: Pack retirement nuance — 1pk retirement on 4pk launch is not always the plan (2026-09-11)
 
 - Captured retailer/channel-specific pack strategy context: big-box may require full lineup (1pk+4pk+8pk+12pk); c-stores carry limited SKUs; club retailers prefer bulk; checkout vs. aisle co-placement zones are a real pattern
