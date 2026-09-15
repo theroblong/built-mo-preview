@@ -6,6 +6,21 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 111: Costco CRX Q&A register + self-resolved follow-up questions (2026-09-15)
+
+Justin answered 5 of 6 original CRX questions (OOS still pending). Three follow-up questions self-resolved by checking existing files — no need to re-ask:
+
+- **Q-A (1 CRX unit = ?):** **1 Club Pack** — Brian's promo Excel shows Costco events as "Club Packs" SKU group. Bars per pack still unknown; Justin's item table (in Circana bucket) likely has it.
+- **Q-B (week-ending date convention):** **Sunday** in both CRX (FAQ example: "Week Ending 07-03-2022" = Sunday) and SPINS ("185 weeks ending 2026-08-09" = Sunday). Direct join on `week_ending` works — no day offset needed.
+- **Q-C (Costco events in Brian's promo file?):** **Yes** — Costco is in the Events tab under Club channel. One promotion: ID 1558-CLUB, "Costco January 2026 $4 TPD", Jan 19 – Feb 15 2026, Club Packs, 50% Off, Use=None (not in 151 qualified IDs; actual lift 4% vs planned 25%). Notably the promotion name says "TPD" (Temporary Price Discount), which the CRX FAQ says is NOT tracked in CRX promo measures — this may indicate a classification mismatch worth clarifying with Justin/Brian.
+
+**Still open before Phase 1 build:** bars per Club Pack, OOS reliability, MVM flag in extract, delivery format, Costco TPD vs. MVM/IRC distinction.
+
+**Memory:** `project_costco_crx_qa_register.md` (new), `project_costco_crx_integration.md` (updated)
+**Wiki:** `customer-built-doc/wiki/18-built-aevah-cadence.md` — Q&A register section added
+
+---
+
 ## README update 110: Costco/Circana CRX data received + integration plan (2026-09-15)
 
 **Files from Justin Fisher (added to Circana bucket):**
