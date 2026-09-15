@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 112: BP222 synthesis — all CRX Q&A fully resolved from existing files (2026-09-15)
+
+BP222 = `(BP222) Daily Inventory Status by Warehouse_Aevah (1-1-2023_8-30-2026).csv` is the actual Costco CRX data BUILT already has. Justin's 4 files today (FAQ, Warehouses, Measures Guide, Item table) are documentation/reference for it. With the Measures Guide and BP222 glossary together, all open Q&A items were resolved without asking anyone:
+
+**Q-A fully closed (unit definition):** BP222 glossary F-06 explicitly states "unit = one club pack, not an individual bar." SPINS item table confirms BUILT Costco SKUs use `00-40962-48...` UPC prefix — 7 SKUs, all Built Bar (not Puff), 16-pack or 18-pack. EQ Units = F-06 × PACK COUNT. Not comparable to SPINS grocery channel units; treat Costco as separate channel. Connor's "Costco = pallets not U/S/W" refers to inventory layer (F-09/F-10 in pallet multiples of 525), not to Unit Sales.
+
+**Q-B fully closed (week-ending):** Sunday in both CRX (FAQ Jul 3 2022 = Sunday) and SPINS (Aug 9 2026 = Sunday). Direct join works — no offset.
+
+**Q-C fully closed (promo in Brian's file):** Costco is in Brian's promo file (Club channel, ID 1558-CLUB). No explicit MVM boolean in BP222 — promo weeks detected via Coupon Units > 0 (F-22), Avg Coupon Value $4–$5 for BUILT. "TPD" vs "MVM" label distinction is irrelevant for CRX purposes.
+
+**CRX Measures Guide highlights:** 129 US measures; Units Per WH Per Week + DPWPW both present; weather (24 AccuWeather measures) and gas prices (4 grades, by WH zip) built into CRX; promo = Promoted/Non-Promoted + Coupon fields; no Costco.com promo data.
+
+**Genuinely still open:** OOS/In-Stock% ~100% null in BP222 (Circana investigating); BP222 refresh cadence; item table MinIO path.
+
+**Memory:** `project_costco_crx_qa_register.md` updated; `project_costco_crx_integration.md` cross-referenced
+**Wiki:** `18-built-aevah-cadence.md` — Q&A table and Still Open table updated; Sept 19 agenda refined
+
+---
+
 ## README update 111: Costco CRX Q&A register + self-resolved follow-up questions (2026-09-15)
 
 Justin answered 5 of 6 original CRX questions (OOS still pending). Three follow-up questions self-resolved by checking existing files — no need to re-ask:
