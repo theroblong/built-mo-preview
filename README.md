@@ -6,6 +6,29 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 114: Circana CRX × SPINS integration plan — MO_74 preprocessing script + Druid ingestion guide + architecture diagram (2026-09-15)
+
+Drafted the full CRX → Druid integration for Costco BP222 data:
+
+- `scripts/MO_74_crx_bp222_preprocess.py` — reads raw BP222 CSV (5.4M rows), parses Circana date/currency formatting, derives `is_mvm` and `dpwpw`, outputs Parquet ready for Druid batch ingestion
+- `docs/CRX_Druid_Ingestion_Guide.md` — step-by-step guide for Rob: run MO_74, upload Parquet to MinIO, apply Druid ingestion spec (full JSON included), verify with SQL queries
+- Architecture diagram published (HTML artifact) — two-lane swim lane showing SPINS and CRX pipelines converging in Druid, join logic, Mo output layer, and 8 caveats/limitations
+
+**Key design decisions:**
+- Target Druid table: `costco_crx_weekly` (item × warehouse × week grain; rollup=false)
+- `week_ending` = Sunday — direct join to `built_filtered_weekly.week_ending`, no offset needed
+- `is_mvm` = `coupon_units > 0` — MVM/instant savings flag
+- `dpwpw` = `dollar_sales / warehouses_selling` — primary Costco velocity metric
+- UPC join: pending item table from Justin Fisher (added to Circana bucket 2026-09-15; MinIO path TBD)
+
+**Still pending before full integration:**
+- Rob: load BP222 Parquet into built Druid instance (`costco_crx_weekly` table)
+- Justin: share item table MinIO path (Costco item# → UPC crosswalk)
+- Justin: confirm BP222 refresh cadence
+- Circana: resolve OOS / In Stock% (~100% null)
+
+---
+
 ## README update 113: NetSuite NS2 schema files received — analyzed and added to project memory (2026-09-15)
 
 Ebad Hashemi (BUILT IT/data engineering) delivered 5 NS2 schema files, added to `docs/`:
