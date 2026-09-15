@@ -89,6 +89,50 @@ Created two artifacts for the CCO/Brian audience on own-brand flavor-launch cann
 
 ---
 
+## README update 106: Aevah Data Availability — Ebad Hashemi + NS2 schema (2026-09-15)
+
+Processed `docs/Aevah Data Availability.docx` — Sept 15 meeting. **Ebad Hashemi** (BUILT IT/data engineering, ebad@built.com) introduced and added to Friday standup cadence.
+
+### Ebad's role
+
+Ebad owns the NetSuite 2 (NS2) SQL Server source database: schema extraction, ERD generation, and DB governance. He prepared a SQL extraction script and used Microsoft Copilot to generate a ~100-page schema document before the call.
+
+### NS2 Schema facts
+
+57 tables, 3,089 columns, 6 declared primary keys, ~19 indices, **0 views** (views live in a separate finance DB). Six business area groupings: Transactions & Orders, Inventory & Locations, Customers & Parties, Finance & Accounting, Items/BOM/Manufacturing, Reference & Classification. Transaction + Transaction Line are the largest tables (200M+ rows, hourly-refreshed filtered views used in practice).
+
+**Finance DB (separate):** Houses the Sales Cube, Retail Cube, and reporting views built on NS2 — this is what the finance team actually queries. Not included in the schema document; coming as a separate appendix.
+
+**Field definitions caveat:** NS→NS2 Oracle-provided field descriptions are "suspect" per Brian and Justin — "a lot of mess." Treat Ebad's AI-generated schema as a starting point, validate meanings with the team.
+
+### Data access model
+
+Short-term: extract-first (CSV/export into Aevah). Long-term: read-only DB grant with tightly scoped rights after data catalog governance is in place. Direct DB access explicitly deferred.
+
+### Pending deliverables (Ebad, post-meeting)
+
+| Item | Format | Due |
+|---|---|---|
+| NS2 schema document | PDF/Word (~100 pages) | ASAP |
+| NS2 schema document | **Markdown** (for AI wiki ingestion) | ASAP |
+| ERD images | Multi-slide Copilot output | ASAP |
+| Column-level export | Table, column, data type, max char length (Excel) | ASAP |
+| Finance DB views list | Table names + columns | "Next few days" |
+| NS→NS2 data glossary | Whatever format exists | TBD |
+
+When received: store Markdown schema as `docs/netsuite_ns2_schema.md`, ERD in `docs/`.
+
+### Other notes
+
+- Brian shared a 2026 trade promotions Excel file (trade marketing only; excludes shopper marketing floor decals etc.)
+- Justin Fisher still working on Circana/Costco data — no committed date
+- Brian traveling end of this week; Rob reconnects Mon/Tue
+- BOM/raw ingredients and Material Plan persona: explicitly out of scope now
+
+**Wiki:** Updated `customer-built-doc/wiki/18-built-aevah-cadence.md` — Sept 15 meeting entry, new AIs (AI-8 through AI-14), updated data sources table, updated next-meeting agenda.
+
+---
+
 ## README update 105: ML retrain v4 complete + Mo Chat fixes (2026-09-14)
 
 ### ML pipeline v4 retrain — MO_10→MO_29
