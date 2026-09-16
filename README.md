@@ -6,6 +6,27 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 118: NS2 column remarks file — field name ground truth + correction (2026-09-16)
+
+`docs/Netsuite Table and Column Remarks.csv` (13.8 MB, 67,326 rows from Ebad via enterprise-landing bucket) contains actual SQL Server SuiteAnalytics Connect metadata for all BUILT NS2 columns. `TABLE_OWNER = "Developer - SuiteAnalytics Connect"` — this is not Copilot-generated. Resolves the "double AI-generated" schema risk for confirmed fields.
+
+**What it confirms for the data-dark shipment report:**
+- `transactionLine.custcolbars_per_line` = "Total Bars Per Line" ✅ — prior recommendation correct; use this not raw `quantity`
+- `transactionLine.custcolpallet_qty` = "Pallet Qty" ✅
+- `transaction.custbody_bb_pallets_shipped` = "Pallets Shipped" ✅
+- `transaction.actualshipdate` = "Actual Shipping Date" ✅
+
+**What it adds:**
+- `transaction.custbody1` = "Bars Per Order" — header-level total bars; add to shipment report as a QA cross-check (should equal sum of `custcolbars_per_line` across lines on the same invoice)
+- `item.custitem1` = "Flavor" — item-level flavor name; useful for row labels in the report
+
+**What it corrects:**
+- `transaction.custbody_bb_total_qty_ordered` = **"Total Qty Uncommitted2"** — this is uncommitted inventory, NOT total bars ordered. **Removed from the recommended NS2 field set.** Never use this field in a bar count or shipment volume calculation.
+
+No changes to the core shipment report design. The fundamental recommendation — `custcolbars_per_line` over raw `quantity`, `abbrevtype = 'Invoice'` filter, sell-in labeling — is unchanged and now confirmed against ground-truth metadata.
+
+---
+
 ## README update 117: SPINS pipeline automation + portfolio health mockup + data-dark shipment report (2026-09-16)
 
 Three deliverables from Sept 16 follow-up discussions with Brian and Rob:
