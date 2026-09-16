@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 116: Brian's SKU portfolio questions — Mo capability response (2026-09-15)
+
+Brian Cluster asked whether Mo's models can answer three SKU portfolio management questions. All three are answerable with existing models (E1 distribution + E2a cannibalization). No new development required.
+
+- **Q1 — Account readiness for incremental SKUs:** Per-account net incrementality visible from velocity + cannibalization rates; inflection point = when next SKU cannibalizes more than it grows
+- **Q2 — Identify over-SKU'd accounts:** Same data, ranked by declining per-SKU velocity + elevated inter-SKU cannibalization; surfaces weakest SKU per account as pull candidate
+- **Q3 — Dreamwich placement (incremental vs. trade-out):** Two-bucket account triage from cannibalization model; pre-launch triage actionable now; sharpens post-launch with Dreamwich sales history
+
+**Deliverable:** `mockups/brian_sku_portfolio_response.html` — clean message draft for Rob to send to Brian. Priority placement: after Experience 1 core + cannibalization account-level drill-down (both already queued).
+
+---
+
 ## README update 115: Costco Item Table analyzed — all 9 Costco item UPCs confirmed (2026-09-15)
 
 `docs/Costco Item Table.csv` received from Justin Fisher. 34 rows, 9 distinct Costco item numbers.

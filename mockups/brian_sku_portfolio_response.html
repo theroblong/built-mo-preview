@@ -1,0 +1,327 @@
+<title>SKU Portfolio Response — Brian</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f8fafc;
+    --border: #e2e8f0;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --accent-border: #bfdbfe;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --green-border: #a7f3d0;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --amber-border: #fde68a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #60a5fa;
+      --accent-light: #1e3a5f;
+      --accent-border: #3b82f6;
+      --green: #34d399;
+      --green-light: #064e3b;
+      --green-border: #065f46;
+      --amber: #fbbf24;
+      --amber-light: #451a03;
+      --amber-border: #92400e;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #60a5fa;
+    --accent-light: #1e3a5f;
+    --accent-border: #3b82f6;
+    --green: #34d399;
+    --green-light: #064e3b;
+    --green-border: #065f46;
+    --amber: #fbbf24;
+    --amber-light: #451a03;
+    --amber-border: #92400e;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 40px 16px;
+  }
+
+  .frame {
+    max-width: 660px;
+    margin: 0 auto;
+  }
+
+  .meta-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+
+  .meta-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 6px 12px;
+    font-size: 13.5px;
+  }
+
+  .meta-key {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .meta-val {
+    color: var(--text-secondary);
+  }
+
+  .headline {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 6px;
+    text-wrap: balance;
+  }
+
+  .subhead {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+
+  .answer-banner {
+    background: var(--green-light);
+    border: 1px solid var(--green-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14.5px;
+    color: var(--green);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .answer-banner .check {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .question-block {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .question-block:last-of-type {
+    border-bottom: none;
+  }
+
+  .q-number {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .q-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    text-wrap: balance;
+  }
+
+  .q-body {
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .q-note {
+    margin-top: 10px;
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+
+  .priority-box {
+    background: var(--amber-light);
+    border: 1px solid var(--amber-border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-top: 28px;
+  }
+
+  .priority-box .p-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .priority-box .p-text {
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .priority-box .p-sequence {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+
+  .step-num {
+    background: var(--amber);
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .footer-note {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 24px 16px; }
+    .headline { font-size: 19px; }
+  }
+</style>
+
+<div class="frame">
+
+  <div class="meta-header">
+    <div class="meta-label">Message Draft — Aevah / Mo</div>
+    <div class="meta-grid">
+      <span class="meta-key">To:</span>     <span class="meta-val">Brian Cluster</span>
+      <span class="meta-key">From:</span>   <span class="meta-val">Rob Long</span>
+      <span class="meta-key">Date:</span>   <span class="meta-val">September 15, 2026</span>
+      <span class="meta-key">Re:</span>     <span class="meta-val">SKU portfolio questions — Mo capability</span>
+    </div>
+  </div>
+
+  <h1 class="headline">Can Mo answer these three questions?</h1>
+  <p class="subhead">Brian's ask: account readiness, over-SKU'd accounts, Dreamwich placement strategy.</p>
+
+  <div class="answer-banner">
+    <span class="check">✓</span>
+    Yes — all three are answerable with the models already in the plan. No new model development required.
+  </div>
+
+  <div class="question-block">
+    <div class="q-number">Question 1</div>
+    <div class="q-title">Account readiness for incremental SKUs</div>
+    <div class="q-body">
+      Mo tracks cannibalization rates and velocity by retailer. For each account we can show: current BUILT SKU count, per-SKU velocity trend, and estimated net incrementality of adding one more SKU. The question answers itself — when the next SKU cannibalizes more than it grows, you've hit the ceiling at that account.
+    </div>
+  </div>
+
+  <div class="question-block">
+    <div class="q-number">Question 2</div>
+    <div class="q-title">Identifying over-SKU'd accounts</div>
+    <div class="q-body">
+      This is the same data sorted the other way. Accounts where per-SKU velocity is declining and inter-SKU cannibalization is elevated are the simplification candidates. Mo can rank these and surface the weakest SKU at each account as the pull candidate — a "get back to basics" priority list.
+    </div>
+  </div>
+
+  <div class="question-block">
+    <div class="q-number">Question 3</div>
+    <div class="q-title">Dreamwich: incremental distribution or trade-out bait?</div>
+    <div class="q-body">
+      The cannibalization model can score each account — is Dreamwich distribution likely to be incremental, or will it displace an existing SKU? For accounts that look over-SKU'd, Mo identifies the best trade-out target. The triage is actionable now from current portfolio health data.
+    </div>
+    <div class="q-note">
+      <strong>Note on timing:</strong> This analysis is strongest once Dreamwich has a few weeks of sales history — pre-launch, we run the account triage on current SKU data, which already tells you which accounts are positioned for a clean incremental add vs. which need a swap.
+    </div>
+  </div>
+
+  <div class="priority-box">
+    <div class="p-label">Priority placement</div>
+    <div class="p-text">
+      All three build directly on Experience 1 (Customer Scorecard) and the cannibalization suite — both already queued. In practice it's a Portfolio Health view within the Customer Scorecard, layered on once the core Experience 1 tabs are running.
+    </div>
+    <div class="p-sequence">
+      <div class="step">
+        <div class="step-num">1</div>
+        <span>Experience 1 core — Book of Business + Distribution Tracker</span>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <span>Cannibalization suite — account-level rates (already in plan)</span>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <span>Portfolio Health tab — Q1 + Q2 surfaces from step 2 data</span>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <span>Dreamwich triage — Q3 once launch data begins flowing</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    This document is for BUILT and Mo project reference only. Internal use — not for public access or consumption.
+    <br>Prepared by Aevah · September 15, 2026
+  </div>
+
+</div>
