@@ -10,10 +10,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ### SPINS Pipeline — Corrected Current State
 
-**Previous (incorrect):** Jason downloads → Rob uploads to MinIO  
-**Correct:** BUILT puts the SPINS file in MinIO. Jason and Rob download or connect to it from there, then run the manual pipeline runbook.
+**Corrected current state (Phase 0 — three manual steps):**
+1. BUILT puts the SPINS file in MinIO (Rob does not upload — BUILT is the uploader)
+2. Rob loads the data files from MinIO into Druid — this is Rob's current manual step
+3. Jason/Rob run the downstream pipeline: `built_filtered_weekly` ingest + ML scoring steps
 
-The automation goal is to eliminate all manual steps that happen *after* the file lands in MinIO, not to change who puts the file there. Phase 2 (MinIO event trigger) fires when a new file appears in `spins-landing/incoming/` — BUILT is already doing that step.
+The automation goal is to eliminate steps 2 and 3. BUILT's MinIO upload (step 1) is already in place and does not change. Phase 2 (MinIO event trigger) fires when a new file appears in `spins-landing/incoming/` and handles the Druid load + ML pipeline automatically.
 
 ### NS2 Shipment Report — Complete Field Specification
 
