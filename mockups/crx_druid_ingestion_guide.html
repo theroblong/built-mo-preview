@@ -1,0 +1,711 @@
+<title>Costco CRX → Druid</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:          #0d1117;
+    --surface:     #161b22;
+    --surface-2:   #1c2128;
+    --border:      #30363d;
+    --border-faint:#21262d;
+    --text:        #e6edf3;
+    --text-2:      #8b949e;
+    --text-3:      #6e7681;
+    --accent:      #2d8cf0;
+    --accent-dim:  #1a4a7a;
+    --green:       #3fb950;
+    --green-dim:   #1a3d22;
+    --amber:       #d29922;
+    --amber-dim:   #3d2e0d;
+    --red:         #f85149;
+    --code-bg:     #0d1117;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg:          #f6f8fa;
+      --surface:     #ffffff;
+      --surface-2:   #f0f3f7;
+      --border:      #d0d7de;
+      --border-faint:#e4e8ec;
+      --text:        #1f2328;
+      --text-2:      #57606a;
+      --text-3:      #8c959f;
+      --accent:      #0969da;
+      --accent-dim:  #dbeafe;
+      --green-dim:   #dafbe1;
+      --amber-dim:   #fff8c5;
+      --code-bg:     #f6f8fa;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:          #0d1117;
+    --surface:     #161b22;
+    --surface-2:   #1c2128;
+    --border:      #30363d;
+    --border-faint:#21262d;
+    --text:        #e6edf3;
+    --text-2:      #8b949e;
+    --text-3:      #6e7681;
+    --accent:      #2d8cf0;
+    --accent-dim:  #1a4a7a;
+    --green:       #3fb950;
+    --green-dim:   #1a3d22;
+    --amber:       #d29922;
+    --amber-dim:   #3d2e0d;
+    --code-bg:     #0d1117;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 40px 16px 80px;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ─────────────────────────────── */
+  .header {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .breadcrumb {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+  .breadcrumb span { color: var(--accent); }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+    text-wrap: balance;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 12px;
+  }
+  .meta-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  /* ── Overview box ─────────────────────────── */
+  .overview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .overview-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .overview-item label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 2px;
+  }
+  .overview-item value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ── Steps ───────────────────────────────── */
+  .step {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 32px;
+    align-items: flex-start;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+  .step-body { flex: 1; min-width: 0; }
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .step-sub {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 14px;
+  }
+
+  /* ── Code blocks ─────────────────────────── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .code-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border-faint);
+    background: var(--surface);
+  }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+    padding: 16px;
+    overflow-x: auto;
+    tab-size: 2;
+  }
+  .kw  { color: #ff7b72; }  /* keyword / filter */
+  .str { color: #a5d6ff; }  /* string value */
+  .num { color: #79c0ff; }  /* number */
+  .cmt { color: var(--text-3); font-style: italic; }
+  .key { color: #ffa657; }  /* JSON key */
+
+  /* ── Callouts ────────────────────────────── */
+  .callout {
+    display: flex;
+    gap: 12px;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    border: 1px solid;
+  }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout.warn { background: var(--amber-dim); border-color: var(--amber); color: var(--text); }
+  .callout.ok   { background: var(--green-dim);  border-color: var(--green);  color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ── Expected output ─────────────────────── */
+  .expected-out {
+    background: var(--surface-2);
+    border: 1px solid var(--border-faint);
+    border-left: 3px solid var(--green);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text-2);
+    margin: 12px 0;
+  }
+  .expected-out .hi { color: var(--green); }
+
+  /* ── Tables ──────────────────────────────── */
+  .section-h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin: 8px 0 24px;
+  }
+  .data-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+  }
+  .data-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-faint);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-faint);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--accent);
+  }
+  .data-table td .note { font-size: 11px; color: var(--text-3); display: block; margin-top: 2px; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .badge.primary { background: var(--accent-dim); color: var(--accent); }
+  .badge.warn    { background: var(--amber-dim);  color: var(--amber);  }
+  .badge.muted   { background: var(--surface-2);  color: var(--text-3); }
+
+  /* ── Pending table ───────────────────────── */
+  .pending-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-faint);
+  }
+  .pending-item:last-child { border-bottom: none; }
+  .pending-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .dot-open   { background: var(--amber); }
+  .dot-ready  { background: var(--green); }
+  .pending-text { font-size: 13px; }
+  .pending-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+  .pending-text span { color: var(--text-2); font-size: 12px; }
+  .owner-tag {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-3);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* ── Divider ─────────────────────────────── */
+  .step-divider {
+    height: 1px;
+    background: var(--border-faint);
+    margin: 28px 0;
+  }
+
+  /* ── Footer ──────────────────────────────── */
+  .footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-faint);
+    font-size: 11px;
+    color: var(--text-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 24px 16px 60px; }
+    h1 { font-size: 22px; }
+    .step-num { width: 28px; height: 28px; font-size: 13px; }
+    .overview-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
+<div class="page">
+
+  <div class="header">
+    <div class="breadcrumb">Aevah / Mo · <span>Data Ingestion</span></div>
+    <h1>Costco CRX (BP222) → Druid</h1>
+    <p style="color:var(--text-2); font-size:13px; margin-top:8px;">Step-by-step guide to preprocess the BP222 Circana extract and load it into <code style="font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--surface); border:1px solid var(--border); border-radius:3px; padding:1px 5px;">costco_crx_weekly</code> in Druid.</p>
+    <div class="meta-row">
+      <div>Target table: <span class="meta-chip">costco_crx_weekly</span></div>
+      <div>Script: <span class="meta-chip">scripts/MO_74_crx_bp222_preprocess.py</span></div>
+      <div>Last updated: <span class="meta-chip">Sept 16, 2026</span></div>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <div class="overview">
+    <div class="overview-title">At a glance</div>
+    <div class="overview-grid">
+      <div class="overview-item"><label>Source file</label><value>BP222 CSV (5.4M rows)</value></div>
+      <div class="overview-item"><label>Output</label><value>costco_crx_weekly.parquet</value></div>
+      <div class="overview-item"><label>Date range</label><value>2023-01-08 → 2026-08-31</value></div>
+      <div class="overview-item"><label>Time column</label><value>week_ending (Sunday)</value></div>
+      <div class="overview-item"><label>Grain</label><value>item × warehouse × week</value></div>
+      <div class="overview-item"><label>Rollup</label><value>false — keep all rows</value></div>
+    </div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">Run the preprocessing script</div>
+      <div class="step-sub">Converts raw BP222 CSV to clean Parquet — parses Circana date/currency formats, adds derived columns.</div>
+
+      <div class="code-block">
+        <div class="code-label">bash</div>
+        <pre><span class="cmt"># Install dependencies if needed</span>
+pip install pandas pyarrow
+
+<span class="cmt"># Run MO_74 — point to the raw BP222 CSV</span>
+python scripts/MO_74_crx_bp222_preprocess.py \
+  <span class="str">"/path/to/(BP222) Daily Inventory Status by Warehouse_Aevah (1-1-2023_8-30-2026).csv"</span> \
+  --output outputs/costco_crx_weekly.parquet</pre>
+      </div>
+
+      <div class="step-sub" style="margin-top:12px; margin-bottom:6px;">Expected console output:</div>
+      <div class="expected-out">Reading (BP222) Daily Inventory Status...
+  <span class="hi">Loaded  5,410,368 rows x 32 columns</span>
+  Output  5,410,XXX rows
+  Dates   <span class="hi">2023-01-08 → 2026-08-31</span>
+  Items   29 distinct SKU descriptions
+  WHs     909 distinct warehouses
+  MVM wks XX,XXX rows flagged as MVM
+  Sparse  ~5,300,000 rows with null dollar_sales (<span class="hi">~98.0%</span>)
+  Written → outputs/costco_crx_weekly.parquet  (~XXX MB)
+
+Next step: upload to MinIO, then run Druid ingestion spec.</div>
+
+      <div class="callout ok">
+        <div class="callout-icon">✓</div>
+        <div><strong>98% null dollar_sales is expected.</strong> Most warehouse × item × week combinations have no sales — Druid handles sparse data efficiently. Do <em>not</em> pre-filter null rows; keeping them ensures Warehouses Selling and inventory metrics are accurate.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-divider"></div>
+
+  <!-- Step 2 -->
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">Upload Parquet to MinIO</div>
+      <div class="step-sub">Upload the output file to the Circana bucket so Druid can read it.</div>
+
+      <div class="code-block">
+        <div class="code-label">bash — MinIO client (mc)</div>
+        <pre>mc cp outputs/costco_crx_weekly.parquet \
+   &lt;minio-alias&gt;/circana/costco/costco_crx_weekly.parquet</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-divider"></div>
+
+  <!-- Step 3 -->
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">Submit the Druid ingestion spec</div>
+      <div class="step-sub">In the Druid console: <strong>Load data → Local disk or S3/MinIO → Paste spec</strong>. Replace <code style="font-family:'JetBrains Mono',monospace; font-size:11px;">&lt;bucket&gt;</code> with your MinIO bucket name.</div>
+
+      <div class="callout warn">
+        <div class="callout-icon">⚠</div>
+        <div><strong>rollup must be false.</strong> Mo needs warehouse-level filtering (selling WHs, region drill-down, WH 847 e-commerce). Rolling up would collapse rows and break those queries permanently.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">costco_crx_ingest.json</div>
+        <pre>{
+  <span class="key">"type"</span>: <span class="str">"index_parallel"</span>,
+  <span class="key">"spec"</span>: {
+    <span class="key">"ioConfig"</span>: {
+      <span class="key">"type"</span>: <span class="str">"index_parallel"</span>,
+      <span class="key">"inputSource"</span>: {
+        <span class="key">"type"</span>: <span class="str">"s3"</span>,
+        <span class="key">"uris"</span>: [<span class="str">"s3://&lt;bucket&gt;/circana/costco/costco_crx_weekly.parquet"</span>]
+      },
+      <span class="key">"inputFormat"</span>: { <span class="key">"type"</span>: <span class="str">"parquet"</span> }
+    },
+    <span class="key">"dataSchema"</span>: {
+      <span class="key">"dataSource"</span>: <span class="str">"costco_crx_weekly"</span>,
+      <span class="key">"timestampSpec"</span>: {
+        <span class="key">"column"</span>: <span class="str">"week_ending"</span>,
+        <span class="key">"format"</span>: <span class="str">"yyyy-MM-dd"</span>
+      },
+      <span class="key">"dimensionsSpec"</span>: {
+        <span class="key">"dimensions"</span>: [
+          { <span class="key">"type"</span>: <span class="str">"string"</span>, <span class="key">"name"</span>: <span class="str">"item_desc"</span>        },
+          { <span class="key">"type"</span>: <span class="str">"string"</span>, <span class="key">"name"</span>: <span class="str">"warehouse_name"</span>   },
+          { <span class="key">"type"</span>: <span class="str">"string"</span>, <span class="key">"name"</span>: <span class="str">"region"</span>           },
+          { <span class="key">"type"</span>: <span class="str">"string"</span>, <span class="key">"name"</span>: <span class="str">"week_ending"</span>      },
+          { <span class="key">"type"</span>: <span class="str">"string"</span>, <span class="key">"name"</span>: <span class="str">"flavor"</span>           },
+          { <span class="key">"type"</span>: <span class="str">"string"</span>, <span class="key">"name"</span>: <span class="str">"flavor_scent"</span>     },
+          { <span class="key">"type"</span>: <span class="str">"long"</span>,   <span class="key">"name"</span>: <span class="str">"is_mvm"</span>           }
+        ]
+      },
+      <span class="key">"metricsSpec"</span>: [
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"unit_sales"</span>,           <span class="key">"fieldName"</span>: <span class="str">"unit_sales"</span>           },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"dollar_sales"</span>,         <span class="key">"fieldName"</span>: <span class="str">"dollar_sales"</span>         },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"warehouses_selling"</span>,   <span class="key">"fieldName"</span>: <span class="str">"warehouses_selling"</span>   },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"num_warehouses"</span>,       <span class="key">"fieldName"</span>: <span class="str">"num_warehouses"</span>       },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"on_hand"</span>,               <span class="key">"fieldName"</span>: <span class="str">"on_hand"</span>               },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"on_order"</span>,              <span class="key">"fieldName"</span>: <span class="str">"on_order"</span>              },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"in_transit"</span>,            <span class="key">"fieldName"</span>: <span class="str">"in_transit"</span>            },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"qty_received"</span>,          <span class="key">"fieldName"</span>: <span class="str">"qty_received"</span>          },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"coupon_units"</span>,          <span class="key">"fieldName"</span>: <span class="str">"coupon_units"</span>          },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"coupon_dollars"</span>,        <span class="key">"fieldName"</span>: <span class="str">"coupon_dollars"</span>        },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"avg_coupon_value"</span>,      <span class="key">"fieldName"</span>: <span class="str">"avg_coupon_value"</span>      },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"avg_promoted_price"</span>,    <span class="key">"fieldName"</span>: <span class="str">"avg_promoted_price"</span>    },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"pct_discount"</span>,          <span class="key">"fieldName"</span>: <span class="str">"pct_discount"</span>          },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"promoted_units"</span>,        <span class="key">"fieldName"</span>: <span class="str">"promoted_units"</span>        },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"promoted_dollars"</span>,      <span class="key">"fieldName"</span>: <span class="str">"promoted_dollars"</span>      },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"non_promoted_units"</span>,    <span class="key">"fieldName"</span>: <span class="str">"non_promoted_units"</span>    },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"non_promoted_dollars"</span>,  <span class="key">"fieldName"</span>: <span class="str">"non_promoted_dollars"</span>  },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"dpwpw"</span>,                  <span class="key">"fieldName"</span>: <span class="str">"dpwpw"</span>                  },
+        { <span class="key">"type"</span>: <span class="str">"doubleSum"</span>, <span class="key">"name"</span>: <span class="str">"fuel_price_regular"</span>,    <span class="key">"fieldName"</span>: <span class="str">"fuel_price_regular"</span>    }
+      ],
+      <span class="key">"granularitySpec"</span>: {
+        <span class="key">"type"</span>: <span class="str">"uniform"</span>,
+        <span class="key">"segmentGranularity"</span>: <span class="str">"MONTH"</span>,
+        <span class="key">"queryGranularity"</span>: <span class="str">"DAY"</span>,
+        <span class="key">"rollup"</span>: <span class="kw">false</span>      <span class="cmt">// must stay false — keep item × warehouse × week grain</span>
+      }
+    },
+    <span class="key">"tuningConfig"</span>: {
+      <span class="key">"type"</span>: <span class="str">"index_parallel"</span>,
+      <span class="key">"maxRowsInMemory"</span>: <span class="num">25000</span>,
+      <span class="key">"maxNumConcurrentSubTasks"</span>: <span class="num">2</span>
+    }
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-divider"></div>
+
+  <!-- Step 4 -->
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-title">Verify in the Druid console</div>
+      <div class="step-sub">Run these SQL queries after ingestion to confirm everything landed correctly.</div>
+
+      <div class="code-block">
+        <div class="code-label">sql — row count + date range</div>
+        <pre><span class="kw">SELECT</span> <span class="kw">COUNT</span>(*) <span class="kw">AS</span> rows,
+       <span class="kw">MIN</span>(__time) <span class="kw">AS</span> earliest,
+       <span class="kw">MAX</span>(__time) <span class="kw">AS</span> latest
+<span class="kw">FROM</span> costco_crx_weekly
+<span class="cmt">-- Expected: ~5.4M rows, 2023-01-08 to 2026-08-31</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">sql — distinct items + warehouses</div>
+        <pre><span class="kw">SELECT</span> <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> item_desc)     <span class="kw">AS</span> items,
+       <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> warehouse_name) <span class="kw">AS</span> warehouses
+<span class="kw">FROM</span> costco_crx_weekly
+<span class="cmt">-- Expected: 29 items, ~909 warehouses</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">sql — MVM weeks flagged</div>
+        <pre><span class="kw">SELECT</span> <span class="kw">SUM</span>(is_mvm) <span class="kw">AS</span> mvm_rows
+<span class="kw">FROM</span> costco_crx_weekly
+<span class="cmt">-- MVM = any row where Coupon Units &gt; 0 (instant savings weeks)</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">sql — DPWPW velocity by week (quick sanity check)</div>
+        <pre><span class="kw">SELECT</span> TIME_FLOOR(__time, <span class="str">'P1W'</span>) <span class="kw">AS</span> week,
+       <span class="kw">SUM</span>(dollar_sales) / NULLIF(<span class="kw">SUM</span>(warehouses_selling), <span class="num">0</span>) <span class="kw">AS</span> dpwpw_avg
+<span class="kw">FROM</span> costco_crx_weekly
+<span class="kw">WHERE</span> unit_sales &gt; <span class="num">0</span>
+<span class="kw">GROUP BY</span> <span class="num">1</span>
+<span class="kw">ORDER BY</span> <span class="num">1</span></pre>
+      </div>
+
+      <div class="callout ok">
+        <div class="callout-icon">✓</div>
+        <div>If row count, item count, and warehouse count match expectations, the load is good. DPWPW trend should show MVM spike weeks (coupon periods) standing out above baseline.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schema reference -->
+  <div class="section-h2">Schema reference</div>
+
+  <div class="callout warn" style="margin-bottom:16px;">
+    <div class="callout-icon">⚠</div>
+    <div><strong>1 unit = 1 Club Pack</strong> (16 or 18 BUILT Bars, depending on the item). Do <em>not</em> compare <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">unit_sales</code> directly to SPINS <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">base_units</code> without pack conversion.</div>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Column</th>
+          <th>Type</th>
+          <th>Source / Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>week_ending</code></td>
+          <td>string (date)</td>
+          <td><span class="badge primary">time dim</span> BP222 "Time" field. Sunday of Costco Mon–Sun week. Direct join to SPINS <code>week_ending</code> — no offset needed.</td>
+        </tr>
+        <tr>
+          <td><code>item_desc</code></td>
+          <td>string</td>
+          <td>BP222 "Item". SKU description. Pending UPC crosswalk from Justin (item table).</td>
+        </tr>
+        <tr>
+          <td><code>warehouse_name</code></td>
+          <td>string</td>
+          <td>BP222 "Venue". Full WH name e.g. "WAREHOUSE 25 RENO". WH 847 = e-commerce.</td>
+        </tr>
+        <tr>
+          <td><code>region</code></td>
+          <td>string</td>
+          <td>BP222 "Region". 11 Costco regions incl. E-Commerce.</td>
+        </tr>
+        <tr>
+          <td><code>is_mvm</code></td>
+          <td>long (0/1)</td>
+          <td><span class="badge primary">derived</span> 1 = Coupon Units &gt; 0 = MVM / instant savings week. Use this as the MVM flag.</td>
+        </tr>
+        <tr>
+          <td><code>dpwpw</code></td>
+          <td>double</td>
+          <td><span class="badge primary">derived</span> Dollar Sales ÷ Warehouses Selling. <strong>Best velocity metric for Costco.</strong> Avoids Club Pack unit confusion.</td>
+        </tr>
+        <tr>
+          <td><code>unit_sales</code></td>
+          <td>double</td>
+          <td>BP222. 1 unit = 1 Club Pack (16 or 18 bars). ~98% of rows are null.</td>
+        </tr>
+        <tr>
+          <td><code>dollar_sales</code></td>
+          <td>double</td>
+          <td>BP222. ~98% null — most WH × item × week = no sales. Expected; do not filter.</td>
+        </tr>
+        <tr>
+          <td><code>warehouses_selling</code></td>
+          <td>double</td>
+          <td>Count of WHs with sales. TDP proxy when divided by ~702 total active selling WHs.</td>
+        </tr>
+        <tr>
+          <td><code>on_hand</code></td>
+          <td>double</td>
+          <td>Inventory on hand. Multiples of 525 = pallet-level. Not consumer demand signal.</td>
+        </tr>
+        <tr>
+          <td><code>on_order</code></td>
+          <td>double</td>
+          <td>Pallet ordering signal.</td>
+        </tr>
+        <tr>
+          <td><code>avg_coupon_value</code></td>
+          <td>double</td>
+          <td>$4.00 or $5.00 for BUILT MVM instant savings events.</td>
+        </tr>
+        <tr>
+          <td><code>fuel_price_regular</code></td>
+          <td>double</td>
+          <td>Circana-embedded macro signal. ~93K of 5.4M rows non-null.</td>
+        </tr>
+        <tr>
+          <td><code>oos</code> / <code>in_stock_pct</code></td>
+          <td>double</td>
+          <td><span class="badge warn">do not use</span> ~100% null. Circana investigating.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pending items -->
+  <div class="section-h2">Pending before full integration</div>
+
+  <div>
+    <div class="pending-item">
+      <div class="pending-dot dot-open"></div>
+      <div class="pending-text">
+        <strong>Item table UPC crosswalk</strong>
+        <span>Maps BP222 item_desc → UPC so Costco CRX data can join to SPINS built_filtered_weekly. Justin added the item table to MinIO bucket on Sept 15; path not yet shared.</span>
+      </div>
+      <div class="owner-tag">Justin Fisher</div>
+    </div>
+    <div class="pending-item">
+      <div class="pending-dot dot-open"></div>
+      <div class="pending-text">
+        <strong>BP222 refresh cadence</strong>
+        <span>How often does the extract update in MinIO? Needed to define Phase 3 automation schedule.</span>
+      </div>
+      <div class="owner-tag">Justin Fisher</div>
+    </div>
+    <div class="pending-item">
+      <div class="pending-dot dot-ready"></div>
+      <div class="pending-text">
+        <strong>Warehouse status lookup</strong>
+        <span>Status=3 filter (selling WHs only). Can load now from <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">docs/Costco US Warehouses.xlsx</code>. Until loaded, approximate by excluding RCTR / DDC / MDO / INN in warehouse_name.</span>
+      </div>
+      <div class="owner-tag">Ready now</div>
+    </div>
+    <div class="pending-item">
+      <div class="pending-dot dot-open"></div>
+      <div class="pending-text">
+        <strong>OOS / In Stock% data</strong>
+        <span>~100% null in current extract. Circana is investigating.</span>
+      </div>
+      <div class="owner-tag">Circana</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Aevah / Mo · Internal use only</span>
+    <span>BUILT Brands, LLC · Sept 16, 2026</span>
+  </div>
+
+</div>
