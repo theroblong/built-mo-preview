@@ -686,15 +686,15 @@
     <div class="section" id="current-state">
       <h2 class="section-title"><span class="section-num">2</span>Current State</h2>
 
-      <p class="prose">The current workflow is fully manual. Jason downloads the SPINS full historical extract from the SPINS portal; Rob uploads it to the <code>spins-landing</code> bucket in MinIO; the ingest runbook (<code>docs/SPINS_INGEST_RUNBOOK.md</code>) is run manually to rebuild <code>built_filtered_weekly</code> in Druid; ML scripts are re-run in sequence. No automation; no validation; no model versioning.</p>
+      <p class="prose">The current workflow is fully manual. Brian (BUILT team) accesses the SPINS portal and drops the extract into the <code>spins-landing</code> bucket in MinIO. Rob retrieves it from MinIO and loads it into Druid; Jason can also pull it from MinIO for further processing. The ingest runbook (<code>docs/SPINS_INGEST_RUNBOOK.md</code>) is then run manually to rebuild <code>built_filtered_weekly</code> in Druid; ML scripts are re-run in sequence. No automation; no validation; no model versioning.</p>
 
       <div class="h3">As-is pipeline</div>
       <div class="flow">
         <div class="flow-node actor">SPINS portal</div>
         <div class="flow-arrow">›</div>
-        <div class="flow-node actor">Jason downloads</div>
+        <div class="flow-node actor">Brian / BUILT → MinIO</div>
         <div class="flow-arrow">›</div>
-        <div class="flow-node actor">Rob uploads to MinIO</div>
+        <div class="flow-node actor">Rob loads into Druid</div>
         <div class="flow-arrow">›</div>
         <div class="flow-node system">Manual runbook</div>
         <div class="flow-arrow">›</div>
@@ -1141,7 +1141,7 @@ MO_17_20260914_20260915     <span class="cmt"># E2b elasticity; same data cutoff
         </div>
         <div class="open-item">
           <div class="open-item-num">5</div>
-          <div class="open-item-body"><strong>SPINS extract delivery — Jason downloads or SPINS pushes?</strong> Currently Jason downloads manually from the SPINS portal and Rob uploads. Long-term, SPINS may support SFTP/S3 delivery directly to MinIO. Worth asking SPINS account team whether programmatic delivery is available — would remove the manual download step entirely.</div>
+          <div class="open-item-body"><strong>SPINS extract delivery — Brian/BUILT drops manually or SPINS pushes?</strong> Currently Brian (BUILT team) accesses the SPINS portal and drops the extract into MinIO manually. Long-term, SPINS may support SFTP/S3 delivery directly to MinIO. Worth asking SPINS account team whether programmatic delivery is available — would remove the manual upload step entirely.</div>
           <div class="open-item-owner">Jason / SPINS account</div>
         </div>
         <div class="open-item">
