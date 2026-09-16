@@ -6,6 +6,80 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 119: Pipeline current-state correction + NS2 shipment data field spec (2026-09-16)
+
+### SPINS Pipeline — Corrected Current State
+
+**Previous (incorrect):** Jason downloads → Rob uploads to MinIO  
+**Correct:** BUILT puts the SPINS file in MinIO. Jason and Rob download or connect to it from there, then run the manual pipeline runbook.
+
+The automation goal is to eliminate all manual steps that happen *after* the file lands in MinIO, not to change who puts the file there. Phase 2 (MinIO event trigger) fires when a new file appears in `spins-landing/incoming/` — BUILT is already doing that step.
+
+### NS2 Shipment Report — Complete Field Specification
+
+For data-dark retailers (Aldi, HEB, Winco, TJ's) where SPINS and Circana are unavailable, BUILT's NS2 sell-in data is the only signal. Every report built from this data must carry the label: **"Source: BUILT shipment data (sell-in). Retail sell-through at these accounts is not available."**
+
+**SQL query** (`ns2` schema, SQL Server):
+
+```sql
+SELECT
+    t.actualshipdate                         AS ship_date,
+    c.companyname                            AS customer_name,
+    sc.name                                  AS sales_channel,
+    i.itemid                                 AS item_code,
+    i.fullname                               AS item_name,
+    i.upccode                                AS upc,
+    i.custitem1                              AS flavor,
+    tl.custcolbars_per_line                  AS bars_per_line,
+    t.custbody1                              AS bars_per_order_qc,
+    tl.custcolpallet_qty                     AS pallet_qty_line,
+    t.custbody_bb_pallets_shipped            AS pallets_shipped_hdr,
+    tl.netamount                             AS net_revenue
+FROM ns2.transactionLine tl
+JOIN ns2.transaction t
+    ON t.id = tl.transaction
+JOIN ns2.item i
+    ON i.id = tl.item
+LEFT JOIN ns2.Customer c
+    ON c.id = t.entity
+LEFT JOIN ns2.CUSTOMRECORD_CSEG_BB_SALES_CHANN sc
+    ON sc.id = t.cseg_bb_sales_chann
+WHERE tl.mainline = 'F'            -- item lines only; exclude header/shipping lines
+  AND t.abbrevtype = 'Invoice'     -- shipped only; exclude open SalesOrds
+  AND i.isinactive = 'F'          -- active items only
+ORDER BY t.actualshipdate DESC, c.companyname, i.itemid
+```
+
+**Field reference table** (labels confirmed from `docs/Netsuite Table and Column Remarks.csv`):
+
+| Column alias | NS2 source | NS2 label | Role in report |
+|---|---|---|---|
+| `ship_date` | `transaction.actualshipdate` | "Actual Shipping Date" | Week/month anchor for all time-series |
+| `customer_name` | `Customer.companyname` | (standard NS2) | Retailer account name |
+| `sales_channel` | `CUSTOMRECORD_CSEG_BB_SALES_CHANN.name` | "Sales Channel" | Grocery / Club / C-Store / DTC segment |
+| `item_code` | `item.itemid` | "Item Name/Number" | BUILT SKU identifier |
+| `item_name` | `item.fullname` | (standard NS2) | Human-readable product name |
+| `upc` | `item.upccode` | "UPC Code" | SPINS join key for future cross-referencing scan data |
+| `flavor` | `item.custitem1` | "Flavor" | Flavor-level breakdown |
+| `bars_per_line` | `transactionLine.custcolbars_per_line` | **"Total Bars Per Line"** | **Primary volume metric — actual bars shipped on this line. Use this, not raw `quantity`.** |
+| `bars_per_order_qc` | `transaction.custbody1` | "Bars Per Order" | Header-level total bars — QA cross-check only; sum of `bars_per_line` should equal this |
+| `pallet_qty_line` | `transactionLine.custcolpallet_qty` | "Pallet Qty" | Pallet count at line level |
+| `pallets_shipped_hdr` | `transaction.custbody_bb_pallets_shipped` | "Pallets Shipped" | Header-level pallet total — distribution scale signal |
+| `net_revenue` | `transactionLine.netamount` | "Amount (Net) (Transaction Currency)" | Sell-in net revenue (not retail scanner revenue) |
+
+**Do NOT use:**
+- `transactionLine.quantity` — NS2 native "Quantity" is in case/unit terms, not bars; not reliable for bar count equivalization
+- `transaction.custbody_bb_total_qty_ordered` — actual label is "Total Qty Uncommitted2" (uncommitted inventory, not quantity ordered)
+
+**Derived columns to add in reporting layer:**
+- `bars_shipped_per_week` = `SUM(bars_per_line)` grouped by customer + week of `ship_date`
+- `weeks_since_last_shipment` = current date minus MAX(`ship_date`) per customer — early warning for distribution loss
+- `yoy_bars` = current period bars vs. same period prior year — seasonal pattern detection
+
+**Cadence:** Weekly for active accounts and new distribution; monthly rollup for long tail.
+
+---
+
 ## README update 118: NS2 column remarks file — field name ground truth + correction (2026-09-16)
 
 `docs/Netsuite Table and Column Remarks.csv` (13.8 MB, 67,326 rows from Ebad via enterprise-landing bucket) contains actual SQL Server SuiteAnalytics Connect metadata for all BUILT NS2 columns. `TABLE_OWNER = "Developer - SuiteAnalytics Connect"` — this is not Copilot-generated. Resolves the "double AI-generated" schema risk for confirmed fields.
