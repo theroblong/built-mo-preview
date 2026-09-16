@@ -6,6 +6,56 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 120: Costco CRX profiling results + ingestion spec correction (2026-09-16)
+
+### `costco_crx_weekly` — Q3 Druid Profiling Results
+
+Q3 run against the live table confirms the UPC prefix structure and gives full product revenue breakdown.
+
+**UPC prefix rule:** Filter to `item_desc LIKE '000840229%'` for all real sales. Zero-prefix (`000000000...`) rows are cashier-entry noise; 999 and 120-prefix rows are returns/credits with negative values.
+
+**BUILT at Costco — revenue by product (live Druid data):**
+
+| Item # | Description | Total $ | Units |
+|--------|-------------|---------|-------|
+| 1851141 | PUFF BARS BROWNIE/COCONUT v2 | $206.2M | 10.3M |
+| 4943119 | SOUR PUFF 14PK | $17.3M | 870K |
+| 1781648 | PUFF BARS BROWNIE/COCONUT v1 | $7.0M | 327K |
+| 1998317 | PUFF'N CRM STB COOKIE 14CT | $6.3M | 316K |
+| 1746091 | PUFFS VARIETY 14/1.41OZ | $4.3M | 193K |
+| 1943119 | PUFF COOKIES CREAM/PB CUP | $3.6M | 180K |
+| 1798671 | ROADSHOW PICK 14 (Seg W) | $3.6M | 178K |
+| 1664930 | BAR VTY 13/1.69OZ | $3.1M | 148K |
+| 2076164 | PUFF BARS PB CUP/BROWNIE SL270 | $1.1M | 54K |
+
+Item 1851141 is 81% of Costco revenue. 918 distinct warehouses; ~190 weeks of history.
+
+**CRX → SPINS join — inline UPC extraction (no lookup table needed):**
+```sql
+WHERE item_desc LIKE '000840229%'
+CAST(SUBSTRING(item_desc, 1, 15) AS BIGINT) AS upc
+-- '000840229305933-...' → 840229305933 → joins built_filtered_weekly.upc
+```
+
+### Ingestion Spec Correction — 8 Columns Added
+
+The original `costco_crx_weekly` ingestion spec omitted 8 columns present in the MO_74 parquet output. Updated spec committed at `889d668` in `mockups/crx_druid_ingestion_guide.html`. Rob needs to re-ingest to pick up these columns:
+
+| Column | Type |
+|--------|------|
+| `fuel_price_diesel` | doubleSum |
+| `fuel_price_midgrade` | doubleSum |
+| `fuel_price_premium` | doubleSum |
+| `oos` | doubleSum |
+| `days_of_supply` | doubleSum |
+| `inventory_turns` | doubleSum |
+| `in_stock_pct` | doubleSum |
+| `total_discount_dollars` | doubleSum |
+
+**Data stewardship rule:** Every column from every BUILT-provided data file must be included in the ingestion schema. Sparse or pending columns stay as nullable metrics — the data speaks for itself. Exclusions require explicit approval from Jason or Rob.
+
+---
+
 ## README update 119: Pipeline current-state correction + NS2 shipment data field spec (2026-09-16)
 
 ### SPINS Pipeline — Corrected Current State
