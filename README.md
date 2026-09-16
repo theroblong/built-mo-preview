@@ -6,6 +6,26 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 117: SPINS pipeline automation + portfolio health mockup + data-dark shipment report (2026-09-16)
+
+Three deliverables from Sept 16 follow-up discussions with Brian and Rob:
+
+**`mockups/spins_pipeline_automation.html`** — 10-section architecture design doc for automating SPINS and Circana ingestion:
+- Validation gate: GREEN (auto-process) vs. HOLD (flag for review) conditions; known-good manifest JSON written to MinIO after each successful ingest catches the channel rename class of failures
+- ML model versioning: 3-slot pattern (active/candidate/archive); never retrain in place; version ID format `{model_id}_{data_cutoff}_{train_date}`; promotion gate requires holdout wMAPE ≤ prior active + 0.5pp
+- Druid architecture: `built_filtered_weekly` append-only source; scoring tables versioned (`ml_{model}_scores_v{N}`); Mo API resolves through `model_registry`; `appendToExisting:true` for incrementals
+- 4-phase plan: Phase 1 = MO_76 validation script (~2 days); Phase 2 = auto-ingest + ML versioning (~4 days); Phase 3 = CRX on same architecture (~2 days, blocked on Justin)
+- 6 open decisions documented
+
+**`mockups/portfolio_health_mockup.html`** — Three-tab Mo prototype for Brian's SKU portfolio questions:
+- Account Readiness tab: ranked by net incrementality of next BUILT SKU; velocity index bars + GREEN/HOLD/REDUCE chips
+- Portfolio Health tab: ranked by self-cannibalization rate; CVS (38% cannib, health score 22) and Albertsons (31%) flagged; pull candidates named
+- Dreamwich Triage tab: two-bucket layout — 4 incremental-ready accounts vs. 3 trade-out candidates with specific SKU swap recommendations; pre-launch disclaimer
+
+**Data-dark shipment report** (discussion only — no file yet): NS2 shipment report for Aldi/HEB/Winco using `transactionLine.custcolbars_per_line` (not raw `quantity`), `transaction.actualshipdate`, `transaction.abbrevtype=Invoice` filter. Always labeled "sell-in only — no scan data." Weekly cadence for active accounts, monthly rollup for long tail.
+
+---
+
 ## README update 116: Brian's SKU portfolio questions — Mo capability response (2026-09-15)
 
 Brian Cluster asked whether Mo's models can answer three SKU portfolio management questions. All three are answerable with existing models (E1 distribution + E2a cannibalization). No new development required.

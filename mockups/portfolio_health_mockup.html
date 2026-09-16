@@ -1,0 +1,1044 @@
+<title>Portfolio Health</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #0b1120;
+    --surface: #121f38;
+    --card: #19294a;
+    --card-hover: #1f3158;
+    --border: #243552;
+    --border-light: #1d2e50;
+    --text-primary: #e2e8f0;
+    --text-secondary: #8ba3c1;
+    --text-muted: #4e6588;
+    --blue: #3b82f6;
+    --blue-dim: #1e3a6e;
+    --green: #10b981;
+    --green-dim: #052e1c;
+    --green-border: #065f46;
+    --amber: #f59e0b;
+    --amber-dim: #2d1a00;
+    --amber-border: #78350f;
+    --red: #ef4444;
+    --red-dim: #2d0808;
+    --red-border: #7f1d1d;
+    --teal: #14b8a6;
+    --purple: #a78bfa;
+    --tab-active-bg: #1e3a8a;
+    --proto-stripe: rgba(245,158,11,0.06);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --card: #f8fafc;
+      --card-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --border-light: #e8eef6;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --blue: #2563eb;
+      --blue-dim: #eff6ff;
+      --green-dim: #ecfdf5;
+      --green-border: #a7f3d0;
+      --amber-dim: #fffbeb;
+      --amber-border: #fde68a;
+      --red-dim: #fef2f2;
+      --red-border: #fecaca;
+      --tab-active-bg: #1e40af;
+      --proto-stripe: rgba(245,158,11,0.04);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --card: #f8fafc;
+    --card-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-light: #e8eef6;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --blue: #2563eb;
+    --blue-dim: #eff6ff;
+    --green-dim: #ecfdf5;
+    --green-border: #a7f3d0;
+    --amber-dim: #fffbeb;
+    --amber-border: #fde68a;
+    --red-dim: #fef2f2;
+    --red-border: #fecaca;
+    --tab-active-bg: #1e40af;
+    --proto-stripe: rgba(245,158,11,0.04);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ── Top bar ───────────────────────── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .mo-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .mo-logo span { color: var(--blue); }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+  .breadcrumb .sep { opacity: 0.4; }
+  .breadcrumb .current {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .proto-badge {
+    margin-left: auto;
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    color: var(--amber);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  /* ── Context bar ───────────────────── */
+  .context-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .ctx-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .ctx-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .ctx-chip.focal {
+    background: var(--blue-dim);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  /* ── Tab navigation ────────────────── */
+  .tab-nav {
+    display: flex;
+    gap: 2px;
+    padding: 16px 24px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tab-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px 10px;
+    border: none;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    color: var(--text-muted);
+    background: transparent;
+    transition: color 0.15s, background 0.15s;
+    position: relative;
+    bottom: -1px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text-secondary); background: var(--card); }
+  .tab-btn.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--blue);
+    background: var(--bg);
+  }
+  .tab-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+    background: var(--card);
+    color: var(--text-muted);
+  }
+  .tab-btn.active .tab-num { background: var(--blue); color: white; }
+  .tab-btn.has-alert .tab-num { background: var(--red); color: white; }
+
+  /* ── Tab panels ────────────────────── */
+  .tab-panel { display: none; padding: 20px 24px; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section header ────────────────── */
+  .section-header {
+    margin-bottom: 16px;
+  }
+  .section-q {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-wrap: balance;
+    margin-bottom: 4px;
+  }
+  .section-sub {
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+
+  /* ── Insight box ────────────────────── */
+  .insight-box {
+    border-radius: 8px;
+    padding: 13px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .insight-box.green {
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+  }
+  .insight-box.amber {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+  }
+  .insight-box.red {
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+  }
+  .insight-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .insight-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+  .insight-text strong { color: var(--text-primary); font-weight: 600; }
+  .insight-action {
+    margin-top: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .insight-box.green .insight-action { color: var(--green); }
+  .insight-box.amber .insight-action { color: var(--amber); }
+  .insight-box.red .insight-action { color: var(--red); }
+
+  /* ── Data table ─────────────────────── */
+  .data-table-wrap { overflow-x: auto; }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--card-hover); }
+  .data-table .account-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  /* chips / badges */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .chip.green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+  .chip.amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+  .chip.red   { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red-border); }
+  .chip.muted { background: var(--card); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* velocity index bar */
+  .vel-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  .vel-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 70px;
+  }
+  .vel-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .vel-bar-fill.high  { background: var(--green); }
+  .vel-bar-fill.mid   { background: var(--amber); }
+  .vel-bar-fill.low   { background: var(--red); }
+  .vel-val {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* health score circle */
+  .score-cell { display: flex; align-items: center; gap: 8px; }
+  .score-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    width: 32px;
+    text-align: center;
+  }
+  .score-num.high { color: var(--green); }
+  .score-num.mid  { color: var(--amber); }
+  .score-num.low  { color: var(--red); }
+  .score-bar-track {
+    width: 60px;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+  .score-bar-fill.high { background: var(--green); }
+  .score-bar-fill.mid  { background: var(--amber); }
+  .score-bar-fill.low  { background: var(--red); }
+
+  /* cannib rate */
+  .cannib-rate {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .cannib-rate.high { color: var(--red); }
+  .cannib-rate.mid  { color: var(--amber); }
+  .cannib-rate.low  { color: var(--green); }
+
+  /* pull candidate */
+  .pull-candidate {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .pull-candidate.flagged {
+    color: var(--red);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* SKU count badge */
+  .sku-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    border: 1.5px solid;
+    flex-shrink: 0;
+  }
+  .sku-count.ok    { border-color: var(--green); color: var(--green); }
+  .sku-count.warn  { border-color: var(--amber); color: var(--amber); }
+  .sku-count.over  { border-color: var(--red);   color: var(--red); }
+
+  /* ── Dreamwich tab ──────────────────── */
+  .triage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  @media (max-width: 640px) {
+    .triage-grid { grid-template-columns: 1fr; }
+    .tab-nav { overflow-x: auto; gap: 0; }
+    .tab-btn { padding: 8px 12px 10px; font-size: 12px; }
+  }
+  .triage-bucket {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .bucket-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .bucket-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .bucket-icon.green { background: var(--green-dim); }
+  .bucket-icon.amber { background: var(--amber-dim); }
+  .bucket-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .bucket-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .bucket-count {
+    margin-left: auto;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .bucket-count.green { color: var(--green); }
+  .bucket-count.amber { color: var(--amber); }
+  .triage-account {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .triage-account:last-child { border-bottom: none; }
+  .triage-account:hover { background: var(--card-hover); }
+  .triage-account-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .triage-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .triage-detail strong { color: var(--text-secondary); font-weight: 500; }
+  .triage-action {
+    margin-top: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .triage-action.green { color: var(--green); }
+  .triage-action.amber { color: var(--amber); }
+  .triage-rank {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* pre-launch note */
+  .prelaunch-note {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .prelaunch-note .icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+
+  /* divider label */
+  .divider-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .divider-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+
+  /* footer */
+  .proto-footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .proto-footer span { display: flex; align-items: center; gap: 5px; }
+</style>
+
+<!-- ── Top bar ────────────────────────── -->
+<div class="topbar">
+  <div class="mo-logo">M<span>o</span></div>
+  <div class="breadcrumb">
+    <span>Experience 1</span>
+    <span class="sep">›</span>
+    <span>Customer Scorecard</span>
+    <span class="sep">›</span>
+    <span class="current">Portfolio Health</span>
+  </div>
+  <div class="proto-badge">Prototype</div>
+</div>
+
+<!-- ── Context bar ────────────────────── -->
+<div class="context-bar">
+  <span class="ctx-label">BUILT Bar</span>
+  <span class="ctx-chip focal">All Channels</span>
+  <span class="ctx-chip">185 wks ending 2026-08-09</span>
+  <span class="ctx-chip">All SKUs</span>
+</div>
+
+<!-- ── Tabs ──────────────────────────── -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('readiness',this)">
+    Account Readiness <span class="tab-num">8</span>
+  </button>
+  <button class="tab-btn has-alert" onclick="switchTab('health',this)">
+    Portfolio Health <span class="tab-num">3</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('dreamwich',this)">
+    Dreamwich Triage <span class="tab-num">7</span>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 1 — ACCOUNT READINESS
+════════════════════════════════════════ -->
+<div id="tab-readiness" class="tab-panel active">
+
+  <div class="section-header">
+    <div class="section-q">When does adding another BUILT SKU stop growing the business?</div>
+    <div class="section-sub">Ranked by net incrementality of next SKU — based on velocity-per-SKU and inter-brand cannibalization rate · Illustrative data</div>
+  </div>
+
+  <div class="insight-box green">
+    <div class="insight-icon">●</div>
+    <div class="insight-text">
+      <strong>3 accounts have clear incremental capacity.</strong> Whole Foods and Sprouts carry 2–3 BUILT SKUs with the highest velocity index — each additional SKU is growing category volume, not cannibalizing the existing set. Kroger is borderline: strong velocity but approaching SKU saturation in premium protein.
+      <div class="insight-action">→ Prioritize new SKU placement at Whole Foods, Sprouts, Kroger</div>
+    </div>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>BUILT SKUs</th>
+          <th>Velocity Index</th>
+          <th>Net Incrementality</th>
+          <th>Recommendation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="account-name"><span class="sku-count ok">2</span>Whole Foods</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">2</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill high" style="width:94%"></div></div>
+              <span class="vel-val">94</span>
+            </div>
+          </td>
+          <td><span class="chip green">▲▲ Very strong</span></td>
+          <td><span class="chip green">Add SKU</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count ok">3</span>Sprouts</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">3</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill high" style="width:81%"></div></div>
+              <span class="vel-val">81</span>
+            </div>
+          </td>
+          <td><span class="chip green">▲ Strong</span></td>
+          <td><span class="chip green">Add SKU</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count ok">4</span>Kroger</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">4</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill high" style="width:87%"></div></div>
+              <span class="vel-val">87</span>
+            </div>
+          </td>
+          <td><span class="chip green">▲ Strong</span></td>
+          <td><span class="chip green">Add SKU</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count warn">5</span>Target</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">5</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill mid" style="width:52%"></div></div>
+              <span class="vel-val">52</span>
+            </div>
+          </td>
+          <td><span class="chip amber">→ Flat</span></td>
+          <td><span class="chip muted">Hold</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count warn">4</span>Safeway</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">4</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill mid" style="width:48%"></div></div>
+              <span class="vel-val">48</span>
+            </div>
+          </td>
+          <td><span class="chip amber">▼ Softening</span></td>
+          <td><span class="chip muted">Hold</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count warn">6</span>Walmart</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">6</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill low" style="width:34%"></div></div>
+              <span class="vel-val">34</span>
+            </div>
+          </td>
+          <td><span class="chip amber">▼ Declining</span></td>
+          <td><span class="chip muted">Hold</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count over">5</span>Albertsons</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">5</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill low" style="width:29%"></div></div>
+              <span class="vel-val">29</span>
+            </div>
+          </td>
+          <td><span class="chip red">▼▼ Weak</span></td>
+          <td><span class="chip red">Reduce</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count over">7</span>CVS</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">7</td>
+          <td>
+            <div class="vel-bar-wrap">
+              <div class="vel-bar-track"><div class="vel-bar-fill low" style="width:18%"></div></div>
+              <span class="vel-val">18</span>
+            </div>
+          </td>
+          <td><span class="chip red">▼▼ Very weak</span></td>
+          <td><span class="chip red">Reduce</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="proto-footer">
+    <span>📊 Velocity Index = units/store/week normalized 0–100 across all BUILT accounts</span>
+    <span>· Net Incrementality = E2a cannibalization-adjusted estimate</span>
+    <span>· Illustrative data — prototype view</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 2 — PORTFOLIO HEALTH
+════════════════════════════════════════ -->
+<div id="tab-health" class="tab-panel">
+
+  <div class="section-header">
+    <div class="section-q">Where is BUILT over-SKU'd?</div>
+    <div class="section-sub">Ranked by portfolio health score — accounts where BUILT SKUs are cannibalizing each other rather than growing total volume · Illustrative data</div>
+  </div>
+
+  <div class="insight-box red">
+    <div class="insight-icon">⚠</div>
+    <div class="insight-text">
+      <strong>CVS and Albertsons are critically over-SKU'd.</strong> 38% and 31% of all BUILT volume at these accounts is intra-brand displacement — SKUs cannibalizing each other, not growing the category. <strong>Built Bar 1-pack is the pull candidate at both.</strong> Removing it at CVS is projected to increase net velocity by simplifying the assortment without sacrificing category share.
+      <div class="insight-action">→ Initiate pull conversation at CVS (Built Bar 1pk), Albertsons (Built Puff Chocolate)</div>
+    </div>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>BUILT SKUs</th>
+          <th>Self-Cannib Rate</th>
+          <th>Health Score</th>
+          <th>Pull Candidate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="account-name"><span class="sku-count over">7</span>CVS</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">7</td>
+          <td><span class="cannib-rate high">38%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num low">22</span>
+              <div class="score-bar-track"><div class="score-bar-fill low" style="width:22%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate flagged">Built Bar 1pk ↗ remove</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count over">5</span>Albertsons</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">5</td>
+          <td><span class="cannib-rate high">31%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num low">44</span>
+              <div class="score-bar-track"><div class="score-bar-fill low" style="width:44%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate flagged">Built Puff Chocolate ↗ remove</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count warn">6</span>Walmart</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">6</td>
+          <td><span class="cannib-rate mid">27%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num mid">48</span>
+              <div class="score-bar-track"><div class="score-bar-fill mid" style="width:48%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate flagged">Built Bar 1pk ↗ watch</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count warn">4</span>Safeway</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">4</td>
+          <td><span class="cannib-rate mid">19%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num mid">61</span>
+              <div class="score-bar-track"><div class="score-bar-fill mid" style="width:61%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate">Built Puff Lemon — monitor</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count warn">5</span>Target</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">5</td>
+          <td><span class="cannib-rate mid">14%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num mid">67</span>
+              <div class="score-bar-track"><div class="score-bar-fill mid" style="width:67%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate">—</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count ok">4</span>Kroger</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">4</td>
+          <td><span class="cannib-rate low">9%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num high">79</span>
+              <div class="score-bar-track"><div class="score-bar-fill high" style="width:79%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate">—</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count ok">3</span>Sprouts</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">3</td>
+          <td><span class="cannib-rate low">6%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num high">85</span>
+              <div class="score-bar-track"><div class="score-bar-fill high" style="width:85%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate">—</span></td>
+        </tr>
+        <tr>
+          <td><span class="account-name"><span class="sku-count ok">2</span>Whole Foods</span></td>
+          <td style="color:var(--text-primary);font-weight:600;font-variant-numeric:tabular-nums">2</td>
+          <td><span class="cannib-rate low">3%</span></td>
+          <td>
+            <div class="score-cell">
+              <span class="score-num high">96</span>
+              <div class="score-bar-track"><div class="score-bar-fill high" style="width:96%"></div></div>
+            </div>
+          </td>
+          <td><span class="pull-candidate">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="proto-footer">
+    <span>📊 Health Score = net incremental velocity ÷ BUILT SKU count, normalized 0–100</span>
+    <span>· Self-Cannib Rate = % of BUILT volume that is intra-brand displacement (E2a)</span>
+    <span>· Illustrative data — prototype view</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 3 — DREAMWICH TRIAGE
+════════════════════════════════════════ -->
+<div id="tab-dreamwich" class="tab-panel">
+
+  <div class="section-header">
+    <div class="section-q">Dreamwich — incremental distribution or trade-out bait?</div>
+    <div class="section-sub">Account triage based on current portfolio health · Pre-launch estimate · Illustrative data</div>
+  </div>
+
+  <div class="prelaunch-note">
+    <span class="icon">◷</span>
+    <span><strong>Pre-launch mode.</strong> This triage is based on current portfolio health and cannibalization rates — no Dreamwich sales history yet. The incremental/trade-out classification will auto-recalibrate once Dreamwich posts 4+ weeks of scan data at each account.</span>
+  </div>
+
+  <div class="insight-box amber">
+    <div class="insight-icon">◈</div>
+    <div class="insight-text">
+      <strong>4 accounts are incremental-ready for Dreamwich.</strong> Whole Foods, Sprouts, Kroger, and Fresh Market have low cannibalization rates and room in the assortment. <strong>3 accounts are better served by a trade-out:</strong> CVS, Albertsons, and Walmart are already over-SKU'd — Dreamwich goes in stronger if it displaces the weakest current SKU rather than expanding a saturated set.
+      <div class="insight-action">→ Incremental launch at 4 accounts · Trade-out strategy at 3 accounts</div>
+    </div>
+  </div>
+
+  <div class="triage-grid">
+
+    <!-- Incremental bucket -->
+    <div class="triage-bucket">
+      <div class="bucket-header">
+        <div class="bucket-icon green">✦</div>
+        <div>
+          <div class="bucket-title">Incremental-ready</div>
+          <div class="bucket-sub">Add Dreamwich as net-new SKU</div>
+        </div>
+        <div class="bucket-count green">4</div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">1</div>
+        <div style="flex:1">
+          <div class="triage-account-name">Whole Foods</div>
+          <div class="triage-detail">
+            <strong>2 BUILT SKUs</strong> · Velocity index 94 · Self-cannib 3%<br>
+            Lowest saturation in portfolio. Dreamwich fits the premium innovation shelf cleanly.
+          </div>
+          <div class="triage-action green">→ Add Dreamwich as SKU #3 — high confidence</div>
+        </div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">2</div>
+        <div style="flex:1">
+          <div class="triage-account-name">Sprouts</div>
+          <div class="triage-detail">
+            <strong>3 BUILT SKUs</strong> · Velocity index 81 · Self-cannib 6%<br>
+            Natural channel — Dreamwich innovation narrative aligns with shopper.
+          </div>
+          <div class="triage-action green">→ Add Dreamwich as SKU #4 — high confidence</div>
+        </div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">3</div>
+        <div style="flex:1">
+          <div class="triage-account-name">Kroger</div>
+          <div class="triage-detail">
+            <strong>4 BUILT SKUs</strong> · Velocity index 87 · Self-cannib 9%<br>
+            Strong velocity across current set. Monitor cannib post-launch.
+          </div>
+          <div class="triage-action green">→ Add Dreamwich as SKU #5 — moderate confidence</div>
+        </div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">4</div>
+        <div style="flex:1">
+          <div class="triage-account-name">Fresh Market</div>
+          <div class="triage-detail">
+            <strong>2 BUILT SKUs</strong> · Velocity index 78 · Self-cannib 5%<br>
+            Underpenetrated for BUILT. Dreamwich could anchor a stronger presence.
+          </div>
+          <div class="triage-action green">→ Add Dreamwich as SKU #3 — moderate confidence</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Trade-out bucket -->
+    <div class="triage-bucket">
+      <div class="bucket-header">
+        <div class="bucket-icon amber">⇄</div>
+        <div>
+          <div class="bucket-title">Trade-out candidates</div>
+          <div class="bucket-sub">Replace weakest SKU with Dreamwich</div>
+        </div>
+        <div class="bucket-count amber">3</div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">1</div>
+        <div style="flex:1">
+          <div class="triage-account-name">CVS</div>
+          <div class="triage-detail">
+            <strong>7 BUILT SKUs</strong> · Self-cannib 38% · Health score 22<br>
+            Critically over-SKU'd. Adding without removal deepens cannibalization drag.
+          </div>
+          <div class="triage-action amber">→ Trade Built Bar 1pk → Dreamwich</div>
+        </div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">2</div>
+        <div style="flex:1">
+          <div class="triage-account-name">Albertsons</div>
+          <div class="triage-detail">
+            <strong>5 BUILT SKUs</strong> · Self-cannib 31% · Health score 44<br>
+            Over-SKU'd. Built Puff Chocolate is the weakest performer — best swap target.
+          </div>
+          <div class="triage-action amber">→ Trade Built Puff Chocolate → Dreamwich</div>
+        </div>
+      </div>
+
+      <div class="triage-account">
+        <div class="triage-rank">3</div>
+        <div style="flex:1">
+          <div class="triage-account-name">Walmart</div>
+          <div class="triage-detail">
+            <strong>6 BUILT SKUs</strong> · Self-cannib 27% · Health score 48<br>
+            At saturation. Built Bar 1pk declining — Dreamwich swap preserves shelf count.
+          </div>
+          <div class="triage-action amber">→ Trade Built Bar 1pk → Dreamwich</div>
+        </div>
+      </div>
+
+      <div style="padding:12px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-light);line-height:1.5">
+        Remaining accounts (Target, Safeway) are borderline — hold classification until Dreamwich launch data is available.
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="proto-footer">
+    <span>◷ Pre-launch triage — recalibrates at 4+ weeks Dreamwich sales data</span>
+    <span>· Trade-out recommendations based on E2a cannibalization model + velocity score</span>
+    <span>· Illustrative data — prototype view</span>
+  </div>
+</div>
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
