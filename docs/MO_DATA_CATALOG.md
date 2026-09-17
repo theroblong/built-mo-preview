@@ -68,21 +68,34 @@ formula below is canonical.
 
 **Definition:** 1 if this row represents a week when the item was on MVM (Multi-Vendor Mailer / Instant Rebate Coupon), 0 otherwise.
 
-**Formula:**
+**Status: ⚠️ PENDING — MVM detection approach under review as of Sept 17, 2026.**
+
+**Formula (target — requires promo calendar):**
 ```sql
-CASE WHEN promoted_units > 0 THEN 1 ELSE 0 END AS is_mvm
+CASE
+  WHEN CAST(SUBSTRING(item_desc, 1, 15) AS BIGINT) = cal.item_upc
+   AND __time BETWEEN cal.mvm_start AND cal.mvm_end
+  THEN 1 ELSE 0
+END AS is_mvm
+-- Requires: built_costco_mvm_calendar lookup table (pending Brian's MVM event history)
 ```
 
-**Source columns:** `promoted_units`
+**Why CRX measures cannot derive is_mvm:**
 
-**⚠️ Do NOT use `coupon_units` for this.** Circana stores `coupon_units` as a negative number. Using `coupon_units > 0` never fires on real MVM rows. Confirmed via profiling: `SUM(coupon_units) = -937,695`; `SUM(promoted_units) = +937,695` (exact mirror). The two columns are complementary, not independent.
+Profiling confirmed (Sept 17, 2026) that **every CRX promo field is null on revenue rows** — including on the Jan 25, 2026 $4.9M MVM peak week:
+- `pct_discount` = null
+- `avg_coupon_value` = null
+- `avg_promoted_price` = null
+- `coupon_dollars` = null
+- `total_discount_dollars` = null
 
-**Identity check:**
-```sql
--- Must hold true: non_promoted_units + promoted_units = unit_sales
-SUM(non_promoted_units) + SUM(promoted_units) = SUM(unit_sales)
--- Verified: 11,819,713 + 937,695 = 12,757,408 ✓
-```
+Promo detail rows (`promoted_units > 0`) and sales rows (`dollar_sales IS NOT NULL`) are structurally separate in BP222 — they never appear on the same record. The 3,337 rows with `promoted_units > 0` have `dollar_sales = null`; all $256.7M revenue is in rows where `promoted_units = 0`. Neither `coupon_units > 0` nor `promoted_units > 0` is a valid MVM signal on revenue rows.
+
+**Open question for Justin (Circana):** Is this structural separation intentional? Is there a separate MVM schedule file delivered alongside BP222?
+
+**Interim approach:** Join to Brian's promo calendar (`docs/2026 PROMO BUILT_PROMOTION_LIFT_08_07_2026.xlsx`) on item × week. Need full Costco MVM history back to Jan 2023 from Brian — current file has only 2 Costco rows. Once available, load as `built_costco_mvm_calendar` in Druid and join at query time.
+
+**Data note on `coupon_units`:** Stored as a **negative value** by Circana. `SUM(coupon_units) = -937,695`; `SUM(promoted_units) = +937,695` (exact mirror). The identity `non_promoted_units + promoted_units = unit_sales` holds globally (delta = 0 ✓).
 
 ---
 
