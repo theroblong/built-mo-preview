@@ -6,6 +6,38 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 121: Mo three-tier data architecture + Costco/data-dark analytics brief (2026-09-17)
+
+### Mo Retailer Data Architecture — Confirmed
+
+Three data sources, each covering a different scope. What Mo can present adapts per source.
+
+| Tier | Source | Retailers | Mo capabilities |
+|---|---|---|---|
+| 1 — SPINS | SPINS syndicated | ~80 conventional + Sprouts (Natural Expanded) | Full suite — demand, TDP, promo lift, cannibalization, elasticity, competitor context |
+| 2 — Vendor POS | Circana CRX | Costco only | BUILT-portfolio demand, DPWPW velocity, warehouse distribution, MVM promo flag — no competitor context |
+| 3 — Sell-in only | NetSuite NS2 | Winco, HEB, Trader Joe's, Aldi | Bars shipped, shipment trend, invoiced revenue, lapse detection — no scan data, no category context |
+
+**Sprouts confirmed SPINS** — verified in `built_filtered_weekly` as `SPROUTS FARMERS MARKET` under `NATURAL EXPANDED` channel. Full Mo treatment. Not data-dark.
+
+**Design principle:** Mo UI adapts to the data source. Dark accounts show shipment data with an explicit "sell-in only — retail sell-through not available" label. Capabilities that require data the source doesn't provide are absent, not empty. NS2 also supplies Gross-to-Net data as a supplement across all three tiers.
+
+### NS2 Shipment Data — Two Use Cases
+
+NS2 (NetSuite) serves two distinct purposes in Mo:
+
+1. **Costco Gross-to-Net** — CRX gives consumer scan data; NS2 gives invoiced revenue and deductions. Together they complete the Gross-to-Net waterfall and enable sell-through comparison (ship vs. scan), replenishment signal, lead time analysis, and trade spend ROI.
+
+2. **Data-dark retailer visibility** — For Winco, HEB, Trader Joe's, and Aldi, NS2 shipments are the *only* signal available. Mo delivers a shipment-trend view for these accounts: bars shipped per week/month, YoY delta, weeks since last shipment (lapse detection), net invoiced revenue.
+
+**Ebad meeting prep document:** `docs/costco_analytics_brief.html` — covers both use cases with a retailer class table, capability cards per dark account, and 11 grouped questions for Ebad (Costco GTN / data-dark retailers / shared).
+
+### Sprouts Classification (verified 2026-09-17)
+
+Sprouts Farmers Market is in `built_filtered_weekly` under channel `NATURAL EXPANDED`. It participates in SPINS and receives the full Mo analytics treatment — same as conventional retail. It is *not* in the data-dark tier.
+
+---
+
 ## README update 120: Costco CRX profiling results + ingestion spec correction (2026-09-16)
 
 ### `built_costco_crx_weekly` — Q3 Druid Profiling Results
