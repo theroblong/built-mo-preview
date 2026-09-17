@@ -645,7 +645,7 @@
 
     <div class="caveat-card info">
       <div class="c-title">No MVM baseline in CRX</div>
-      <div class="c-body">CRX has no built-in Base/Incremental split. MVM lift proxy = compare MVM-week <code>unit_sales</code> vs. prior-period or year-ago. <code>is_mvm</code> flag (<code>coupon_units &gt; 0</code>) marks the event weeks. TPRs and COMPs are not captured in CRX promo measures.</div>
+      <div class="c-body">CRX has no built-in Base/Incremental split. MVM lift proxy = compare MVM-week <code>unit_sales</code> vs. prior-period or year-ago. <code>is_mvm</code> flag (<code>promoted_units &gt; 0</code>) marks the event weeks. ⚠️ <code>coupon_units</code> is stored as a negative by Circana — never use it for MVM detection. TPRs and COMPs are not captured in CRX promo measures.</div>
     </div>
 
   </div>

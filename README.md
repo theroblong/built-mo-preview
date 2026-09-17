@@ -77,7 +77,7 @@ CAST(SUBSTRING(item_desc, 1, 15) AS BIGINT) AS upc
 
 Current entries: `built_costco_crx_weekly` (full), `built_filtered_weekly` (stub), NS2 shipment (stub). Add an entry for every new derived field or data quirk discovered.
 
-### MO_74 is_mvm Fix — Parquet Regeneration Required
+### MO_74 is_mvm Fix — ✅ Re-ingested Sept 17, 2026
 
 `coupon_units` is stored as a **negative value** by Circana. The prior derivation `coupon_units > 0` never fired on real MVM rows. Confirmed via Q7/Q8 profiling: `total_coupon_units = −937,695`; `total_promoted_units = +937,695` (exact mirror); `non_promoted_units + promoted_units = total_unit_sales` ✓.
 
@@ -89,11 +89,11 @@ df["is_mvm"] = (df["coupon_units"].fillna(0) > 0).astype(int)
 df["is_mvm"] = (df["promoted_units"].fillna(0) > 0).astype(int)
 ```
 
-Parquet must be regenerated from the full BP222 file; Rob to re-ingest `built_costco_crx_weekly`. **Rule for all future Circana MVM logic: use `promoted_units > 0`.**
+`built_costco_crx_weekly` re-ingested Sept 17, 2026 with corrected `is_mvm`. **Rule for all future Circana MVM logic: use `promoted_units > 0`.**
 
-### Ingestion Spec Correction — 8 Columns Added
+### Ingestion Spec Correction — 8 Columns Added — ✅ Re-ingested Sept 17, 2026
 
-The original `built_costco_crx_weekly` ingestion spec omitted 8 columns present in the MO_74 parquet output. Updated spec committed at `889d668` in `mockups/crx_druid_ingestion_guide.html`. Rob needs to re-ingest to pick up these columns:
+The original `built_costco_crx_weekly` ingestion spec omitted 8 columns present in the MO_74 parquet output. Updated spec committed at `889d668` in `mockups/crx_druid_ingestion_guide.html`. All 34 columns now live:
 
 | Column | Type |
 |--------|------|
@@ -266,7 +266,7 @@ Drafted the full CRX → Druid integration for Costco BP222 data:
 **Key design decisions:**
 - Target Druid table: `built_costco_crx_weekly` (item × warehouse × week grain; rollup=false)
 - `week_ending` = Sunday — direct join to `built_filtered_weekly.week_ending`, no offset needed
-- `is_mvm` = `coupon_units > 0` — MVM/instant savings flag
+- `is_mvm` = `promoted_units > 0` — MVM/instant savings flag (⚠️ `coupon_units` is negative in Circana; never use it for MVM detection)
 - `dpwpw` = `dollar_sales / warehouses_selling` — primary Costco velocity metric
 - UPC join: pending item table from Justin Fisher (added to Circana bucket 2026-09-15; MinIO path TBD)
 

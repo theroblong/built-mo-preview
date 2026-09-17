@@ -1,21 +1,21 @@
 """
 MO_74 — Circana CRX BP222 Preprocessing
 Reads raw BP222 CSV, normalizes fields, and writes a clean Parquet file
-ready for Druid batch ingestion into costco_crx_weekly.
+ready for Druid batch ingestion into built_costco_crx_weekly.
 
 Usage:
     python MO_74_crx_bp222_preprocess.py <path/to/BP222.csv>
-    python MO_74_crx_bp222_preprocess.py <path/to/BP222.csv> --output outputs/costco_crx_weekly.parquet
+    python MO_74_crx_bp222_preprocess.py <path/to/BP222.csv> --output outputs/built_costco_crx_weekly.parquet
 
 What it does:
     1. Renames 32 BP222 headers to clean snake_case names
     2. Parses "N week ending MM-DD-YYYY" → ISO date (week_ending)
     3. Strips Circana currency formatting: "$1,234.56" → 1234.56, "($19.99)" → -19.99
     4. Parses comma-formatted numeric strings
-    5. Adds derived columns: is_mvm (Coupon Units > 0), dpwpw ($/WH/week)
+    5. Adds derived columns: is_mvm (promoted_units > 0), dpwpw ($/WH/week)
     6. Writes Parquet — ready for Druid ingestion spec (see docs/CRX_Druid_Ingestion_Guide.md)
 
-Target Druid table: costco_crx_weekly
+Target Druid table: built_costco_crx_weekly
 Primary time column: week_ending (Sunday of the Costco Mon–Sun week)
 
 NOTE — Week boundary: BP222 weeks end Sunday (matches SPINS week_ending).

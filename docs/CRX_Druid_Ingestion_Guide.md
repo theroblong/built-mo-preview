@@ -182,14 +182,14 @@ ORDER BY 1
 | `item_desc` | string | BP222 "Item" | SKU description. Join to item table (pending Justin) for UPC. |
 | `warehouse_name` | string | BP222 "Venue" | Full WH name (e.g., "WAREHOUSE 25 RENO"). |
 | `region` | string | BP222 "Region" | 11 Costco regions incl. E-Commerce. |
-| `is_mvm` | long (0/1) | derived | 1 = Coupon Units > 0 = MVM/instant savings week. |
+| `is_mvm` | long (0/1) | derived | 1 = Promoted Units > 0 = MVM/instant savings week. ⚠️ Do NOT use `coupon_units` — Circana stores it as a negative value. |
 | `dpwpw` | double | derived | Dollar Sales ÷ Warehouses Selling. Best velocity metric for Costco. |
 | `unit_sales` | double | BP222 | 1 unit = 1 Club Pack (16 or 18 bars). NOT individual bars. |
 | `dollar_sales` | double | BP222 | ~98% null (most WH × item × week have no sales). Expected. |
 | `warehouses_selling` | double | BP222 | Count of WHs with sales. TDP proxy when divided by 702 total selling WHs. |
 | `on_hand` | double | BP222 | Multiples of 525 = pallet-level inventory. Not consumer demand. |
 | `on_order` | double | BP222 | Pallet ordering pattern. |
-| `coupon_units` | double | BP222 | > 0 signals MVM week. |
+| `coupon_units` | double | BP222 | ⚠️ Stored as a **negative value** by Circana. Do NOT use for MVM detection — use `is_mvm` or `promoted_units > 0`. |
 | `avg_coupon_value` | double | BP222 | $4.00 or $5.00 for BUILT instant savings. |
 | `fuel_price_regular` | double | BP222 | Circana embedded macro signal. ~93K of 5.4M non-null. |
 | `oos` / `in_stock_pct` | double | BP222 | ~100% null. Circana investigating. Do not use. |
