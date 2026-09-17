@@ -1,4 +1,4 @@
-<title>Costco Analytics Brief</title>
+<title>Costco & Data-Dark Analytics Brief</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600&display=swap');
 
@@ -393,8 +393,9 @@
   <a href="#scope">Scope</a>
   <a href="#status">Status</a>
   <span class="nav-part">Part 2 — Ebad Prep</span>
-  <a href="#shipment-why">Why We Need Shipments</a>
-  <a href="#shipment-insights">Insights</a>
+  <a href="#shipment-why">Two Use Cases</a>
+  <a href="#data-dark">Data-Dark Retailers</a>
+  <a href="#shipment-insights">Costco Insights</a>
   <a href="#shipment-ask">Questions for Ebad</a>
 </div>
 
@@ -403,8 +404,8 @@
   <!-- Cover -->
   <div class="cover">
     <p class="cover-eyebrow">Aevah · Mo Intelligence Platform</p>
-    <h1>Costco Analytics Plan<br><em style="font-weight:400; font-style:italic;">and Ebad Meeting Prep</em></h1>
-    <p class="cover-sub">How Circana CRX data powers Mo's Costco view — and what we need from NetSuite to complete the picture.</p>
+    <h1>Costco &amp; Data-Dark Analytics Plan<br><em style="font-weight:400; font-style:italic;">and Ebad Meeting Prep</em></h1>
+    <p class="cover-sub">How Circana CRX data powers Mo's Costco view — and how NetSuite shipments are the only signal at Winco, HEB, Trader Joe's, and Aldi.</p>
     <div class="cover-meta">
       <span>Prepared by Aevah</span>
       <span>September 17, 2026</span>
@@ -579,44 +580,98 @@
 
   <div class="part2-section">
 
-    <p class="part-label">Part 2 — Ebad Meeting Prep</p>
-    <h2 id="shipment-why" style="scroll-margin-top: 52px;">Why Mo needs NetSuite shipment data</h2>
+    <p class="part-label">Part 2 — Ebad Meeting Prep · NS2 Shipment Data</p>
+    <h2 id="shipment-why" style="scroll-margin-top: 52px;">Two reasons Mo needs NetSuite shipment data</h2>
 
     <div class="summary-box">
-      <strong>The core gap:</strong> CRX shows what Costco <em>sold to consumers</em>. NetSuite shows what BUILT <em>shipped and invoiced to Costco</em>. Without both, Mo can report demand but not revenue — and the Gross-to-Net tab of Experience 1 is entirely blocked without NS2 data.
+      <strong>NS2 serves two distinct use cases.</strong> At Costco, it fills the Gross-to-Net gap: CRX tells us what consumers bought, NS2 tells us what BUILT earned. At data-dark retailers — Winco, HEB, Trader Joe's, Aldi — there is no scan data at all. NS2 shipments are the <em>only signal</em> BUILT has for those accounts.
     </div>
-
-    <p>These two data streams are complementary, not redundant. CRX (sell-out) tells us consumer demand and velocity. NS2 (sell-in) tells us BUILT's actual shipments and recognized revenue. The gap between them — the sell-through spread — is one of the most operationally valuable signals in the platform.</p>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Data source</th>
-            <th>What it measures</th>
-            <th>Direction</th>
-            <th>Owner</th>
+            <th>Retailer class</th>
+            <th>Examples</th>
+            <th>Scan data?</th>
+            <th>NS2 role</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Circana CRX</strong></td>
-            <td>Consumer purchases at Costco register</td>
-            <td>Sell-out (demand)</td>
-            <td>Justin Fisher</td>
+            <td><strong>Class 1 — SPINS</strong></td>
+            <td>Kroger, Target, Albertsons (~80 retailers)</td>
+            <td><span class="badge badge-green">Full SPINS</span></td>
+            <td>GTN supplement only</td>
           </tr>
           <tr>
-            <td><strong>NetSuite NS2</strong></td>
-            <td>BUILT invoices to Costco; bars shipped, deductions</td>
-            <td>Sell-in (revenue)</td>
-            <td>Ebad Hashemi</td>
+            <td><strong>Class 2 — Circana</strong></td>
+            <td>Costco</td>
+            <td><span class="badge badge-accent">CRX (Circana)</span></td>
+            <td>GTN + sell-through complement</td>
+          </tr>
+          <tr>
+            <td><strong>Class 3 — Own portal</strong></td>
+            <td>ACS</td>
+            <td><span class="badge badge-amber">Retailer portal only</span></td>
+            <td>NS2 as external validation</td>
+          </tr>
+          <tr>
+            <td><strong>Class 4 — Data dark</strong></td>
+            <td>Winco, HEB, Trader Joe's, Aldi, Sprouts (TBD)</td>
+            <td><span style="font-size:12px;font-weight:600;color:var(--red);">None</span></td>
+            <td><strong>Primary signal — shipments only</strong></td>
           </tr>
         </tbody>
       </table>
     </div>
 
+    <section id="data-dark" style="border-top: none; padding-top: 0; scroll-margin-top: 52px;">
+      <h2>Data-dark retailers: NS2 as the only lens</h2>
+
+      <div class="summary-box">
+        <strong>Brian's verbatim framing (July 22 process review):</strong> <em>"We have what we ship them, but we don't see the view of the category."</em> Connor added: <em>"Winco is Data Dark. We continuously ask the buyer at Winco to give us velocity information and they refuse."</em> These accounts are large — HEB and Trader Joe's are significant revenue — but completely invisible in any syndicated panel.
+      </div>
+
+      <div class="cap-grid" style="margin-bottom: 24px;">
+        <div class="cap-card">
+          <span class="cap-number">Winco</span>
+          <h3>Fully dark — buyer refuses</h3>
+          <p>Winco's buyer actively declines to share velocity data. Connor and the broker team operate on tribal knowledge. NS2 weekly shipment volume is the only quantitative signal available and is currently unused for forecasting.</p>
+        </div>
+        <div class="cap-card">
+          <span class="cap-number">HEB</span>
+          <h3>Major account, zero visibility</h3>
+          <p>HEB does not participate in SPINS or Circana. No category data, no competitor context. NS2 bars-shipped per week is BUILT's only performance indicator for one of the largest regional grocery chains in the US.</p>
+        </div>
+        <div class="cap-card">
+          <span class="cap-number">Trader Joe's</span>
+          <h3>National presence, dark data</h3>
+          <p>Same data class as HEB. No syndicated panel. Shipments serve as the demand proxy. Mo can benchmark trajectory shape against Natural/Expanded channel SPINS-reporting peers — but only if NS2 data is flowing.</p>
+        </div>
+        <div class="cap-card">
+          <span class="cap-number">Aldi + Sprouts</span>
+          <h3>Shipment report requested; Sprouts TBD</h3>
+          <p>Brian explicitly asked whether a weekly or monthly shipment report would help for Aldi. NS2 invoice frequency is the only performance view. Sprouts is TBD — needs to be confirmed whether it participates in SPINS (Natural Expanded channel) or is dark. If dark, same shipment-only treatment applies.</p>
+        </div>
+      </div>
+
+      <div class="limit-box">
+        <h3>What Mo can and cannot do for data-dark accounts</h3>
+        <ul class="limit-list">
+          <li><span class="chk chk-y">✓</span><div><strong>Shipment trend</strong> — bars shipped per week/month by account and SKU; YoY delta; weeks since last shipment (lapse detection)</div></li>
+          <li><span class="chk chk-y">✓</span><div><strong>Distribution entry signal</strong> — first ship date to a new account; pallet qty as proxy for shelf placement scale</div></li>
+          <li><span class="chk chk-y">✓</span><div><strong>Demand forecast anchor</strong> — shipment level sets the volume anchor; trajectory shape borrowed from structurally similar SPINS-reporting peers (Winco → value format; HEB → South Central grocery; TJ's → Natural Expanded channel)</div></li>
+          <li><span class="chk chk-y">✓</span><div><strong>Net revenue (sell-in)</strong> — NS2 <code style="background: var(--accent-bg); padding: 0 4px; border-radius: 3px; font-size: 12px;">netamount</code> per line = BUILT's invoiced revenue for those accounts</div></li>
+          <li><span class="chk chk-n">✗</span><div><strong>Consumer sell-through</strong> — we will never know what's actually scanning. Any "demand" figure for these accounts is sell-in, not sell-out — and must always be labeled as such</div></li>
+          <li><span class="chk chk-n">✗</span><div><strong>Category or competitor context</strong> — no panel data exists. No TDP, no share, no competitive pricing for these accounts</div></li>
+        </ul>
+        <p style="font-size: 13px; color: var(--amber); font-weight: 600; margin-top: 14px;">Every Mo screen showing data-dark accounts must carry this label: "Source: BUILT shipment data (sell-in). Retail sell-through is not available for this account."</p>
+      </div>
+    </section>
+
     <section id="shipment-insights" style="border-top: none; padding-top: 0;">
-      <h2>What insights unlock with shipment data</h2>
+      <h2>Costco-specific insights from NS2</h2>
 
       <div class="insight-grid">
         <div class="insight-card">
@@ -661,19 +716,32 @@
 
       <p style="margin-bottom: 18px; font-size: 14px; color: var(--ink-muted);">Come prepared with context: Mo already has the NS2 schema documented (57 tables). We know the core query involves <code style="background: var(--accent-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px;">ns2.transaction</code> + <code style="background: var(--accent-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px;">ns2.transactionLine</code> filtered to Invoice type. We need Ebad to confirm the deduction and allowance line structure.</p>
 
+      <p style="margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--ink-muted); letter-spacing: .05em; text-transform: uppercase;">Costco — Gross-to-Net</p>
+      <ol class="ask-list" style="margin-bottom: 24px;">
+        <li><strong>Delivery cadence:</strong> Can NS2 invoice data be exported weekly, automated? We need weekly granularity to align with the Circana CRX feed. Is there a weekly batch job or scheduled report we can connect to?</li>
+        <li><strong>Costco customer filter:</strong> How is Costco represented in NS2 — one customer record, or multiple (e.g., Costco Wholesale, Costco Business Centers, e-com)? Need to confirm every Costco entity is captured.</li>
+        <li><strong>Deduction / allowance lines:</strong> How are trade allowances, returns, and spoils recorded — as separate transaction lines, memo lines, or credit memos? Need to trace gross to net at line level for the GTN waterfall.</li>
+        <li><strong>Bars-per-line field:</strong> We believe <code style="background: var(--accent-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px;">custcolbars_per_line</code> ("Total Bars Per Line") is the right equivalized unit count. Can Ebad confirm it is populated consistently on all Costco invoice lines?</li>
+      </ol>
+
+      <p style="margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--ink-muted); letter-spacing: .05em; text-transform: uppercase;">Data-Dark Retailers — Shipment Signal</p>
+      <ol class="ask-list" style="margin-bottom: 24px;">
+        <li><strong>Account coverage confirmation:</strong> Can Ebad confirm that Winco, HEB, Trader Joe's, and Aldi are all distinct customer records in NS2? Are there subsidiaries or distribution-center entities that would split shipment records (e.g., HEB Central vs. HEB Plus)?</li>
+        <li><strong>Sprouts classification:</strong> Is Sprouts in NS2 as a distinct account? Does BUILT have an active shipping relationship with Sprouts, and if so, is any panel scan data available (SPINS Natural Expanded channel) or is it ship-only?</li>
+        <li><strong>Sales channel segment:</strong> NS2 has a <code style="background: var(--accent-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px;">cseg_bb_sales_chann</code> field (Sales Channel). Can Ebad confirm how data-dark retailers are classified — "Grocery," a regional flag, or another value — so we can filter accurately?</li>
+        <li><strong>Weekly vs. monthly cadence for dark accounts:</strong> Brian asked about weekly or monthly. Recommendation: weekly detail for active accounts (catches a missed ship week within days) + monthly rollup for long-tail trend. Does NS2 data support weekly granularity for all four accounts, or are any of them batch-invoiced monthly?</li>
+      </ol>
+
+      <p style="margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--ink-muted); letter-spacing: .05em; text-transform: uppercase;">Shared — Applies to All Accounts</p>
       <ol class="ask-list">
-        <li><strong>Delivery cadence:</strong> Can NS2 invoice data be exported weekly, automated? We need weekly granularity to align with CRX. Is there a weekly batch job or scheduled report we can hook into?</li>
-        <li><strong>Customer filter:</strong> How is Costco represented in NS2 — one customer record, or multiple (e.g., Costco Wholesale, Costco Business Centers, separate for e-com)? We need to make sure we capture all Costco shipments.</li>
-        <li><strong>Deduction / allowance lines:</strong> How are trade allowances, returns, and spoils recorded — as separate transaction lines, as memo lines, or as credit memos? We need to trace gross to net at line level.</li>
-        <li><strong>Bars-per-line field:</strong> We believe <code style="background: var(--accent-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px;">custcolbars_per_line</code> holds the bar-equivalized unit count per line. Can Ebad confirm this is the right field and that it is populated consistently?</li>
-        <li><strong>Item mapping:</strong> How are BUILT SKUs identified in NS2 — by internal item ID, by UPC, or both? We need to map NS2 items to the same UPCs used in CRX and SPINS.</li>
-        <li><strong>Historical depth:</strong> How far back does clean invoice history go in NS2? Ideally we want 2023-to-present to match the CRX history, but we need to know if there are any schema or migration breaks in the data.</li>
-        <li><strong>Access path:</strong> Is the preferred handoff a scheduled SQL export, a NetSuite saved search, a flat-file drop to MinIO, or an API? What does Ebad's team prefer to own?</li>
+        <li><strong>Item / UPC mapping:</strong> How are BUILT SKUs identified in NS2 — internal item ID, UPC, or both? Need to map NS2 items to the same UPCs used in SPINS and Circana CRX so all three data sources join cleanly.</li>
+        <li><strong>Historical depth:</strong> How far back does clean invoice history go in NS2? Target is 2023-to-present to align with CRX history. Any schema breaks or migration gaps in the data?</li>
+        <li><strong>Access path:</strong> Preferred handoff — scheduled SQL export, NetSuite saved search, flat-file drop to MinIO, or API? What does Ebad's team prefer to own on an ongoing basis?</li>
       </ol>
 
       <div style="margin-top: 28px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px;">
         <h3 style="margin-bottom: 12px;">What to leave Ebad with</h3>
-        <p style="font-size: 14px; color: var(--ink-muted);">The ask is one recurring weekly export: Invoice transactions for Costco (and any affiliated entities), with line-level detail including bars per line, unit price, and all deduction/allowance fields. Once it flows into Mo, the Gross-to-Net tab of Experience 1 becomes fully operational — connecting BUILT's recognized revenue directly to the demand and velocity data the commercial team already uses.</p>
+        <p style="font-size: 14px; color: var(--ink-muted);">The ask is <strong>one recurring weekly export</strong> covering all retail accounts — Invoice transactions, line-level detail, bars per line, unit price, all deduction/allowance fields, sales channel segment. For Costco: this completes the Gross-to-Net tab of Experience 1. For Winco, HEB, Trader Joe's, Aldi, and Sprouts (TBD): this is the <em>only</em> performance data Mo will ever have for those accounts, and it unlocks a dedicated data-dark view that Brian asked for by name.</p>
       </div>
     </section>
 
