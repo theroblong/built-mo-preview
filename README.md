@@ -37,6 +37,14 @@ CAST(SUBSTRING(item_desc, 1, 15) AS BIGINT) AS upc
 -- '000840229305933-...' → 840229305933 → joins built_filtered_weekly.upc
 ```
 
+### Mo Data Catalog — Transformation Register Created
+
+`docs/MO_DATA_CATALOG.md` — living register of all field-level transformations, derivations, and data quirks across Mo data sources. Feeds the Aevah data catalog.
+
+**Design principle:** Druid stores raw source data faithfully. Derivations are computed at query/API time using canonical formulas in the catalog. Pre-computed Druid columns are performance caches only — the catalog formula is authoritative.
+
+Current entries: `built_costco_crx_weekly` (full), `built_filtered_weekly` (stub), NS2 shipment (stub). Add an entry for every new derived field or data quirk discovered.
+
 ### MO_74 is_mvm Fix — Parquet Regeneration Required
 
 `coupon_units` is stored as a **negative value** by Circana. The prior derivation `coupon_units > 0` never fired on real MVM rows. Confirmed via Q7/Q8 profiling: `total_coupon_units = −937,695`; `total_promoted_units = +937,695` (exact mirror); `non_promoted_units + promoted_units = total_unit_sales` ✓.
