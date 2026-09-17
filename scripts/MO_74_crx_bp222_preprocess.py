@@ -159,8 +159,10 @@ def main():
         if col in df.columns:
             df[col] = df[col].apply(parse_numeric)
 
-    # Derived: MVM flag (any coupon activity = MVM week)
-    df["is_mvm"] = (df["coupon_units"].fillna(0) > 0).astype(int)
+    # Derived: MVM flag — promoted_units > 0 is the correct signal.
+    # coupon_units is stored as a negative number by Circana (deduction from non-promoted);
+    # promoted_units is the positive counterpart and is the reliable MVM indicator.
+    df["is_mvm"] = (df["promoted_units"].fillna(0) > 0).astype(int)
 
     # Derived: DPWPW — best Costco velocity metric
     df["dpwpw"] = df.apply(

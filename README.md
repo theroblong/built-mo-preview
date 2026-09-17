@@ -37,6 +37,20 @@ CAST(SUBSTRING(item_desc, 1, 15) AS BIGINT) AS upc
 -- '000840229305933-...' → 840229305933 → joins built_filtered_weekly.upc
 ```
 
+### MO_74 is_mvm Fix — Parquet Regeneration Required
+
+`coupon_units` is stored as a **negative value** by Circana. The prior derivation `coupon_units > 0` never fired on real MVM rows. Confirmed via Q7/Q8 profiling: `total_coupon_units = −937,695`; `total_promoted_units = +937,695` (exact mirror); `non_promoted_units + promoted_units = total_unit_sales` ✓.
+
+Fixed in `scripts/MO_74_crx_bp222_preprocess.py`:
+```python
+# Before (wrong):
+df["is_mvm"] = (df["coupon_units"].fillna(0) > 0).astype(int)
+# After (correct):
+df["is_mvm"] = (df["promoted_units"].fillna(0) > 0).astype(int)
+```
+
+Parquet must be regenerated from the full BP222 file; Rob to re-ingest `built_costco_crx_weekly`. **Rule for all future Circana MVM logic: use `promoted_units > 0`.**
+
 ### Ingestion Spec Correction — 8 Columns Added
 
 The original `built_costco_crx_weekly` ingestion spec omitted 8 columns present in the MO_74 parquet output. Updated spec committed at `889d668` in `mockups/crx_druid_ingestion_guide.html`. Rob needs to re-ingest to pick up these columns:

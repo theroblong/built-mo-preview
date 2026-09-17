@@ -561,7 +561,8 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
         <div class="code-label">sql — MVM weeks flagged</div>
         <pre><span class="kw">SELECT</span> <span class="kw">SUM</span>(is_mvm) <span class="kw">AS</span> mvm_rows
 <span class="kw">FROM</span> built_costco_crx_weekly
-<span class="cmt">-- MVM = any row where Coupon Units &gt; 0 (instant savings weeks)</span></pre>
+<span class="cmt">-- MVM = Promoted Units &gt; 0 (instant savings weeks)</span>
+<span class="cmt">-- NOTE: coupon_units is stored as a NEGATIVE value by Circana — do not use for MVM detection</span></pre>
       </div>
 
       <div class="code-block">
@@ -622,7 +623,7 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
         <tr>
           <td><code>is_mvm</code></td>
           <td>long (0/1)</td>
-          <td><span class="badge primary">derived</span> 1 = Coupon Units &gt; 0 = MVM / instant savings week. Use this as the MVM flag.</td>
+          <td><span class="badge primary">derived</span> 1 = Promoted Units &gt; 0 = MVM / instant savings week. Use this as the MVM flag. <strong>Note:</strong> <code>coupon_units</code> is stored as a negative value by Circana and must not be used for MVM detection.</td>
         </tr>
         <tr>
           <td><code>dpwpw</code></td>
