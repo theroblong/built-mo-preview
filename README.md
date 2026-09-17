@@ -6,6 +6,54 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 122: CRX MVM structural finding + Sept 19 meeting prep (2026-09-17)
+
+### CRX MVM Structural Finding — Critical (Sept 17, 2026)
+
+Validation queries against the re-ingested `built_costco_crx_weekly` table revealed that **MVM cannot be detected from CRX measures alone.** The finding is structural, not a data quality issue.
+
+**What the data shows:**
+
+| Row type | Count | dollar_sales | promoted_units |
+|----------|-------|-------------|----------------|
+| Sales rows | 86,182 | $256.7M non-null | 0 (all null promo fields) |
+| Promo metadata rows | 3,337 | null | > 0 |
+
+Promo metadata and sales data are stored on **structurally separate rows** in BP222. They never coexist on the same record. Confirmed against the Jan 25, 2026 $4.9M MVM peak week — every promo field (`pct_discount`, `avg_coupon_value`, `avg_promoted_price`, `coupon_dollars`, `total_discount_dollars`) is null on that week's revenue rows.
+
+**Root cause of prior fix being insufficient:** The original `coupon_units > 0` formula always failed because Circana stores coupon_units as negative. The corrected `promoted_units > 0` formula fires correctly — but only on null-dollar_sales rows. Neither approach flags MVM on revenue rows.
+
+**Resolution approach:**
+
+| Option | Status |
+|--------|--------|
+| Derive from CRX measures alone | ❌ Not possible |
+| `promoted_units > 0` | ❌ Only fires on rows with no dollar_sales |
+| Join to Brian's promo calendar | ✅ Correct approach |
+
+**Implementation plan:** Create `built_costco_mvm_calendar` lookup table (small, ~50–100 rows) from Brian's full Costco MVM event history. Join at query time on item × week overlap. No re-ingest of the 5.4M-row table needed.
+
+**Blocker:** Brian's current promo lift file has only 2 Costco rows (Use=None). Need full MVM event history back to Jan 2023 from Brian or Justin before `is_mvm` can be used in any Mo query.
+
+**Data catalog:** `docs/MO_DATA_CATALOG.md` updated — `is_mvm` entry documents the structural finding, promo calendar join formula, and both invalid approaches.
+
+### Sept 19, 2026 — Friday Standup Meeting Prep
+
+BUILT × Aevah cadence — attendees: Brian Cluster, Justin Fisher, Ebad Hashemi, Rob Long, Jason.
+
+**Agenda topics:**
+
+1. **CRX MVM detection — critical finding** (Justin + Brian) — is promo/sales row separation intentional? Does Circana deliver a separate event schedule? Brian: need full MVM calendar back to Jan 2023.
+2. **NS2 shipment data ask** (Ebad) — delivery cadence, Costco GTN filter, `custcolbars_per_line`, data-dark retailer account codes, UPC mapping, historical depth, access path.
+3. **NS2 open AIs** (Ebad) — AI-12 (finance DB views) and AI-13 (NS→NS2 glossary).
+4. **Dimension tables** (Justin) — customers, products, salesperson→customer hierarchy; UPC crosswalk gaps.
+5. **Trade promo calendar structure** (Brian) — walk through file; how to use for feature engineering windows.
+6. **RBAC design** (Rob) — tier proposal once Brian is back from Vegas.
+
+**Full prep doc:** `customer-built-doc/wiki/18-built-aevah-cadence.md` — Working Agenda section with all questions grouped by recipient.
+
+---
+
 ## README update 121: Mo three-tier data architecture + Costco/data-dark analytics brief (2026-09-17)
 
 ### Mo Retailer Data Architecture — Confirmed
