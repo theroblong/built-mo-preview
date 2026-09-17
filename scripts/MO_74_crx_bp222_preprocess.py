@@ -143,7 +143,8 @@ def main():
     df = df.rename(columns=COLUMN_MAP)
 
     # Parse week_ending from "N week ending MM-DD-YYYY"
-    df["week_ending"] = df["time_raw"].apply(parse_week_ending)
+    df = df.copy()
+    df.loc[:, "week_ending"] = df["time_raw"].apply(parse_week_ending)
     bad_dates = df["week_ending"].isna().sum()
     if bad_dates:
         print(f"  WARNING: {bad_dates:,} rows with unparseable Time — dropped")
@@ -152,12 +153,12 @@ def main():
     # Parse dollar fields
     for col in DOLLAR_COLS:
         if col in df.columns:
-            df[col] = df[col].apply(parse_dollar)
+            df.loc[:, col] = df[col].apply(parse_dollar)
 
     # Parse numeric fields
     for col in NUMERIC_COLS:
         if col in df.columns:
-            df[col] = df[col].apply(parse_numeric)
+            df.loc[:, col] = df[col].apply(parse_numeric)
 
     # Derived: MVM flag — promoted_units > 0 is the correct signal.
     # coupon_units is stored as a negative number by Circana (deduction from non-promoted);
