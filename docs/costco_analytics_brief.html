@@ -405,7 +405,7 @@
   <div class="cover">
     <p class="cover-eyebrow">Aevah · Mo Intelligence Platform</p>
     <h1>Costco &amp; Data-Dark Analytics Plan<br><em style="font-weight:400; font-style:italic;">and Ebad Meeting Prep</em></h1>
-    <p class="cover-sub">How Circana CRX data powers Mo's Costco view — and how NetSuite shipments are the only signal at Winco, HEB, Trader Joe's, and Aldi.</p>
+    <p class="cover-sub">How Circana CRX data powers Mo's Costco view — and how NetSuite shipments are the only signal at Winco, HEB, Trader Joe's, and Aldi. (Sprouts is confirmed in SPINS — full Mo coverage.)</p>
     <div class="cover-meta">
       <span>Prepared by Aevah</span>
       <span>September 17, 2026</span>
@@ -617,8 +617,14 @@
             <td>NS2 as external validation</td>
           </tr>
           <tr>
+            <td><strong>Class 1 — SPINS</strong> <em style="font-size:12px;color:var(--ink-muted)">(also)</em></td>
+            <td>Sprouts Farmers Market</td>
+            <td><span class="badge badge-green">NATURAL EXPANDED channel</span></td>
+            <td>Full SPINS suite — same as conventional</td>
+          </tr>
+          <tr>
             <td><strong>Class 4 — Data dark</strong></td>
-            <td>Winco, HEB, Trader Joe's, Aldi, Sprouts (TBD)</td>
+            <td>Winco, HEB, Trader Joe's, Aldi</td>
             <td><span style="font-size:12px;font-weight:600;color:var(--red);">None</span></td>
             <td><strong>Primary signal — shipments only</strong></td>
           </tr>
@@ -650,9 +656,9 @@
           <p>Same data class as HEB. No syndicated panel. Shipments serve as the demand proxy. Mo can benchmark trajectory shape against Natural/Expanded channel SPINS-reporting peers — but only if NS2 data is flowing.</p>
         </div>
         <div class="cap-card">
-          <span class="cap-number">Aldi + Sprouts</span>
-          <h3>Shipment report requested; Sprouts TBD</h3>
-          <p>Brian explicitly asked whether a weekly or monthly shipment report would help for Aldi. NS2 invoice frequency is the only performance view. Sprouts is TBD — needs to be confirmed whether it participates in SPINS (Natural Expanded channel) or is dark. If dark, same shipment-only treatment applies.</p>
+          <span class="cap-number">Aldi</span>
+          <h3>Shipment report requested</h3>
+          <p>Brian explicitly asked whether a weekly or monthly shipment report would help for Aldi. NS2 invoice frequency is the only performance view. Note: Sprouts is <strong>not</strong> data-dark — it is confirmed in SPINS as Sprouts Farmers Market under the Natural Expanded channel and gets the full Mo treatment.</p>
         </div>
       </div>
 
@@ -727,7 +733,7 @@
       <p style="margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--ink-muted); letter-spacing: .05em; text-transform: uppercase;">Data-Dark Retailers — Shipment Signal</p>
       <ol class="ask-list" style="margin-bottom: 24px;">
         <li><strong>Account coverage confirmation:</strong> Can Ebad confirm that Winco, HEB, Trader Joe's, and Aldi are all distinct customer records in NS2? Are there subsidiaries or distribution-center entities that would split shipment records (e.g., HEB Central vs. HEB Plus)?</li>
-        <li><strong>Sprouts classification:</strong> Is Sprouts in NS2 as a distinct account? Does BUILT have an active shipping relationship with Sprouts, and if so, is any panel scan data available (SPINS Natural Expanded channel) or is it ship-only?</li>
+        <li><strong>Sprouts — confirmed SPINS, not dark:</strong> Sprouts Farmers Market is confirmed in SPINS under the Natural Expanded channel — it gets the full Mo treatment, not the shipment-only view. No data-dark question needed for Sprouts. NS2 shipment data for Sprouts is still useful as a GTN supplement, same as conventional SPINS retailers.</li>
         <li><strong>Sales channel segment:</strong> NS2 has a <code style="background: var(--accent-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px;">cseg_bb_sales_chann</code> field (Sales Channel). Can Ebad confirm how data-dark retailers are classified — "Grocery," a regional flag, or another value — so we can filter accurately?</li>
         <li><strong>Weekly vs. monthly cadence for dark accounts:</strong> Brian asked about weekly or monthly. Recommendation: weekly detail for active accounts (catches a missed ship week within days) + monthly rollup for long-tail trend. Does NS2 data support weekly granularity for all four accounts, or are any of them batch-invoiced monthly?</li>
       </ol>
@@ -741,7 +747,7 @@
 
       <div style="margin-top: 28px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px;">
         <h3 style="margin-bottom: 12px;">What to leave Ebad with</h3>
-        <p style="font-size: 14px; color: var(--ink-muted);">The ask is <strong>one recurring weekly export</strong> covering all retail accounts — Invoice transactions, line-level detail, bars per line, unit price, all deduction/allowance fields, sales channel segment. For Costco: this completes the Gross-to-Net tab of Experience 1. For Winco, HEB, Trader Joe's, Aldi, and Sprouts (TBD): this is the <em>only</em> performance data Mo will ever have for those accounts, and it unlocks a dedicated data-dark view that Brian asked for by name.</p>
+        <p style="font-size: 14px; color: var(--ink-muted);">The ask is <strong>one recurring weekly export</strong> covering all retail accounts — Invoice transactions, line-level detail, bars per line, unit price, all deduction/allowance fields, sales channel segment. For Costco: completes the Gross-to-Net tab of Experience 1. For Winco, HEB, Trader Joe's, and Aldi: this is the <em>only</em> performance data Mo will ever have for those accounts, unlocking the data-dark view Brian asked for by name. For all other SPINS-covered retailers (including Sprouts): a GTN and sell-in supplement to the scan data Mo already has.</p>
       </div>
     </section>
 
