@@ -8,7 +8,7 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ## README update 120: Costco CRX profiling results + ingestion spec correction (2026-09-16)
 
-### `costco_crx_weekly` — Q3 Druid Profiling Results
+### `built_costco_crx_weekly` — Q3 Druid Profiling Results
 
 Q3 run against the live table confirms the UPC prefix structure and gives full product revenue breakdown.
 
@@ -39,7 +39,7 @@ CAST(SUBSTRING(item_desc, 1, 15) AS BIGINT) AS upc
 
 ### Ingestion Spec Correction — 8 Columns Added
 
-The original `costco_crx_weekly` ingestion spec omitted 8 columns present in the MO_74 parquet output. Updated spec committed at `889d668` in `mockups/crx_druid_ingestion_guide.html`. Rob needs to re-ingest to pick up these columns:
+The original `built_costco_crx_weekly` ingestion spec omitted 8 columns present in the MO_74 parquet output. Updated spec committed at `889d668` in `mockups/crx_druid_ingestion_guide.html`. Rob needs to re-ingest to pick up these columns:
 
 | Column | Type |
 |--------|------|
@@ -210,14 +210,14 @@ Drafted the full CRX → Druid integration for Costco BP222 data:
 - Architecture diagram: `mockups/crx_spins_architecture.html` — two-lane swim lane showing SPINS and CRX pipelines converging in Druid, join logic, Mo output layer, and 8 caveats/limitations
 
 **Key design decisions:**
-- Target Druid table: `costco_crx_weekly` (item × warehouse × week grain; rollup=false)
+- Target Druid table: `built_costco_crx_weekly` (item × warehouse × week grain; rollup=false)
 - `week_ending` = Sunday — direct join to `built_filtered_weekly.week_ending`, no offset needed
 - `is_mvm` = `coupon_units > 0` — MVM/instant savings flag
 - `dpwpw` = `dollar_sales / warehouses_selling` — primary Costco velocity metric
 - UPC join: pending item table from Justin Fisher (added to Circana bucket 2026-09-15; MinIO path TBD)
 
 **Still pending before full integration:**
-- Rob: load BP222 Parquet into built Druid instance (`costco_crx_weekly` table)
+- Rob: load BP222 Parquet into built Druid instance (`built_costco_crx_weekly` table)
 - Justin: share item table MinIO path (Costco item# → UPC crosswalk)
 - Justin: confirm BP222 refresh cadence
 - Circana: resolve OOS / In Stock% (~100% null)
@@ -304,7 +304,7 @@ Justin answered 5 of 6 original CRX questions (OOS still pending). Three follow-
 6. Coupon timing: CRX = POS scan week; MVM auto-applied at register → aligns with Brian's actual event dates
 
 **Integration plan — 4 phases:**
-- Phase 1 (Ingest): `costco_crx_weekly` Druid table; Status=3 filter; exclude placeholder UPCs; align week boundary (Costco Mon-Sun vs SPINS Sun-Sat); confirm unit definition before treating as SPINS-comparable
+- Phase 1 (Ingest): `built_costco_crx_weekly` Druid table; Status=3 filter; exclude placeholder UPCs; align week boundary (Costco Mon-Sun vs SPINS Sun-Sat); confirm unit definition before treating as SPINS-comparable
 - Phase 2 (Mo demand screen): Costco as retail_account; DPWPW velocity; Warehouses Selling as TDP proxy; MVM flag annotations; extend LightGBM demand model (same 28 features + `mvm_flag`)
 - Phase 3 (Elasticity/promo): MVM on/off as event signal; intra-BUILT cannibalization (1CT vs 4CT) if both subscribed; no cross-brand
 - Phase 4 (Distribution tracker): Warehouses Selling over time; regional drill-down; WH 847 separate

@@ -364,9 +364,9 @@
   <div class="header">
     <div class="breadcrumb">Aevah / Mo · <span>Data Ingestion</span></div>
     <h1>Costco CRX (BP222) → Druid</h1>
-    <p style="color:var(--text-2); font-size:13px; margin-top:8px;">Step-by-step guide to preprocess the BP222 Circana extract and load it into <code style="font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--surface); border:1px solid var(--border); border-radius:3px; padding:1px 5px;">costco_crx_weekly</code> in Druid.</p>
+    <p style="color:var(--text-2); font-size:13px; margin-top:8px;">Step-by-step guide to preprocess the BP222 Circana extract and load it into <code style="font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--surface); border:1px solid var(--border); border-radius:3px; padding:1px 5px;">built_costco_crx_weekly</code> in Druid.</p>
     <div class="meta-row">
-      <div>Target table: <span class="meta-chip">costco_crx_weekly</span></div>
+      <div>Target table: <span class="meta-chip">built_costco_crx_weekly</span></div>
       <div>Script: <span class="meta-chip">scripts/MO_74_crx_bp222_preprocess.py</span></div>
       <div>Last updated: <span class="meta-chip">Sept 16, 2026</span></div>
     </div>
@@ -377,7 +377,7 @@
     <div class="overview-title">At a glance</div>
     <div class="overview-grid">
       <div class="overview-item"><label>Source file</label><value>BP222 CSV (5.4M rows)</value></div>
-      <div class="overview-item"><label>Output</label><value>costco_crx_weekly.parquet</value></div>
+      <div class="overview-item"><label>Output</label><value>built_costco_crx_weekly.parquet</value></div>
       <div class="overview-item"><label>Date range</label><value>2023-01-08 → 2026-08-31</value></div>
       <div class="overview-item"><label>Time column</label><value>week_ending (Sunday)</value></div>
       <div class="overview-item"><label>Grain</label><value>item × warehouse × week</value></div>
@@ -400,7 +400,7 @@ pip install pandas pyarrow
 <span class="cmt"># Run MO_74 — point to the raw BP222 CSV</span>
 python scripts/MO_74_crx_bp222_preprocess.py \
   <span class="str">"/path/to/(BP222) Daily Inventory Status by Warehouse_Aevah (1-1-2023_8-30-2026).csv"</span> \
-  --output outputs/costco_crx_weekly.parquet</pre>
+  --output outputs/built_costco_crx_weekly.parquet</pre>
       </div>
 
       <div class="step-sub" style="margin-top:12px; margin-bottom:6px;">Expected console output:</div>
@@ -412,7 +412,7 @@ python scripts/MO_74_crx_bp222_preprocess.py \
   WHs     909 distinct warehouses
   MVM wks XX,XXX rows flagged as MVM
   Sparse  ~5,300,000 rows with null dollar_sales (<span class="hi">~98.0%</span>)
-  Written → outputs/costco_crx_weekly.parquet  (~XXX MB)
+  Written → outputs/built_costco_crx_weekly.parquet  (~XXX MB)
 
 Next step: upload to MinIO, then run Druid ingestion spec.</div>
 
@@ -434,8 +434,8 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
 
       <div class="code-block">
         <div class="code-label">bash — MinIO client (mc)</div>
-        <pre>mc cp outputs/costco_crx_weekly.parquet \
-   &lt;minio-alias&gt;/circana/costco/costco_crx_weekly.parquet</pre>
+        <pre>mc cp outputs/built_costco_crx_weekly.parquet \
+   &lt;minio-alias&gt;/circana/costco/built_costco_crx_weekly.parquet</pre>
       </div>
     </div>
   </div>
@@ -463,12 +463,12 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
       <span class="key">"type"</span>: <span class="str">"index_parallel"</span>,
       <span class="key">"inputSource"</span>: {
         <span class="key">"type"</span>: <span class="str">"s3"</span>,
-        <span class="key">"uris"</span>: [<span class="str">"s3://&lt;bucket&gt;/circana/costco/costco_crx_weekly.parquet"</span>]
+        <span class="key">"uris"</span>: [<span class="str">"s3://&lt;bucket&gt;/circana/costco/built_costco_crx_weekly.parquet"</span>]
       },
       <span class="key">"inputFormat"</span>: { <span class="key">"type"</span>: <span class="str">"parquet"</span> }
     },
     <span class="key">"dataSchema"</span>: {
-      <span class="key">"dataSource"</span>: <span class="str">"costco_crx_weekly"</span>,
+      <span class="key">"dataSource"</span>: <span class="str">"built_costco_crx_weekly"</span>,
       <span class="key">"timestampSpec"</span>: {
         <span class="key">"column"</span>: <span class="str">"week_ending"</span>,
         <span class="key">"format"</span>: <span class="str">"yyyy-MM-dd"</span>
@@ -545,7 +545,7 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
         <pre><span class="kw">SELECT</span> <span class="kw">COUNT</span>(*) <span class="kw">AS</span> rows,
        <span class="kw">MIN</span>(__time) <span class="kw">AS</span> earliest,
        <span class="kw">MAX</span>(__time) <span class="kw">AS</span> latest
-<span class="kw">FROM</span> costco_crx_weekly
+<span class="kw">FROM</span> built_costco_crx_weekly
 <span class="cmt">-- Expected: ~5.4M rows, 2023-01-08 to 2026-08-31</span></pre>
       </div>
 
@@ -553,14 +553,14 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
         <div class="code-label">sql — distinct items + warehouses</div>
         <pre><span class="kw">SELECT</span> <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> item_desc)     <span class="kw">AS</span> items,
        <span class="kw">COUNT</span>(<span class="kw">DISTINCT</span> warehouse_name) <span class="kw">AS</span> warehouses
-<span class="kw">FROM</span> costco_crx_weekly
+<span class="kw">FROM</span> built_costco_crx_weekly
 <span class="cmt">-- Expected: 29 items, ~909 warehouses</span></pre>
       </div>
 
       <div class="code-block">
         <div class="code-label">sql — MVM weeks flagged</div>
         <pre><span class="kw">SELECT</span> <span class="kw">SUM</span>(is_mvm) <span class="kw">AS</span> mvm_rows
-<span class="kw">FROM</span> costco_crx_weekly
+<span class="kw">FROM</span> built_costco_crx_weekly
 <span class="cmt">-- MVM = any row where Coupon Units &gt; 0 (instant savings weeks)</span></pre>
       </div>
 
@@ -568,7 +568,7 @@ Next step: upload to MinIO, then run Druid ingestion spec.</div>
         <div class="code-label">sql — DPWPW velocity by week (quick sanity check)</div>
         <pre><span class="kw">SELECT</span> TIME_FLOOR(__time, <span class="str">'P1W'</span>) <span class="kw">AS</span> week,
        <span class="kw">SUM</span>(dollar_sales) / NULLIF(<span class="kw">SUM</span>(warehouses_selling), <span class="num">0</span>) <span class="kw">AS</span> dpwpw_avg
-<span class="kw">FROM</span> costco_crx_weekly
+<span class="kw">FROM</span> built_costco_crx_weekly
 <span class="kw">WHERE</span> unit_sales &gt; <span class="num">0</span>
 <span class="kw">GROUP BY</span> <span class="num">1</span>
 <span class="kw">ORDER BY</span> <span class="num">1</span></pre>
