@@ -6,6 +6,27 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 123: Mo Chat incident + fix — anthropic package missing from mo-ml (2026-09-18)
+
+Mo Chat (Claude + GPT-4o) stopped responding on Sept 18 with 0-byte streaming responses and "Mo hit a snag" in the UI. Root cause: the `anthropic` and `openai` packages were missing from the `mo-ml` conda environment after what appeared to be a conda update. The generator crashed with `ModuleNotFoundError` before yielding its first byte — FastAPI silently closed the connection with no visible error.
+
+**Fixes committed (`4b995d2`):**
+- Installed `anthropic==0.111.0` + `openai` into `mo-ml` (both are in `requirements.txt`)
+- Added `load_dotenv()` to top of `main.py` — ensures `ANTHROPIC_API_KEY` is always loaded from `.env` on fresh server starts regardless of import order
+- Added broad `except Exception` in `_stream_anthropic_with_tools` so crashes surface as SSE error events instead of silent 0-byte connections
+- Improved error messages in both streaming and sync paths to name the missing env var and say to restart the server
+- Added Qwen3 no-UPC system prompt instruction: when no focal product is selected, Qwen3 now asks the user to pick from the dropdown instead of trying a multi-turn tool loop (too slow on a local 8B model)
+
+**Blue Razz 4pk search:** Confirmed working end-to-end — "Show me blue razz 4pk" resolves to `08-40229-30654 Built Sweet Sour Puff Blue Raz Blast 1.45 Oz (4pk)` and auto-selects via `update_filters(set_focal_upc=...)` in under 4 seconds. Full incident diagnosis checklist added to wiki/06-mo-chat.md.
+
+**If this recurs after a conda update:**
+```bash
+/opt/anaconda3/envs/mo-ml/bin/pip install anthropic==0.111.0 "openai>=1.30.0"
+touch app/main.py   # triggers uvicorn --reload
+```
+
+---
+
 ## README update 122: CRX MVM structural finding + Sept 19 meeting prep (2026-09-17)
 
 ### CRX MVM Structural Finding — Critical (Sept 17, 2026)
