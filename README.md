@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 124: Sept 18 BUILT Aevah Cadence — NS2 shipment data agreed with Ebad (2026-09-18)
+
+Only Ebad could join (Brian/Justin at GroceryShop). Full 43-min working session on NS2 shipment data for the 4 data-dark retailers (WinCo, HEB, Trader Joe's, Aldi). All questions answered; separate "shipment data talk" meeting retired — covered here.
+
+**Agreed:** Ebad delivers CSV export of raw transaction-line data (YTD, 4 dark retailers) by Mon/Tue Sept 21/22. Fields: customer name/ID, sales channel, item ID + flavor, ship date, gross revenue, cases, bars (`custcolbars_per_line`), all line types with descriptions. UPC field currently broken (wrong join) — AI-15 to fix after Jason sends SPINS UPC examples (AI-18).
+
+**Key decisions:** NS2 = substitution not blend (joined via UPC); ship-date filter only (no open orders); weekly grain (week-ending Sunday); primary use = demand velocity (bars shipped per retailer per week); cannibalization not applicable; price elasticity possible if promo weeks distinguishable. CSV → MinIO automation deferred.
+
+**Wiki updated:** `customer-built-doc/wiki/18-built-aevah-cadence.md` — Sept 18 entry added, AI-15 through AI-19 added, Sept 19 agenda updated.
+
+---
+
 ## README update 123: Mo Chat incident + fix — anthropic package missing from mo-ml (2026-09-18)
 
 Mo Chat (Claude + GPT-4o) stopped responding on Sept 18 with 0-byte streaming responses and "Mo hit a snag" in the UI. Root cause: the `anthropic` and `openai` packages were missing from the `mo-ml` conda environment after what appeared to be a conda update. The generator crashed with `ModuleNotFoundError` before yielding its first byte — FastAPI silently closed the connection with no visible error.
