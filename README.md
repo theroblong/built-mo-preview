@@ -6,6 +6,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 126: Measure dictionaries fully read — Built Measure Dictionary + CRX Measures Guide (2026-09-21)
+
+Full deep-read of both Circana/BUILT reference documents from MinIO:
+
+**#2 — Built Measure Dictionary** (7 sheets, all departments): Confirmed sales channel taxonomy (Retail-Club, Grocery, Mass, Drug, C-Store, Distributor, Wholesale, Marketplace, DTC), NetSuite order status flow, and key BUILT-specific metrics (FGE, Bars Sold vs Bars Shipped, OTIF, MABD, CPMU, Batch Yield). SPINS Measures sheet confirmed TDP, ARP, Base/Incr definitions consistent with our pipeline. Numerator panel metrics documented.
+
+**#3 — CRX Measures Guide US** (129 measures): Six critical pipeline confirmations: (1) `promoted_units > 0` is the correct `is_mvm` signal — confirmed by official guide (Promoted Units = reverse sign of Coupon Units; positive at redemption). (2) Dollar Sales = gross net of returns only, not coupons. Net Dollars = gross net of both coupons AND returns. (3) DPWPW formula confirmed: Dollar Sales ÷ SUM of WH-selling counts per week. (4) Quantity Received double-count risk — Costco records at both depot AND warehouse; never sum across all locations. (5) IOH is a non-additive day-level snapshot — last day of period if reporting above day level. (6) OOS null in BP222 confirmed expected — custom aggregate limitation (same as FAQ finding). Wiki and memory updated.
+
+---
+
 ## README update 125: CRX FAQ deep-read — MVM auto-populated, OOS null explained, automation blocked (2026-09-21)
 
 Full read of Costco CRX FAQ (`docs/Costco_FAQs_and_Data_Nuances_v6.md`) against all open Circana questions. Three key findings:
