@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 128: Ebad delivers NS2 shipment data — two fields pending (2026-09-21)
+
+Ebad Hashemi delivered `Shipment Data.sql` + `Shipment Data.xlsx` to the `enterprise-landing` MinIO bucket (today, 14:37 MDT). Historical shipments for the 4 data-dark retailers (WinCo, HEB, TJ's, Aldi). AI-16 partially complete.
+
+**Two fields still missing — Ebad will add ASAP:**
+- `custcolbars_per_line` ("Total Bars Per Line") — PRIMARY velocity field; without it we cannot compute bars shipped/retailer/week; top priority
+- `custbody_bb_cost_per_bar` ("Cost Per Bar") — transaction header level; useful for GTN/economics
+
+**Open questions sent to Ebad:**
+1. UPC fix (AI-15) — does the SQL now pull `item.upccode` correctly? Previously all rows had the same wrong UPC value — this is the SPINS join key.
+2. Date range — does "historical" go back to Jan 2023, or YTD only?
+3. Customer + item dimension tables (AI-17) — in the Excel, or coming separately?
+4. Finance DB (AI-12) — NS2 schema is complete; the gap is the separate Finance DB (Sales Cube, Retail Cube views). Need view list + columns.
+
+NS2 schema coverage confirmed complete: `Netsuite Table and Column Remarks.csv` + 5 Sept 15 files cover all 57 NS2 tables. No missing NS2 tables. Only gap = Finance DB.
+
+---
+
 ## README update 127: SPINS staging validation + pipeline architecture decision (2026-09-21)
 
 Validated new SPINS staging datasource `built_spins_all_items_9626` (Rob's caution-first pattern: new datasource → validate → merge). Full validation gate results:
