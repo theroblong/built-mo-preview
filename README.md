@@ -6,6 +6,26 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 127: SPINS staging validation + pipeline architecture decision (2026-09-21)
+
+Validated new SPINS staging datasource `built_spins_all_items_9626` (Rob's caution-first pattern: new datasource → validate → merge). Full validation gate results:
+
+- **Date range:** Sept 14, 2025 → Sept 6, 2026 (52-week rolling extract)
+- **New weeks:** 4 (Aug 16 / Aug 23 / Aug 30 / Sept 6, 2026) = 2,062,010 rows to merge
+- **Schema:** 215 columns — exact match to `spins_full` (runbook spec of "214" is outdated)
+- **Channels:** 11/12 match; `CONVENTIONAL|MULO + CONVENIENCE` → `CONVENTIONAL|W/` rename handled by existing CASE FIX; `CONVENTIONAL|DOLLAR` absent (20K rows in full history, minor channel — confirm with Rob/BUILT)
+- **BUILT brand family:** BUILT BAR 18 / BUILT PUFF 67 / BUILT SOUR PUFF 15 — consistent with prior data (BAR drop 60→18 = discontinued SKUs in 52-week window, expected)
+- **Verdict: GREEN** — merge command ready: `REPLACE INTO spins_full OVERWRITE WHERE __time > '2026-08-09T00:00:00.000Z'`
+
+**Architecture note:** Raised whether new weeks could write directly to `built_filtered_weekly` (skipping `spins_full` update). Mo ML pipeline is `built_filtered_weekly`-based; `spins_full` is the full competitive-universe source of truth needed for reprocessing and competitive analysis. Rob to decide: weekly incremental via `spins_full` (current pattern) vs. designating `spins_full` as quarterly archival and running incrementals direct-to-`built_filtered_weekly`.
+
+**Outstanding from Brian/Justin/Ebad as of Sept 21, 2026:**
+- Brian: SKU portfolio response feedback; Experience 1 sign-off
+- Justin: AI-1 dimension tables (overdue Sept 16); MVM in BP222 flat-file vs portal-only; BP222 delivery cadence; RBAC design
+- Ebad: NS2 shipment CSV for data-dark retailers (AI-15/16/17 — due today/tomorrow)
+
+---
+
 ## README update 126: Measure dictionaries fully read — Built Measure Dictionary + CRX Measures Guide (2026-09-21)
 
 Full deep-read of both Circana/BUILT reference documents from MinIO:
