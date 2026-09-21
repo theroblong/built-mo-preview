@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 125: CRX FAQ deep-read — MVM auto-populated, OOS null explained, automation blocked (2026-09-21)
+
+Full read of Costco CRX FAQ (`docs/Costco_FAQs_and_Data_Nuances_v6.md`) against all open Circana questions. Three key findings:
+
+1. **MVM dates are auto-populated by Costco into the CRX database** — no separate calendar needed from Brian. Revised question for Justin: do those MVM period flags appear in the BP222 flat-file export, or only in the portal UI? If they're in the file, `promoted_units > 0` plus MVM period boundaries gives us full promo coverage. Brian's manual calendar is de-prioritized pending Justin's answer.
+
+2. **OOS null is expected behavior** — CRX FAQ states OOS doesn't work for custom aggregates; it's item-level only. BP222 is an aggregate export. Close Justin's Circana investigation — it was a dead end.
+
+3. **Automation requires ATP upgrade** — Circana explicitly prohibits bots/automated downloads without the Advanced Technology Package. Justin cannot automate BP222 drops into MinIO without a contract change. Pipeline automation plan for CRX must account for this; flag to Brian as a potential subscription decision.
+
+Also confirmed: TPRs and COMPs are NOT in CRX promo measures — only IRCs/MVMs. No baseline units in CRX — period comparison is the correct lift proxy (our current approach). Coupon Dollars stored as negatives (consistent with our `coupon_units` finding). Wiki and memory updated.
+
+---
+
 ## README update 124: Sept 18 BUILT Aevah Cadence — NS2 shipment data agreed with Ebad (2026-09-18)
 
 Only Ebad could join (Brian/Justin at GroceryShop). Full 43-min working session on NS2 shipment data for the 4 data-dark retailers (WinCo, HEB, Trader Joe's, Aldi). All questions answered; separate "shipment data talk" meeting retired — covered here.
