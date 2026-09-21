@@ -6,6 +6,14 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 129: NS2 UPC validation + CustomerDim profiled (2026-09-21)
+
+**UPC join strategy confirmed** (`custcol_sps_upccasecode`): zero-pad NS2 field to 12 digits, strip dashes from SPINS UPCs → exact match. `084022930257` (NS2) = `08-40229-30257` (SPINS). 27/33 distinct UPCs match (83.8% of product rows). All 6 non-matches explained: 2 Trader Joe's private store codes (00000-prefix, never in SPINS — TJ's policy), 1 MER-prefix merchandise item (exclude from analysis), 3 newer/limited SKUs not yet in SPINS universe.
+
+**CustomerDim.csv profiled** (139 rows, 191 cols): Ebad filtered 2.8M-row full NS2 customer table to retail-only — 119 active, 20 inactive. Join check: all 4 dark-retailer `customer_id` values from shipment data match `dim.id` exactly — zero gaps. Key fields: `id` (join key), `entityid` (C-prefixed external ID), `companyname`, `cseg_bb_sales_chann`, `isinactive`, `salesrep`. One open item: `cseg_bb_sales_chann` comes through as numeric NS2 internal IDs — need `CUSTOMRECORD_CSEG_BB_SALES_CHANN` lookup table to decode to human-readable channel names (Grocery, Mass, Club, etc.).
+
+---
+
 ## README update 128: Ebad delivers NS2 shipment data — two fields pending (2026-09-21)
 
 Ebad Hashemi delivered `Shipment Data.sql` + `Shipment Data.xlsx` to the `enterprise-landing` MinIO bucket (today, 14:37 MDT). Historical shipments for the 4 data-dark retailers (WinCo, HEB, TJ's, Aldi). AI-16 partially complete.
