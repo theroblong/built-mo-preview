@@ -1,5 +1,6 @@
 <title>Mo Data Model</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
 <style>
 :root {
   --bg:        #0D1117;
@@ -221,6 +222,86 @@ code, .mono { font-family: 'IBM Plex Mono', monospace; }
 
 /* Mermaid override */
 .mermaid svg { max-width: 100%; }
+
+/* Diagram controls */
+.diagram-controls {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 10px; margin-bottom: 4px;
+}
+.diagram-btn {
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700;
+  padding: 7px 16px; border-radius: 5px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .15s, color .15s, box-shadow .15s;
+  letter-spacing: .01em;
+}
+.diagram-btn svg { flex-shrink: 0; }
+#btn-download-mmd {
+  background: rgba(63,185,80,.14); border: 1.5px solid #3FB950;
+  color: #2ea043;
+}
+#btn-download-mmd:hover {
+  background: rgba(63,185,80,.25); box-shadow: 0 0 0 1px #3FB950; color: #1a7f37;
+}
+#btn-fullscreen {
+  background: rgba(88,166,255,.14); border: 1.5px solid #58A6FF;
+  color: #1a6cc9;
+}
+#btn-fullscreen:hover {
+  background: rgba(88,166,255,.25); box-shadow: 0 0 0 1px #58A6FF; color: #0d4fa8;
+}
+@media (prefers-color-scheme: dark) {
+  #btn-download-mmd { color: #3FB950; }
+  #btn-download-mmd:hover { color: #56d364; }
+  #btn-fullscreen { color: #58A6FF; }
+  #btn-fullscreen:hover { color: #79c0ff; }
+}
+:root[data-theme="dark"] #btn-download-mmd { color: #3FB950; }
+:root[data-theme="dark"] #btn-download-mmd:hover { color: #56d364; }
+:root[data-theme="dark"] #btn-fullscreen { color: #58A6FF; }
+:root[data-theme="dark"] #btn-fullscreen:hover { color: #79c0ff; }
+
+/* Fullscreen overlay */
+#fs-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0D1117;
+  display: flex; flex-direction: column;
+}
+#fs-overlay[hidden] { display: none; }
+#fs-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-bottom: 1px solid #30363D;
+  flex-shrink: 0; background: #161B22;
+}
+#fs-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: #7D8590; flex: 1;
+}
+.fs-btn {
+  background: #21262D; border: 1px solid #30363D;
+  color: #E6EDF3; font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; padding: 3px 10px; border-radius: 4px; cursor: pointer;
+  transition: border-color .15s;
+}
+.fs-btn:hover { border-color: #7D8590; }
+#fs-zoom-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: #7D8590; min-width: 40px; text-align: right;
+}
+#fs-canvas {
+  flex: 1; overflow: hidden; position: relative; cursor: grab;
+}
+#fs-canvas.grabbing { cursor: grabbing; }
+#fs-inner {
+  position: absolute; top: 0; left: 0;
+  transform-origin: 0 0;
+}
+#fs-inner svg { display: block; max-width: none !important; }
+#fs-hint {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: #484F58; pointer-events: none; white-space: nowrap;
+}
 </style>
 
 <div class="page-header">
@@ -240,7 +321,7 @@ code, .mono { font-family: 'IBM Plex Mono', monospace; }
 
 <div class="section-label">Data Flow</div>
 <div class="diagram-wrap">
-<pre class="mermaid">
+<pre class="mermaid" id="mmd-source">
 %%{init: {"theme": "base", "themeVariables": {
   "background": "#161B22",
   "primaryColor": "#21262D",
@@ -327,6 +408,32 @@ graph LR
 </pre>
 </div>
 
+<div class="diagram-controls">
+  <button class="diagram-btn" id="btn-download-mmd">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z"/><path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.97a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.779a.749.749 0 1 1 1.06-1.06l1.97 1.97Z"/></svg>
+    Download .mmd
+  </button>
+  <button class="diagram-btn" id="btn-fullscreen">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 10a.75.75 0 0 1 .75.75v2.5c0 .138.112.25.25.25h2.5a.75.75 0 0 1 0 1.5h-2.5A1.75 1.75 0 0 1 1 13.25v-2.5a.75.75 0 0 1 .75-.75ZM14.25 10a.75.75 0 0 1 .75.75v2.5A1.75 1.75 0 0 1 13.25 15h-2.5a.75.75 0 0 1 0-1.5h2.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 .75-.75ZM2.75 2.5a.25.25 0 0 0-.25.25v2.5a.75.75 0 0 1-1.5 0v-2.5C1 1.784 1.784 1 2.75 1h2.5a.75.75 0 0 1 0 1.5ZM10 1.75a.75.75 0 0 1 .75-.75h2.5C14.216 1 15 1.784 15 2.75v2.5a.75.75 0 0 1-1.5 0v-2.5a.25.25 0 0 0-.25-.25h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>
+    Fullscreen
+  </button>
+</div>
+
+<div id="fs-overlay" hidden>
+  <div id="fs-toolbar">
+    <span id="fs-title">Mo Data Flow · scroll to zoom · drag to pan</span>
+    <span id="fs-zoom-label">100%</span>
+    <button class="fs-btn" id="fs-zoom-out">−</button>
+    <button class="fs-btn" id="fs-zoom-in">+</button>
+    <button class="fs-btn" id="fs-zoom-fit">Fit</button>
+    <button class="fs-btn" id="fs-close">✕ Close</button>
+  </div>
+  <div id="fs-canvas">
+    <div id="fs-inner"></div>
+    <div id="fs-hint">scroll to zoom · drag to pan · Esc to close</div>
+  </div>
+</div>
+
 <div class="section-label">Druid — Live</div>
 <div class="card-grid">
 
@@ -371,7 +478,7 @@ graph LR
         <li><strong>units / dollars / tdp / arp</strong></li>
         <li><strong>base_units / incr_units</strong></li>
         <li><strong>is_mvm</strong> — promo flag (SPINS-derived)</li>
-        <li><strong>built_tdp_share</strong> — caution: hurts model</li>
+        <li><strong>built_tdp_share</strong> — BUILT category share ratio; audit column</li>
       </ul>
       <div class="card-feeds">Feeds → <span>E1 demand training, E2a cannibalization pairs, E2b elasticity · Mo Chat context</span></div>
     </div>
@@ -523,15 +630,15 @@ graph LR
       <div class="card-name">ml_demand_scores_v{N}</div>
       <div class="card-meta">
         <span class="badge badge-ml">E1 — Demand</span>
-        <span class="stat">LightGBM LambdaRank</span>
+        <span class="stat">Gradient Boosting · 28 features</span>
       </div>
     </div>
     <div class="card-body">
       <ul class="field-list">
         <li><strong>Trained on:</strong> built_filtered_weekly</li>
-        <li><strong>wMAPE:</strong> 6.1% (v4 retrain, 28 features)</li>
-        <li><strong>Holdout:</strong> fixed 12-week; conformal MO_67b = 1.0059×</li>
-        <li><strong>ETS fallback:</strong> MO_75 for ≥4-actuals series</li>
+        <li><strong>wMAPE:</strong> 6.1% on holdout (v4 retrain, 28 features)</li>
+        <li><strong>Holdout:</strong> fixed 12-week out-of-sample window</li>
+        <li><strong>Fallback:</strong> ETS model for low-history series (≥4 actuals)</li>
         <li><strong>3-slot pattern:</strong> active · candidate · archive</li>
       </ul>
     </div>
@@ -568,7 +675,7 @@ graph LR
         <li><strong>Trained on:</strong> built_filtered_weekly + CRX (Costco)</li>
         <li><strong>Robust events:</strong> 40/140 (citation-safe: 26)</li>
         <li><strong>Guardrail:</strong> $0.05 min price delta (MO_17)</li>
-        <li><strong>AHOLD note:</strong> positive elasticity = CRMA artifact</li>
+        <li><strong>Ahold note:</strong> positive elasticity = CRMA geographic aggregate artifact; excluded from UI</li>
       </ul>
     </div>
   </div>
@@ -588,7 +695,7 @@ graph LR
         <li><strong>status</strong> — active · candidate · archive</li>
         <li><strong>wMAPE</strong> — holdout metric at promotion</li>
       </ul>
-      <div class="card-feeds">Mo API resolves → <span>SELECT * WHERE status='active' → versioned score table</span></div>
+      <div class="card-feeds">Mo API resolves → <span>active slot served to all UI screens; candidate slot for comparison testing; archive retained for rollback</span></div>
     </div>
   </div>
 
@@ -647,8 +754,125 @@ graph LR
   <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> lookup — needed to decode customer_dim sales channel numeric codes</span></li>
   <li><span class="owner">Ebad</span><span class="item"><strong>Finance DB schema</strong> (AI-12) — Sales Cube + Retail Cube views; separate SQL Server DB from NS2</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>MVM in BP222 flat-file?</strong> — do Costco MVM period dates appear in the export or only in the Unify portal UI?</span></li>
-  <li><span class="owner">Justin</span><span class="item"><strong>AI-1: Dimension tables CSV</strong> — customers, products, salesperson→customer mapping (overdue since Sept 16)</span></li>
+  <li><span class="owner">Justin</span><span class="item"><strong>AI-1: Dimension tables CSV</strong> — customers, products, salesperson→customer mapping (requested Sept 16)</span></li>
   <li><span class="owner">Rob</span><span class="item"><strong>spins_full update</strong> — fill missing weeks back to Sept 2025; tonight or tomorrow AM</span></li>
   <li><span class="owner">Rob</span><span class="item"><strong>Grain decision</strong> — weekly grain rollup vs monthly for built_filtered_weekly; affects ML feature engineering</span></li>
   <li><span class="owner">Rob</span><span class="item"><strong>CONVENTIONAL|DOLLAR channel</strong> — absent from new extract (20K rows in history); confirm with BUILT before merge</span></li>
 </ul>
+
+<script>
+// Capture source before mermaid replaces the <pre>
+let mmdSource = '';
+document.addEventListener('DOMContentLoaded', () => {
+  const pre = document.getElementById('mmd-source');
+  if (pre) mmdSource = pre.textContent || '';
+});
+
+mermaid.initialize({ startOnLoad: true });
+
+window.addEventListener('load', () => {
+  // ── Download .mmd ──────────────────────────────────────────
+  document.getElementById('btn-download-mmd').addEventListener('click', () => {
+    try {
+      const blob = new Blob([mmdSource], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'mo_data_model.mmd';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    } catch(e) { console.error('Download failed', e); }
+  });
+
+  // ── Fullscreen zoom/pan ────────────────────────────────────
+  const overlay  = document.getElementById('fs-overlay');
+  const canvas   = document.getElementById('fs-canvas');
+  const inner    = document.getElementById('fs-inner');
+  const zoomLbl  = document.getElementById('fs-zoom-label');
+
+  let scale = 1, tx = 0, ty = 0;
+  let dragging = false, lastX = 0, lastY = 0;
+
+  function applyTransform() {
+    inner.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+    zoomLbl.textContent = Math.round(scale * 100) + '%';
+  }
+
+  function fitToCanvas() {
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    // Use SVG natural size from viewBox or bounding box
+    const svg = inner.querySelector('svg');
+    let sw = 1200, sh = 600;
+    if (svg) {
+      const vb = svg.viewBox && svg.viewBox.baseVal;
+      if (vb && vb.width) { sw = vb.width; sh = vb.height; }
+      else { sw = svg.scrollWidth || 1200; sh = svg.scrollHeight || 600; }
+    }
+    scale = Math.min(0.98, Math.min((cw - 60) / sw, (ch - 60) / sh));
+    tx = (cw - sw * scale) / 2;
+    ty = Math.max(20, (ch - sh * scale) / 2);
+    applyTransform();
+  }
+
+  function openFullscreen() {
+    const src = document.querySelector('#mmd-source svg') ||
+                document.querySelector('.mermaid svg');
+    if (!src) { alert('Diagram not yet rendered — try again in a moment.'); return; }
+    inner.innerHTML = '';
+    const clone = src.cloneNode(true);
+    clone.style.maxWidth = 'none';
+    inner.appendChild(clone);
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(fitToCanvas);
+  }
+
+  document.getElementById('btn-fullscreen').addEventListener('click', openFullscreen);
+
+  document.getElementById('fs-close').addEventListener('click', () => {
+    overlay.hidden = true; document.body.style.overflow = '';
+  });
+
+  document.getElementById('fs-zoom-fit').addEventListener('click', fitToCanvas);
+
+  document.getElementById('fs-zoom-in').addEventListener('click', () => {
+    scale = Math.min(5, scale * 1.3); applyTransform();
+  });
+  document.getElementById('fs-zoom-out').addEventListener('click', () => {
+    scale = Math.max(0.1, scale / 1.3); applyTransform();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !overlay.hidden) {
+      overlay.hidden = true; document.body.style.overflow = '';
+    }
+  });
+
+  // Scroll-to-zoom (zoom toward cursor position)
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newScale = Math.min(5, Math.max(0.1, scale * factor));
+    tx = mx - (mx - tx) * (newScale / scale);
+    ty = my - (my - ty) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  // Drag-to-pan
+  canvas.addEventListener('mousedown', e => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    canvas.classList.add('grabbing');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx += e.clientX - lastX; ty += e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false; canvas.classList.remove('grabbing');
+  });
+});
+</script>

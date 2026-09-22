@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 133: mo_data_model.html ready to share — Mermaid fix + download + fullscreen (2026-09-22)
+
+`mockups/mo_data_model.html` polished and client-ready (v2.5.7, artifact Version 8):
+
+**Mermaid rendering fixed:** Added Mermaid CDN script + `mermaid.initialize({ startOnLoad: true })` so the data flow diagram renders correctly when the file is opened locally (previously showed raw source as text in the browser).
+
+**Download .mmd button** (green): exports the raw Mermaid source as `mo_data_model.mmd` for use in mermaid.live or VS Code Mermaid Preview.
+
+**Fullscreen button** (blue): opens a dark full-screen overlay with the rendered diagram — scroll to zoom toward cursor, drag to pan, Fit button to reset, Esc to close.
+
+**Brian-readiness review:** removed internal ML development notes (`caution: hurts model`, MO experiment codes, raw SQL in registry card), softened open-items language, kept CRMA artifact reference as a data governance caveat. No CPG analytics content was dumbed down — only internal pipeline identifiers removed.
+
+---
+
 ## README update 132: FRED Tier 1 macro features + diesel prices in Mo Trends (2026-09-22)
 
 **MO_76 macro feature ablation candidate:** `scripts/MO_76_macro_feature_ablation.py` (616 lines). 8 FRED series tested as LightGBM demand forecast features with 4-week lag: `DDFUELUSGULF` (diesel), `GASDESW` (gas), `ICSA`/`ICNSA` (jobless claims), `MRTSSM4451USS` (grocery sales), `PSAVERT` (savings rate), `WPU115` (PPI food), `PAYEMS` (payrolls). MO_53 28-feature champion (6.1% wMAPE) stays active — MO_76 is candidate only; 3-gate promotion criteria (no regression + ≥0.03pp CV + SHAP review). Run after spins_full refresh.
