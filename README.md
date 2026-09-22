@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 131: Mo full data model ER diagram complete (2026-09-22)
+
+`mockups/mo_data_model.html` — full data model covering all Mo data sources. Mermaid flow diagram (source systems → Druid live → ML scoring → Mo UI) plus entity detail cards for every table: `spins_full` (113M rows, 215 cols), `built_filtered_weekly` (Q-series), `built_costco_crx_weekly` (5.4M rows, CRX), staging `built_spins_all_items_9626` (26.7M rows, GREEN, pending merge), and 4 pending-ingestion tables (ns2_shipment_weekly, customer_dim, built_costco_mvm_calendar, CUSTOMRECORD_CSEG_BB_SALES_CHANN lookup). Join key reference table includes UPC zero-pad strategy, spins_full OVERWRITE merge command, and Costco MVM join pattern. Open items section tracks Ebad/Justin/Rob deliverables.
+
+---
+
 ## README update 130 (v2.5.7): NS2 data model + full Druid ER diagram (2026-09-22)
 
 Version bump to v2.5.7. Beginning full data model / ER diagram for all ingested data sources: SPINS (spins_full, built_filtered_weekly), Circana CRX (built_costoo_crx_weekly), NS2 dark-retailer shipments, CustomerDim, ItemDim, MVM calendar, ML scoring tables, and model registry. Rob updating spins_full tonight/tomorrow AM to fill missing weeks back to Sept 2025; grain change (weekly → monthly rollup) under consideration.

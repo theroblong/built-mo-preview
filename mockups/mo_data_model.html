@@ -1,0 +1,626 @@
+<title>Mo Data Model</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg:        #0D1117;
+  --surface:   #161B22;
+  --surface-2: #1C2128;
+  --border:    #30363D;
+  --text:      #E6EDF3;
+  --text-muted:#7D8590;
+  --code:      #79C0FF;
+  --live:      #3FB950;
+  --live-bg:   rgba(63,185,80,.12);
+  --staging:   #D29922;
+  --staging-bg:rgba(210,153,34,.12);
+  --pending:   #6E7681;
+  --pending-bg:rgba(110,118,129,.12);
+  --ml:        #58A6FF;
+  --ml-bg:     rgba(88,166,255,.12);
+  --source:    #BC8CFF;
+  --source-bg: rgba(188,140,255,.12);
+  --ui:        #F78166;
+  --ui-bg:     rgba(247,129,102,.12);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:        #F6F8FA;
+    --surface:   #FFFFFF;
+    --surface-2: #F0F2F4;
+    --border:    #D0D7DE;
+    --text:      #1F2328;
+    --text-muted:#636C76;
+    --code:      #0550AE;
+    --live-bg:   rgba(31,136,61,.10);
+    --staging-bg:rgba(154,103,0,.10);
+    --pending-bg:rgba(110,118,129,.10);
+    --ml-bg:     rgba(9,105,218,.10);
+    --source-bg: rgba(130,80,223,.10);
+    --ui-bg:     rgba(207,34,46,.10);
+  }
+}
+:root[data-theme="light"] {
+  --bg:        #F6F8FA;
+  --surface:   #FFFFFF;
+  --surface-2: #F0F2F4;
+  --border:    #D0D7DE;
+  --text:      #1F2328;
+  --text-muted:#636C76;
+  --code:      #0550AE;
+  --live-bg:   rgba(31,136,61,.10);
+  --staging-bg:rgba(154,103,0,.10);
+  --pending-bg:rgba(110,118,129,.10);
+  --ml-bg:     rgba(9,105,218,.10);
+  --source-bg: rgba(130,80,223,.10);
+  --ui-bg:     rgba(207,34,46,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+  padding-inline: 20px;
+  padding-block: 24px;
+}
+h1,h2,h3 { font-family: 'Inter', sans-serif; text-wrap: balance; margin: 0; }
+code, .mono { font-family: 'IBM Plex Mono', monospace; }
+
+/* Header */
+.page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.page-header h1 { font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
+.version { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2px 8px; }
+.page-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+
+/* Legend */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 24px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-live    { background: var(--live); }
+.dot-staging { background: var(--staging); }
+.dot-pending { background: var(--pending); }
+.dot-ml      { background: var(--ml); }
+.dot-source  { background: var(--source); }
+.dot-ui      { background: var(--ui); }
+
+/* Section labels */
+.section-label {
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+  margin-bottom: 12px; margin-top: 32px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+
+/* Diagram container */
+.diagram-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+  padding: 20px;
+  margin-bottom: 8px;
+}
+.diagram-wrap pre.mermaid { margin: 0; }
+
+/* Entity card grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.entity-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.entity-card.live    { border-left: 3px solid var(--live); }
+.entity-card.staging { border-left: 3px solid var(--staging); }
+.entity-card.pending { border-left: 3px solid var(--pending); }
+.entity-card.ml      { border-left: 3px solid var(--ml); }
+.entity-card.source  { border-left: 3px solid var(--source); }
+
+.card-head {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.card-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; font-weight: 600;
+  color: var(--code);
+  margin-bottom: 4px;
+}
+.card-meta {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.badge {
+  font-size: 10px; font-weight: 600; letter-spacing: .05em;
+  padding: 1px 6px; border-radius: 20px; text-transform: uppercase;
+}
+.badge-live    { background: var(--live-bg);    color: var(--live); }
+.badge-staging { background: var(--staging-bg); color: var(--staging); }
+.badge-pending { background: var(--pending-bg); color: var(--pending); }
+.badge-ml      { background: var(--ml-bg);      color: var(--ml); }
+.stat {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--text-muted);
+}
+
+.card-body { padding: 10px 14px; }
+.field-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.field-list li {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: var(--text-muted);
+}
+.field-list li strong { color: var(--text); font-weight: 500; }
+.card-feeds {
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-muted);
+}
+.card-feeds span { color: var(--text); }
+
+/* Join table */
+.join-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.join-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+  text-align: left; padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.join-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.join-table tr:last-child td { border-bottom: none; }
+.join-table td:first-child, .join-table td:nth-child(2) {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--code);
+  white-space: nowrap;
+}
+.join-table td:last-child {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted);
+}
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; overflow-x: auto;
+}
+
+/* Open items */
+.open-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.open-list li {
+  display: flex; gap: 10px; align-items: baseline;
+  font-size: 12px; padding: 8px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+}
+.open-list li .owner {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--staging); flex-shrink: 0;
+}
+.open-list li .item { color: var(--text); }
+
+/* Mermaid override */
+.mermaid svg { max-width: 100%; }
+</style>
+
+<div class="page-header">
+  <h1>Mo Data Model</h1>
+  <span class="version">v2.5.7 · 2026-09-22</span>
+</div>
+<p class="page-subtitle">All data sources, Druid tables, ML scoring layer, and Mo UI connections for the BUILT × Aevah intelligence suite.</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot dot-source"></div> Source System</div>
+  <div class="legend-item"><div class="dot dot-live"></div> Live in Druid</div>
+  <div class="legend-item"><div class="dot dot-staging"></div> Staging / Pending Merge</div>
+  <div class="legend-item"><div class="dot dot-pending"></div> Pending Ingestion</div>
+  <div class="legend-item"><div class="dot dot-ml"></div> ML Scoring</div>
+  <div class="legend-item"><div class="dot dot-ui"></div> Mo UI</div>
+</div>
+
+<div class="section-label">Data Flow</div>
+<div class="diagram-wrap">
+<pre class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"background":"#161B22","primaryColor":"#1C2128","primaryTextColor":"#E6EDF3","primaryBorderColor":"#30363D","lineColor":"#7D8590","secondaryColor":"#1C2128","tertiaryColor":"#0D1117","clusterBkg":"#161B22","titleColor":"#E6EDF3","edgeLabelBackground":"#161B22","fontFamily":"IBM Plex Mono"}}}%%
+graph LR
+  subgraph SRC["Source Systems"]
+    S1["SPINS Extract\n.csv.gz · MinIO"]
+    S2["Circana BP222\nCostco CRX · MinIO"]
+    S3["NetSuite NS2\nSQL Server bb-db"]
+    S4["FRED API\nMacro · Live"]
+  end
+  subgraph LIVE["Druid — Live"]
+    D1["spins_full\n113M rows · 215 cols"]
+    D2["built_filtered_weekly\nBUILT+comp · weekly"]
+    D3["built_costco_crx_weekly\n5.4M rows · 34 cols"]
+  end
+  subgraph STG["Druid — Staging"]
+    D4["built_spins_all_items_9626\n26.7M rows · GREEN"]
+  end
+  subgraph PEND["Pending Ingestion"]
+    P1["ns2_shipment_weekly\nDark retailers · 4 accts"]
+    P2["customer_dim\n139 retail customers"]
+    P3["built_costco_mvm_calendar\nMVM events lookup"]
+  end
+  subgraph ML["ML Scoring"]
+    M1["ml_demand_scores_vN\nE1 Demand"]
+    M2["ml_cannib_scores_vN\nE2a Cannibalization"]
+    M3["ml_elasticity_scores_vN\nE2b Elasticity"]
+    REG["model_registry\nactive · candidate · archive"]
+  end
+  subgraph UI["Mo UI"]
+    U1["Experience 1\nBook of Business"]
+    U2["Mo Trends\nCompetitive"]
+    U3["Mo Chat\nSSE streaming"]
+  end
+
+  S1 --> D1
+  S1 --> D4
+  D4 -.->|"OVERWRITE WHERE\n> Aug 9, 2026"| D1
+  D1 -->|"Q-series QS1→Q22"| D2
+  S2 --> D3
+  S3 --> P1
+  S3 --> P2
+  S4 --> D2
+  P3 -.-> D3
+  D2 --> M1
+  D2 --> M2
+  D2 --> M3
+  D3 --> M3
+  M1 --> REG
+  M2 --> REG
+  M3 --> REG
+  REG --> U1
+  REG --> U2
+  REG --> U3
+  D1 --> U2
+  P1 --> U1
+  P2 --> U1
+</pre>
+</div>
+
+<div class="section-label">Druid — Live</div>
+<div class="card-grid">
+
+  <div class="entity-card live">
+    <div class="card-head">
+      <div class="card-name">spins_full</div>
+      <div class="card-meta">
+        <span class="badge badge-live">Live</span>
+        <span class="stat">113M rows · 215 cols</span>
+        <span class="stat">Jan 2023 – Aug 2026</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>__time</strong> — week-ending timestamp</li>
+        <li><strong>UPC</strong> — hyphenated GTIN-12 (e.g. 08-40229-30257)</li>
+        <li><strong>Brand</strong> — BUILT BAR · BUILT PUFF · competitors</li>
+        <li><strong>Channel/Outlet</strong> — 12 channels (MULO, FOOD, etc.)</li>
+        <li><strong>Geography</strong> — market-level geography</li>
+        <li><strong>Dollars / Units / TDP / ARP</strong> — core measures</li>
+        <li><strong>Base / Incr Units</strong> — promo decomposition</li>
+        <li><strong>*Yago</strong> — year-ago pairs for all measures</li>
+      </ul>
+      <div class="card-feeds">Feeds → <span>built_filtered_weekly (Q-series), Mo Trends competitive universe</span></div>
+    </div>
+  </div>
+
+  <div class="entity-card live">
+    <div class="card-head">
+      <div class="card-name">built_filtered_weekly</div>
+      <div class="card-meta">
+        <span class="badge badge-live">Live</span>
+        <span class="stat">Weekly grain · Jan 2023 – Aug 2026</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>upc</strong> — BUILT + competitor UPCs</li>
+        <li><strong>channel</strong> — normalized channel name</li>
+        <li><strong>geography</strong> — market</li>
+        <li><strong>week_ending</strong> — Sunday date</li>
+        <li><strong>units / dollars / tdp / arp</strong></li>
+        <li><strong>base_units / incr_units</strong></li>
+        <li><strong>is_mvm</strong> — promo flag (SPINS-derived)</li>
+        <li><strong>built_tdp_share</strong> — caution: hurts model</li>
+      </ul>
+      <div class="card-feeds">Feeds → <span>E1 demand training, E2a cannibalization pairs, E2b elasticity · Mo Chat context</span></div>
+    </div>
+  </div>
+
+  <div class="entity-card live">
+    <div class="card-head">
+      <div class="card-name">built_costco_crx_weekly</div>
+      <div class="card-meta">
+        <span class="badge badge-live">Live</span>
+        <span class="stat">5.4M rows · 34 cols</span>
+        <span class="stat">Jan 2023 – Aug 2026</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>upc</strong> — Costco-assigned (00-40962-* prefix)</li>
+        <li><strong>item_desc</strong> — product description</li>
+        <li><strong>week_ending</strong> — Sunday (Mon–Sun Costco week)</li>
+        <li><strong>dollar_sales</strong> — gross net of returns (NOT coupons)</li>
+        <li><strong>dpwpw</strong> — Dollar Sales ÷ SUM(WH-selling/week)</li>
+        <li><strong>is_mvm</strong> — promoted_units &gt; 0 ✅ confirmed</li>
+        <li><strong>wh_selling</strong> — warehouses with sales ≠ 0</li>
+        <li><strong>fuel_price_regular / diesel</strong> — Opus by WH zip</li>
+      </ul>
+      <div class="card-feeds">Feeds → <span>E2b elasticity (Costco channel) · Costco-specific analysis</span><br><span style="color:var(--pending);font-size:10px;">⚠ OOS fields null — expected (custom aggregate export)</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">Druid — Staging</div>
+<div class="card-grid">
+
+  <div class="entity-card staging">
+    <div class="card-head">
+      <div class="card-name">built_spins_all_items_9626</div>
+      <div class="card-meta">
+        <span class="badge badge-staging">Staging · GREEN</span>
+        <span class="stat">26.7M rows · 215 cols</span>
+        <span class="stat">Sept 2025 – Sept 6, 2026</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li>Same 215-col schema as <strong>spins_full</strong></li>
+        <li><strong>New weeks:</strong> Aug 16, 23, 30 · Sept 6, 2026</li>
+        <li><strong>Rows to merge:</strong> 2,062,010</li>
+        <li><strong>Channel flag:</strong> CONVENTIONAL|DOLLAR missing — confirm</li>
+        <li><strong>MULO rename:</strong> + → W/ — CASE FIX applies</li>
+      </ul>
+      <div class="card-feeds">Next → <span>REPLACE INTO spins_full OVERWRITE WHERE __time &gt; '2026-08-09'; then Q-series retrain</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">Pending Ingestion</div>
+<div class="card-grid">
+
+  <div class="entity-card pending">
+    <div class="card-head">
+      <div class="card-name">ns2_shipment_weekly</div>
+      <div class="card-meta">
+        <span class="badge badge-pending">Pending</span>
+        <span class="stat">4,681 source rows → weekly agg</span>
+        <span class="stat">Jan 2023 – Sept 2026</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>customer_id / customer_name</strong></li>
+        <li><strong>ship_date</strong> → week_ending (Sunday)</li>
+        <li><strong>upc_12</strong> — LPAD(custcol_sps_upccasecode, 12, '0')</li>
+        <li><strong>item_code / flavor / ItemDescription</strong></li>
+        <li><strong>TotalCases / Amount</strong></li>
+        <li><strong>custcolbars_per_line</strong> — ⏳ MISSING · top priority</li>
+        <li><strong>custbody_bb_cost_per_bar</strong> — ⏳ pending</li>
+        <li>Retailers: WinCo · ALDI · HEB · Trader Joe's</li>
+      </ul>
+      <div class="card-feeds">UPC match: <span>27/33 products = 83.8% rows join to SPINS</span><br>Feeds → <span>Experience 1 Book of Business · dark retailer velocity</span></div>
+    </div>
+  </div>
+
+  <div class="entity-card pending">
+    <div class="card-head">
+      <div class="card-name">customer_dim</div>
+      <div class="card-meta">
+        <span class="badge badge-pending">Pending</span>
+        <span class="stat">139 retail customers · 191 cols</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>id</strong> — join key → ns2_shipment.customer_id ✅</li>
+        <li><strong>entityid</strong> — C-prefixed external ID</li>
+        <li><strong>companyname / altname / fullname</strong></li>
+        <li><strong>cseg_bb_sales_chann</strong> — numeric; needs lookup decode</li>
+        <li><strong>isinactive</strong> — F=active (119), T=inactive (20)</li>
+        <li><strong>salesrep</strong> — numeric ID; 12 distinct reps</li>
+      </ul>
+      <div class="card-feeds">Open ask → <span>CUSTOMRECORD_CSEG_BB_SALES_CHANN lookup (id → channel name)</span></div>
+    </div>
+  </div>
+
+  <div class="entity-card pending">
+    <div class="card-head">
+      <div class="card-name">built_costco_mvm_calendar</div>
+      <div class="card-meta">
+        <span class="badge badge-pending">Pending</span>
+        <span class="stat">Small lookup · item × date range</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>upc</strong> — Costco UPC (00-40962-*)</li>
+        <li><strong>mvm_start / mvm_end</strong> — event dates</li>
+        <li><strong>discount_pct</strong> — coupon value</li>
+      </ul>
+      <div class="card-feeds">Source → <span>Brian's MVM calendar OR BP222 flat-file (awaiting Justin confirmation on whether MVM period dates appear in export vs. portal-only)</span></div>
+    </div>
+  </div>
+
+  <div class="entity-card pending">
+    <div class="card-head">
+      <div class="card-name">CUSTOMRECORD_CSEG_BB_SALES_CHANN</div>
+      <div class="card-meta">
+        <span class="badge badge-pending">Pending</span>
+        <span class="stat">Lookup · 11 distinct codes</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>id</strong> — numeric NS2 code</li>
+        <li><strong>name</strong> — channel name (Grocery, Club, Mass, etc.)</li>
+        <li><strong>abbreviation / scriptid</strong></li>
+      </ul>
+      <div class="card-feeds">Needed to decode → <span>customer_dim.cseg_bb_sales_chann (11 codes observed). Structure in NS2 DDL; ask Ebad for name values.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">ML Scoring Layer</div>
+<div class="card-grid">
+
+  <div class="entity-card ml">
+    <div class="card-head">
+      <div class="card-name">ml_demand_scores_v{N}</div>
+      <div class="card-meta">
+        <span class="badge badge-ml">E1 — Demand</span>
+        <span class="stat">LightGBM LambdaRank</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>Trained on:</strong> built_filtered_weekly</li>
+        <li><strong>wMAPE:</strong> 6.1% (v4 retrain, 28 features)</li>
+        <li><strong>Holdout:</strong> fixed 12-week; conformal MO_67b = 1.0059×</li>
+        <li><strong>ETS fallback:</strong> MO_75 for ≥4-actuals series</li>
+        <li><strong>3-slot pattern:</strong> active · candidate · archive</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="entity-card ml">
+    <div class="card-head">
+      <div class="card-name">ml_cannib_scores_v{N}</div>
+      <div class="card-meta">
+        <span class="badge badge-ml">E2a — Cannibalization</span>
+        <span class="stat">Pair scoring</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>Trained on:</strong> built_filtered_weekly (BUILT UPCs)</li>
+        <li><strong>Coverage:</strong> 48% of combos scored</li>
+        <li><strong>Gate:</strong> ≥8 weeks data-maturity per series</li>
+        <li><strong>Scope:</strong> flavor-family · pack-mix · clean elasticity</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="entity-card ml">
+    <div class="card-head">
+      <div class="card-name">ml_elasticity_scores_v{N}</div>
+      <div class="card-meta">
+        <span class="badge badge-ml">E2b — Elasticity</span>
+        <span class="stat">$0.05 guardrail</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>Trained on:</strong> built_filtered_weekly + CRX (Costco)</li>
+        <li><strong>Robust events:</strong> 40/140 (citation-safe: 26)</li>
+        <li><strong>Guardrail:</strong> $0.05 min price delta (MO_17)</li>
+        <li><strong>AHOLD note:</strong> positive elasticity = CRMA artifact</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="entity-card ml">
+    <div class="card-head">
+      <div class="card-name">model_registry</div>
+      <div class="card-meta">
+        <span class="badge badge-ml">Registry</span>
+        <span class="stat">3-slot per engine</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>model_id</strong> — e.g. MO_53</li>
+        <li><strong>version</strong> — {model_id}_{cutoff}_{train_date}</li>
+        <li><strong>status</strong> — active · candidate · archive</li>
+        <li><strong>wMAPE</strong> — holdout metric at promotion</li>
+      </ul>
+      <div class="card-feeds">Mo API resolves → <span>SELECT * WHERE status='active' → versioned score table</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">Join Key Reference</div>
+<div class="table-wrap">
+  <table class="join-table">
+    <thead>
+      <tr><th>From</th><th>To</th><th>Join Key</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ns2_shipment</td>
+        <td>spins_full</td>
+        <td>LPAD(custcol_sps_upccasecode, 12, '0')<br>= REPLACE(UPC, '-', '')</td>
+        <td>83.8% match rate · TJ's private codes never match</td>
+      </tr>
+      <tr>
+        <td>ns2_shipment</td>
+        <td>customer_dim</td>
+        <td>customer_id = id</td>
+        <td>100% match for 4 dark-retailer accounts ✅</td>
+      </tr>
+      <tr>
+        <td>spins_full</td>
+        <td>built_filtered_weekly</td>
+        <td>UPC + Channel/Outlet + Geography + Time Period End Date</td>
+        <td>Q-series QS1→Q22 transformation pipeline</td>
+      </tr>
+      <tr>
+        <td>built_costco_crx_weekly</td>
+        <td>built_costco_mvm_calendar</td>
+        <td>upc + week_ending BETWEEN mvm_start AND mvm_end</td>
+        <td>Pending: confirm MVM dates in BP222 flat-file</td>
+      </tr>
+      <tr>
+        <td>built_spins_all_items_9626</td>
+        <td>spins_full</td>
+        <td>OVERWRITE WHERE __time &gt; '2026-08-09T00:00:00Z'</td>
+        <td>REPLACE INTO · 2,062,010 rows · 4 new weeks</td>
+      </tr>
+      <tr>
+        <td>ns2_item.upccode</td>
+        <td>spins_full.UPC (normalized)</td>
+        <td>REPLACE(ns2_item.upccode, '-', '') = REPLACE(UPC, '-', '')</td>
+        <td>Alternate join via NS2 item master; more reliable than SPS case code</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-label">Open Items</div>
+<ul class="open-list">
+  <li><span class="owner">Ebad</span><span class="item"><strong>custcolbars_per_line</strong> missing from ns2 shipment export — needed for bars/retailer/week velocity</span></li>
+  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> lookup — needed to decode customer_dim sales channel numeric codes</span></li>
+  <li><span class="owner">Ebad</span><span class="item"><strong>Finance DB schema</strong> (AI-12) — Sales Cube + Retail Cube views; separate SQL Server DB from NS2</span></li>
+  <li><span class="owner">Justin</span><span class="item"><strong>MVM in BP222 flat-file?</strong> — do Costco MVM period dates appear in the export or only in the Unify portal UI?</span></li>
+  <li><span class="owner">Justin</span><span class="item"><strong>AI-1: Dimension tables CSV</strong> — customers, products, salesperson→customer mapping (overdue since Sept 16)</span></li>
+  <li><span class="owner">Rob</span><span class="item"><strong>spins_full update</strong> — fill missing weeks back to Sept 2025; tonight or tomorrow AM</span></li>
+  <li><span class="owner">Rob</span><span class="item"><strong>Grain decision</strong> — weekly grain rollup vs monthly for built_filtered_weekly; affects ML feature engineering</span></li>
+  <li><span class="owner">Rob</span><span class="item"><strong>CONVENTIONAL|DOLLAR channel</strong> — absent from new extract (20K rows in history); confirm with BUILT before merge</span></li>
+</ul>
