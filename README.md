@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 132: FRED Tier 1 macro features + diesel prices in Mo Trends (2026-09-22)
+
+**MO_76 macro feature ablation candidate:** `scripts/MO_76_macro_feature_ablation.py` (616 lines). 8 FRED series tested as LightGBM demand forecast features with 4-week lag: `DDFUELUSGULF` (diesel), `GASDESW` (gas), `ICSA`/`ICNSA` (jobless claims), `MRTSSM4451USS` (grocery sales), `PSAVERT` (savings rate), `WPU115` (PPI food), `PAYEMS` (payrolls). MO_53 28-feature champion (6.1% wMAPE) stays active — MO_76 is candidate only; 3-gate promotion criteria (no regression + ≥0.03pp CV + SHAP review). Run after spins_full refresh.
+
+**`/api/trends/macro` extended:** All 8 Tier 1 FRED series now returned per observation. `MacroPoint` type extended in `customer-built-mo-ui/src/api/types.ts`. Monthly series forward-filled to weekly cadence by YYYY-MM match. 1-hour server-side cache. Backward-compatible: existing `gas` + `sentiment` fields unchanged.
+
+**Diesel prices added to Mo Trends:** Both `MacroContextTile` (tile 7) and `VelocityMacroTile` (tile 8) now show EIA on-highway diesel (`DDFUELUSGULF`) as orange dotted-dash line alongside gas (amber solid) on shared $/gal left Y-axis. Diesel-gas spread signals distribution margin compression independently from consumer pump price reaction. Source attribution updated: `FRED: GASDESW · DDFUELUSGULF · UMCSENT`.
+
+**Wiki updated:** `wiki/12-external-data-apis.md` — full Tier 1 series table with chart/ML columns. `wiki/03-ml-pipeline.md` — MO_76 ablation spec with feature table, protocol, and promotion criteria.
+
+---
+
 ## README update 131: Mo full data model ER diagram complete (2026-09-22)
 
 `mockups/mo_data_model.html` — full data model covering all Mo data sources. Mermaid flow diagram (source systems → Druid live → ML scoring → Mo UI) plus entity detail cards for every table: `spins_full` (113M rows, 215 cols), `built_filtered_weekly` (Q-series), `built_costco_crx_weekly` (5.4M rows, CRX), staging `built_spins_all_items_9626` (26.7M rows, GREEN, pending merge), and 4 pending-ingestion tables (ns2_shipment_weekly, customer_dim, built_costco_mvm_calendar, CUSTOMRECORD_CSEG_BB_SALES_CHANN lookup). Join key reference table includes UPC zero-pad strategy, spins_full OVERWRITE merge command, and Costco MVM join pattern. Open items section tracks Ebad/Justin/Rob deliverables.
