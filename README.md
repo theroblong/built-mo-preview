@@ -6,7 +6,28 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
-## README update 136: Finance DB schema reviewed — 34 views, Sales_Channel resolved (2026-09-22)
+## README update 137: Built_EDW star schema delivered — DimSalesChannel + OTIF flags resolved (2026-09-22)
+
+Ebad delivered 2 additional files: `Sales_Retail_Cube_Schema_Documentation.md` + `Sales and Retail Cube Schema.sql`. This reveals a full dimensional star schema (`Built_EDW`) above NS2 and the Finance DB views.
+
+**Architecture:** `FactTransactions` central fact table · 3 schemas: `NetSuite2` (core), `NetSuite2_Sales` (revenue analytics), `NetSuite2_Retail` (OTIF/compliance)
+
+**`FactTransactions` measures:** Amount · NetAmount · SalesAmount · ShippedAmount · ItemCount · Bars · BarsSold · BarsShipped · QuantityAllocated · QuantityCommitted · QuantityPacked · QuantityPicked
+
+**Resolved open items:**
+- **`CUSTOMRECORD_CSEG_BB_SALES_CHANN` ✅** — `DimSalesChannel` (Id, Name, FullName) has channel names decoded in the EDW. Use `FactTransactions.DimSalesChannelId → DimSalesChannel.Name` for channel analytics.
+- **OTIF ✅** — `DimComplianceFlags` has `WasOnTimeFlag`, `WasInFullFlag`, `MABDCalculatedFlag` — official OTIF/MABD tracking layer in the EDW.
+- **Sales rep mapping ✅** — `DimSalesRep` has FullName, Email, Title for all 12 distinct reps.
+
+**11 role-playing date dimensions:** TranDate, ShipDate, ActualShipDate, ActualDeliveryDate, RequestedDeliveryDate, PlannedDeliveryDate, PlannedShipByDate, ShipByDate, PurchaseOrderDate, MustArriveByDate (MABD), CancelDate
+
+**Practical rule:** Prefer `Built_EDW.FactTransactions` + dims for all analytical queries (revenue, channel, OTIF). Use `Finance.dbo` views for operational/supply planning data not in the EDW (InventoryOnHand, FutureOrderSupplyVisibility, WorkOrderSupply, BOM).
+
+Updated: `mockups/mo_data_model.html` (Built_EDW section, CUSTOMRECORD resolved), `wiki/02-data-architecture.md`, `memory/project_netsuite_schema.md`.
+
+---
+
+## README update 136: Finance DB schema reviewed — 34 views, Sales_Channel partial (2026-09-22)
 
 Ebad delivered 3 Finance DB schema files (`FinanceViewsMarkdown.md`, `Finance_View_Schema_Documentation.docx`, `Finance View Schema.sql`). Finance DB is a separate SQL Server database (`Finance.dbo`) — a reporting layer on top of NS2 with 34 views.
 

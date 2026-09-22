@@ -621,40 +621,38 @@ graph LR
         <li><strong>name</strong> — channel name (Grocery, Club, Mass, etc.)</li>
         <li><strong>abbreviation / scriptid</strong></li>
       </ul>
-      <div class="card-feeds">Partial resolution → <span>Finance DB NetSuite2_View_BarsSold joins this table and outputs Sales_Channel text. Full lookup table still needed to decode customer_dim.cseg_bb_sales_chann for Druid queries.</span></div>
+      <div class="card-feeds">Resolved ✅ → <span>Built_EDW DimSalesChannel (Id, Name, FullName) — channel names fully decoded in star schema. DimSalesChannelId in FactTransactions links directly to channel names.</span></div>
     </div>
   </div>
 
 </div>
 
-<div class="section-label">Finance DB — Reporting Layer</div>
+<div class="section-label">Built_EDW — Star Schema</div>
 <div class="card-grid">
 
   <div class="entity-card source">
     <div class="card-head">
-      <div class="card-name">Finance.dbo (34 views)</div>
+      <div class="card-name">FactTransactions + Dims</div>
       <div class="card-meta">
-        <span class="badge badge-source">Reporting Layer</span>
-        <span class="stat">SQL Server · separate from NS2</span>
+        <span class="badge badge-source">Star Schema</span>
+        <span class="stat">Built_EDW · 3 schemas</span>
         <span class="stat">Delivered 2026-09-22</span>
       </div>
     </div>
     <div class="card-body">
       <ul class="field-list">
-        <li><strong>NetSuite2_View_BarsSold</strong> — units + bars sold by date + Sales_Channel (text) · joins CUSTOMRECORD_CSEG_BB_SALES_CHANN ✅</li>
-        <li><strong>vw_SCA_SalesOrderLines</strong> — open SO demand (Pending Approval / Fulfillment) · PlannedShipDate · MABD · commitment + allocation qtys</li>
-        <li><strong>NetSuite2_View_FutureOrderSupplyVisibility</strong> — SO demand vs inventory + transfer + WO supply · CandidateSupplyStatus classification</li>
-        <li><strong>NetSuite2_View_InventoryOnHand</strong> — OnOrder / OnHand / Available by lot + location</li>
-        <li><strong>vw_SCA_WorkOrderSupply</strong> — WO demand vs production · BarsRemaining · WorkOrderValidationStatus</li>
-        <li><strong>NetSuite2_View_BarsProduced</strong> — assembly build/unbuild · OUTPUT vs CONSUMPTION · ItemGroup: FG/Packaging/Ingredient/Bar/Batch</li>
-        <li><strong>NetSuite2_View_ItemsAll</strong> — enriched item master · product_type · product_class · flavor · custitem_bars · standardCost · BarsOnHand</li>
-        <li><strong>NetSuite2_View_BillOfMaterials</strong> — active BOM revisions + components · component yields + dates</li>
-        <li><strong>NetSuite2_View_StdCostSum</strong> — standard cost per item (Main Warehouse)</li>
-        <li style="color:var(--text-muted);font-size:10px;">⚠ BarsProdSummary + LotTrace views: hard-coded date filters / lot numbers — treat as snapshots, not reusable queries</li>
-        <li style="color:var(--text-muted);font-size:10px;">⚠ ItemsAll: unreachable CASE branch (account 121010 repeated for both Ingredients and Packaging)</li>
-        <li style="color:var(--text-muted);font-size:10px;">⚠ TransactionsJoin: double-joins TransactionAccountingLine — potential row multiplication</li>
+        <li><strong>FactTransactions</strong> — Amount · NetAmount · SalesAmount · ShippedAmount · Bars · BarsSold · BarsShipped · QuantityAllocated · QuantityCommitted · QuantityPacked/Picked</li>
+        <li><strong>DimSalesChannel</strong> — Id · Name · FullName · resolves CUSTOMRECORD_CSEG_BB_SALES_CHANN ✅</li>
+        <li><strong>DimCustomer</strong> — CustomerType · Country/State/City + CompanyName · DeliveryTypeName · LeadTime (Retail schema)</li>
+        <li><strong>DimItem</strong> — Flavor · Bars (per case) · ItemType · FullName · CostCategory</li>
+        <li><strong>DimComplianceFlags</strong> — WasOnTimeFlag · WasInFullFlag · MABDCalculatedFlag → OTIF ✅</li>
+        <li><strong>DimSalesRep</strong> — Id · FullName · FirstName · LastName · Email · Title</li>
+        <li><strong>Role-playing date dims (11)</strong> — TranDate · ShipDate · ActualShipDate · ActualDeliveryDate · RequestedDeliveryDate · MustArriveByDate · CancelDate + more</li>
+        <li><strong>NetSuite2_Sales schema</strong> — revenue · customer analytics · product mix · sales channel · financial reporting</li>
+        <li><strong>NetSuite2_Retail schema</strong> — OTIF · MABD analysis · customer compliance · shipment performance · requested vs actual delivery</li>
+        <li style="color:var(--text-muted);font-size:10px;">34 NS2 views also delivered (Finance.dbo) — prefer EDW star schema for analytics queries; use views for operational/supply planning data</li>
       </ul>
-      <div class="card-feeds">Source → <span>NS2 reporting layer; BarsSold resolves Sales_Channel; InventoryOnHand + SupplyVisibility → future supply risk signals in Mo</span></div>
+      <div class="card-feeds">Source → <span>Preferred analytical layer; FactTransactions is the cleanest join surface for revenue + OTIF + channel reporting; DimSalesChannel + DimComplianceFlags resolve two open items</span></div>
     </div>
   </div>
 
@@ -788,7 +786,7 @@ graph LR
 
 <div class="section-label">Open Items</div>
 <ul class="open-list">
-  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> id→name lookup — Finance DB BarsSold already joins this and outputs Sales_Channel text, but the full numeric code→name table is still needed to decode customer_dim.cseg_bb_sales_chann in Druid queries</span></li>
+  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> — resolved via Built_EDW DimSalesChannel (Id, Name, FullName) ✅ · prefer EDW FactTransactions + DimSalesChannel for channel analytics over raw customer_dim numeric codes</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>MVM in BP222 flat-file?</strong> — do Costco MVM period dates appear in the export or only in the Unify portal UI?</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>AI-1: Dimension tables CSV</strong> — customers, products, salesperson→customer mapping (requested Sept 16)</span></li>
   <li><span class="owner">Rob</span><span class="item"><strong>spins_full update</strong> — fill missing weeks back to Sept 2025; tonight or tomorrow AM</span></li>
