@@ -6,6 +6,26 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 134: NS2 shipment data v2 — TotalBars + CostPerBar resolved (2026-09-22)
+
+Ebad delivered updated `Shipment Data.sql` + `Shipment Data.xlsx` (4,681 rows · 37 cols · Jan 2023 – Sept 11, 2026). Both previously missing fields are now resolved:
+
+**`TotalBars` ✅** — computed as `ABS(tl.quantity × i.custitem_bars)` via JOIN to `ns2.item`. 3,346/3,351 Assembly rows populated (99.9%). This was the top-priority missing field for bars/retailer/week velocity.
+
+**`CostPerBar` ✅** — derived as `Amount ÷ TotalBars`. Range $1.36–$3.44, median $1.72. Enables GTN margin analysis for dark retailer accounts.
+
+**New fields in v2:** `customer_category` (decoded via `customerCategory` JOIN — all 4 accounts = "Retailer"), full shipping address (`city/state/zip`, 100% populated — WinCo DC footprint: OR/ID/CA/TX/AZ), `total_pallets_shipped` (62%), `quantitybilled/quantityshiprecv` (OTIF cross-check).
+
+**Row composition clarified:** Assembly (3,351 · 72%) = actual product lines with UPC (76%) and bars (99.9%). NonInvtPart (1,134 · 24%) + Discount (188 · 4%) rows have no UPC/bars — exclude from velocity analysis. MER-prefix items (ALDI display trays/cases) are Assembly rows with no SPINS UPC match — expected.
+
+**`bars_per_order_qc` (custbody1):** 0/4,681 populated — empty field, dropped from data catalog.
+
+**Updated:** `mo_data_model.html` ns2_shipment_weekly card (new fields, resolved markers, caveats); Open Items (removed 2 resolved Ebad asks); memory `project_netsuite_schema.md`; `wiki/02-data-architecture.md`.
+
+**Remaining open with Ebad:** CUSTOMRECORD_CSEG_BB_SALES_CHANN lookup · Finance DB schema (AI-12).
+
+---
+
 ## README update 133: mo_data_model.html ready to share — Mermaid fix + download + fullscreen (2026-09-22)
 
 `mockups/mo_data_model.html` polished and client-ready (v2.5.7, artifact Version 8):

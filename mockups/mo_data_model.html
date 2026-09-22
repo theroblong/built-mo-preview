@@ -544,22 +544,26 @@ graph LR
       <div class="card-name">ns2_shipment_weekly</div>
       <div class="card-meta">
         <span class="badge badge-pending">Pending</span>
-        <span class="stat">4,681 source rows → weekly agg</span>
-        <span class="stat">Jan 2023 – Sept 2026</span>
+        <span class="stat">4,681 source rows · 37 cols</span>
+        <span class="stat">Jan 2023 – Sept 11, 2026</span>
       </div>
     </div>
     <div class="card-body">
       <ul class="field-list">
-        <li><strong>customer_id / customer_name</strong></li>
+        <li><strong>customer_id / customer_name / customer_category</strong> — all 4 = "Retailer" ✅</li>
         <li><strong>ship_date</strong> → week_ending (Sunday)</li>
-        <li><strong>upc_12</strong> — LPAD(custcol_sps_upccasecode, 12, '0')</li>
-        <li><strong>item_code / flavor / ItemDescription</strong></li>
+        <li><strong>upc_12</strong> — LPAD(custcol_sps_upccasecode, 12, '0') · 76% on Assembly rows</li>
+        <li><strong>item_code / flavor / ItemDescription / itemtype</strong></li>
         <li><strong>TotalCases / Amount</strong></li>
-        <li><strong>custcolbars_per_line</strong> — ⏳ MISSING · top priority</li>
-        <li><strong>custbody_bb_cost_per_bar</strong> — ⏳ pending</li>
+        <li><strong>TotalBars</strong> — ABS(quantity × i.custitem_bars) · 99.9% on Assembly ✅</li>
+        <li><strong>CostPerBar</strong> — Amount ÷ TotalBars · $1.36–$3.44 · median $1.72 ✅</li>
+        <li><strong>city / state / zip</strong> — 100% populated · WinCo DCs: OR/ID/CA/TX/AZ</li>
+        <li><strong>total_pallets_shipped</strong> — 62% populated</li>
+        <li style="color:var(--text-muted);font-size:10px;">⚠ NonInvtPart (1,134) + Discount (188) rows: no UPC/bars — exclude from velocity</li>
+        <li style="color:var(--text-muted);font-size:10px;">⚠ MER-prefix items (display trays/cases): Assembly rows without SPINS UPC — expected</li>
         <li>Retailers: WinCo · ALDI · HEB · Trader Joe's</li>
       </ul>
-      <div class="card-feeds">UPC match: <span>27/33 products = 83.8% rows join to SPINS</span><br>Feeds → <span>Experience 1 Book of Business · dark retailer velocity</span></div>
+      <div class="card-feeds">UPC match (Assembly): <span>2,561/3,351 rows · MER items excluded</span><br>Feeds → <span>Experience 1 Book of Business · dark retailer velocity · GTN margin analysis</span></div>
     </div>
   </div>
 
@@ -750,8 +754,7 @@ graph LR
 
 <div class="section-label">Open Items</div>
 <ul class="open-list">
-  <li><span class="owner">Ebad</span><span class="item"><strong>custcolbars_per_line</strong> missing from ns2 shipment export — needed for bars/retailer/week velocity</span></li>
-  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> lookup — needed to decode customer_dim sales channel numeric codes</span></li>
+  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> lookup — needed to decode customer_dim.cseg_bb_sales_chann numeric codes to channel names (Grocery, Club, Mass, etc.)</span></li>
   <li><span class="owner">Ebad</span><span class="item"><strong>Finance DB schema</strong> (AI-12) — Sales Cube + Retail Cube views; separate SQL Server DB from NS2</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>MVM in BP222 flat-file?</strong> — do Costco MVM period dates appear in the export or only in the Unify portal UI?</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>AI-1: Dimension tables CSV</strong> — customers, products, salesperson→customer mapping (requested Sept 16)</span></li>
