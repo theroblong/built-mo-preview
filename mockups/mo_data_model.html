@@ -111,7 +111,7 @@ code, .mono { font-family: 'IBM Plex Mono', monospace; }
 
 /* Diagram container */
 .diagram-wrap {
-  background: var(--surface);
+  background: #0D1117;
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow-x: auto;
@@ -241,8 +241,29 @@ code, .mono { font-family: 'IBM Plex Mono', monospace; }
 <div class="section-label">Data Flow</div>
 <div class="diagram-wrap">
 <pre class="mermaid">
-%%{init: {"theme": "dark", "themeVariables": {"background":"#161B22","primaryColor":"#1C2128","primaryTextColor":"#E6EDF3","primaryBorderColor":"#30363D","lineColor":"#7D8590","secondaryColor":"#1C2128","tertiaryColor":"#0D1117","clusterBkg":"#161B22","titleColor":"#E6EDF3","edgeLabelBackground":"#161B22","fontFamily":"IBM Plex Mono"}}}%%
+%%{init: {"theme": "base", "themeVariables": {
+  "background": "#161B22",
+  "primaryColor": "#21262D",
+  "primaryTextColor": "#C9D1D9",
+  "primaryBorderColor": "#8B949E",
+  "lineColor": "#8B949E",
+  "secondaryColor": "#161B22",
+  "tertiaryColor": "#0D1117",
+  "clusterBkg": "#0D1117",
+  "clusterBorder": "#484F58",
+  "titleColor": "#C9D1D9",
+  "edgeLabelBackground": "#21262D",
+  "fontFamily": "IBM Plex Mono, monospace",
+  "fontSize": "11px"
+}}}%%
 graph LR
+  classDef source  fill:#2D1B55,stroke:#BC8CFF,stroke-width:2px,color:#E6EDF3,font-family:IBM Plex Mono
+  classDef live    fill:#0F3320,stroke:#3FB950,stroke-width:2px,color:#E6EDF3,font-family:IBM Plex Mono
+  classDef staging fill:#3D2B00,stroke:#D29922,stroke-width:2px,color:#F0C060,font-family:IBM Plex Mono
+  classDef pending fill:#1C2128,stroke:#484F58,stroke-width:1px,color:#8B949E,font-family:IBM Plex Mono
+  classDef ml      fill:#0D1F3D,stroke:#58A6FF,stroke-width:2px,color:#9CC5FF,font-family:IBM Plex Mono
+  classDef ui      fill:#3D1A10,stroke:#F78166,stroke-width:2px,color:#FFA895,font-family:IBM Plex Mono
+
   subgraph SRC["Source Systems"]
     S1["SPINS Extract\n.csv.gz · MinIO"]
     S2["Circana BP222\nCostco CRX · MinIO"]
@@ -276,8 +297,8 @@ graph LR
 
   S1 --> D1
   S1 --> D4
-  D4 -.->|"OVERWRITE WHERE\n> Aug 9, 2026"| D1
-  D1 -->|"Q-series QS1→Q22"| D2
+  D4 -.->|"OVERWRITE WHERE > Aug 9"| D1
+  D1 -->|"Q-series QS1 to Q22"| D2
   S2 --> D3
   S3 --> P1
   S3 --> P2
@@ -295,6 +316,13 @@ graph LR
   REG --> U3
   D1 --> U2
   P1 --> U1
+
+  class S1,S2,S3,S4 source
+  class D1,D2,D3 live
+  class D4 staging
+  class P1,P2,P3 pending
+  class M1,M2,M3,REG ml
+  class U1,U2,U3 ui
   P2 --> U1
 </pre>
 </div>
