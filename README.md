@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 135: NS2 shipment data — extended validation findings (2026-09-22)
+
+**Duplicates:** 282 duplicate `transaction_id + item_id` combos (1,257 rows) — all Discount/allowance line types (item_ids 66570, 98163, 137518, 97247). No real product rows affected. Exclude from velocity. Caution: 1,055 have non-zero Amount — deduplicate before GTN Amount aggregation.
+
+**Negative NonInvtPart rows:** 1,075 rows, all `item_code = "Promotional Allowance"`. NS2 records promo allowances as both `Discount` itemtype and `NonInvtPart` — both patterns negative, both excluded from Assembly velocity filter. Report to Ebad for GTN completeness.
+
+**OTIF:** `quantitybilled = quantityshiprecv` in all 4,681 rows (0 mismatches). Pending Ebad confirm: true 100% fill rate or field not capturing short-ships at line level?
+
+**Time series gaps — ask Ebad:** ALDI has a 21-month gap (Nov 2023 → Aug 2025) — data gap or selling pause? HEB history starts Nov 2025 only. TJ's only June–Aug 2026 (2 months). All three need confirmation of whether earlier history exists.
+
+**UPC inconsistency:** 5 item codes with 2 UPCs each. Three likely reformulations/packaging changes (PFB0002, BRB0255, BRG0253). Two NS2 data entry errors where item code was used as UPC placeholder (BRB0229, PFB0218). Ask Ebad which UPC is current per pair before finalizing SPINS join.
+
+---
+
 ## README update 134: NS2 shipment data v2 — TotalBars + CostPerBar resolved (2026-09-22)
 
 Ebad delivered updated `Shipment Data.sql` + `Shipment Data.xlsx` (4,681 rows · 37 cols · Jan 2023 – Sept 11, 2026). Both previously missing fields are now resolved:
