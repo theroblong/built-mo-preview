@@ -6,6 +6,32 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 136: Finance DB schema reviewed — 34 views, Sales_Channel resolved (2026-09-22)
+
+Ebad delivered 3 Finance DB schema files (`FinanceViewsMarkdown.md`, `Finance_View_Schema_Documentation.docx`, `Finance View Schema.sql`). Finance DB is a separate SQL Server database (`Finance.dbo`) — a reporting layer on top of NS2 with 34 views.
+
+**Channel lookup resolved (partial):** `NetSuite2_View_BarsSold` joins `CUSTOMRECORD_CSEG_BB_SALES_CHANN` and outputs `Sales_Channel` as text — this is the cleanest path for channel-aggregated bars sold. Full id→name lookup table still needed to decode `customer_dim.cseg_bb_sales_chann` numeric codes in Druid queries.
+
+**Key views:**
+- `NetSuite2_View_BarsSold` — units + bars sold by date + Sales_Channel text · from `'2023-07-01'`
+- `vw_SCA_SalesOrderLines` — open SO demand · PlannedShipDate · MABD · commitment/allocation
+- `NetSuite2_View_FutureOrderSupplyVisibility` — SO demand vs inventory + transfers + WOs · CandidateSupplyStatus
+- `NetSuite2_View_InventoryOnHand` — OnOrder / OnHand / Available by lot + location
+- `vw_SCA_WorkOrderSupply` — WO demand vs production · BarsRemaining · WorkOrderValidationStatus
+- `NetSuite2_View_BarsProduced` — assembly build/unbuild · OUTPUT vs CONSUMPTION · ItemGroup taxonomy
+- `NetSuite2_View_ItemsAll` — enriched item master · product_type · product_class · flavor · standardCost · BarsOnHand
+- `NetSuite2_View_BillOfMaterials` — active BOM revisions + component yields + dates
+- `NetSuite2_View_StdCostSum` — standard cost per item (Main Warehouse)
+
+**Data quality flags noted:**
+- `BarsProdSummary` + `LotTrace` views: hard-coded date filters / lot numbers — treat as snapshots
+- `ItemsAll`: unreachable CASE branch (account 121010 repeated for Ingredients and Packaging)
+- `TransactionsJoin`: double-joins `TransactionAccountingLine` → possible row multiplication
+
+Updated: `mockups/mo_data_model.html` (Finance DB section added), `wiki/02-data-architecture.md`, `memory/project_netsuite_schema.md`.
+
+---
+
 ## README update 135: NS2 shipment data — extended validation findings (2026-09-22)
 
 **Duplicates:** 282 duplicate `transaction_id + item_id` combos (1,257 rows) — all Discount/allowance line types (item_ids 66570, 98163, 137518, 97247). No real product rows affected. Exclude from velocity. Caution: 1,055 have non-zero Amount — deduplicate before GTN Amount aggregation.

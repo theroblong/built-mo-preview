@@ -161,6 +161,7 @@ code, .mono { font-family: 'IBM Plex Mono', monospace; }
 .badge-staging { background: var(--staging-bg); color: var(--staging); }
 .badge-pending { background: var(--pending-bg); color: var(--pending); }
 .badge-ml      { background: var(--ml-bg);      color: var(--ml); }
+.badge-source  { background: var(--source-bg);  color: var(--source); }
 .stat {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px; color: var(--text-muted);
@@ -584,7 +585,7 @@ graph LR
         <li><strong>isinactive</strong> — F=active (119), T=inactive (20)</li>
         <li><strong>salesrep</strong> — numeric ID; 12 distinct reps</li>
       </ul>
-      <div class="card-feeds">Open ask → <span>CUSTOMRECORD_CSEG_BB_SALES_CHANN lookup (id → channel name)</span></div>
+      <div class="card-feeds">Partial → <span>Finance DB BarsSold joins CUSTOMRECORD_CSEG_BB_SALES_CHANN + outputs Sales_Channel text. Full id→name lookup still needed for direct Druid queries on this dim.</span></div>
     </div>
   </div>
 
@@ -620,7 +621,40 @@ graph LR
         <li><strong>name</strong> — channel name (Grocery, Club, Mass, etc.)</li>
         <li><strong>abbreviation / scriptid</strong></li>
       </ul>
-      <div class="card-feeds">Needed to decode → <span>customer_dim.cseg_bb_sales_chann (11 codes observed). Structure in NS2 DDL; ask Ebad for name values.</span></div>
+      <div class="card-feeds">Partial resolution → <span>Finance DB NetSuite2_View_BarsSold joins this table and outputs Sales_Channel text. Full lookup table still needed to decode customer_dim.cseg_bb_sales_chann for Druid queries.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">Finance DB — Reporting Layer</div>
+<div class="card-grid">
+
+  <div class="entity-card source">
+    <div class="card-head">
+      <div class="card-name">Finance.dbo (34 views)</div>
+      <div class="card-meta">
+        <span class="badge badge-source">Reporting Layer</span>
+        <span class="stat">SQL Server · separate from NS2</span>
+        <span class="stat">Delivered 2026-09-22</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <ul class="field-list">
+        <li><strong>NetSuite2_View_BarsSold</strong> — units + bars sold by date + Sales_Channel (text) · joins CUSTOMRECORD_CSEG_BB_SALES_CHANN ✅</li>
+        <li><strong>vw_SCA_SalesOrderLines</strong> — open SO demand (Pending Approval / Fulfillment) · PlannedShipDate · MABD · commitment + allocation qtys</li>
+        <li><strong>NetSuite2_View_FutureOrderSupplyVisibility</strong> — SO demand vs inventory + transfer + WO supply · CandidateSupplyStatus classification</li>
+        <li><strong>NetSuite2_View_InventoryOnHand</strong> — OnOrder / OnHand / Available by lot + location</li>
+        <li><strong>vw_SCA_WorkOrderSupply</strong> — WO demand vs production · BarsRemaining · WorkOrderValidationStatus</li>
+        <li><strong>NetSuite2_View_BarsProduced</strong> — assembly build/unbuild · OUTPUT vs CONSUMPTION · ItemGroup: FG/Packaging/Ingredient/Bar/Batch</li>
+        <li><strong>NetSuite2_View_ItemsAll</strong> — enriched item master · product_type · product_class · flavor · custitem_bars · standardCost · BarsOnHand</li>
+        <li><strong>NetSuite2_View_BillOfMaterials</strong> — active BOM revisions + components · component yields + dates</li>
+        <li><strong>NetSuite2_View_StdCostSum</strong> — standard cost per item (Main Warehouse)</li>
+        <li style="color:var(--text-muted);font-size:10px;">⚠ BarsProdSummary + LotTrace views: hard-coded date filters / lot numbers — treat as snapshots, not reusable queries</li>
+        <li style="color:var(--text-muted);font-size:10px;">⚠ ItemsAll: unreachable CASE branch (account 121010 repeated for both Ingredients and Packaging)</li>
+        <li style="color:var(--text-muted);font-size:10px;">⚠ TransactionsJoin: double-joins TransactionAccountingLine — potential row multiplication</li>
+      </ul>
+      <div class="card-feeds">Source → <span>NS2 reporting layer; BarsSold resolves Sales_Channel; InventoryOnHand + SupplyVisibility → future supply risk signals in Mo</span></div>
     </div>
   </div>
 
@@ -754,8 +788,7 @@ graph LR
 
 <div class="section-label">Open Items</div>
 <ul class="open-list">
-  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> lookup — needed to decode customer_dim.cseg_bb_sales_chann numeric codes to channel names (Grocery, Club, Mass, etc.)</span></li>
-  <li><span class="owner">Ebad</span><span class="item"><strong>Finance DB schema</strong> (AI-12) — Sales Cube + Retail Cube views; separate SQL Server DB from NS2</span></li>
+  <li><span class="owner">Ebad</span><span class="item"><strong>CUSTOMRECORD_CSEG_BB_SALES_CHANN</strong> id→name lookup — Finance DB BarsSold already joins this and outputs Sales_Channel text, but the full numeric code→name table is still needed to decode customer_dim.cseg_bb_sales_chann in Druid queries</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>MVM in BP222 flat-file?</strong> — do Costco MVM period dates appear in the export or only in the Unify portal UI?</span></li>
   <li><span class="owner">Justin</span><span class="item"><strong>AI-1: Dimension tables CSV</strong> — customers, products, salesperson→customer mapping (requested Sept 16)</span></li>
   <li><span class="owner">Rob</span><span class="item"><strong>spins_full update</strong> — fill missing weeks back to Sept 2025; tonight or tomorrow AM</span></li>
