@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 130 (v2.5.7): NS2 data model + full Druid ER diagram (2026-09-22)
+
+Version bump to v2.5.7. Beginning full data model / ER diagram for all ingested data sources: SPINS (spins_full, built_filtered_weekly), Circana CRX (built_costoo_crx_weekly), NS2 dark-retailer shipments, CustomerDim, ItemDim, MVM calendar, ML scoring tables, and model registry. Rob updating spins_full tonight/tomorrow AM to fill missing weeks back to Sept 2025; grain change (weekly → monthly rollup) under consideration.
+
+---
+
 ## README update 129: NS2 UPC validation + CustomerDim profiled (2026-09-21)
 
 **UPC join strategy confirmed** (`custcol_sps_upccasecode`): zero-pad NS2 field to 12 digits, strip dashes from SPINS UPCs → exact match. `084022930257` (NS2) = `08-40229-30257` (SPINS). 27/33 distinct UPCs match (83.8% of product rows). All 6 non-matches explained: 2 Trader Joe's private store codes (00000-prefix, never in SPINS — TJ's policy), 1 MER-prefix merchandise item (exclude from analysis), 3 newer/limited SKUs not yet in SPINS universe.
