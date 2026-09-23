@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 143: EIA fuel consumption API integrated — MO_76 + Mo Trends (2026-09-23)
+
+Rob's request from standup: add rate-of-consumption for gas/diesel (Mb/d) and crude oil inventories (Mb) as free API signals. Implemented as EIA API v2 integration, mirroring the existing FRED pattern.
+
+**Files changed:**
+- `customer-built-mo-api/app/config.py` — `EIA_API_KEY` added (env, optional)
+- `customer-built-mo-api/.env.example` — `EIA_API_KEY` placeholder
+- `customer-built-mo-api/app/routers/trends.py` — `_eia_fetch()` + `/macro` endpoint extended with `gas_consumption`, `diesel_consumption`, `crude_stocks`
+- `customer-built-mo-ui/src/api/types.ts` — `MacroPoint` extended with 3 EIA fields (number | null)
+- `FirstAgent/scripts/MO_76_macro_feature_ablation.py` — `EIA_SERIES` dict, `eia_fetch()`, EIA loop in `build_macro_features()`, lag columns (`gas_consumption_lag4`, `diesel_consumption_lag4`, `crude_stocks_yoy`)
+
+**Series:** gasoline product supplied (`petroleum/cons/wpsup`), distillate/diesel product supplied (`petroleum/cons/wpsup`), commercial crude oil inventories (`petroleum/stoc/wstk`). Handles both `YYYY-MM-DD` and `YYYY-WXX` EIA period formats. 4-week lag applied before LightGBM. Feature importance to be tested in next MO_76 run.
+
+**Key note:** UI mockup deferred — Mb/d and Mb require a 3rd Y-axis separate from $/gal and index axes.
+
+**Setup:** Register free key at https://www.eia.gov/opendata/register.php and set `EIA_API_KEY=<key>` in both `.env` files.
+
+---
+
 ## README update 142: Q0 date-range bug found and fixed — pipeline restarting (2026-09-23)
 
 Root cause of second pipeline issue: the automated pipeline extracted Q0 SQL from the register, which showed Batch 1 (2023-01-01 → 2024-01-01) as its template. The new weeks (2026-04-20 → 2026-09-06) were never written to `built_filtered_weekly`. `built_enriched_weekly` then rebuilt from the incomplete source and got the same stale HWM (2026-08-09). The HWM gate in `run_q2_onwards.py` correctly detected this and blocked Q2 — surfacing the problem before any downstream corruption.

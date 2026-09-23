@@ -94,18 +94,20 @@ MACRO_PARQUET = OUTPUT_DIR / "mo76_fred_features.parquet"
 MODEL_HISTORY = OUTPUT_DIR / "model_history.json"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-# ── FRED config ───────────────────────────────────────────────────────────────
+# ── FRED + EIA config ─────────────────────────────────────────────────────────
 _FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
+_EIA_BASE  = "https://api.eia.gov/v2"
 
-def _load_env_key() -> str:
+def _load_env_key(key_name: str) -> str:
     env_path = SCRIPT_DIR / ".env"
     if env_path.exists():
         for line in env_path.read_text().splitlines():
-            if line.startswith("FRED_API_KEY="):
+            if line.startswith(f"{key_name}="):
                 return line.split("=", 1)[1].strip()
-    return os.environ.get("FRED_API_KEY", "")
+    return os.environ.get(key_name, "")
 
-FRED_API_KEY = _load_env_key()
+FRED_API_KEY = _load_env_key("FRED_API_KEY")
+EIA_API_KEY  = _load_env_key("EIA_API_KEY")
 
 WEEKLY_SERIES = {
     "DDFUELUSGULF": "diesel_price",
@@ -119,6 +121,22 @@ MONTHLY_SERIES = {
     "PSAVERT":       "savings_rate",
     "WPU115":        "ppi_food",
     "PAYEMS":        "payrolls",
+}
+
+# EIA weekly series: fuel consumption rates (Mb/d) and crude inventories (Mb)
+# Added Sept 23 2026 — Rob Cluster request; test for feature importance vs MO_53 champion
+# Hypothesis: diesel consumption (economic activity proxy) + crude drawdown rate = leading
+# indicators for CPG distribution velocity and consumer demand environment.
+EIA_SERIES = {
+    # (endpoint_path, facets, col_name)
+    "gas_consumption":    ("petroleum/cons/wpsup",
+                           [("facets[process][]", "VPP"), ("facets[duoarea][]", "NUS"),
+                            ("facets[product][]", "EPM0")]),
+    "diesel_consumption": ("petroleum/cons/wpsup",
+                           [("facets[process][]", "VPP"), ("facets[duoarea][]", "NUS"),
+                            ("facets[product][]", "EPD0")]),
+    "crude_stocks":       ("petroleum/stoc/wstk",
+                           [("facets[duoarea][]", "NUS"), ("facets[product][]", "EPC0")]),
 }
 
 LAG_WEEKS      = 4    # weeks of lag applied to all macro features
@@ -156,7 +174,56 @@ CHAMPION_FEATS = [
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
 
-# ── FRED fetching ─────────────────────────────────────────────────────────────
+# ── FRED + EIA fetching ───────────────────────────────────────────────────────
+
+def eia_fetch(endpoint: str, facets: list[tuple], start: str) -> list[dict]:
+    """
+    Fetch EIA API v2 weekly petroleum data. Returns [] when key absent or on error.
+    Handles both 'YYYY-MM-DD' and 'YYYY-WXX' EIA period formats.
+    """
+    if not EIA_API_KEY:
+        print(f"    EIA_API_KEY not set — skipping {endpoint}")
+        return []
+    try:
+        params: list[tuple] = [
+            ("api_key",              EIA_API_KEY),
+            ("frequency",            "weekly"),
+            ("data[0]",              "value"),
+            ("start",                start),
+            ("sort[0][column]",      "period"),
+            ("sort[0][direction]",   "asc"),
+            ("length",               "500"),
+        ] + facets
+        r = requests.get(f"{_EIA_BASE}/{endpoint}/data/", params=params, timeout=15)
+        r.raise_for_status()
+        rows = r.json().get("response", {}).get("data", [])
+        result = []
+        for row in rows:
+            period = row.get("period", "")
+            val    = row.get("value")
+            if val is None:
+                continue
+            if "W" in period:
+                try:
+                    year, wk = period.split("-W")
+                    ts = pd.Timestamp(f"{year}-W{wk.zfill(2)}-1", freq=None)
+                    # strptime workaround for ISO week
+                    from datetime import datetime as _dt
+                    ts = pd.Timestamp(
+                        _dt.strptime(f"{year}-W{wk.zfill(2)}-1", "%Y-W%W-%w")
+                    )
+                except Exception:
+                    continue
+            else:
+                ts = pd.Timestamp(period)
+            result.append({"date": ts, "value": float(val)})
+        print(f"    EIA {endpoint}: {len(result)} observations"
+              + (f" ({result[0]['date'].date()} → {result[-1]['date'].date()})" if result else ""))
+        return result
+    except Exception as exc:
+        print(f"    WARNING: EIA fetch failed for {endpoint}: {exc}")
+        return []
+
 
 def fred_fetch(series_id: str, start: str) -> list[dict]:
     """Fetch FRED series observations. Returns [] on any error."""
@@ -195,12 +262,13 @@ def fred_fetch(series_id: str, start: str) -> list[dict]:
 
 def build_macro_features(train_start: pd.Timestamp, train_end: pd.Timestamp) -> pd.DataFrame:
     """
-    Fetch all Tier 1 FRED series and return a weekly DataFrame indexed by week_ending (Sunday).
+    Fetch all Tier 1 FRED + EIA series and return a weekly DataFrame indexed by week_ending.
     Applies 4-week lag and YoY % Δ for level series.
+    EIA series are included when EIA_API_KEY is set; silently skipped otherwise.
     """
     fetch_start = (train_start - timedelta(weeks=LAG_WEEKS + 54)).strftime("%Y-%m-%d")
-    print(f"\n[FRED] Fetching {len(WEEKLY_SERIES) + len(MONTHLY_SERIES)} series "
-          f"from {fetch_start} …")
+    print(f"\n[FRED+EIA] Fetching {len(WEEKLY_SERIES) + len(MONTHLY_SERIES)} FRED + "
+          f"{len(EIA_SERIES)} EIA series from {fetch_start} …")
 
     # ── Build weekly date spine (Sunday = SPINS week_ending convention) ────────
     # Cover full date range with buffer for lag + YoY lookback
@@ -251,31 +319,55 @@ def build_macro_features(train_start: pd.Timestamp, train_end: pd.Timestamp) -> 
             return None
         macro[col_name] = macro["year_month"].map(_ffill_monthly)
 
+    # ── EIA weekly series: fuel consumption rates + crude inventories ────────────
+    if EIA_API_KEY:
+        print(f"\n[EIA] Fetching {len(EIA_SERIES)} series …")
+        for col_name, (endpoint, facets) in EIA_SERIES.items():
+            obs = eia_fetch(endpoint, facets, fetch_start)
+            if not obs:
+                macro[col_name] = np.nan
+                continue
+            eia_df = pd.DataFrame(obs)
+            eia_df["year_week"] = eia_df["date"].dt.strftime("%Y-%W")
+            eia_df = eia_df.groupby("year_week")["value"].last().reset_index()
+            eia_df.rename(columns={"value": col_name}, inplace=True)
+            macro = macro.merge(eia_df, on="year_week", how="left")
+            macro[col_name] = macro[col_name].ffill()
+    else:
+        print("\n[EIA] EIA_API_KEY not set — skipping consumption/inventory features")
+        for col_name in EIA_SERIES:
+            macro[col_name] = np.nan
+
     # ── Apply 4-week lag to all macro features ────────────────────────────────
     macro = macro.sort_values("week_ending").reset_index(drop=True)
-    raw_cols = list(WEEKLY_SERIES.values()) + list(MONTHLY_SERIES.values())
+    raw_cols = (list(WEEKLY_SERIES.values()) + list(MONTHLY_SERIES.values())
+                + list(EIA_SERIES.keys()))
     for col in raw_cols:
         if col in macro.columns:
             macro[f"{col}_lag{LAG_WEEKS}"] = macro[col].shift(LAG_WEEKS)
 
     # ── YoY % Δ for level series (removes secular trend) ─────────────────────
-    # Use the lagged value — compare lag4 this year vs lag4 same week last year
-    level_series = ["grocery_sales", "ppi_food", "payrolls"]
+    level_series = ["grocery_sales", "ppi_food", "payrolls",
+                    "crude_stocks"]  # crude inventories are a stock/level
     for col in level_series:
         lagged = f"{col}_lag{LAG_WEEKS}"
         if lagged in macro.columns:
             macro[f"{col}_yoy"] = macro[lagged].pct_change(52) * 100
 
     # ── Final feature columns for ML ─────────────────────────────────────────
-    # Prefer YoY Δ for level series; keep lag-only for rate/price series
-    macro["diesel_price_lag4"]    = macro.get(f"diesel_price_lag{LAG_WEEKS}")
-    macro["gas_price_lag4"]       = macro.get(f"gas_price_lag{LAG_WEEKS}")
-    macro["jobless_initial_lag4"] = macro.get(f"jobless_initial_lag{LAG_WEEKS}")
-    macro["jobless_contd_lag4"]   = macro.get(f"jobless_contd_lag{LAG_WEEKS}")
-    macro["savings_rate_lag4"]    = macro.get(f"savings_rate_lag{LAG_WEEKS}")
+    macro["diesel_price_lag4"]       = macro.get(f"diesel_price_lag{LAG_WEEKS}")
+    macro["gas_price_lag4"]          = macro.get(f"gas_price_lag{LAG_WEEKS}")
+    macro["jobless_initial_lag4"]    = macro.get(f"jobless_initial_lag{LAG_WEEKS}")
+    macro["jobless_contd_lag4"]      = macro.get(f"jobless_contd_lag{LAG_WEEKS}")
+    macro["savings_rate_lag4"]       = macro.get(f"savings_rate_lag{LAG_WEEKS}")
+    # EIA — standardize before use; LightGBM handles NaN natively
+    macro["gas_consumption_lag4"]    = macro.get(f"gas_consumption_lag{LAG_WEEKS}")
+    macro["diesel_consumption_lag4"] = macro.get(f"diesel_consumption_lag{LAG_WEEKS}")
+    macro["crude_stocks_yoy"]        = macro.get("crude_stocks_yoy")  # YoY Δ preferred for stock
 
     # Drop working columns
-    drop_cols = ["year_week", "year_month"] + raw_cols + [f"{c}_lag{LAG_WEEKS}" for c in raw_cols]
+    drop_cols = (["year_week", "year_month"] + raw_cols
+                 + [f"{c}_lag{LAG_WEEKS}" for c in raw_cols])
     macro = macro.drop(columns=[c for c in drop_cols if c in macro.columns], errors="ignore")
     macro = macro[macro["week_ending"] >= train_start].reset_index(drop=True)
 
