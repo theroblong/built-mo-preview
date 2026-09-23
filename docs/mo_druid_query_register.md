@@ -1595,16 +1595,27 @@ PARTITIONED BY ALL
 
 **Run time: 10–30 minutes on ~95M rows.**
 
+**⚠️ DATE RANGE — UPDATE EACH CYCLE:**
+The `OVERWRITE WHERE` bounds and the `WHERE __time` filter BOTH must match the new data window.
+- Start = prior `built_filtered_weekly` HWM (the last week already written)
+- End   = `2027-01-01` (or next year boundary once 2026 fills)
+- Run `SELECT MAX(__time) FROM "built_filtered_weekly"` to confirm prior HWM before running.
+- After running: verify `SELECT MAX(__time) FROM "built_filtered_weekly"` = new SPINS HWM before proceeding to Q1.
+
+**Batch history:**
+- Batch 1: 2023-01-01 → 2024-01-01 ✓ COMPLETE
+- Batch 2: 2024-01-01 → 2025-01-01 ✓ COMPLETE
+- Batch 3: 2025-01-01 → 2026-04-19 ✓ COMPLETE (prior cycle)
+- **Batch 4 (current — Sept 23 2026): 2026-04-19 → 2027-01-01** ← this is what the SQL below runs
+
 ```sql
--- Run once per year-range to stay within cluster task-time limits.
--- Adjust the __time bounds for each batch; re-run with the next range when complete.
--- Example batches (tune start/end to match your data's actual date range):
---   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE
---   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE
---   Batch 3: 2025-01-01 → present      ✓ COMPLETE
+-- INCREMENTAL BATCH — update bounds each cycle:
+--   Start = prior built_filtered_weekly MAX(__time)
+--   End   = next year boundary (2027-01-01 until 2026 data is complete)
+-- Sept 23 2026 cycle: adding weeks 2026-04-20 → 2026-09-06
 REPLACE INTO "built_filtered_weekly"
-OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01'
-            AND __time <  TIMESTAMP '2024-01-01'
+OVERWRITE WHERE __time >= TIMESTAMP '2026-04-19'
+            AND __time <  TIMESTAMP '2027-01-01'
 SELECT
   __time,
   "Channel/Outlet"                                       AS channel_outlet,
@@ -1667,15 +1678,20 @@ FROM "spins_full"
 WHERE
   ("Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
    OR "Subcategory" = 'WELLNESS & NUTRITION BARS')
-  AND __time >= TIMESTAMP '2023-01-01'
-  AND __time <  TIMESTAMP '2024-01-01'
+  AND __time >= TIMESTAMP '2026-04-19'
+  AND __time <  TIMESTAMP '2027-01-01'
 PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```
 
-**Verify:** `SELECT COUNT(*) FROM built_filtered_weekly` — expect roughly one-third of the full ~62.9M total per batch. After all batches: `SELECT MIN(__time), MAX(__time), COUNT(*) FROM built_filtered_weekly`.
+**Verify (run after every Q0 before proceeding to Q1):**
+```sql
+SELECT MIN(__time) AS min_t, MAX(__time) AS max_t, COUNT(*) AS cnt
+FROM "built_filtered_weekly"
+```
+Expect `max_t` = new SPINS HWM (2026-09-06 this cycle). If `max_t` is still the prior HWM, Q0 ran the wrong batch or failed silently.
 
-**Status: ✓ COMPLETE (all 3 batches)**
+**Status: ✓ Batch 4 (2026-04-19 → 2027-01-01) IN PROGRESS — Sept 23 2026**
 
 ---
 

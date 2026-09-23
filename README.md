@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 142: Q0 date-range bug found and fixed — pipeline restarting (2026-09-23)
+
+Root cause of second pipeline issue: the automated pipeline extracted Q0 SQL from the register, which showed Batch 1 (2023-01-01 → 2024-01-01) as its template. The new weeks (2026-04-20 → 2026-09-06) were never written to `built_filtered_weekly`. `built_enriched_weekly` then rebuilt from the incomplete source and got the same stale HWM (2026-08-09). The HWM gate in `run_q2_onwards.py` correctly detected this and blocked Q2 — surfacing the problem before any downstream corruption.
+
+**What the HWM gate caught:** `built_enriched_weekly` showed TASK SUCCESS but `MAX(__time)` was still 2026-08-09 — proving the task completed but wrote stale data. Without the HWM gate, Q2 would have run for 5–6 hours on wrong inputs.
+
+**Fix:**
+- `docs/mo_druid_query_register.md` — Q0 SQL updated to Batch 4 (2026-04-19 → 2027-01-01); added ⚠️ date-range update instruction with prior HWM check and post-run verify gate; batch history table added; status updated.
+- `run_q2_onwards.py` (scratchpad) — updated to prepend Q0 incremental + Q1 re-run before Q2, both with HWM gates. Script restarted.
+
+**Key rule for future cycles:** Before running Q0, check `SELECT MAX(__time) FROM "built_filtered_weekly"`. The Q0 OVERWRITE WHERE start bound = that date. After Q0, verify `MAX(__time)` = new SPINS HWM before proceeding to Q1. Update the Q0 SQL in the register to reflect the new batch each cycle.
+
+---
+
 ## README update 141: Pipeline polling bug fixed — Q2 re-running at maxNumTasks=8 (2026-09-23)
 
 Q2 (`comparison_pool_weekly`) was cancelled after it started reading stale `built_enriched_weekly` data. Root cause: the pipeline's MSQ statements API polling code (`/druid/v2/sql/statements/`) treated HTTP 404 (statement record expired) as task SUCCESS and advanced to the next step while `built_enriched_weekly` was still building. `built_enriched_weekly` was RUNNING for ~13 minutes — far longer than statement retention — when Q2 fired.
