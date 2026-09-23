@@ -6,6 +6,23 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 141: Pipeline polling bug fixed — Q2 re-running at maxNumTasks=8 (2026-09-23)
+
+Q2 (`comparison_pool_weekly`) was cancelled after it started reading stale `built_enriched_weekly` data. Root cause: the pipeline's MSQ statements API polling code (`/druid/v2/sql/statements/`) treated HTTP 404 (statement record expired) as task SUCCESS and advanced to the next step while `built_enriched_weekly` was still building. `built_enriched_weekly` was RUNNING for ~13 minutes — far longer than statement retention — when Q2 fired.
+
+**Fix applied (2026-09-23):**
+- `scripts/mo_druid_client.py` — added `poll_task_api()` (Tasks API, never expires) and `wait_for_hwm()` (MAX(__time) datasource gate). Both functions replace the 404=SUCCESS polling pattern for all future pipeline runs.
+- `run_q_pipeline.py` (scratchpad) — rewrote `run_msq_safe()` to use `poll_task_api()` + added `wait_for_hwm()` gates before Q0, Q1, `built_enriched_weekly`, Q2.
+- `run_q2_onwards.py` (scratchpad) — continuation script for this cycle: waits on `built_enriched_weekly` HWM = 2026-09-06 before submitting Q2 at `maxNumTasks=8`.
+- `docs/mo_druid_query_register.md` — Q2 `SET maxNumTasks = 8` (was 4).
+
+**Full pipeline dependency chain (all in series — no overlapping steps):**
+`QS2/QS3 → Q0 → Q1 → built_enriched_weekly → Q2 → Q3/Q4/Q5 → Q6–Q9 → Q14–Q22`
+
+Every step reads from the prior step's output datasource. The HWM gate confirms segments are committed and queryable before the next step is submitted.
+
+---
+
 ## README update 140: Q2 maxNumTasks tuning roadmap documented (2026-09-23)
 
 Sept 23 Q-series running at `maxNumTasks=4` (pipeline had SQL locked in memory before note added). Q2 (`comparison_pool_weekly` self-join) took 11h 12m last cycle at =4. Register, memory, and wiki updated with tuning roadmap: **use =8 next cycle** (user-validated, ~5–6h), then benchmark =16 after =8 confirmed stable (test on 2026-only short batch first; =16 saturates all 15 cluster workers). `durableShuffleStorage=true` + `sqlSortMergeDiskBuffered=true` already in place. Pipeline running in background — may complete overnight.
