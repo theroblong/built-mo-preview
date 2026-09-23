@@ -6,6 +6,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 138: QS1 + 2 new BUILT PUFF UPCs — spins_full updated to 2026-09-06 (2026-09-23)
+
+Post-ingest validation of Rob's `spins_full` update (2026-04-19 → 2026-09-06, ~10.4M new rows) found 2 new BUILT UPCs not yet in `flavor_mapping`. Added both to all 6 QS1 CASE blocks in `docs/mo_druid_query_register.md`. QS1v returned 0 mismatches. Q-series pipeline (QS2 → Q22) running.
+
+**New UPCs added:**
+- `08-40229-30511` — BUILT PUFF Pumpkin Cookie Chunk 18.2oz 12ct · flavor_family: OTHER · pack_count: 12 · size: 18.2
+- `08-40229-30687` — BUILT PUFF Peanut Butter Cup 11.29oz 8ct · flavor_family: PEANUT BUTTER · pack_count: 8 · size: 11.29
+
+---
+
 ## README update 137: Built_EDW star schema delivered — DimSalesChannel + OTIF flags resolved (2026-09-22)
 
 Ebad delivered 2 additional files: `Sales_Retail_Cube_Schema_Documentation.md` + `Sales and Retail Cube Schema.sql`. This reveals a full dimensional star schema (`Built_EDW`) above NS2 and the Finance DB views.

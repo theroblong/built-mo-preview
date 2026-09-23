@@ -199,6 +199,8 @@ SELECT
       WHEN '08-40229-30690' THEN 'BUILT PUFF'
       WHEN '08-40229-30734' THEN 'BUILT PUFF'
       WHEN '08-40229-30736' THEN 'BUILT SOUR PUFF'
+      WHEN '08-40229-30511' THEN 'BUILT PUFF'
+      WHEN '08-40229-30687' THEN 'BUILT PUFF'
       ELSE NULL
     END                    AS brand,
   "Description"                                AS description,
@@ -349,6 +351,8 @@ SELECT
       WHEN '08-40229-30690' THEN 'CHOCOLATE MINT'
       WHEN '08-40229-30734' THEN 'ASSORTED'
       WHEN '08-40229-30736' THEN 'ASSORTED'
+      WHEN '08-40229-30511' THEN 'OTHER'
+      WHEN '08-40229-30687' THEN 'PEANUT BUTTER'
       ELSE NULL
     END            AS flavor_family,
     CASE upc
@@ -498,6 +502,8 @@ SELECT
       WHEN '08-40229-30690' THEN 'Mint Chip'
       WHEN '08-40229-30734' THEN 'Cookies N Cream & Cookie Dough Variety'
       WHEN '08-40229-30736' THEN 'Sweet Peach & Green Apple Variety'
+      WHEN '08-40229-30511' THEN 'Pumpkin Cookie Chunk'
+      WHEN '08-40229-30687' THEN 'Peanut Butter Cup'
       ELSE NULL
     END      AS specific_flavor_raw,
     CASE upc
@@ -647,6 +653,8 @@ SELECT
       WHEN '08-40229-30690' THEN 'Mint Chip'
       WHEN '08-40229-30734' THEN 'Variety Pack'
       WHEN '08-40229-30736' THEN 'Variety Pack'
+      WHEN '08-40229-30511' THEN 'Pumpkin Cookie'
+      WHEN '08-40229-30687' THEN 'Peanut Butter Cup'
       ELSE NULL
     END AS specific_flavor_normalized,
     CASE upc
@@ -796,6 +804,8 @@ SELECT
       WHEN '08-40229-30690' THEN CAST('8' AS BIGINT)
       WHEN '08-40229-30734' THEN CAST('13' AS BIGINT)
       WHEN '08-40229-30736' THEN CAST('13' AS BIGINT)
+      WHEN '08-40229-30511' THEN CAST('12' AS BIGINT)
+      WHEN '08-40229-30687' THEN CAST('8' AS BIGINT)
       ELSE NULL
     END AS pack_count,
     CASE upc
@@ -945,6 +955,8 @@ SELECT
       WHEN '08-40229-30690' THEN CAST('11.29' AS DOUBLE)
       WHEN '08-40229-30734' THEN CAST('19.20' AS DOUBLE)
       WHEN '08-40229-30736' THEN CAST('18.85' AS DOUBLE)
+      WHEN '08-40229-30511' THEN CAST('18.2' AS DOUBLE)
+      WHEN '08-40229-30687' THEN CAST('11.29' AS DOUBLE)
       ELSE NULL
     END       AS size,
   "UNIT OF MEASURE"                            AS unit_of_measure,
