@@ -1791,6 +1791,11 @@ SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join e
 SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
 SET durableShuffleStorage = 'true';               -- routes shuffle files to S3; cluster-level config completed by Rob
 SET maxNumTasks           = 4;                     -- REQUIRED: single-worker sort-merge stalls (E13); 15 workers confirmed available
+-- TUNING NOTE (2026-09-23): Sept 23 cycle ran at =4 (automated pipeline locked in before update).
+--   NEXT CYCLE → try =8 (user-validated, ~2× faster, ~5–6h vs 11h 12m at =4).
+--   After =8 confirmed stable → benchmark =16 (saturates all 15 workers; ~3h est.).
+--   Test =16 on a SHORT batch first (2026 batch only) before full 2025→2027 run.
+--   durableShuffleStorage=true already routes shuffles to S3 — helps both.
 -- SET rowsPerSegment        = 5000000;           -- output segment size tuning (minor; uncomment when Q2 succeeds)
 
 -- Run once per year-range (same batching pattern as Q0).

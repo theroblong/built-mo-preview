@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 140: Q2 maxNumTasks tuning roadmap documented (2026-09-23)
+
+Sept 23 Q-series running at `maxNumTasks=4` (pipeline had SQL locked in memory before note added). Q2 (`comparison_pool_weekly` self-join) took 11h 12m last cycle at =4. Register, memory, and wiki updated with tuning roadmap: **use =8 next cycle** (user-validated, ~5–6h), then benchmark =16 after =8 confirmed stable (test on 2026-only short batch first; =16 saturates all 15 cluster workers). `durableShuffleStorage=true` + `sqlSortMergeDiskBuffered=true` already in place. Pipeline running in background — may complete overnight.
+
+---
+
 ## README update 139: spins_full validation complete — pipeline Q-series running (2026-09-23)
 
 Full post-ingest validation of Rob's 2026-09-06 update confirmed clean. Pipeline running (QS2 → Q22 automated). Memory + wiki/19 updated with Sept 23 cycle summary.
