@@ -6,6 +6,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 144: wallet-share macro signals added — FRED + EIA monthly (2026-09-23)
+
+Added 5 new FRED monthly series (food-at-home CPI, snacks CPI, revolving credit, real disposable income, credit card delinquency) and 2 EIA monthly series (residential electricity ¢/kWh, natural gas $/Mcf) to MO_76, the Mo Trends `/macro` endpoint, and TypeScript types.
+
+All 7 new series use YoY % Δ as ML features (removes secular trend; model sees acceleration signal). `cc_delinquency` used as lag4 direct (already a rate). `_eia_fetch()` extended with `frequency` param to support monthly; handles `YYYY-MM` period format. `EIA_MONTHLY_SERIES` dict added to MO_76.
+
+Feature set grows from 8 → 20 macro signals for MO_76 ablation run.
+
+---
+
 ## README update 143: EIA fuel consumption API integrated — MO_76 + Mo Trends (2026-09-23)
 
 Rob's request from standup: add rate-of-consumption for gas/diesel (Mb/d) and crude oil inventories (Mb) as free API signals. Implemented as EIA API v2 integration, mirroring the existing FRED pattern.

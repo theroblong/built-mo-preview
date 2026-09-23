@@ -26,22 +26,39 @@ If any criterion fails → candidate archived, MO_53 stays active, no UI impact.
 FRED SERIES (Tier 1)
 --------------------
 Weekly (direct join on week — no interpolation):
-  DDFUELUSGULF  diesel_price_lag4      EIA On-Highway Diesel $/gal
-  GASDESW       gas_price_lag4         US Regular Retail Gas $/gal
-  ICSA          jobless_initial_lag4   Initial Jobless Claims (thousands)
-  ICNSA         jobless_contd_lag4     Continued Jobless Claims (thousands)
+  DDFUELUSGULF  diesel_price_lag4        EIA On-Highway Diesel $/gal
+  GASDESW       gas_price_lag4           US Regular Retail Gas $/gal
+  ICSA          jobless_initial_lag4     Initial Jobless Claims (thousands)
+  ICNSA         jobless_contd_lag4       Continued Jobless Claims (thousands)
 
 Monthly (forward-fill to weekly, then 4-week lag + YoY Δ):
-  MRTSSM4451USS grocery_sales_yoy      Grocery Store Sales % YoY
-  PSAVERT       savings_rate_lag4      Personal Savings Rate (%)
-  WPU115        ppi_food_yoy           PPI: Processed Foods % YoY
-  PAYEMS        payrolls_yoy           Nonfarm Payrolls % YoY
+  MRTSSM4451USS grocery_sales_yoy        Grocery Store Sales % YoY
+  PSAVERT       savings_rate_lag4        Personal Savings Rate (%)
+  WPU115        ppi_food_yoy             PPI: Processed Foods % YoY
+  PAYEMS        payrolls_yoy             Nonfarm Payrolls % YoY
+  CUSR0000SAF11 food_at_home_cpi_yoy     CPI: Food at Home % YoY (shelf-price pressure)
+  REVOLNS       revolving_credit_yoy     Revolving Consumer Credit Outstanding % YoY
+  DSPIC96       disposable_income_yoy    Real Disposable Personal Income % YoY
+  CUUR0000SAF112 snacks_cpi_yoy          CPI: Snacks & Cereal % YoY (direct shelf comp)
+  DRCCLACBS     cc_delinquency_lag4      Credit Card Delinquency Rate % (stress signal)
+
+EIA SERIES (Tier 1 weekly, Tier 2 monthly)
+------------------------------------------
+Weekly petroleum (direct join):
+  EPM0/VPP/NUS  gas_consumption_lag4     Motor Gasoline Product Supplied, Mb/d
+  EPD0/VPP/NUS  diesel_consumption_lag4  Distillate Fuel Oil Product Supplied, Mb/d
+  EPC0/NUS      crude_stocks_yoy         US Commercial Crude Oil Inventories % YoY, Mb
+
+Monthly energy (forward-fill to weekly — wallet-share signals, Sept–Feb particularly):
+  RES/US        elec_price_yoy           Residential Electricity Price ¢/kWh % YoY
+  PRS/NUS       natgas_price_yoy         Residential Natural Gas Price $/Mcf % YoY
 
 Feature engineering rules
   - 4-week lag on ALL macro features (avoids look-ahead bias; macro signals take
     weeks to flow through distribution decisions and consumer behavior)
-  - YoY % Δ for level series (grocery_sales, ppi_food, payrolls): removes secular
-    trend so the model sees acceleration signal, not absolute level
+  - YoY % Δ for level/price-index series: removes secular trend so the model sees
+    acceleration signal, not absolute level
+  - Rate series used directly (savings_rate, cc_delinquency): lag4 only, no YoY
   - Weekly series: direct week join + lag only (no interpolation needed)
   - Monthly series: forward-fill each monthly release across all weeks in that month,
     then apply 4-week lag
@@ -117,18 +134,21 @@ WEEKLY_SERIES = {
 }
 
 MONTHLY_SERIES = {
-    "MRTSSM4451USS": "grocery_sales",
-    "PSAVERT":       "savings_rate",
-    "WPU115":        "ppi_food",
-    "PAYEMS":        "payrolls",
+    "MRTSSM4451USS":  "grocery_sales",
+    "PSAVERT":        "savings_rate",
+    "WPU115":         "ppi_food",
+    "PAYEMS":         "payrolls",
+    # Wallet-share + shelf-competition additions (Sept 23 2026)
+    "CUSR0000SAF11":  "food_at_home_cpi",   # CPI Food at Home — direct shelf-price pressure
+    "REVOLNS":        "revolving_credit",   # Revolving credit outstanding — spending capacity
+    "DSPIC96":        "disposable_income",  # Real disposable personal income
+    "CUUR0000SAF112": "snacks_cpi",         # CPI Snacks & Cereal — BUILT's exact shelf
+    "DRCCLACBS":      "cc_delinquency",     # Credit card delinquency rate — stress indicator
 }
 
 # EIA weekly series: fuel consumption rates (Mb/d) and crude inventories (Mb)
 # Added Sept 23 2026 — Rob Cluster request; test for feature importance vs MO_53 champion
-# Hypothesis: diesel consumption (economic activity proxy) + crude drawdown rate = leading
-# indicators for CPG distribution velocity and consumer demand environment.
 EIA_SERIES = {
-    # (endpoint_path, facets, col_name)
     "gas_consumption":    ("petroleum/cons/wpsup",
                            [("facets[process][]", "VPP"), ("facets[duoarea][]", "NUS"),
                             ("facets[product][]", "EPM0")]),
@@ -137,6 +157,15 @@ EIA_SERIES = {
                             ("facets[product][]", "EPD0")]),
     "crude_stocks":       ("petroleum/stoc/wstk",
                            [("facets[duoarea][]", "NUS"), ("facets[product][]", "EPC0")]),
+}
+
+# EIA monthly series: residential energy prices — home energy burden / wallet-share
+# Added Sept 23 2026; particularly relevant Sept–Feb when winter heating bills spike
+EIA_MONTHLY_SERIES = {
+    "elec_price":   ("electricity/retail-sales",
+                     [("facets[sectorid][]", "RES"), ("facets[stateid][]", "US")]),
+    "natgas_price": ("natural-gas/pri/sum",
+                     [("facets[process][]", "PRS"), ("facets[duoarea][]", "NUS")]),
 }
 
 LAG_WEEKS      = 4    # weeks of lag applied to all macro features
@@ -176,19 +205,23 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
 # ── FRED + EIA fetching ───────────────────────────────────────────────────────
 
-def eia_fetch(endpoint: str, facets: list[tuple], start: str) -> list[dict]:
+def eia_fetch(endpoint: str, facets: list[tuple], start: str,
+              frequency: str = "weekly") -> list[dict]:
     """
-    Fetch EIA API v2 weekly petroleum data. Returns [] when key absent or on error.
-    Handles both 'YYYY-MM-DD' and 'YYYY-WXX' EIA period formats.
+    Fetch EIA API v2 data. Returns [] when key absent or on error.
+    Handles 'YYYY-MM-DD', 'YYYY-WXX', and 'YYYY-MM' period formats.
+    frequency: 'weekly' (default) or 'monthly'
     """
     if not EIA_API_KEY:
         print(f"    EIA_API_KEY not set — skipping {endpoint}")
         return []
     try:
+        # Monthly electricity endpoint uses 'price' field; petroleum uses 'value'
+        data_field = "price" if "electricity" in endpoint else "value"
         params: list[tuple] = [
             ("api_key",              EIA_API_KEY),
-            ("frequency",            "weekly"),
-            ("data[0]",              "value"),
+            ("frequency",            frequency),
+            ("data[0]",              data_field),
             ("start",                start),
             ("sort[0][column]",      "period"),
             ("sort[0][direction]",   "asc"),
@@ -200,14 +233,12 @@ def eia_fetch(endpoint: str, facets: list[tuple], start: str) -> list[dict]:
         result = []
         for row in rows:
             period = row.get("period", "")
-            val    = row.get("value")
+            val    = row.get(data_field)
             if val is None:
                 continue
             if "W" in period:
                 try:
                     year, wk = period.split("-W")
-                    ts = pd.Timestamp(f"{year}-W{wk.zfill(2)}-1", freq=None)
-                    # strptime workaround for ISO week
                     from datetime import datetime as _dt
                     ts = pd.Timestamp(
                         _dt.strptime(f"{year}-W{wk.zfill(2)}-1", "%Y-W%W-%w")
@@ -215,9 +246,9 @@ def eia_fetch(endpoint: str, facets: list[tuple], start: str) -> list[dict]:
                 except Exception:
                     continue
             else:
-                ts = pd.Timestamp(period)
+                ts = pd.Timestamp(period)  # handles both YYYY-MM-DD and YYYY-MM
             result.append({"date": ts, "value": float(val)})
-        print(f"    EIA {endpoint}: {len(result)} observations"
+        print(f"    EIA {endpoint} ({frequency}): {len(result)} observations"
               + (f" ({result[0]['date'].date()} → {result[-1]['date'].date()})" if result else ""))
         return result
     except Exception as exc:
@@ -268,7 +299,8 @@ def build_macro_features(train_start: pd.Timestamp, train_end: pd.Timestamp) -> 
     """
     fetch_start = (train_start - timedelta(weeks=LAG_WEEKS + 54)).strftime("%Y-%m-%d")
     print(f"\n[FRED+EIA] Fetching {len(WEEKLY_SERIES) + len(MONTHLY_SERIES)} FRED + "
-          f"{len(EIA_SERIES)} EIA series from {fetch_start} …")
+          f"{len(EIA_SERIES)} EIA weekly + {len(EIA_MONTHLY_SERIES)} EIA monthly "
+          f"series from {fetch_start} …")
 
     # ── Build weekly date spine (Sunday = SPINS week_ending convention) ────────
     # Cover full date range with buffer for lag + YoY lookback
@@ -338,32 +370,71 @@ def build_macro_features(train_start: pd.Timestamp, train_end: pd.Timestamp) -> 
         for col_name in EIA_SERIES:
             macro[col_name] = np.nan
 
+    # ── EIA monthly series: residential energy prices ─────────────────────────
+    if EIA_API_KEY:
+        for col_name, (endpoint, facets) in EIA_MONTHLY_SERIES.items():
+            obs = eia_fetch(endpoint, facets, fetch_start, frequency="monthly")
+            if not obs:
+                macro[col_name] = np.nan
+                continue
+            eia_df = pd.DataFrame(obs)
+            eia_df["year_month"] = eia_df["date"].dt.strftime("%Y-%m")
+            monthly_map: dict[str, float] = dict(zip(eia_df["year_month"], eia_df["value"]))
+            macro["year_month"] = macro["week_ending"].dt.strftime("%Y-%m")
+            def _eia_ffill(ym: str, _mm: dict = monthly_map) -> float | None:
+                for m in sorted(_mm.keys(), reverse=True):
+                    if m <= ym:
+                        return _mm[m]
+                return None
+            macro[col_name] = macro["year_month"].map(_eia_ffill)
+    else:
+        for col_name in EIA_MONTHLY_SERIES:
+            macro[col_name] = np.nan
+
     # ── Apply 4-week lag to all macro features ────────────────────────────────
     macro = macro.sort_values("week_ending").reset_index(drop=True)
     raw_cols = (list(WEEKLY_SERIES.values()) + list(MONTHLY_SERIES.values())
-                + list(EIA_SERIES.keys()))
+                + list(EIA_SERIES.keys()) + list(EIA_MONTHLY_SERIES.keys()))
     for col in raw_cols:
         if col in macro.columns:
             macro[f"{col}_lag{LAG_WEEKS}"] = macro[col].shift(LAG_WEEKS)
 
-    # ── YoY % Δ for level series (removes secular trend) ─────────────────────
-    level_series = ["grocery_sales", "ppi_food", "payrolls",
-                    "crude_stocks"]  # crude inventories are a stock/level
+    # ── YoY % Δ for level/price-index series ─────────────────────────────────
+    level_series = [
+        "grocery_sales", "ppi_food", "payrolls",
+        "crude_stocks",                  # stock/inventory level
+        "food_at_home_cpi", "snacks_cpi",  # CPI indices — YoY = inflation rate
+        "revolving_credit", "disposable_income",  # dollar levels — YoY removes secular trend
+        "elec_price", "natgas_price",    # energy price levels — YoY = energy inflation
+    ]
     for col in level_series:
         lagged = f"{col}_lag{LAG_WEEKS}"
         if lagged in macro.columns:
             macro[f"{col}_yoy"] = macro[lagged].pct_change(52) * 100
 
     # ── Final feature columns for ML ─────────────────────────────────────────
-    macro["diesel_price_lag4"]       = macro.get(f"diesel_price_lag{LAG_WEEKS}")
-    macro["gas_price_lag4"]          = macro.get(f"gas_price_lag{LAG_WEEKS}")
-    macro["jobless_initial_lag4"]    = macro.get(f"jobless_initial_lag{LAG_WEEKS}")
-    macro["jobless_contd_lag4"]      = macro.get(f"jobless_contd_lag{LAG_WEEKS}")
-    macro["savings_rate_lag4"]       = macro.get(f"savings_rate_lag{LAG_WEEKS}")
-    # EIA — standardize before use; LightGBM handles NaN natively
-    macro["gas_consumption_lag4"]    = macro.get(f"gas_consumption_lag{LAG_WEEKS}")
-    macro["diesel_consumption_lag4"] = macro.get(f"diesel_consumption_lag{LAG_WEEKS}")
-    macro["crude_stocks_yoy"]        = macro.get("crude_stocks_yoy")  # YoY Δ preferred for stock
+    # Fuel prices — weekly, lag4 direct
+    macro["diesel_price_lag4"]        = macro.get(f"diesel_price_lag{LAG_WEEKS}")
+    macro["gas_price_lag4"]           = macro.get(f"gas_price_lag{LAG_WEEKS}")
+    # Labor — weekly, lag4 direct
+    macro["jobless_initial_lag4"]     = macro.get(f"jobless_initial_lag{LAG_WEEKS}")
+    macro["jobless_contd_lag4"]       = macro.get(f"jobless_contd_lag{LAG_WEEKS}")
+    # Rates — monthly, lag4 direct (already a % rate, no YoY needed)
+    macro["savings_rate_lag4"]        = macro.get(f"savings_rate_lag{LAG_WEEKS}")
+    macro["cc_delinquency_lag4"]      = macro.get(f"cc_delinquency_lag{LAG_WEEKS}")
+    # CPI / price-index YoY
+    macro["food_at_home_cpi_yoy"]     = macro.get("food_at_home_cpi_yoy")
+    macro["snacks_cpi_yoy"]           = macro.get("snacks_cpi_yoy")
+    # Income & credit YoY
+    macro["disposable_income_yoy"]    = macro.get("disposable_income_yoy")
+    macro["revolving_credit_yoy"]     = macro.get("revolving_credit_yoy")
+    # Energy wallet-share YoY
+    macro["elec_price_yoy"]           = macro.get("elec_price_yoy")
+    macro["natgas_price_yoy"]         = macro.get("natgas_price_yoy")
+    # EIA weekly — consumption lag4 + crude YoY
+    macro["gas_consumption_lag4"]     = macro.get(f"gas_consumption_lag{LAG_WEEKS}")
+    macro["diesel_consumption_lag4"]  = macro.get(f"diesel_consumption_lag{LAG_WEEKS}")
+    macro["crude_stocks_yoy"]         = macro.get("crude_stocks_yoy")
 
     # Drop working columns
     drop_cols = (["year_week", "year_month"] + raw_cols
