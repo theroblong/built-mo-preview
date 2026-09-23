@@ -6,6 +6,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 139: spins_full validation complete — pipeline Q-series running (2026-09-23)
+
+Full post-ingest validation of Rob's 2026-09-06 update confirmed clean. Pipeline running (QS2 → Q22 automated). Memory + wiki/19 updated with Sept 23 cycle summary.
+
+**Validation summary:** 107,071,648 total rows · 10.4M new · 2025 52-week cadence gap-free · Sep 2025 fully present · Aug 17–Sep 28 2025 elevated rows (~743K/week) are prior-file coverage artifact, not dups · BUILT UPCs: 148 in spins_full, 153 in flavor_mapping (5 historical-only) · flavor_mapping parity confirmed · QS1v 0 mismatches.
+
+**Pipeline speed context:** ~10% more data (10.4M / 107M); incremental queries faster; OVERWRITE ALL same; P-series similar. Sep 2025 "missing" data was not missing — Rob's file covered 2025-10 → 2026-09 and Sep 2025 was retained from prior ingest.
+
+---
+
 ## README update 138: QS1 + 2 new BUILT PUFF UPCs — spins_full updated to 2026-09-06 (2026-09-23)
 
 Post-ingest validation of Rob's `spins_full` update (2026-04-19 → 2026-09-06, ~10.4M new rows) found 2 new BUILT UPCs not yet in `flavor_mapping`. Added both to all 6 QS1 CASE blocks in `docs/mo_druid_query_register.md`. QS1v returned 0 mismatches. Q-series pipeline (QS2 → Q22) running.
