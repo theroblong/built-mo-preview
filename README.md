@@ -6,6 +6,20 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 161: Mo Trends — product picker search fixed; expanded Pack Crossover UX overhaul (2026-09-24)
+
+**Product picker search** — root cause of phantom search results found and fixed. SPINS delivers description corrections as separate rows for the same UPC (e.g. "Built Rocky Coconut Brownie" alongside "Built Coconut Brownie"), causing the description variant that matched "rocky" to surface non-matching-looking items. `/api/filters/products` now groups by UPC only (`ANY_VALUE` for strings) — one canonical row per UPC, no duplicates. Also: brand pre-filter (picker scope narrows to active brands when brand chips are selected) + `maxVisible` reduced 100→25 with "N of M shown — type to search" footer. API cache must be cleared on deploy (requires restart).
+
+**Expanded Pack Crossover modal**:
+- Header chips: `singleRow` MultiPicker mode (nowrap, horizontally scrollable) + `whiteSpace: nowrap` per chip — 12 chips no longer wrap to a second header line
+- Chart margin `right: 8→50` (annotation chips no longer clip at right edge)
+- Chart margin `bottom: 0→24` (x-axis date labels now visible)
+- Chart height `H: 680→600` (fits 90vh modal without bottom clip)
+- Annotation chips now stack **upward from chart bottom** (`y + plotH - 18 - yOffset`) — no longer cover data area
+- Cluster window 21→42 days + cap 4 chips per cluster with "+N more" — right-side badge density cut in half
+
+---
+
 ## README update 160: Sept 2026 SPINS cycle fully closed — GEO-06 Meijer SPINS architecture fix (2026-09-24)
 
 **Sept 2026 SPINS full update cycle — ALL PHASES COMPLETE**
