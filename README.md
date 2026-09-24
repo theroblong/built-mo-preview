@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 162: Mo Trends — FRED macro dynamic lookback matching full SPINS history (2026-09-24)
+
+`/api/trends/macro` now queries `MIN(__time)` from `built_filtered_weekly` at cold start (`_get_spins_start()`, 1-hour cache) and uses that date as `observation_start` for all FRED series. Previously hardcoded to ~2 years (104 weeks); now returns the full SPINS arc automatically — currently **194 weeks** (Oct 2023 → Sep 2026). When the next SPINS ingest extends history further back, FRED coverage extends with it — no config or code change needed. Fallback `"2023-01-01"` for Druid failures. ML pipeline and SHAP values are unaffected (display endpoint only). Committed to `customer-built-mo-api`.
+
+---
+
 ## README update 161: Mo Trends — product picker search fixed; expanded Pack Crossover UX overhaul (2026-09-24)
 
 **Product picker search** — root cause of phantom search results found and fixed. SPINS delivers description corrections as separate rows for the same UPC (e.g. "Built Rocky Coconut Brownie" alongside "Built Coconut Brownie"), causing the description variant that matched "rocky" to surface non-matching-looking items. `/api/filters/products` now groups by UPC only (`ANY_VALUE` for strings) — one canonical row per UPC, no duplicates. Also: brand pre-filter (picker scope narrows to active brands when brand chips are selected) + `maxVisible` reduced 100→25 with "N of M shown — type to search" footer. API cache must be cleared on deploy (requires restart).
