@@ -636,6 +636,14 @@
             <td><span class="badge badge-blocked">Blocked</span></td>
             <td>2026-08-25</td>
           </tr>
+          <tr>
+            <td class="entry-id">GEO-06</td>
+            <td><div class="entry-title">CONVENTIONAL|FOOD is a thin channel at Meijer — use CONVENTIONAL|MULTI OUTLET for all BUILT Meijer analysis</div><div class="entry-body">At Meijer, SPINS populates two <code>channel_outlet</code> rows: <code>CONVENTIONAL|FOOD</code> (~9 BUILT UPCs, sparse ARP/promo data) and <code>CONVENTIONAL|MULTI OUTLET</code> (54 BUILT UPCs, fully-populated base_units, TDP, ARP). Using FOOD channel at Meijer produces partial results — the Sales Outlook and Price &amp; Promo tiles will show "No data" even for products with strong TDP. Root cause: the account quick-select button was passing <code>CONVENTIONAL|FOOD</code> as a channel filter to the active-products endpoint, loading only 7 of 54 BUILT products. Fixed 2026-09-24 to omit channel from that query. Also documented in Mo Chat glossary. This FOOD-vs-MULO split likely applies to other single-banner accounts beyond Meijer; always verify which channel returns data before analysis.</div></td>
+            <td><span class="where-tag">Mo Trends</span><span class="where-tag">Sales Outlook tile</span><span class="where-tag">Price &amp; Promo tile</span><span class="where-tag">account quick-select button</span><span class="where-tag">Mo Chat</span></td>
+            <td>Confirmed by live Druid diagnostic (2026-09-24): <code>CONVENTIONAL|FOOD</code> at Meijer has 9 BUILT UPCs; <code>CONVENTIONAL|MULTI OUTLET</code> has 56 BUILT UPCs. The UI channel picker has no guardrail preventing users from selecting FOOD for a Meijer session, causing misleading "No data" on two tiles. BUILT BAR at Meijer = 1 UPC at 1.7% avg TDP (not meaningfully sold there). BUILT PUFF (41 UPCs) and BUILT SOUR PUFF (13 UPCs) are the full Meijer portfolio.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-09-24</td>
+          </tr>
         </tbody>
       </table>
     </div>
