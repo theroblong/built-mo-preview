@@ -39,7 +39,7 @@ if __name__ == "__main__":
     df = query_druid("""
         SELECT *
         FROM "new_upc_classifications"
-        WHERE classification = 'NEW_PACK_SIZE'
+        WHERE upc_classification = 'NEW_PACK_SIZE'
     """)
     print(f"  New pack size UPCs: {len(df):,}")
 
