@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 157: MO_67 re-run on new v4 models — q90 PASS, MO_67b skip confirmed (2026-09-24)
+
+After `run_fpa_report.sh` retrains v4 models (MO_26), MO_67 must re-run to verify calibration on the new models before Druid ingest. **Rule: always re-run MO_67 after a full report pipeline run.**
+
+MO_67 result on new v4 models: **identical** to pre-report run.
+
+| Quantile | Coverage | Error | Gate |
+|---|---|---|---|
+| q10 | 11.1% | +1.1pp | ✅ PASS |
+| q50 | 57.3% | +7.3pp | ⚠️ known gap (not gated) |
+| q90 | 85.6% | −4.4pp | ✅ PASS |
+
+MO_67b **skipped** (q90 ≥ 85%). Druid ingest with `appendToExisting:false` proceeding.
+
+**Runbook update:** `run_fpa_report.sh` → MO_67 re-run → if q90 ≥ 85%: Druid ingest → if q90 < 85%: MO_67b → re-run MO_27 → Druid ingest.
+
+---
+
 ## README update 156: FP&A report v2.4.0 COMPLETE — 15.3 MB, 32 sections (2026-09-24)
 
 `docs/built_demand_intelligence_report_v2.4.0.html` — full Sept 24, 2026 cycle complete.
