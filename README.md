@@ -6,12 +6,35 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 147: P-series MO_10–MO_21 complete — Sept 24 2026 cycle (2026-09-24)
+
+**P-series MO_10–MO_21 complete.** Manual run-and-validate, all Druid write-backs successful.
+
+| Script | Datasource written | Key metric |
+|---|---|---|
+| MO_10 | — (train) | `model_cannibal_v1.pkl`; ROC-AUC 1.0000 |
+| MO_11 | — (train) | `model_ranker_v1.pkl` (LambdaRank) |
+| MO_12 | `event_detection_weekly` | Scored per UPC×week |
+| MO_13 | `scored_cannibalization` | 107,692 pairs |
+| MO_14 | `event_queue` | Auto-enrolled |
+| MO_15 | `event_queue` | New pack enrollment; **bug fix:** `upc_classification` column name |
+| MO_16 | — (train) | `model_own_price_elasticity_v2.pkl`; MAE=0.0737, R²=0.9807 |
+| MO_17 | `scored_price_elasticity` | 120,102 rows; 36.1% flagged Insufficient Price Variation |
+| MO_18 | `price_elasticity_forecast` | 620,337 rows (3 price scenarios) |
+| MO_19 | `cannibalization_rate_weekly` | 814,516 rows; 102 weeks; 106 focal UPCs |
+| MO_20 | — (train) | q10/q50/q90 quantile models; q50 MAE=0.0230 |
+| MO_21 | `cannibalization_rate_forecast_weekly` | 193,388 rows (14,876 series × 13 weeks) |
+
+Continuing: MO_22 → MO_29.
+
+---
+
 ## README update 146: P-series runbook + pipeline optimization roadmap (2026-09-24)
 
 **P-series (MO_10–MO_21) — manual run-and-validate protocol:**
 Run each script individually from `FirstAgent/scripts/`, paste output for validation before proceeding to the next. Log pattern: `python -u MO_10_cannibal_train.py 2>&1 | tee /tmp/MO_10_$(date +%Y%m%d_%H%M%S).log`
 
-Core sequence: MO_10 → MO_11 → MO_12 → MO_13 → MO_14 → MO_15 → MO_16 → MO_17 → MO_18 → MO_19 → MO_20 → MO_21
+Core sequence: MO_10 → MO_11 → MO_12 → MO_13 → MO_14 → MO_15 → MO_16 → MO_17 → MO_18 → MO_19 → MO_20 → MO_21 → MO_22 → MO_23 → MO_24 → MO_25 → MO_26 → MO_27 → MO_28 → MO_29
 
 **Automation roadmap (3 phases):**
 1. **Now — manual:** Run-and-validate per step; human approval before each write-back

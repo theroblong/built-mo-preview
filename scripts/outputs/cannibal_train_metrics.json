@@ -1,7 +1,7 @@
 {
   "roc_auc": 1.0,
   "model_version": "v1",
-  "n_train": 60695,
+  "n_train": 91735,
   "features_used": [
     "donor_base_units_pct_chg",
     "focal_base_units_pct_chg",

@@ -1,8 +1,8 @@
 {
-  "mae": 0.0759,
-  "r2": 0.981,
+  "mae": 0.0737,
+  "r2": 0.9807,
   "model_version": "v2",
-  "n_train": 58196,
+  "n_train": 76711,
   "features_used": [
     "pre_13w_avg_price_per_bar",
     "post_13w_avg_price_per_bar",
