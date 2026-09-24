@@ -6,6 +6,24 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 155: Validation gate COMPLETE — all green; run_fpa_report.sh 2.4.0 launched (2026-09-24)
+
+**Full validation gate run complete on Sept 24, 2026 v4 cycle (28-feature LightGBM, 177,055 rows, 2023-09-24 → 2026-08-09):**
+
+| Script | Result | Gate |
+|---|---|---|
+| MO_67 quantile calibration | q50 FAIL (+7.3pp known gap) / q90 85.6% / q10 11.1% | ✅ PASS (q90 ≥ 85%, q10 ≤ 15%) |
+| MO_67b recalibration | Skipped | — q90 ≥ 85%, condition not met |
+| MO_68 per-series drift | 2 drifters (same MCKEEVERS/MCCAFFREYS watch list, no new segments) | ✅ PASS |
+| MO_69 residual structure | Portfolio bias −0.07%; 0/127 segments biased | ✅ PASS |
+| MO_71 distribution shift | TDP +148.2% (< 150% gate); ARP +9.4% (< 30% gate) | ✅ PASS |
+
+**`./run_fpa_report.sh 2.4.0` launched.** Output: `docs/built_demand_intelligence_report_v2.4.0.html`
+
+**Data coverage confirmed:** MO_25 LOOKBACK = 3 YEAR. Parquet 2023-09-24 → 2026-08-09 (151 weeks, 177,055 rows) — full 3-year window of Rob's updated spins_full, current through latest SPINS delivery.
+
+---
+
 ## README update 154: MO_67 formal validation gate run — PASS with q50 known gap (2026-09-24)
 
 **MO_67 quantile calibration audit ran on v4 models (28-feature LightGBM, trained Sept 14).** Val set: 27,500 rows, 2026-05-17 → 2026-08-09 (last 13 weeks per series).
