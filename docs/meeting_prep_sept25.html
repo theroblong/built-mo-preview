@@ -1,0 +1,681 @@
+<title>Sept 25 Meeting Prep</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-2: #f1f5f9;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --green: #059669;
+    --green-soft: #ecfdf5;
+    --amber: #d97706;
+    --amber-soft: #fffbeb;
+    --red: #dc2626;
+    --red-soft: #fef2f2;
+    --blue: #0284c7;
+    --blue-soft: #f0f9ff;
+    --purple: #7c3aed;
+    --purple-soft: #f5f3ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #293548;
+      --border: #334155;
+      --text: #f1f5f9;
+      --text-2: #94a3b8;
+      --text-3: #475569;
+      --accent: #818cf8;
+      --accent-soft: #1e1b4b;
+      --green: #34d399;
+      --green-soft: #022c22;
+      --amber: #fbbf24;
+      --amber-soft: #1c1407;
+      --red: #f87171;
+      --red-soft: #1f0606;
+      --blue: #38bdf8;
+      --blue-soft: #082f49;
+      --purple: #a78bfa;
+      --purple-soft: #1e1040;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f172a; --surface: #1e293b; --surface-2: #293548; --border: #334155;
+    --text: #f1f5f9; --text-2: #94a3b8; --text-3: #475569;
+    --accent: #818cf8; --accent-soft: #1e1b4b;
+    --green: #34d399; --green-soft: #022c22;
+    --amber: #fbbf24; --amber-soft: #1c1407;
+    --red: #f87171; --red-soft: #1f0606;
+    --blue: #38bdf8; --blue-soft: #082f49;
+    --purple: #a78bfa; --purple-soft: #1e1040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    padding-inline: 16px;
+    padding-block: 24px 48px;
+  }
+
+  .page-header {
+    max-width: 820px;
+    margin: 0 auto 24px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .page-header .meta {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Tabs */
+  .tabs {
+    max-width: 820px;
+    margin: 0 auto 24px;
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    padding: 8px 18px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel { display: none; max-width: 820px; margin: 0 auto; }
+  .tab-panel.active { display: block; }
+
+  /* Sections */
+  .section { margin-bottom: 24px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .section-header h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .label-standup { background: var(--accent-soft); color: var(--accent); }
+  .label-built { background: var(--purple-soft); color: var(--purple); }
+  .label-shared { background: var(--blue-soft); color: var(--blue); }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .card p { color: var(--text-2); font-size: 13px; margin-bottom: 6px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-done { background: var(--green-soft); color: var(--green); }
+  .badge-partial { background: var(--amber-soft); color: var(--amber); }
+  .badge-open { background: var(--surface-2); color: var(--text-2); }
+  .badge-critical { background: var(--red-soft); color: var(--red); }
+  .badge-info { background: var(--blue-soft); color: var(--blue); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-2);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-2);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  td strong { color: var(--text); font-weight: 600; }
+  td code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  /* Agenda items */
+  .agenda-list { list-style: none; }
+  .agenda-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .agenda-item:last-child { border-bottom: none; }
+  .agenda-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .agenda-body { flex: 1; }
+  .agenda-title { font-weight: 600; color: var(--text); font-size: 13px; }
+  .agenda-detail { color: var(--text-2); font-size: 12.5px; margin-top: 3px; }
+  .agenda-time {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 3px;
+  }
+
+  /* KPI row */
+  .kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    flex: 1;
+    min-width: 130px;
+  }
+  .kpi-label { font-size: 11px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 2px; }
+  .kpi-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* Highlight block */
+  .highlight {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .highlight strong { color: var(--accent); }
+  .highlight-amber {
+    background: var(--amber-soft);
+    border-left-color: var(--amber);
+  }
+  .highlight-amber strong { color: var(--amber); }
+  .highlight-green {
+    background: var(--green-soft);
+    border-left-color: var(--green);
+  }
+  .highlight-green strong { color: var(--green); }
+</style>
+
+<div class="page-header">
+  <h1>Sept 25 — Meeting Prep</h1>
+  <div class="meta">Aevah Standup → BUILT Aevah Cadence &nbsp;|&nbsp; Jason + Rob &nbsp;|&nbsp; 2026-09-25</div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('standup', this)">Aevah Standup</button>
+  <button class="tab-btn" onclick="switchTab('built', this)">BUILT Cadence</button>
+  <button class="tab-btn" onclick="switchTab('ais', this)">Open Action Items</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ STANDUP TAB -->
+<div class="tab-panel active" id="tab-standup">
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Internal — Rob + Jason</h2>
+      <span class="section-label label-standup">Standup</span>
+    </div>
+
+    <ul class="agenda-list card">
+      <li class="agenda-item">
+        <span class="agenda-num">1</span>
+        <div class="agenda-body">
+          <div class="agenda-title">ML cycle state — what's next after P-series</div>
+          <div class="agenda-detail">• MO_10–29 ✓ Sept 24<br>• Next: MO_67 → MO_68/69/71 → <code>run_fpa_report.sh 2.4.0</code> → MO_76<br>• Validation must clear before report gen</div>
+        </div>
+        <div class="agenda-time">5 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">2</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Pipeline automation design — Rob's HTML diagram spec</div>
+          <div class="agenda-detail">• MinIO drop → alert → authorize → Parquet → Druid → overlap → remediate<br>• Target: 2 weeks; happy path needs no Jason<br>• Q: who owns the clickable HTML diagram?</div>
+        </div>
+        <div class="agenda-time">5 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">3</span>
+        <div class="agenda-body">
+          <div class="agenda-title">MCP layer — what does Jason need to provide?</div>
+          <div class="agenda-detail">• Rob building MCP → Claude/GPT route to right Aevah screen<br>• Needs: screen map, glossary, guardrail rules<br>• Most already in Mo Chat context files — plan extraction</div>
+        </div>
+        <div class="agenda-time">3 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">4</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Pricing + promo optimization — prep for Brian's call</div>
+          <div class="agenda-detail">• Aevah today: elasticity, promo lift, Trade ROI (SPINS)<br>• One unlock: GL trade codes AI-18; DimChartOfAccounts schema already received<br>• Rob's "Oliver example" — confirm talking point</div>
+        </div>
+        <div class="agenda-time">5 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">5</span>
+        <div class="agenda-body">
+          <div class="agenda-title">NS2 ML roadmap — dark retailer forecasting</div>
+          <div class="agenda-detail">• NS2 NOT in cannib/elasticity — velocity proxy only (confirmed)<br>• Future: demand models on sell-in → after MO_76<br>• Add to post-2.4.0 queue</div>
+        </div>
+        <div class="agenda-time">3 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">6</span>
+        <div class="agenda-body">
+          <div class="agenda-title">BUILT PRD export — timing check</div>
+          <div class="agenda-detail">• Deferred until BUILT v1 stable (mid/late Oct)<br>• After Oct demo: export personas + use cases → Aevah core PRD<br>• Confirm milestone with Rob</div>
+        </div>
+        <div class="agenda-time">2 min</div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><h2>ML Cycle Snapshot</h2></div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">P-Series</div>
+        <div class="kpi-value">✓ 20/20</div>
+        <div class="kpi-sub">MO_10–29 complete Sept 24</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Backtest wMAPE</div>
+        <div class="kpi-value">5.2%</div>
+        <div class="kpi-sub">vs. 39.7% naive (49-week OOS)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Current Model</div>
+        <div class="kpi-value">3.4%</div>
+        <div class="kpi-sub">13-wk holdout; bias −0.8%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">ROI at $1M/pp</div>
+        <div class="kpi-value">~$34.6M</div>
+        <div class="kpi-sub">+34.6pp vs. naive</div>
+      </div>
+    </div>
+    <div class="highlight highlight-green">
+      <strong>What's next:</strong> MO_67 quantile calibration audit → MO_68/69/71 (drift, residuals, distribution shift) → <code>./run_fpa_report.sh 2.4.0</code> → <code>docs/built_demand_intelligence_report_v2.4.0.html</code>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ BUILT TAB -->
+<div class="tab-panel" id="tab-built">
+
+  <div class="section">
+    <div class="section-header">
+      <h2>BUILT Aevah Cadence</h2>
+      <span class="section-label label-built">Brian + Ebad</span>
+    </div>
+    <div class="highlight highlight-amber">
+      <strong>Justin Fisher:</strong> Likely out. Defer Circana/CRX questions (AI-3) and RBAC (AI-5) to next meeting. Focus on NS2 data progress (Ebad) and pricing/promo strategy (Brian).
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:8px;">Since last Brian + Justin meeting</div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.8;color:var(--text);">
+        <li>P-series complete (MO_10–29 ✓ Sept 24) — all scoring tables refreshed</li>
+        <li>NS2 shipment data: Shipment Data.sql with TotalBars + CostPerBar formulas received (Sept 22)</li>
+        <li>Finance View Schema + Sales &amp; Retail Cube schema received from Ebad (Sept 22) — 34 views + full star schema</li>
+        <li>DimChartOfAccounts is in the schema — AccountNumber + AccountType fields available</li>
+        <li>CustomerDim.csv + DimItem schema received — customer + item dim both covered</li>
+        <li>AI-12, AI-15, AI-16, AI-17 all closed by Ebad's Sept 22 delivery</li>
+        <li>NS2 → Druid (AI-19): fields complete, ready to load</li>
+      </ul>
+    </div>
+
+    <ul class="agenda-list card">
+      <li class="agenda-item">
+        <span class="agenda-num">1</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Current data model overview — three-tier recap</div>
+          <div class="agenda-detail">• SPINS: ~80 retailers, full POS, full suite<br>• Circana CRX: Costco only, BUILT-only data<br>• NS2: WinCo/HEB/TJ's/Aldi — ships/week velocity proxy</div>
+        </div>
+        <div class="agenda-time">3 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">2</span>
+        <div class="agenda-body">
+          <div class="agenda-title">ML cycle results — headlines for Brian</div>
+          <div class="agenda-detail">• P-series ✓ Sept 24; cannib/elasticity/forecast all refreshed<br>• 49-wk backtest: 5.2% vs. 39.7% naive → ~$34.6M ROI at $1M/pp<br>• Connor/Jeff can verify against actuals</div>
+        </div>
+        <div class="agenda-time">3 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">3</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Pricing + promotional optimization — what Aevah can do</div>
+          <div class="agenda-detail">• Most capabilities already built (see table below)<br>• DimChartOfAccounts schema received Sept 22 — has AccountNumber + AccountType<br>• One unlock: AI-18 — which GL accounts = scan allowances / off-invoice / billbacks?</div>
+        </div>
+        <div class="agenda-time">8 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">4</span>
+        <div class="agenda-body">
+          <div class="agenda-title">NS2 shipment data status (Ebad)</div>
+          <div class="agenda-detail">• Shipment Data.sql delivered Sept 22 — TotalBars + CostPerBar formulas included ✓<br>• UPC via SPS cols (custcol_sps_upccasecode) ✓; DimItem schema in Sales Cube ✓<br>• Ready to load into Druid (AI-19 — next step)</div>
+        </div>
+        <div class="agenda-time">5 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">5</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Dreamwich triage — Brian's Q3</div>
+          <div class="agenda-detail">• Two buckets: incremental (low SKU count, strong velocity, low cannib) vs. trade-out (saturated; identify weakest SKU)<br>• Answerable now from E2a + E1 — no new model<br>• Post-launch: actuals sharpen triage</div>
+        </div>
+        <div class="agenda-time">5 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">6</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Finance DB / Sales Cube (AI-12) — received ✓</div>
+          <div class="agenda-detail">• 34 Finance views + Sales Cube star schema delivered Sept 22 ✓<br>• DimChartOfAccounts is in schema — AccountNumber, AccountType present<br>• Next: load into Druid; confirm AI-18 GL codes for trade spend</div>
+        </div>
+        <div class="agenda-time">2 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">7</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Timeline — mid/late October external demo</div>
+          <div class="agenda-detail">• Brian confirmed: mid/late Oct (target Oct 22–31) to show other potential customers<br>• Brian happy with pace — no acceleration pressure<br>• Q: which screens does Brian want highlighted?</div>
+        </div>
+        <div class="agenda-time">3 min</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-header"><h2>Pricing + Promo Optimization Capabilities</h2></div>
+    <p style="color:var(--text-2);font-size:13px;margin-bottom:12px;">What Aevah can do today by data tier. One unlock needed from Brian/Ebad.</p>
+    <div class="table-wrap card" style="padding:0">
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>SPINS Retailers</th>
+            <th>Costco (CRX)</th>
+            <th>Dark Retailers (NS2)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Price elasticity scoring</strong></td>
+            <td><span class="badge badge-done">✓ Live</span> MO_17: 120K rows, 3 price scenarios</td>
+            <td><span class="badge badge-info">Planned</span></td>
+            <td><span class="badge badge-open">No POS pricing</span></td>
+          </tr>
+          <tr>
+            <td><strong>Promo lift measurement</strong></td>
+            <td><span class="badge badge-done">✓ Live</span> MO_73: 59K+ event-weeks; grocery 12pk cliff at 30%+ discount</td>
+            <td><span class="badge badge-info">Planned</span></td>
+            <td><span class="badge badge-partial">Sell-in proxy only</span></td>
+          </tr>
+          <tr>
+            <td><strong>Trade ROI</strong></td>
+            <td><span class="badge badge-partial">Needs AI-18</span> NS2 deductions ÷ MO_73 lift — one GL code unlock</td>
+            <td><span class="badge badge-partial">Needs AI-18</span></td>
+            <td><span class="badge badge-open">No POS to close loop</span></td>
+          </tr>
+          <tr>
+            <td><strong>Price waterfall</strong></td>
+            <td><span class="badge badge-partial">Needs AI-18</span> NS2 invoice → SPINS ARP; shows gross → net per event</td>
+            <td><span class="badge badge-partial">Needs AI-18</span></td>
+            <td><span class="badge badge-open">Sell-in side only</span></td>
+          </tr>
+          <tr>
+            <td><strong>Forward buy detection</strong></td>
+            <td><span class="badge badge-done">✓ Live</span> Sell-in spike + SPINS trough = channel loading vs. consumer pull</td>
+            <td>N/A</td>
+            <td><span class="badge badge-done">✓ Live</span> Spike + trough in NS2 sell-in</td>
+          </tr>
+          <tr>
+            <td><strong>Promo-to-sell-in correlation</strong></td>
+            <td><span class="badge badge-done">✓ Live</span></td>
+            <td>N/A</td>
+            <td><span class="badge badge-done">✓ Live</span> NS2 deductions vs. TotalBars ±4 weeks</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="highlight highlight-amber">
+      <strong>Raise tomorrow (AI-18):</strong> Ask Brian or Ebad — which DimChartOfAccounts GL account numbers represent trade spend (scan allowances, off-invoice deductions, billbacks) vs. freight or other? One answer unlocks Trade ROI + Price Waterfall across all SPINS + Costco retailers.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-header"><h2>NS2 Shipment Data Status</h2></div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">UPC join rate</div>
+        <div class="kpi-value">83.8%</div>
+        <div class="kpi-sub">27/33 products matched to SPINS</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Dark retailers</div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-sub">WinCo, HEB, TJ's, Aldi</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Fields status</div>
+        <div class="kpi-value" style="color:var(--green)">✓</div>
+        <div class="kpi-sub">TotalBars + CostPerBar in SQL (Sept 22)</div>
+      </div>
+    </div>
+    <div class="table-wrap card" style="padding:0">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Status</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Shipment Data.sql (AI-16)</strong></td><td><span class="badge badge-done">Received Sept 22</span></td><td>TotalBars = qty × custitem_bars; CostPerBar = netamount ÷ bars</td></tr>
+          <tr><td><strong>UPC field (AI-15)</strong></td><td><span class="badge badge-done">Received Sept 22</span></td><td>Updated SQL uses <code>custcol_sps_upccasecode</code> + <code>custcol_sps_gtin</code></td></tr>
+          <tr><td><strong>6 UPC non-matches</strong></td><td><span class="badge badge-done">Explained</span></td><td>2× TJ's private label; 4× newer/limited SKUs not yet in SPINS</td></tr>
+          <tr><td><strong>Customer + Item dim (AI-17)</strong></td><td><span class="badge badge-done">Received</span></td><td>CustomerDim.csv ✓; DimItem in Sales Cube schema (Id, Flavor, ItemType, Bars/case)</td></tr>
+          <tr><td><strong>Finance DB (AI-12)</strong></td><td><span class="badge badge-done">Received Sept 22</span></td><td>34 Finance views + Sales Cube star schema — FinanceViewsMarkdown.md + Sales_Retail_Cube_Schema_Documentation.md</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-header"><h2>Dreamwich — Account Triage Framework</h2></div>
+    <div class="card">
+      <div class="card-title">Brian's Q: incremental distribution vs. trade-out bait?</div>
+      <p>Mo's cannibalization model + distribution data gives a two-bucket answer per account — no new model development needed.</p>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi" style="border-left: 3px solid var(--green);">
+        <div class="kpi-label">Incremental bucket</div>
+        <div class="kpi-value" style="font-size:14px;line-height:1.4;">Pure net-new</div>
+        <div class="kpi-sub">Low SKU count + strong per-SKU velocity + low predicted cannibalization → Dreamwich as addition, no displacement</div>
+      </div>
+      <div class="kpi" style="border-left: 3px solid var(--amber);">
+        <div class="kpi-label">Trade-out bucket</div>
+        <div class="kpi-value" style="font-size:14px;line-height:1.4;">Displacement target</div>
+        <div class="kpi-sub">Saturated account → identify weakest SKU (lowest velocity + highest cannib contribution) as the swap target</div>
+      </div>
+    </div>
+    <div class="highlight">
+      <strong>Actionable now</strong> from current portfolio data. Post-launch, Dreamwich's actual cannibalization rates sharpen the triage. Fits within Experience 1 (Customer Scorecard) + E2a cannibalization suite — already in plan, no separate scoping needed.
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ ACTION ITEMS TAB -->
+<div class="tab-panel" id="tab-ais">
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Open Action Items</h2>
+      <span class="section-label label-shared">All Parties</span>
+    </div>
+
+    <div class="section-header" style="margin-top:8px;margin-bottom:8px;">
+      <h2 style="font-size:13px;font-weight:600;color:var(--text-2);">Brian Cluster</h2>
+    </div>
+    <div class="table-wrap card" style="padding:0;margin-bottom:16px;">
+      <table>
+        <thead><tr><th>AI</th><th>Item</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>AI-18</code></td><td><strong>GL trade spend codes</strong> — which DimChartOfAccounts entries = scan allowances / off-invoice / billbacks? Unlocks Trade ROI + Price Waterfall. <em>New ask — raise with Brian/Ebad tomorrow</em></td><td><span class="badge badge-open">Raise tomorrow</span></td></tr>
+          <tr><td><code>AI-12</code></td><td><strong>Finance DB views</strong> — Sales Cube + Retail Cube schema delivered by Ebad Sept 22</td><td><span class="badge badge-done">Received Sept 22</span></td></tr>
+          <tr><td><code>AI-4</code></td><td><strong>Trade promo calendar</strong> — 596-event SPINS-based lift analysis received; confirm if 2026 actuals are updated</td><td><span class="badge badge-done">Received</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-header" style="margin-bottom:8px;">
+      <h2 style="font-size:13px;font-weight:600;color:var(--text-2);">Ebad Hashemi</h2>
+    </div>
+    <div class="table-wrap card" style="padding:0;margin-bottom:16px;">
+      <table>
+        <thead><tr><th>AI</th><th>Item</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>AI-16</code></td><td><strong>NS2 missing fields</strong> — TotalBars + CostPerBar formulas delivered in Shipment Data.sql</td><td><span class="badge badge-done">Received Sept 22</span></td></tr>
+          <tr><td><code>AI-15</code></td><td><strong>UPC field fix</strong> — updated SQL uses SPS UPC cols (<code>custcol_sps_upccasecode</code>, <code>custcol_sps_gtin</code>)</td><td><span class="badge badge-done">Received Sept 22</span></td></tr>
+          <tr><td><code>AI-17</code></td><td><strong>Dimension tables</strong> — CustomerDim.csv ✓; DimItem in Sales Cube schema (Flavor, ItemType, Bars/case)</td><td><span class="badge badge-done">Received</span></td></tr>
+          <tr><td><code>AI-12</code></td><td><strong>Finance DB schema</strong> — 34 Finance views + Sales Cube star schema delivered (FinanceViewsMarkdown.md + Sales_Retail_Cube_Schema_Documentation.md)</td><td><span class="badge badge-done">Received Sept 22</span></td></tr>
+          <tr><td><code>AI-13</code></td><td><strong>NS→NS2 transition glossary</strong> — field definitions; Oracle glossary flagged as "suspect"</td><td><span class="badge badge-open">Open</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-header" style="margin-bottom:8px;">
+      <h2 style="font-size:13px;font-weight:600;color:var(--text-2);">Justin Fisher — Deferred (out)</h2>
+    </div>
+    <div class="table-wrap card" style="padding:0;margin-bottom:16px;">
+      <table>
+        <thead><tr><th>AI</th><th>Item</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>AI-1</code></td><td><strong>Dimension tables CSV</strong> — customers, products, salesperson→customer mapping; overdue since Sept 16</td><td><span class="badge badge-critical">Overdue</span></td></tr>
+          <tr><td><code>AI-2</code></td><td><strong>SQL Server schema DDL</strong> — ~Sept 16, no update received</td><td><span class="badge badge-open">Open</span></td></tr>
+          <tr><td><code>AI-3</code></td><td><strong>CRX Circana questions</strong> — 5/6 resolved; OOS / In-Stock % still pending Circana's answer</td><td><span class="badge badge-partial">1 open</span></td></tr>
+          <tr><td><code>AI-5</code></td><td><strong>RBAC tier definition</strong> — access levels per persona (executive/finance/salesperson/ops); Rob leading</td><td><span class="badge badge-open">Open</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-header" style="margin-bottom:8px;">
+      <h2 style="font-size:13px;font-weight:600;color:var(--text-2);">Jason + Rob</h2>
+    </div>
+    <div class="table-wrap card" style="padding:0;">
+      <table>
+        <thead><tr><th>AI</th><th>Item</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>AI-19</code></td><td><strong>NS2 → Parquet → Druid</strong> — load Shipment Data.sql output; field mapping; begin ML integration</td><td><span class="badge badge-open">Fields complete — ready</span></td></tr>
+          <tr><td>—</td><td><strong>MO_67 validation gate</strong> — run after P-series; before report pipeline</td><td><span class="badge badge-open">Next ML step</span></td></tr>
+          <tr><td>—</td><td><strong>run_fpa_report.sh 2.4.0</strong> — after validation passes; generates fresh HTML report</td><td><span class="badge badge-open">After MO_71</span></td></tr>
+          <tr><td>—</td><td><strong>Pipeline automation HTML diagram</strong> — Rob's spec: clickable stage-by-stage with reasoning + Aevah component</td><td><span class="badge badge-open">Rob building</span></td></tr>
+          <tr><td>—</td><td><strong>BUILT PRD export</strong> — personas + use cases → Aevah core; deferred until BUILT v1 stable (mid/late Oct)</td><td><span class="badge badge-open">Deferred</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
