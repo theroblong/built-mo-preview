@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 148: NS2 trade promo + pricing capabilities documented; MO_28 wMAPE 3.4% (2026-09-24)
+
+**Trade Promotion & Pricing — what's possible with Ebad's NS2 Built_EDW data:**
+
+| Tier | POS available? | Trade ROI | Price waterfall | Notes |
+|---|---|---|---|---|
+| SPINS retailers (~80) | Yes (SPINS) | ✅ NS2 deductions ÷ MO_73 lift | ✅ NS2 invoice → SPINS ARP | One unlock needed: DimChartOfAccounts GL trade codes |
+| Costco (Circana) | Yes (CRX) | ✅ NS2 deductions ÷ CRX lift | ✅ NS2 invoice → CRX ARP | Same pattern, Circana as demand side |
+| Dark retailers (Winco/HEB/TJ's/Aldi) | No | ❌ No POS to close loop | Partial (sell-in side only) | NS2 deduction amounts available; sell-through unknown |
+
+**MO_28 retailer sales model evaluation (current v4 model, 13-week holdout):**
+- Overall wMAPE: **3.4%** (96.6% accuracy) · High-volume series: **2.8%** wMAPE
+- Bias: −0.8% (slight over-forecast, negligible)
+- Top demand drivers (SHAP): 4-week rolling avg → lag1 → WoW momentum
+- Worst series: `08-40229-30284` (Orange Dreamsicle Puff) at Publix/Southeastern Grocers/Kroger — 17–24% wMAPE; likely high volatility SKU
+- 788 series qualify for Oct 2025 backtest (MO_29 next)
+
+---
+
 ## README update 147: P-series MO_10–MO_21 complete — Sept 24 2026 cycle (2026-09-24)
 
 **P-series MO_10–MO_21 complete.** Manual run-and-validate, all Druid write-backs successful.
