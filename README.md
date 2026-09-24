@@ -6,6 +6,32 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 159: Meijer cannibalization brief COMPLETE — 20 UPCs, 6 P4 2026 launches, check lane analysis (2026-09-24)
+
+**Meijer Account Brief — P4 2026 Launch Review & Assortment Strategy**
+
+Report delivered: `customer-built-mo-ui/mockups/meijer_cannibalization_brief.html` (internal only).
+
+**Full Meijer portfolio confirmed: 20 active UPCs (not 5 four-packs as initially estimated):**
+- 6 established 4-packs (TDP 42–69%): Brownie Batter, Cookie Dough, Coconut, PB Cup, Cookies N Cream, Salted Caramel
+- 6 P4 2026 launch 4-packs (TDP 4–16%): Cinnamon Cereal Milk, Rocky Road, Mystery Flavor, Banana Cream Pie, Sour Blue Raz 4pk, Sour Green Apple 4pk
+- 6 1-pack singles (TDP 21–31%): Brownie Batter, Cookies N Cream, Sour Peach, Cookie Dough, Sour Blue Razz, Coconut
+- 2 variety 13-packs (TDP ~7%)
+
+**Cannibalization findings (MO_55, all P4 2026 = Low confidence <20 weeks):**
+- Cinnamon Cereal Milk 4pk: cannibalizing 5 competitor cinnamon SKUs (D4) — demand from Mush Maple Cinnamon, David Cinnamon Roll, GoMacro, Once Upon A Farm, Larabar Kids. Taking from competitors: GOOD.
+- Banana Cream Pie 4pk: cannibalizing PL Banana bar, Bobos Banana, Once Upon A Farm Banana (D4). GOOD.
+- All P4 2026 4-pks show D5 "Cannibalizing" vs established BUILT 4-pks — expected portfolio overlap, NOT alarming at Low confidence.
+- All 1-pk singles: Incremental vs. 4-pk shelf. Check lane deployment fully additive.
+
+**Check lane:** Brownie Batter 1pk + Sour Peach 1pk recommended anchor set. Fully incremental to main shelf TDP.
+
+**Competitive position:** BUILT PUFF #5 by volume (5.5% share), avg ARP $9.65. ε = −0.489 (Moderately Elastic, MO_44).
+
+**Mo Trends guide:** Channel = CONVENTIONAL|MULTI OUTLET, Account = MEIJER. Search by UPC suffix in product picker to avoid brand-naming ambiguity. Product roadmap: account quick-select shortcut + TDP badge in picker results (both front-end only, multi-select stays).
+
+---
+
 ## README update 158: MO_76 macro ablation CANDIDATE — MO_53 stays active; Mo Chat macro context added (2026-09-24)
 
 **MO_76 — FRED Macro Feature Augmentation Ablation**
