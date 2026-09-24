@@ -6,6 +6,28 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 152: Aevah standup Sept 24 — MCP layer, pipeline automation, BUILT→Aevah PRD export (2026-09-24)
+
+**Aevah Standup (Jason + Rob, 20m 54s):**
+
+**MCP layer (Rob building):** Claude/ChatGPT/Copilot questions resolve to the right screen in Aevah — deep link or inline widget. Mo = Aevah + BUILT stylesheet. MCP serves both internal Aevah chat and external AI clients from the same API surface.
+
+**Pipeline automation vision (next 2 weeks target):**  
+New file in MinIO landing bucket → Aevah alert → user authorizes → CSV → Parquet → Druid segments → overlap diagnosis → remediation → load → diagram flow as clickable HTML. Current: 3-day manual cycle. Target: Friday PM drop → Monday AM ready.
+
+**BUILT→Aevah PRD export (deferred — after BUILT v1 stable):**  
+Once BUILT is done, export all accumulated knowledge (personas, analytics use cases, data decisions) into Aevah core PRD so next customer onboards faster. Jason moves to governance/override; Josh/Aiden run day-to-day per customer.
+
+**NS2 ML scope (confirmed):** NS2 sell-in NOT in cannibalization or elasticity. Current value: demand velocity proxy (ships/week, promo timing, distribution expansion for dark retailers). Future: demand velocity ML models trained on NS2 data.
+
+**Brian's timeline:** Mid/late October to show BUILT to other potential customers. Brian is happy with pace ("this was 6-8 months of work in the past"). No pressure to go faster.
+
+**Tomorrow (GroceryShop):** Pricing + promotional optimization use case on agenda. Brian wants Aevah to replace other systems. Oliver example = reference use case. Justin Fisher still out — Circana questions deferred.
+
+**ML pipeline MO_30–MO_66 taxonomy (clarification):** These scripts are NOT all skipped after MO_29. They split into: (a) Group A runs inside `run_fpa_report.sh` every cycle; (b) Group B are one-time R&D experiments. Memory + wiki/19 updated with full taxonomy.
+
+---
+
 ## README update 151: Full ML cycle documented — validation gate + report pipeline (2026-09-24)
 
 **The complete cycle has 3 post-P-series steps that were missing from the runbook.** After MO_10–MO_29, the cycle is NOT done — these steps are required before declaring the cycle complete:
