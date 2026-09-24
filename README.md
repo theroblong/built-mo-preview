@@ -6,6 +6,43 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 154: MO_67 formal validation gate run — PASS with q50 known gap (2026-09-24)
+
+**MO_67 quantile calibration audit ran on v4 models (28-feature LightGBM, trained Sept 14).** Val set: 27,500 rows, 2026-05-17 → 2026-08-09 (last 13 weeks per series).
+
+| Quantile | Target | Actual | Error | Gate |
+|---|---|---|---|---|
+| q10 | 10% | 11.1% | +1.1pp | ✅ PASS (≤15%) |
+| q50 | 50% | 57.3% | +7.3pp | ⚠️ known gap |
+| q90 | 90% | 85.6% | −4.4pp | ✅ PASS (≥85%) |
+
+**Gate decision: PASS.** wiki/19 gate criteria (q90 ≥ 85%, q10 ≤ 15%) both met. Script OVERALL VERDICT is FAIL because it uses ±5pp for all three quantiles; wiki/19 does not gate on q50.
+
+**q50 gap:** 57.3% of actuals fall below q50 = median over-predicts systematically. Known LightGBM log-scale artifact (expm1 back-transform right-skews distribution). Consistent across all maturity buckets (56–58%) and all channels. Not model deterioration. Documented; no model change triggered.
+
+**MO_67b: SKIP** — q90 = 85.6% ≥ 85%; conformal recalibration condition not met.
+
+**Outputs:** `outputs/mo67_calibration_scorecard.json`, `outputs/mo67_calibration_chart.png`
+
+**Next:** MO_68 (per-series drift detection) → MO_69 (residual structure) → MO_71 (distribution shift) → `run_fpa_report.sh 2.4.0`
+
+---
+
+## README update 153: Ebad Sept 22 deliveries — Finance DB + Sales Cube schema (2026-09-24)
+
+**Ebad Hashemi (ebad@built.com) delivered 4 NS2/EDW schema files Sept 22:**
+
+| File | What it contains |
+|---|---|
+| `docs/Finance View Schema.sql` | 34 Finance.dbo views over Source_NetSuite.ns2 (165KB) |
+| `docs/FinanceViewsMarkdown.md` | Human-readable catalog of all 34 views (grain, columns, dependencies) |
+| `docs/Sales_Retail_Cube_Schema_Documentation.md` | Built_EDW star schema: FactTransactions + DimItem/DimCustomer/DimChartOfAccounts/DimComplianceFlags + 11 date dims |
+| `docs/Shipment Data.sql` | Updated NS2 query with TotalBars + CostPerBar formulas; filters to 4 dark retailers |
+
+**Closes AI-12, AI-15, AI-16, AI-17.** DimChartOfAccounts has AccountNumber + AccountType (AI-18 still open — need Brian/Ebad to map GL codes to scan allowances / off-invoice / billbacks). wiki/18 cadence log updated with full delivery table.
+
+---
+
 ## README update 152: Aevah standup Sept 24 — MCP layer, pipeline automation, BUILT→Aevah PRD export (2026-09-24)
 
 **Aevah Standup (Jason + Rob, 20m 54s):**
