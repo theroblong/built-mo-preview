@@ -6,6 +6,28 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 156: FP&A report v2.4.0 COMPLETE — 15.3 MB, 32 sections (2026-09-24)
+
+`docs/built_demand_intelligence_report_v2.4.0.html` — full Sept 24, 2026 cycle complete.
+
+**Pipeline highlights:**
+- MO_26 retrained v4 models on 187,127 rows (through 2026-09-06)
+- MO_27: 41,249 forecast rows — Druid re-ingest pending (`appendToExisting:false`)
+- MO_55: 267 series adjusted, 710,527 units redistributed (0.99% of portfolio)
+- MO_43 BSTS: +28.8% lift / +$85,546 revenue at Kroger Dec 2025 price event
+- MO_44 DoWhy: ATE −0.5110 (4/4 refutations pass), 86 retailers scored
+- MO_61 HTE: Single ε=−0.25, 4-pack ε=−0.58, 12-pack ε=−0.63
+- MO_62: Aevah 6.1% vs TimesFM 36.9% — 6× better; Chronos/Moirai failed (torchvision conflict)
+- **MO_38 patch:** neuralforecast import made optional — TFT skipped with nan when unavailable
+- 32 sections, no duplicates, TOC sidebar clean
+
+**Open items:**
+1. Druid re-ingest `retailer_sales_forecast` with `appendToExisting:false`
+2. Re-run MO_67 on new v4 models — calibration constants not written; q90 uncalibrated
+3. MO_76 macro feature ablation
+
+---
+
 ## README update 155: Validation gate COMPLETE — all green; run_fpa_report.sh 2.4.0 launched (2026-09-24)
 
 **Full validation gate run complete on Sept 24, 2026 v4 cycle (28-feature LightGBM, 177,055 rows, 2023-09-24 → 2026-08-09):**

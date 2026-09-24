@@ -52,8 +52,13 @@ from sklearn.linear_model import Ridge, Lasso
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-from neuralforecast import NeuralForecast
-from neuralforecast.models import TFT
+try:
+    from neuralforecast import NeuralForecast
+    from neuralforecast.models import TFT
+    TFT_AVAILABLE = True
+except Exception as _nf_err:
+    print(f"  [WARNING] neuralforecast unavailable ({_nf_err.__class__.__name__}): TFT skipped.")
+    TFT_AVAILABLE = False
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -597,53 +602,59 @@ def main():
               f"({n_selected}/{len(avail_sklearn)} features selected)")
 
         # ── 4. TFT (global, h=13) ─────────────────────────────────────────────
-        print(f"  [4/4] TFT (global, {n_series} series, "
-              f"h={H}, input_size={INPUT_SIZE}, max_steps={MAX_STEPS}) …")
-        train_nf = (
-            train_all[["unique_id", "__time_naive", "log_base_units"] + avail_hist]
-            .rename(columns={"__time_naive": "ds", "log_base_units": "y"})
-            .sort_values(["unique_id", "ds"])
-            .reset_index(drop=True)
-            .copy()
-        )
-        # Drop NaN targets and fill any remaining NaNs in hist exog
-        train_nf = train_nf[train_nf["y"].notna()].reset_index(drop=True)
-        for c in avail_hist:
-            if c in train_nf.columns:
-                train_nf[c] = train_nf[c].fillna(0.0)
+        if TFT_AVAILABLE:
+            print(f"  [4/4] TFT (global, {n_series} series, "
+                  f"h={H}, input_size={INPUT_SIZE}, max_steps={MAX_STEPS}) …")
+            train_nf = (
+                train_all[["unique_id", "__time_naive", "log_base_units"] + avail_hist]
+                .rename(columns={"__time_naive": "ds", "log_base_units": "y"})
+                .sort_values(["unique_id", "ds"])
+                .reset_index(drop=True)
+                .copy()
+            )
+            # Drop NaN targets and fill any remaining NaNs in hist exog
+            train_nf = train_nf[train_nf["y"].notna()].reset_index(drop=True)
+            for c in avail_hist:
+                if c in train_nf.columns:
+                    train_nf[c] = train_nf[c].fillna(0.0)
 
-        tft = TFT(
-            h=H,
-            input_size=INPUT_SIZE,
-            hidden_size=64,
-            n_head=4,
-            hist_exog_list=avail_hist,
-            max_steps=MAX_STEPS,
-            early_stop_patience_steps=EARLY_STOP,
-            val_check_steps=25,
-            scaler_type="standard",
-            random_seed=42,
-            accelerator="cpu",
-            start_padding_enabled=True,
-            enable_progress_bar=False,
-            enable_model_summary=False,
-        )
-        nf = NeuralForecast(models=[tft], freq="W")
-        nf.fit(train_nf, val_size=VAL_SIZE)
-        preds_tft = nf.predict().rename(columns={"TFT": "pred_log"})
-        preds_tft["pred_tft"] = np.expm1(np.clip(preds_tft["pred_log"].values, 0, None))
-        preds_tft["ds"] = pd.to_datetime(preds_tft["ds"]).dt.normalize()
+            tft = TFT(
+                h=H,
+                input_size=INPUT_SIZE,
+                hidden_size=64,
+                n_head=4,
+                hist_exog_list=avail_hist,
+                max_steps=MAX_STEPS,
+                early_stop_patience_steps=EARLY_STOP,
+                val_check_steps=25,
+                scaler_type="standard",
+                random_seed=42,
+                accelerator="cpu",
+                start_padding_enabled=True,
+                enable_progress_bar=False,
+                enable_model_summary=False,
+            )
+            nf = NeuralForecast(models=[tft], freq="W")
+            nf.fit(train_nf, val_size=VAL_SIZE)
+            preds_tft = nf.predict().rename(columns={"TFT": "pred_log"})
+            preds_tft["pred_tft"] = np.expm1(np.clip(preds_tft["pred_log"].values, 0, None))
+            preds_tft["ds"] = pd.to_datetime(preds_tft["ds"]).dt.normalize()
 
-        test_df["ds"] = pd.to_datetime(test_df["__time_naive"]).dt.normalize()
-        merged = test_df.merge(
-            preds_tft[["unique_id", "ds", "pred_tft"]],
-            on=["unique_id", "ds"], how="left"
-        )
-        n_matched = merged["pred_tft"].notna().sum()
-        print(f"       TFT predictions matched: {n_matched:,}/{len(merged):,}")
-        tft_wmape = wmape(merged["base_units"].values,
-                          merged["pred_tft"].fillna(0).values)
-        print(f"       TFT wMAPE: {tft_wmape:.1f}%")
+            test_df["ds"] = pd.to_datetime(test_df["__time_naive"]).dt.normalize()
+            merged = test_df.merge(
+                preds_tft[["unique_id", "ds", "pred_tft"]],
+                on=["unique_id", "ds"], how="left"
+            )
+            n_matched = merged["pred_tft"].notna().sum()
+            print(f"       TFT predictions matched: {n_matched:,}/{len(merged):,}")
+            tft_wmape = wmape(merged["base_units"].values,
+                              merged["pred_tft"].fillna(0).values)
+            print(f"       TFT wMAPE: {tft_wmape:.1f}%")
+        else:
+            print("  [4/4] TFT skipped (neuralforecast unavailable — torchvision version conflict).")
+            test_df["pred_tft"] = float("nan")
+            merged = test_df
+            tft_wmape = float("nan")
 
         # ── Naive baselines ───────────────────────────────────────────────────
         ma4_list, ma13_list, naive_list = [], [], []
