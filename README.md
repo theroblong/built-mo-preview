@@ -6,6 +6,40 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 145: Q-series pipeline COMPLETE — Sept 24 2026 cycle benchmarks (2026-09-24)
+
+Full Q-series pipeline complete for the first time with Batch 4 data (weeks through 2026-09-06).
+
+**Benchmarks (actual durations, Sept 23–24 2026):**
+
+| Step | Datasource | Duration | Notes |
+|---|---|---|---|
+| Q0 | built_filtered_weekly | 9:48 | Batch 4 incremental (2026-04-19→2027-01-01) |
+| Q1 | built_enriched_weekly | 1:51:29 | OVERWRITE ALL |
+| Q2 | comparison_pool_weekly | ~11.4h | maxNumTasks=8 on tiny cluster — consider ≤4 next cycle |
+| Q3 | built_tdp | 18.6 min | |
+| Q4 | built_promo_events | 51.3 min | |
+| Q5 | cannibalization_training_input | 15.5 min | |
+| Q6 | event_detection_weekly | ~16 min | |
+| Q7 | new_upc_candidates | ~8 min | |
+| Q8 | new_upc_classifications | ~15.5 min | |
+| Q9 | new_product_ramp_monitor | ~16 min | |
+| Q14 | price_elasticity_weekly_features | ~2.7 min | |
+| Q15 | price_pack_ladder_weekly | ~7 min | |
+| Q16 | price_competitive_weekly | 2:16:18 | Largest in Q14–Q22; grows with data |
+| Q17 | | 7 min | |
+| Q20 | | ~2 min | |
+| Q21 | | 42.5 min | |
+| Q22 | | ~3 min | |
+
+**Key lessons:**
+- Q16 timeout must be ≥3h (set to 6h in scripts for data-growth headroom)
+- Q2 maxNumTasks=8 did NOT help on tiny cluster — likely slower than 4 workers; revert next cycle
+- Poll timeout for Q6–Q9: 3600s (1h) is sufficient; Q14–Q22: use 21600s (6h)
+- Q16 actual duration false-positived as SUCCESS when checked at 57min; never trust a spot-check during a long-running task — always read `duration` from Druid console to confirm completion
+
+---
+
 ## README update 144: wallet-share macro signals added — FRED + EIA monthly (2026-09-23)
 
 Added 5 new FRED monthly series (food-at-home CPI, snacks CPI, revolving credit, real disposable income, credit card delinquency) and 2 EIA monthly series (residential electricity ¢/kWh, natural gas $/Mcf) to MO_76, the Mo Trends `/macro` endpoint, and TypeScript types.
