@@ -6,6 +6,28 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 158: MO_76 macro ablation CANDIDATE — MO_53 stays active; Mo Chat macro context added (2026-09-24)
+
+**MO_76 — FRED Macro Feature Augmentation Ablation**
+
+| Criterion | Result | Verdict |
+|---|---|---|
+| No regression (avg CV ≤ champion) | 6.313% vs 6.505% | PASS |
+| CV improvement ≥ 0.03pp | +0.191pp improvement | PASS |
+| Individual winner exists | None (grocery_sales_yoy −0.005pp only) | FAIL |
+
+Group macro set beats MO_53 by 0.191pp avg CV — but SHAP analysis shows macro features have near-zero importance. Model remains dominated by `base_units_roll4_avg` (SHAP ~1.6) and `base_units_lag1` (~0.9). The CV gain is concentrated in the Jun 2025 volatile window (−0.485pp at that cutpoint), not a stable signal across regimes.
+
+**Decision: MO_53 stays active. MO_76 archived as CANDIDATE.** 3-year SPINS window is insufficient to isolate long-cycle macro effects from autoregressive signal. Revisit with 2+ more years of data.
+
+**Best individual feature:** `grocery_sales_yoy` (total grocery channel volume — rising tide / divergence signal). Only solo feature that marginally helps. Others (revolving_credit_yoy +0.180pp, disposable_income_yoy +0.122pp, natgas_price_yoy +0.120pp) hurt individually.
+
+**Mo Chat updated:** Added MACRO ECONOMIC CONTEXT section to _DATA_GLOSSARY — Mo Chat can now answer questions about fuel/inflation/macro demand drivers with correct mechanism, FRED data sourcing, and MO_76 context.
+
+**Outputs:** `outputs/mo76_fred_features.parquet`, `mo76_macro_individual.csv`, `mo76_shap.png`, `mo76_individual_results.png`, `model_history.json` (MO_76 status=candidate).
+
+---
+
 ## README update 157: MO_67 re-run on new v4 models — q90 PASS, MO_67b skip confirmed (2026-09-24)
 
 After `run_fpa_report.sh` retrains v4 models (MO_26), MO_67 must re-run to verify calibration on the new models before Druid ingest. **Rule: always re-run MO_67 after a full report pipeline run.**
