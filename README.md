@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 150: P-series MO_22–MO_29 complete — Sept 24 2026 cycle DONE (2026-09-24)
+
+**Full P-series MO_10–MO_29 complete.** Sept 24, 2026 cycle — all 20 scripts run with manual validate-and-submit protocol.
+
+| Script | Output | Key metric |
+|---|---|---|
+| MO_22 | `comparison_pool_prelaunch_baseline` → Druid | 57,231 rows; pre-launch competitor velocity anchored to focal first_week_selling |
+| MO_23 | `competitor_pack_size_norms` → Druid | 1,310 rows; 3 scopes (account/channel/overall) |
+| MO_24 | `new_product_ramp_monitor` → Druid | 126,401 rows; 97 UPCs; ACTIVE/SUPPRESSED/LOW_CONFIDENCE |
+| MO_25 | `retailer_sales_weekly.parquet` (local) | 187,127 rows; 3,173 series; 122 UPCs |
+| MO_26 | 6 quantile models (base_units + total_units q10/q50/q90 v4) | base_units q50 MAE=72.5 units/wk |
+| MO_27 | `retailer_sales_forecast` → Druid | 41,249 rows (3,173 series × 13 weeks) |
+| MO_28 | Evaluation only | Overall wMAPE **3.4%**; high-volume 2.8%; bias −0.8% |
+| MO_29 | Backtest only (Oct 2025 cutoff, 49-week OOS) | LightGBM **5.2%** vs. naive 39.7% → **+34.6pp; ~$34.6M ROI** at $1M/pp |
+
+**Headline for FP&A:** 49-week out-of-sample test (Oct 2025 → Sept 2026) shows LightGBM 5.2% wMAPE vs. 39.7% naive (Excel proxy). Connor/Jeff can verify against their own actuals for the same period. At Brian's $1M/1pp multiplier: ~$34.6M in forecast accuracy value.
+
+---
+
 ## README update 149: NS2 sell-in analysis expanded — dark retailer signals + sell-in × SPINS combination (2026-09-24)
 
 **Dark retailers (Winco/HEB/TJ's/Aldi) — more knowable than "just shipments":**
