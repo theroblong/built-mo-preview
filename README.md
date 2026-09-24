@@ -6,6 +6,25 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 146: P-series runbook + pipeline optimization roadmap (2026-09-24)
+
+**P-series (MO_10–MO_21) — manual run-and-validate protocol:**
+Run each script individually from `FirstAgent/scripts/`, paste output for validation before proceeding to the next. Log pattern: `python -u MO_10_cannibal_train.py 2>&1 | tee /tmp/MO_10_$(date +%Y%m%d_%H%M%S).log`
+
+Core sequence: MO_10 → MO_11 → MO_12 → MO_13 → MO_14 → MO_15 → MO_16 → MO_17 → MO_18 → MO_19 → MO_20 → MO_21
+
+**Automation roadmap (3 phases):**
+1. **Now — manual:** Run-and-validate per step; human approval before each write-back
+2. **Next — `run_p_series.py`:** Chain MO_10–MO_21 with wMAPE regression gate; auto-abort if candidate exceeds champion by >0.03pp
+3. **Later — scheduled + hyperparameter tuning:** Trigger on Q22 SUCCESS; Optuna search on candidate branch; drift detection auto-triggering retrains between SPINS cycles
+
+**Cycle time optimization targets (deferred — post stable manual cycle):**
+- **Q2 incremental self-join:** Biggest lever. Change `comparison_pool_weekly` from OVERWRITE WHERE full 2025–2027 window to APPEND on new weeks only. Q2: 11.4h → potentially <1h on incremental weeks.
+- **Q16 incremental:** `price_competitive_weekly` took 2h16m — same incremental pattern applicable.
+- **Goal:** Reduce full cycle from ~2 days to weekend overnight (Friday PM → Monday AM ready).
+
+---
+
 ## README update 145: Q-series pipeline COMPLETE — Sept 24 2026 cycle benchmarks (2026-09-24)
 
 Full Q-series pipeline complete for the first time with Batch 4 data (weeks through 2026-09-06).
