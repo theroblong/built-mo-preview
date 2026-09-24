@@ -6,6 +6,45 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 160: Sept 2026 SPINS cycle fully closed — GEO-06 Meijer SPINS architecture fix (2026-09-24)
+
+**Sept 2026 SPINS full update cycle — ALL PHASES COMPLETE**
+
+Full pipeline run triggered by Rob's new `All_items_extract_9626.csv.gz` (Sept 6, 2026 HWM). All phases complete as of 2026-09-24:
+
+| Phase | Status | Key facts |
+|---|---|---|
+| spins_full ingest | ✅ | 107,071,648 rows; HWM 2026-09-06; 2 new BUILT PUFF UPCs added to QS1 |
+| Q-series (QS1→Q22) | ✅ | Full run; Q2 at maxNumTasks=8 (~11.4h — revert to 4 next cycle); all HWM gates passed |
+| P-series (MO_10→MO_29) | ✅ | All 20 scripts; wMAPE 3.4% (MO_28 current), 5.2% backtest vs 39.7% naive (+34.6pp) |
+| Validation gate (MO_67/68/69/71) | ✅ | All green; q90 85.6% PASS; MO_67b skipped; no new drift segments |
+| FP&A report v2.4.0 | ✅ | 15.3 MB, 32 sections; `docs/built_demand_intelligence_report_v2.4.0.html` |
+| MO_67 re-run post-report | ✅ | Identical result; q90 PASS; Druid ingest `retailer_sales_forecast` SUCCESS |
+| MO_76 macro ablation | ✅ | CANDIDATE — MO_53 stays active; `grocery_sales_yoy` flagged for next cycle |
+
+**New UPCs in production (QS1 updated):**
+- `08-40229-30511` — BUILT PUFF Pumpkin Cookie Chunk 18.2oz 12ct
+- `08-40229-30687` — BUILT PUFF Peanut Butter Cup 11.29oz 8ct
+
+---
+
+**GEO-06: Meijer SPINS channel architecture — critical correction**
+
+README 159's Mo Trends guide was wrong: it said to use `CONVENTIONAL|MULTI OUTLET` for Meijer. **This is incorrect.** Corrected architecture:
+
+- **`CONVENTIONAL|FOOD` + `MEIJER CORP - RMA`** = real Meijer store POS data. 10 BUILT PUFF UPCs all-time; 5 actively selling now (Brownie Batter, Cookie Dough, Coconut, Cookies N Cream, PB Cup 4-packs) at 75–89% TDP.
+- **`CONVENTIONAL|MULTI OUTLET` + `MEIJER CORP - MULO CRMA`** = geographic aggregate across ALL retailers in Meijer's Midwest/Great Lakes territory — NOT Meijer-specific. Includes 56 BUILT UPCs from the broader region.
+
+**Fixes applied (2026-09-24):**
+1. **Mo Chat `_DATA_GLOSSARY`** — "CHANNEL SELECTION FOR ACCOUNT-LEVEL RETAILERS" rewritten: use CONVENTIONAL|FOOD (RMA) for retailer-specific analysis; CONVENTIONAL|MULTI OUTLET is the geographic aggregate, never appropriate for account-level queries.
+2. **Mo Trends account quick-select button** (`Trends.tsx`): restored channel filter (loads only CONVENTIONAL|FOOD products when that channel is selected); changed from append to replace so highest-TDP product is first — fixes blank Sales Outlook and Price & Promo tiles.
+3. **Decisions register GEO-06** (`mockups/mo_decisions_register.html`): corrected entry to document the real architecture.
+
+**⚠️ Open item — review with Brian:**
+The Meijer cannibalization brief (README 159) was built from MULO CRMA data (Midwest geographic aggregate). TDP values for the 6 established 4-packs, 6 P4 2026 launches, 6 singles, and check-lane recommendation need to be verified against actual Meijer store data before acting on them. BUILT sell-in (NS2) would confirm shelf status faster than SPINS lag. The 5 currently-active RMA products (CONVENTIONAL|FOOD) are the confirmed ground truth.
+
+---
+
 ## README update 159: Meijer cannibalization brief COMPLETE — 20 UPCs, 6 P4 2026 launches, check lane analysis (2026-09-24)
 
 **Meijer Account Brief — P4 2026 Launch Review & Assortment Strategy**
