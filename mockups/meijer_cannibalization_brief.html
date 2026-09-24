@@ -1,0 +1,1033 @@
+<title>Meijer BUILT Assortment Brief</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface-2: #eef1f6;
+    --border: #dde2ea;
+    --navy: #0d1b2a;
+    --navy-mid: #1b3a5c;
+    --teal: #00897b;
+    --teal-light: #e0f2f0;
+    --amber: #e67e22;
+    --amber-light: #fef3e7;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --green: #27ae60;
+    --green-light: #e8f8ee;
+    --muted: #6b7a8d;
+    --text: #1a2533;
+    --text-light: #4a5568;
+    --accent: #0d6efd;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a1220;
+      --surface: #111c2d;
+      --surface-2: #172236;
+      --border: #253550;
+      --navy: #1e3a5f;
+      --navy-mid: #2a4d7a;
+      --teal: #26a69a;
+      --teal-light: #0d2e2b;
+      --amber: #f39c12;
+      --amber-light: #2d1e0a;
+      --red: #e74c3c;
+      --red-light: #2d0f0c;
+      --green: #2ecc71;
+      --green-light: #0d2a18;
+      --muted: #8fa3ba;
+      --text: #e4ecf5;
+      --text-light: #9db0c5;
+      --accent: #4a9eff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a1220;
+    --surface: #111c2d;
+    --surface-2: #172236;
+    --border: #253550;
+    --navy: #1e3a5f;
+    --navy-mid: #2a4d7a;
+    --teal: #26a69a;
+    --teal-light: #0d2e2b;
+    --amber: #f39c12;
+    --amber-light: #2d1e0a;
+    --red: #e74c3c;
+    --red-light: #2d0f0c;
+    --green: #2ecc71;
+    --green-light: #0d2a18;
+    --muted: #8fa3ba;
+    --text: #e4ecf5;
+    --text-light: #9db0c5;
+    --accent: #4a9eff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    padding-inline: 24px;
+    padding-block: 32px;
+    max-width: 1100px;
+    margin-inline: auto;
+  }
+
+  /* ── Report header ── */
+  .report-header {
+    background: var(--navy);
+    color: #fff;
+    border-radius: 10px 10px 0 0;
+    padding: 28px 32px 20px;
+  }
+  .confidential-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,.15);
+    color: rgba(255,255,255,.8);
+    border-radius: 3px;
+    padding: 2px 8px;
+    margin-bottom: 12px;
+  }
+  .report-header h1 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #fff;
+    text-wrap: balance;
+  }
+  .report-header h1 em {
+    font-style: italic;
+    color: rgba(255,255,255,.75);
+  }
+  .report-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: rgba(255,255,255,.6);
+    flex-wrap: wrap;
+  }
+  .report-meta span strong { color: rgba(255,255,255,.85); font-weight: 600; }
+
+  /* ── KPI tiles ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .kpi-tile {
+    background: var(--surface);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    line-height: 1;
+  }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .kpi-tile.accent-teal .kpi-value { color: var(--teal); }
+  .kpi-tile.accent-amber .kpi-value { color: var(--amber); }
+
+  /* ── Section layout ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 24px 32px;
+  }
+  .section + .section { border-top: none; }
+  .section:last-child { border-radius: 0 0 10px 10px; }
+
+  .section-heading {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .section-heading { color: var(--teal); }
+  }
+  :root[data-theme="dark"] .section-heading { color: var(--teal); }
+
+  .section-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* ── Tables ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .data-table th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 6px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover { background: var(--surface-2); }
+  .data-table .num { text-align: right; }
+  .data-table .center { text-align: center; }
+  .built-row { background: var(--teal-light) !important; }
+  .built-row td:first-child { font-weight: 600; }
+
+  /* ── Overflow scroll containers ── */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-teal { background: var(--teal-light); color: var(--teal); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-grey { background: var(--surface-2); color: var(--muted); }
+  .badge-blue { background: #e8f0fe; color: #1a56db; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .badge-blue { background: #172040; color: #7aadff; }
+  }
+  :root[data-theme="dark"] .badge-blue { background: #172040; color: #7aadff; }
+
+  /* ── TDP bar ── */
+  .tdp-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+  .tdp-bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .tdp-bar-fill { height: 100%; border-radius: 3px; background: var(--teal); }
+  .tdp-num { font-size: 12px; color: var(--muted); min-width: 36px; text-align: right; }
+
+  /* ── Share bar ── */
+  .share-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .share-bar-bg { width: 80px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .share-bar-fill { height: 100%; border-radius: 4px; }
+  .share-bar-fill.built { background: var(--teal); }
+  .share-bar-fill.comp { background: #b0bec5; }
+
+  /* ── Two-column grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Call-out boxes ── */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .callout-teal { background: var(--teal-light); border-left: 3px solid var(--teal); }
+  .callout-amber { background: var(--amber-light); border-left: 3px solid var(--amber); }
+  .callout-red { background: var(--red-light); border-left: 3px solid var(--red); }
+  .callout-blue { background: #e8f0fe; border-left: 3px solid #1a56db; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .callout-blue { background: #172040; border-color: #4a9eff; }
+  }
+  :root[data-theme="dark"] .callout-blue { background: #172040; border-color: #4a9eff; }
+
+  .callout strong { font-weight: 700; }
+
+  /* ── Cannibalization matrix ── */
+  .cannibal-matrix { display: flex; flex-direction: column; gap: 6px; }
+  .cannibal-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .cannibal-row .focal-name { flex: 1; min-width: 200px; font-weight: 600; }
+  .cannibal-row .donor-list { flex: 2; min-width: 240px; color: var(--text-light); }
+  .cannibal-row .status-col { flex: 0 0 auto; }
+
+  /* ── Recommendation pills ── */
+  .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+  .rec-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    font-size: 13px;
+  }
+  .rec-card .rec-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .rec-card .rec-name { font-weight: 600; line-height: 1.3; }
+  .rec-card .rec-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .rec-card.keep { border-top: 3px solid var(--teal); }
+  .rec-card.launch { border-top: 3px solid var(--accent); }
+  .rec-card.check-lane { border-top: 3px solid var(--amber); }
+  .rec-card.watch { border-top: 3px solid var(--red); }
+
+  /* ── Mo capabilities panel ── */
+  .capability-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .cap-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .cap-icon { font-size: 18px; flex: 0 0 24px; line-height: 1.4; }
+  .cap-body { flex: 1; }
+  .cap-title { font-weight: 600; font-size: 13px; }
+  .cap-desc { font-size: 12px; color: var(--text-light); margin-top: 2px; line-height: 1.5; }
+
+  /* ── Trends guidance box ── */
+  .trends-guide {
+    background: var(--navy);
+    color: rgba(255,255,255,.9);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .trends-guide h4 { color: #fff; font-weight: 700; font-size: 13px; margin-bottom: 10px; letter-spacing: .05em; text-transform: uppercase; }
+  .trends-guide .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .trends-guide .filter-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.45); min-width: 70px; }
+  .trends-chip {
+    display: inline-block;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 4px;
+    padding: 2px 9px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,.85);
+  }
+  .trends-chip.highlight { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+  /* ── Footer ── */
+  .report-footer {
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding-inline: 16px; }
+    .section { padding: 18px 16px; }
+    .report-header { padding: 20px 16px 16px; }
+    .kpi-value { font-size: 20px; }
+  }
+</style>
+
+<!-- ── Report header ── -->
+<div class="report-header">
+  <div class="confidential-badge">Internal &middot; Aevah / Mo Platform</div>
+  <h1>Meijer Account Brief &mdash; <em>P4 2026 Launch Review &amp; Assortment Strategy</em></h1>
+  <div class="report-meta">
+    <span><strong>Account</strong> Meijer Corp</span>
+    <span><strong>Channel</strong> Conventional &middot; Multi-Outlet (MULO CRMA)</span>
+    <span><strong>Data</strong> SPINS weekly through Sept 2026</span>
+    <span><strong>Generated</strong> Sept 24, 2026</span>
+    <span><strong>Source</strong> Mo Cannibalization Engine MO_55 &middot; Elasticity MO_44 v2.1.0</span>
+  </div>
+</div>
+
+<!-- ── KPI strip ── -->
+<div class="kpi-row">
+  <div class="kpi-tile">
+    <div class="kpi-label">Market Share</div>
+    <div class="kpi-value">5.5%</div>
+    <div class="kpi-sub">#5 brand by units</div>
+  </div>
+  <div class="kpi-tile accent-teal">
+    <div class="kpi-label">Core 4-pk TDP</div>
+    <div class="kpi-value">~69%</div>
+    <div class="kpi-sub">Brownie Batter anchor (peak)</div>
+  </div>
+  <div class="kpi-tile">
+    <div class="kpi-label">SKUs at Meijer</div>
+    <div class="kpi-value">20</div>
+    <div class="kpi-sub">12 four-packs · 6 singles · 2 variety</div>
+  </div>
+  <div class="kpi-tile accent-amber">
+    <div class="kpi-label">Price Elasticity</div>
+    <div class="kpi-value">&minus;0.49</div>
+    <div class="kpi-sub">Moderately elastic (MO_44)</div>
+  </div>
+  <div class="kpi-tile">
+    <div class="kpi-label">Avg ARP (own-brand 4-pk)</div>
+    <div class="kpi-value">$9.65</div>
+    <div class="kpi-sub">vs $10.07 Barebells</div>
+  </div>
+  <div class="kpi-tile">
+    <div class="kpi-label">P4 2026 Launches</div>
+    <div class="kpi-value">6</div>
+    <div class="kpi-sub">All 4-pk format; Low confidence</div>
+  </div>
+</div>
+
+<!-- ── A: Competitive Position ── -->
+<div class="section">
+  <div class="section-heading">A &mdash; Competitive Position at Meijer</div>
+  <div class="section-sub">SPINS MULO CRMA · Jan 2025 – Sept 2026 cumulative units · 15 brands shown</div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Brand</th>
+          <th class="num">Total Units</th>
+          <th class="num">Share</th>
+          <th>Share Bar</th>
+          <th class="num">Avg TDP</th>
+          <th class="num">Avg ARP</th>
+          <th class="num">SKU Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td><td>BAREBELLS</td><td class="num">5,957,045</td>
+          <td class="num">9.6%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:100%"></div></div></div></td>
+          <td class="num">18.2</td><td class="num">$10.07</td><td class="num">76</td>
+        </tr>
+        <tr>
+          <td>2</td><td>PRIVATE LABEL</td><td class="num">5,935,347</td>
+          <td class="num">9.6%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:99.6%"></div></div></div></td>
+          <td class="num">7.7</td><td class="num">$5.10</td><td class="num">112</td>
+        </tr>
+        <tr>
+          <td>3</td><td>CLIF BAR</td><td class="num">4,669,457</td>
+          <td class="num">7.5%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:78.4%"></div></div></div></td>
+          <td class="num">24.5</td><td class="num">$8.70</td><td class="num">110</td>
+        </tr>
+        <tr>
+          <td>4</td><td>KIND</td><td class="num">3,514,155</td>
+          <td class="num">5.7%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:59%"></div></div></div></td>
+          <td class="num">13.8</td><td class="num">$8.15</td><td class="num">157</td>
+        </tr>
+        <tr class="built-row">
+          <td>5</td><td>BUILT PUFF ★</td><td class="num">3,376,102</td>
+          <td class="num">5.5%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill built" style="width:56.7%"></div></div></div></td>
+          <td class="num">14.5</td><td class="num">$9.65</td><td class="num">47</td>
+        </tr>
+        <tr>
+          <td>6</td><td>PERFECT BAR</td><td class="num">3,297,319</td>
+          <td class="num">5.3%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:55.4%"></div></div></div></td>
+          <td class="num">12.5</td><td class="num">$6.59</td><td class="num">39</td>
+        </tr>
+        <tr>
+          <td>7</td><td>QUEST</td><td class="num">2,874,828</td>
+          <td class="num">4.6%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:48.2%"></div></div></div></td>
+          <td class="num">12.2</td><td class="num">$9.18</td><td class="num">114</td>
+        </tr>
+        <tr>
+          <td>8</td><td>CLIF ZBAR</td><td class="num">2,538,995</td>
+          <td class="num">4.1%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:42.6%"></div></div></div></td>
+          <td class="num">27.5</td><td class="num">$11.64</td><td class="num">31</td>
+        </tr>
+        <tr>
+          <td>9–15</td><td>PURE PROTEIN, RXBAR, LARABAR, ATKINS, CLIO, DAVID, THINK!</td>
+          <td class="num">11,350,050</td><td class="num">18.3%</td>
+          <td><div class="share-bar-wrap"><div class="share-bar-bg"><div class="share-bar-fill comp" style="width:100%;opacity:.4"></div></div></div></td>
+          <td class="num">—</td><td class="num">—</td><td class="num">458</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-teal" style="margin-top:16px">
+    <strong>Position:</strong> BUILT PUFF sits 5th by volume — 47 SKUs vs. KIND's 157. We are getting more revenue per SKU: our avg ARP of $9.65 exceeds Barebells ($10.07 is the only premium peer). The 0.2-pt gap between BUILT and KIND is closable through check-lane expansion and continued P4 distribution ramp. Private Label's low ARP ($5.10) does not compete at the same price tier.
+  </div>
+</div>
+
+<!-- ── B: Core 4-pk Distribution ── -->
+<div class="section">
+  <div class="section-heading">B &mdash; Established 4-Pack Set &mdash; Current Distribution</div>
+  <div class="section-sub">MULO CRMA · avg recent-12-week TDP shown · these 6 SKUs form the primary shelf assortment</div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>SKU (4-pack)</th>
+          <th>UPC</th>
+          <th>Flavor</th>
+          <th class="num">L12W Avg TDP</th>
+          <th>Distribution</th>
+          <th class="num">Avg ARP</th>
+          <th class="num">Approx Weekly Units</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Brownie Batter 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30380</td>
+          <td>BROWNIE</td>
+          <td class="num">69%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:69%"></div></div><span class="tdp-num">69%</span></div></td>
+          <td class="num">$8.99</td>
+          <td class="num">~8,400</td>
+        </tr>
+        <tr>
+          <td>Cookie Dough 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30558</td>
+          <td>COOKIE DOUGH</td>
+          <td class="num">66%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:66%"></div></div><span class="tdp-num">66%</span></div></td>
+          <td class="num">$8.99</td>
+          <td class="num">~9,300</td>
+        </tr>
+        <tr>
+          <td>Coconut 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30381</td>
+          <td>COCONUT</td>
+          <td class="num">57%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:57%"></div></div><span class="tdp-num">57%</span></div></td>
+          <td class="num">$9.11</td>
+          <td class="num">~3,900</td>
+        </tr>
+        <tr>
+          <td>PB Cup 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30646</td>
+          <td>PEANUT BUTTER</td>
+          <td class="num">57%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:57%"></div></div><span class="tdp-num">57%</span></div></td>
+          <td class="num">$8.79</td>
+          <td class="num">~4,300</td>
+        </tr>
+        <tr>
+          <td>Cookies N Cream 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30581</td>
+          <td>COOKIES &amp; CREAM</td>
+          <td class="num">54%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:54%"></div></div><span class="tdp-num">54%</span></div></td>
+          <td class="num">$9.02</td>
+          <td class="num">~3,700</td>
+        </tr>
+        <tr>
+          <td>Salted Caramel 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30577</td>
+          <td>CARAMEL</td>
+          <td class="num">42%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:42%"></div></div><span class="tdp-num">42%</span></div></td>
+          <td class="num">$8.81</td>
+          <td class="num">~2,300</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-teal" style="margin-top:14px">
+    <strong>Opportunity:</strong> Brownie Batter (69% TDP) and Cookie Dough (66%) have the strongest distribution. Salted Caramel at 42% trails the pack — if shelf space is finite, its slot is where a new launch competes first.
+  </div>
+</div>
+
+<!-- ── C: P4 2026 Launches ── -->
+<div class="section">
+  <div class="section-heading">C &mdash; P4 2026 Launches at Meijer</div>
+  <div class="section-sub">6 new 4-pack SKUs first appearing Jan – Apr 2026 · all Low confidence (6–20 weeks of data) · MULO CRMA</div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>UPC</th>
+          <th class="num">Weeks Live<br><span style="font-weight:400;text-transform:none">(≈Sept 24)</span></th>
+          <th class="num">Latest TDP</th>
+          <th>Ramp</th>
+          <th class="num">Latest Weekly Units</th>
+          <th>Cannibalization Signal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Cinnamon Cereal Milk 4pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30765</td>
+          <td class="num">~15</td>
+          <td class="num">4–5%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:5%;background:var(--amber)"></div></div></div></td>
+          <td class="num">~1,700</td>
+          <td><span class="badge badge-teal">Taking from competitors</span></td>
+        </tr>
+        <tr>
+          <td><strong>Rocky Road 4pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30696</td>
+          <td class="num">~13</td>
+          <td class="num">12–13%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:13%;background:var(--amber)"></div></div></div></td>
+          <td class="num">~600</td>
+          <td><span class="badge badge-amber">Mixed / Monitor</span></td>
+        </tr>
+        <tr>
+          <td><strong>Mystery Flavor 4pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30747</td>
+          <td class="num">~13</td>
+          <td class="num">7–16%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:16%;background:var(--amber)"></div></div></div></td>
+          <td class="num">~400</td>
+          <td><span class="badge badge-amber">Mixed / Monitor</span></td>
+        </tr>
+        <tr>
+          <td><strong>Banana Cream Pie 4pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30749</td>
+          <td class="num">~13</td>
+          <td class="num">6–14%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:14%;background:var(--amber)"></div></div></div></td>
+          <td class="num">~350</td>
+          <td><span class="badge badge-teal">Taking from competitors</span></td>
+        </tr>
+        <tr>
+          <td>Sour Blue Raz Blast 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30654</td>
+          <td class="num">~15</td>
+          <td class="num">5–6%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:6%;background:var(--muted)"></div></div></div></td>
+          <td class="num">~600</td>
+          <td><span class="badge badge-grey">Early — insufficient signal</span></td>
+        </tr>
+        <tr>
+          <td>Sour Green Apple 4pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30656</td>
+          <td class="num">~15</td>
+          <td class="num">5%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:5%;background:var(--muted)"></div></div></div></td>
+          <td class="num">~400</td>
+          <td><span class="badge badge-grey">Early — insufficient signal</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-amber" style="margin-top:14px">
+    <strong>Note on confidence:</strong> All P4 2026 signals are <em>Low confidence</em> — under 20 weeks of Meijer data. Mo's cannibalization engine needs ≥ 8 weeks to activate and marks signals Low until ≥ 20 weeks. Treat the findings below as early-warning directional, not conclusive.
+  </div>
+</div>
+
+<!-- ── D: Cannibalization Analysis ── -->
+<div class="section">
+  <div class="section-heading">D &mdash; Cannibalization Analysis</div>
+  <div class="section-sub">Mo Cannibalization Engine MO_55 · D4 = same flavor family cross-brand · D5 = cross-flavor own-brand</div>
+
+  <div class="two-col">
+    <div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:8px">Cinnamon Cereal Milk 4pk (08-40229-30765)</p>
+      <div class="cannibal-matrix">
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Mush Maple Cinnamon</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>David Cinnamon Roll 4pk</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>GoMacro Cinnamon Roll</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Once Upon A Farm Cinnamon Roll</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Larabar Kids Cinnamon Swirl</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>BUILT core 4-pks</strong> (D5 — cross-flavor own-brand)</div>
+          <div class="status-col"><span class="badge badge-red">Cannibalizing*</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Sour 1-pk / variety packs</strong> (D5)</div>
+          <div class="status-col"><span class="badge badge-teal">Incremental</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:8px">Banana Cream Pie 4pk (08-40229-30749)</p>
+      <div class="cannibal-matrix">
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>PL Banana Wellness Bar</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Bobos Banana Choc Chip</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Once Upon A Farm Banana Choc</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Cannibalizing</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Barebells Banana Caramel</strong> (D4)</div>
+          <div class="status-col"><span class="badge badge-teal">Incremental</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>BUILT core 4-pks</strong> (D5 — cross-flavor own-brand)</div>
+          <div class="status-col"><span class="badge badge-red">Cannibalizing*</span></div>
+        </div>
+        <div class="cannibal-row">
+          <div class="focal-name" style="font-size:12px;font-weight:400">vs. <strong>Sour 1-pk / Sour variety 13pk</strong> (D5)</div>
+          <div class="status-col"><span class="badge badge-teal">Incremental</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-amber" style="margin-top:16px">
+    <strong>* Interpreting D5 "Cannibalizing" flags:</strong> The model sees portfolio-wide co-movement between all BUILT 4-pks at a single account. When a new flavor enters and begins drawing velocity from the same planogram slot, the model correctly flags structural competition for shelf units. This does <em>not</em> necessarily mean demand is being stolen — at Low confidence and &lt;20 weeks of data, it means the new SKUs are competing for the same shopper budget and potentially the same shelf position. <strong>Key distinction: D4 (competitor-flavor) "Cannibalizing" = demand diversion from category competitors — this is exactly what we want. D5 (own-brand) "Cannibalizing" = intra-portfolio pressure to monitor.</strong>
+  </div>
+
+  <div class="callout callout-teal" style="margin-top:10px">
+    <strong>Bottom line:</strong> Cinnamon Cereal Milk is the standout P4 launch — it is demonstrably taking from 5 competitor cinnamon-flavored products at Meijer while remaining incremental to the Sour format. Banana Cream Pie is also competitor-additive. The D5 signals across the 4-pk set are expected portfolio dynamics, not alarming steal, but they do argue against layering in too many simultaneous 4-pk introductions at the same account.
+  </div>
+</div>
+
+<!-- ── E: Check Lane ── -->
+<div class="section">
+  <div class="section-heading">E &mdash; Check Lane Opportunity &mdash; 1-Pack Singles</div>
+  <div class="section-sub">6 single-serve SKUs active at Meijer MULO · Check lane = incremental format, not planogram competition</div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>SKU (1-pack)</th>
+          <th>UPC</th>
+          <th>Flavor Category</th>
+          <th class="num">Latest TDP</th>
+          <th class="num">Avg ARP</th>
+          <th>vs. 4-pk Shelf</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Brownie Batter 1pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30362</td>
+          <td>BROWNIE</td>
+          <td class="num">31%</td>
+          <td class="num">$2.74</td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cookies N Cream 1pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30550</td>
+          <td>COOKIES &amp; CREAM</td>
+          <td class="num">27%</td>
+          <td class="num">$2.68</td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sour Peach 1pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30651</td>
+          <td>SOUR / PEACH</td>
+          <td class="num">26%</td>
+          <td class="num">$2.57</td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cookie Dough 1pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30333</td>
+          <td>COOKIE DOUGH</td>
+          <td class="num">26%</td>
+          <td class="num">$2.57</td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+        <tr>
+          <td>Sour Blue Razz 1pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30653</td>
+          <td>SOUR / BLUE RAZZ</td>
+          <td class="num">24%</td>
+          <td class="num">$2.74</td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+        <tr>
+          <td>Coconut 1pk</td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30037</td>
+          <td>COCONUT</td>
+          <td class="num">21%</td>
+          <td class="num">$2.63</td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-teal" style="margin-top:14px">
+    <strong>Check lane verdict — go:</strong> All 6 singles score as <em>Incremental</em> against the core 4-pk shelf set. The single-serve format targets impulse and trial shoppers who are not selecting a 4-pk from the main shelf — demand pools do not overlap. Brownie Batter 1pk (31% TDP) and Cookies N Cream 1pk (27% TDP) have the highest existing placement, making them natural anchors for a check-lane pitch. The Sour 1-pks add format differentiation and skew toward a distinct shopper profile (younger, impulse). <strong>Recommended check lane set: Brownie Batter 1pk + Sour Peach 1pk (2-item test).</strong> Expand to Cookie Dough + Sour Blue Razz if trial performs.
+  </div>
+</div>
+
+<!-- ── F: Ideal Assortment ── -->
+<div class="section">
+  <div class="section-heading">F &mdash; Ideal Assortment Recommendation</div>
+  <div class="section-sub">Based on TDP trajectory, cannibalization signals, and competitive displacement potential at Meijer</div>
+
+  <div style="margin-bottom:12px;font-size:13px;color:var(--text-light)">
+    Color code: <span class="badge badge-teal" style="margin-right:4px">Keep / Grow</span><span class="badge badge-blue" style="margin-right:4px">Launch / Ramp</span><span class="badge badge-amber" style="margin-right:4px">Check Lane</span><span class="badge badge-red">Monitor / Review</span>
+  </div>
+
+  <div class="rec-grid">
+    <div class="rec-card keep">
+      <div class="rec-tag">Keep &amp; Grow · Core Set</div>
+      <div class="rec-name">Brownie Batter 4pk</div>
+      <div class="rec-note">TDP 69% · #1 velocity anchor · protect at all costs</div>
+    </div>
+    <div class="rec-card keep">
+      <div class="rec-tag">Keep &amp; Grow · Core Set</div>
+      <div class="rec-name">Cookie Dough 4pk</div>
+      <div class="rec-note">TDP 66% · #2 velocity · strong incremental lift</div>
+    </div>
+    <div class="rec-card keep">
+      <div class="rec-tag">Keep &amp; Grow · Core Set</div>
+      <div class="rec-name">Coconut 4pk</div>
+      <div class="rec-note">TDP 57% · flavor diversity · loyal repeat buyers</div>
+    </div>
+    <div class="rec-card keep">
+      <div class="rec-tag">Keep &amp; Grow · Core Set</div>
+      <div class="rec-name">PB Cup 4pk</div>
+      <div class="rec-note">TDP 57% · strong velocity · peanut butter is perennial</div>
+    </div>
+    <div class="rec-card keep">
+      <div class="rec-tag">Keep · Core Set</div>
+      <div class="rec-name">Cookies N Cream 4pk</div>
+      <div class="rec-note">TDP 54% · also has 1pk trial vehicle</div>
+    </div>
+    <div class="rec-card watch">
+      <div class="rec-tag">Monitor · Core Set</div>
+      <div class="rec-name">Salted Caramel 4pk</div>
+      <div class="rec-note">TDP 42% · lowest in core set · vulnerable to new launch displacement</div>
+    </div>
+    <div class="rec-card launch">
+      <div class="rec-tag">Continue Ramp · P4 Launch</div>
+      <div class="rec-name">Cinnamon Cereal Milk 4pk</div>
+      <div class="rec-note">TDP 4–5% · competitor-cannibalizing · needs distribution push</div>
+    </div>
+    <div class="rec-card launch">
+      <div class="rec-tag">Ramp / Watch · P4 Launch</div>
+      <div class="rec-name">Rocky Road 4pk</div>
+      <div class="rec-note">TDP 12% · best ramp rate among P4 · mixed signal</div>
+    </div>
+    <div class="rec-card launch">
+      <div class="rec-tag">Limited Time Only</div>
+      <div class="rec-name">Mystery Flavor 4pk</div>
+      <div class="rec-note">TDP 7–16% · volatile by design · LTO mechanics</div>
+    </div>
+    <div class="rec-card launch">
+      <div class="rec-tag">Continue Ramp · P4 Launch</div>
+      <div class="rec-name">Banana Cream Pie 4pk</div>
+      <div class="rec-note">TDP 6% · competitor-taking at D4 level · extend trial</div>
+    </div>
+    <div class="rec-card check-lane">
+      <div class="rec-tag">Check Lane · Anchor</div>
+      <div class="rec-name">Brownie Batter 1pk</div>
+      <div class="rec-note">TDP 31% · proven trial vehicle · fully incremental</div>
+    </div>
+    <div class="rec-card check-lane">
+      <div class="rec-tag">Check Lane · Differentiation</div>
+      <div class="rec-name">Sour Peach 1pk</div>
+      <div class="rec-note">TDP 26% · distinct shopper profile · impulse-native</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── G: Price Sensitivity ── -->
+<div class="section">
+  <div class="section-heading">G &mdash; Price Sensitivity Context</div>
+  <div class="section-sub">MO_44 per-account OLS elasticity v2.1.0 · run 2026-07-01</div>
+
+  <div class="two-col">
+    <div>
+      <div class="callout callout-amber">
+        <strong>Meijer ε = &minus;0.489 (Moderately Elastic)</strong><br><br>
+        A 10% price increase at Meijer leads to roughly a 4.9% volume decline — meaningful but not hyper-sensitive. This is within the range where promotional pricing (temporary discounts, BOGOs) generates a measurable lift without permanently anchoring the shopper to a lower price expectation.<br><br>
+        <strong>Implication for assortment:</strong> BUILT's $9.65 ARP sits below Barebells ($10.07) and above Pure Protein / Perfect Bar. There is modest room to increase price without outsized volume loss, but a reduction below $9.00 would generate modest lift.
+      </div>
+    </div>
+    <div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:8px">Elasticity by Peer Brand (for context)</p>
+      <table class="data-table" style="font-size:12px">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th class="num">ε</th>
+            <th>Sensitivity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Meijer</td><td class="num">-0.489</td><td><span class="badge badge-amber">Moderate</span></td></tr>
+          <tr><td style="color:var(--muted);font-style:italic">(Other accounts available in Mo)</td><td class="num">—</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px">Per-account elasticity available for all SPINS accounts via Mo Price Elasticity suite (MO_44 v2.1.0). Ask Mo Chat for a specific retailer.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── H: Mo Capabilities ── -->
+<div class="section">
+  <div class="section-heading">H &mdash; How Mo Addresses These Questions</div>
+  <div class="section-sub">Current capabilities · ongoing monitoring · product roadmap notes</div>
+
+  <div class="capability-list">
+    <div class="cap-item">
+      <div class="cap-icon">📊</div>
+      <div class="cap-body">
+        <div class="cap-title">Cannibalization Suite (Cannibalization screen)</div>
+        <div class="cap-desc">Set focal UPC to any P4 2026 launch. Mo shows D4/D5 relationship map, cannibal_prob scores, confidence level, and donor velocity trends. The matrix above was generated directly from this engine (scored_cannibalization table, MO_55). Updated with each SPINS ingest.</div>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-icon">📈</div>
+      <div class="cap-body">
+        <div class="cap-title">Distribution Tracker (Retailer Summary → Customer Scorecard)</div>
+        <div class="cap-desc">TDP arc over time for each Meijer SKU. Filter by account = MEIJER. Shows weekly distribution ramp for P4 2026 launches — Cinnamon Cereal Milk from 0→5% TDP over 15 weeks is visible here in real time.</div>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-icon">💬</div>
+      <div class="cap-body">
+        <div class="cap-title">Mo Chat — Meijer-specific Q&amp;A</div>
+        <div class="cap-desc">Ask "What is BUILT's price elasticity at Meijer?" → ε = −0.489, Moderately Elastic. Ask "Which P4 2026 flavors are incremental at Meijer?" → Mo will answer from live SPINS data. Ask "How are fuel prices impacting BUILT demand?" → Mo provides FRED macro context with GASDESW/DDFUELUSGULF data.</div>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-icon">🔍</div>
+      <div class="cap-body">
+        <div class="cap-title">Mo Trends — Meijer Portfolio View</div>
+        <div class="cap-desc">Channel: <strong>CONVENTIONAL | MULTI OUTLET</strong>. Account: <strong>MEIJER</strong>. Select all BUILT brands. The Flavor Demand tile shows which flavor families hold share at Meijer vs. the broader category. See trends guidance below for exact product selections.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="trends-guide">
+    <h4>Mo Trends — Meijer Product Selection Guide</h4>
+
+    <div class="filter-row">
+      <span class="filter-label">Channel</span>
+      <span class="trends-chip highlight">CONVENTIONAL | MULTI OUTLET</span>
+      <span style="font-size:11px;color:rgba(255,255,255,.4);margin-left:4px">← most data; broadest Meijer view</span>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">Account</span>
+      <span class="trends-chip highlight">MEIJER</span>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">Brand</span>
+      <span class="trends-chip">BUILT SOUR PUFF</span>
+      <span class="trends-chip">BUILT PUFF</span>
+      <span class="trends-chip">BUILT BAR</span>
+      <span class="trends-chip">BUILT</span>
+    </div>
+
+    <div style="margin: 12px 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4)">Core Shelf View (established 4-pks)</div>
+    <div class="filter-row" style="flex-wrap:wrap">
+      <span class="filter-label">Products</span>
+      <span class="trends-chip">Brownie Batter (4 Pk) — 30380</span>
+      <span class="trends-chip">Cookie Dough (4 Pk) — 30558</span>
+      <span class="trends-chip">Coconut (4 Pk) — 30381</span>
+      <span class="trends-chip">PB Cup (4 Pk) — 30646</span>
+      <span class="trends-chip">Cookies N Cream (4 Pk) — 30581</span>
+      <span class="trends-chip">Salted Caramel (4 Pk) — 30577</span>
+    </div>
+
+    <div style="margin: 12px 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4)">P4 2026 Launch View</div>
+    <div class="filter-row" style="flex-wrap:wrap">
+      <span class="filter-label">Products</span>
+      <span class="trends-chip">Cinnamon Cereal Milk (4 Pk) — 30765</span>
+      <span class="trends-chip">Banana Cream Pie (4 Pk) — 30749</span>
+      <span class="trends-chip">Rocky Road (4 Pk) — 30696</span>
+      <span class="trends-chip">Mystery Flavor (4 Pk) — 30747</span>
+    </div>
+
+    <div style="margin: 12px 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4)">Check Lane / Singles View</div>
+    <div class="filter-row" style="flex-wrap:wrap">
+      <span class="filter-label">Products</span>
+      <span class="trends-chip">Brownie Batter 1pk — 30362</span>
+      <span class="trends-chip">Cookies N Cream 1pk — 30550</span>
+      <span class="trends-chip">Cookie Dough 1pk — 30333</span>
+      <span class="trends-chip">Sour Peach 1pk — 30651</span>
+      <span class="trends-chip">Sour Blue Razz 1pk — 30653</span>
+    </div>
+
+    <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.45)">
+      Product picker tip: search by UPC suffix (e.g., "30380") for unambiguous selection. Avoid searching flavor names alone — competitor variety packs with overlapping names will appear.
+    </div>
+  </div>
+
+  <div class="callout callout-blue" style="margin-top:18px">
+    <strong>Product roadmap note (for internal discussion):</strong> The difficulty finding "Brownie Batter 4pk" vs. "Built Bar Coconut &amp; Brownie Batter Variety Pack" in the Trends product picker suggests two near-term improvements worth scoping: (1) <em>Account quick-select</em> — when MEIJER is the active account filter, surface a "Load active Meijer SKUs" shortcut that pre-populates the picker with all 20 live UPCs, multi-select style; (2) <em>TDP badge in picker results</em> — display TDP% next to each product name so 30380 (TDP 69%) is immediately distinguishable from a low-distribution variant. Neither requires a new data model — both are front-end changes against existing SPINS data.
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<div class="report-footer">
+  <strong>Data source:</strong> SPINS MULO CRMA (CONVENTIONAL | MULTI OUTLET) · Meijer Corp · Jan 2025 – Sept 2026 · pulled via Mo / Apache Druid 2026-09-24.<br>
+  <strong>Models:</strong> Mo Cannibalization Engine MO_55 (scored_cannibalization table) · Elasticity MO_44 v2.1.0 (OLS per-account, run 2026-07-01).<br>
+  <strong>Confidence note:</strong> All P4 2026 cannibalization signals are Low confidence (&lt;20 weeks). D5 own-brand "Cannibalizing" flags at this confidence level indicate structural portfolio overlap, not confirmed demand theft. Revisit in 6–8 weeks for confirmatory signals.<br>
+  <strong>Internal use only.</strong> Not for distribution outside BUILT / Aevah. This is for BUILT and Mo project reference only. This is not for public access or consumption.
+</div>
