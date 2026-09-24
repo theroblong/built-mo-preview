@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 149: NS2 sell-in analysis expanded — dark retailer signals + sell-in × SPINS combination (2026-09-24)
+
+**Dark retailers (Winco/HEB/TJ's/Aldi) — more knowable than "just shipments":**
+NS2 has 3.5 years of weekly history. Key signals: velocity trend, new SKU adoption, distribution loss early warning (≥4 weeks no shipment), seasonal shape, pack mix, order cadence, and **trade promo-sell-in correlation** — NS2 has both deduction amounts and TotalBars, so we can measure whether promos drove more retailer orders. Forward-buy detection (spike + trough pattern) separates real demand from channel loading. Comparable-retailer SPINS proxy fills in demand shape.
+
+**SPINS retailers — sell-in layer unlocks additional signals on top of POS:**
+Channel inventory = sell-in − sell-through. OOS detection (BUILT shipped but SPINS dropped). Forward buy decomposition (sell-in spike without SPINS response = channel loading). Distribution expansion validation (first NS2 ship → first SPINS TDP week). Full trade ROI = NS2 deductions ÷ MO_73 lift.
+
+**Architecture rule:** Sell-in and sell-through are never combined in the same metric without an explicit label. Dark retailer figures always carry "Source: BUILT shipment data (sell-in). Retail sell-through not available."
+
+---
+
 ## README update 148: NS2 trade promo + pricing capabilities documented; MO_28 wMAPE 3.4% (2026-09-24)
 
 **Trade Promotion & Pricing — what's possible with Ebad's NS2 Built_EDW data:**
