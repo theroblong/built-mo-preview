@@ -6,6 +6,33 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 151: Full ML cycle documented — validation gate + report pipeline (2026-09-24)
+
+**The complete cycle has 3 post-P-series steps that were missing from the runbook.** After MO_10–MO_29, the cycle is NOT done — these steps are required before declaring the cycle complete:
+
+**1. Validation gate (MO_67 → MO_71)**
+
+| Script | Gate condition |
+|---|---|
+| MO_67 quantile calibration | q90 coverage ≥ 85% on holdout |
+| MO_67b recalibration | Run only if MO_67 gate fails |
+| MO_68 per-series drift | No new segments above drift threshold |
+| MO_69 residual structure | No systematic bias by retailer/quarter |
+| MO_71 distribution shift | TDP shift ≤ 150%; ARP shift ≤ 30% |
+
+**2. FP&A report pipeline (`./run_fpa_report.sh 2.4.0`)**  
+~22 scripts across 5 phases → `docs/built_demand_intelligence_report_v2.4.0.html`  
+Phases: data (MO_25/26/27/**MO_55**) → quarterly rollforward (MO_32B) → analysis charts (MO_33/34/35/37) → explainability (MO_38/40/43/44/47) → HTML chain (MO_36→MO_63) → TOC fix → version stamp.  
+**MO_55** (portfolio constraint) was not in the standalone P-series — it runs automatically here.
+
+**3. MO_76 macro feature ablation (experimental)**  
+Tests 20-signal EIA+FRED set vs. MO_53 champion 6.1% wMAPE. If improvement ≥ 0.3pp on holdout, add macro features to next retrain's feature set.
+
+**Full cycle order:** Q-series → P-series (MO_10→MO_29) → Validation (MO_67→MO_71) → `run_fpa_report.sh` → MO_76 ablation  
+wiki/19 updated with full sequence + validation gate spec. Memory updated.
+
+---
+
 ## README update 150: P-series MO_22–MO_29 complete — Sept 24 2026 cycle DONE (2026-09-24)
 
 **Full P-series MO_10–MO_29 complete.** Sept 24, 2026 cycle — all 20 scripts run with manual validate-and-submit protocol.
