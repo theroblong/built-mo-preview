@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 166: NS2 trade spend signal — Promotional Allowance already in shipment data (2026-09-25)
+
+Read `Shipment Data.sql` in full and found that NS2 already captures trade deductions via `i.fullname = 'Promotional Allowance'` rows, sign-flipped as negatives — no GL account mapping needed for Mo's core trade spend analysis. Critical finding: the SQL is hard-filtered to 4 data-dark customers only; Trade ROI (NS2 deductions ÷ MO_73 SPINS lift) requires extending the query to all BUILT customers. Two asks for today's meeting — Brian: confirm Promotional Allowance rows capture all trade deduction types; Ebad: remove the 4-retailer filter and extend to all customers. DimChartOfAccounts / FactTransactions path deferred to a Finance/GTN experience phase — it's a Finance analytics tool, not Mo's core need now. Updated `project_netsuite_schema.md` and `wiki/18`.
+
+---
+
 ## README update 165: Meeting list style — human-readable, actionable, collaborative (2026-09-25)
 
 Locked in the standard format for all BUILT cadence tracking lists after iterating through several versions of the Sept 25 agenda. Key rules: first names only on person headers; no reference codes (no AI-#); spell out every item in plain English; three sections per person (Done / Show+Demo / Still needed); include filenames and SQL queries inline so the list is immediately actionable; no blame language; collaborative tone throughout. Also clarified that NS2 schema deliveries from Ebad are sufficient for Mo's core use cases — the FK gap doesn't block Mo's specific queries. What's still missing is data, not schema: DimChartOfAccounts rows and GL trade spend code identification, both addressable in today's meeting. Saved in `memory/feedback_meeting_list_style.md`; style applies to all future cadence meeting prep lists.
