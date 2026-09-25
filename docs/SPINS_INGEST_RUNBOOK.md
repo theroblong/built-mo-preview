@@ -524,28 +524,58 @@ Full cycle ran Sept 24 2026. Findings:
 | ✅ | cannibalization_rate_forecast_weekly | 2026-12-06 | MO_21 | Current | — |
 | ✅ | competitor_pack_size_norms | 2026-09-24 | MO_23 | Current | — |
 | ✅ | new_product_ramp_monitor | 2026-09-06 | MO_24 | Current | — |
-| ⚠️ | retailer_sales_forecast | Old Apr–Jul data remains | MO_27 | **CONTAMINATED** | Kill Apr 26 – Aug 15 segments in Druid console (see below) |
+| ✅ | retailer_sales_forecast | 2026-12-06 | MO_27 | **FIXED Sept 25** | Disable-all + kill + re-ingest (see Fix below) |
 | ⚠️ | comparison_pool_prelaunch_baseline | 2026-07-19 | MO_22 | Stale + complex | See MO_22 note below |
 | ⚠️ | retailer_sales_tdp_velocity | 2026-07-09 | MO_64 | Not re-run Sept 24 | Re-run MO_64, then submit spec |
-| ⚠️ | retailer_sales_forecast_adj | 2026-07-19 | MO_27 variant | Stale | Needs investigation — no Sept 24 spec |
-| 🔴 | causal_impact_scores | Corrupt timestamps (year 5M+) | MO_72 | Data corrupt | Drop datasource; re-ingest via scripts/outputs/causal_impact_scores_ingest_spec.json |
+| ✅ | retailer_sales_forecast_adj | 2026-12-06 | MO_55 | **FIXED Sept 25** | Disable-all + kill + re-ingest; MO_55 now calls write_back() |
+| ✅ | causal_impact_scores | 2026-04-19 | MO_72 | **FIXED Sept 25** | Disable-all + kill all + re-ingest with ISO timestamps |
 
-### Fix: retailer_sales_forecast contamination
+### Fix: rolling forecast table contamination (retailer_sales_forecast + _adj)
 
-The table accumulated data from multiple pipeline runs (appendToExisting=False only removes segments in the NEW data's time range, leaving old segments outside that range untouched). After the Sept 25 submission, the table contains:
-- Apr 26 – Jul 19 (2,494 series): stale from a pre-August run
-- Aug 16 – Aug 30 (2,951 series): from an intermediate run
-- Sep 13 – Dec 6 (3,173 series): CURRENT (Sept 24 cycle)
+**Root cause:** `appendToExisting=False` in native batch ingest only replaces Druid segments in the NEW data's time range. Old segments outside that range survive untouched across any number of cycles. The tables had stale data from prior runs (Apr–Sep 2026) co-existing with the current Sep 13–Dec 6 cycle.
 
-**Fix — kill the stale segments via Druid console:**
+**What didn't work:** `DELETE /druid/coordinator/v1/datasources/{ds}/intervals/{interval}` returns 404 — the interval-level mark-unused endpoint is not available in this Druid deployment.
+
+**What worked — disable-all + kill + re-ingest (Sept 25 2026):**
+```python
+# From scripts/druid_cleanup_contamination.py — run this any time a rolling table is contaminated
+import requests, time, json
+from mo_druid_client import DRUID_HOST, _AUTH, _HEADERS
+
+# Step 1: Mark ALL segments as unused
+requests.delete(f"{DRUID_HOST}/druid/coordinator/v1/datasources/retailer_sales_forecast",
+                auth=_AUTH, headers=_HEADERS)
+time.sleep(2)
+
+# Step 2: Kill all unused segments
+requests.post(f"{DRUID_HOST}/druid/indexer/v1/task", auth=_AUTH, headers=_HEADERS,
+    json={"type": "kill", "dataSource": "retailer_sales_forecast",
+          "interval": "2026-04-01T00:00:00.000Z/2027-01-01T00:00:00.000Z"})
+time.sleep(5)
+
+# Step 3: Re-ingest clean data (appendToExisting=False in spec is fine — table is now empty)
+spec = json.load(open("outputs/retailer_sales_forecast_ingest_spec.json"))
+spec["spec"]["ioConfig"]["appendToExisting"] = False
+requests.post(f"{DRUID_HOST}/druid/indexer/v1/task", auth=_AUTH, headers=_HEADERS, json=spec)
 ```
-Druid UI → Datasources → retailer_sales_forecast → Kill unused segments
-Date range: 2026-04-26 to 2026-08-31
-Confirm kill task
-```
-After the kill completes, only the Sep 13 – Dec 6 (3,173 series) data remains. The API has no dedup — any stale segment that survives will show duplicate forecasts.
 
-**Prevent recurrence:** each pipeline run must use `REPLACE INTO OVERWRITE ALL` semantics for this table. The current `appendToExisting=False` only covers the new time range. Future fix: switch `druid_ingest_forecast.py` to submit an MSQ `REPLACE INTO "retailer_sales_forecast" OVERWRITE ALL` instead of native batch.
+After fix, both tables verified clean: **Sep 13–Dec 6, 3,173 series/week, 41,249 rows each.**
+
+**Prevent recurrence:** future pipeline runs should switch to MSQ `REPLACE INTO "retailer_sales_forecast" OVERWRITE ALL` instead of native batch. Until then, run the post-cycle audit checklist after every cycle and use `druid_cleanup_contamination.py` if stale segments are found.
+
+### Fix: causal_impact_scores timestamp corruption
+
+**Root cause:** PyArrow serializes `datetime64[ns]` columns as INT64 nanoseconds when not pre-converted to strings. Druid interprets INT64 values as epoch-milliseconds → year ~56,000,000 timestamps. These land in year-56M Druid segments outside any normal date range, so `appendToExisting=False` for the correct 2023–2026 data never touched them.
+
+**Fix (Sept 25 2026):** Disable entire datasource → kill all intervals (including year-56M) → re-ingest from the ISO-timestamp parquet already in S3:
+```python
+requests.delete(f"{DRUID_HOST}/druid/coordinator/v1/datasources/causal_impact_scores", ...)
+# kill interval: "1000-01-01T00:00:00.000Z/9999-12-31T00:00:00.000Z" covers year-56M segments
+# Re-ingest: scripts/outputs/causal_impact_scores_ingest_spec.json (ISO timestamps via mo_writeback.py)
+```
+After fix: 2023-12-17 → 2026-04-19, **500 rows**, all valid years.
+
+**Prevention:** `mo_writeback.py` `upload_parquet()` already serializes timestamp columns as ISO strings before writing to parquet. All scripts using `write_back()` are protected. Scripts that write parquet manually (without `write_back()`) must call `df[ts_col] = pd.to_datetime(df[ts_col], utc=True).dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")` before writing.
 
 ### MO_22 note: comparison_pool_prelaunch_baseline
 

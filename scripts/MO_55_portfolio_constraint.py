@@ -48,6 +48,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from datetime import datetime, timezone
 from mo_druid_client import query_druid
+from mo_writeback import write_back
 
 # ── Config ────────────────────────────────────────────────────────────────────
 OUTPUT_DIR       = os.path.join(os.path.dirname(__file__), "outputs")
@@ -484,6 +485,5 @@ if __name__ == "__main__":
     print(f"  Total units redistributed:     {total_redistributed:,.0f}")
     print(f"  As % of BUILT portfolio total: {pct_of_portfolio:.2f}%")
     print(f"  Adjusted forecast saved:       {ADJ_PARQUET}")
-    print(f"\nNext: review adjusted forecasts, then optionally upload to S3 and ingest")
-    print(f"      into Druid as 'retailer_sales_forecast_adj' datasource.")
-    print(f"      UI wire-up: SkuRetailerView forecast drawer can show both raw + adj.")
+    write_back(forecast_adj, "retailer_sales_forecast_adj", timestamp_col="__time")
+    print(f"\nNext: run druid_ingest_forecast_adj.py to submit spec to Druid.")
