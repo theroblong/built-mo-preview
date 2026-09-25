@@ -6,6 +6,14 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 164: Documentation process locked in — log everything, continuously (2026-09-24)
+
+Established the governing principle for all Mo/Aevah documentation: everything discussed, decided, or received goes into `wiki/18-built-aevah-cadence.md` and project memory immediately — not after the fact, not from recall. Async inputs (email, Teams, voice) get their own dated wiki section with verbatim quotes and extracted action items the same turn they arrive. Meeting preps are derived from wiki/18, never reconstructed from memory. Jason should not carry information in his head or audit documentation for accuracy.
+
+Updated `wiki/18` "How to use this page" with the async logging protocol and end-of-session routine. Saved feedback memories: `feedback_log_everything.md` and `feedback_meeting_prep_process.md`. The purpose is continuous improvement of Mo/Aevah as a client-serving product — not record-keeping for its own sake.
+
+---
+
 ## README update 163: Report output security + salesperson export direction (2026-09-24)
 
 Brian Cluster + Rob Long feedback after the Meijer cannibalization brief: HTML reports embed raw data as inline JS — forwarding to a retailer broker exposes competitor UPCs, Mo score probabilities, and internal SPINS numbers via view-source. Rob's framing: target users are salespeople and channel people; the packaged file must not contain anything critical.
