@@ -526,7 +526,7 @@ Full cycle ran Sept 24 2026. Findings:
 | ✅ | new_product_ramp_monitor | 2026-09-06 | MO_24 | Current | — |
 | ✅ | retailer_sales_forecast | 2026-12-06 | MO_27 | **FIXED Sept 25** | Disable-all + kill + re-ingest (see Fix below) |
 | ⚠️ | comparison_pool_prelaunch_baseline | 2026-07-19 | MO_22 | Stale + complex | See MO_22 note below |
-| ⚠️ | retailer_sales_tdp_velocity | 2026-07-09 | MO_64 | Not re-run Sept 24 | Re-run MO_64, then submit spec |
+| ✅ | retailer_sales_tdp_velocity | 2026-09-25 | MO_64 | **FIXED Sept 25** | Re-ran MO_64; 2,285 rows; appended to Jul 9 snapshot |
 | ✅ | retailer_sales_forecast_adj | 2026-12-06 | MO_55 | **FIXED Sept 25** | Disable-all + kill + re-ingest; MO_55 now calls write_back() |
 | ✅ | causal_impact_scores | 2026-04-19 | MO_72 | **FIXED Sept 25** | Disable-all + kill all + re-ingest with ISO timestamps |
 
