@@ -99,3 +99,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     write_back(out, "scored_cannibalization", timestamp_col="scored_at")
+    # IMPORTANT: write_back() uses appendToExisting=True by default.
+    # Always run druid_ingest_cannibal_score.py immediately after this script
+    # to replace (not append to) scored_cannibalization in Druid.
+    # Skipping that step accumulates duplicate runs (~92K rows per run).

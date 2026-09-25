@@ -428,6 +428,27 @@
     opacity: .5;
   }
 
+  /* ── Cannibalization heat map cells ── */
+  .hm-cell { font-size:12px; font-weight:700; padding:5px 9px; border-radius:4px; white-space:nowrap; text-align:center; }
+  .hm-teal   { background:var(--teal-light);   color:var(--teal);  }
+  .hm-amber  { background:var(--amber-light);  color:var(--amber); }
+  .hm-red    { background:var(--red-light);     color:var(--red);   }
+  .hm-grey   { background:var(--surface-2);    color:var(--muted); font-weight:500; }
+  .hm-na     { background:transparent;          color:var(--muted); font-weight:400; font-style:italic; }
+  .badge-displacer { background:#e0f2f0; color:#00695c; }
+  .badge-friction  { background:var(--amber-light); color:#b45309; }
+  .badge-builder   { background:var(--surface-2);    color:var(--text-light); }
+  :root[data-theme="dark"] .hm-teal,
+  :root:not([data-theme="light"]) .hm-teal  { background:#0d2e2b; color:#26a69a; }
+  :root[data-theme="dark"] .hm-amber,
+  :root:not([data-theme="light"]) .hm-amber { background:#2d1e0a; color:#f39c12; }
+  :root[data-theme="dark"] .hm-red,
+  :root:not([data-theme="light"]) .hm-red   { background:#2d0f0c; color:#e74c3c; }
+  :root[data-theme="dark"] .badge-displacer,
+  :root:not([data-theme="light"]) .badge-displacer { background:#0d2e2b; color:#26a69a; }
+  :root[data-theme="dark"] .badge-friction,
+  :root:not([data-theme="light"]) .badge-friction  { background:#2d1e0a; color:#f39c12; }
+
   @media print {
     .print-controls { display: none !important; }
     .section[data-hidden="true"] { display: none !important; }
@@ -449,7 +470,7 @@
     <span><strong>Channel</strong> Conventional &middot; Food (Meijer RMA)</span>
     <span><strong>Data</strong> SPINS weekly through Sept 2026</span>
     <span><strong>Generated</strong> Sept 24, 2026 &middot; Updated Sept 25</span>
-    <span><strong>Source</strong> Mo Cannibalization Engine MO_55 &middot; Elasticity MO_44 v2.1.0</span>
+    <span><strong>Source</strong> Mo Cannibalization Engine &middot; Mo Elasticity v2.1.0</span>
   </div>
 </div>
 
@@ -482,8 +503,8 @@ function toggleSection(id, cb) {
   </div>
   <div class="kpi-tile accent-teal">
     <div class="kpi-label">Core 4-pk TDP (RMA)</div>
-    <div class="kpi-value">&ge;93%</div>
-    <div class="kpi-sub">Near-full dist. all 5 core SKUs</div>
+    <div class="kpi-value">86–94%</div>
+    <div class="kpi-sub">Current L4W avg · Peak 93–97%</div>
   </div>
   <div class="kpi-tile">
     <div class="kpi-label">SKUs at Meijer RMA</div>
@@ -619,7 +640,7 @@ function toggleSection(id, cb) {
   </div>
 
   <div class="callout callout-teal" style="margin-top:14px" contenteditable="true">
-    <strong>Distribution story:</strong> All 5 core SKUs are at near-full distribution in Meijer RMA — 93–97% TDP means BUILT is in virtually every Meijer store. Cookie Dough Chunk leads velocity at ~1,230 units/week, followed by Brownie Batter at ~1,198. Coconut, PB Cup, and Cookies N Cream trail at 700–800 units/week, suggesting either a pricing or planogram position opportunity. Note: Salted Caramel is not confirmed in the Meijer FOOD RMA dataset.
+    <strong>Distribution story:</strong> All 5 core SKUs are at near-full distribution in Meijer RMA — current L4W avg TDP is 89–94%, with peak TDP on record at 93–97%, confirming BUILT is in virtually every Meijer store. Cookie Dough Chunk leads velocity at ~1,230 units/week, followed by Brownie Batter at ~1,198. Coconut, PB Cup, and Cookies N Cream trail at 700–800 units/week, suggesting either a pricing or planogram position opportunity. Note: Salted Caramel is not confirmed in the Meijer FOOD RMA dataset.
   </div>
 </div>
 
@@ -681,94 +702,118 @@ function toggleSection(id, cb) {
 <!-- ── D: Cannibalization Analysis ── -->
 <div class="section" id="sec-d">
   <div class="section-heading">D &mdash; Cannibalization Analysis &mdash; Meijer RMA</div>
-  <div class="section-sub">Mo Cannibalization Engine MO_55 · CONVENTIONAL | FOOD · Meijer Corp RMA · 211 scored pairs · 99 cannibalizing (46.9%) · sorted by competitive breadth</div>
+  <div class="section-sub">Mo Cannibalization Engine · CONVENTIONAL | FOOD · Meijer Corp RMA · deduplicated unique pairs · 46.9% overall cannibal rate · All confidence: Low (data maturity, not model uncertainty)</div>
 
-  <!-- Cross-retailer comparison -->
-  <div style="margin-bottom:20px">
-    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:10px">Cross-Retailer Cannibalization Rate — RMA Level</p>
-    <div style="display:flex;flex-direction:column;gap:7px;max-width:480px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;min-width:110px;color:var(--text-light)">Target</span>
-        <div style="flex:1;height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:54.9%;height:100%;background:var(--teal);border-radius:3px"></div></div>
-        <span style="font-size:12px;font-weight:600;min-width:38px;text-align:right;font-variant-numeric:tabular-nums">54.9%</span>
+  <!-- ── Cross-retailer summary (Grocery RMA) ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px" class="retailer-compare-grid">
+
+    <div>
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:10px">Overall Cannibal Rate — Grocery RMA (CONVENTIONAL | FOOD)</p>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;min-width:90px;color:var(--text-light)">Target</span>
+          <div style="flex:1;height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:54.9%;height:100%;background:var(--teal);border-radius:3px"></div></div>
+          <span style="font-size:12px;font-weight:600;min-width:38px;text-align:right;font-variant-numeric:tabular-nums">54.9%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;font-weight:700;min-width:90px;color:var(--text)">Meijer ★</span>
+          <div style="flex:1;height:10px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:46.9%;height:100%;background:var(--amber);border-radius:3px"></div></div>
+          <span style="font-size:13px;font-weight:700;min-width:38px;text-align:right;font-variant-numeric:tabular-nums;color:var(--amber)">46.9%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;min-width:90px;color:var(--text-light)">Kroger</span>
+          <div style="flex:1;height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:43.0%;height:100%;background:var(--teal);border-radius:3px"></div></div>
+          <span style="font-size:12px;font-weight:600;min-width:38px;text-align:right;font-variant-numeric:tabular-nums">43.0%</span>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;min-width:110px;color:var(--text-light)">Walmart</span>
-        <div style="flex:1;height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:54.5%;height:100%;background:var(--teal);border-radius:3px"></div></div>
-        <span style="font-size:12px;font-weight:600;min-width:38px;text-align:right;font-variant-numeric:tabular-nums">54.5%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;font-weight:700;min-width:110px;color:var(--text)">Meijer ★</span>
-        <div style="flex:1;height:10px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:46.9%;height:100%;background:var(--amber);border-radius:3px"></div></div>
-        <span style="font-size:13px;font-weight:700;min-width:38px;text-align:right;font-variant-numeric:tabular-nums;color:var(--amber)">46.9%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;min-width:110px;color:var(--text-light)">Kroger</span>
-        <div style="flex:1;height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:43.0%;height:100%;background:var(--teal);border-radius:3px"></div></div>
-        <span style="font-size:12px;font-weight:600;min-width:38px;text-align:right;font-variant-numeric:tabular-nums">43.0%</span>
-      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">% of scored focal–donor pairs where Mo determined demand flows from a competitor <em>toward</em> BUILT · higher = more competitive displacement</p>
     </div>
-    <p style="font-size:11px;color:var(--muted);margin-top:7px">% of scored BUILT focal–donor pairs where Mo determined demand is flowing from a competitor toward BUILT · higher = more competitive displacement at that retailer</p>
-  </div>
 
-  <!-- Competitive displacement table — sorted by breadth (# brands displaced) -->
+    <div>
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:10px">Overall Cannibal Rate — Mass Merch RMA (CONVENTIONAL | MASS MERCH)</p>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;min-width:90px;color:var(--text-light)">Walmart</span>
+          <div style="flex:1;height:7px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:54.5%;height:100%;background:var(--teal);border-radius:3px"></div></div>
+          <span style="font-size:12px;font-weight:600;min-width:38px;text-align:right;font-variant-numeric:tabular-nums">54.5%</span>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">Mass Merch uses a different RMA geography (MASS MERCH vs FOOD) — direct apples-to-apples comparison with Grocery accounts</p>
+    </div>
+  </div>
+  <style>@media (max-width:650px) { .retailer-compare-grid { grid-template-columns:1fr !important; } }</style>
+
+  <!-- ── Per-SKU Cannibalization Profile ── -->
+  <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:10px">Per-SKU Cannibalization Profile — Meijer RMA (Deduplicated)</p>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+    <strong>Cross-brand rate</strong> = fraction of competitor flavor-match pairs where Mo scores BUILT as displacing the competitor.
+    <strong>Own-brand rate</strong> = fraction of BUILT-vs-BUILT pairs (portfolio friction).
+    Higher cross-brand = stronger competitive displacement; higher own-brand = more internal SKU friction.
+  </p>
   <div class="table-wrap">
     <table class="data-table">
       <thead>
         <tr>
-          <th>BUILT Focal SKU</th>
-          <th>Competitor brands drawn from (D4 — same flavor)</th>
-          <th class="num">Cannibal score</th>
-          <th class="num">Brands displaced</th>
-          <th>Verdict</th>
+          <th>BUILT SKU</th>
+          <th class="num">Cross-brand rate<br><span style="font-weight:400;font-size:10px">cannibalizing / total pairs</span></th>
+          <th class="num">Own-brand rate<br><span style="font-weight:400;font-size:10px">friction / total pairs</span></th>
+          <th>Top competitor donors displaced</th>
+          <th>Profile</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>Coconut 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30381</span></td>
-          <td style="font-size:12px">Atkins Endulge Choc Coconut · Larabar Coconut Cream Pie · Kind Core Almond &amp; Coconut (×2 SKUs) · Kind Drk Choc Almond Coconut · GoMacro Cnut Almond Btr (×2) · RXBAR Coconut Choc · Ratio Keto Coconut Almond · Perfect Bar Coconut PB · Bobo's Oat Bar Coconut · Bob's Red Mill PB Coconut</td>
-          <td class="num" style="white-space:nowrap"><strong>99.97–99.99%</strong><br><span style="font-size:10px;color:var(--muted)">Low confidence (maturity)</span></td>
-          <td class="num"><span style="font-size:18px;font-weight:700;color:var(--teal)">10</span></td>
-          <td><span class="badge badge-teal">Cannibalizing</span></td>
-        </tr>
-        <tr>
-          <td><strong>PB Cup 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30646</span></td>
-          <td style="font-size:12px">Alani Nu PB &amp; Jelly · Met-rx Big 100 PB Pretzel · Robert Irvine Crunch Fit PB · Atkins Advantage PB Granola · Kind Soft Baked Squares PB · Unite Food PB &amp; Jelly</td>
-          <td class="num" style="white-space:nowrap"><strong>99.95–99.99%</strong><br><span style="font-size:10px;color:var(--muted)">Low confidence (maturity)</span></td>
-          <td class="num"><span style="font-size:18px;font-weight:700;color:var(--teal)">6</span></td>
-          <td><span class="badge badge-teal">Cannibalizing</span></td>
-        </tr>
-        <tr>
-          <td><strong>Cookie Dough Chunk 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30558</span></td>
-          <td style="font-size:12px">Robert Irvine Ftcrnch Cookie Dough · Mid-Day Squares Cookie Dough<br><span style="color:var(--amber);font-size:11px">+ own-brand: Coconut 4pk &amp; Brownie Batter 4pk (D5)</span></td>
-          <td class="num" style="white-space:nowrap"><strong>99.93–99.99%</strong><br><span style="font-size:10px;color:var(--muted)">Low confidence (maturity)</span></td>
-          <td class="num"><span style="font-size:18px;font-weight:700;color:var(--teal)">2</span><br><span style="font-size:10px;color:var(--amber)">+2 own</span></td>
-          <td><span class="badge badge-teal">Cannibalizing</span></td>
+          <td class="num"><span class="hm-cell hm-teal">84.6%</span><br><span style="font-size:11px;color:var(--muted)">11 of 13 pairs</span></td>
+          <td class="num"><span class="hm-cell hm-na">—</span><br><span style="font-size:11px;color:var(--muted)">0 own-brand pairs</span></td>
+          <td style="font-size:12px">Atkins · Larabar · Kind (×3) · GoMacro (×2) · RXBAR · Ratio Keto · Perfect Bar</td>
+          <td><span class="badge badge-displacer">Competitor Displacer</span></td>
         </tr>
         <tr>
           <td><strong>Brownie Batter 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30380</span></td>
+          <td class="num"><span class="hm-cell hm-teal">100%</span><br><span style="font-size:11px;color:var(--muted)">1 of 1 pair†</span></td>
+          <td class="num"><span class="hm-cell hm-na">—</span><br><span style="font-size:11px;color:var(--muted)">0 own-brand pairs</span></td>
           <td style="font-size:12px">Think! HiPro Brownie Crunch Bars</td>
-          <td class="num" style="white-space:nowrap"><strong>99.97–99.99%</strong><br><span style="font-size:10px;color:var(--muted)">Low confidence (maturity)</span></td>
-          <td class="num"><span style="font-size:18px;font-weight:700;color:var(--teal)">1</span></td>
-          <td><span class="badge badge-teal">Cannibalizing</span></td>
+          <td><span class="badge badge-displacer">Competitor Displacer</span></td>
         </tr>
         <tr>
-          <td><strong>Cookies N Cream 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30581</span></td>
-          <td style="font-size:12px"><span style="color:var(--amber)">No cross-brand competition scored at Meijer RMA</span><br><span style="font-size:11px;color:var(--muted)">Own-brand: draws from Brownie Batter 4pk (D5)</span></td>
-          <td class="num" style="white-space:nowrap"><strong>99.97–99.98%</strong><br><span style="font-size:10px;color:var(--muted)">Low confidence (maturity)</span></td>
-          <td class="num" style="color:var(--muted)">0 ext</td>
-          <td><span class="badge badge-amber">Internal only</span></td>
+          <td><strong>Cookie Dough Chunk 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30558</span></td>
+          <td class="num"><span class="hm-cell hm-amber">50%</span><br><span style="font-size:11px;color:var(--muted)">2 of 4 pairs</span></td>
+          <td class="num"><span class="hm-cell hm-amber">75%</span><br><span style="font-size:11px;color:var(--muted)">3 of 4 pairs</span></td>
+          <td style="font-size:12px">Robert Irvine Crunch · Mid-Day Squares<br><span style="color:var(--amber)">Own: Coconut, Brownie Batter, PB Cup</span></td>
+          <td><span class="badge badge-friction">Portfolio Friction</span></td>
+        </tr>
+        <tr>
+          <td><strong>PB Cup 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30646</span></td>
+          <td class="num"><span class="hm-cell hm-grey">12.5%</span><br><span style="font-size:11px;color:var(--muted)">6 of 48 pairs</span></td>
+          <td class="num"><span class="hm-cell hm-na">—</span><br><span style="font-size:11px;color:var(--muted)">0 of 3 pairs</span></td>
+          <td style="font-size:12px">Alani Nu · Met-rx · Robert Irvine · Atkins · Kind · Unite Food<br><span style="color:var(--teal);font-size:11px">42 PB-adjacent competitor pairs scored Incremental — new demand</span></td>
+          <td><span class="badge badge-builder">Category Builder</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cookies &amp; Cream 4pk</strong><br><span style="font-size:11px;color:var(--muted)">08-40229-30581</span></td>
+          <td class="num"><span class="hm-cell hm-na">N/A</span><br><span style="font-size:11px;color:var(--muted)">0 cross-brand pairs</span></td>
+          <td class="num"><span class="hm-cell hm-grey">33.3%</span><br><span style="font-size:11px;color:var(--muted)">1 of 3 pairs</span></td>
+          <td style="font-size:12px"><span style="color:var(--muted)">No competitor flavor matches scored at Meijer RMA</span><br><span style="color:var(--amber);font-size:11px">Own: draws from Brownie Batter 4pk</span></td>
+          <td><span class="badge badge-builder">Category Builder</span></td>
         </tr>
       </tbody>
     </table>
   </div>
+  <p style="font-size:11px;color:var(--muted);margin-top:6px">† Brownie Batter 100% rate is based on a single scored pair (small n) — directionally strong but not statistically robust. · All pairs: Low confidence (data maturity ≤20 wks)</p>
 
-  <div class="callout callout-amber" style="margin-top:14px">
-    <strong>Reading the cannibal score vs. confidence:</strong> The score (99.9x%) is Mo's model probability that demand flows from the donor brand toward BUILT — it is consistently high because these flavor pairings are structurally competitive. <em>"Low confidence"</em> is a separate field tracking <strong>data maturity</strong>: how many weeks of clean Meijer FOOD RMA data Mo has accumulated. All Meijer RMA data is still below Mo's 20-week full-confidence threshold. As more RMA weeks accumulate, the confidence label will upgrade; the model probability itself will not change materially for these established flavor relationships.
+  <!-- PB Cup spotlight -->
+  <div style="background:var(--teal-light);border-left:3px solid var(--teal);border-radius:0 6px 6px 0;padding:12px 14px;margin-top:16px">
+    <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:5px">Spotlight: PB Cup 4pk — Meijer vs. Walmart</p>
+    <p style="font-size:13px;line-height:1.6">At <strong>Walmart</strong> (Mass Merch RMA), PB Cup shows a <strong>47% cross-brand cannibal rate</strong> — taking significant share from competitors. At <strong>Meijer</strong>, that rate is only <strong>12.5%</strong>, with 42 of 48 competitor pairs scoring as <em>Incremental</em>. This means PB Cup is generating genuinely new demand at Meijer — customers buying it who would not have bought a competing bar — making it a category-building SKU at this account specifically.</p>
+  </div>
+
+  <div class="callout callout-amber" style="margin-top:16px">
+    <strong>Reading the scores:</strong> The cannibal model probability (99.9x%) reflects structural flavor competition — it is high because these pairings are inherently competitive product substitutes. <em>"Low confidence"</em> is a separate data-maturity flag tracking how many weeks of Meijer FOOD RMA data have accumulated. All 5 core SKUs are still below Mo's 20-week full-confidence threshold. The model direction (cannibalizing vs. incremental) will not change materially as more weeks accumulate, but the confidence label will upgrade.
   </div>
 
   <div class="callout callout-teal" style="margin-top:10px" contenteditable="true">
-    <strong>Key takeaway:</strong> Coconut 4pk is BUILT's #1 competitive weapon at Meijer — it is drawing demand away from 10 distinct competitor brands, the broadest competitive displacement of any SKU in the portfolio. PB Cup is #2 with 6 brands. These two SKUs represent the strongest argument for expanded distribution at Meijer: their growth is not at BUILT's own expense, it is coming from the shelf competition. Meijer's 46.9% cannibalization rate sits above Kroger (43.0%) and below Target (54.9%), indicating more incremental category growth at Meijer relative to Target — a positive signal for the distribution expansion conversation.
+    <strong>Key takeaway:</strong> Coconut 4pk is BUILT's top competitive weapon at Meijer: 84.6% cross-brand displacement rate, drawing from 11 distinct competitor brands with no own-brand friction. PB Cup tells the opposite and more powerful story — it is a category builder at Meijer, with only 12.5% cross-brand displacement and 42 of 48 competitive pairs generating new demand. Cookie Dough carries the most internal friction (75% own-brand rate) and warrants the closest assortment attention. Meijer's overall 46.9% rate sits above Kroger (43.0%), consistent with a healthy — not over-competitive — growth story.
   </div>
 </div>
 
