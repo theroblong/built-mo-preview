@@ -360,6 +360,17 @@ SELECT COUNT(*) FROM "ml_training_features";
 -- Baseline: ~60,695 rows (2026-06-08); will grow with new launch events and new weeks
 ```
 
+**⛔ MANDATORY gate after Q6 — do not proceed to P-series until this passes:**
+```sql
+SELECT
+  MAX(__time)                          AS edw_latest_week,
+  (SELECT MAX(__time) FROM "built_filtered_weekly") AS spins_latest_week
+FROM "event_detection_weekly"
+```
+`edw_latest_week` must be within 14 days of `spins_latest_week`. If the gap is larger, Q6 failed or was skipped — stop, diagnose, and re-run Q6 before continuing.
+
+Background: On 2026-09-25, Q6 was not re-run after a SPINS ingest. `event_detection_weekly` remained stale at 2026-04-12 while `built_filtered_weekly` was current through Sept 2026. This caused sparklines, cannibal rates, ramp monitor, and forecast pipeline to all silently serve stale data in a client demo.
+
 ---
 
 ## Part 4 — P-Series: Python ML Retrain and Score (Jason)
@@ -384,12 +395,32 @@ MO_21  → cannibalization_rate_forecast_weekly  (→ Druid write-back)
 
 **For each write-back:** Review the printed ingest spec, then POST it to Druid (or use the Druid console). The spec uses `appendToExisting: true`.
 
+**⚠️ MO_12 reads `event_detection_weekly`.** If Q6 was skipped or stale, the event detector model will be undertrained on incomplete data. Always confirm the Q6 gate passed before running MO_12.
+
+**⚠️ MO_19 reads `event_detection_weekly`.** Same dependency — stale Q6 = stale cannibal rates.
+
 **After MO_13, verify coverage:**
 ```sql
 SELECT COUNT(*) FROM "scored_cannibalization"
 -- Baseline: scored combinations exist for ~48% of focal/donor pairs
 -- (lower for new-launch SKUs due to 8-week data maturity gate in Q5)
 ```
+
+### Forecast pipeline (MO_22–MO_27, MO_46, MO_55) — run after MO_10–MO_21
+
+These steps were historically omitted from the P-series checklist and were missed in the Sept 24 2026 cycle. They are **required** on every SPINS ingest that extends the date range.
+
+```
+MO_22  → comparison_pool_prelaunch_baseline  (reads event_detection_weekly)
+MO_24  → new_product_ramp_monitor            (reads event_detection_weekly)
+MO_46  → rolling_signals_weekly.parquet      (reads event_detection_weekly; input to MO_25)
+MO_25  → retailer_sales_weekly.parquet       (reads event_detection_weekly + MO_46 output)
+MO_26  → forecast model retrain              (reads MO_25 output)
+MO_27  → retailer_sales_forecast             (→ Druid write-back; drives SKU View sparklines + drawer)
+MO_55  → portfolio constraint scoring        (reads event_detection_weekly)
+```
+
+**⛔ `druid_ingest_forecast.py` has `appendToExisting=False` hardcoded — this wipes forecast history on every run.** Use `mo_writeback.py` instead, which enforces `appendToExisting=True`. Do not use `druid_ingest_forecast.py` until this is fixed.
 
 ---
 
