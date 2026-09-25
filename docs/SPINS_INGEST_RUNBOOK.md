@@ -420,7 +420,7 @@ MO_27  → retailer_sales_forecast             (→ Druid write-back; drives SKU
 MO_55  → portfolio constraint scoring        (reads event_detection_weekly)
 ```
 
-**⛔ `druid_ingest_forecast.py` has `appendToExisting=False` hardcoded — this wipes forecast history on every run.** Use `mo_writeback.py` instead, which enforces `appendToExisting=True`. Do not use `druid_ingest_forecast.py` until this is fixed.
+**Note:** `druid_ingest_forecast.py` uses `appendToExisting=False` intentionally. `retailer_sales_forecast` is a rolling 13-week forward window replaced each cycle — the API has no dedup logic, so appending would accumulate duplicate forecast rows for overlapping weeks. MO_27's `write_back()` generates the spec but does not auto-submit; use `druid_ingest_forecast.py` to submit it.
 
 ---
 
