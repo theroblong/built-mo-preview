@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 165: Meeting list style — human-readable, actionable, collaborative (2026-09-25)
+
+Locked in the standard format for all BUILT cadence tracking lists after iterating through several versions of the Sept 25 agenda. Key rules: first names only on person headers; no reference codes (no AI-#); spell out every item in plain English; three sections per person (Done / Show+Demo / Still needed); include filenames and SQL queries inline so the list is immediately actionable; no blame language; collaborative tone throughout. Also clarified that NS2 schema deliveries from Ebad are sufficient for Mo's core use cases — the FK gap doesn't block Mo's specific queries. What's still missing is data, not schema: DimChartOfAccounts rows and GL trade spend code identification, both addressable in today's meeting. Saved in `memory/feedback_meeting_list_style.md`; style applies to all future cadence meeting prep lists.
+
+---
+
 ## README update 164: Documentation process locked in — log everything, continuously (2026-09-24)
 
 Established the governing principle for all Mo/Aevah documentation: everything discussed, decided, or received goes into `wiki/18-built-aevah-cadence.md` and project memory immediately — not after the fact, not from recall. Async inputs (email, Teams, voice) get their own dated wiki section with verbatim quotes and extracted action items the same turn they arrive. Meeting preps are derived from wiki/18, never reconstructed from memory. Jason should not carry information in his head or audit documentation for accuracy.

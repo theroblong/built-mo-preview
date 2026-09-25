@@ -421,13 +421,37 @@
       <li class="agenda-item">
         <span class="agenda-num">1</span>
         <div class="agenda-body">
-          <div class="agenda-title">Current data model overview — three-tier recap</div>
-          <div class="agenda-detail">• SPINS: ~80 retailers, full POS, full suite<br>• Circana CRX: Costco only, BUILT-only data<br>• NS2: WinCo/HEB/TJ's/Aldi — ships/week velocity proxy</div>
+          <div class="agenda-title">Data model review — three-tier + GL chain</div>
+          <div class="agenda-detail">• SPINS (~80 retailers) → Circana CRX (Costco) → NS2 (WinCo/HEB/TJ's/Aldi)<br>• DimChartOfAccounts received Sept 22 — AccountNumber + AccountType schema in hand<br>• One ask (AI-18 GL codes) unlocks Trade ROI + Price Waterfall across all tiers</div>
         </div>
-        <div class="agenda-time">3 min</div>
+        <div class="agenda-time">5 min</div>
       </li>
       <li class="agenda-item">
         <span class="agenda-num">2</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Demo — Meijer account brief</div>
+          <div class="agenda-detail">• Pull up <code>meijer_cannibalization_brief.html</code> — 20 UPCs, P4 2026 launches, check lane analysis, ε=−0.489<br>• Confirm which sections Brian wants retailer-visible vs. internal-only (broker meeting Monday Sept 29)<br>• Get direction on contenteditable + section toggles build</div>
+        </div>
+        <div class="agenda-time">8 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">3</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Demo — Mo Trends</div>
+          <div class="agenda-detail">• Competitive dashboard — brand filter, SPINS universe, flavor pickers<br>• Pack Crossover view (chip nowrap, annotation bottom-stack, x-axis visible)<br>• FRED macro context tile (grocery sales YoY, 194-week dynamic lookback)</div>
+        </div>
+        <div class="agenda-time">5 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">4</span>
+        <div class="agenda-body">
+          <div class="agenda-title">Demo — Portfolio health + Dreamwich triage</div>
+          <div class="agenda-detail">• Pull up <code>mockups/brian_sku_portfolio_response.html</code> — account readiness, over-SKU'd accounts, Dreamwich two-bucket framework<br>• Confirm framing matches what Brian needs for internal decision-making</div>
+        </div>
+        <div class="agenda-time">8 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">5</span>
         <div class="agenda-body">
           <div class="agenda-title">ML cycle results — headlines for Brian</div>
           <div class="agenda-detail">• P-series ✓ Sept 24; cannib/elasticity/forecast all refreshed<br>• 49-wk backtest: 5.2% vs. 39.7% naive → ~$34.6M ROI at $1M/pp<br>• Connor/Jeff can verify against actuals</div>
@@ -435,55 +459,15 @@
         <div class="agenda-time">3 min</div>
       </li>
       <li class="agenda-item">
-        <span class="agenda-num">3</span>
-        <div class="agenda-body">
-          <div class="agenda-title">Pricing + promotional optimization — what Aevah can do</div>
-          <div class="agenda-detail">• Most capabilities already built (see table below)<br>• DimChartOfAccounts schema received Sept 22 — has AccountNumber + AccountType<br>• One unlock: AI-18 — which GL accounts = scan allowances / off-invoice / billbacks?</div>
-        </div>
-        <div class="agenda-time">8 min</div>
-      </li>
-      <li class="agenda-item">
-        <span class="agenda-num">4</span>
-        <div class="agenda-body">
-          <div class="agenda-title">NS2 shipment data status (Ebad)</div>
-          <div class="agenda-detail">• Shipment Data.sql delivered Sept 22 — TotalBars + CostPerBar formulas included ✓<br>• UPC via SPS cols (custcol_sps_upccasecode) ✓; DimItem schema in Sales Cube ✓<br>• Ready to load into Druid (AI-19 — next step)</div>
-        </div>
-        <div class="agenda-time">5 min</div>
-      </li>
-      <li class="agenda-item">
-        <span class="agenda-num">5</span>
-        <div class="agenda-body">
-          <div class="agenda-title">Dreamwich triage — Brian's Q3</div>
-          <div class="agenda-detail">• Two buckets: incremental (low SKU count, strong velocity, low cannib) vs. trade-out (saturated; identify weakest SKU)<br>• Answerable now from E2a + E1 — no new model<br>• Post-launch: actuals sharpen triage</div>
-        </div>
-        <div class="agenda-time">5 min</div>
-      </li>
-      <li class="agenda-item">
         <span class="agenda-num">6</span>
         <div class="agenda-body">
-          <div class="agenda-title">Finance DB / Sales Cube (AI-12) — received ✓</div>
-          <div class="agenda-detail">• 34 Finance views + Sales Cube star schema delivered Sept 22 ✓<br>• DimChartOfAccounts is in schema — AccountNumber, AccountType present<br>• Next: load into Druid; confirm AI-18 GL codes for trade spend</div>
+          <div class="agenda-title">NS2 data status + AI asks (Ebad)</div>
+          <div class="agenda-detail">• AI-15/16/17/12 all received Sept 22 ✓ — shipment SQL, UPC fix, customer dim, Finance schema<br>• AI-18 (new): run <code>SELECT AccountNumber, Name, FullName, AccountType FROM DimChartOfAccounts</code><br>• AI-19: ready to load NS2 → Druid once connection confirmed</div>
         </div>
-        <div class="agenda-time">2 min</div>
+        <div class="agenda-time">5 min</div>
       </li>
       <li class="agenda-item">
         <span class="agenda-num">7</span>
-        <div class="agenda-body">
-          <div class="agenda-title">Dreamwich triage + SKU portfolio questions — walk Brian through the response doc</div>
-          <div class="agenda-detail">• Brian's Sept 15 Qs: account readiness / over-SKU'd accounts / Dreamwich triage — all answered in <code>mockups/brian_sku_portfolio_response.html</code><br>• Walk through the two-bucket framework (incremental vs. trade-out) with actual account data<br>• Confirm the framing matches what he needs for internal decision-making</div>
-        </div>
-        <div class="agenda-time">8 min</div>
-      </li>
-      <li class="agenda-item">
-        <span class="agenda-num">8</span>
-        <div class="agenda-body">
-          <div class="agenda-title">Meijer brief + report output format — Brian + Rob's feedback</div>
-          <div class="agenda-detail">• Brian: editable PDF, modular sections (lock charts, editable takeaways, include/exclude sections per audience)<br>• Rob: security concern — HTML embeds raw data; view-source exposes internal Mo scores, competitor UPCs, SPINS numbers if forwarded to Meijer broker<br>• Target users = salespeople / channel people exporting to retailers<br>• Build plan: contenteditable takeaways + section toggles + print/export CSS (Retailer View strips internal data); Monday deadline<br>• Q: confirm which sections Brian wants retailer-visible vs. internal-only</div>
-        </div>
-        <div class="agenda-time">8 min</div>
-      </li>
-      <li class="agenda-item">
-        <span class="agenda-num">9</span>
         <div class="agenda-body">
           <div class="agenda-title">Timeline — mid/late October external demo</div>
           <div class="agenda-detail">• Brian confirmed: mid/late Oct (target Oct 22–31) to show other potential customers<br>• Brian happy with pace — no acceleration pressure<br>• Q: which screens does Brian want highlighted?</div>
@@ -686,6 +670,7 @@
           <tr><td><code>AI-15</code></td><td><strong>UPC field fix</strong> — updated SQL uses SPS UPC cols (<code>custcol_sps_upccasecode</code>, <code>custcol_sps_gtin</code>)</td><td><span class="badge badge-done">Received Sept 22</span></td></tr>
           <tr><td><code>AI-17</code></td><td><strong>Dimension tables</strong> — CustomerDim.csv ✓; DimItem in Sales Cube schema (Flavor, ItemType, Bars/case)</td><td><span class="badge badge-done">Received</span></td></tr>
           <tr><td><code>AI-12</code></td><td><strong>Finance DB schema</strong> — 34 Finance views + Sales Cube star schema delivered (FinanceViewsMarkdown.md + Sales_Retail_Cube_Schema_Documentation.md)</td><td><span class="badge badge-done">Received Sept 22</span></td></tr>
+          <tr><td><code>AI-18</code></td><td><strong>DimChartOfAccounts data pull</strong> — <code>SELECT AccountNumber, Name, FullName, AccountType FROM DimChartOfAccounts ORDER BY AccountNumber</code>; share output so we can map GL trade spend codes</td><td><span class="badge badge-open">Ask today</span></td></tr>
           <tr><td><code>AI-13</code></td><td><strong>NS→NS2 transition glossary</strong> — field definitions; Oracle glossary flagged as "suspect"</td><td><span class="badge badge-open">Open</span></td></tr>
         </tbody>
       </table>
