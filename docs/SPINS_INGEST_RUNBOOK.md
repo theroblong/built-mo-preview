@@ -525,7 +525,7 @@ Full cycle ran Sept 24 2026. Findings:
 | ✅ | competitor_pack_size_norms | 2026-09-24 | MO_23 | Current | — |
 | ✅ | new_product_ramp_monitor | 2026-09-06 | MO_24 | Current | — |
 | ✅ | retailer_sales_forecast | 2026-12-06 | MO_27 | **FIXED Sept 25** | Disable-all + kill + re-ingest (see Fix below) |
-| ⚠️ | comparison_pool_prelaunch_baseline | 2026-07-19 | MO_22 | Stale + complex | See MO_22 note below |
+| ✅ | comparison_pool_prelaunch_baseline | 2026-07-19 | MO_22 | **FIXED Sept 25** | 330 accumulated segments cleared; re-ingested clean 57,231 rows from Sept 24 run |
 | ✅ | retailer_sales_tdp_velocity | 2026-09-25 | MO_64 | **FIXED Sept 25** | Re-ran MO_64; 2,285 rows; appended to Jul 9 snapshot |
 | ✅ | retailer_sales_forecast_adj | 2026-12-06 | MO_55 | **FIXED Sept 25** | Disable-all + kill + re-ingest; MO_55 now calls write_back() |
 | ✅ | causal_impact_scores | 2026-04-19 | MO_72 | **FIXED Sept 25** | Disable-all + kill all + re-ingest with ISO timestamps |
@@ -579,11 +579,11 @@ After fix: 2023-12-17 → 2026-04-19, **500 rows**, all valid years.
 
 ### MO_22 note: comparison_pool_prelaunch_baseline
 
-Do not blindly re-submit the MO_22 spec with `appendToExisting=True`. The Sept 24 parquet (49,233 rows, max __time=June 21 2026) has FEWER rows than what's already in Druid (106,464 rows, max __time=July 19 2026). Submitting with True would add 49K duplicate rows without filling the July gap.
+MO_22 **ran Sept 24** and produced 57,231 rows (2023-03-12 → 2026-07-19, `scored_at: 2026-09-24`). The parquet is at `scripts/outputs/comparison_pool_prelaunch_baseline.parquet`.
 
-MO_22 requires focal products to have sufficient pre-launch history — new BUILT products that launched after June 2026 may not yet qualify. The July 19 data in Druid came from a July 2026 pipeline submission. Leave the Druid table as-is until:
-1. The next cycle confirms MO_22 produces rows for products launched after June 21
-2. The table is cleared (OVERWRITE ALL) before re-submitting
+The Druid table had 106,464 rows from 330 accumulated segments across multiple prior pipeline runs (appendToExisting=True was accumulating duplicates). Fixed Sept 25: disable-all → kill → re-ingest with appendToExisting=False → **57,231 clean rows**.
+
+**Do NOT use appendToExisting=True for this table.** Each cycle produces a full snapshot of all (focal, candidate) pairs scored as of that run date. Use disable-all → kill → re-ingest (same pattern as the forecast tables). This table is standalone — no other pipeline scripts read from it, and no active API currently queries it (Pool Health lookup is a future TODO).
 
 ### MO_64 note: retailer_sales_tdp_velocity
 
