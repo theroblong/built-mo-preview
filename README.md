@@ -6,6 +6,23 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 163: Report output security + salesperson export direction (2026-09-24)
+
+Brian Cluster + Rob Long feedback after the Meijer cannibalization brief: HTML reports embed raw data as inline JS — forwarding to a retailer broker exposes competitor UPCs, Mo score probabilities, and internal SPINS numbers via view-source. Rob's framing: target users are salespeople and channel people; the packaged file must not contain anything critical.
+
+**Immediate build direction (for Monday's Meijer broker meeting):**
+- `contenteditable` on narrative/takeaway blocks — salespeople rewrite before printing
+- Section-level show/hide checkboxes (modular per audience)
+- "Retailer View" print CSS — auto-hides cannibal_prob, competitor unit detail, internal Mo scores, raw data tables
+- "Export PDF" button → `window.print()` with Retailer CSS; charts render as images (no view-source risk)
+- Full internal HTML stays unchanged; only the PDF export is the shareable artifact
+
+**Longer-term:** server-side auth + RBAC (MCP direction, post-v1). Documented in wiki/17 and project memory.
+
+Meeting prep (`docs/meeting_prep_sept25.html`) updated with today's FRED/Trends work + full product guidance discussion.
+
+---
+
 ## README update 162: Mo Trends — FRED macro dynamic lookback matching full SPINS history (2026-09-24)
 
 `/api/trends/macro` now queries `MIN(__time)` from `built_filtered_weekly` at cold start (`_get_spins_start()`, 1-hour cache) and uses that date as `observation_start` for all FRED series. Previously hardcoded to ~2 years (104 weeks); now returns the full SPINS arc automatically — currently **194 weeks** (Oct 2023 → Sep 2026). When the next SPINS ingest extends history further back, FRED coverage extends with it — no config or code change needed. Fallback `"2023-01-01"` for Druid failures. ML pipeline and SHAP values are unaffected (display endpoint only). Committed to `customer-built-mo-api`.

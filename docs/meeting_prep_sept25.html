@@ -411,6 +411,9 @@
         <li>CustomerDim.csv + DimItem schema received — customer + item dim both covered</li>
         <li>AI-12, AI-15, AI-16, AI-17 all closed by Ebad's Sept 22 delivery</li>
         <li>NS2 → Druid (AI-19): fields complete, ready to load</li>
+        <li><strong>Meijer cannibalization brief delivered Sept 24</strong> — 20 UPCs, P4 2026 launches, check lane analysis, elasticity ε=−0.489; Brian responded positively, meeting with Meijer broker Monday Sept 29</li>
+        <li>Mo Trends: product search fixed (UPC dedup via ANY_VALUE), brand pre-filter, maxVisible 25 with "N of M" footer; expanded Pack Crossover UX overhaul (chip nowrap, annotation bottom-stack, x-axis visible)</li>
+        <li>FRED macro dynamic lookback: now queries MIN(__time) from SPINS — 194 weeks (Oct 2023→) automatically, no hardcoded limit</li>
       </ul>
     </div>
 
@@ -466,12 +469,55 @@
       <li class="agenda-item">
         <span class="agenda-num">7</span>
         <div class="agenda-body">
+          <div class="agenda-title">Meijer brief + report output format — Brian + Rob's feedback</div>
+          <div class="agenda-detail">• Brian: editable PDF, modular sections (lock charts, editable takeaways, include/exclude sections per audience)<br>• Rob: security concern — HTML embeds raw data; view-source exposes internal Mo scores, competitor UPCs, SPINS numbers if forwarded to Meijer broker<br>• Target users = salespeople / channel people exporting to retailers<br>• Build plan: contenteditable takeaways + section toggles + print/export CSS (Retailer View strips internal data); Monday deadline<br>• Q: confirm which sections Brian wants retailer-visible vs. internal-only</div>
+        </div>
+        <div class="agenda-time">8 min</div>
+      </li>
+      <li class="agenda-item">
+        <span class="agenda-num">8</span>
+        <div class="agenda-body">
           <div class="agenda-title">Timeline — mid/late October external demo</div>
           <div class="agenda-detail">• Brian confirmed: mid/late Oct (target Oct 22–31) to show other potential customers<br>• Brian happy with pace — no acceleration pressure<br>• Q: which screens does Brian want highlighted?</div>
         </div>
         <div class="agenda-time">3 min</div>
       </li>
     </ul>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-header"><h2>Meijer Brief — Report Output Product Direction</h2></div>
+    <div class="highlight highlight-amber">
+      <strong>Monday deadline:</strong> Brian's Meijer broker meeting is Sept 29. Brief was delivered Sept 24 and received positively — now needs retailer-safe export capability before that meeting.
+    </div>
+    <div class="card">
+      <div class="card-title">Brian's ask: editable PDF with modular sections</div>
+      <p>Graphs locked; user can edit takeaway/narrative text. Sections can be shown, hidden, or separated — different audiences get different cuts of the same brief.</p>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red)">Rob's concern: HTML exposes internal data</div>
+      <p>The current <code>meijer_cannibalization_brief.html</code> embeds all its data as inline JSON/JS. A salesperson forwarding this to a Meijer broker gives them view-source access to: competitor UPCs + units, Mo cannibalization probabilities, internal SPINS scores, BUILT-vs-competitor raw numbers. None of that should reach a retailer.</p>
+      <p style="margin-top:8px;"><strong>Target users:</strong> salespeople / channel people exporting to retailers. Depending on destination, must reduce data and ensure nothing critical is packaged in the file.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Build plan (for Monday)</div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:var(--text-2);">
+        <li><code>contenteditable</code> on narrative/takeaway blocks — salespeople rewrite before printing</li>
+        <li>Section-level show/hide checkboxes — include or exclude sections per audience</li>
+        <li>"Retailer View" print mode — CSS that auto-hides: raw data tables, cannibal_prob columns, competitor-level detail, internal Mo scores</li>
+        <li>"Export PDF" button → <code>window.print()</code> with Retailer CSS active; charts render as images, no view-source risk</li>
+        <li>Internal HTML stays full; only the PDF is the shareable artifact</li>
+      </ul>
+    </div>
+    <div class="highlight">
+      <strong>Confirm with Brian:</strong> which sections should be retailer-visible vs. internal-only? (e.g. check lane recommendation = visible; competitor unit volumes = internal)
+    </div>
+    <div class="card" style="border-left: 3px solid var(--text-3);">
+      <div class="card-title" style="color:var(--text-2)">Longer-term: server-side auth + RBAC</div>
+      <p>The real fix is server-side rendering so the file never contains data the viewer isn't authorized to see. This is the MCP+RBAC direction from earlier discussions — right sprint is post-v1 stable. PDF mode is the safe path for Monday.</p>
+    </div>
   </div>
 
   <hr class="divider">
