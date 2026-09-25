@@ -416,11 +416,21 @@ MO_24  → new_product_ramp_monitor            (reads event_detection_weekly)
 MO_46  → rolling_signals_weekly.parquet      (reads event_detection_weekly; input to MO_25)
 MO_25  → retailer_sales_weekly.parquet       (reads event_detection_weekly + MO_46 output)
 MO_26  → forecast model retrain              (reads MO_25 output)
-MO_27  → retailer_sales_forecast             (→ Druid write-back; drives SKU View sparklines + drawer)
+MO_27  → retailer_sales_forecast             (→ outputs/ spec only; MUST submit manually — see below)
 MO_55  → portfolio constraint scoring        (reads event_detection_weekly)
 ```
 
-**Note:** `druid_ingest_forecast.py` uses `appendToExisting=False` intentionally. `retailer_sales_forecast` is a rolling 13-week forward window replaced each cycle — the API has no dedup logic, so appending would accumulate duplicate forecast rows for overlapping weeks. MO_27's `write_back()` generates the spec but does not auto-submit; use `druid_ingest_forecast.py` to submit it.
+**⚠️ MANDATORY after MO_27 — submit the forecast to Druid:**
+```bash
+cd scripts
+python druid_ingest_forecast.py   # submits outputs/retailer_sales_forecast_ingest_spec.json
+# Expect: 200 {"task":"index_parallel_retailer_sales_forecast_..."}
+# Wait 60–90s, then verify SKU View forecast drawer shows correct forward dates.
+```
+
+MO_27's `write_back()` saves the ingest spec locally but does NOT submit to Druid (human review required). If this step is skipped, the `retailer_sales_forecast` Druid table remains stale from the prior cycle and the SKU View drawer will show forecast dates in the past.
+
+`appendToExisting=False` is intentional: the table is a rolling 13-week forward window replaced each cycle. Appending would accumulate duplicate rows for overlapping forecast weeks (the API has no dedup).
 
 ---
 
