@@ -465,6 +465,116 @@ Check outputs in `outputs/mo68_*.json`, `mo69_*.json`, `mo71_*.json`. Any FAIL v
 
 ---
 
+## Post-cycle Druid audit checklist
+
+After every pipeline cycle run, verify all datasources are current by running this query for each table. The expected latest date and row count are noted — anything older than expected = a spec was not submitted.
+
+```bash
+# Run from scripts/ after each pipeline cycle:
+cd scripts
+python3 << 'EOF'
+from dotenv import load_dotenv; load_dotenv('../.env')
+from mo_druid_client import query_druid
+
+EXPECTED = [
+    # (datasource, expected_latest_approx, note)
+    ('built_filtered_weekly',               'SPINS batch end date',    'Q0/Q1 — SPINS data'),
+    ('event_detection_weekly',              'SPINS batch end date',    'Q6 — must match built_filtered_weekly'),
+    ('scored_cannibalization',              'run date',                'MO_13'),
+    ('event_queue',                         'run date',                'MO_14/15'),
+    ('price_event_queue',                   'SPINS batch end date',    'Q22 MSQ — not a write_back spec'),
+    ('scored_price_elasticity',             'run date',                'MO_17'),
+    ('price_elasticity_forecast',           'run date',                'MO_18'),
+    ('cannibalization_rate_weekly',         'SPINS batch end date',    'MO_19'),
+    ('cannibalization_rate_forecast_weekly','13wk forward from run',   'MO_21'),
+    ('comparison_pool_prelaunch_baseline',  'latest focal launch date','MO_22 — see note below'),
+    ('competitor_pack_size_norms',          'run date',                'MO_23'),
+    ('new_product_ramp_monitor',            'SPINS batch end date',    'MO_24'),
+    ('retailer_sales_forecast',             '13wk forward from run',   'MO_27 — submit druid_ingest_forecast.py'),
+    ('retailer_sales_tdp_velocity',         'run date',                'MO_64 — re-run if MO_25/27 updated'),
+]
+for ds, expected, note in EXPECTED:
+    try:
+        df = query_druid(
+            f"SELECT TIME_FORMAT(__time, 'yyyy-MM-dd') AS wk, COUNT(*) AS n "
+            f"FROM \"{ds}\" ORDER BY __time DESC LIMIT 1", timeout=20)
+        latest = df.iloc[0]['wk'] if len(df) else 'EMPTY'
+        rows_df = query_druid(f'SELECT COUNT(*) AS n FROM "{ds}"', timeout=20)
+        rows = rows_df.iloc[0]['n']
+        print(f"{'OK' if latest >= '2026-09' else 'CHECK':<5}  {ds:<48} latest={latest}  rows={rows:>9,}  [{note}]")
+    except Exception as e:
+        print(f"ERR    {ds:<48} {str(e)[:60]}")
+EOF
+```
+
+### Sept 25 2026 audit findings
+
+Full cycle ran Sept 24 2026. Findings:
+
+| # | Datasource | Latest in Druid | Script | Status | Action |
+|---|---|---|---|---|---|
+| ✅ | built_filtered_weekly | 2026-09-06 | Q0/Q1 | Current | — |
+| ✅ | event_detection_weekly | 2026-09-06 | Q6 | Current | — |
+| ✅ | scored_cannibalization | 2026-09-24 | MO_13 | Current | — |
+| ✅ | event_queue | 2026-09-24 | MO_14/15 | Current | — |
+| ✅ | price_event_queue | 2026-09-06 | Q22 (MSQ) | Current | Q22 writes directly — no spec needed |
+| ✅ | scored_price_elasticity | 2026-09-24 | MO_17 | Current | — |
+| ✅ | price_elasticity_forecast | 2026-09-24 | MO_18 | Current | — |
+| ✅ | cannibalization_rate_weekly | 2026-09-06 | MO_19 | Current | — |
+| ✅ | cannibalization_rate_forecast_weekly | 2026-12-06 | MO_21 | Current | — |
+| ✅ | competitor_pack_size_norms | 2026-09-24 | MO_23 | Current | — |
+| ✅ | new_product_ramp_monitor | 2026-09-06 | MO_24 | Current | — |
+| ⚠️ | retailer_sales_forecast | Old Apr–Jul data remains | MO_27 | **CONTAMINATED** | Kill Apr 26 – Aug 15 segments in Druid console (see below) |
+| ⚠️ | comparison_pool_prelaunch_baseline | 2026-07-19 | MO_22 | Stale + complex | See MO_22 note below |
+| ⚠️ | retailer_sales_tdp_velocity | 2026-07-09 | MO_64 | Not re-run Sept 24 | Re-run MO_64, then submit spec |
+| ⚠️ | retailer_sales_forecast_adj | 2026-07-19 | MO_27 variant | Stale | Needs investigation — no Sept 24 spec |
+| 🔴 | causal_impact_scores | Corrupt timestamps (year 5M+) | MO_72 | Data corrupt | Drop datasource; re-ingest via scripts/outputs/causal_impact_scores_ingest_spec.json |
+
+### Fix: retailer_sales_forecast contamination
+
+The table accumulated data from multiple pipeline runs (appendToExisting=False only removes segments in the NEW data's time range, leaving old segments outside that range untouched). After the Sept 25 submission, the table contains:
+- Apr 26 – Jul 19 (2,494 series): stale from a pre-August run
+- Aug 16 – Aug 30 (2,951 series): from an intermediate run
+- Sep 13 – Dec 6 (3,173 series): CURRENT (Sept 24 cycle)
+
+**Fix — kill the stale segments via Druid console:**
+```
+Druid UI → Datasources → retailer_sales_forecast → Kill unused segments
+Date range: 2026-04-26 to 2026-08-31
+Confirm kill task
+```
+After the kill completes, only the Sep 13 – Dec 6 (3,173 series) data remains. The API has no dedup — any stale segment that survives will show duplicate forecasts.
+
+**Prevent recurrence:** each pipeline run must use `REPLACE INTO OVERWRITE ALL` semantics for this table. The current `appendToExisting=False` only covers the new time range. Future fix: switch `druid_ingest_forecast.py` to submit an MSQ `REPLACE INTO "retailer_sales_forecast" OVERWRITE ALL` instead of native batch.
+
+### MO_22 note: comparison_pool_prelaunch_baseline
+
+Do not blindly re-submit the MO_22 spec with `appendToExisting=True`. The Sept 24 parquet (49,233 rows, max __time=June 21 2026) has FEWER rows than what's already in Druid (106,464 rows, max __time=July 19 2026). Submitting with True would add 49K duplicate rows without filling the July gap.
+
+MO_22 requires focal products to have sufficient pre-launch history — new BUILT products that launched after June 2026 may not yet qualify. The July 19 data in Druid came from a July 2026 pipeline submission. Leave the Druid table as-is until:
+1. The next cycle confirms MO_22 produces rows for products launched after June 21
+2. The table is cleared (OVERWRITE ALL) before re-submitting
+
+### MO_64 note: retailer_sales_tdp_velocity
+
+MO_64 reads `scripts/outputs/retailer_sales_weekly.parquet` (MO_25 output) and `scripts/outputs/retailer_sales_forecast.parquet` (MO_27 output) — both Sept 24. Re-run is safe:
+```bash
+cd scripts
+python MO_64_tdp_velocity_decomp.py
+# Then submit the new spec:
+python3 -c "
+import json, requests
+from mo_druid_client import DRUID_HOST, _AUTH, _HEADERS
+spec = json.load(open('outputs/retailer_sales_tdp_velocity_ingest_spec.json'))
+r = requests.post(f'{DRUID_HOST}/druid/indexer/v1/task', json=spec, auth=_AUTH, headers=_HEADERS)
+print(r.status_code, r.text[:200])
+"
+```
+
+Note: No API endpoint currently queries `retailer_sales_tdp_velocity` — this feeds future TDP decomposition views. Run when ready to wire it to the UI.
+
+---
+
 ## Contacts and access
 
 | Step | Owner | Access needed |
