@@ -395,6 +395,11 @@ MO_21  → cannibalization_rate_forecast_weekly  (→ Druid write-back)
 
 **For each write-back:** Review the printed ingest spec, then POST it to Druid (or use the Druid console). The spec uses `appendToExisting: true`.
 
+**⚠️ After MO_21, immediately run the replacement ingest script** to prevent forecast row accumulation:
+```bash
+python druid_ingest_cannibal_rate_forecast.py --poll
+```
+
 **⚠️ MO_12 reads `event_detection_weekly`.** If Q6 was skipped or stale, the event detector model will be undertrained on incomplete data. Always confirm the Q6 gate passed before running MO_12.
 
 **⚠️ MO_19 reads `event_detection_weekly`.** Same dependency — stale Q6 = stale cannibal rates.
