@@ -299,6 +299,20 @@ FROM "built_filtered_weekly" GROUP BY 1 ORDER BY 1;
 -- 2023/2024/2025 row counts unchanged from prior run
 ```
 
+**⛔ MANDATORY gate after Q1 — zero-NULL check for critical BUILT flavor/pack fields:**
+```sql
+SELECT COUNT(DISTINCT upc) AS upcs_with_null_fields
+FROM "built_enriched_weekly"
+WHERE parent_brand = 'BUILT'
+  AND military_excluded_flag = 0
+  AND (specific_flavor_normalized IS NULL
+       OR pack_count IS NULL
+       OR size_oz IS NULL)
+```
+Must return 0. If > 0, new BUILT UPCs appeared in the latest SPINS drop without a QS1 CASE block — stop, run the new-UPC gate query (Part 2), add the missing UPCs to QS1, re-run QS1 + Q1.
+
+Why this matters: `specific_flavor_normalized` is the key that links same-flavor products across pack sizes (pack ladder analysis), drives within-brand cannibalization pair matching in Q2, and powers the UI product picker's flavor-grouping display. A NULL here means the product is in the data but invisible to flavor-proximity logic.
+
 **Note — Q0 batch size:** If the new period spans more than one year, Q0 will time out with `OVERWRITE ALL` (E03). Run it in annual batches using annual `OVERWRITE WHERE` bounds, the same pattern used for the original build. Each batch takes ~10–25 minutes.
 
 ### Q2 — comparison pool (OVERWRITE ALL, requires special settings)
