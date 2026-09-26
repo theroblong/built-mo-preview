@@ -6,8 +6,8 @@ from mo_writeback import write_back
 
 SCORED_AT = datetime.now(timezone.utc).isoformat()
 
-# Look-back window for weekly history fed to the P11 training set
-LOOKBACK_INTERVAL = "INTERVAL '2' YEAR"
+# Fixed floor date — captures full SPINS history regardless of when MO_19 runs
+HISTORY_FLOOR = "2023-01-01"
 
 
 def _upc_sql_list(upcs: list[str]) -> str:
@@ -50,7 +50,7 @@ if __name__ == "__main__":
             base_units_outlier_class
         FROM "event_detection_weekly"
         WHERE upc IN ({_upc_sql_list(focal_upcs)})
-          AND __time >= CURRENT_TIMESTAMP - {LOOKBACK_INTERVAL}
+          AND __time >= TIMESTAMP '{HISTORY_FLOOR}'
     """)
     print(f"  Focal weekly rows: {len(focal_weekly):,}")
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
             base_units, base_units_wow_delta
         FROM "event_detection_weekly"
         WHERE upc IN ({_upc_sql_list(donor_upcs)})
-          AND __time >= CURRENT_TIMESTAMP - {LOOKBACK_INTERVAL}
+          AND __time >= TIMESTAMP '{HISTORY_FLOOR}'
     """)
     print(f"  Donor weekly rows: {len(donor_weekly):,}")
     for col in ["base_units", "base_units_wow_delta"]:
