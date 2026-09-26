@@ -448,6 +448,8 @@
   :root:not([data-theme="light"]) .badge-displacer { background:#0d2e2b; color:#26a69a; }
   :root[data-theme="dark"] .badge-friction,
   :root:not([data-theme="light"]) .badge-friction  { background:#2d1e0a; color:#f39c12; }
+  :root[data-theme="dark"] .badge-builder,
+  :root:not([data-theme="light"]) .badge-builder   { background:#1e2530; color:#94a3b8; }
 
   @media print {
     .print-controls { display: none !important; }
@@ -492,13 +494,40 @@ function toggleSection(id, cb) {
   var el = document.getElementById(id);
   if (el) el.dataset.hidden = cb.checked ? 'false' : 'true';
 }
-// Sync data-hidden state from checkbox defaults on load
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.section-toggle input[type="checkbox"]').forEach(function(cb) {
     var match = cb.getAttribute('onchange') && cb.getAttribute('onchange').match(/toggleSection\('([^']+)'/);
     if (match) toggleSection(match[1], cb);
   });
 });
+
+var _sortDir = {};
+function sortTable(tableId, colIdx, type) {
+  var tbl = document.getElementById(tableId);
+  if (!tbl) return;
+  var tbody = tbl.querySelector('tbody');
+  var rows = Array.from(tbody.querySelectorAll('tr'));
+  var key = tableId + '_' + colIdx;
+  _sortDir[key] = (_sortDir[key] === 'asc') ? 'desc' : 'asc';
+  var asc = _sortDir[key] === 'asc';
+  rows.sort(function(a, b) {
+    var aCell = a.querySelectorAll('td')[colIdx];
+    var bCell = b.querySelectorAll('td')[colIdx];
+    var aVal, bVal;
+    if (type === 'num') {
+      aVal = parseFloat((aCell && aCell.dataset.val !== undefined) ? aCell.dataset.val : aCell.textContent.replace(/[^0-9.\-]/g,''));
+      bVal = parseFloat((bCell && bCell.dataset.val !== undefined) ? bCell.dataset.val : bCell.textContent.replace(/[^0-9.\-]/g,''));
+      if (isNaN(aVal)) aVal = asc ? Infinity : -Infinity;
+      if (isNaN(bVal)) bVal = asc ? Infinity : -Infinity;
+    } else {
+      aVal = aCell ? aCell.textContent.trim().toLowerCase() : '';
+      bVal = bCell ? bCell.textContent.trim().toLowerCase() : '';
+    }
+    return asc ? (aVal > bVal ? 1 : aVal < bVal ? -1 : 0)
+                : (aVal < bVal ? 1 : aVal > bVal ? -1 : 0);
+  });
+  rows.forEach(function(r) { tbody.appendChild(r); });
+}
 </script>
 
 <!-- ── KPI strip ── -->
@@ -585,67 +614,86 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="section-sub">Meijer RMA (CONVENTIONAL | FOOD) · peak TDP and L13W avg weekly velocity · ending Sept 6, 2026 · 5 core SKUs confirmed in RMA</div>
 
   <div class="table-wrap">
-    <table class="data-table">
+    <table class="data-table" id="sec-b-table">
       <thead>
         <tr>
-          <th>SKU (4-pack)</th>
+          <th onclick="sortTable('sec-b-table',0,'str')" style="cursor:pointer">SKU (4-pack) ↕</th>
           <th>UPC</th>
           <th>Flavor</th>
-          <th class="num">Peak TDP (RMA)</th>
+          <th class="num" onclick="sortTable('sec-b-table',3,'num')" style="cursor:pointer">Peak TDP ↕</th>
           <th>Distribution</th>
-          <th class="num">Avg ARP</th>
-          <th class="num">Avg Weekly Units</th>
+          <th class="num" onclick="sortTable('sec-b-table',5,'num')" style="cursor:pointer">Avg ARP ↕</th>
+          <th class="num" onclick="sortTable('sec-b-table',6,'num')" style="cursor:pointer">Avg Wkly Units ↕</th>
+          <th class="num" onclick="sortTable('sec-b-table',7,'num')" style="cursor:pointer" title="% of competitor donor SKUs scoring Cannibalizing (cross-brand rate)">Comp. Displ. Rate ↕</th>
+          <th class="num" onclick="sortTable('sec-b-table',8,'num')" style="cursor:pointer" title="% of own-brand donor SKUs scoring Cannibalizing (own-brand friction)">Own-brand Friction ↕</th>
+          <th>Profile</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong>Cookie Dough Chunk 4pk</strong></td>
-          <td style="font-size:11px;color:var(--muted)">08-40229-30558</td>
-          <td>COOKIE DOUGH</td>
-          <td class="num">96%</td>
-          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:96%"></div></div><span class="tdp-num">96%</span></div></td>
-          <td class="num">$9.20</td>
-          <td class="num">~1,230</td>
-        </tr>
-        <tr>
           <td><strong>Brownie Batter 4pk</strong></td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30380</td>
           <td>BROWNIE</td>
-          <td class="num">97%</td>
+          <td class="num" data-val="97">97%</td>
           <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:97%"></div></div><span class="tdp-num">97%</span></div></td>
-          <td class="num">$9.21</td>
-          <td class="num">~1,198</td>
+          <td class="num" data-val="9.21">$9.21</td>
+          <td class="num" data-val="1198">~1,198</td>
+          <td class="num" data-val="100"><strong style="color:var(--red)">100.0%</strong><span style="font-size:10px;color:var(--muted)"> (1/1†)</span></td>
+          <td class="num" data-val="0"><span style="color:var(--muted)">—</span></td>
+          <td><span class="badge badge-displacer">Competitor Displacer</span></td>
         </tr>
         <tr>
-          <td>Coconut 4pk</td>
+          <td><strong>Coconut 4pk</strong></td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30381</td>
           <td>COCONUT</td>
-          <td class="num">94%</td>
+          <td class="num" data-val="94">94%</td>
           <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:94%"></div></div><span class="tdp-num">94%</span></div></td>
-          <td class="num">$9.24</td>
-          <td class="num">~795</td>
+          <td class="num" data-val="9.24">$9.24</td>
+          <td class="num" data-val="795">~795</td>
+          <td class="num" data-val="84.6"><strong style="color:var(--red)">84.6%</strong><span style="font-size:10px;color:var(--muted)"> (11/13)</span></td>
+          <td class="num" data-val="0"><span style="color:var(--muted)">—</span></td>
+          <td><span class="badge badge-displacer">Competitor Displacer</span></td>
         </tr>
         <tr>
-          <td>PB Cup 4pk</td>
+          <td><strong>Cookie Dough Chunk 4pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30558</td>
+          <td>COOKIE DOUGH</td>
+          <td class="num" data-val="96">96%</td>
+          <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:96%"></div></div><span class="tdp-num">96%</span></div></td>
+          <td class="num" data-val="9.20">$9.20</td>
+          <td class="num" data-val="1230">~1,230</td>
+          <td class="num" data-val="50"><strong style="color:var(--amber)">50.0%</strong><span style="font-size:10px;color:var(--muted)"> (2/4)</span></td>
+          <td class="num" data-val="75"><strong style="color:var(--amber)">75.0%</strong><span style="font-size:10px;color:var(--muted)"> (3/4)</span></td>
+          <td><span class="badge badge-friction">Portfolio Friction</span></td>
+        </tr>
+        <tr>
+          <td><strong>PB Cup 4pk</strong></td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30646</td>
           <td>PEANUT BUTTER</td>
-          <td class="num">93%</td>
+          <td class="num" data-val="93">93%</td>
           <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:93%"></div></div><span class="tdp-num">93%</span></div></td>
-          <td class="num">$9.21</td>
-          <td class="num">~790</td>
+          <td class="num" data-val="9.21">$9.21</td>
+          <td class="num" data-val="790">~790</td>
+          <td class="num" data-val="12.5"><strong style="color:var(--teal)">12.5%</strong><span style="font-size:10px;color:var(--muted)"> (6/48)</span></td>
+          <td class="num" data-val="0">0.0%<span style="font-size:10px;color:var(--muted)"> (0/3)</span></td>
+          <td><span class="badge badge-builder">Category Builder</span></td>
         </tr>
         <tr>
-          <td>Cookies N Cream 4pk</td>
+          <td><strong>Cookies N Cream 4pk</strong></td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30581</td>
           <td>COOKIES &amp; CREAM</td>
-          <td class="num">94%</td>
+          <td class="num" data-val="94">94%</td>
           <td><div class="tdp-bar-wrap"><div class="tdp-bar-bg"><div class="tdp-bar-fill" style="width:94%"></div></div><span class="tdp-num">94%</span></div></td>
-          <td class="num">$9.24</td>
-          <td class="num">~712</td>
+          <td class="num" data-val="9.24">$9.24</td>
+          <td class="num" data-val="712">~712</td>
+          <td class="num" data-val="-1"><span style="color:var(--muted)">N/A</span><span style="font-size:10px;color:var(--muted)"> (0 pairs)</span></td>
+          <td class="num" data-val="33.3"><strong style="color:var(--amber)">33.3%</strong><span style="font-size:10px;color:var(--muted)"> (1/3)</span></td>
+          <td><span class="badge badge-builder">Category Builder</span></td>
         </tr>
       </tbody>
     </table>
   </div>
+  <p style="font-size:11px;color:var(--muted);margin-top:6px">† Brownie Batter cross-brand rate is based on 1 confirmed competitor pair — high confidence directionally; small n. Click column headers to sort. Comp. Displ. Rate = % of competitor donor SKUs scoring "Cannibalizing" (BUILT taking demand from that brand). Own-brand Friction = % of own-brand donor SKUs scoring "Cannibalizing" (BUILT SKUs competing with each other).</p>
 
   <div class="callout callout-teal" style="margin-top:14px" contenteditable="true">
     <strong>Distribution story:</strong> All 5 core SKUs are at near-full distribution in Meijer RMA — current L4W avg TDP is 89–94%, with peak TDP on record at 93–97%, confirming BUILT is in virtually every Meijer store. Cookie Dough Chunk leads velocity at ~1,230 units/week, followed by Brownie Batter at ~1,198. Coconut, PB Cup, and Cookies N Cream trail at 700–800 units/week, suggesting either a pricing or planogram position opportunity. Note: Salted Caramel is not confirmed in the Meijer FOOD RMA dataset.
