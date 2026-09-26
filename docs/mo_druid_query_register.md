@@ -962,19 +962,24 @@ SELECT
   "UNIT OF MEASURE"                            AS unit_of_measure,
   'N'                                          AS manual_review_needed
 FROM (
-  SELECT DISTINCT
-    "UPC"            AS upc,
-    "Description",
-    "UNIT OF MEASURE"
+  -- GROUP BY upc (not DISTINCT on compound key) so that UPCs with multiple
+  -- Description strings in spins_full (SPINS corrects names across batches)
+  -- produce exactly one flavor_mapping row. Without this the JOIN in Q1 fans
+  -- out to 2× rows for those UPCs and corrupts every downstream table.
+  SELECT
+    "UPC"                AS upc,
+    MIN("Description")   AS "Description",
+    MIN("UNIT OF MEASURE") AS "UNIT OF MEASURE"
   FROM "spins_full"
   WHERE "Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
+  GROUP BY "UPC"
 )
 PARTITIONED BY ALL
 ```
 
-**Verify:** `SELECT COUNT(*) FROM flavor_mapping` — expect rows matching distinct BUILT UPCs in `spins_full`. Then run QS1v to validate values against the CSV.
+**Verify:** `SELECT COUNT(*) FROM flavor_mapping` — expect rows = distinct BUILT UPCs in `spins_full`, NO duplicates. Run QS1v immediately after; expect 0 rows.
 
-**Status: ✓ COMPLETE**
+**Status: ✓ COMPLETE — FIX APPLIED 2026-09-26: GROUP BY upc replaces DISTINCT to prevent description-variant fan-out.**
 
 ---
 

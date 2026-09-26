@@ -255,6 +255,18 @@ QS2  → flavor_canonical_overrides  OVERWRITE ALL  (re-run if any flavor normal
 QS3  → item_catalog             OVERWRITE ALL  (re-run if a new competitor brand needs tier assignment)
 ```
 
+**⛔ MANDATORY gate after QS1 — check for duplicate UPCs:**
+```sql
+SELECT COUNT(*) AS dup_upc_count
+FROM (
+    SELECT upc FROM "flavor_mapping"
+    GROUP BY upc HAVING COUNT(*) > 1
+)
+```
+Must return 0. If > 0, QS1's GROUP BY was not applied — stop and diagnose before running Q1.
+
+Background: SPINS corrects product Description strings across data batches. The old QS1 used `SELECT DISTINCT (upc, description, unit_of_measure)`, which kept both description variants for the same UPC. The JOIN in Q1 then fanned out to 2× rows for those UPCs throughout the entire pipeline. Fix: QS1 now uses `GROUP BY upc` with `MIN(Description)` to guarantee one row per UPC. (Fixed 2026-09-26.)
+
 QS1–QS3 are small lookup tables (< 200 rows). `OVERWRITE ALL` is fast and safe here.
 
 ### Q0 and Q1 — passthrough/enrichment (incremental WHERE, same pattern as spins_full)
