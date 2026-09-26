@@ -4113,10 +4113,6 @@ WITH windows AS (
     AND p.geography_raw  = w.geography_raw
     AND p.__time BETWEEN TIMESTAMPADD(WEEK,-25,w.__time) AND w.__time
   WHERE w.parent_brand = 'BUILT'
-    AND w.upc NOT IN (
-      '08-40229-30119',   -- duplicate rows: SPINS description typo ("Satled"→"Salted") + true dups; self-join 4× COUNT inflation
-      '08-40229-30593'    -- duplicate rows: same pattern, NORTHWEST GROCERS only
-    )
   GROUP BY
     w.__time, w.upc, w.description, w.channel_outlet,
     w.retail_account, w.geography_raw, w.geography_level,
