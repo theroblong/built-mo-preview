@@ -492,6 +492,13 @@ function toggleSection(id, cb) {
   var el = document.getElementById(id);
   if (el) el.dataset.hidden = cb.checked ? 'false' : 'true';
 }
+// Sync data-hidden state from checkbox defaults on load
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.section-toggle input[type="checkbox"]').forEach(function(cb) {
+    var match = cb.getAttribute('onchange') && cb.getAttribute('onchange').match(/toggleSection\('([^']+)'/);
+    if (match) toggleSection(match[1], cb);
+  });
+});
 </script>
 
 <!-- ── KPI strip ── -->
