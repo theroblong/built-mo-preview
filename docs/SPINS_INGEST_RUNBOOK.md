@@ -399,6 +399,12 @@ MO_21  → cannibalization_rate_forecast_weekly  (→ Druid write-back)
 
 **⚠️ MO_19 reads `event_detection_weekly`.** Same dependency — stale Q6 = stale cannibal rates.
 
+**⚠️ After MO_19, immediately run the replacement ingest script** to prevent row accumulation:
+```bash
+python druid_ingest_cannibal_rate.py --poll
+```
+This submits the MO_19 spec with `appendToExisting=False`, fully replacing `cannibalization_rate_weekly`. Without this step, each MO_19 run appends ~814K duplicate rows. The historical dedup (3 stacked runs as of Sept 2026) was resolved by `druid_cannibal_rate_dedup.py`.
+
 **After MO_13, verify coverage:**
 ```sql
 SELECT COUNT(*) FROM "scored_cannibalization"
