@@ -880,7 +880,7 @@ function sortTable(tableId, colIdx, type) {
 <!-- ── E: Check Lane ── -->
 <div class="section" id="sec-e">
   <div class="section-heading">E &mdash; Check Lane Opportunity &mdash; 1-Pack Singles</div>
-  <div class="section-sub">MULO CRMA (check lane / impulse singles aggregate across channel types) · Meijer RMA FOOD does not separately track singles placement · confirm with broker</div>
+  <div class="section-sub">Meijer RMA (CONVENTIONAL | FOOD) · 2 of 6 singles confirmed in Meijer account data · 4 not yet in Meijer RMA (untapped check lane distribution)</div>
 
   <div class="table-wrap">
     <table class="data-table">
@@ -889,8 +889,9 @@ function sortTable(tableId, colIdx, type) {
           <th>SKU (1-pack)</th>
           <th>UPC</th>
           <th>Flavor Category</th>
-          <th class="num">Latest TDP</th>
+          <th class="num">TDP at Meijer (RMA)</th>
           <th class="num">Avg ARP</th>
+          <th>Status</th>
           <th>vs. 4-pk Shelf</th>
         </tr>
       </thead>
@@ -899,56 +900,63 @@ function sortTable(tableId, colIdx, type) {
           <td><strong>Brownie Batter 1pk</strong></td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30362</td>
           <td>BROWNIE</td>
-          <td class="num">31%</td>
-          <td class="num">$2.74</td>
+          <td class="num">9.4%</td>
+          <td class="num">$2.37</td>
+          <td><span class="badge badge-teal">In RMA — sparse</span></td>
           <td><span class="badge badge-teal">Incremental</span></td>
         </tr>
         <tr>
-          <td><strong>Cookies N Cream 1pk</strong></td>
+          <td><strong>Coconut 1pk</strong></td>
+          <td style="font-size:11px;color:var(--muted)">08-40229-30037</td>
+          <td>COCONUT</td>
+          <td class="num">9.0%</td>
+          <td class="num">$2.17</td>
+          <td><span class="badge badge-teal">In RMA — sparse</span></td>
+          <td><span class="badge badge-teal">Incremental</span></td>
+        </tr>
+        <tr>
+          <td>Cookies N Cream 1pk</td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30550</td>
           <td>COOKIES &amp; CREAM</td>
-          <td class="num">27%</td>
-          <td class="num">$2.68</td>
-          <td><span class="badge badge-teal">Incremental</span></td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td><span class="badge badge-amber">Not in Meijer RMA</span></td>
+          <td><span class="badge badge-teal">Incremental†</span></td>
         </tr>
         <tr>
-          <td><strong>Sour Peach 1pk</strong></td>
+          <td>Sour Peach 1pk</td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30651</td>
           <td>SOUR / PEACH</td>
-          <td class="num">26%</td>
-          <td class="num">$2.57</td>
-          <td><span class="badge badge-teal">Incremental</span></td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td><span class="badge badge-amber">Not in Meijer RMA</span></td>
+          <td><span class="badge badge-teal">Incremental†</span></td>
         </tr>
         <tr>
-          <td><strong>Cookie Dough 1pk</strong></td>
+          <td>Cookie Dough 1pk</td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30333</td>
           <td>COOKIE DOUGH</td>
-          <td class="num">26%</td>
-          <td class="num">$2.57</td>
-          <td><span class="badge badge-teal">Incremental</span></td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td><span class="badge badge-amber">Not in Meijer RMA</span></td>
+          <td><span class="badge badge-teal">Incremental†</span></td>
         </tr>
         <tr>
           <td>Sour Blue Razz 1pk</td>
           <td style="font-size:11px;color:var(--muted)">08-40229-30653</td>
           <td>SOUR / BLUE RAZZ</td>
-          <td class="num">24%</td>
-          <td class="num">$2.74</td>
-          <td><span class="badge badge-teal">Incremental</span></td>
-        </tr>
-        <tr>
-          <td>Coconut 1pk</td>
-          <td style="font-size:11px;color:var(--muted)">08-40229-30037</td>
-          <td>COCONUT</td>
-          <td class="num">21%</td>
-          <td class="num">$2.63</td>
-          <td><span class="badge badge-teal">Incremental</span></td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td class="num" style="color:var(--muted)">—</td>
+          <td><span class="badge badge-amber">Not in Meijer RMA</span></td>
+          <td><span class="badge badge-teal">Incremental†</span></td>
         </tr>
       </tbody>
     </table>
   </div>
+  <p style="font-size:11px;color:var(--muted);margin-top:6px">† Incremental vs. 4-pk shelf is based on format analysis: 1-packs target impulse / check lane shoppers (distinct demand pool from main-shelf 4-pk selection). SKUs not in Meijer RMA represent untapped new distribution — not a format already selling there.</p>
 
-  <div class="callout callout-teal" style="margin-top:14px">
-    <strong>Check lane verdict — go:</strong> All 6 singles score as <em>Incremental</em> against the core 4-pk shelf set (MULO CRMA analysis). The single-serve format targets impulse and trial shoppers who are not selecting a 4-pk from the main shelf — demand pools do not overlap. Brownie Batter 1pk (31% TDP) and Cookies N Cream 1pk (27% TDP) have the highest existing placement, making them natural anchors for a check-lane pitch. The Sour 1-pks add format differentiation and skew toward a distinct shopper profile (younger, impulse). <strong>Recommended check lane set: Brownie Batter 1pk + Sour Peach 1pk (2-item test).</strong> Expand to Cookie Dough + Sour Blue Razz if trial performs. <em>Note: singles placement data is from MULO CRMA; confirm exact Meijer check lane status with broker.</em>
+  <div class="callout callout-amber" style="margin-top:14px" contenteditable="true">
+    <strong>Check lane opportunity is wider than expected:</strong> Meijer FOOD RMA confirms only 2 singles are in the account at all — Brownie Batter 1pk and Coconut 1pk, both at under 10% TDP (fewer than 1 in 10 Meijer stores). The other 4 singles have <em>zero</em> Meijer FOOD RMA presence. This is not a placement expansion pitch — it is a genuine new distribution play. All singles are Incremental vs. the 4-pk shelf because the impulse/check lane shopper does not overlap with main-shelf 4-pk selection. <strong>Recommended first pitch: Brownie Batter 1pk (existing toe-in-the-door at 9.4% TDP) + Sour Peach 1pk (format differentiation, distinct shopper profile — sour is a separate taste occasion).</strong> Expand to Cookie Dough + Sour Blue Razz if trial performs. Confirm exact store-level placement with broker.
   </div>
 </div>
 
@@ -1153,7 +1161,7 @@ function sortTable(tableId, colIdx, type) {
 <!-- ── Footer ── -->
 <div class="report-footer">
   <strong>Primary data source:</strong> SPINS Meijer RMA (CONVENTIONAL | FOOD) · Meijer Corp · L13W ending Sept 6, 2026 · pulled via Mo / Aevah platform 2026-09-25.<br>
-  <strong>Sections E (singles):</strong> MULO CRMA (CONVENTIONAL | MULTI OUTLET) · impulse/check lane data aggregated at market level; Meijer account-level singles not separately tracked in FOOD RMA.<br>
+  <strong>Section E (singles):</strong> Meijer RMA (CONVENTIONAL | FOOD) · 2 singles confirmed in RMA (Brownie Batter 1pk 9.4% TDP, Coconut 1pk 9.0% TDP); 4 singles not present in Meijer FOOD RMA. Incremental vs. 4-pk shelf is format-based (separate demand pool), not RMA cannibalization score.<br>
   <strong>Models:</strong> Mo Cannibalization Engine MO_55 (211 Meijer RMA scored pairs, data through 2026-09-24) · Elasticity MO_44 v2.1.0 (OLS per-account, run 2026-07-01).<br>
   <strong>Confidence note:</strong> All cannibalization signals are Low confidence (&lt;20 weeks of Meijer RMA data). Cannibal scores (99.9x%) reflect model probability, which is distinct from data maturity. Revisit in 6–8 weeks for full-confidence signals.<br>
   <strong>Internal use only.</strong> Not for distribution outside BUILT / Aevah. This is for BUILT and Mo project reference only. This is not for public access or consumption.
