@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 167: Mo Chat live UI test — two client-facing bugs found (2026-09-26)
+
+Live Cannibalization Explanation testing surfaced two HIGH-severity issues. (1) Competitor description shows as "0robert Irvines Ftcrnch" — a leading "0" on "Robert" from the raw SPINS `Description` field in `spins_full`. Needs correction before any client demo; fix is either a source data correction or a CASE normalization in Q0. (2) Mo Chat cited -22.7% donor base unit change while the MO NARRATIVE chip displayed -98.6% for the same metric — Chat then asked the user to describe what was on screen despite "Watching" being active. Root cause: narrative and chat tool payload draw from different fields. Fix: audit `mo_chat.py` `_SCREEN_MAP` for Cannibalization Explanation and reconcile `donor_base_units_pct_chg` source. Positive finding: FitCrunch demand-transfer analysis was strong and data-grounded. Logged in `wiki/18` and `memory/project_mo_chat_bugs_sept26.md`.
+
+---
+
 ## README update 166: NS2 trade spend signal — Promotional Allowance already in shipment data (2026-09-25)
 
 Read `Shipment Data.sql` in full and found that NS2 already captures trade deductions via `i.fullname = 'Promotional Allowance'` rows, sign-flipped as negatives — no GL account mapping needed for Mo's core trade spend analysis. Critical finding: the SQL is hard-filtered to 4 data-dark customers only; Trade ROI (NS2 deductions ÷ MO_73 SPINS lift) requires extending the query to all BUILT customers. Two asks for today's meeting — Brian: confirm Promotional Allowance rows capture all trade deduction types; Ebad: remove the 4-retailer filter and extend to all customers. DimChartOfAccounts / FactTransactions path deferred to a Finance/GTN experience phase — it's a Finance analytics tool, not Mo's core need now. Updated `project_netsuite_schema.md` and `wiki/18`.

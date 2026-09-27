@@ -203,7 +203,6 @@ SELECT
       WHEN '08-40229-30687' THEN 'BUILT PUFF'
       ELSE NULL
     END                    AS brand,
-  "Description"                                AS description,
     CASE upc
       WHEN '08-40229-30107' THEN 'CHOCOLATE MINT'
       WHEN '08-40229-30581' THEN 'COOKIES AND CREAM'
@@ -959,20 +958,16 @@ SELECT
       WHEN '08-40229-30687' THEN CAST('11.29' AS DOUBLE)
       ELSE NULL
     END       AS size,
-  "UNIT OF MEASURE"                            AS unit_of_measure,
   'N'                                          AS manual_review_needed
 FROM (
-  -- GROUP BY upc (not DISTINCT on compound key) so that UPCs with multiple
+  -- DISTINCT on UPC only (not compound key) so that UPCs with multiple
   -- Description strings in spins_full (SPINS corrects names across batches)
   -- produce exactly one flavor_mapping row. Without this the JOIN in Q1 fans
   -- out to 2× rows for those UPCs and corrupts every downstream table.
-  SELECT
-    "UPC"                AS upc,
-    MIN("Description")   AS "Description",
-    MIN("UNIT OF MEASURE") AS "UNIT OF MEASURE"
+  -- description and unit_of_measure dropped: Q1 never reads them from flavor_mapping.
+  SELECT DISTINCT "UPC" AS upc
   FROM "spins_full"
   WHERE "Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
-  GROUP BY "UPC"
 )
 PARTITIONED BY ALL
 ```
