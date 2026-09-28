@@ -797,15 +797,15 @@ tr:last-child td{border-bottom:none;}
   </div>
 
   <div class="kpi-strip">
-    <div class="kpi"><div class="kv g" id="acc-wmape">—</div><div class="kl">wMAPE (holdout period)</div><div class="ks">Lower = more accurate</div></div>
-    <div class="kpi"><div class="kv b" id="acc-holdout-wks">13 wk</div><div class="kl">Holdout window</div><div class="ks">Weeks never seen during training</div></div>
-    <div class="kpi"><div class="kv a" id="acc-train-cutoff">—</div><div class="kl">Training data through</div><div class="ks">All predictions made from this anchor</div></div>
-    <div class="kpi"><div class="kv p">True AR</div><div class="kl">Forecast method</div><div class="ks">lag1 = prior step prediction</div></div>
+    <div class="kpi"><div class="kv g" id="acc-wmape">—</div><div class="kl">wMAPE (holdout)</div><div class="ks">~2× better than year-ago baseline</div></div>
+    <div class="kpi"><div class="kv b" id="acc-holdout-wks">13 wk</div><div class="kl">Holdout window</div><div class="ks">No actuals used after training cutoff</div></div>
+    <div class="kpi"><div class="kv a" id="acc-train-cutoff">—</div><div class="kl">Training cutoff</div><div class="ks">Anchor for all predictions</div></div>
+    <div class="kpi"><div class="kv p">Recursive AR</div><div class="kl">Forecast method</div><div class="ks">No crystal ball — directional signal</div></div>
   </div>
 
   <div class="chart-card">
     <div class="ct" id="acc-chart-title">Predicted vs. Actual — Out-of-Sample Holdout</div>
-    <div class="cs" id="acc-chart-sub">Training period actuals · then holdout: true recursive predictions (amber) vs. what actually happened (green) · each amber step uses the prior step's own prediction as input — no actual values used after the cutoff</div>
+    <div class="cs" id="acc-chart-sub">Training period actuals · then holdout: true recursive predictions (amber) vs. what actually happened (green) · band = model's quantile range, not a coverage guarantee · no actual data used after the training cutoff</div>
     <div class="legend">
       <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units (SPINS)</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>Model prediction (holdout)</div>
@@ -819,11 +819,11 @@ tr:last-child td{border-bottom:none;}
     <div class="ii">◎</div>
     <div>
       <div class="il">The accuracy story for Bracken</div>
-      <div id="acc-narrative">On May 10 we anchored the model at its last actual SPINS delivery. We then ran a fully recursive 13-week forecast: step 1 used May 10 actuals as its starting point, and every subsequent step used the prior step's own prediction as input — no actual SPINS data from May 17 onward was available to the model. The amber line is what it called. The green line is what SPINS actually recorded. At <span id="acc-wmape-inline">—</span>% wMAPE, this beats a simple year-ago seasonal baseline by roughly 2× — and it's the same algorithm generating the forward forecast you see in the other tabs.</div>
+      <div id="acc-narrative">No crystal ball here. On May 10 we anchored the model and generated 13 weeks of predictions — each step using only its own prior output, exactly as the production forecast runs. The amber line is what the model called. The green line is what SPINS actually recorded afterward. At <span id="acc-wmape-inline">—</span>% average weekly error, it beats a simple "same as last year" baseline by roughly 2×. But the exact path diverged — demand surged in May and softened in July in ways the model didn't fully anticipate. The confidence band is the model's trained range, not a statistical coverage guarantee. What we're building is a disciplined planning input — directionally right, consistently better than naive, and transparent about where it misses.</div>
     </div>
   </div>
 
-  <p class="footnote"><strong>How to read this:</strong> The amber dashed line is a true multi-step recursive forecast — not a fitted curve. Each of the 13 predicted weeks uses the prior week's prediction as its own input, exactly as the production forecast does. No actual SPINS data from after May 10 was seen during forecast generation. <strong>wMAPE</strong> = weighted Mean Absolute Percentage Error, weighted by actual volume so high-volume SKUs drive the measure. The seasonal year-ago reference (lag52) always comes from real historical data and prevents the AR series from collapsing to a flat trend. The forward forecast (blue) is generated identically from the most recent SPINS delivery.</p>
+  <p class="footnote"><strong>How to read this:</strong> The amber dashed line is a true multi-step recursive forecast — not a fitted curve. Each of the 13 predicted weeks uses the prior week's own prediction as input; no actual SPINS data after May 10 was available to the model. <strong>wMAPE</strong> = weighted Mean Absolute Percentage Error, weighted by actual volume. The confidence band is the model's q10–q90 quantile range — it shows where the model believes demand could reasonably land based on its training data, but is not a statistical coverage guarantee over a 13-week recursive horizon. Demand patterns that deviate from prior-year seasonal shape (as happened here in May and July 2026) will fall outside the band. The forward forecast (blue) is generated the same way from the most recent SPINS delivery.</p>
 </div>
 
 </div><!-- /page -->
