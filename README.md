@@ -6,9 +6,9 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
-## README update 169: Forecast accuracy proof chart — backtest honesty rule (2026-09-28)
+## README update 170: True recursive backtest — honest wMAPE for Bracken (2026-09-28)
 
-`mockups/bracken_forecast_charts.html` extended with a 4th tab "Accuracy Proof": v4 model predictions (amber dashed) vs. SPINS actuals (green solid) for the 13-week holdout window (May 17 – Aug 9, 2026) at Kroger. wMAPE 2.3% at Kroger (portfolio 3.4%). Chart is built from local `retailer_sales_weekly.parquet` + v4 model pkl files — no data leaves the machine. Run: `/opt/anaconda3/envs/mo-ml/bin/python3 mockups/build_forecast_chart_data.py`. Key lesson logged: the v4 model was trained in September 2026, not May 2026 — correct framing for Bracken is "current model evaluated on 13 weeks it was held out from training on," not "we predicted this back in May." The lag features use pre-cutoff values only (no look-ahead), so 2.3% is a real and honest number — the distinction is that the v3 model that existed in May 2026 would have been ~4–5% wMAPE, not 2.3%. Framing rule and backtest details saved to `memory/project_bracken_forecast_plan.md` and `wiki/18`.
+`build_forecast_chart_data.py` backtest section rewritten to use MO_27's exact autoregressive algorithm: each of 13 forecast steps feeds its own q50 prediction back as lag1 for the next step — no actual SPINS values used after the May 10 training cutoff. lag52 always from real historical data. Seasonal blend (0.40 weight) prevents AR collapse. **True recursive wMAPE at Kroger: 13.8%** vs. the earlier teacher-forcing number of 2.3% (which used actual lags within the holdout — biased and not how production works). 13.8% is the number to cite to Bracken: roughly 2× better than a year-ago seasonal baseline (~25%), CPG industry "good" tier (10–20%). Chart labels and narrative updated to say "true recursive predictions" and explain that each step uses the prior step's own output. Do not cite 2.3% to the CFO. Full honesty rule logged to `memory/project_bracken_forecast_plan.md` and `wiki/18`.
 
 ---
 
