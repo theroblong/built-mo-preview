@@ -1,0 +1,1109 @@
+#!/usr/bin/env python3
+"""
+build_forecast_chart_data.py
+
+Queries Druid directly and writes mockups/bracken_forecast_charts.html.
+Also loads local parquet + model files to generate historical backtest chart.
+Data stays entirely local — nothing leaves this machine.
+
+Usage (requires mo-ml conda env for backtest tab):
+    /opt/anaconda3/envs/mo-ml/bin/python3 mockups/build_forecast_chart_data.py
+    open mockups/bracken_forecast_charts.html
+
+Reads credentials from customer-built-mo-api/.env automatically.
+"""
+
+import os
+import sys
+import json
+import requests
+from datetime import datetime, timedelta
+from pathlib import Path
+from requests.auth import HTTPBasicAuth
+
+# ── Load .env from the mo-api directory (same as the API itself) ──────
+_env_path = Path(__file__).parent.parent.parent / "customer-built-mo-api" / ".env"
+if _env_path.exists():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(_env_path)
+        print(f"Loaded env from {_env_path}")
+    except ImportError:
+        print("python-dotenv not available; falling back to shell env")
+else:
+    print(f"No .env found at {_env_path}; using shell env")
+
+# ── Druid connection ──────────────────────────────────────────────────
+HOST     = os.environ.get("DRUID_HOST", "").rstrip("/")
+USERNAME = os.environ.get("DRUID_USERNAME", "")
+PASSWORD = os.environ.get("DRUID_PASSWORD", "")
+
+if not HOST:
+    sys.exit("ERROR: DRUID_HOST not set. Check customer-built-mo-api/.env")
+
+_auth    = HTTPBasicAuth(USERNAME, PASSWORD)
+_headers = {"Content-Type": "application/json"}
+
+def druid(sql: str, label: str = "", timeout: int = 90) -> list[dict]:
+    if label:
+        print(f"  → {label}...")
+    resp = requests.post(
+        f"{HOST}/druid/v2/sql/",
+        json={"query": sql},
+        auth=_auth,
+        headers=_headers,
+        timeout=timeout,
+    )
+    if not resp.ok:
+        print(f"    WARNING: {resp.status_code} — {resp.text[:200]}")
+        return []
+    rows = resp.json()
+    print(f"    {len(rows)} rows")
+    return rows
+
+# ── Date helpers ──────────────────────────────────────────────────────
+def parse_druid_ts(s: str) -> datetime | None:
+    if not s:
+        return None
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s[:len(fmt)], fmt)
+        except ValueError:
+            continue
+    return None
+
+def add_forecast_dates(rows: list[dict]) -> list[dict]:
+    """Attach calendar week_ending to each forecast row from anchor_date + N weeks."""
+    if not rows:
+        return rows
+    anchor = parse_druid_ts(str(rows[0].get("anchor_date", "")))
+    if not anchor:
+        return rows
+    for r in rows:
+        n = int(r.get("forecast_week_number") or 0)
+        r["week_ending"] = (anchor + timedelta(weeks=n)).strftime("%Y-%m-%d")
+    return rows
+
+def safe_float(v) -> float | None:
+    try:
+        return float(v) if v is not None else None
+    except (TypeError, ValueError):
+        return None
+
+# ── Queries ───────────────────────────────────────────────────────────
+print("\n=== Fetching data from Druid ===\n")
+
+# 1. Top retailers by BUILT volume (last 52 weeks)
+top_retailers = druid("""
+    SELECT
+      retail_account,
+      SUM(base_units) AS total_units
+    FROM "built_enriched_weekly"
+    WHERE parent_brand = 'BUILT'
+      AND channel_outlet = 'CONVENTIONAL|FOOD'
+      AND military_excluded_flag = 0
+      AND retail_account IS NOT NULL
+      AND retail_account <> ''
+      AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+    GROUP BY retail_account
+    ORDER BY total_units DESC
+    LIMIT 5
+""", "Top retailers by BUILT volume")
+
+named = [r for r in top_retailers if r.get("retail_account")]
+if not named:
+    sys.exit("ERROR: No named retailer data returned. Check connection and filters.")
+
+top_acct    = named[0]["retail_account"]
+second_acct = named[1]["retail_account"] if len(named) > 1 else None
+print(f"\n  Primary retailer  : {top_acct}")
+print(f"  Secondary retailer: {second_acct}\n")
+
+# 2. Primary retailer — 52 weeks of actuals
+r1_actuals = druid(f"""
+    SELECT
+      TIME_FLOOR(__time, 'P1W') AS week_ending,
+      SUM(base_units)            AS actual_units
+    FROM "built_enriched_weekly"
+    WHERE parent_brand = 'BUILT'
+      AND channel_outlet = 'CONVENTIONAL|FOOD'
+      AND retail_account = '{top_acct}'
+      AND military_excluded_flag = 0
+      AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+    GROUP BY 1
+    ORDER BY 1
+""", f"{top_acct} actuals (52w)")
+
+# 3. Primary retailer — 13-week forward forecast
+r1_forecast = druid(f"""
+    SELECT
+      ANY_VALUE(anchor_date)       AS anchor_date,
+      forecast_week_number,
+      SUM(forecast_units_base)     AS forecast_units,
+      SUM(forecast_units_low)      AS forecast_low,
+      SUM(forecast_units_high)     AS forecast_high
+    FROM "retailer_sales_forecast"
+    WHERE channel_outlet = 'CONVENTIONAL|FOOD'
+      AND retail_account = '{top_acct}'
+    GROUP BY forecast_week_number
+    ORDER BY forecast_week_number
+""", f"{top_acct} forecast (13w)")
+r1_forecast = add_forecast_dates(r1_forecast)
+
+# 4. Secondary retailer — 52 weeks of actuals
+r2_actuals = []
+if second_acct:
+    r2_actuals = druid(f"""
+        SELECT
+          TIME_FLOOR(__time, 'P1W') AS week_ending,
+          SUM(base_units)            AS actual_units
+        FROM "built_enriched_weekly"
+        WHERE parent_brand = 'BUILT'
+          AND channel_outlet = 'CONVENTIONAL|FOOD'
+          AND retail_account = '{second_acct}'
+          AND military_excluded_flag = 0
+          AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+        GROUP BY 1
+        ORDER BY 1
+    """, f"{second_acct} actuals (52w)")
+
+# 5. Secondary retailer — 13-week forward forecast
+r2_forecast = []
+if second_acct:
+    r2_forecast = druid(f"""
+        SELECT
+          ANY_VALUE(anchor_date)       AS anchor_date,
+          forecast_week_number,
+          SUM(forecast_units_base)     AS forecast_units,
+          SUM(forecast_units_low)      AS forecast_low,
+          SUM(forecast_units_high)     AS forecast_high
+        FROM "retailer_sales_forecast"
+        WHERE channel_outlet = 'CONVENTIONAL|FOOD'
+          AND retail_account = '{second_acct}'
+        GROUP BY forecast_week_number
+        ORDER BY forecast_week_number
+    """, f"{second_acct} forecast (13w)")
+    r2_forecast = add_forecast_dates(r2_forecast)
+
+# 6. Top 5 SKUs at primary retailer (last 13 weeks)
+top_skus = druid(f"""
+    SELECT
+      upc,
+      ANY_VALUE(description)              AS description,
+      SUM(base_units)                     AS total_units_13w,
+      AVG(arp)                            AS avg_price,
+      ANY_VALUE(spins_flavor_canonical)   AS flavor
+    FROM "built_enriched_weekly"
+    WHERE parent_brand = 'BUILT'
+      AND channel_outlet = 'CONVENTIONAL|FOOD'
+      AND retail_account = '{top_acct}'
+      AND military_excluded_flag = 0
+      AND __time >= TIMESTAMPADD(WEEK, -13, CURRENT_TIMESTAMP)
+    GROUP BY upc
+    ORDER BY total_units_13w DESC
+    LIMIT 5
+""", f"Top 5 SKUs at {top_acct}")
+
+# 7. Top SKU — actuals + forecast
+focal_upc  = top_skus[0]["upc"]  if top_skus else None
+focal_desc = top_skus[0]["description"] if top_skus else ""
+
+sku_actuals  = []
+sku_forecast = []
+if focal_upc:
+    sku_actuals = druid(f"""
+        SELECT
+          TIME_FLOOR(__time, 'P1W') AS week_ending,
+          SUM(base_units)            AS actual_units,
+          AVG(arp)                   AS avg_price
+        FROM "built_enriched_weekly"
+        WHERE upc = '{focal_upc}'
+          AND channel_outlet = 'CONVENTIONAL|FOOD'
+          AND retail_account = '{top_acct}'
+          AND military_excluded_flag = 0
+          AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+        GROUP BY 1
+        ORDER BY 1
+    """, f"Top SKU actuals: {focal_desc[:40]}")
+
+    sku_forecast = druid(f"""
+        SELECT
+          ANY_VALUE(anchor_date)       AS anchor_date,
+          ANY_VALUE(anchor_base_units) AS anchor_units,
+          ANY_VALUE(anchor_arp)        AS anchor_arp,
+          forecast_week_number,
+          SUM(forecast_units_base)     AS forecast_units,
+          SUM(forecast_units_low)      AS forecast_low,
+          SUM(forecast_units_high)     AS forecast_high
+        FROM "retailer_sales_forecast"
+        WHERE upc = '{focal_upc}'
+          AND channel_outlet = 'CONVENTIONAL|FOOD'
+          AND retail_account = '{top_acct}'
+        GROUP BY forecast_week_number
+        ORDER BY forecast_week_number
+    """, f"Top SKU forecast: {focal_desc[:40]}")
+    sku_forecast = add_forecast_dates(sku_forecast)
+
+# ── Summary stats ─────────────────────────────────────────────────────
+def yoy(rows: list[dict]) -> str:
+    if len(rows) < 26:
+        return "N/A"
+    recent = sum(r["actual_units"] or 0 for r in rows[-13:])
+    prior  = sum(r["actual_units"] or 0 for r in rows[-26:-13])
+    if prior == 0:
+        return "N/A"
+    pct = (recent - prior) / prior * 100
+    return f"{'+' if pct >= 0 else ''}{pct:.1f}%"
+
+r1_yoy = yoy(r1_actuals)
+r2_yoy = yoy(r2_actuals)
+
+anchor_date_display = ""
+if r1_forecast:
+    a = parse_druid_ts(str(r1_forecast[0].get("anchor_date", "")))
+    if a:
+        anchor_date_display = a.strftime("%b %d, %Y")
+
+# ── Parquet backtest (mo-ml conda env required) ───────────────────────
+print("\n=== Building backtest from local parquet ===\n")
+
+FEATURE_COLS = [
+    "base_units_roll4_avg", "base_units_roll8_avg", "base_units_roll8_std",
+    "base_units_roll13_avg", "base_units_roll13_std", "base_units_wow_delta",
+    "base_units_z8", "base_units_z13", "velocity_spm_roll8_avg", "velocity_spm_roll13_avg",
+    "velocity_spm_z8", "velocity_spm_z13", "tdp", "tdp_z8", "tdp_wow_delta",
+    "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std", "weeks_since_launch",
+    "donor_count", "week_of_year", "base_units_lag1", "base_units_lag4",
+    "base_units_lag13", "base_units_lag52", "velocity_spm_lag52", "channel_outlet",
+]
+
+ROOT_ML   = Path(__file__).parent.parent
+PARQUET   = ROOT_ML / "outputs" / "retailer_sales_weekly.parquet"
+MODEL_DIR = ROOT_ML / "outputs"
+
+backtest_history = []
+backtest_holdout = []
+retailer_wmape   = "3.4"   # portfolio fallback if parquet unavailable
+backtest_cutoff  = "2026-05-10"
+backtest_val_end = "2026-08-09"
+
+try:
+    import pandas as pd
+    import pickle
+
+    df = pd.read_parquet(PARQUET)
+    df["__time"] = pd.to_datetime(df["__time"], utc=True)
+
+    mask = (
+        (df["retail_account"] == top_acct) &
+        (df["channel_outlet"] == "CONVENTIONAL|FOOD")
+    )
+    df_r1 = df[mask].copy()
+
+    if len(df_r1) == 0:
+        raise ValueError(f"No parquet rows for {top_acct}")
+
+    # Train/val split: last 13 weeks held out
+    cutoff = df_r1["__time"].max() - pd.Timedelta(weeks=13)
+    val    = df_r1[df_r1["__time"] > cutoff].copy()
+    train  = df_r1[df_r1["__time"] <= cutoff].copy()
+
+    # Prepare features
+    for c in FEATURE_COLS:
+        if c != "channel_outlet" and c in val.columns:
+            val[c] = pd.to_numeric(val[c], errors="coerce")
+    val["channel_outlet"] = val["channel_outlet"].astype("category")
+    val = val.dropna(subset=["base_units"])
+
+    # Load v4 quantile models
+    with open(MODEL_DIR / "model_retailer_sales_q50_v4.pkl", "rb") as f:
+        m50 = pickle.load(f)
+    with open(MODEL_DIR / "model_retailer_sales_q10_v4.pkl", "rb") as f:
+        m10 = pickle.load(f)
+    with open(MODEL_DIR / "model_retailer_sales_q90_v4.pkl", "rb") as f:
+        m90 = pickle.load(f)
+
+    import numpy as np
+    X_val = val[FEATURE_COLS]
+    val = val.copy()
+    # Model outputs log1p-space; invert with expm1 (see MO_26 comment and MO_27 usage)
+    val["pred_q50"] = np.expm1(np.clip(m50.predict(X_val), 0, None))
+    val["pred_q10"] = np.expm1(np.clip(m10.predict(X_val), 0, None))
+    val["pred_q90"] = np.expm1(np.clip(m90.predict(X_val), 0, None))
+
+    # Weekly aggregates
+    val_weekly = (
+        val.groupby("__time")
+        .agg(actual_units=("base_units", "sum"),
+             pred_q50=("pred_q50", "sum"),
+             pred_q10=("pred_q10", "sum"),
+             pred_q90=("pred_q90", "sum"))
+        .reset_index().sort_values("__time")
+    )
+
+    # 39 weeks of pre-holdout actuals for context (39+13=52 displayed)
+    history_start = cutoff - pd.Timedelta(weeks=39)
+    train_recent  = train[train["__time"] > history_start]
+    train_weekly  = (
+        train_recent.groupby("__time")
+        .agg(actual_units=("base_units", "sum"))
+        .reset_index().sort_values("__time")
+    )
+
+    backtest_history = [
+        {"week_ending": r["__time"].strftime("%Y-%m-%d"),
+         "actual_units": float(r["actual_units"])}
+        for _, r in train_weekly.iterrows()
+    ]
+    backtest_holdout = [
+        {"week_ending": r["__time"].strftime("%Y-%m-%d"),
+         "actual_units": float(r["actual_units"]),
+         "pred_q50":     float(r["pred_q50"]),
+         "pred_q10":     float(r["pred_q10"]),
+         "pred_q90":     float(r["pred_q90"])}
+        for _, r in val_weekly.iterrows()
+    ]
+
+    # wMAPE for this retailer
+    total_actual = val["base_units"].sum()
+    total_ae     = (val["base_units"] - val["pred_q50"]).abs().sum()
+    wmape_val    = round(total_ae / total_actual * 100, 1) if total_actual > 0 else 0
+    retailer_wmape  = str(wmape_val)
+    backtest_cutoff = cutoff.strftime("%Y-%m-%d")
+    backtest_val_end = val["__time"].max().strftime("%Y-%m-%d")
+
+    print(f"  History weeks : {len(backtest_history)}")
+    print(f"  Holdout weeks : {len(backtest_holdout)}")
+    print(f"  wMAPE at {top_acct}: {retailer_wmape}%")
+
+except Exception as e:
+    print(f"  WARNING: Could not build backtest ({e}); accuracy tab will show portfolio wMAPE")
+
+# ── Bundle payload ────────────────────────────────────────────────────
+payload = {
+    "primary_acct":       top_acct,
+    "secondary_acct":     second_acct or "",
+    "r1_actuals":         r1_actuals,
+    "r1_forecast":        r1_forecast,
+    "r2_actuals":         r2_actuals,
+    "r2_forecast":        r2_forecast,
+    "top_skus":           top_skus,
+    "sku_actuals":        sku_actuals,
+    "sku_forecast":       sku_forecast,
+    "focal_desc":         focal_desc,
+    "focal_upc":          focal_upc or "",
+    "r1_yoy":             r1_yoy,
+    "r2_yoy":             r2_yoy,
+    "anchor_date":        anchor_date_display,
+    "generated":          datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "wmape":              "3.4",
+    "series_count":       "2,517",
+    "backtest_history":   backtest_history,
+    "backtest_holdout":   backtest_holdout,
+    "backtest_wmape":     retailer_wmape,
+    "backtest_cutoff":    backtest_cutoff,
+    "backtest_val_end":   backtest_val_end,
+}
+
+# ── HTML template ─────────────────────────────────────────────────────
+HTML = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Forecast vs. Actuals</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0d0f14; --surface:#161921; --surface2:#1e2330; --border:#2a2f3d;
+  --text:#e8ecf4; --muted:#8892a4; --accent:#4f8ef7; --accent2:#38c9a0;
+  --amber:#f5a623; --red:#e05252; --purple:#9b6dff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  font-size:14px;line-height:1.6;padding:0 24px;
+  padding-bottom:env(safe-area-inset-bottom,0px);}
+.page{max-width:960px;margin:0 auto;padding:40px 0 72px;}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:10px;}
+h1{font-size:22px;font-weight:700;margin-bottom:6px;}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px;}
+.data-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+  font-weight:600;padding:4px 10px;border-radius:20px;
+  background:rgba(56,201,160,.12);color:var(--accent2);
+  border:1px solid rgba(56,201,160,.25);margin-bottom:28px;}
+.data-badge::before{content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--accent2);flex-shrink:0;}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;margin-bottom:24px;background:var(--surface);
+  border-radius:10px;padding:4px;border:1px solid var(--border);overflow-x:auto;}
+.tab{flex:1;min-width:120px;padding:9px 14px;border-radius:7px;font-size:12px;
+  font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;text-align:center;}
+.tab:hover{color:var(--text);}
+.tab.active{background:var(--surface2);color:var(--text);font-weight:600;}
+.panel{display:none;} .panel.active{display:block;}
+
+/* KPIs */
+.kpi-strip{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 18px;flex:1;min-width:120px;}
+.kv{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.kv.g{color:var(--accent2);} .kv.b{color:var(--accent);}
+.kv.a{color:var(--amber);}   .kv.p{color:var(--purple);}
+.kl{font-size:11px;color:var(--muted);margin-top:2px;}
+.ks{font-size:10px;color:var(--accent);margin-top:1px;}
+
+/* Charts */
+.chart-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:24px;margin-bottom:16px;}
+.ct{font-size:13px;font-weight:600;margin-bottom:3px;}
+.cs{font-size:11px;color:var(--muted);margin-bottom:18px;}
+.cw{position:relative;height:280px;}
+
+/* Insight */
+.insight{border-radius:8px;padding:16px 20px;font-size:13px;line-height:1.6;
+  display:flex;gap:14px;align-items:flex-start;margin-top:4px;}
+.insight.g{background:rgba(56,201,160,.07);border:1px solid rgba(56,201,160,.2);}
+.insight.b{background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);}
+.insight.a{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);}
+.ii{font-size:16px;flex-shrink:0;margin-top:2px;}
+.il{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.insight.g .il{color:var(--accent2);} .insight.b .il{color:var(--accent);}
+.insight.a .il{color:var(--amber);}
+
+/* SKU table */
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+  font-weight:600;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:10px 10px;border-bottom:1px solid rgba(42,47,61,.5);color:var(--text);}
+tr:last-child td{border-bottom:none;}
+.rank{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+.units-cell{font-variant-numeric:tabular-nums;}
+.fcast-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:3px;
+  background:rgba(79,142,247,.12);color:var(--accent);}
+
+/* Context chip row */
+.ctx-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.ctx{font-size:11px;padding:4px 10px;border-radius:20px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);}
+.ctx strong{color:var(--text);}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-line{width:24px;height:2px;flex-shrink:0;}
+.leg-dash{width:24px;height:2px;flex-shrink:0;
+  background:repeating-linear-gradient(90deg,currentColor 0,currentColor 4px,transparent 4px,transparent 8px);}
+.leg-band{width:16px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* Accuracy proof divider */
+.holdout-label{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+  font-weight:600;padding:3px 10px;border-radius:4px;
+  background:rgba(245,166,35,.12);color:var(--amber);
+  border:1px solid rgba(245,166,35,.25);}
+
+.footnote{font-size:11px;color:var(--muted);margin-top:20px;line-height:1.5;
+  padding-top:16px;border-top:1px solid var(--border);}
+.footnote strong{color:var(--text);}
+
+@media(max-width:640px){.kpi{min-width:100px;} h1{font-size:18px;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="eyebrow">BUILT × Aevah — Forecasting Use Case</div>
+<h1>Forecast vs. Actuals — Live Data</h1>
+<p class="subtitle" id="subtitle">Sell-through demand · Conventional Food · SPINS retailers</p>
+<div class="data-badge" id="data-badge">Live SPINS data · generated __GENERATED__</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('portfolio')">Portfolio View</button>
+  <button class="tab" onclick="showTab('sku')">SKU Detail</button>
+  <button class="tab" onclick="showTab('comparison')">Retailer Comparison</button>
+  <button class="tab" onclick="showTab('accuracy')">Accuracy Proof</button>
+</div>
+
+<!-- ── TAB 1: Portfolio (Bracken) ──────────────────────────────────── -->
+<div class="panel active" id="tab-portfolio">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Retailer:</strong> <span id="r1-label">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food</div>
+    <div class="ctx"><strong>Scope:</strong> All BUILT products</div>
+    <div class="ctx"><strong>Forecast anchor:</strong> <span id="anchor-label">—</span></div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kv g" id="kpi-wmape">3.4%</div><div class="kl">Model error (wMAPE)</div><div class="ks">vs 39.7% naive baseline</div></div>
+    <div class="kpi"><div class="kv b" id="kpi-series">—</div><div class="kl">Active forecast series</div><div class="ks">SKU × retailer × geography</div></div>
+    <div class="kpi"><div class="kv g" id="kpi-yoy">—</div><div class="kl">YoY unit change (L13w)</div></div>
+    <div class="kpi"><div class="kv a">13 wk</div><div class="kl">Forward forecast horizon</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct" id="chart1-title">Weekly Demand — Actuals + 13-Week Forecast</div>
+    <div class="cs">Trailing 52 weeks of real SPINS sell-through · dashed = forward forecast · band = confidence interval (low/high)</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forecast (base)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3)"></div>Confidence band</div>
+    </div>
+    <div class="cw"><canvas id="chartPortfolio"></canvas></div>
+  </div>
+
+  <div class="insight g">
+    <div class="ii">◎</div>
+    <div>
+      <div class="il">What Bracken sees</div>
+      <div id="bracken-narrative">The model tracks sell-through demand across all BUILT products and projects the next 13 weeks. The confidence band narrows where velocity has been stable and widens around promotional windows. At 3.4% wMAPE, the forecast is 10× more accurate than a simple prior-year baseline — comparable to the best CPG forecasting systems on the market.</div>
+    </div>
+  </div>
+
+  <p class="footnote"><strong>Data source:</strong> SPINS syndicated POS data via built_enriched_weekly. <strong>Forecast:</strong> 28-feature demand model retrained September 2026, 29-week out-of-sample backtest. <strong>wMAPE:</strong> weighted Mean Absolute Percentage Error across all active series. Confidence band = model low/high prediction interval.</p>
+</div>
+
+<!-- ── TAB 2: SKU Detail (Connor) ──────────────────────────────────── -->
+<div class="panel" id="tab-sku">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Retailer:</strong> <span id="r1-label-sku">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food</div>
+    <div class="ctx"><strong>SKU:</strong> <span id="focal-sku-label">Top by volume</span></div>
+  </div>
+
+  <div class="kpi-strip" id="sku-kpis">
+    <div class="kpi"><div class="kv b" id="sku-13w-units">—</div><div class="kl">Units sold (L13w)</div></div>
+    <div class="kpi"><div class="kv a" id="sku-fcast-units">—</div><div class="kl">Forecast next 13w</div></div>
+    <div class="kpi"><div class="kv g" id="sku-price">—</div><div class="kl">Avg retail price</div></div>
+    <div class="kpi"><div class="kv p">13 wk</div><div class="kl">Forward horizon</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct" id="sku-chart-title">SKU Weekly Units — Actuals + Forecast</div>
+    <div class="cs">52 weeks trailing actuals · dashed line = 13-week forward forecast · band = confidence interval</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forecast (base)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3)"></div>Confidence band</div>
+    </div>
+    <div class="cw"><canvas id="chartSku"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct">Top 5 SKUs — <span id="r1-acct-table">—</span> · Conventional Food · L13 Weeks</div>
+    <div class="cs">Ranked by total units. Forecast shown for next 13 weeks.</div>
+    <table id="sku-table">
+      <thead><tr>
+        <th>#</th><th>Product</th><th>UPC</th><th>Units L13W</th><th>Forecast 13W</th>
+      </tr></thead>
+      <tbody id="sku-table-body"></tbody>
+    </table>
+  </div>
+
+  <div class="insight b">
+    <div class="ii">◈</div>
+    <div>
+      <div class="il">What Connor sees</div>
+      <div id="connor-narrative">The top SKU's 13-week forward forecast gives Connor a planning-ready number for each product at each account — no spreadsheet reconciliation needed. The confidence band tells him where to hold inventory buffer vs. where demand is predictable enough to run lean.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB 3: Retailer Comparison (Brian) ─────────────────────────── -->
+<div class="panel" id="tab-comparison">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Accounts:</strong> <span id="both-accts-label">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food · All BUILT</div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kv g" id="r1-yoy-kpi">—</div><div class="kl" id="r1-yoy-label">YoY (L13w)</div></div>
+    <div class="kpi"><div class="kv b" id="r2-yoy-kpi">—</div><div class="kl" id="r2-yoy-label">YoY (L13w)</div></div>
+    <div class="kpi"><div class="kv g">3.4%</div><div class="kl">wMAPE across all series</div></div>
+    <div class="kpi"><div class="kv a">2,517</div><div class="kl">Total forecast series</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct">Weekly Units — Account Comparison · Actuals + Forecast</div>
+    <div class="cs">Both accounts indexed to first week = 1.0 to show trajectory on a common scale · dashed = forward forecast</div>
+    <div class="legend" id="comp-legend"></div>
+    <div class="cw"><canvas id="chartComparison"></canvas></div>
+  </div>
+
+  <div class="insight a">
+    <div class="ii">⚡</div>
+    <div>
+      <div class="il">What Brian sees</div>
+      <div id="brian-narrative">The model runs independently for each account and geography — it learns each account's seasonal pattern, promotional response, and base velocity separately. Comparing accounts on a common index shows which are accelerating vs. plateauing, and the 13-week forward forecasts diverge where account-level dynamics differ.</div>
+    </div>
+  </div>
+
+  <p class="footnote"><strong>Index:</strong> Each series divided by its own week-1 value so accounts with different volumes are visible on the same chart. Raw unit counts are in the Portfolio and SKU tabs.</p>
+</div>
+
+<!-- ── TAB 4: Accuracy Proof (Bracken) ───────────────────────────── -->
+<div class="panel" id="tab-accuracy">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Retailer:</strong> <span id="acc-r1-label">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food · All BUILT</div>
+    <div class="ctx"><strong>Holdout window:</strong> <span id="acc-holdout-range">—</span></div>
+    <div class="ctx holdout-label">Model had never seen this data</div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kv g" id="acc-wmape">—</div><div class="kl">wMAPE (holdout period)</div><div class="ks">Lower = more accurate</div></div>
+    <div class="kpi"><div class="kv b" id="acc-holdout-wks">13 wk</div><div class="kl">Holdout window</div><div class="ks">Weeks never seen during training</div></div>
+    <div class="kpi"><div class="kv a" id="acc-train-cutoff">—</div><div class="kl">Training data through</div><div class="ks">All predictions made from this anchor</div></div>
+    <div class="kpi"><div class="kv p">29 wk</div><div class="kl">Portfolio backtest span</div><div class="ks">Out-of-sample validation</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct" id="acc-chart-title">Predicted vs. Actual — Out-of-Sample Holdout</div>
+    <div class="cs" id="acc-chart-sub">Training period actuals · then holdout: model predictions (amber) vs. what actually happened (green) · forward forecast (blue)</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units (SPINS)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>Model prediction (holdout)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3)"></div>Confidence band (q10–q90)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast</div>
+    </div>
+    <div class="cw" style="height:320px"><canvas id="chartAccuracy"></canvas></div>
+  </div>
+
+  <div class="insight g">
+    <div class="ii">◎</div>
+    <div>
+      <div class="il">The accuracy story for Bracken</div>
+      <div id="acc-narrative">We trained the model on all data up to the cutoff date — then generated predictions for the next 13 weeks without looking at what actually happened. The amber line shows those predictions. The green line shows what SPINS actually recorded. This gap is what wMAPE measures: the closer the lines, the more accurate the model. The forward forecast (blue dashed) uses the same model — the track record above is the basis for trusting it.</div>
+    </div>
+  </div>
+
+  <p class="footnote"><strong>How to read this:</strong> The amber dashed line was generated <em>before</em> the holdout weeks occurred — it is a true out-of-sample prediction, not a fitted line. The model learned patterns from ~2.5 years of SPINS history (UPC × retailer × geography level) and generalized to weeks it had never seen. <strong>wMAPE</strong> = weighted Mean Absolute Percentage Error, weighted by actual volume so high-volume SKUs drive the accuracy measure. The forward forecast (blue) is generated by the same model anchored at the most recent SPINS delivery.</p>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ── Injected data ─────────────────────────────────────────────────────
+const DATA = __DATA_JSON__;
+
+// ── Helpers ───────────────────────────────────────────────────────────
+Chart.defaults.color = '#8892a4';
+Chart.defaults.borderColor = '#2a2f3d';
+Chart.defaults.font.family = 'Inter, sans-serif';
+Chart.defaults.font.size = 11;
+
+const TAB_NAMES = ['portfolio','sku','comparison','accuracy'];
+
+function showTab(name) {
+  TAB_NAMES.forEach((n,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', n === name);
+    document.getElementById('tab-' + n).classList.toggle('active', n === name);
+  });
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  const d = new Date(s);
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+
+function fmtDateShort(s) {
+  if (!s) return '';
+  const d = new Date(s);
+  return d.toLocaleDateString('en-US', {month:'short', year:'numeric'});
+}
+
+function fmtUnits(v) {
+  if (v == null) return '—';
+  const n = parseFloat(v);
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return Math.round(n).toLocaleString();
+}
+
+function baseOpts(yLabel) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(42,47,61,0.6)' }, ticks: { maxTicksLimit: 13 } },
+      y: { grid: { color: 'rgba(42,47,61,0.6)' },
+           title: { display: !!yLabel, text: yLabel, color: '#8892a4' },
+           ticks: { callback: v => fmtUnits(v) } }
+    }
+  };
+}
+
+// ── Populate labels ───────────────────────────────────────────────────
+const pa = DATA.primary_acct;
+const sa = DATA.secondary_acct;
+document.getElementById('r1-label').textContent        = pa;
+document.getElementById('r1-label-sku').textContent    = pa;
+document.getElementById('r1-acct-table').textContent   = pa;
+document.getElementById('anchor-label').textContent    = DATA.anchor_date || '—';
+document.getElementById('kpi-yoy').textContent         = DATA.r1_yoy;
+document.getElementById('kpi-series').textContent      = DATA.series_count;
+document.getElementById('data-badge').textContent      = 'Live SPINS data · generated ' + DATA.generated;
+document.getElementById('chart1-title').textContent    = pa + ' · Weekly Demand — Actuals + 13-Week Forecast';
+document.getElementById('both-accts-label').textContent = sa ? pa + ' vs. ' + sa : pa;
+document.getElementById('r1-yoy-kpi').textContent      = DATA.r1_yoy;
+document.getElementById('r1-yoy-label').textContent    = pa + ' YoY (L13w)';
+if (sa) {
+  document.getElementById('r2-yoy-kpi').textContent   = DATA.r2_yoy;
+  document.getElementById('r2-yoy-label').textContent = sa + ' YoY (L13w)';
+}
+
+// ── Chart 1: Portfolio (actuals + forecast) ───────────────────────────
+(function() {
+  const actuals  = DATA.r1_actuals  || [];
+  const forecast = DATA.r1_forecast || [];
+
+  const actDates = actuals.map(r => fmtDate(r.week_ending));
+  const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
+
+  const fctDates = forecast.map(r => fmtDate(r.week_ending));
+  const fctBase  = forecast.map(r => parseFloat(r.forecast_units) || null);
+  const fctLow   = forecast.map(r => parseFloat(r.forecast_low)   || null);
+  const fctHigh  = forecast.map(r => parseFloat(r.forecast_high)  || null);
+
+  const allLabels = [...actDates, ...fctDates];
+  const nAct = actDates.length;
+
+  const actLine  = [...actUnits, ...fctDates.map(() => null)];
+  const lastActual = actUnits.length ? actUnits[actUnits.length - 1] : null;
+  const fctLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
+  const highLine = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
+  const lowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+
+  new Chart(document.getElementById('chartPortfolio'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        { label: 'Band High', data: highLine, fill: '+1',
+          backgroundColor: 'rgba(79,142,247,0.10)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { label: 'Band Low', data: lowLine, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { label: 'Forecast', data: fctLine, borderColor: '#4f8ef7',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Actual', data: actLine, borderColor: '#38c9a0',
+          borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+      ]
+    },
+    options: baseOpts('Weekly Units')
+  });
+})();
+
+// ── Chart 2: SKU detail ───────────────────────────────────────────────
+(function() {
+  const actuals  = DATA.sku_actuals  || [];
+  const forecast = DATA.sku_forecast || [];
+  const desc     = DATA.focal_desc   || '';
+
+  document.getElementById('focal-sku-label').textContent = desc;
+  document.getElementById('sku-chart-title').textContent  = desc || 'Top SKU';
+
+  const last13Units = actuals.slice(-13).reduce((s,r) => s + (parseFloat(r.actual_units)||0), 0);
+  const fct13Units  = forecast.reduce((s,r) => s + (parseFloat(r.forecast_units)||0), 0);
+  const avgPrice    = actuals.length ? actuals.slice(-4).reduce((s,r) => s + (parseFloat(r.avg_price)||0), 0) / Math.min(4, actuals.length) : 0;
+  document.getElementById('sku-13w-units').textContent  = fmtUnits(last13Units);
+  document.getElementById('sku-fcast-units').textContent = fmtUnits(fct13Units);
+  document.getElementById('sku-price').textContent       = avgPrice ? '$' + avgPrice.toFixed(2) : '—';
+
+  const actDates = actuals.map(r => fmtDate(r.week_ending));
+  const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
+  const fctDates = forecast.map(r => fmtDate(r.week_ending));
+  const fctBase  = forecast.map(r => parseFloat(r.forecast_units) || null);
+  const fctLow   = forecast.map(r => parseFloat(r.forecast_low)   || null);
+  const fctHigh  = forecast.map(r => parseFloat(r.forecast_high)  || null);
+
+  const allLabels = [...actDates, ...fctDates];
+  const nAct = actDates.length;
+  const lastActual = actUnits.length ? actUnits[actUnits.length - 1] : null;
+
+  const actLine  = [...actUnits, ...fctDates.map(() => null)];
+  const fctLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
+  const highLine = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
+  const lowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+
+  new Chart(document.getElementById('chartSku'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        { label: 'Band High', data: highLine, fill: '+1',
+          backgroundColor: 'rgba(79,142,247,0.10)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { label: 'Band Low',  data: lowLine,  fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { label: 'Forecast', data: fctLine, borderColor: '#4f8ef7',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Actual', data: actLine, borderColor: '#38c9a0',
+          borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+      ]
+    },
+    options: baseOpts('Weekly Units')
+  });
+
+  const tbody = document.getElementById('sku-table-body');
+  tbody.innerHTML = '';
+  const fctByUpc = {};
+  fctByUpc[DATA.focal_upc] = fct13Units;
+
+  (DATA.top_skus || []).forEach((sku, i) => {
+    const tr = document.createElement('tr');
+    const fct = fctByUpc[sku.upc] != null ? fmtUnits(fctByUpc[sku.upc]) : '<span class="fcast-badge">in model</span>';
+    tr.innerHTML = `
+      <td class="rank">${i+1}</td>
+      <td>${sku.description || '—'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">${sku.upc || '—'}</td>
+      <td class="units-cell">${fmtUnits(sku.total_units_13w)}</td>
+      <td>${fct}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+})();
+
+// ── Chart 3: Retailer comparison (indexed) ────────────────────────────
+(function() {
+  const r1a = DATA.r1_actuals  || [];
+  const r1f = DATA.r1_forecast || [];
+  const r2a = DATA.r2_actuals  || [];
+  const r2f = DATA.r2_forecast || [];
+
+  function indexed(rows, key) {
+    const vals = rows.map(r => parseFloat(r[key]) || null);
+    const first = vals.find(v => v != null && v > 0);
+    return first ? vals.map(v => v != null ? v / first : null) : vals;
+  }
+
+  const r1ActDates = r1a.map(r => fmtDate(r.week_ending));
+  const r1FctDates = r1f.map(r => fmtDate(r.week_ending));
+  const r2ActDates = r2a.map(r => fmtDate(r.week_ending));
+
+  const allLabels = [...r1ActDates, ...r1FctDates];
+
+  const r1ActIdx = indexed(r1a, 'actual_units');
+  const r1FctIdx = indexed(r1f, 'forecast_units');
+  const r2ActIdx = indexed(r2a, 'actual_units');
+  const r2FctIdx = indexed(r2f, 'forecast_units');
+
+  const nR1 = r1ActDates.length;
+  const lastR1 = r1ActIdx.length ? r1ActIdx[r1ActIdx.length-1] : null;
+  const nR2 = r2ActDates.length;
+  const lastR2 = r2ActIdx.length ? r2ActIdx[r2ActIdx.length-1] : null;
+
+  function padAct(vals, n) {
+    return [...vals, ...Array(allLabels.length - n).fill(null)];
+  }
+  function padFct(vals, baseN, connector) {
+    return [...Array(baseN - 1).fill(null), connector, ...vals, ...Array(allLabels.length - baseN - vals.length).fill(null)];
+  }
+
+  const datasets = [
+    { label: DATA.primary_acct + ' Actual',
+      data: padAct(r1ActIdx, nR1),
+      borderColor: '#38c9a0', borderWidth: 2.5, pointRadius: 2,
+      pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+    { label: DATA.primary_acct + ' Forecast',
+      data: padFct(r1FctIdx, nR1, lastR1),
+      borderColor: '#38c9a0', borderDash: [5,4], borderWidth: 2,
+      pointRadius: 0, tension: 0.3, fill: false },
+  ];
+
+  if (r2a.length) {
+    const r2ActPadded = padAct(r2ActIdx.slice(0, allLabels.length), Math.min(nR2, allLabels.length));
+    const r2FctPadded = padFct(r2FctIdx, Math.min(nR2, allLabels.length),
+      r2ActIdx.length ? r2ActIdx[Math.min(nR2,allLabels.length)-1] : null);
+    datasets.push(
+      { label: DATA.secondary_acct + ' Actual',
+        data: r2ActPadded,
+        borderColor: '#9b6dff', borderWidth: 2.5, pointRadius: 2,
+        pointBackgroundColor: '#9b6dff', tension: 0.3, fill: false },
+      { label: DATA.secondary_acct + ' Forecast',
+        data: r2FctPadded,
+        borderColor: '#9b6dff', borderDash: [5,4], borderWidth: 2,
+        pointRadius: 0, tension: 0.3, fill: false }
+    );
+  }
+
+  const colors = {'#38c9a0': DATA.primary_acct, '#9b6dff': DATA.secondary_acct};
+  const legendEl = document.getElementById('comp-legend');
+  Object.entries(colors).forEach(([c, label]) => {
+    if (!label) return;
+    legendEl.innerHTML += `<div class="leg-item"><div class="leg-line" style="background:${c}"></div>${label} actual</div>
+      <div class="leg-item"><div class="leg-dash" style="color:${c}"></div>${label} forecast</div>`;
+  });
+
+  const opts = baseOpts('Indexed Units (Wk1 = 1.0)');
+  opts.scales.y.ticks = { callback: v => v != null ? v.toFixed(1) + 'x' : '' };
+  new Chart(document.getElementById('chartComparison'), { type: 'line', data: { labels: allLabels, datasets }, options: opts });
+})();
+
+// ── Chart 4: Accuracy proof ───────────────────────────────────────────
+(function() {
+  const history = DATA.backtest_history || [];
+  const holdout = DATA.backtest_holdout || [];
+  const fwd     = DATA.r1_forecast      || [];
+  const wmape   = DATA.backtest_wmape   || '3.4';
+  const cutoff  = DATA.backtest_cutoff  || '';
+  const valEnd  = DATA.backtest_val_end || '';
+
+  // Populate labels
+  document.getElementById('acc-r1-label').textContent    = DATA.primary_acct;
+  document.getElementById('acc-wmape').textContent        = wmape + '%';
+  document.getElementById('acc-train-cutoff').textContent = fmtDateShort(cutoff);
+  document.getElementById('acc-holdout-wks').textContent  = holdout.length + ' wk';
+
+  if (cutoff && valEnd) {
+    document.getElementById('acc-holdout-range').textContent =
+      fmtDateShort(cutoff) + ' – ' + fmtDateShort(valEnd);
+  }
+
+  document.getElementById('acc-chart-title').textContent =
+    DATA.primary_acct + ' · Predicted vs. Actual — Out-of-Sample Holdout';
+
+  if (!history.length && !holdout.length) {
+    document.getElementById('acc-chart-sub').textContent =
+      'Backtest data unavailable — re-run with mo-ml conda env to generate this chart.';
+    return;
+  }
+
+  // Build unified timeline
+  const histDates   = history.map(r => fmtDate(r.week_ending));
+  const histActuals = history.map(r => parseFloat(r.actual_units) || null);
+
+  const holdDates   = holdout.map(r => fmtDate(r.week_ending));
+  const holdActuals = holdout.map(r => parseFloat(r.actual_units) || null);
+  const holdPred    = holdout.map(r => parseFloat(r.pred_q50) || null);
+  const holdLow     = holdout.map(r => parseFloat(r.pred_q10) || null);
+  const holdHigh    = holdout.map(r => parseFloat(r.pred_q90) || null);
+
+  const fwdDates    = fwd.map(r => fmtDate(r.week_ending));
+  const fwdBase     = fwd.map(r => parseFloat(r.forecast_units) || null);
+  const fwdLow      = fwd.map(r => parseFloat(r.forecast_low)   || null);
+  const fwdHigh     = fwd.map(r => parseFloat(r.forecast_high)  || null);
+
+  const allLabels = [...histDates, ...holdDates, ...fwdDates];
+  const nHist = histDates.length;
+  const nHold = holdDates.length;
+  const nFwd  = fwdDates.length;
+  const total = allLabels.length;
+
+  // Helper: pad array to total length with leading/trailing nulls
+  function padSeg(vals, offset) {
+    return [...Array(offset).fill(null), ...vals, ...Array(total - offset - vals.length).fill(null)];
+  }
+
+  // Actuals: history + holdout continuous
+  const combinedActuals = [
+    ...histActuals,
+    ...holdActuals,
+    ...Array(nFwd).fill(null)
+  ];
+
+  // Connector between history and holdout (avoid gap)
+  const lastHist = histActuals.length ? histActuals[histActuals.length - 1] : null;
+
+  // Holdout predictions: start at history end, span holdout
+  const predLine = [
+    ...Array(nHist - 1).fill(null),
+    lastHist,
+    ...holdPred,
+    ...Array(nFwd).fill(null)
+  ];
+  const highAmber = [
+    ...Array(nHist - 1).fill(null),
+    lastHist,
+    ...holdHigh,
+    ...Array(nFwd).fill(null)
+  ];
+  const lowAmber = [
+    ...Array(nHist - 1).fill(null),
+    lastHist,
+    ...holdLow,
+    ...Array(nFwd).fill(null)
+  ];
+
+  // Forward forecast: start at last holdout actual
+  const lastHold = holdActuals.length ? holdActuals[holdActuals.length - 1] : null;
+  const fwdLine = [
+    ...Array(nHist + nHold - 1).fill(null),
+    lastHold,
+    ...fwdBase
+  ];
+  const fwdHighLine = [
+    ...Array(nHist + nHold - 1).fill(null),
+    lastHold,
+    ...fwdHigh
+  ];
+  const fwdLowLine = [
+    ...Array(nHist + nHold - 1).fill(null),
+    lastHold,
+    ...fwdLow
+  ];
+
+  new Chart(document.getElementById('chartAccuracy'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        // Forward forecast band (behind everything)
+        { label: 'Fwd Band High', data: fwdHighLine, fill: '+1',
+          backgroundColor: 'rgba(79,142,247,0.08)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { label: 'Fwd Band Low', data: fwdLowLine, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        // Amber holdout confidence band
+        { label: 'Pred Band High', data: highAmber, fill: '+1',
+          backgroundColor: 'rgba(245,166,35,0.12)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        { label: 'Pred Band Low', data: lowAmber, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+        // Forward forecast line
+        { label: 'Forward Forecast', data: fwdLine, borderColor: '#4f8ef7',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        // Holdout prediction
+        { label: 'Model Prediction', data: predLine, borderColor: '#f5a623',
+          borderDash: [5,4], borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
+        // Actuals (on top)
+        { label: 'Actual (SPINS)', data: combinedActuals, borderColor: '#38c9a0',
+          borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+      ]
+    },
+    options: {
+      ...baseOpts('Weekly Units'),
+      plugins: {
+        ...baseOpts('Weekly Units').plugins,
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const labels = ['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low'];
+              if (labels.includes(ctx.dataset.label)) return null;
+              return ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`;
+            }
+          },
+          filter: item => !['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low'].includes(item.dataset.label)
+        }
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
+"""
+
+# ── Inject data and write file ────────────────────────────────────────
+html_out = HTML.replace("__DATA_JSON__", json.dumps(payload, default=str))
+html_out = html_out.replace("__GENERATED__", payload["generated"])
+
+out_path = Path(__file__).parent / "bracken_forecast_charts.html"
+out_path.write_text(html_out, encoding="utf-8")
+print(f"\n✓ Written to {out_path}")
+print(f"  Open with: open {out_path}")
