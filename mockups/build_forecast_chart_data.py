@@ -21,6 +21,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
 
+# Dynamic lookback: show full previous calendar year + current year
+_PREV_YEAR     = datetime.now().year - 1
+_LOOKBACK_DATE = f"{_PREV_YEAR}-01-01"   # "2025-01-01" when run in 2026
+
 # ── Load .env from the mo-api directory (same as the API itself) ──────
 _env_path = Path(__file__).parent.parent.parent / "customer-built-mo-api" / ".env"
 if _env_path.exists():
@@ -119,7 +123,7 @@ second_acct = named[1]["retail_account"] if len(named) > 1 else None
 print(f"\n  Primary retailer  : {top_acct}")
 print(f"  Secondary retailer: {second_acct}\n")
 
-# 2. Primary retailer — 52 weeks of actuals
+# 2. Primary retailer — actuals from start of prior year
 r1_actuals = druid(f"""
     SELECT
       TIME_FLOOR(__time, 'P1W') AS week_ending,
@@ -129,10 +133,10 @@ r1_actuals = druid(f"""
       AND channel_outlet = 'CONVENTIONAL|FOOD'
       AND retail_account = '{top_acct}'
       AND military_excluded_flag = 0
-      AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+      AND __time >= TIMESTAMP '{_LOOKBACK_DATE}'
     GROUP BY 1
     ORDER BY 1
-""", f"{top_acct} actuals (52w)")
+""", f"{top_acct} actuals (from {_LOOKBACK_DATE})")
 
 # 3. Primary retailer — 13-week forward forecast
 r1_forecast = druid(f"""
@@ -150,7 +154,7 @@ r1_forecast = druid(f"""
 """, f"{top_acct} forecast (13w)")
 r1_forecast = add_forecast_dates(r1_forecast)
 
-# 4. Secondary retailer — 52 weeks of actuals
+# 4. Secondary retailer — actuals from start of prior year
 r2_actuals = []
 if second_acct:
     r2_actuals = druid(f"""
@@ -162,10 +166,10 @@ if second_acct:
           AND channel_outlet = 'CONVENTIONAL|FOOD'
           AND retail_account = '{second_acct}'
           AND military_excluded_flag = 0
-          AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+          AND __time >= TIMESTAMP '{_LOOKBACK_DATE}'
         GROUP BY 1
         ORDER BY 1
-    """, f"{second_acct} actuals (52w)")
+    """, f"{second_acct} actuals (from {_LOOKBACK_DATE})")
 
 # 5. Secondary retailer — 13-week forward forecast
 r2_forecast = []
@@ -221,7 +225,7 @@ if focal_upc:
           AND channel_outlet = 'CONVENTIONAL|FOOD'
           AND retail_account = '{top_acct}'
           AND military_excluded_flag = 0
-          AND __time >= TIMESTAMPADD(WEEK, -52, CURRENT_TIMESTAMP)
+          AND __time >= TIMESTAMP '{_LOOKBACK_DATE}'
         GROUP BY 1
         ORDER BY 1
     """, f"Top SKU actuals: {focal_desc[:40]}")
@@ -480,10 +484,12 @@ try:
     )
     weekly = weekly[weekly["actual_units"] > 0].copy()
 
-    # 39-week pre-cutoff history for chart context
+    # Pre-cutoff history: go back to start of prior year for full seasonal view
+    _lookback_ts    = pd.Timestamp(f"{_PREV_YEAR}-01-01", tz="UTC")
+    _history_weeks  = max(52, int((TRAINING_CUTOFF - _lookback_ts).days / 7) + 4)
     train_weekly = (
         df_r1[
-            (df_r1["__time"] > TRAINING_CUTOFF - pd.Timedelta(weeks=39)) &
+            (df_r1["__time"] > TRAINING_CUTOFF - pd.Timedelta(weeks=_history_weeks)) &
             (df_r1["__time"] <= TRAINING_CUTOFF)
         ]
         .groupby("__time")
@@ -566,9 +572,9 @@ HTML = r"""<!DOCTYPE html>
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
-  font-size:14px;line-height:1.6;padding:0 24px;
+  font-size:14px;line-height:1.6;padding:0 40px;
   padding-bottom:env(safe-area-inset-bottom,0px);}
-.page{max-width:960px;margin:0 auto;padding:40px 0 72px;}
+.page{max-width:1600px;margin:0 auto;padding:40px 0 72px;}
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   color:var(--accent);margin-bottom:10px;}
 h1{font-size:22px;font-weight:700;margin-bottom:6px;}
@@ -605,7 +611,7 @@ h1{font-size:22px;font-weight:700;margin-bottom:6px;}
   border-radius:10px;padding:24px;margin-bottom:16px;}
 .ct{font-size:13px;font-weight:600;margin-bottom:3px;}
 .cs{font-size:11px;color:var(--muted);margin-bottom:18px;}
-.cw{position:relative;height:280px;}
+.cw{position:relative;height:340px;}
 
 /* Insight */
 .insight{border-radius:8px;padding:16px 20px;font-size:13px;line-height:1.6;
@@ -690,7 +696,7 @@ tr:last-child td{border-bottom:none;}
 
   <div class="chart-card">
     <div class="ct" id="chart1-title">Weekly Demand — Actuals + 13-Week Forecast</div>
-    <div class="cs">Trailing 52 weeks of real SPINS sell-through · dashed = forward forecast · band = confidence interval (low/high)</div>
+    <div class="cs">SPINS sell-through actuals (prior year to present) · dashed = 13-week forward forecast · band = confidence interval (low/high)</div>
     <div class="legend">
       <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forecast (base)</div>
@@ -729,7 +735,7 @@ tr:last-child td{border-bottom:none;}
 
   <div class="chart-card">
     <div class="ct" id="sku-chart-title">SKU Weekly Units — Actuals + Forecast</div>
-    <div class="cs">52 weeks trailing actuals · dashed line = 13-week forward forecast · band = confidence interval</div>
+    <div class="cs">SPINS actuals (prior year to present) · dashed line = 13-week forward forecast · band = confidence interval</div>
     <div class="legend">
       <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forecast (base)</div>
@@ -776,7 +782,7 @@ tr:last-child td{border-bottom:none;}
 
   <div class="chart-card">
     <div class="ct">Weekly Units — Account Comparison · Actuals + Forecast</div>
-    <div class="cs">Both accounts indexed to first week = 1.0 to show trajectory on a common scale · dashed = forward forecast</div>
+    <div class="cs">Raw weekly units for each account · dashed = forward forecast · shows absolute scale difference and trajectory</div>
     <div class="legend" id="comp-legend"></div>
     <div class="cw"><canvas id="chartComparison"></canvas></div>
   </div>
@@ -785,11 +791,11 @@ tr:last-child td{border-bottom:none;}
     <div class="ii">⚡</div>
     <div>
       <div class="il">What Brian sees</div>
-      <div id="brian-narrative">The model runs independently for each account and geography — it learns each account's seasonal pattern, promotional response, and base velocity separately. Comparing accounts on a common index shows which are accelerating vs. plateauing, and the 13-week forward forecasts diverge where account-level dynamics differ.</div>
+      <div id="brian-narrative">The model runs independently for each account and geography — it learns each account's seasonal pattern, promotional response, and base velocity separately. Showing raw weekly units makes the absolute scale difference visible alongside trend direction, and the 13-week forward forecasts diverge where account-level dynamics differ.</div>
     </div>
   </div>
 
-  <p class="footnote"><strong>Index:</strong> Each series divided by its own week-1 value so accounts with different volumes are visible on the same chart. Raw unit counts are in the Portfolio and SKU tabs.</p>
+  <p class="footnote"><strong>Data source:</strong> SPINS syndicated POS data via built_enriched_weekly. Raw weekly units shown; accounts may differ significantly in absolute volume. The 13-week forward forecast (dashed) is generated from the most recent SPINS delivery using the same production model.</p>
 </div>
 
 <!-- ── TAB 4: Accuracy Proof (Bracken) ───────────────────────────── -->
@@ -817,7 +823,7 @@ tr:last-child td{border-bottom:none;}
       <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3)"></div>Confidence band (q10–q90)</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast</div>
     </div>
-    <div class="cw" style="height:320px"><canvas id="chartAccuracy"></canvas></div>
+    <div class="cw" style="height:380px"><canvas id="chartAccuracy"></canvas></div>
   </div>
 
   <div class="insight g">
@@ -854,14 +860,23 @@ function showTab(name) {
 
 function fmtDate(s) {
   if (!s) return '';
-  const d = new Date(s);
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  const d = new Date(s + 'T12:00:00');
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
 
 function fmtDateShort(s) {
   if (!s) return '';
-  const d = new Date(s);
-  return d.toLocaleDateString('en-US', {month:'short', year:'numeric'});
+  const d = new Date(s + 'T12:00:00');
+  return d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+}
+
+// Compact tick label for x-axis: "Jan '25"
+function fmtTick(s) {
+  if (!s) return '';
+  const d = new Date(s + 'T12:00:00');
+  const mo = d.toLocaleDateString('en-US', {month:'short'});
+  const yr = String(d.getFullYear()).slice(2);
+  return `${mo} '${yr}`;
 }
 
 function fmtUnits(v) {
@@ -878,12 +893,21 @@ function baseOpts(yLabel) {
       legend: { display: false },
       tooltip: {
         callbacks: {
+          title: ctx => fmtDate(ctx[0]?.label || ''),
           label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`
         }
       }
     },
     scales: {
-      x: { grid: { color: 'rgba(42,47,61,0.6)' }, ticks: { maxTicksLimit: 13 } },
+      x: {
+        grid: { color: 'rgba(42,47,61,0.6)' },
+        ticks: {
+          maxTicksLimit: 20,
+          callback: function(value) {
+            return fmtTick(this.getLabelForValue(value));
+          }
+        }
+      },
       y: { grid: { color: 'rgba(42,47,61,0.6)' },
            title: { display: !!yLabel, text: yLabel, color: '#8892a4' },
            ticks: { callback: v => fmtUnits(v) } }
@@ -955,10 +979,10 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const actuals  = DATA.r1_actuals  || [];
   const forecast = DATA.r1_forecast || [];
 
-  const actDates = actuals.map(r => fmtDate(r.week_ending));
+  const actDates = actuals.map(r => r.week_ending);   // ISO strings → tick formatter handles display
   const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
 
-  const fctDates = forecast.map(r => fmtDate(r.week_ending));
+  const fctDates = forecast.map(r => r.week_ending);
   const fctBase  = forecast.map(r => parseFloat(r.forecast_units) || null);
   const fctLow   = forecast.map(r => parseFloat(r.forecast_low)   || null);
   const fctHigh  = forecast.map(r => parseFloat(r.forecast_high)  || null);
@@ -1010,9 +1034,9 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   document.getElementById('sku-fcast-units').textContent = fmtUnits(fct13Units);
   document.getElementById('sku-price').textContent       = avgPrice ? '$' + avgPrice.toFixed(2) : '—';
 
-  const actDates = actuals.map(r => fmtDate(r.week_ending));
+  const actDates = actuals.map(r => r.week_ending);
   const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
-  const fctDates = forecast.map(r => fmtDate(r.week_ending));
+  const fctDates = forecast.map(r => r.week_ending);
   const fctBase  = forecast.map(r => parseFloat(r.forecast_units) || null);
   const fctLow   = forecast.map(r => parseFloat(r.forecast_low)   || null);
   const fctHigh  = forecast.map(r => parseFloat(r.forecast_high)  || null);
@@ -1066,57 +1090,51 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   });
 })();
 
-// ── Chart 3: Retailer comparison (indexed) ────────────────────────────
+// ── Chart 3: Retailer comparison (raw units) ──────────────────────────
 (function() {
   const r1a = DATA.r1_actuals  || [];
   const r1f = DATA.r1_forecast || [];
   const r2a = DATA.r2_actuals  || [];
   const r2f = DATA.r2_forecast || [];
 
-  function indexed(rows, key) {
-    const vals = rows.map(r => parseFloat(r[key]) || null);
-    const first = vals.find(v => v != null && v > 0);
-    return first ? vals.map(v => v != null ? v / first : null) : vals;
-  }
-
-  const r1ActDates = r1a.map(r => fmtDate(r.week_ending));
-  const r1FctDates = r1f.map(r => fmtDate(r.week_ending));
-  const r2ActDates = r2a.map(r => fmtDate(r.week_ending));
+  const r1ActDates = r1a.map(r => r.week_ending);
+  const r1FctDates = r1f.map(r => r.week_ending);
+  const r2ActDates = r2a.map(r => r.week_ending);
 
   const allLabels = [...r1ActDates, ...r1FctDates];
 
-  const r1ActIdx = indexed(r1a, 'actual_units');
-  const r1FctIdx = indexed(r1f, 'forecast_units');
-  const r2ActIdx = indexed(r2a, 'actual_units');
-  const r2FctIdx = indexed(r2f, 'forecast_units');
+  const r1ActVals = r1a.map(r => parseFloat(r.actual_units)   || null);
+  const r1FctVals = r1f.map(r => parseFloat(r.forecast_units) || null);
+  const r2ActVals = r2a.map(r => parseFloat(r.actual_units)   || null);
+  const r2FctVals = r2f.map(r => parseFloat(r.forecast_units) || null);
 
-  const nR1 = r1ActDates.length;
-  const lastR1 = r1ActIdx.length ? r1ActIdx[r1ActIdx.length-1] : null;
-  const nR2 = r2ActDates.length;
-  const lastR2 = r2ActIdx.length ? r2ActIdx[r2ActIdx.length-1] : null;
+  const nR1   = r1ActDates.length;
+  const lastR1 = r1ActVals.length ? r1ActVals[r1ActVals.length - 1] : null;
+  const nR2   = r2ActDates.length;
+  const lastR2 = r2ActVals.length ? r2ActVals[Math.min(nR2, allLabels.length) - 1] : null;
 
   function padAct(vals, n) {
     return [...vals, ...Array(allLabels.length - n).fill(null)];
   }
   function padFct(vals, baseN, connector) {
-    return [...Array(baseN - 1).fill(null), connector, ...vals, ...Array(allLabels.length - baseN - vals.length).fill(null)];
+    return [...Array(baseN - 1).fill(null), connector, ...vals,
+            ...Array(allLabels.length - baseN - vals.length).fill(null)];
   }
 
   const datasets = [
     { label: DATA.primary_acct + ' Actual',
-      data: padAct(r1ActIdx, nR1),
+      data: padAct(r1ActVals, nR1),
       borderColor: '#38c9a0', borderWidth: 2.5, pointRadius: 2,
       pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
     { label: DATA.primary_acct + ' Forecast',
-      data: padFct(r1FctIdx, nR1, lastR1),
+      data: padFct(r1FctVals, nR1, lastR1),
       borderColor: '#38c9a0', borderDash: [5,4], borderWidth: 2,
       pointRadius: 0, tension: 0.3, fill: false },
   ];
 
   if (r2a.length) {
-    const r2ActPadded = padAct(r2ActIdx.slice(0, allLabels.length), Math.min(nR2, allLabels.length));
-    const r2FctPadded = padFct(r2FctIdx, Math.min(nR2, allLabels.length),
-      r2ActIdx.length ? r2ActIdx[Math.min(nR2,allLabels.length)-1] : null);
+    const r2ActPadded = padAct(r2ActVals.slice(0, allLabels.length), Math.min(nR2, allLabels.length));
+    const r2FctPadded = padFct(r2FctVals, Math.min(nR2, allLabels.length), lastR2);
     datasets.push(
       { label: DATA.secondary_acct + ' Actual',
         data: r2ActPadded,
@@ -1137,8 +1155,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       <div class="leg-item"><div class="leg-dash" style="color:${c}"></div>${label} forecast</div>`;
   });
 
-  const optsComp = baseOpts('Indexed Units (Wk1 = 1.0)');
-  optsComp.scales.y.ticks = { callback: v => v != null ? v.toFixed(1) + 'x' : '' };
+  const optsComp = baseOpts('Weekly Units');
   optsComp.plugins.vertLine = { index: nR1 - 1, label: '→ Forecast' };
   new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
 })();
@@ -1173,17 +1190,17 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     return;
   }
 
-  // Build unified timeline
-  const histDates   = history.map(r => fmtDate(r.week_ending));
+  // Build unified timeline (ISO strings; tick formatter handles display)
+  const histDates   = history.map(r => r.week_ending);
   const histActuals = history.map(r => parseFloat(r.actual_units) || null);
 
-  const holdDates   = holdout.map(r => fmtDate(r.week_ending));
+  const holdDates   = holdout.map(r => r.week_ending);
   const holdActuals = holdout.map(r => parseFloat(r.actual_units) || null);
   const holdPred    = holdout.map(r => parseFloat(r.pred_q50) || null);
   const holdLow     = holdout.map(r => parseFloat(r.pred_q10) || null);
   const holdHigh    = holdout.map(r => parseFloat(r.pred_q90) || null);
 
-  const fwdDates    = fwd.map(r => fmtDate(r.week_ending));
+  const fwdDates    = fwd.map(r => r.week_ending);
   const fwdBase     = fwd.map(r => parseFloat(r.forecast_units) || null);
   const fwdLow      = fwd.map(r => parseFloat(r.forecast_low)   || null);
   const fwdHigh     = fwd.map(r => parseFloat(r.forecast_high)  || null);
