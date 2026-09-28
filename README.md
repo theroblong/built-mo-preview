@@ -6,6 +6,18 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 172: Chart date clarity + KROGER fall promo question for Brian (2026-09-28)
+
+`bracken_forecast_charts.html` — three improvements: (1) Added "Actuals thru [date] · Forecast [date range]" context chips to all tabs so it's unambiguous when actual SPINS data ends and which weeks are forecast. (2) Added `→ Forecast` vertical reference line on all forward-forecast charts (Portfolio, SKU Detail, Retailer Comparison) drawn by an inline Chart.js plugin at the actual/forecast boundary. (3) Added two vertical reference lines on the Accuracy Proof chart: amber at training cutoff ("← Training | Holdout →") and blue at holdout/forecast boundary ("→ Live forecast"). Forward forecast confirmed: v4 model (trained Sept 14, 2026), anchored Sept 6, 2026, q10/q90 confidence bands — most current available. KROGER fall promo question logged to wiki/18 and memory for Brian at next cadence: the model predicts ~26% seasonal decline at KROGER (Sept–Nov 2025 was 32K–44K/week vs current 76K — even with 1.75× YoY factor applied); if Brian has planned fall TPRs/displays the model doesn't know about, the actual trajectory could beat the forecast.
+
+---
+
+## README update 171: honest accuracy framing — no crystal ball, directional signal (2026-09-28)
+
+Chart narrative, KPI tiles, subtitle and footnote updated to lead with honesty: no crystal ball, 13.8% recursive wMAPE ~2× better than naive, bands are model quantile range not a coverage guarantee, transparent that May surge and July softening fell outside the band. "No crystal ball — directional signal" framing for CFO.
+
+---
+
 ## README update 170: True recursive backtest — honest wMAPE for Bracken (2026-09-28)
 
 `build_forecast_chart_data.py` backtest section rewritten to use MO_27's exact autoregressive algorithm: each of 13 forecast steps feeds its own q50 prediction back as lag1 for the next step — no actual SPINS values used after the May 10 training cutoff. lag52 always from real historical data. Seasonal blend (0.40 weight) prevents AR collapse. **True recursive wMAPE at Kroger: 13.8%** vs. the earlier teacher-forcing number of 2.3% (which used actual lags within the holdout — biased and not how production works). 13.8% is the number to cite to Bracken: roughly 2× better than a year-ago seasonal baseline (~25%), CPG industry "good" tier (10–20%). Chart labels and narrative updated to say "true recursive predictions" and explain that each step uses the prior step's own output. Do not cite 2.3% to the CFO. Full honesty rule logged to `memory/project_bracken_forecast_plan.md` and `wiki/18`.

@@ -677,7 +677,8 @@ tr:last-child td{border-bottom:none;}
     <div class="ctx"><strong>Retailer:</strong> <span id="r1-label">—</span></div>
     <div class="ctx"><strong>Channel:</strong> Conventional Food</div>
     <div class="ctx"><strong>Scope:</strong> All BUILT products</div>
-    <div class="ctx"><strong>Forecast anchor:</strong> <span id="anchor-label">—</span></div>
+    <div class="ctx"><strong>Actuals thru:</strong> <span id="anchor-label">—</span></div>
+    <div class="ctx"><strong>Forecast:</strong> <span id="fcast-range-label">—</span></div>
   </div>
 
   <div class="kpi-strip">
@@ -715,6 +716,8 @@ tr:last-child td{border-bottom:none;}
     <div class="ctx"><strong>Retailer:</strong> <span id="r1-label-sku">—</span></div>
     <div class="ctx"><strong>Channel:</strong> Conventional Food</div>
     <div class="ctx"><strong>SKU:</strong> <span id="focal-sku-label">Top by volume</span></div>
+    <div class="ctx"><strong>Actuals thru:</strong> <span id="anchor-label-sku">—</span></div>
+    <div class="ctx"><strong>Forecast:</strong> <span id="fcast-range-sku">—</span></div>
   </div>
 
   <div class="kpi-strip" id="sku-kpis">
@@ -760,6 +763,8 @@ tr:last-child td{border-bottom:none;}
   <div class="ctx-row">
     <div class="ctx"><strong>Accounts:</strong> <span id="both-accts-label">—</span></div>
     <div class="ctx"><strong>Channel:</strong> Conventional Food · All BUILT</div>
+    <div class="ctx"><strong>Actuals thru:</strong> <span id="anchor-label-comp">—</span></div>
+    <div class="ctx"><strong>Forecast:</strong> <span id="fcast-range-comp">—</span></div>
   </div>
 
   <div class="kpi-strip">
@@ -886,13 +891,38 @@ function baseOpts(yLabel) {
   };
 }
 
+// Inline plugin — draws a vertical dashed line at the actual/forecast boundary
+const vertLinePlugin = {
+  id: 'vertLine',
+  afterDraw(chart, args, opts) {
+    if (opts == null || opts.index == null) return;
+    const {ctx, chartArea, scales} = chart;
+    const x = scales.x.getPixelForValue(opts.index);
+    if (x < chartArea.left || x > chartArea.right) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(79,142,247,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Label
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(79,142,247,0.85)';
+    ctx.textAlign = 'left';
+    ctx.fillText(opts.label || '→ Forecast', x + 5, chartArea.top + 14);
+    ctx.restore();
+  }
+};
+
 // ── Populate labels ───────────────────────────────────────────────────
 const pa = DATA.primary_acct;
 const sa = DATA.secondary_acct;
 document.getElementById('r1-label').textContent        = pa;
 document.getElementById('r1-label-sku').textContent    = pa;
 document.getElementById('r1-acct-table').textContent   = pa;
-document.getElementById('anchor-label').textContent    = DATA.anchor_date || '—';
 document.getElementById('kpi-yoy').textContent         = DATA.r1_yoy;
 document.getElementById('kpi-series').textContent      = DATA.series_count;
 document.getElementById('data-badge').textContent      = 'Live SPINS data · generated ' + DATA.generated;
@@ -904,6 +934,21 @@ if (sa) {
   document.getElementById('r2-yoy-kpi').textContent   = DATA.r2_yoy;
   document.getElementById('r2-yoy-label').textContent = sa + ' YoY (L13w)';
 }
+
+// ── Date range chips (actuals cutoff + forecast range) ────────────────
+function fcastRange(fcastRows) {
+  if (!fcastRows || !fcastRows.length) return '—';
+  const dates = fcastRows.map(r => r.week_ending).filter(Boolean).sort();
+  return fmtDate(dates[0]) + ' – ' + fmtDate(dates[dates.length - 1]);
+}
+const anchorDisplay = DATA.anchor_date || '—';
+const fcastRangeStr = fcastRange(DATA.r1_forecast);
+document.getElementById('anchor-label').textContent      = anchorDisplay;
+document.getElementById('anchor-label-sku').textContent  = anchorDisplay;
+document.getElementById('anchor-label-comp').textContent = anchorDisplay;
+document.getElementById('fcast-range-label').textContent = fcastRangeStr;
+document.getElementById('fcast-range-sku').textContent   = fcastRangeStr;
+document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
 // ── Chart 1: Portfolio (actuals + forecast) ───────────────────────────
 (function() {
@@ -927,8 +972,11 @@ if (sa) {
   const highLine = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
   const lowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
 
+  const opts1 = baseOpts('Weekly Units');
+  opts1.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
   new Chart(document.getElementById('chartPortfolio'), {
     type: 'line',
+    plugins: [vertLinePlugin],
     data: {
       labels: allLabels,
       datasets: [
@@ -942,7 +990,7 @@ if (sa) {
           borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
       ]
     },
-    options: baseOpts('Weekly Units')
+    options: opts1
   });
 })();
 
@@ -978,8 +1026,11 @@ if (sa) {
   const highLine = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
   const lowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
 
+  const optsSku = baseOpts('Weekly Units');
+  optsSku.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
   new Chart(document.getElementById('chartSku'), {
     type: 'line',
+    plugins: [vertLinePlugin],
     data: {
       labels: allLabels,
       datasets: [
@@ -993,7 +1044,7 @@ if (sa) {
           borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
       ]
     },
-    options: baseOpts('Weekly Units')
+    options: optsSku
   });
 
   const tbody = document.getElementById('sku-table-body');
@@ -1086,9 +1137,10 @@ if (sa) {
       <div class="leg-item"><div class="leg-dash" style="color:${c}"></div>${label} forecast</div>`;
   });
 
-  const opts = baseOpts('Indexed Units (Wk1 = 1.0)');
-  opts.scales.y.ticks = { callback: v => v != null ? v.toFixed(1) + 'x' : '' };
-  new Chart(document.getElementById('chartComparison'), { type: 'line', data: { labels: allLabels, datasets }, options: opts });
+  const optsComp = baseOpts('Indexed Units (Wk1 = 1.0)');
+  optsComp.scales.y.ticks = { callback: v => v != null ? v.toFixed(1) + 'x' : '' };
+  optsComp.plugins.vertLine = { index: nR1 - 1, label: '→ Forecast' };
+  new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
 })();
 
 // ── Chart 4: Accuracy proof ───────────────────────────────────────────
@@ -1195,8 +1247,39 @@ if (sa) {
     ...fwdLow
   ];
 
+  // Two-line accuracy plugin: one at training cutoff, one at holdout/forward boundary
+  const twoLinePlugin = {
+    id: 'twoLine',
+    afterDraw(chart) {
+      const {ctx, chartArea, scales} = chart;
+      const lines = [
+        { idx: nHist - 1, label: '← Training | Holdout →', color: 'rgba(245,166,35,0.7)' },
+        { idx: nHist + nHold - 1, label: '→ Live forecast', color: 'rgba(79,142,247,0.7)' },
+      ];
+      lines.forEach(({idx, label, color}) => {
+        const x = scales.x.getPixelForValue(idx);
+        if (x < chartArea.left || x > chartArea.right) return;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = color;
+        ctx.textAlign = 'left';
+        ctx.fillText(label, x + 5, chartArea.top + 14);
+        ctx.restore();
+      });
+    }
+  };
+
   new Chart(document.getElementById('chartAccuracy'), {
     type: 'line',
+    plugins: [twoLinePlugin],
     data: {
       labels: allLabels,
       datasets: [
