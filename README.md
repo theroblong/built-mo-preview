@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 168: Bracken Palmer (CFO) forecasting meeting prep — project plan + Phase 1 activities (2026-09-28)
+
+Brian requested a high-level forecasting project plan for a meeting with Bracken Palmer (BUILT CFO, economic buyer). Rob narrowed the ask: "a clear defined list of which analytics... a list of activities... so we know the confined list and when it'll be available for phase one." Two deliverables produced: (1) `mockups/bracken_forecast_project_plan.html` — 3-option roadmap (fast track 10wk / full demand suite 20wk recommended / platform expansion 40wk), addresses Bracken's "3 years of data but it's not comparable" concern; (2) `mockups/bracken_phase1_activities.html` — confined Phase 1 list: 8 analytics (4 live today, 4 in-flight) + 4 build activities with owner and availability dates. Phase 1 build items: A1 accuracy dashboard (2–3wks), A2 promo lift UI (3–4wks), A3 FP&A integration (4–6wks), A4 scenario modeling (6–8wks). Meeting date TBD pending Brian's confirmation. Logged in `wiki/18` and `memory/project_bracken_forecast_plan.md`. Brian's title corrected in memory: Sr. Director, Business Intelligence.
+
+---
+
 ## README update 167: Mo Chat live UI test — two client-facing bugs found (2026-09-26)
 
 Live Cannibalization Explanation testing surfaced two HIGH-severity issues. (1) Competitor description shows as "0robert Irvines Ftcrnch" — a leading "0" on "Robert" from the raw SPINS `Description` field in `spins_full`. Needs correction before any client demo; fix is either a source data correction or a CASE normalization in Q0. (2) Mo Chat cited -22.7% donor base unit change while the MO NARRATIVE chip displayed -98.6% for the same metric — Chat then asked the user to describe what was on screen despite "Watching" being active. Root cause: narrative and chat tool payload draw from different fields. Fix: audit `mo_chat.py` `_SCREEN_MAP` for Cannibalization Explanation and reconcile `donor_base_units_pct_chg` source. Positive finding: FitCrunch demand-transfer analysis was strong and data-grounded. Logged in `wiki/18` and `memory/project_mo_chat_bugs_sept26.md`.

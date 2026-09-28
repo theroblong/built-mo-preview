@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Forecasting Project Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #161921;
+  --surface2: #1e2330;
+  --border: #2a2f3d;
+  --text: #e8ecf4;
+  --muted: #8892a4;
+  --accent: #4f8ef7;
+  --accent2: #38c9a0;
+  --amber: #f5a623;
+  --red: #e05252;
+  --purple: #9b6dff;
+  --tag-bg: #1a2035;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 0 16px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 0 80px;
+}
+
+/* Header */
+.header {
+  margin-bottom: 48px;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  margin-bottom: 16px;
+}
+.subtitle {
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 640px;
+}
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.meta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.meta-value {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Section */
+section { margin-bottom: 56px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.section-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Status bar */
+.status-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+}
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent2);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label { font-size: 11px; color: var(--muted); }
+.stat-sub { font-size: 11px; color: var(--accent); }
+
+/* Concern box */
+.concern-box {
+  background: linear-gradient(135deg, rgba(79,142,247,0.07) 0%, rgba(155,109,255,0.07) 100%);
+  border: 1px solid rgba(79,142,247,0.25);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.concern-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.concern-quote {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.concern-response {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Options */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.option-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.option-card:hover { border-color: var(--accent); }
+.option-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), inset 0 0 40px rgba(79,142,247,0.04);
+}
+.option-card.recommended { border-color: var(--accent2); }
+.option-card.recommended:hover { border-color: var(--accent2); }
+
+.option-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.option-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.option-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.badge-recommended { background: rgba(56,201,160,0.15); color: var(--accent2); }
+.badge-fast { background: rgba(245,166,35,0.15); color: var(--amber); }
+.badge-full { background: rgba(79,142,247,0.15); color: var(--accent); }
+
+.option-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+.option-timeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.timeline-icon { font-size: 14px; }
+.timeline-text { font-size: 13px; font-weight: 600; color: var(--text); }
+
+.option-outcomes { display: flex; flex-direction: column; gap: 6px; }
+.outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.outcome-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent2);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.option-phases { display: flex; flex-direction: column; gap: 8px; }
+.phase {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+}
+.phase-week {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap;
+  min-width: 56px;
+  padding-top: 1px;
+}
+.phase-label { color: var(--text); font-weight: 500; line-height: 1.4; }
+.phase-sub { color: var(--muted); font-size: 11px; line-height: 1.4; }
+
+/* Roadmap */
+.roadmap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  overflow-x: auto;
+}
+.roadmap-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 24px;
+}
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0;
+  min-width: 560px;
+}
+.roadmap-row {
+  display: contents;
+}
+.roadmap-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 8px 16px 8px 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.roadmap-label:last-of-type { border-bottom: none; }
+.roadmap-track {
+  position: relative;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.roadmap-track:last-of-type { border-bottom: none; }
+
+.track-bar {
+  height: 26px;
+  border-radius: 5px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-live { background: rgba(56,201,160,0.2); color: var(--accent2); border: 1px solid rgba(56,201,160,0.3); }
+.track-q4 { background: rgba(79,142,247,0.2); color: var(--accent); border: 1px solid rgba(79,142,247,0.3); }
+.track-q1 { background: rgba(245,166,35,0.2); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+.track-q2 { background: rgba(155,109,255,0.2); color: var(--purple); border: 1px solid rgba(155,109,255,0.3); }
+.track-future { background: rgba(136,146,164,0.12); color: var(--muted); border: 1px dashed var(--border); }
+
+.quarter-labels {
+  grid-column: 2;
+  display: flex;
+  margin-bottom: 8px;
+}
+.quarter-label {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Deliverables table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(42,47,61,0.5);
+  vertical-align: top;
+  color: var(--text);
+}
+tr:last-child td { border-bottom: none; }
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.dot-live { background: var(--accent2); }
+.dot-near { background: var(--accent); }
+.dot-mid { background: var(--amber); }
+.dot-future { background: var(--muted); }
+
+/* Tag */
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--tag-bg);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* Notes */
+.note {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 20px;
+}
+.note strong { color: var(--text); }
+
+@media (max-width: 600px) {
+  h1 { font-size: 22px; }
+  .options-grid { grid-template-columns: 1fr; }
+  .status-bar { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="eyebrow">BUILT × Aevah — Forecasting Use Case</div>
+    <h1>Demand Forecasting Project Plan</h1>
+    <p class="subtitle">Three scope options with timelines and deliverables. Prepared for discussion with Brian and Bracken.</p>
+    <div class="meta-row">
+      <div class="meta-item">
+        <span class="meta-label">Prepared</span>
+        <span class="meta-value">September 2026</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Audience</span>
+        <span class="meta-value">Bracken Palmer (CFO), Brian Cluster (Sr. Director, Business Intelligence)</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Current Model</span>
+        <span class="meta-value">Live — wMAPE 3.4%</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Data Coverage</span>
+        <span class="meta-value">107M rows · 185 weeks · 148 SKUs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: Where We Are -->
+  <section>
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Where We Are Today</div>
+    </div>
+
+    <div class="status-bar">
+      <div class="stat">
+        <span class="stat-val">3.4%</span>
+        <span class="stat-label">Forecast error (wMAPE)</span>
+        <span class="stat-sub">vs 39.7% naive baseline</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">41,249</span>
+        <span class="stat-label">Active forecast rows</span>
+        <span class="stat-sub">13-week forward · live in Mo</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">148</span>
+        <span class="stat-label">BUILT SKUs tracked</span>
+        <span class="stat-sub">Bars · Puffs · Sour Puffs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">2,517</span>
+        <span class="stat-label">Forecast series</span>
+        <span class="stat-sub">SKU × retailer × geography</span>
+      </div>
+    </div>
+
+    <div class="concern-box">
+      <div class="concern-label">Bracken's core concern — June 26</div>
+      <div class="concern-quote">"3 years of data but it's not comparable data. Promotional lift in '25 won't be what it is in '26 and '27."</div>
+      <div class="concern-response">The model is built to handle this. It separates base demand from promo-driven volume at every SKU and retailer, tracks year-ago lift rates as a signal, and retrains quarterly so each forecast reflects the current promotional regime — not a historical average. The Oct 2025 backtest (29-week out-of-sample) showed 6.1% error during BUILT's highest-growth phase precisely because the model adapts.</div>
+    </div>
+  </section>
+
+  <!-- Section 2: Options -->
+  <section>
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Three Scope Options</div>
+    </div>
+
+    <div class="options-grid">
+
+      <!-- Option A -->
+      <div class="option-card">
+        <div class="option-header">
+          <div class="option-name">Option A — FP&amp;A Integration</div>
+          <span class="option-badge badge-fast">Fast track</span>
+        </div>
+        <div class="option-desc">Get the existing forecast into Connor's planning workflow and give Bracken a live accuracy dashboard. No new modeling — deploy and connect what's already built.</div>
+        <div class="option-timeline">
+          <span class="timeline-icon">⏱</span>
+          <span class="timeline-text">10 weeks</span>
+        </div>
+        <div class="option-phases">
+          <div class="phase">
+            <span class="phase-week">Wk 1–3</span>
+            <div>
+              <div class="phase-label">Accuracy Dashboard</div>
+              <div class="phase-sub">Rolling wMAPE by retailer + SKU, visible to Bracken/Jeff. Live proof of model performance.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="phase-week">Wk 4–7</span>
+            <div>
+              <div class="phase-label">Connor's Workflow</div>
+              <div class="phase-sub">13-week forecast exported into planning cadence. Board pack automation stub. Cannibalization-adjusted view.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="phase-week">Wk 8–10</span>
+            <div>
+              <div class="phase-label">Scenario Modeling</div>
+              <div class="phase-sub">Price sensitivity + promo timing scenarios. "What happens if we hold price at Kroger for 8 weeks?"</div>
+            </div>
+          </div>
+        </div>
+        <div class="option-outcomes">
+          <div class="outcome"><span class="outcome-dot"></span>Connor saves 5–8 hrs/week on forecast reconciliation</div>
+          <div class="outcome"><span class="outcome-dot"></span>Bracken has live, auditable accuracy proof before Q4 planning</div>
+          <div class="outcome"><span class="outcome-dot"></span>No additional data sources or ML work required</div>
+        </div>
+      </div>
+
+      <!-- Option B -->
+      <div class="option-card recommended">
+        <div class="option-header">
+          <div class="option-name">Option B — Full Demand Suite</div>
+          <span class="option-badge badge-recommended">Recommended</span>
+        </div>
+        <div class="option-desc">Option A plus promo ROI measurement and sell-in data integration (NetSuite). Closes the sell-through → sell-in gap and adds promotional planning capability.</div>
+        <div class="option-timeline">
+          <span class="timeline-icon">⏱</span>
+          <span class="timeline-text">20 weeks</span>
+        </div>
+        <div class="option-phases">
+          <div class="phase">
+            <span class="phase-week">Wk 1–10</span>
+            <div>
+              <div class="phase-label">All of Option A</div>
+              <div class="phase-sub">Accuracy dashboard + FP&amp;A workflow + scenario modeling.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="phase-week">Wk 11–15</span>
+            <div>
+              <div class="phase-label">Promo Intelligence</div>
+              <div class="phase-sub">Lift forecasting by event type. Promotional ROI measurement. "Was that Kroger TPR worth running?"</div>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="phase-week">Wk 16–20</span>
+            <div>
+              <div class="phase-label">Sell-In Integration</div>
+              <div class="phase-sub">NetSuite shipment data layered in. Surfaces over/under-ordering risk 1–4 weeks earlier than SPINS alone.</div>
+            </div>
+          </div>
+        </div>
+        <div class="option-outcomes">
+          <div class="outcome"><span class="outcome-dot"></span>Complete sell-through + sell-in demand picture</div>
+          <div class="outcome"><span class="outcome-dot"></span>Promo ROI measurable in the same system as the forecast</div>
+          <div class="outcome"><span class="outcome-dot"></span>Closes the 1–4 week lag between shipment and scan data</div>
+          <div class="outcome"><span class="outcome-dot"></span>Foundation for Costco and dark-retailer expansion</div>
+        </div>
+      </div>
+
+      <!-- Option C -->
+      <div class="option-card">
+        <div class="option-header">
+          <div class="option-name">Option C — Platform Expansion</div>
+          <span class="option-badge badge-full">Full scope</span>
+        </div>
+        <div class="option-desc">Option B plus Costco/CRX integration, retailer expansion to data-dark accounts (WinCo, HEB, Aldi), and automated refresh with alert engine.</div>
+        <div class="option-timeline">
+          <span class="timeline-icon">⏱</span>
+          <span class="timeline-text">40 weeks</span>
+        </div>
+        <div class="option-phases">
+          <div class="phase">
+            <span class="phase-week">Wk 1–20</span>
+            <div>
+              <div class="phase-label">All of Option B</div>
+              <div class="phase-sub">Full demand suite delivered and embedded in FP&amp;A workflow.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="phase-week">Wk 21–30</span>
+            <div>
+              <div class="phase-label">Costco + Dark Retailers</div>
+              <div class="phase-sub">Circana CRX for Costco. NS2 sell-in proxy for WinCo, HEB, Aldi, TJ's — extending coverage to accounts with no scan data.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <span class="phase-week">Wk 31–40</span>
+            <div>
+              <div class="phase-label">Automated Alert Engine</div>
+              <div class="phase-sub">Weekly model refresh. Proactive alerts when forecast deviation exceeds threshold. Bracken gets a Sunday summary, not a Monday fire drill.</div>
+            </div>
+          </div>
+        </div>
+        <div class="option-outcomes">
+          <div class="outcome"><span class="outcome-dot"></span>Forecast coverage across all BUILT retail accounts</div>
+          <div class="outcome"><span class="outcome-dot"></span>Automated weekly refresh — zero manual intervention</div>
+          <div class="outcome"><span class="outcome-dot"></span>Proactive exception alerts for finance + supply chain</div>
+          <div class="outcome"><span class="outcome-dot"></span>Full CPG intelligence platform at scale</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section 3: Roadmap -->
+  <section>
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Delivery Roadmap</div>
+    </div>
+
+    <div class="roadmap">
+      <div class="roadmap-title">Milestone view — Q4 2026 through Q3 2027</div>
+      <div class="roadmap-grid">
+        <div></div>
+        <div class="quarter-labels">
+          <div class="quarter-label">Q4 '26</div>
+          <div class="quarter-label">Q1 '27</div>
+          <div class="quarter-label">Q2 '27</div>
+          <div class="quarter-label">Q3 '27</div>
+        </div>
+
+        <div class="roadmap-label">Demand Forecast</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-live" style="width:100%">Live · 3.4% wMAPE · 2,517 series</div>
+        </div>
+
+        <div class="roadmap-label">Accuracy Dashboard</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q4" style="width:28%">Wk 1–3 · A/B/C</div>
+        </div>
+
+        <div class="roadmap-label">FP&amp;A Workflow</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q4" style="width:40%; margin-left:20%">Wk 4–7 · A/B/C</div>
+        </div>
+
+        <div class="roadmap-label">Scenario Modeling</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q4" style="width:18%; margin-left:55%">Wk 8–10</div>
+        </div>
+
+        <div class="roadmap-label">Promo Intelligence</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q1" style="width:30%; margin-left:22%">Wk 11–15 · B/C</div>
+        </div>
+
+        <div class="roadmap-label">Sell-In (NS2)</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q1" style="width:28%; margin-left:47%">Wk 16–20 · B/C</div>
+        </div>
+
+        <div class="roadmap-label">Costco / CRX</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q2" style="width:32%; margin-left:52%">Wk 21–30 · C only</div>
+        </div>
+
+        <div class="roadmap-label">Dark Retailers</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q2" style="width:28%; margin-left:55%">Wk 21–30 · C only</div>
+        </div>
+
+        <div class="roadmap-label">Alert Engine</div>
+        <div class="roadmap-track">
+          <div class="track-bar track-q3" style="width:28%; margin-left:77%">Wk 31–40 · C only</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Deliverables -->
+  <section>
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">Deliverables by Phase</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Deliverable</th>
+          <th>Option</th>
+          <th>Who Uses It</th>
+          <th>Business Output</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>13-week demand forecast · live in Mo</td>
+          <td><span class="tag">ALL</span></td>
+          <td>Connor, Chase</td>
+          <td>SKU-level sell-through projection by retailer + geography</td>
+          <td><span class="status-dot dot-live"></span>Live</td>
+        </tr>
+        <tr>
+          <td>Cannibalization-adjusted forecast</td>
+          <td><span class="tag">ALL</span></td>
+          <td>Connor, Jeff</td>
+          <td>Net new demand vs. volume shift from sibling SKUs</td>
+          <td><span class="status-dot dot-live"></span>Live</td>
+        </tr>
+        <tr>
+          <td>Price elasticity suite</td>
+          <td><span class="tag">ALL</span></td>
+          <td>Brian, Connor</td>
+          <td>Demand sensitivity to price changes by SKU × account</td>
+          <td><span class="status-dot dot-live"></span>Live</td>
+        </tr>
+        <tr>
+          <td>Accuracy dashboard (rolling wMAPE)</td>
+          <td><span class="tag">A · B · C</span></td>
+          <td>Bracken, Jeff</td>
+          <td>Live proof of model performance — auditable by finance</td>
+          <td><span class="status-dot dot-near"></span>Wk 1–3</td>
+        </tr>
+        <tr>
+          <td>FP&amp;A workflow integration</td>
+          <td><span class="tag">A · B · C</span></td>
+          <td>Connor, Chase</td>
+          <td>Forecast export into planning cycle · board pack automation</td>
+          <td><span class="status-dot dot-near"></span>Wk 4–7</td>
+        </tr>
+        <tr>
+          <td>Price + promo scenario modeling</td>
+          <td><span class="tag">A · B · C</span></td>
+          <td>Brian, Connor</td>
+          <td>What-if: price hold / event timing / distribution expansion</td>
+          <td><span class="status-dot dot-near"></span>Wk 8–10</td>
+        </tr>
+        <tr>
+          <td>Promo lift forecasting + ROI</td>
+          <td><span class="tag">B · C</span></td>
+          <td>Brian, Connor, Trade</td>
+          <td>Was that TPR worth running? Forward-looking event lift by account</td>
+          <td><span class="status-dot dot-mid"></span>Wk 11–15</td>
+        </tr>
+        <tr>
+          <td>Sell-in integration (NetSuite NS2)</td>
+          <td><span class="tag">B · C</span></td>
+          <td>Bracken, Jeff, Supply Chain</td>
+          <td>Over/under-ordering risk surfaced 1–4 weeks earlier</td>
+          <td><span class="status-dot dot-mid"></span>Wk 16–20</td>
+        </tr>
+        <tr>
+          <td>Costco / CRX forecast</td>
+          <td><span class="tag">C</span></td>
+          <td>Brian, Connor</td>
+          <td>Club channel demand visibility — currently a blind spot</td>
+          <td><span class="status-dot dot-future"></span>Wk 21–30</td>
+        </tr>
+        <tr>
+          <td>Dark retailer coverage (WinCo, HEB, Aldi, TJ's)</td>
+          <td><span class="tag">C</span></td>
+          <td>Brian, Sales</td>
+          <td>Sell-in proxy for accounts with no scan data</td>
+          <td><span class="status-dot dot-future"></span>Wk 21–30</td>
+        </tr>
+        <tr>
+          <td>Automated alert engine</td>
+          <td><span class="tag">C</span></td>
+          <td>Bracken, Jeff, Connor</td>
+          <td>Weekly exception report — proactive, not reactive</td>
+          <td><span class="status-dot dot-future"></span>Wk 31–40</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Recommendation:</strong> Option B is the right scope for the next phase. Option A is achievable before Q4 close and gives Bracken the live accuracy proof he needs to trust the forecast in planning. The sell-in layer (Wk 16–20) is the highest-value addition — blending NS2 shipment data with SPINS sell-through closes the inventory gap that currently requires Connor to maintain manual bridge spreadsheets. Option C scope is valid but should wait until Option B is embedded in the workflow.
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

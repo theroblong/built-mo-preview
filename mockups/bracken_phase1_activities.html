@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Phase 1 Forecasting Activities</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #161921;
+  --surface2: #1e2330;
+  --border: #2a2f3d;
+  --text: #e8ecf4;
+  --muted: #8892a4;
+  --accent: #4f8ef7;
+  --accent2: #38c9a0;
+  --amber: #f5a623;
+  --red: #e05252;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 0 24px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.page { max-width: 860px; margin: 0 auto; padding: 48px 0 72px; }
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; max-width: 560px; }
+
+.meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.chip {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.chip strong { color: var(--text); }
+
+/* Section label */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 12px;
+  margin-top: 32px;
+}
+.section-label:first-of-type { margin-top: 0; }
+
+/* Analytics table */
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom: 1px solid var(--border); }
+th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 8px 12px;
+  text-align: left;
+}
+th:first-child { padding-left: 0; }
+td {
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(42,47,61,0.6);
+  vertical-align: top;
+}
+td:first-child { padding-left: 0; }
+tr:last-child td { border-bottom: none; }
+
+.analytics-name { font-weight: 600; color: var(--text); font-size: 13px; }
+.analytics-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.audience-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(79,142,247,0.12);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.status-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent2);
+}
+.status-live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent2);
+  flex-shrink: 0;
+}
+.status-weeks {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--amber);
+}
+.status-weeks::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+/* Activities table */
+.activity-row td { padding: 10px 12px; font-size: 13px; }
+.activity-row td:first-child { padding-left: 0; }
+.activity-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.activity-label { font-weight: 500; color: var(--text); }
+.activity-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.owner-chip {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.avail-live { font-size: 12px; font-weight: 600; color: var(--accent2); }
+.avail-weeks { font-size: 12px; font-weight: 600; color: var(--amber); }
+
+.note {
+  margin-top: 28px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.note strong { color: var(--text); }
+
+@media (max-width: 600px) {
+  h1 { font-size: 20px; }
+  th, td { padding: 8px 6px; }
+  th:first-child, td:first-child { padding-left: 0; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">BUILT × Aevah — Forecasting Use Case</div>
+  <h1>Phase 1: Analytics &amp; Activities</h1>
+  <p class="subtitle">Confined list of Phase 1 analytics and delivery activities. Prepared for alignment before the Bracken meeting.</p>
+
+  <div class="meta-chips">
+    <div class="chip"><strong>Prepared:</strong> Sept 28, 2026</div>
+    <div class="chip"><strong>Meeting date:</strong> TBD — pending Brian's confirmation</div>
+    <div class="chip"><strong>Audience:</strong> Bracken Palmer (CFO)</div>
+    <div class="chip"><strong>Scope:</strong> Phase 1 only</div>
+  </div>
+
+  <!-- Analytics in scope -->
+  <div class="section-label">Phase 1 Analytics</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:34%">Analytic</th>
+        <th style="width:32%">What it answers</th>
+        <th style="width:18%">Primary users</th>
+        <th style="width:16%">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <div class="analytics-name">Demand Forecast</div>
+          <div class="analytics-desc">13-week sell-through by SKU × retailer × geography</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">How many bars will sell at each account over the next quarter?</td>
+        <td><span class="audience-tag">Connor · Chase</span></td>
+        <td><span class="status-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">Forecast Accuracy Tracking</div>
+          <div class="analytics-desc">Rolling error rate by SKU and retailer, visible to finance</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">How accurate is the model — and is it getting better or worse?</td>
+        <td><span class="audience-tag">Bracken · Jeff</span></td>
+        <td><span class="status-weeks">2–3 wks</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">Cannibalization-Adjusted Forecast</div>
+          <div class="analytics-desc">Net new demand vs. volume shifted from sibling SKUs</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">When we launch a new flavor, how much is truly incremental?</td>
+        <td><span class="audience-tag">Connor · Jeff</span></td>
+        <td><span class="status-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">Price Elasticity</div>
+          <div class="analytics-desc">Demand sensitivity to price by SKU × account</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">If we move price $0.50 at Target, what happens to volume?</td>
+        <td><span class="audience-tag">Brian · Connor</span></td>
+        <td><span class="status-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">New Product Ramp Monitoring</div>
+          <div class="analytics-desc">4-week launch velocity vs. expected ramp curve</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">Is this new SKU tracking to plan in its first month?</td>
+        <td><span class="audience-tag">Brian · Chase</span></td>
+        <td><span class="status-live">Live</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">Promo Lift Measurement</div>
+          <div class="analytics-desc">Lift by event type, account, and discount depth</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">Was that TPR worth running — and which events drive the most lift?</td>
+        <td><span class="audience-tag">Brian · Connor · Trade</span></td>
+        <td><span class="status-weeks">3–4 wks</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">FP&amp;A Workflow Integration</div>
+          <div class="analytics-desc">Forecast export into Connor's planning cycle</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">How do we get the model's numbers into the plan Connor is building?</td>
+        <td><span class="audience-tag">Connor · Bracken</span></td>
+        <td><span class="status-weeks">4–6 wks</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="analytics-name">Scenario Modeling</div>
+          <div class="analytics-desc">Price hold / promo timing / distribution expansion what-ifs</div>
+        </td>
+        <td style="font-size:13px; color:var(--muted)">What happens to Q4 if we hold price at Kroger for 8 weeks?</td>
+        <td><span class="audience-tag">Brian · Connor</span></td>
+        <td><span class="status-weeks">6–8 wks</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Activities -->
+  <div class="section-label" style="margin-top:40px">Delivery Activities</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:6%">#</th>
+        <th style="width:38%">Activity</th>
+        <th style="width:14%">Owner</th>
+        <th style="width:22%">Depends on</th>
+        <th style="width:20%">Available</th>
+      </tr>
+    </thead>
+    <tbody class="activity-row">
+      <tr>
+        <td><span class="activity-num">A1</span></td>
+        <td>
+          <div class="activity-label">Accuracy dashboard</div>
+          <div class="activity-desc">Rolling wMAPE by retailer + SKU. Gives Bracken/Jeff live proof.</div>
+        </td>
+        <td><span class="owner-chip">Aevah</span></td>
+        <td style="font-size:12px; color:var(--muted)">—</td>
+        <td><span class="avail-weeks">2–3 weeks</span></td>
+      </tr>
+      <tr>
+        <td><span class="activity-num">A2</span></td>
+        <td>
+          <div class="activity-label">Promo lift UI</div>
+          <div class="activity-desc">Surface lift data (596 events) as interactive screen in Mo. Data is ready.</div>
+        </td>
+        <td><span class="owner-chip">Aevah</span></td>
+        <td style="font-size:12px; color:var(--muted)">—</td>
+        <td><span class="avail-weeks">3–4 weeks</span></td>
+      </tr>
+      <tr>
+        <td><span class="activity-num">A3</span></td>
+        <td>
+          <div class="activity-label">FP&amp;A export + planning integration</div>
+          <div class="activity-desc">13-week forecast into Connor's planning cadence. Board pack stub.</div>
+        </td>
+        <td><span class="owner-chip">Aevah + Connor</span></td>
+        <td style="font-size:12px; color:var(--muted)">Connor workflow meeting</td>
+        <td><span class="avail-weeks">4–6 weeks</span></td>
+      </tr>
+      <tr>
+        <td><span class="activity-num">A4</span></td>
+        <td>
+          <div class="activity-label">Scenario modeling interface</div>
+          <div class="activity-desc">Price + promo what-if UI. "What happens if we hold price at Kroger?"</div>
+        </td>
+        <td><span class="owner-chip">Aevah</span></td>
+        <td style="font-size:12px; color:var(--muted)">A3 complete</td>
+        <td><span class="avail-weeks">6–8 weeks</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Live today (no activity needed):</strong> Demand Forecast, Cannibalization-Adjusted Forecast, Price Elasticity, and New Product Ramp Monitoring are already running in Mo. The four activities above (A1–A4) are the only remaining build items for Phase 1. Phase 2 scope (sell-in integration, Costco/CRX, dark retailers) is defined but excluded from this list.
+  </div>
+
+</div>
+</body>
+</html>
