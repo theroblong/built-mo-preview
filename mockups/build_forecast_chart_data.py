@@ -77,11 +77,18 @@ def parse_druid_ts(s: str) -> datetime | None:
     return None
 
 def add_forecast_dates(rows: list[dict]) -> list[dict]:
-    """Attach calendar week_ending to each forecast row from anchor_date + N weeks."""
+    """Attach calendar week_ending to each forecast row from anchor_date + N weeks.
+    Sorts numerically by forecast_week_number first (Druid may return it as a
+    string, giving lexicographic order: 1, 10, 11 ... instead of 1, 2, 3 ...).
+    Slices anchor_date to YYYY-MM-DD before parsing — handles '+00:00' variants.
+    """
     if not rows:
         return rows
-    anchor = parse_druid_ts(str(rows[0].get("anchor_date", "")))
-    if not anchor:
+    rows = sorted(rows, key=lambda r: int(r.get("forecast_week_number") or 0))
+    anchor_str = str(rows[0].get("anchor_date", ""))[:10]
+    try:
+        anchor = datetime.strptime(anchor_str, "%Y-%m-%d")
+    except ValueError:
         return rows
     for r in rows:
         n = int(r.get("forecast_week_number") or 0)
@@ -93,6 +100,14 @@ def safe_float(v) -> float | None:
         return float(v) if v is not None else None
     except (TypeError, ValueError):
         return None
+
+def normalize_dates(rows: list[dict]) -> list[dict]:
+    """Trim any week_ending to YYYY-MM-DD — Druid returns full ISO timestamps."""
+    for r in rows:
+        we = r.get("week_ending")
+        if we:
+            r["week_ending"] = str(we)[:10]
+    return rows
 
 # ── Queries ───────────────────────────────────────────────────────────
 print("\n=== Fetching data from Druid ===\n")
@@ -137,6 +152,7 @@ r1_actuals = druid(f"""
     GROUP BY 1
     ORDER BY 1
 """, f"{top_acct} actuals (from {_LOOKBACK_DATE})")
+r1_actuals = normalize_dates(r1_actuals)
 
 # 3. Primary retailer — 13-week forward forecast
 r1_forecast = druid(f"""
@@ -170,6 +186,7 @@ if second_acct:
         GROUP BY 1
         ORDER BY 1
     """, f"{second_acct} actuals (from {_LOOKBACK_DATE})")
+    r2_actuals = normalize_dates(r2_actuals)
 
 # 5. Secondary retailer — 13-week forward forecast
 r2_forecast = []
@@ -229,6 +246,7 @@ if focal_upc:
         GROUP BY 1
         ORDER BY 1
     """, f"Top SKU actuals: {focal_desc[:40]}")
+    sku_actuals = normalize_dates(sku_actuals)
 
     sku_forecast = druid(f"""
         SELECT
@@ -264,9 +282,12 @@ r2_yoy = yoy(r2_actuals)
 
 anchor_date_display = ""
 if r1_forecast:
-    a = parse_druid_ts(str(r1_forecast[0].get("anchor_date", "")))
-    if a:
-        anchor_date_display = a.strftime("%b %d, %Y")
+    _anchor_str = str(r1_forecast[0].get("anchor_date", ""))[:10]
+    try:
+        _a = datetime.strptime(_anchor_str, "%Y-%m-%d")
+        anchor_date_display = _a.strftime("%b %d, %Y")
+    except ValueError:
+        pass
 
 # ── True recursive backtest (mirrors MO_27's exact autoregressive loop) ──────
 # Each forecast step feeds its own q50 prediction back as lag1 for the next
@@ -858,22 +879,28 @@ function showTab(name) {
   });
 }
 
+// Parse any ISO date string (with or without time/timezone) → local Date at noon
+function parseDate(s) {
+  if (!s) return new Date(NaN);
+  return new Date(String(s).slice(0, 10) + 'T12:00:00');
+}
+
 function fmtDate(s) {
-  if (!s) return '';
-  const d = new Date(s + 'T12:00:00');
+  const d = parseDate(s);
+  if (isNaN(d)) return '';
   return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
 
 function fmtDateShort(s) {
-  if (!s) return '';
-  const d = new Date(s + 'T12:00:00');
+  const d = parseDate(s);
+  if (isNaN(d)) return '';
   return d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
 }
 
 // Compact tick label for x-axis: "Jan '25"
 function fmtTick(s) {
-  if (!s) return '';
-  const d = new Date(s + 'T12:00:00');
+  const d = parseDate(s);
+  if (isNaN(d)) return '';
   const mo = d.toLocaleDateString('en-US', {month:'short'});
   const yr = String(d.getFullYear()).slice(2);
   return `${mo} '${yr}`;
