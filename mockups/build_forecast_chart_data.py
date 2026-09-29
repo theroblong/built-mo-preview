@@ -1433,23 +1433,33 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const fwdPromoHArr = fwd.map(r => parseFloat(r.forecast_high_promo)  || null);
   const fwdPromoLArr = fwd.map(r => parseFloat(r.forecast_low_promo)   || null);
 
-  const allLabels = [...histDates, ...holdDates, ...fwdDates];
+  // Post-holdout actuals: SPINS weeks after holdout ends, before forward forecast starts
+  const allActualsAcc = DATA.r1_actuals || [];
+  const fwdStart = fwdDates[0] || '9999-99-99';
+  const postHold    = allActualsAcc.filter(r => r.week_ending > valEnd && r.week_ending < fwdStart);
+  const nPost       = postHold.length;
+  const postDates   = postHold.map(r => r.week_ending);
+  const postActuals = postHold.map(r => parseFloat(r.actual_units) || null);
+  const postTotal   = postHold.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+
+  const allLabels = [...histDates, ...holdDates, ...postDates, ...fwdDates];
   const nHist = histDates.length;
   const nHold = holdDates.length;
   const nFwd  = fwdDates.length;
-  const total = allLabels.length;
 
-  // Actuals: history + holdout continuous (base)
+  // Actuals: history + holdout + post-holdout continuous (base)
   const combinedActuals = [
     ...histActuals,
     ...holdActuals,
+    ...postActuals,
     ...Array(nFwd).fill(null)
   ];
 
-  // Actuals: history + holdout continuous (total incl. promo)
+  // Actuals: history + holdout + post-holdout continuous (total incl. promo)
   const combinedTotal = [
     ...histTotal,
     ...holdTotal,
+    ...postTotal,
     ...Array(nFwd).fill(null)
   ];
 
@@ -1457,54 +1467,54 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const lastHist      = histActuals.length ? histActuals[histActuals.length - 1] : null;
   const lastHistTotal = histTotal.length   ? histTotal[histTotal.length - 1]     : null;
 
-  // Holdout predictions: start at history end, span holdout
+  // Holdout predictions: start at history end, span holdout only
   const predLine = [
     ...Array(nHist - 1).fill(null),
     lastHist,
     ...holdPred,
-    ...Array(nFwd).fill(null)
+    ...Array(nPost + nFwd).fill(null)
   ];
   const highAmber = [
     ...Array(nHist - 1).fill(null),
     lastHist,
     ...holdHigh,
-    ...Array(nFwd).fill(null)
+    ...Array(nPost + nFwd).fill(null)
   ];
   const lowAmber = [
     ...Array(nHist - 1).fill(null),
     lastHist,
     ...holdLow,
-    ...Array(nFwd).fill(null)
+    ...Array(nPost + nFwd).fill(null)
   ];
 
-  // Forward forecast base: start at last holdout actual
-  const lastHold      = holdActuals.length ? holdActuals[holdActuals.length - 1] : null;
-  const lastHoldTotal = holdTotal.length   ? holdTotal[holdTotal.length - 1]     : null;
+  // Forward forecast base: connect from last post-holdout actual (or holdout end if no post data)
+  const lastPostOrHold      = postActuals.length ? postActuals[postActuals.length - 1] : (holdActuals.length ? holdActuals[holdActuals.length - 1] : null);
+  const lastPostOrHoldTotal = postTotal.length   ? postTotal[postTotal.length - 1]     : (holdTotal.length   ? holdTotal[holdTotal.length - 1]     : null);
   const fwdLine = [
-    ...Array(nHist + nHold - 1).fill(null),
-    lastHold,
+    ...Array(nHist + nHold + nPost - 1).fill(null),
+    lastPostOrHold,
     ...fwdBase
   ];
   const fwdHighLine = [
-    ...Array(nHist + nHold - 1).fill(null),
-    lastHold,
+    ...Array(nHist + nHold + nPost - 1).fill(null),
+    lastPostOrHold,
     ...fwdHigh
   ];
   const fwdLowLine = [
-    ...Array(nHist + nHold - 1).fill(null),
-    lastHold,
+    ...Array(nHist + nHold + nPost - 1).fill(null),
+    lastPostOrHold,
     ...fwdLow
   ];
 
   // Forward promo forecast
-  const fwdPromoLine  = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoArr];
-  const fwdPromoHLine = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoHArr];
-  const fwdPromoLLine = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoLArr];
+  const fwdPromoLine  = [...Array(nHist + nHold + nPost - 1).fill(null), lastPostOrHoldTotal, ...fwdPromoArr];
+  const fwdPromoHLine = [...Array(nHist + nHold + nPost - 1).fill(null), lastPostOrHoldTotal, ...fwdPromoHArr];
+  const fwdPromoLLine = [...Array(nHist + nHold + nPost - 1).fill(null), lastPostOrHoldTotal, ...fwdPromoLArr];
 
   // Promo-adjusted holdout prediction (base pred × (1+lift)) — connects from history end
-  const predPromoLine  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdPredPromo,  ...Array(nFwd).fill(null)];
-  const highPromoAmber = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdHighPromo,  ...Array(nFwd).fill(null)];
-  const lowPromoAmber  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdLowPromo,   ...Array(nFwd).fill(null)];
+  const predPromoLine  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdPredPromo,  ...Array(nPost + nFwd).fill(null)];
+  const highPromoAmber = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdHighPromo,  ...Array(nPost + nFwd).fill(null)];
+  const lowPromoAmber  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdLowPromo,   ...Array(nPost + nFwd).fill(null)];
 
   // Two-line accuracy plugin: one at training cutoff, one at holdout/forward boundary
   const twoLinePlugin = {
@@ -1513,7 +1523,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       const {ctx, chartArea, scales} = chart;
       const lines = [
         { idx: nHist - 1, label: '← Training | Holdout →', color: 'rgba(245,166,35,0.7)' },
-        { idx: nHist + nHold - 1, label: '→ Live forecast', color: 'rgba(79,142,247,0.7)' },
+        { idx: nHist + nHold + nPost - 1, label: '→ Live forecast', color: 'rgba(79,142,247,0.7)' },
       ];
       lines.forEach(({idx, label, color}) => {
         const x = scales.x.getPixelForValue(idx);
