@@ -1537,10 +1537,61 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const holdHighData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q90) || null}));
   const holdLowData  = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q10) || null}));
 
+  // Promo-adjusted data (for toggle)
+  const liftMult = 1 + (DATA.r1_lift_pct / 100);
+  const actualsPromoData = allActualsAcc.map(r => ({
+    x: r.week_ending,
+    y: ((parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0)) || null
+  })).filter(p => p.y != null);
+  const holdPredPromoData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q50_promo) || null}));
+  const holdHighPromoData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q90_promo) || null}));
+  const holdLowPromoData  = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q10_promo) || null}));
+
   // Forward forecast
   const fwdData  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_units) || null}));
   const fwdHighD = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_high)  || null}));
   const fwdLowD  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_low)   || null}));
+
+  // Confidence band plugin — draws q10-q90 fills BEFORE dataset lines
+  const retroColors = [
+    'rgba(155,109,255,0.55)','rgba(79,142,247,0.45)',
+    'rgba(155,109,255,0.55)','rgba(79,142,247,0.45)',
+    'rgba(155,109,255,0.55)','rgba(79,142,247,0.45)',
+  ];
+  const qBandsPlugin = {
+    id: 'qBands',
+    beforeDatasetsDraw(chart) {
+      const {ctx, chartArea, scales} = chart;
+      const mult = promoOn ? liftMult : 1;
+      (qBts || []).forEach((q, i) => {
+        if (!q.predictions || !q.predictions.length) return;
+        const m = retroColors[i % retroColors.length].match(/rgba\((\d+),(\d+),(\d+)/);
+        if (!m) return;
+        const bandFill = `rgba(${m[1]},${m[2]},${m[3]},${promoOn ? 0.14 : 0.09})`;
+        const preds = q.predictions;
+        ctx.save();
+        ctx.beginPath();
+        let first = true;
+        for (const p of preds) {
+          const x = scales.x.getPixelForValue(new Date(String(p.week_ending).slice(0,10) + 'T12:00:00').getTime());
+          const y = scales.y.getPixelForValue((parseFloat(p.pred_q90)||0) * mult);
+          if (x < chartArea.left || x > chartArea.right) continue;
+          if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+        }
+        for (let k = preds.length - 1; k >= 0; k--) {
+          const p = preds[k];
+          const x = scales.x.getPixelForValue(new Date(String(p.week_ending).slice(0,10) + 'T12:00:00').getTime());
+          const y = scales.y.getPixelForValue((parseFloat(p.pred_q10)||0) * mult);
+          if (x < chartArea.left || x > chartArea.right) continue;
+          ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = bandFill;
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+  };
 
   // Quarter boundary lines + wMAPE badge plugin
   const quarterLinesPlugin = {
@@ -1709,17 +1760,29 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     // Actuals on top
     { label: 'Base Units (SPINS)', data: actualsData, borderColor: '#38c9a0',
       borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+    // ── Promo overlay datasets (toggle-controlled, _promo: true) ────────
+    // Promo actuals (base + incr_units) — lighter green dashed
+    { label: 'Total Units incl. Promo', data: actualsPromoData,
+      borderColor: 'rgba(56,201,160,0.55)', borderDash: [4,3],
+      borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false,
+      hidden: true, _promo: true },
+    // Holdout promo confidence band
+    { label: 'Holdout Band High Promo', data: holdHighPromoData, fill: '+1',
+      backgroundColor: 'rgba(245,166,35,0.10)',
+      borderColor: 'rgba(245,166,35,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    { label: 'Holdout Band Low Promo', data: holdLowPromoData, fill: false,
+      borderColor: 'rgba(245,166,35,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    // Holdout promo prediction (brighter amber, above base)
+    { label: 'Holdout Pred (Promo)', data: holdPredPromoData,
+      borderColor: 'rgba(245,166,35,0.95)', borderDash: [6,3],
+      borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false,
+      hidden: true, _promo: true },
   ];
 
   // Quarterly retrospective lines + naive baseline per quarter
-  const retroColors = [
-    'rgba(155,109,255,0.55)',
-    'rgba(79,142,247,0.45)',
-    'rgba(155,109,255,0.55)',
-    'rgba(79,142,247,0.45)',
-    'rgba(155,109,255,0.55)',
-    'rgba(79,142,247,0.45)',
-  ];
+  // (retroColors already defined above for qBandsPlugin)
 
   // Naive YoY baseline for the true holdout window
   const holdNaiveData = holdout
@@ -1756,7 +1819,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
         fill: false,
       });
     }
-    // Our model prediction for this quarter
+    // Our model prediction for this quarter (base)
     datasets.push({
       label: q.quarter_label + ' Retrospective',
       data: q.predictions.map(p => ({x: p.week_ending, y: p.pred_q50})),
@@ -1767,9 +1830,23 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       tension: 0.3,
       fill: false,
     });
+    // Promo-adjusted q50 for this quarter (toggle-controlled)
+    datasets.push({
+      label: q.quarter_label + ' Retro Promo',
+      data: q.predictions.map(p => ({x: p.week_ending, y: (parseFloat(p.pred_q50)||0) * liftMult})),
+      borderColor: retroColors[i % retroColors.length].replace(/[\d.]+\)$/, '0.80)'),
+      borderDash: [5,2],
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+      hidden: true,
+      _promo: true,
+    });
   });
 
-  const skipBands = ['Fwd Band High','Fwd Band Low','Holdout Band High','Holdout Band Low'];
+  const skipBands = ['Fwd Band High','Fwd Band Low','Holdout Band High','Holdout Band Low',
+                      'Holdout Band High Promo','Holdout Band Low Promo'];
   const isNaive = lbl => lbl.includes('Naive');
   const skipTooltip = lbl => skipBands.includes(lbl) || isNaive(lbl);
   const optsAcc = {
@@ -1795,7 +1872,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
     type: 'line',
-    plugins: [quarterLinesPlugin],
+    plugins: [qBandsPlugin, quarterLinesPlugin],
     data: { datasets },
     options: optsAcc
   });
