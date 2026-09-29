@@ -808,7 +808,7 @@ tr:last-child td{border-bottom:none;}
     <div class="legend">
       <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Base Forecast</div>
-      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3)"></div>Confidence band</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.14);border:1px dashed rgba(79,142,247,.38)"></div>Confidence band (q10–q90)</div>
     </div>
     <button class="promo-toggle" id="promo-btn-portfolio" data-lift-pct="__R1_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__R1_LIFT_PCT__% avg)</button>
     <div class="cw"><canvas id="chartPortfolio"></canvas></div>
@@ -848,7 +848,7 @@ tr:last-child td{border-bottom:none;}
     <div class="legend">
       <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Base Forecast</div>
-      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3)"></div>Confidence band</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.14);border:1px dashed rgba(79,142,247,.38)"></div>Confidence band (q10–q90)</div>
     </div>
     <button class="promo-toggle" id="promo-btn-sku" data-lift-pct="__SKU_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__SKU_LIFT_PCT__% avg)</button>
     <div class="cw"><canvas id="chartSku"></canvas></div>
@@ -931,8 +931,9 @@ tr:last-child td{border-bottom:none;}
     <div class="legend">
       <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units (SPINS)</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>Model prediction (holdout)</div>
-      <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3)"></div>Confidence band (q10–q90)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.18);border:1px dashed rgba(245,166,35,.45)"></div>Confidence band (q10–q90)</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast (base)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.16);border:1px dashed rgba(79,142,247,.40)"></div>Forecast range (q10–q90)</div>
       <div class="leg-item" id="promo-leg-acc" style="display:none"><div class="leg-line" style="background:var(--accent2);opacity:.5;border-top:2px dotted var(--accent2);background:none"></div>Total w/ Promo</div>
       <div class="leg-item" id="promo-pred-leg-acc" style="display:none"><div class="leg-dash" style="color:var(--purple)"></div>Promo prediction (holdout)</div>
     </div>
@@ -1162,9 +1163,12 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       labels: allLabels,
       datasets: [
         { label: 'Band High', data: highLine, fill: '+1',
-          backgroundColor: 'rgba(79,142,247,0.10)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          backgroundColor: 'rgba(79,142,247,0.14)',
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         { label: 'Band Low', data: lowLine, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         { label: 'Base Forecast', data: fctLine, borderColor: '#4f8ef7',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
         { label: 'Base Units', data: actLine, borderColor: '#38c9a0',
@@ -1174,10 +1178,12 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           borderWidth: 2, pointRadius: 1.5, pointBackgroundColor: '#f5a623',
           tension: 0.3, fill: false, hidden: true, _promo: true },
         { label: 'Promo Band High', data: promoHighLine, fill: '+1',
-          backgroundColor: 'rgba(245,166,35,0.09)', borderWidth: 0, pointRadius: 0,
-          tension: 0.3, hidden: true, _promo: true },
+          backgroundColor: 'rgba(245,166,35,0.14)',
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Band Low', data: promoLowLine, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Forecast', data: fctPromoLine, borderColor: 'rgba(245,166,35,0.75)',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3,
           fill: false, hidden: true, _promo: true },
@@ -1241,9 +1247,12 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       labels: allLabels,
       datasets: [
         { label: 'Band High', data: highLine, fill: '+1',
-          backgroundColor: 'rgba(79,142,247,0.10)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          backgroundColor: 'rgba(79,142,247,0.14)',
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         { label: 'Band Low',  data: lowLine,  fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         { label: 'Base Forecast', data: fctLine, borderColor: '#4f8ef7',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
         { label: 'Base Units', data: actLine, borderColor: '#38c9a0',
@@ -1253,10 +1262,12 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           borderWidth: 2, pointRadius: 1.5, pointBackgroundColor: '#f5a623',
           tension: 0.3, fill: false, hidden: true, _promo: true },
         { label: 'Promo Band High', data: promoHighLine, fill: '+1',
-          backgroundColor: 'rgba(245,166,35,0.09)', borderWidth: 0, pointRadius: 0,
-          tension: 0.3, hidden: true, _promo: true },
+          backgroundColor: 'rgba(245,166,35,0.14)',
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Band Low', data: promoLowLine, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Forecast', data: fctPromoLine, borderColor: 'rgba(245,166,35,0.75)',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3,
           fill: false, hidden: true, _promo: true },
@@ -1557,14 +1568,20 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       datasets: [
         // Forward forecast band (base, behind everything)
         { label: 'Fwd Band High', data: fwdHighLine, fill: '+1',
-          backgroundColor: 'rgba(79,142,247,0.08)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          backgroundColor: 'rgba(79,142,247,0.16)',
+          borderColor: 'rgba(79,142,247,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         { label: 'Fwd Band Low', data: fwdLowLine, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          borderColor: 'rgba(79,142,247,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         // Amber holdout confidence band
         { label: 'Pred Band High', data: highAmber, fill: '+1',
-          backgroundColor: 'rgba(245,166,35,0.12)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          backgroundColor: 'rgba(245,166,35,0.18)',
+          borderColor: 'rgba(245,166,35,0.45)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         { label: 'Pred Band Low', data: lowAmber, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3 },
+          borderColor: 'rgba(245,166,35,0.45)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
         // Forward forecast line (base)
         { label: 'Forward Forecast', data: fwdLine, borderColor: '#4f8ef7',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
@@ -1579,19 +1596,23 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           borderWidth: 1.5, borderDash: [3,3], pointRadius: 0,
           tension: 0.3, fill: false, hidden: true, _promo: true },
         { label: 'Promo Fwd Band High', data: fwdPromoHLine, fill: '+1',
-          backgroundColor: 'rgba(79,142,247,0.06)', borderWidth: 0, pointRadius: 0,
-          tension: 0.3, hidden: true, _promo: true },
+          backgroundColor: 'rgba(79,142,247,0.11)',
+          borderColor: 'rgba(79,142,247,0.30)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Fwd Band Low', data: fwdPromoLLine, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+          borderColor: 'rgba(79,142,247,0.30)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Forward Forecast', data: fwdPromoLine, borderColor: 'rgba(79,142,247,0.55)',
           borderDash: [5,4], borderWidth: 1.5, pointRadius: 0,
           tension: 0.3, fill: false, hidden: true, _promo: true },
         // Promo-adjusted holdout prediction band + line (purple — distinct from base amber)
         { label: 'Promo Pred Band High', data: highPromoAmber, fill: '+1',
-          backgroundColor: 'rgba(155,109,255,0.09)', borderWidth: 0, pointRadius: 0,
-          tension: 0.3, hidden: true, _promo: true },
+          backgroundColor: 'rgba(155,109,255,0.13)',
+          borderColor: 'rgba(155,109,255,0.35)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Pred Band Low', data: lowPromoAmber, fill: false,
-          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+          borderColor: 'rgba(155,109,255,0.35)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Model Prediction', data: predPromoLine, borderColor: '#9b6dff',
           borderDash: [5,4], borderWidth: 2.5, pointRadius: 0,
           tension: 0.3, fill: false, hidden: true, _promo: true },
