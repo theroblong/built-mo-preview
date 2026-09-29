@@ -387,11 +387,12 @@ MODEL_DIR = ROOT_ML / "outputs"
 # v4 training cutoff (from retailer_sales_train_metrics.json)
 _TRAINING_CUTOFF_STR = "2026-05-10"
 
-backtest_history = []
-backtest_holdout = []
-retailer_wmape   = "3.4"   # portfolio fallback if parquet unavailable
-backtest_cutoff  = _TRAINING_CUTOFF_STR
-backtest_val_end = "2026-08-09"
+backtest_history    = []
+backtest_holdout    = []
+quarterly_backtests = []
+retailer_wmape      = "3.4"   # portfolio fallback if parquet unavailable
+backtest_cutoff     = _TRAINING_CUTOFF_STR
+backtest_val_end    = "2026-08-09"
 
 try:
     import pandas as pd
@@ -427,142 +428,149 @@ try:
 
     channel_cats = m50._Booster.pandas_categorical[0]
 
-    # ── Per-series true AR forecast ───────────────────────────────────────
-    all_preds  = []
-    series_run = 0
+    # ── Reusable MO_27 recursive AR loop — callable for any training cutoff ───
+    def run_single_backtest(cutoff_ts):
+        """Run the MO_27 recursive AR loop from a given cutoff.
+        Returns (weekly_agg_df, wmape_val); wmape computed over weeks with actual > 0."""
+        all_preds  = []
+        series_run = 0
 
-    for group_keys, g in df_r1.groupby(GROUP_COLS):
-        upc, channel, account, geo = group_keys
-        g = g.sort_values("__time")
+        for group_keys, g in df_r1.groupby(GROUP_COLS):
+            upc, channel, account, geo = group_keys
+            g = g.sort_values("__time")
 
-        # Seed: actual data through training cutoff (need 65 weeks: lag52 + 13 steps)
-        seed = g[g["__time"] <= TRAINING_CUTOFF].tail(65)
-        if len(seed) < 13:
-            continue
-
-        # Holdout actuals for comparison (exactly the 13 post-cutoff weeks)
-        holdout_rows = g[
-            (g["__time"] > TRAINING_CUTOFF) &
-            (g["__time"] <= TRAINING_CUTOFF + pd.Timedelta(weeks=FORECAST_WEEKS))
-        ]
-        if holdout_rows.empty:
-            continue
-
-        holdout_map = holdout_rows.groupby("__time")["base_units"].sum().to_dict()
-
-        # AR history seeded from actuals
-        units_history = list(seed["base_units"].fillna(0))
-        N_actual      = len(units_history)
-
-        # Precompute lag52 for each forecast step from ACTUAL history (never predictions)
-        lag52_seq = [
-            float(units_history[N_actual - 53 + k])
-            if 0 <= (N_actual - 53 + k) < N_actual else np.nan
-            for k in range(1, FORECAST_WEEKS + 1)
-        ]
-
-        # YoY ratio (clamped 0.5–2.0 per MO_27)
-        yoy_ratio = None
-        if N_actual >= 52:
-            _yago = float(units_history[N_actual - 52])
-            if _yago > 0:
-                yoy_ratio = float(np.clip(float(units_history[-1]) / _yago, 0.5, 2.0))
-
-        latest     = seed.iloc[-1]
-        anchor_dt  = latest["__time"]
-        wsl_anchor = int(pd.to_numeric(latest.get("weeks_since_launch"), errors="coerce") or 0)
-
-        # Static features held flat (same as MO_27 static_feats — rolling stats,
-        # TDP, donor_count, velocity signals don't change across the 13-step horizon)
-        static_feats = {}
-        for col in FEATURE_COLS:
-            if col in AR_DYNAMIC or col == "channel_outlet":
+            seed = g[g["__time"] <= cutoff_ts].tail(65)
+            if len(seed) < 13:
                 continue
-            raw = latest.get(col)
-            try:
-                static_feats[col] = float(raw) if pd.notna(raw) else np.nan
-            except (TypeError, ValueError):
-                static_feats[col] = np.nan
 
-        arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
-        arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
+            holdout_rows = g[
+                (g["__time"] > cutoff_ts) &
+                (g["__time"] <= cutoff_ts + pd.Timedelta(weeks=FORECAST_WEEKS))
+            ]
+            if holdout_rows.empty:
+                continue
 
-        series_run += 1
+            holdout_map = holdout_rows.groupby("__time")["base_units"].sum().to_dict()
 
-        for step in range(1, FORECAST_WEEKS + 1):
-            forecast_dt = anchor_dt + pd.Timedelta(weeks=step)
+            units_history = list(seed["base_units"].fillna(0))
+            N_actual      = len(units_history)
 
-            # Autoregressive lags — lag1 is the PRIOR STEP's prediction, not the actual
-            lag1  = units_history[-1]  if len(units_history) >= 1  else np.nan
-            lag4  = units_history[-4]  if len(units_history) >= 4  else np.nan
-            lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
-            lag52 = lag52_seq[step - 1]   # always actual, never prediction
+            lag52_seq = [
+                float(units_history[N_actual - 53 + k])
+                if 0 <= (N_actual - 53 + k) < N_actual else np.nan
+                for k in range(1, FORECAST_WEEKS + 1)
+            ]
 
-            arp_cur      = arp_history[-1] if arp_history else arp_val
-            arp_lag1     = arp_history[-1] if len(arp_history) >= 1 else np.nan
-            arp_window   = arp_history[-8:]
-            arp_roll8avg = float(np.nanmean(arp_window)) if arp_window else np.nan
-            arp_roll8std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
-            arp_wow_d    = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
+            yoy_ratio = None
+            if N_actual >= 52:
+                _yago = float(units_history[N_actual - 52])
+                if _yago > 0:
+                    yoy_ratio = float(np.clip(float(units_history[-1]) / _yago, 0.5, 2.0))
 
-            feature_row = {
-                **static_feats,
-                "channel_outlet":     channel,
-                "week_of_year":       int(forecast_dt.isocalendar().week),
-                "weeks_since_launch": wsl_anchor + step,
-                "arp":                arp_cur,
-                "arp_wow_delta":      arp_wow_d,
-                "arp_roll8_avg":      arp_roll8avg,
-                "arp_roll8_std":      arp_roll8std,
-                "base_units_lag1":    lag1,
-                "base_units_lag4":    lag4,
-                "base_units_lag13":   lag13,
-                "base_units_lag52":   lag52,
-            }
+            latest     = seed.iloc[-1]
+            anchor_dt  = latest["__time"]
+            wsl_anchor = int(pd.to_numeric(latest.get("weeks_since_launch"), errors="coerce") or 0)
 
-            X = pd.DataFrame([feature_row])[FEATURE_COLS]
-            X["channel_outlet"] = pd.Categorical(X["channel_outlet"], categories=channel_cats)
+            static_feats = {}
+            for col in FEATURE_COLS:
+                if col in AR_DYNAMIC or col == "channel_outlet":
+                    continue
+                raw = latest.get(col)
+                try:
+                    static_feats[col] = float(raw) if pd.notna(raw) else np.nan
+                except (TypeError, ValueError):
+                    static_feats[col] = np.nan
 
-            units_base = float(np.expm1(max(0.0, m50.predict(X)[0])))
-            units_low  = float(np.expm1(max(0.0, m10.predict(X)[0])))
-            units_high = float(np.expm1(max(0.0, m90.predict(X)[0])))
+            arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
+            arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
 
-            # Seasonal blend — prevents AR collapse to flat after ~4 steps
-            # (identical to MO_27: blends toward lag52 × YoY-ratio reference)
-            if yoy_ratio is not None and pd.notna(lag52) and lag52 > 0 and units_base > 0:
-                s_ref      = lag52 * yoy_ratio
-                blend_mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * units_base
-                              + SEASONAL_BLEND_WEIGHT * s_ref) / units_base
-                units_low  = max(0.0, units_low  * blend_mult)
-                units_base = max(0.0, units_base * blend_mult)
-                units_high = max(0.0, units_high * blend_mult)
+            series_run += 1
 
-            # Feed q50 back as next step's lag1 — TRUE autoregressive, no teacher forcing
-            units_history.append(units_base)
-            arp_history.append(arp_cur)
+            for step in range(1, FORECAST_WEEKS + 1):
+                forecast_dt = anchor_dt + pd.Timedelta(weeks=step)
 
-            actual = holdout_map.get(forecast_dt, np.nan)
-            all_preds.append({
-                "__time":   forecast_dt,
-                "pred_q50": units_base,
-                "pred_q10": units_low,
-                "pred_q90": units_high,
-                "actual":   float(actual) if pd.notna(actual) else np.nan,
-            })
+                lag1  = units_history[-1]  if len(units_history) >= 1  else np.nan
+                lag4  = units_history[-4]  if len(units_history) >= 4  else np.nan
+                lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
+                lag52 = lag52_seq[step - 1]
 
-    print(f"  Series processed : {series_run:,}")
+                arp_cur      = arp_history[-1] if arp_history else arp_val
+                arp_lag1     = arp_history[-1] if len(arp_history) >= 1 else np.nan
+                arp_window   = arp_history[-8:]
+                arp_roll8avg = float(np.nanmean(arp_window)) if arp_window else np.nan
+                arp_roll8std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
+                arp_wow_d    = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
 
-    # Weekly aggregate
-    pred_df = pd.DataFrame(all_preds)
-    weekly  = (
-        pred_df.groupby("__time")
-        .agg(actual_units=("actual",   "sum"),
-             pred_q50    =("pred_q50", "sum"),
-             pred_q10    =("pred_q10", "sum"),
-             pred_q90    =("pred_q90", "sum"))
-        .reset_index()
-        .sort_values("__time")
-    )
+                feature_row = {
+                    **static_feats,
+                    "channel_outlet":     channel,
+                    "week_of_year":       int(forecast_dt.isocalendar().week),
+                    "weeks_since_launch": wsl_anchor + step,
+                    "arp":                arp_cur,
+                    "arp_wow_delta":      arp_wow_d,
+                    "arp_roll8_avg":      arp_roll8avg,
+                    "arp_roll8_std":      arp_roll8std,
+                    "base_units_lag1":    lag1,
+                    "base_units_lag4":    lag4,
+                    "base_units_lag13":   lag13,
+                    "base_units_lag52":   lag52,
+                }
+
+                X = pd.DataFrame([feature_row])[FEATURE_COLS]
+                X["channel_outlet"] = pd.Categorical(X["channel_outlet"], categories=channel_cats)
+
+                units_base = float(np.expm1(max(0.0, m50.predict(X)[0])))
+                units_low  = float(np.expm1(max(0.0, m10.predict(X)[0])))
+                units_high = float(np.expm1(max(0.0, m90.predict(X)[0])))
+
+                if yoy_ratio is not None and pd.notna(lag52) and lag52 > 0 and units_base > 0:
+                    s_ref      = lag52 * yoy_ratio
+                    blend_mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * units_base
+                                  + SEASONAL_BLEND_WEIGHT * s_ref) / units_base
+                    units_low  = max(0.0, units_low  * blend_mult)
+                    units_base = max(0.0, units_base * blend_mult)
+                    units_high = max(0.0, units_high * blend_mult)
+
+                units_history.append(units_base)
+                arp_history.append(arp_cur)
+
+                actual = holdout_map.get(forecast_dt, np.nan)
+                all_preds.append({
+                    "__time":   forecast_dt,
+                    "pred_q50": units_base,
+                    "pred_q10": units_low,
+                    "pred_q90": units_high,
+                    "actual":   float(actual) if pd.notna(actual) else np.nan,
+                })
+
+        print(f"  Series processed : {series_run:,}")
+
+        if not all_preds:
+            return pd.DataFrame(), 0.0
+
+        pred_df = pd.DataFrame(all_preds)
+        weekly  = (
+            pred_df.groupby("__time")
+            .agg(actual_units=("actual",   "sum"),
+                 pred_q50    =("pred_q50", "sum"),
+                 pred_q10    =("pred_q10", "sum"),
+                 pred_q90    =("pred_q90", "sum"))
+            .reset_index()
+            .sort_values("__time")
+        )
+        weekly_valid = weekly[weekly["actual_units"] > 0].copy()
+        total_actual = weekly_valid["actual_units"].sum()
+        total_ae     = (weekly_valid["actual_units"] - weekly_valid["pred_q50"]).abs().sum()
+        wmape_val    = round(total_ae / total_actual * 100, 1) if total_actual > 0 else 0.0
+        return weekly, wmape_val
+
+    # ── True holdout: cutoff May 10, 2026 ──────────────────────────────────────
+    print("\n  Running true holdout backtest (cutoff 2026-05-10)...")
+    weekly, wmape_val = run_single_backtest(TRAINING_CUTOFF)
+
+    if weekly.empty:
+        raise ValueError("True holdout returned no data")
+
     weekly = weekly[weekly["actual_units"] > 0].copy()
 
     # Pre-cutoff history: go back to start of prior year for full seasonal view
@@ -597,8 +605,54 @@ try:
     total_actual    = weekly["actual_units"].sum()
     total_ae        = (weekly["actual_units"] - weekly["pred_q50"]).abs().sum()
     wmape_val       = round(total_ae / total_actual * 100, 1) if total_actual > 0 else 0
+
     retailer_wmape  = str(wmape_val)
     backtest_val_end = weekly["__time"].max().strftime("%Y-%m-%d")
+
+    # ── Quarterly retrospective backtests ─────────────────────────────────────────────
+    # Cutoffs are the last Sunday before each financial quarter starts.
+    # Each backtest uses the same v4 model (retrospective) vs. the true May-10
+    # holdout where the model genuinely had not seen any post-cutoff actuals.
+    print("\n  Running quarterly retrospective backtests...")
+    _Q_CUTOFFS = [
+        ("Q1 2025", "Jan–Mar 2025", "2024-12-29", "2025-01-05", "2025-03-30"),
+        ("Q2 2025", "Apr–Jun 2025", "2025-03-30", "2025-04-06", "2025-06-29"),
+        ("Q3 2025", "Jul–Sep 2025", "2025-06-29", "2025-07-06", "2025-09-28"),
+        ("Q4 2025", "Oct–Dec 2025", "2025-09-28", "2025-10-05", "2025-12-28"),
+        ("Q1 2026", "Jan–Mar 2026", "2025-12-28", "2026-01-04", "2026-03-29"),
+        ("Q2 2026", "Apr–Jun 2026", "2026-03-29", "2026-04-05", "2026-06-28"),
+    ]
+    for _ql, _qlong, _qcutoff, _qstart, _qend in _Q_CUTOFFS:
+        _qts = pd.Timestamp(_qcutoff, tz="UTC")
+        print(f"    {_ql} (cutoff {_qcutoff})...", end=" ", flush=True)
+        try:
+            _qw, _qwmape = run_single_backtest(_qts)
+            if _qw.empty:
+                print("no data — skip")
+                continue
+            _qpreds = [
+                {
+                    "week_ending": _r["__time"].strftime("%Y-%m-%d"),
+                    "pred_q50":    float(_r["pred_q50"]),
+                    "pred_q10":    float(_r["pred_q10"]),
+                    "pred_q90":    float(_r["pred_q90"]),
+                    "actual":      float(_r["actual_units"]),
+                }
+                for _, _r in _qw.iterrows()
+            ]
+            quarterly_backtests.append({
+                "quarter_label": _ql,
+                "quarter_long":  _qlong,
+                "cutoff":        _qcutoff,
+                "start":         _qstart,
+                "end":           _qend,
+                "type":          "retrospective",
+                "predictions":   _qpreds,
+                "wmape":         _qwmape,
+            })
+            print(f"{len(_qpreds)} weeks, wMAPE={_qwmape}%")
+        except Exception as _qe:
+            print(f"WARN: {_qe}")
 
     print(f"  History weeks    : {len(backtest_history)}")
     print(f"  Holdout weeks    : {len(backtest_holdout)}")
@@ -642,12 +696,13 @@ payload = {
     "series_count":       "2,517",
     "backtest_history":   backtest_history,
     "backtest_holdout":   backtest_holdout,
-    "backtest_wmape":     retailer_wmape,
-    "backtest_cutoff":    backtest_cutoff,
-    "backtest_val_end":   backtest_val_end,
-    "r1_lift_pct":        round(r1_lift * 100, 1),
-    "r2_lift_pct":        round(r2_lift * 100, 1),
-    "sku_lift_pct":       round(sku_lift * 100, 1),
+    "backtest_wmape":       retailer_wmape,
+    "backtest_cutoff":      backtest_cutoff,
+    "backtest_val_end":     backtest_val_end,
+    "quarterly_backtests":  quarterly_backtests,
+    "r1_lift_pct":          round(r1_lift * 100, 1),
+    "r2_lift_pct":          round(r2_lift * 100, 1),
+    "sku_lift_pct":         round(sku_lift * 100, 1),
 }
 
 # ── HTML template ─────────────────────────────────────────────────────
@@ -659,6 +714,7 @@ HTML = r"""<!DOCTYPE html>
 <title>Forecast vs. Actuals</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
 :root {
   --bg:#0d0f14; --surface:#161921; --surface2:#1e2330; --border:#2a2f3d;
@@ -926,13 +982,11 @@ tr:last-child td{border-bottom:none;}
     <div class="ct" id="acc-chart-title">Predicted vs. Actual — Out-of-Sample Holdout</div>
     <div class="cs" id="acc-chart-sub">Training period actuals · then holdout: true recursive predictions (amber) vs. what actually happened (green) · band = model's quantile range, not a coverage guarantee · no actual data used after the training cutoff</div>
     <div class="legend">
-      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units (SPINS)</div>
-      <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>Model prediction (holdout)</div>
-      <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.18);border:1px dashed rgba(245,166,35,.45)"></div>Confidence band (q10–q90)</div>
-      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast (base)</div>
-      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.16);border:1px dashed rgba(79,142,247,.40)"></div>Forecast range (q10–q90)</div>
-      <div class="leg-item" id="promo-leg-acc" style="display:none"><div class="leg-line" style="background:var(--accent2);opacity:.5;border-top:2px dotted var(--accent2);background:none"></div>Total w/ Promo</div>
-      <div class="leg-item" id="promo-pred-leg-acc" style="display:none"><div class="leg-dash" style="color:var(--purple)"></div>Promo prediction (holdout)</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actuals (SPINS)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>True holdout prediction (May–Aug 2026)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px dashed rgba(245,166,35,.40)"></div>Holdout confidence band</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent);opacity:0.6"></div>Quarterly retrospective (same model)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast</div>
     </div>
     <button class="promo-toggle" id="promo-btn-acc" data-lift-pct="__R1_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__R1_LIFT_PCT__% avg)</button>
     <div class="cw" style="height:380px"><canvas id="chartAccuracy"></canvas></div>
@@ -1035,20 +1089,26 @@ function baseOpts(yLabel) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          title: ctx => fmtDate(ctx[0]?.label || ''),
+          title: ctx => {
+            const ts = ctx[0]?.parsed?.x;
+            if (ts == null) return '';
+            return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+          },
           label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`
         }
       }
     },
     scales: {
       x: {
+        type: 'time',
+        min: '2025-01-01',
+        max: '2026-12-31',
+        time: {
+          unit: 'month',
+          displayFormats: { month: "MMM ''yy" }
+        },
         grid: { color: 'rgba(42,47,61,0.6)' },
-        ticks: {
-          maxTicksLimit: 20,
-          callback: function(value) {
-            return fmtTick(this.getLabelForValue(value));
-          }
-        }
+        ticks: { maxRotation: 0, color: '#8892a4' }
       },
       y: { grid: { color: 'rgba(42,47,61,0.6)' },
            title: { display: !!yLabel, text: yLabel, color: '#8892a4' },
@@ -1061,9 +1121,9 @@ function baseOpts(yLabel) {
 const vertLinePlugin = {
   id: 'vertLine',
   afterDraw(chart, args, opts) {
-    if (opts == null || opts.index == null) return;
+    if (opts == null || opts.date == null) return;
     const {ctx, chartArea, scales} = chart;
-    const x = scales.x.getPixelForValue(opts.index);
+    const x = scales.x.getPixelForValue(new Date(String(opts.date).slice(0,10) + 'T12:00:00').getTime());
     if (x < chartArea.left || x > chartArea.right) return;
     ctx.save();
     ctx.strokeStyle = 'rgba(79,142,247,0.55)';
@@ -1074,7 +1134,6 @@ const vertLinePlugin = {
     ctx.lineTo(x, chartArea.bottom);
     ctx.stroke();
     ctx.setLineDash([]);
-    // Label
     ctx.font = '600 10px Inter, sans-serif';
     ctx.fillStyle = 'rgba(79,142,247,0.85)';
     ctx.textAlign = 'left';
@@ -1144,15 +1203,15 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   const actLine      = [...actUnits, ...fctDates.map(() => null)];
   const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
-  const fctLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
-  const highLine     = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
-  const lowLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
-  const fctPromoLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoArr];
-  const promoHighLine = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoHighArr];
-  const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoLowArr];
+  const fctLine      = [...Array(nAct).fill(null), ...fctBase];
+  const highLine     = [...Array(nAct).fill(null), ...fctHigh];
+  const lowLine      = [...Array(nAct).fill(null), ...fctLow];
+  const fctPromoLine  = [...Array(nAct).fill(null), ...fctPromoArr];
+  const promoHighLine = [...Array(nAct).fill(null), ...fctPromoHighArr];
+  const promoLowLine  = [...Array(nAct).fill(null), ...fctPromoLowArr];
 
   const opts1 = baseOpts('Weekly Units');
-  opts1.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
+  opts1.plugins.vertLine = { date: allLabels[nAct - 1], label: '→ Forecast' };
   chartPortfolio = new Chart(document.getElementById('chartPortfolio'), {
     type: 'line',
     plugins: [vertLinePlugin],
@@ -1228,15 +1287,15 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   const actLine      = [...actUnits, ...fctDates.map(() => null)];
   const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
-  const fctLine       = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
-  const highLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
-  const lowLine       = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
-  const fctPromoLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoArr];
-  const promoHighLine = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoHighArr];
-  const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoLowArr];
+  const fctLine       = [...Array(nAct).fill(null), ...fctBase];
+  const highLine      = [...Array(nAct).fill(null), ...fctHigh];
+  const lowLine       = [...Array(nAct).fill(null), ...fctLow];
+  const fctPromoLine  = [...Array(nAct).fill(null), ...fctPromoArr];
+  const promoHighLine = [...Array(nAct).fill(null), ...fctPromoHighArr];
+  const promoLowLine  = [...Array(nAct).fill(null), ...fctPromoLowArr];
 
   const optsSku = baseOpts('Weekly Units');
-  optsSku.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
+  optsSku.plugins.vertLine = { date: allLabels[nAct - 1], label: '→ Forecast' };
   chartSku = new Chart(document.getElementById('chartSku'), {
     type: 'line',
     plugins: [vertLinePlugin],
@@ -1325,9 +1384,9 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   function padAct(vals, n) {
     return [...vals, ...Array(totalLen - n).fill(null)];
   }
-  function padFct(vals, baseN, connector) {
-    return [...Array(baseN - 1).fill(null), connector, ...vals,
-            ...Array(totalLen - baseN - vals.length).fill(null)];
+  function padFct(vals, baseN) {
+    return [...Array(baseN).fill(null), ...vals,
+            ...Array(Math.max(0, totalLen - baseN - vals.length)).fill(null)];
   }
 
   const datasets = [
@@ -1336,7 +1395,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       borderColor: '#38c9a0', borderWidth: 2.5, pointRadius: 2,
       pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
     { label: DATA.primary_acct + ' Forecast',
-      data: padFct(r1FctVals, nR1, lastR1),
+      data: padFct(r1FctVals, nR1),
       borderColor: '#38c9a0', borderDash: [5,4], borderWidth: 2,
       pointRadius: 0, tension: 0.3, fill: false },
     // Promo overlays for r1 (hidden by default)
@@ -1345,7 +1404,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       borderColor: 'rgba(56,201,160,0.55)', borderWidth: 1.5, pointRadius: 0,
       tension: 0.3, fill: false, borderDash: [3,3], hidden: true, _promo: true },
     { label: DATA.primary_acct + ' Promo Forecast',
-      data: padFct(r1FctPromo, nR1, lastR1T),
+      data: padFct(r1FctPromo, nR1),
       borderColor: 'rgba(56,201,160,0.5)', borderDash: [5,4], borderWidth: 1.5,
       pointRadius: 0, tension: 0.3, fill: false, hidden: true, _promo: true },
   ];
@@ -1353,8 +1412,8 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   if (r2a.length) {
     const r2ActPadded   = padAct(r2ActVals.slice(0, totalLen),   Math.min(nR2, totalLen));
     const r2TotalPadded = padAct(r2TotalVals.slice(0, totalLen), Math.min(nR2, totalLen));
-    const r2FctPadded   = padFct(r2FctVals,  Math.min(nR2, totalLen), lastR2);
-    const r2PromoPadded = padFct(r2FctPromo, Math.min(nR2, totalLen), lastR2T);
+    const r2FctPadded   = padFct(r2FctVals,  Math.min(nR2, totalLen));
+    const r2PromoPadded = padFct(r2FctPromo, Math.min(nR2, totalLen));
     datasets.push(
       { label: DATA.secondary_acct + ' Base',
         data: r2ActPadded,
@@ -1384,7 +1443,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   });
 
   const optsComp = baseOpts('Weekly Units');
-  optsComp.plugins.vertLine = { index: nR1 - 1, label: '→ Forecast' };
+  optsComp.plugins.vertLine = { date: r1ActDates[nR1 - 1], label: '→ Forecast' };
   chartComparison = new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
 })();
 
@@ -1398,6 +1457,16 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const valEnd  = DATA.backtest_val_end || '';
 
   // Populate labels
+  documen// ── Chart 4: Accuracy proof ────────────────────────────────────────────
+(function() {
+  const history = DATA.backtest_history || [];
+  const holdout = DATA.backtest_holdout || [];
+  const fwd     = DATA.r1_forecast      || [];
+  const qBts    = DATA.quarterly_backtests || [];
+  const wmape   = DATA.backtest_wmape   || '3.4';
+  const cutoff  = DATA.backtest_cutoff  || '';
+  const valEnd  = DATA.backtest_val_end || '';
+
   document.getElementById('acc-r1-label').textContent    = DATA.primary_acct;
   document.getElementById('acc-wmape').textContent        = wmape + '%';
   document.getElementById('acc-wmape-inline').textContent = wmape;
@@ -1410,7 +1479,10 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   }
 
   document.getElementById('acc-chart-title').textContent =
-    DATA.primary_acct + ' · Predicted vs. Actual — Out-of-Sample Holdout';
+    DATA.primary_acct + ' · Predicted vs. Actual — Quarterly Segments';
+
+  document.getElementById('acc-chart-sub').textContent =
+    'Green = actuals · amber = true holdout (May–Aug 2026, model never saw this data) · faint lines = quarterly retrospective predictions · blue dashed = forward forecast';
 
   if (!history.length && !holdout.length) {
     document.getElementById('acc-chart-sub').textContent =
@@ -1418,224 +1490,197 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     return;
   }
 
-  // Build unified timeline (ISO strings; tick formatter handles display)
-  const histDates   = history.map(r => r.week_ending);
-  const histActuals = history.map(r => parseFloat(r.actual_units) || null);
-  const histTotal   = history.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
-
-  const holdDates      = holdout.map(r => r.week_ending);
-  const holdActuals    = holdout.map(r => parseFloat(r.actual_units)  || null);
-  const holdTotal      = holdout.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
-  const holdPred       = holdout.map(r => parseFloat(r.pred_q50)      || null);
-  const holdLow        = holdout.map(r => parseFloat(r.pred_q10)      || null);
-  const holdHigh       = holdout.map(r => parseFloat(r.pred_q90)      || null);
-  const holdPredPromo  = holdout.map(r => parseFloat(r.pred_q50_promo)|| null);
-  const holdLowPromo   = holdout.map(r => parseFloat(r.pred_q10_promo)|| null);
-  const holdHighPromo  = holdout.map(r => parseFloat(r.pred_q90_promo)|| null);
-
-  const fwdDates     = fwd.map(r => r.week_ending);
-  const fwdBase      = fwd.map(r => parseFloat(r.forecast_units)       || null);
-  const fwdLow       = fwd.map(r => parseFloat(r.forecast_low)         || null);
-  const fwdHigh      = fwd.map(r => parseFloat(r.forecast_high)        || null);
-  const fwdPromoArr  = fwd.map(r => parseFloat(r.forecast_units_promo) || null);
-  const fwdPromoHArr = fwd.map(r => parseFloat(r.forecast_high_promo)  || null);
-  const fwdPromoLArr = fwd.map(r => parseFloat(r.forecast_low_promo)   || null);
-
-  // Post-holdout actuals: SPINS weeks after holdout ends, before forward forecast starts
+  // Actuals: continuous from start of history through post-holdout
   const allActualsAcc = DATA.r1_actuals || [];
-  const fwdStart = fwdDates[0] || '9999-99-99';
-  const postHold    = allActualsAcc.filter(r => r.week_ending > valEnd && r.week_ending < fwdStart);
-  const nPost       = postHold.length;
-  const postDates   = postHold.map(r => r.week_ending);
-  const postActuals = postHold.map(r => parseFloat(r.actual_units) || null);
-  const postTotal   = postHold.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+  const actualsData = allActualsAcc.map(r => ({
+    x: r.week_ending, y: parseFloat(r.actual_units) || null
+  })).filter(p => p.y != null);
 
-  const allLabels = [...histDates, ...holdDates, ...postDates, ...fwdDates];
-  const nHist = histDates.length;
-  const nHold = holdDates.length;
-  const nFwd  = fwdDates.length;
+  // True holdout predictions (amber, strong)
+  const holdPredData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q50) || null}));
+  const holdHighData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q90) || null}));
+  const holdLowData  = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q10) || null}));
 
-  // Actuals: history + holdout + post-holdout continuous (base)
-  const combinedActuals = [
-    ...histActuals,
-    ...holdActuals,
-    ...postActuals,
-    ...Array(nFwd).fill(null)
-  ];
+  // Forward forecast
+  const fwdData  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_units) || null}));
+  const fwdHighD = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_high)  || null}));
+  const fwdLowD  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_low)   || null}));
 
-  // Actuals: history + holdout + post-holdout continuous (total incl. promo)
-  const combinedTotal = [
-    ...histTotal,
-    ...holdTotal,
-    ...postTotal,
-    ...Array(nFwd).fill(null)
-  ];
-
-  // Connector between history and holdout (avoid gap)
-  const lastHist      = histActuals.length ? histActuals[histActuals.length - 1] : null;
-  const lastHistTotal = histTotal.length   ? histTotal[histTotal.length - 1]     : null;
-
-  // Holdout predictions: start at history end, span holdout only
-  const predLine = [
-    ...Array(nHist - 1).fill(null),
-    lastHist,
-    ...holdPred,
-    ...Array(nPost + nFwd).fill(null)
-  ];
-  const highAmber = [
-    ...Array(nHist - 1).fill(null),
-    lastHist,
-    ...holdHigh,
-    ...Array(nPost + nFwd).fill(null)
-  ];
-  const lowAmber = [
-    ...Array(nHist - 1).fill(null),
-    lastHist,
-    ...holdLow,
-    ...Array(nPost + nFwd).fill(null)
-  ];
-
-  // Forward forecast base: connect from last post-holdout actual (or holdout end if no post data)
-  const lastPostOrHold      = postActuals.length ? postActuals[postActuals.length - 1] : (holdActuals.length ? holdActuals[holdActuals.length - 1] : null);
-  const lastPostOrHoldTotal = postTotal.length   ? postTotal[postTotal.length - 1]     : (holdTotal.length   ? holdTotal[holdTotal.length - 1]     : null);
-  const fwdLine = [
-    ...Array(nHist + nHold + nPost - 1).fill(null),
-    lastPostOrHold,
-    ...fwdBase
-  ];
-  const fwdHighLine = [
-    ...Array(nHist + nHold + nPost - 1).fill(null),
-    lastPostOrHold,
-    ...fwdHigh
-  ];
-  const fwdLowLine = [
-    ...Array(nHist + nHold + nPost - 1).fill(null),
-    lastPostOrHold,
-    ...fwdLow
-  ];
-
-  // Forward promo forecast
-  const fwdPromoLine  = [...Array(nHist + nHold + nPost - 1).fill(null), lastPostOrHoldTotal, ...fwdPromoArr];
-  const fwdPromoHLine = [...Array(nHist + nHold + nPost - 1).fill(null), lastPostOrHoldTotal, ...fwdPromoHArr];
-  const fwdPromoLLine = [...Array(nHist + nHold + nPost - 1).fill(null), lastPostOrHoldTotal, ...fwdPromoLArr];
-
-  // Promo-adjusted holdout prediction (base pred × (1+lift)) — connects from history end
-  const predPromoLine  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdPredPromo,  ...Array(nPost + nFwd).fill(null)];
-  const highPromoAmber = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdHighPromo,  ...Array(nPost + nFwd).fill(null)];
-  const lowPromoAmber  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdLowPromo,   ...Array(nPost + nFwd).fill(null)];
-
-  // Two-line accuracy plugin: one at training cutoff, one at holdout/forward boundary
-  const twoLinePlugin = {
-    id: 'twoLine',
+  // Quarter boundary lines + wMAPE badge plugin
+  const quarterLinesPlugin = {
+    id: 'quarterLines',
     afterDraw(chart) {
       const {ctx, chartArea, scales} = chart;
-      const lines = [
-        { idx: nHist - 1, label: '← Training | Holdout →', color: 'rgba(245,166,35,0.7)' },
-        { idx: nHist + nHold + nPost - 1, label: '→ Live forecast', color: 'rgba(79,142,247,0.7)' },
+
+      // Quarter grid lines at each Jan/Apr/Jul/Oct boundary
+      const qBounds = [
+        '2025-01-01','2025-04-01','2025-07-01','2025-10-01',
+        '2026-01-01','2026-04-01','2026-07-01','2026-10-01'
       ];
-      lines.forEach(({idx, label, color}) => {
-        const x = scales.x.getPixelForValue(idx);
+      const qLbls  = ['Q1','Q2','Q3','Q4','Q1','Q2','Q3','Q4'];
+      const qYears = ['2025','','','','2026','','',''];
+
+      qBounds.forEach((d, i) => {
+        const x = scales.x.getPixelForValue(new Date(d + 'T12:00:00').getTime());
         if (x < chartArea.left || x > chartArea.right) return;
         ctx.save();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 3]);
-        ctx.beginPath();
-        ctx.moveTo(x, chartArea.top);
-        ctx.lineTo(x, chartArea.bottom);
-        ctx.stroke();
+        ctx.strokeStyle = 'rgba(136,146,164,0.22)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.font = '600 10px Inter, sans-serif';
-        ctx.fillStyle = color;
+        ctx.font = '600 9px Inter, sans-serif';
+        ctx.fillStyle = 'rgba(136,146,164,0.6)';
         ctx.textAlign = 'left';
-        ctx.fillText(label, x + 5, chartArea.top + 14);
+        ctx.fillText(qLbls[i], x + 4, chartArea.top + 13);
+        if (qYears[i]) {
+          ctx.font = '400 9px Inter, sans-serif';
+          ctx.fillText(qYears[i], x + 4, chartArea.top + 23);
+        }
         ctx.restore();
       });
-    }
-  };
 
-  const bandLabels = ['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low',
-                       'Promo Fwd Band High','Promo Fwd Band Low',
-                       'Promo Pred Band High','Promo Pred Band Low'];
-  chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
-    type: 'line',
-    plugins: [twoLinePlugin],
-    data: {
-      labels: allLabels,
-      datasets: [
-        // Forward forecast band (base, behind everything)
-        { label: 'Fwd Band High', data: fwdHighLine, fill: '+1',
-          backgroundColor: 'rgba(79,142,247,0.16)',
-          borderColor: 'rgba(79,142,247,0.40)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3 },
-        { label: 'Fwd Band Low', data: fwdLowLine, fill: false,
-          borderColor: 'rgba(79,142,247,0.40)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3 },
-        // Amber holdout confidence band
-        { label: 'Pred Band High', data: highAmber, fill: '+1',
-          backgroundColor: 'rgba(245,166,35,0.18)',
-          borderColor: 'rgba(245,166,35,0.45)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3 },
-        { label: 'Pred Band Low', data: lowAmber, fill: false,
-          borderColor: 'rgba(245,166,35,0.45)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3 },
-        // Forward forecast line (base)
-        { label: 'Forward Forecast', data: fwdLine, borderColor: '#4f8ef7',
-          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
-        // Holdout model prediction (amber stays always — accuracy context)
-        { label: 'Model Prediction', data: predLine, borderColor: '#f5a623',
-          borderDash: [5,4], borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
-        // Base actuals (on top)
-        { label: 'Base Units (SPINS)', data: combinedActuals, borderColor: '#38c9a0',
-          borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
-        // Promo overlays (hidden by default)
-        { label: 'Total w/ Promo', data: combinedTotal, borderColor: 'rgba(56,201,160,0.6)',
-          borderWidth: 1.5, borderDash: [3,3], pointRadius: 0,
-          tension: 0.3, fill: false, hidden: true, _promo: true },
-        { label: 'Promo Fwd Band High', data: fwdPromoHLine, fill: '+1',
-          backgroundColor: 'rgba(79,142,247,0.11)',
-          borderColor: 'rgba(79,142,247,0.30)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
-        { label: 'Promo Fwd Band Low', data: fwdPromoLLine, fill: false,
-          borderColor: 'rgba(79,142,247,0.30)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
-        { label: 'Promo Forward Forecast', data: fwdPromoLine, borderColor: 'rgba(79,142,247,0.55)',
-          borderDash: [5,4], borderWidth: 1.5, pointRadius: 0,
-          tension: 0.3, fill: false, hidden: true, _promo: true },
-        // Promo-adjusted holdout prediction band + line (purple — distinct from base amber)
-        { label: 'Promo Pred Band High', data: highPromoAmber, fill: '+1',
-          backgroundColor: 'rgba(155,109,255,0.13)',
-          borderColor: 'rgba(155,109,255,0.35)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
-        { label: 'Promo Pred Band Low', data: lowPromoAmber, fill: false,
-          borderColor: 'rgba(155,109,255,0.35)', borderWidth: 1, borderDash: [4,3],
-          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
-        { label: 'Promo Model Prediction', data: predPromoLine, borderColor: '#9b6dff',
-          borderDash: [5,4], borderWidth: 2.5, pointRadius: 0,
-          tension: 0.3, fill: false, hidden: true, _promo: true },
-      ]
-    },
-    options: {
-      ...baseOpts('Weekly Units'),
-      plugins: {
-        ...baseOpts('Weekly Units').plugins,
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              if (bandLabels.includes(ctx.dataset.label)) return null;
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`;
-            }
-          },
-          filter: item => !bandLabels.includes(item.dataset.label)
+      // Holdout boundary (training cutoff) — amber
+      if (cutoff) {
+        const x = scales.x.getPixelForValue(new Date(cutoff + 'T12:00:00').getTime());
+        if (x >= chartArea.left && x <= chartArea.right) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(245,166,35,0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '700 9px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(245,166,35,0.9)';
+          ctx.textAlign = 'right';
+          ctx.fillText('← Training', x - 4, chartArea.top + 30);
+          ctx.textAlign = 'left';
+          ctx.fillText('Holdout →', x + 4, chartArea.top + 30);
+          ctx.restore();
+        }
+      }
+
+      // wMAPE badge in the holdout window
+      if (holdout.length && wmape) {
+        const midRow = holdout[Math.floor(holdout.length / 2)];
+        if (midRow) {
+          const mx = scales.x.getPixelForValue(new Date(midRow.week_ending + 'T12:00:00').getTime());
+          if (mx >= chartArea.left && mx <= chartArea.right) {
+            const txt = 'wMAPE ' + wmape + '%';
+            ctx.save();
+            ctx.font = '700 10px Inter, sans-serif';
+            const tw = ctx.measureText(txt).width;
+            ctx.fillStyle = 'rgba(245,166,35,0.13)';
+            ctx.fillRect(mx - tw/2 - 8, chartArea.top + 4, tw + 16, 18);
+            ctx.fillStyle = '#f5a623';
+            ctx.textAlign = 'center';
+            ctx.fillText(txt, mx, chartArea.top + 16);
+            ctx.restore();
+          }
+        }
+      }
+
+      // Forward forecast boundary (blue)
+      if (fwd.length) {
+        const x = scales.x.getPixelForValue(new Date(fwd[0].week_ending + 'T12:00:00').getTime());
+        if (x >= chartArea.left && x <= chartArea.right) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(79,142,247,0.7)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '600 9px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(79,142,247,0.85)';
+          ctx.textAlign = 'left';
+          ctx.fillText('→ Forecast', x + 4, chartArea.top + 43);
+          ctx.restore();
         }
       }
     }
+  };
+
+  const datasets = [
+    // Forward forecast band (behind everything)
+    { label: 'Fwd Band High', data: fwdHighD, fill: '+1',
+      backgroundColor: 'rgba(79,142,247,0.10)',
+      borderColor: 'rgba(79,142,247,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    { label: 'Fwd Band Low', data: fwdLowD, fill: false,
+      borderColor: 'rgba(79,142,247,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    // True holdout amber confidence band
+    { label: 'Holdout Band High', data: holdHighData, fill: '+1',
+      backgroundColor: 'rgba(245,166,35,0.14)',
+      borderColor: 'rgba(245,166,35,0.38)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    { label: 'Holdout Band Low', data: holdLowData, fill: false,
+      borderColor: 'rgba(245,166,35,0.38)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    // Forward forecast line
+    { label: 'Forward Forecast', data: fwdData, borderColor: '#4f8ef7',
+      borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+    // True holdout prediction (stronger amber)
+    { label: 'Model Prediction (Holdout)', data: holdPredData, borderColor: '#f5a623',
+      borderDash: [5,4], borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
+    // Actuals on top
+    { label: 'Base Units (SPINS)', data: actualsData, borderColor: '#38c9a0',
+      borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+  ];
+
+  // Quarterly retrospective lines (alternating blue/purple, lighter)
+  const retroColors = [
+    'rgba(155,109,255,0.55)',
+    'rgba(79,142,247,0.45)',
+    'rgba(155,109,255,0.55)',
+    'rgba(79,142,247,0.45)',
+    'rgba(155,109,255,0.55)',
+    'rgba(79,142,247,0.45)',
+  ];
+  (qBts || []).forEach((q, i) => {
+    if (!q.predictions || !q.predictions.length) return;
+    datasets.push({
+      label: q.quarter_label + ' Retrospective',
+      data: q.predictions.map(p => ({x: p.week_ending, y: p.pred_q50})),
+      borderColor: retroColors[i % retroColors.length],
+      borderDash: [3,3],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+    });
+  });
+
+  const skipBands = ['Fwd Band High','Fwd Band Low','Holdout Band High','Holdout Band Low'];
+  const optsAcc = {
+    ...baseOpts('Weekly Units'),
+    plugins: {
+      ...baseOpts('Weekly Units').plugins,
+      tooltip: {
+        callbacks: {
+          title: ctx => {
+            const ts = ctx[0]?.parsed?.x;
+            if (ts == null) return '';
+            return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+          },
+          label: ctx => {
+            if (skipBands.includes(ctx.dataset.label)) return null;
+            return ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—');
+          }
+        },
+        filter: item => !skipBands.includes(item.dataset.label)
+      }
+    }
+  };
+
+  chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
+    type: 'line',
+    plugins: [quarterLinesPlugin],
+    data: { datasets },
+    options: optsAcc
   });
 })();
-</script>
-</body>
-</html>
-"""
+</script>"""
 
 # ── Inject data and write file ────────────────────────────────────────
 html_out = HTML.replace("__DATA_JSON__", json.dumps(payload, default=str))
