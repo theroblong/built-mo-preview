@@ -393,6 +393,7 @@ quarterly_backtests  = []
 retailer_wmape       = "3.4"   # portfolio fallback if parquet unavailable
 holdout_naive_wmape  = "—"
 holdout_series_count = 0
+holdout_ets_count    = 0
 backtest_cutoff      = _TRAINING_CUTOFF_STR
 backtest_val_end     = "2026-08-09"
 
@@ -400,6 +401,7 @@ try:
     import pandas as pd
     import pickle
     import numpy as np
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing as _HW
 
     TRAINING_CUTOFF = pd.Timestamp(_TRAINING_CUTOFF_STR, tz="UTC")
 
@@ -430,20 +432,42 @@ try:
 
     channel_cats = m50._Booster.pandas_categorical[0]
 
+    def run_ets_series(history_vals, steps=13):
+        """Damped additive-trend ETS for < 52-week series. Returns (q50s, q10s, q90s) or None."""
+        arr = np.array([v if v and v > 0 else 0.01 for v in history_vals], dtype=float)
+        if len(arr) < 4:
+            return None
+        try:
+            fit = _HW(arr, trend='add', seasonal=None, damped_trend=True,
+                      initialization_method='estimated').fit(optimized=True)
+            q50s = np.clip(fit.forecast(steps), 0, None)
+            try:
+                sims = fit.simulate(steps, repetitions=200, error='add', random_errors='bootstrap')
+                q10s = np.clip(np.percentile(sims, 10, axis=1), 0, None)
+                q90s = np.clip(np.percentile(sims, 90, axis=1), 0, None)
+            except Exception:
+                std  = float(np.std(fit.resid)) if len(getattr(fit, 'resid', [])) else 0.0
+                q10s = np.clip(q50s - 1.28 * std, 0, None)
+                q90s = q50s + 1.28 * std
+            return list(q50s), list(q10s), list(q90s)
+        except Exception:
+            return None
+
     # ── Reusable MO_27 recursive AR loop — callable for any training cutoff ───
     def run_single_backtest(cutoff_ts):
         """Run the MO_27 recursive AR loop from a given cutoff.
         Returns (weekly_agg_df, wmape_val, naive_wmape_val, series_run).
         naive_wmape = lag52 * YoY baseline — the "Excel-level" comparison."""
-        all_preds  = []
-        series_run = 0
+        all_preds   = []
+        series_run  = 0
+        series_ets  = 0
 
         for group_keys, g in df_r1.groupby(GROUP_COLS):
             upc, channel, account, geo = group_keys
             g = g.sort_values("__time")
 
             seed = g[g["__time"] <= cutoff_ts].tail(65)
-            if len(seed) < 13:
+            if len(seed) < 4:
                 continue
 
             holdout_rows = g[
@@ -487,57 +511,73 @@ try:
             arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
             arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
 
+            # Route series with < 52 weeks of history to ETS (avoids near-zero lag52 drag)
+            use_ets = len(seed) < 52
+            ets_q50s = ets_q10s = ets_q90s = None
+            if use_ets:
+                _ets = run_ets_series(units_history)
+                if _ets is None:
+                    continue
+                ets_q50s, ets_q10s, ets_q90s = _ets
+                series_ets += 1
+
             series_run += 1
 
             for step in range(1, FORECAST_WEEKS + 1):
                 forecast_dt = anchor_dt + pd.Timedelta(weeks=step)
-
-                lag1  = units_history[-1]  if len(units_history) >= 1  else np.nan
-                lag4  = units_history[-4]  if len(units_history) >= 4  else np.nan
-                lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
                 lag52 = lag52_seq[step - 1]
 
-                arp_cur      = arp_history[-1] if arp_history else arp_val
-                arp_lag1     = arp_history[-1] if len(arp_history) >= 1 else np.nan
-                arp_window   = arp_history[-8:]
-                arp_roll8avg = float(np.nanmean(arp_window)) if arp_window else np.nan
-                arp_roll8std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
-                arp_wow_d    = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
+                if use_ets:
+                    units_base = ets_q50s[step - 1]
+                    units_low  = ets_q10s[step - 1]
+                    units_high = ets_q90s[step - 1]
+                    units_history.append(units_base)
+                else:
+                    lag1  = units_history[-1]  if len(units_history) >= 1  else np.nan
+                    lag4  = units_history[-4]  if len(units_history) >= 4  else np.nan
+                    lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
 
-                feature_row = {
-                    **static_feats,
-                    "channel_outlet":     channel,
-                    "week_of_year":       int(forecast_dt.isocalendar().week),
-                    "weeks_since_launch": wsl_anchor + step,
-                    "arp":                arp_cur,
-                    "arp_wow_delta":      arp_wow_d,
-                    "arp_roll8_avg":      arp_roll8avg,
-                    "arp_roll8_std":      arp_roll8std,
-                    "base_units_lag1":    lag1,
-                    "base_units_lag4":    lag4,
-                    "base_units_lag13":   lag13,
-                    "base_units_lag52":   lag52,
-                }
+                    arp_cur      = arp_history[-1] if arp_history else arp_val
+                    arp_lag1     = arp_history[-1] if len(arp_history) >= 1 else np.nan
+                    arp_window   = arp_history[-8:]
+                    arp_roll8avg = float(np.nanmean(arp_window)) if arp_window else np.nan
+                    arp_roll8std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
+                    arp_wow_d    = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
 
-                X = pd.DataFrame([feature_row])[FEATURE_COLS]
-                X["channel_outlet"] = pd.Categorical(X["channel_outlet"], categories=channel_cats)
+                    feature_row = {
+                        **static_feats,
+                        "channel_outlet":     channel,
+                        "week_of_year":       int(forecast_dt.isocalendar().week),
+                        "weeks_since_launch": wsl_anchor + step,
+                        "arp":                arp_cur,
+                        "arp_wow_delta":      arp_wow_d,
+                        "arp_roll8_avg":      arp_roll8avg,
+                        "arp_roll8_std":      arp_roll8std,
+                        "base_units_lag1":    lag1,
+                        "base_units_lag4":    lag4,
+                        "base_units_lag13":   lag13,
+                        "base_units_lag52":   lag52,
+                    }
 
-                units_base = float(np.expm1(max(0.0, m50.predict(X)[0])))
-                units_low  = float(np.expm1(max(0.0, m10.predict(X)[0])))
-                units_high = float(np.expm1(max(0.0, m90.predict(X)[0])))
+                    X = pd.DataFrame([feature_row])[FEATURE_COLS]
+                    X["channel_outlet"] = pd.Categorical(X["channel_outlet"], categories=channel_cats)
 
-                if yoy_ratio is not None and pd.notna(lag52) and lag52 > 0 and units_base > 0:
-                    s_ref      = lag52 * yoy_ratio
-                    blend_mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * units_base
-                                  + SEASONAL_BLEND_WEIGHT * s_ref) / units_base
-                    units_low  = max(0.0, units_low  * blend_mult)
-                    units_base = max(0.0, units_base * blend_mult)
-                    units_high = max(0.0, units_high * blend_mult)
+                    units_base = float(np.expm1(max(0.0, m50.predict(X)[0])))
+                    units_low  = float(np.expm1(max(0.0, m10.predict(X)[0])))
+                    units_high = float(np.expm1(max(0.0, m90.predict(X)[0])))
 
-                units_history.append(units_base)
-                arp_history.append(arp_cur)
+                    if yoy_ratio is not None and pd.notna(lag52) and lag52 > 0 and units_base > 0:
+                        s_ref      = lag52 * yoy_ratio
+                        blend_mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * units_base
+                                      + SEASONAL_BLEND_WEIGHT * s_ref) / units_base
+                        units_low  = max(0.0, units_low  * blend_mult)
+                        units_base = max(0.0, units_base * blend_mult)
+                        units_high = max(0.0, units_high * blend_mult)
 
-                # Naive: pure lag52 * YoY — the Excel-style year-ago comparison
+                    units_history.append(units_base)
+                    arp_history.append(arp_cur)
+
+                # Naive: pure lag52 * YoY — same regardless of model
                 naive_unit = 0.0
                 if pd.notna(lag52) and lag52 > 0:
                     _yr = yoy_ratio if yoy_ratio is not None else 1.0
@@ -553,7 +593,7 @@ try:
                     "naive_pred": naive_unit,
                 })
 
-        print(f"  Series processed : {series_run:,}")
+        print(f"  Series processed : {series_run:,}  (ETS-routed: {series_ets})")
 
         if not all_preds:
             return pd.DataFrame(), 0.0
@@ -575,11 +615,11 @@ try:
         wmape_val    = round(total_ae / total_actual * 100, 1) if total_actual > 0 else 0.0
         naive_ae     = (weekly_valid["actual_units"] - weekly_valid["naive_units"]).abs().sum()
         naive_wmape_val = round(naive_ae / total_actual * 100, 1) if total_actual > 0 else 0.0
-        return weekly, wmape_val, naive_wmape_val, series_run
+        return weekly, wmape_val, naive_wmape_val, series_run, series_ets
 
     # ── True holdout: cutoff May 10, 2026 ──────────────────────────────────────
     print("\n  Running true holdout backtest (cutoff 2026-05-10)...")
-    weekly, wmape_val, naive_wmape_val, series_count_h = run_single_backtest(TRAINING_CUTOFF)
+    weekly, wmape_val, naive_wmape_val, series_count_h, ets_count_h = run_single_backtest(TRAINING_CUTOFF)
 
     if weekly.empty:
         raise ValueError("True holdout returned no data")
@@ -623,6 +663,7 @@ try:
     retailer_wmape       = str(wmape_val)
     holdout_naive_wmape  = str(naive_wmape_val)
     holdout_series_count = series_count_h
+    holdout_ets_count    = ets_count_h
     backtest_val_end     = weekly["__time"].max().strftime("%Y-%m-%d")
 
     # ── Quarterly retrospective backtests ─────────────────────────────────────────────
@@ -645,7 +686,7 @@ try:
         _qts = pd.Timestamp(_qcutoff, tz="UTC")
         print(f"    {_ql} (cutoff {_qcutoff})...", end=" ", flush=True)
         try:
-            _qw, _, _naive_wmape_q, _series_count_q = run_single_backtest(_qts)
+            _qw, _, _naive_wmape_q, _series_count_q, _ets_count_q = run_single_backtest(_qts)
             if _qw.empty:
                 print("no data — skip")
                 continue
@@ -690,6 +731,7 @@ try:
                 "wmape":         _qwmape,
                 "naive_wmape":   _naive_wmape_q_clipped,
                 "series_count":  _series_count_q,
+                "ets_count":     _ets_count_q,
             })
             print(f"{len(_qpreds)} weeks, wMAPE={_qwmape}%")
         except Exception as _qe:
@@ -740,6 +782,7 @@ payload = {
     "backtest_wmape":        retailer_wmape,
     "backtest_naive_wmape":  holdout_naive_wmape,
     "backtest_series_count": holdout_series_count,
+    "backtest_ets_count":    holdout_ets_count,
     "backtest_cutoff":       backtest_cutoff,
     "backtest_val_end":      backtest_val_end,
     "quarterly_backtests":   quarterly_backtests,
