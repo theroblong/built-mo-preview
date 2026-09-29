@@ -491,16 +491,16 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   const actLine      = [...actUnits, ...fctDates.map(() => null)];
   const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
-  const fctLine      = [...Array(nAct).fill(null), ...fctBase];
-  const highLine     = [...Array(nAct).fill(null), ...fctHigh];
-  const lowLine      = [...Array(nAct).fill(null), ...fctLow];
-  const fctPromoLine  = [...Array(nAct).fill(null), ...fctPromoArr];
-  const promoHighLine = [...Array(nAct).fill(null), ...fctPromoHighArr];
-  const promoLowLine  = [...Array(nAct).fill(null), ...fctPromoLowArr];
+  const fctLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
+  const highLine     = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
+  const lowLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+  const fctPromoLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoArr];
+  const promoHighLine = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoHighArr];
+  const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoLowArr];
 
   const opts1 = baseOpts('Weekly Units');
   opts1.scales.x.ticks.maxTicksLimit = 28;
-  opts1.plugins.vertLine = { index: nAct, label: '→ Forecast' };
+  opts1.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
   chartPortfolio = new Chart(document.getElementById('chartPortfolio'), {
     type: 'line',
     plugins: [vertLinePlugin],
@@ -576,16 +576,16 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   const actLine      = [...actUnits, ...fctDates.map(() => null)];
   const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
-  const fctLine       = [...Array(nAct).fill(null), ...fctBase];
-  const highLine      = [...Array(nAct).fill(null), ...fctHigh];
-  const lowLine       = [...Array(nAct).fill(null), ...fctLow];
-  const fctPromoLine  = [...Array(nAct).fill(null), ...fctPromoArr];
-  const promoHighLine = [...Array(nAct).fill(null), ...fctPromoHighArr];
-  const promoLowLine  = [...Array(nAct).fill(null), ...fctPromoLowArr];
+  const fctLine       = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
+  const highLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
+  const lowLine       = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+  const fctPromoLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoArr];
+  const promoHighLine = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoHighArr];
+  const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoLowArr];
 
   const optsSku = baseOpts('Weekly Units');
   optsSku.scales.x.ticks.maxTicksLimit = 28;
-  optsSku.plugins.vertLine = { index: nAct, label: '→ Forecast' };
+  optsSku.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
   chartSku = new Chart(document.getElementById('chartSku'), {
     type: 'line',
     plugins: [vertLinePlugin],
@@ -674,8 +674,8 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   function padAct(vals, n) {
     return [...vals, ...Array(totalLen - n).fill(null)];
   }
-  function padFct(vals, baseN) {
-    return [...Array(baseN).fill(null), ...vals,
+  function padFct(vals, baseN, connector) {
+    return [...Array(baseN - 1).fill(null), connector, ...vals,
             ...Array(totalLen - baseN - vals.length).fill(null)];
   }
 
@@ -685,7 +685,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       borderColor: '#38c9a0', borderWidth: 2.5, pointRadius: 2,
       pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
     { label: DATA.primary_acct + ' Forecast',
-      data: padFct(r1FctVals, nR1),
+      data: padFct(r1FctVals, nR1, lastR1),
       borderColor: '#38c9a0', borderDash: [5,4], borderWidth: 2,
       pointRadius: 0, tension: 0.3, fill: false },
     // Promo overlays for r1 (hidden by default)
@@ -694,7 +694,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       borderColor: 'rgba(56,201,160,0.55)', borderWidth: 1.5, pointRadius: 0,
       tension: 0.3, fill: false, borderDash: [3,3], hidden: true, _promo: true },
     { label: DATA.primary_acct + ' Promo Forecast',
-      data: padFct(r1FctPromo, nR1),
+      data: padFct(r1FctPromo, nR1, lastR1T),
       borderColor: 'rgba(56,201,160,0.5)', borderDash: [5,4], borderWidth: 1.5,
       pointRadius: 0, tension: 0.3, fill: false, hidden: true, _promo: true },
   ];
@@ -702,8 +702,8 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   if (r2a.length) {
     const r2ActPadded   = padAct(r2ActVals.slice(0, totalLen),   Math.min(nR2, totalLen));
     const r2TotalPadded = padAct(r2TotalVals.slice(0, totalLen), Math.min(nR2, totalLen));
-    const r2FctPadded   = padFct(r2FctVals,  Math.min(nR2, totalLen));
-    const r2PromoPadded = padFct(r2FctPromo, Math.min(nR2, totalLen));
+    const r2FctPadded   = padFct(r2FctVals,  Math.min(nR2, totalLen), lastR2);
+    const r2PromoPadded = padFct(r2FctPromo, Math.min(nR2, totalLen), lastR2T);
     datasets.push(
       { label: DATA.secondary_acct + ' Base',
         data: r2ActPadded,
@@ -734,7 +734,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   const optsComp = baseOpts('Weekly Units');
   optsComp.scales.x.ticks.maxTicksLimit = 28;
-  optsComp.plugins.vertLine = { index: nR1, label: '→ Forecast' };
+  optsComp.plugins.vertLine = { index: nR1 - 1, label: '→ Forecast' };
   chartComparison = new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
 })();
 
