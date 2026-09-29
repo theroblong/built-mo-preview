@@ -6,6 +6,29 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 187: Multi-retailer backtest comparison; velocity_spm_lag52 unit scaling diagnosis (2026-09-29)
+
+`build_forecast_chart_data.py` — `run_single_backtest()` refactored to accept `target_df` parameter (default: Kroger). After the Kroger quarterly loop, the script now automatically runs quarterly + holdout backtests for the next three largest retailers by volume (currently PUBLIX, ALBERTSONS, UNFI) and prints a comparison. No change to the chart payload or Kroger results.
+
+**True holdout wMAPE (May–Aug 2026, training cutoff May 10):**
+
+| Retailer | wMAPE | Series | ETS-routed |
+|---|---|---|---|
+| KROGER | 15.5% | 64 | 28 (44%) |
+| PUBLIX | **12.4%** | 19 | 12 (63%) |
+| UNFI | **11.6%** | 37 | 15 (41%) |
+| ALBERTSONS | **50.8%** | 44 | 30 (68%) |
+
+PUBLIX and UNFI beat Kroger on the true holdout. Albertsons is the structural outlier: 50.8% true wMAPE with 68% ETS-routed, the highest remaining error across all retailers, likely from rapid BUILT distribution expansion at Albertsons in 2025–26 (exactly the scenario the TDP blend aims to address).
+
+**PUBLIX Q3 2025 anomaly (216% wMAPE):** With only 9 series, a single outlier can dominate. Warrants investigation before citing PUBLIX numbers to clients — possible shelf reset, distribution gap, or SPINS data quality issue at Publix in Jul–Sep 2025.
+
+**`velocity_spm_lag52` unit scaling diagnosis:** The TDP blend (`tdp_lag52_est = units_52w_ago / velocity_spm_lag52`) produces ~0.01× TDP values because `velocity_spm` is NOT in raw units-per-store — it is normalized by some ACV or distribution scale factor that makes direct division with raw unit counts meaningless. `tdp_yoy` comes out as 0.01× → `yoy_clip_max` always floors to 2.0 → blend is identical to the original. The fix requires adding `tdp_lag52` as a direct parquet column in the training pipeline. This is a pipeline change (feature engineering step), not a backtest-script change. Until that's done, the TDP blend code is dormant.
+
+**ETS ensemble (v2) confirmed intact across all retailers:** ETS-routed counts consistent (41–68% in mature periods), no degradation from the TDP blend code.
+
+---
+
 ## README update 186: TDP-aware seasonal blend — dynamic yoy_ratio ceiling, null result at Kroger (2026-09-29)
 
 `build_forecast_chart_data.py` — Added TDP-aware dynamic clip ceiling to the LightGBM seasonal blend `yoy_ratio`. Previously the growth cap was a hard 2.0×; now it expands proportionally when TDP has grown: `tdp_lag52_est = units_52w_ago / velocity_spm_lag52`, `tdp_yoy = tdp_now / tdp_lag52_est`, `yoy_clip_max = clip(tdp_yoy × 1.5, 2.0, 5.0)`. No retraining — uses only `velocity_spm_lag52` and `tdp` already in `static_feats`. Rationale: units_52w_ago was collected at fewer stores; for a SKU that doubled TDP, a raw unit growth of 2.8× is physically reasonable and the prior hard cap at 2.0× discarded the signal.

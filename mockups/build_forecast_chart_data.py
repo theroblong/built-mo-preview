@@ -454,15 +454,17 @@ try:
             return None
 
     # ── Reusable MO_27 recursive AR loop — callable for any training cutoff ───
-    def run_single_backtest(cutoff_ts):
+    def run_single_backtest(cutoff_ts, target_df=None):
         """Run the MO_27 recursive AR loop from a given cutoff.
-        Returns (weekly_agg_df, wmape_val, naive_wmape_val, series_run).
+        Returns (weekly_agg_df, wmape_val, naive_wmape_val, series_run, series_ets).
+        target_df: parquet slice to run against (defaults to df_r1 / Kroger).
         naive_wmape = lag52 * YoY baseline — the "Excel-level" comparison."""
+        _df         = target_df if target_df is not None else df_r1
         all_preds   = []
         series_run  = 0
         series_ets  = 0
 
-        for group_keys, g in df_r1.groupby(GROUP_COLS):
+        for group_keys, g in _df.groupby(GROUP_COLS):
             upc, channel, account, geo = group_keys
             g = g.sort_values("__time")
 
@@ -755,6 +757,54 @@ try:
     print(f"  Holdout weeks    : {len(backtest_holdout)}")
     print(f"  TRUE recursive wMAPE at {top_acct}: {retailer_wmape}%")
     print(f"  (lag1 = prior prediction, not actual — no teacher forcing)")
+
+    # ── Secondary retailer quarterly comparison (prints only, not in chart payload) ──
+    _comparison_accounts = [second_acct] if second_acct else []
+    # Also try top retailers that aren't Kroger for TDP-blend stress-test
+    _try_accounts = [r["retail_account"] for r in named[1:5] if r.get("retail_account")]
+    for _cmp_acct in _try_accounts[:3]:
+        _mask_cmp = (
+            (df["retail_account"] == _cmp_acct) &
+            (df["channel_outlet"] == "CONVENTIONAL|FOOD")
+        )
+        _df_cmp = df[_mask_cmp].copy()
+        if len(_df_cmp) == 0:
+            continue
+        for _c in FEATURE_COLS:
+            if _c != "channel_outlet" and _c in _df_cmp.columns:
+                _df_cmp[_c] = pd.to_numeric(_df_cmp[_c], errors="coerce")
+        _df_cmp = _df_cmp.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
+        print(f"\n  ── {_cmp_acct} quarterly backtests ──")
+        for _ql, _qlong, _qcutoff, _qstart, _qend in _Q_CUTOFFS:
+            _qts = pd.Timestamp(_qcutoff, tz="UTC")
+            print(f"    {_ql} (cutoff {_qcutoff})...", end=" ", flush=True)
+            try:
+                _qw2, _, _, _sc2, _ec2 = run_single_backtest(_qts, target_df=_df_cmp)
+                if _qw2.empty:
+                    print("no data"); continue
+                _qstart_ts2 = pd.Timestamp(_qstart, tz="UTC")
+                _qend_ts2   = pd.Timestamp(_qend,   tz="UTC") + pd.Timedelta(days=6)
+                _clip2 = _qw2[(_qw2["__time"] >= _qstart_ts2) & (_qw2["__time"] <= _qend_ts2)]
+                if _clip2.empty:
+                    print("no data in window"); continue
+                _valid2 = _clip2[_clip2["actual_units"] > 0]
+                _ta2 = _valid2["actual_units"].sum()
+                _ae2 = (_valid2["actual_units"] - _valid2["pred_q50"]).abs().sum()
+                _wm2 = round(_ae2 / _ta2 * 100, 1) if _ta2 > 0 else 0.0
+                print(f"{len(_clip2)} weeks, wMAPE={_wm2}%  (series={_sc2}, ETS={_ec2})")
+            except Exception as _e2:
+                print(f"WARN: {_e2}")
+        # True holdout for this retailer
+        try:
+            _wh2, _wmape_h2, _, _sh2, _eh2 = run_single_backtest(TRAINING_CUTOFF, target_df=_df_cmp)
+            if not _wh2.empty:
+                _wv2 = _wh2[_wh2["actual_units"] > 0]
+                _ta_h = _wv2["actual_units"].sum()
+                _ae_h = (_wv2["actual_units"] - _wv2["pred_q50"]).abs().sum()
+                _wm_h = round(_ae_h / _ta_h * 100, 1) if _ta_h > 0 else 0.0
+                print(f"    Holdout (May–Aug 2026)       True wMAPE={_wm_h}%  (series={_sh2}, ETS={_eh2})")
+        except Exception as _e3:
+            print(f"    Holdout WARN: {_e3}")
 
 except Exception as e:
     import traceback
