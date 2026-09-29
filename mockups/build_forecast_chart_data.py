@@ -488,12 +488,6 @@ try:
                 for k in range(1, FORECAST_WEEKS + 1)
             ]
 
-            yoy_ratio = None
-            if N_actual >= 52:
-                _yago = float(units_history[N_actual - 52])
-                if _yago > 0:
-                    yoy_ratio = float(np.clip(float(units_history[-1]) / _yago, 0.5, 2.0))
-
             latest     = seed.iloc[-1]
             anchor_dt  = latest["__time"]
             wsl_anchor = int(pd.to_numeric(latest.get("weeks_since_launch"), errors="coerce") or 0)
@@ -510,6 +504,26 @@ try:
 
             arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
             arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
+
+            # TDP-aware yoy_ratio: expand the growth cap when distribution has grown.
+            # Estimate tdp_lag52 from (units_52w_ago / velocity_spm_lag52) — both already in
+            # static_feats — then allow up to 1.5× the TDP expansion as the unit growth ceiling.
+            # Falls back to the original 2.0× cap if velocity_spm_lag52 or tdp is missing.
+            yoy_ratio = None
+            if N_actual >= 52:
+                _units_52 = float(units_history[N_actual - 52])
+                if _units_52 > 0:
+                    _raw_yoy     = float(units_history[-1]) / _units_52
+                    yoy_clip_max = 2.0
+                    _vel_52 = static_feats.get("velocity_spm_lag52")
+                    _tdp    = static_feats.get("tdp")
+                    if (pd.notna(_vel_52) and float(_vel_52) > 0 and
+                            pd.notna(_tdp) and float(_tdp) > 0):
+                        _tdp_lag52_est = _units_52 / float(_vel_52)
+                        if _tdp_lag52_est > 0:
+                            _tdp_yoy     = float(_tdp) / _tdp_lag52_est
+                            yoy_clip_max = float(np.clip(_tdp_yoy * 1.5, 2.0, 5.0))
+                    yoy_ratio = float(np.clip(_raw_yoy, 0.5, yoy_clip_max))
 
             # Route series with < 52 weeks of history to ETS (avoids near-zero lag52 drag)
             use_ets = len(seed) < 52
