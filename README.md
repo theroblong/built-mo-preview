@@ -6,6 +6,12 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 178: bracken_forecast_charts.html — Sunday week-ending date fix, all actuals queries (2026-09-28)
+
+`build_forecast_chart_data.py` — All four `TIME_FLOOR(__time, 'P1W')` usages in actuals Druid queries replaced with `CAST(__time AS VARCHAR)`. Root cause confirmed by direct Druid query: `__time` in `built_enriched_weekly` (and `built_filtered_weekly`, `spins_full`) is stored as **Sunday week-ending** natively. `TIME_FLOOR('P1W')` anchors to Monday, silently shifting every actuals date 6 days backward. Effect on charts: "→ Live forecast" vertical line was rendering between Aug and Sep (at Mon Aug 31 from `TIME_FLOOR`) instead of at Sun Sep 6 (the forecast anchor date). After fix, `r1_actuals` last = 2026-09-06 (Sun) = exact anchor date; `r1_forecast` first = 2026-09-13 (Sun); all parquet-derived dates already Sunday — full pipeline now consistently Sunday week-ending. Also removed the `acc_incr_map` +6 day workaround (was compensating for this bug) and replaced it with a direct dict comprehension. Mo API was unaffected — it never used `TIME_FLOOR`, so API-served data was always correct. Payload audit: r1_actuals first=2025-01-05(Sun) last=2026-09-06(Sun) ORDER=OK; r1_forecast, backtest_holdout, backtest_history all ORDER=OK, all Sunday.
+
+---
+
 ## README update 177: bracken_forecast_charts.html — visible confidence bands / cone of uncertainty (2026-09-28)
 
 `bracken_forecast_charts.html` / `build_forecast_chart_data.py` — All chart confidence bands are now visually prominent (hurricane-cone style) instead of nearly invisible. Previously every band dataset used `borderWidth: 0` and very low fill opacity (0.06–0.12), making the q10/q90 range effectively invisible. Now each band has a visible fill (0.14–0.18 opacity) plus thin dotted boundary lines (q10 lower edge, q90 upper edge, `borderWidth: 1, borderDash: [4,3]`). Affects all charts: Portfolio (blue base band + amber promo band), SKU Detail (same), Accuracy Proof (amber holdout prediction band + blue forward forecast band + purple promo bands). Legends updated to "Confidence band (q10–q90)" with dashed swatch borders. Accuracy Proof gains a second legend entry "Forecast range (q10–q90)" in blue for the forward forecast band, distinct from the amber holdout band. The forecast IS 13 weeks (Sep 13 – Dec 6, 2026) as confirmed by payload audit; visual prominence of the band makes the forecast zone easier to read relative to the 74-week training history.

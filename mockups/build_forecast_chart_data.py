@@ -139,9 +139,11 @@ print(f"\n  Primary retailer  : {top_acct}")
 print(f"  Secondary retailer: {second_acct}\n")
 
 # 2. Primary retailer — actuals from start of prior year (base + incr for promo toggle)
+# __time in built_enriched_weekly is already the Sunday week-ending date; CAST directly to avoid
+# TIME_FLOOR shifting Sundays back to Monday.
 r1_actuals = druid(f"""
     SELECT
-      TIME_FLOOR(__time, 'P1W') AS week_ending,
+      CAST(__time AS VARCHAR)    AS week_ending,
       SUM(base_units)            AS actual_units,
       SUM(incr_units)            AS incr_units
     FROM "built_enriched_weekly"
@@ -176,7 +178,7 @@ r2_actuals = []
 if second_acct:
     r2_actuals = druid(f"""
         SELECT
-          TIME_FLOOR(__time, 'P1W') AS week_ending,
+          CAST(__time AS VARCHAR)    AS week_ending,
           SUM(base_units)            AS actual_units,
           SUM(incr_units)            AS incr_units
         FROM "built_enriched_weekly"
@@ -236,7 +238,7 @@ sku_forecast = []
 if focal_upc:
     sku_actuals = druid(f"""
         SELECT
-          TIME_FLOOR(__time, 'P1W') AS week_ending,
+          CAST(__time AS VARCHAR)    AS week_ending,
           SUM(base_units)            AS actual_units,
           SUM(incr_units)            AS incr_units,
           AVG(arp)                   AS avg_price
@@ -328,7 +330,7 @@ if r1_forecast:
 # Pulls actual weekly incr_units for the full backtest window from Druid
 acc_incr = druid(f"""
     SELECT
-      TIME_FLOOR(__time, 'P1W') AS week_ending,
+      CAST(__time AS VARCHAR)    AS week_ending,
       SUM(incr_units)            AS incr_units
     FROM "built_enriched_weekly"
     WHERE parent_brand = 'BUILT'
@@ -341,16 +343,11 @@ acc_incr = druid(f"""
     ORDER BY 1
 """, f"{top_acct} incr_units (backtest window)")
 acc_incr = normalize_dates(acc_incr)
-# Druid TIME_FLOOR anchors to Monday; parquet uses Sunday week-ending → shift +6 days to align keys
-acc_incr_map = {}
-for r in acc_incr:
-    we = r.get("week_ending")
-    if we:
-        try:
-            sunday = (datetime.strptime(we, "%Y-%m-%d") + timedelta(days=6)).strftime("%Y-%m-%d")
-        except ValueError:
-            sunday = we
-        acc_incr_map[sunday] = safe_float(r.get("incr_units")) or 0.0
+# __time is Sunday week-ending; keys already match parquet holdout rows directly
+acc_incr_map = {
+    r["week_ending"]: safe_float(r.get("incr_units")) or 0.0
+    for r in acc_incr if r.get("week_ending")
+}
 
 # ── True recursive backtest (mirrors MO_27's exact autoregressive loop) ──────
 # Each forecast step feeds its own q50 prediction back as lag1 for the next
