@@ -6,6 +6,7 @@
 <title>Forecast vs. Actuals</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
 :root {
   --bg:#0d0f14; --surface:#161921; --surface2:#1e2330; --border:#2a2f3d;
@@ -382,20 +383,27 @@ function baseOpts(yLabel) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          title: ctx => fmtDate(ctx[0]?.label || ''),
+          title: ctx => {
+            const ts = ctx[0]?.parsed?.x;
+            if (ts == null) return '';
+            const d = new Date(ts);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          },
           label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`
         }
       }
     },
     scales: {
       x: {
+        type: 'time',
+        min: '2025-01-01',
+        max: '2026-12-31',
+        time: {
+          unit: 'month',
+          displayFormats: { month: "MMM ''yy" }
+        },
         grid: { color: 'rgba(42,47,61,0.6)' },
-        ticks: {
-          maxTicksLimit: 20,
-          callback: function(value) {
-            return fmtTick(this.getLabelForValue(value));
-          }
-        }
+        ticks: { maxRotation: 0, color: '#8892a4' }
       },
       y: { grid: { color: 'rgba(42,47,61,0.6)' },
            title: { display: !!yLabel, text: yLabel, color: '#8892a4' },
@@ -408,9 +416,9 @@ function baseOpts(yLabel) {
 const vertLinePlugin = {
   id: 'vertLine',
   afterDraw(chart, args, opts) {
-    if (opts == null || opts.index == null) return;
+    if (opts == null || opts.date == null) return;
     const {ctx, chartArea, scales} = chart;
-    const x = scales.x.getPixelForValue(opts.index);
+    const x = scales.x.getPixelForValue(new Date(opts.date + 'T12:00:00').getTime());
     if (x < chartArea.left || x > chartArea.right) return;
     ctx.save();
     ctx.strokeStyle = 'rgba(79,142,247,0.55)';
@@ -499,8 +507,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoLowArr];
 
   const opts1 = baseOpts('Weekly Units');
-  opts1.scales.x.ticks.maxTicksLimit = 28;
-  opts1.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
+  opts1.plugins.vertLine = { date: allLabels[nAct - 1], label: '→ Forecast' };
   chartPortfolio = new Chart(document.getElementById('chartPortfolio'), {
     type: 'line',
     plugins: [vertLinePlugin],
@@ -584,8 +591,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoLowArr];
 
   const optsSku = baseOpts('Weekly Units');
-  optsSku.scales.x.ticks.maxTicksLimit = 28;
-  optsSku.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
+  optsSku.plugins.vertLine = { date: allLabels[nAct - 1], label: '→ Forecast' };
   chartSku = new Chart(document.getElementById('chartSku'), {
     type: 'line',
     plugins: [vertLinePlugin],
@@ -733,8 +739,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   });
 
   const optsComp = baseOpts('Weekly Units');
-  optsComp.scales.x.ticks.maxTicksLimit = 28;
-  optsComp.plugins.vertLine = { index: nR1 - 1, label: '→ Forecast' };
+  optsComp.plugins.vertLine = { date: r1ActDates[nR1 - 1], label: '→ Forecast' };
   chartComparison = new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
 })();
 
@@ -880,11 +885,11 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     afterDraw(chart) {
       const {ctx, chartArea, scales} = chart;
       const lines = [
-        { idx: nHist - 1, label: '← Training | Holdout →', color: 'rgba(245,166,35,0.7)' },
-        { idx: nHist + nHold + nPost - 1, label: '→ Live forecast', color: 'rgba(79,142,247,0.7)' },
+        { date: allLabels[nHist - 1], label: '← Training | Holdout →', color: 'rgba(245,166,35,0.7)' },
+        { date: allLabels[nHist + nHold + nPost - 1], label: '→ Live forecast', color: 'rgba(79,142,247,0.7)' },
       ];
-      lines.forEach(({idx, label, color}) => {
-        const x = scales.x.getPixelForValue(idx);
+      lines.forEach(({date, label, color}) => {
+        const x = scales.x.getPixelForValue(new Date(date + 'T12:00:00').getTime());
         if (x < chartArea.left || x > chartArea.right) return;
         ctx.save();
         ctx.strokeStyle = color;
@@ -907,6 +912,7 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const bandLabels = ['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low',
                        'Promo Fwd Band High','Promo Fwd Band Low',
                        'Promo Pred Band High','Promo Pred Band Low'];
+  const optsAcc = baseOpts('Weekly Units');
   chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
     type: 'line',
     plugins: [twoLinePlugin],
@@ -966,9 +972,9 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       ]
     },
     options: {
-      ...baseOpts('Weekly Units'),
+      ...optsAcc,
       plugins: {
-        ...baseOpts('Weekly Units').plugins,
+        ...optsAcc.plugins,
         tooltip: {
           callbacks: {
             label: ctx => {
