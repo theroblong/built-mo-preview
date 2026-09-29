@@ -138,11 +138,12 @@ second_acct = named[1]["retail_account"] if len(named) > 1 else None
 print(f"\n  Primary retailer  : {top_acct}")
 print(f"  Secondary retailer: {second_acct}\n")
 
-# 2. Primary retailer — actuals from start of prior year
+# 2. Primary retailer — actuals from start of prior year (base + incr for promo toggle)
 r1_actuals = druid(f"""
     SELECT
       TIME_FLOOR(__time, 'P1W') AS week_ending,
-      SUM(base_units)            AS actual_units
+      SUM(base_units)            AS actual_units,
+      SUM(incr_units)            AS incr_units
     FROM "built_enriched_weekly"
     WHERE parent_brand = 'BUILT'
       AND channel_outlet = 'CONVENTIONAL|FOOD'
@@ -170,13 +171,14 @@ r1_forecast = druid(f"""
 """, f"{top_acct} forecast (13w)")
 r1_forecast = add_forecast_dates(r1_forecast)
 
-# 4. Secondary retailer — actuals from start of prior year
+# 4. Secondary retailer — actuals from start of prior year (base + incr)
 r2_actuals = []
 if second_acct:
     r2_actuals = druid(f"""
         SELECT
           TIME_FLOOR(__time, 'P1W') AS week_ending,
-          SUM(base_units)            AS actual_units
+          SUM(base_units)            AS actual_units,
+          SUM(incr_units)            AS incr_units
         FROM "built_enriched_weekly"
         WHERE parent_brand = 'BUILT'
           AND channel_outlet = 'CONVENTIONAL|FOOD'
@@ -236,6 +238,7 @@ if focal_upc:
         SELECT
           TIME_FLOOR(__time, 'P1W') AS week_ending,
           SUM(base_units)            AS actual_units,
+          SUM(incr_units)            AS incr_units,
           AVG(arp)                   AS avg_price
         FROM "built_enriched_weekly"
         WHERE upc = '{focal_upc}'
@@ -280,6 +283,38 @@ def yoy(rows: list[dict]) -> str:
 r1_yoy = yoy(r1_actuals)
 r2_yoy = yoy(r2_actuals)
 
+# ── Promo lift rate (used for forecast what-if toggle) ─────────────────
+# Compute per-account avg weekly lift rate from actual SPINS incr_units
+def avg_lift_rate(rows: list[dict]) -> float:
+    rates = []
+    for r in rows:
+        base = safe_float(r.get("actual_units")) or 0
+        incr = safe_float(r.get("incr_units")) or 0
+        if base > 0 and incr >= 0:
+            rates.append(incr / base)
+    return round(sum(rates) / len(rates), 4) if rates else 0.0
+
+r1_lift = avg_lift_rate(r1_actuals)
+r2_lift = avg_lift_rate(r2_actuals)
+sku_lift = avg_lift_rate(sku_actuals)
+
+def stamp_promo_forecast(rows: list[dict], lift: float) -> list[dict]:
+    """Add forecast_units_promo/low_promo/high_promo fields using avg lift multiplier."""
+    for r in rows:
+        mult = 1.0 + lift
+        r["forecast_units_promo"] = (safe_float(r.get("forecast_units")) or 0) * mult
+        r["forecast_low_promo"]   = (safe_float(r.get("forecast_low"))   or 0) * mult
+        r["forecast_high_promo"]  = (safe_float(r.get("forecast_high"))  or 0) * mult
+    return rows
+
+r1_forecast  = stamp_promo_forecast(r1_forecast,  r1_lift)
+r2_forecast  = stamp_promo_forecast(r2_forecast,  r2_lift)
+sku_forecast = stamp_promo_forecast(sku_forecast, sku_lift)
+
+print(f"  Promo lift rates  : {top_acct} {r1_lift*100:.1f}%"
+      + (f" · {second_acct} {r2_lift*100:.1f}%" if second_acct else "")
+      + f" · SKU {sku_lift*100:.1f}%")
+
 anchor_date_display = ""
 if r1_forecast:
     _anchor_str = str(r1_forecast[0].get("anchor_date", ""))[:10]
@@ -288,6 +323,34 @@ if r1_forecast:
         anchor_date_display = _a.strftime("%b %d, %Y")
     except ValueError:
         pass
+
+# ── Backtest incr_units (for Accuracy Proof promo toggle) ────────────
+# Pulls actual weekly incr_units for the full backtest window from Druid
+acc_incr = druid(f"""
+    SELECT
+      TIME_FLOOR(__time, 'P1W') AS week_ending,
+      SUM(incr_units)            AS incr_units
+    FROM "built_enriched_weekly"
+    WHERE parent_brand = 'BUILT'
+      AND channel_outlet = 'CONVENTIONAL|FOOD'
+      AND retail_account = '{top_acct}'
+      AND military_excluded_flag = 0
+      AND __time >= TIMESTAMP '{str(_PREV_YEAR - 1)}-12-01'
+      AND __time <= CURRENT_TIMESTAMP
+    GROUP BY 1
+    ORDER BY 1
+""", f"{top_acct} incr_units (backtest window)")
+acc_incr = normalize_dates(acc_incr)
+# Druid TIME_FLOOR anchors to Monday; parquet uses Sunday week-ending → shift +6 days to align keys
+acc_incr_map = {}
+for r in acc_incr:
+    we = r.get("week_ending")
+    if we:
+        try:
+            sunday = (datetime.strptime(we, "%Y-%m-%d") + timedelta(days=6)).strftime("%Y-%m-%d")
+        except ValueError:
+            sunday = we
+        acc_incr_map[sunday] = safe_float(r.get("incr_units")) or 0.0
 
 # ── True recursive backtest (mirrors MO_27's exact autoregressive loop) ──────
 # Each forecast step feeds its own q50 prediction back as lag1 for the next
@@ -550,6 +613,12 @@ except Exception as e:
     traceback.print_exc()
     print(f"  WARNING: Could not build true recursive backtest ({e}); showing portfolio wMAPE")
 
+# ── Stamp incr_units onto backtest rows for Accuracy Proof promo toggle ─
+for row in backtest_history:
+    row["incr_units"] = acc_incr_map.get(row["week_ending"], 0.0)
+for row in backtest_holdout:
+    row["incr_units"] = acc_incr_map.get(row["week_ending"], 0.0)
+
 # ── Bundle payload ────────────────────────────────────────────────────
 payload = {
     "primary_acct":       top_acct,
@@ -574,6 +643,9 @@ payload = {
     "backtest_wmape":     retailer_wmape,
     "backtest_cutoff":    backtest_cutoff,
     "backtest_val_end":   backtest_val_end,
+    "r1_lift_pct":        round(r1_lift * 100, 1),
+    "r2_lift_pct":        round(r2_lift * 100, 1),
+    "sku_lift_pct":       round(sku_lift * 100, 1),
 }
 
 # ── HTML template ─────────────────────────────────────────────────────
@@ -680,6 +752,16 @@ tr:last-child td{border-bottom:none;}
   padding-top:16px;border-top:1px solid var(--border);}
 .footnote strong{color:var(--text);}
 
+/* Promo lift toggle */
+.promo-toggle{display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);font-size:11px;font-weight:600;
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;
+  margin-bottom:12px;letter-spacing:.02em;}
+.promo-toggle:hover{color:var(--text);border-color:var(--muted);}
+.promo-toggle.on{background:rgba(245,166,35,.12);border-color:rgba(245,166,35,.35);color:var(--amber);}
+
 @media(max-width:640px){.kpi{min-width:100px;} h1{font-size:18px;}}
 </style>
 </head>
@@ -719,10 +801,11 @@ tr:last-child td{border-bottom:none;}
     <div class="ct" id="chart1-title">Weekly Demand — Actuals + 13-Week Forecast</div>
     <div class="cs">SPINS sell-through actuals (prior year to present) · dashed = 13-week forward forecast · band = confidence interval (low/high)</div>
     <div class="legend">
-      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units</div>
-      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forecast (base)</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Base Forecast</div>
       <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3)"></div>Confidence band</div>
     </div>
+    <button class="promo-toggle" id="promo-btn-portfolio" data-lift-pct="__R1_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__R1_LIFT_PCT__% avg)</button>
     <div class="cw"><canvas id="chartPortfolio"></canvas></div>
   </div>
 
@@ -758,10 +841,11 @@ tr:last-child td{border-bottom:none;}
     <div class="ct" id="sku-chart-title">SKU Weekly Units — Actuals + Forecast</div>
     <div class="cs">SPINS actuals (prior year to present) · dashed line = 13-week forward forecast · band = confidence interval</div>
     <div class="legend">
-      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units</div>
-      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forecast (base)</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Base Forecast</div>
       <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3)"></div>Confidence band</div>
     </div>
+    <button class="promo-toggle" id="promo-btn-sku" data-lift-pct="__SKU_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__SKU_LIFT_PCT__% avg)</button>
     <div class="cw"><canvas id="chartSku"></canvas></div>
   </div>
 
@@ -803,8 +887,9 @@ tr:last-child td{border-bottom:none;}
 
   <div class="chart-card">
     <div class="ct">Weekly Units — Account Comparison · Actuals + Forecast</div>
-    <div class="cs">Raw weekly units for each account · dashed = forward forecast · shows absolute scale difference and trajectory</div>
+    <div class="cs">Base weekly units for each account · dashed = forward forecast · shows absolute scale difference and trajectory</div>
     <div class="legend" id="comp-legend"></div>
+    <button class="promo-toggle" id="promo-btn-comp" data-lift-pct="__R1_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__R1_LIFT_PCT__% avg)</button>
     <div class="cw"><canvas id="chartComparison"></canvas></div>
   </div>
 
@@ -839,11 +924,12 @@ tr:last-child td{border-bottom:none;}
     <div class="ct" id="acc-chart-title">Predicted vs. Actual — Out-of-Sample Holdout</div>
     <div class="cs" id="acc-chart-sub">Training period actuals · then holdout: true recursive predictions (amber) vs. what actually happened (green) · band = model's quantile range, not a coverage guarantee · no actual data used after the training cutoff</div>
     <div class="legend">
-      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actual units (SPINS)</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units (SPINS)</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>Model prediction (holdout)</div>
       <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3)"></div>Confidence band (q10–q90)</div>
-      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast (base)</div>
     </div>
+    <button class="promo-toggle" id="promo-btn-acc" data-lift-pct="__R1_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__R1_LIFT_PCT__% avg)</button>
     <div class="cw" style="height:380px"><canvas id="chartAccuracy"></canvas></div>
   </div>
 
@@ -876,6 +962,25 @@ function showTab(name) {
   TAB_NAMES.forEach((n,i) => {
     document.querySelectorAll('.tab')[i].classList.toggle('active', n === name);
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
+  });
+}
+
+// ── Promo lift toggle (global — all tabs stay in sync) ────────────────
+let promoOn = false;
+let chartPortfolio, chartSku, chartComparison, chartAccuracy;
+
+function setPromoMode(on) {
+  promoOn = on;
+  document.querySelectorAll('.promo-toggle').forEach(btn => {
+    btn.classList.toggle('on', on);
+    const pct = btn.dataset.liftPct || '';
+    const pctStr = pct ? ` (${pct}% avg)` : '';
+    btn.textContent = on ? `✕ Promo Lift ON${pctStr}` : `＋ Promo Lift${pctStr}`;
+  });
+  [chartPortfolio, chartSku, chartComparison, chartAccuracy].forEach(ch => {
+    if (!ch) return;
+    ch.data.datasets.forEach(ds => { if (ds._promo) ds.hidden = !on; });
+    ch.update('none');
   });
 }
 
@@ -1006,26 +1111,39 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const actuals  = DATA.r1_actuals  || [];
   const forecast = DATA.r1_forecast || [];
 
-  const actDates = actuals.map(r => r.week_ending);   // ISO strings → tick formatter handles display
+  const actDates = actuals.map(r => r.week_ending);
   const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
+  const actTotal = actuals.map(r => {
+    const base = parseFloat(r.actual_units) || 0;
+    const incr = parseFloat(r.incr_units)   || 0;
+    return base + incr || null;
+  });
 
-  const fctDates = forecast.map(r => r.week_ending);
-  const fctBase  = forecast.map(r => parseFloat(r.forecast_units) || null);
-  const fctLow   = forecast.map(r => parseFloat(r.forecast_low)   || null);
-  const fctHigh  = forecast.map(r => parseFloat(r.forecast_high)  || null);
+  const fctDates     = forecast.map(r => r.week_ending);
+  const fctBase      = forecast.map(r => parseFloat(r.forecast_units)       || null);
+  const fctLow       = forecast.map(r => parseFloat(r.forecast_low)         || null);
+  const fctHigh      = forecast.map(r => parseFloat(r.forecast_high)        || null);
+  const fctPromoArr     = forecast.map(r => parseFloat(r.forecast_units_promo) || null);
+  const fctPromoLowArr  = forecast.map(r => parseFloat(r.forecast_low_promo)   || null);
+  const fctPromoHighArr = forecast.map(r => parseFloat(r.forecast_high_promo)  || null);
 
-  const allLabels = [...actDates, ...fctDates];
-  const nAct = actDates.length;
-
-  const actLine  = [...actUnits, ...fctDates.map(() => null)];
+  const allLabels  = [...actDates, ...fctDates];
+  const nAct       = actDates.length;
   const lastActual = actUnits.length ? actUnits[actUnits.length - 1] : null;
-  const fctLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
-  const highLine = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
-  const lowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+  const lastTotal  = actTotal.length  ? actTotal[actTotal.length - 1]   : null;
+
+  const actLine      = [...actUnits, ...fctDates.map(() => null)];
+  const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
+  const fctLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
+  const highLine     = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
+  const lowLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+  const fctPromoLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoArr];
+  const promoHighLine = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoHighArr];
+  const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal : null), ...fctPromoLowArr];
 
   const opts1 = baseOpts('Weekly Units');
   opts1.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
-  new Chart(document.getElementById('chartPortfolio'), {
+  chartPortfolio = new Chart(document.getElementById('chartPortfolio'), {
     type: 'line',
     plugins: [vertLinePlugin],
     data: {
@@ -1035,10 +1153,22 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           backgroundColor: 'rgba(79,142,247,0.10)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
         { label: 'Band Low', data: lowLine, fill: false,
           borderWidth: 0, pointRadius: 0, tension: 0.3 },
-        { label: 'Forecast', data: fctLine, borderColor: '#4f8ef7',
+        { label: 'Base Forecast', data: fctLine, borderColor: '#4f8ef7',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
-        { label: 'Actual', data: actLine, borderColor: '#38c9a0',
+        { label: 'Base Units', data: actLine, borderColor: '#38c9a0',
           borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+        // Promo overlay (hidden by default)
+        { label: 'Total w/ Promo', data: actTotalLine, borderColor: '#f5a623',
+          borderWidth: 2, pointRadius: 1.5, pointBackgroundColor: '#f5a623',
+          tension: 0.3, fill: false, hidden: true, _promo: true },
+        { label: 'Promo Band High', data: promoHighLine, fill: '+1',
+          backgroundColor: 'rgba(245,166,35,0.09)', borderWidth: 0, pointRadius: 0,
+          tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Band Low', data: promoLowLine, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Forecast', data: fctPromoLine, borderColor: 'rgba(245,166,35,0.75)',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3,
+          fill: false, hidden: true, _promo: true },
       ]
     },
     options: opts1
@@ -1063,23 +1193,36 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 
   const actDates = actuals.map(r => r.week_ending);
   const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
-  const fctDates = forecast.map(r => r.week_ending);
-  const fctBase  = forecast.map(r => parseFloat(r.forecast_units) || null);
-  const fctLow   = forecast.map(r => parseFloat(r.forecast_low)   || null);
-  const fctHigh  = forecast.map(r => parseFloat(r.forecast_high)  || null);
+  const actTotal = actuals.map(r => {
+    const base = parseFloat(r.actual_units) || 0;
+    const incr = parseFloat(r.incr_units)   || 0;
+    return base + incr || null;
+  });
+  const fctDates        = forecast.map(r => r.week_ending);
+  const fctBase         = forecast.map(r => parseFloat(r.forecast_units)       || null);
+  const fctLow          = forecast.map(r => parseFloat(r.forecast_low)         || null);
+  const fctHigh         = forecast.map(r => parseFloat(r.forecast_high)        || null);
+  const fctPromoArr     = forecast.map(r => parseFloat(r.forecast_units_promo) || null);
+  const fctPromoLowArr  = forecast.map(r => parseFloat(r.forecast_low_promo)   || null);
+  const fctPromoHighArr = forecast.map(r => parseFloat(r.forecast_high_promo)  || null);
 
-  const allLabels = [...actDates, ...fctDates];
-  const nAct = actDates.length;
+  const allLabels  = [...actDates, ...fctDates];
+  const nAct       = actDates.length;
   const lastActual = actUnits.length ? actUnits[actUnits.length - 1] : null;
+  const lastTotal  = actTotal.length  ? actTotal[actTotal.length - 1]  : null;
 
-  const actLine  = [...actUnits, ...fctDates.map(() => null)];
-  const fctLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
-  const highLine = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
-  const lowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+  const actLine      = [...actUnits, ...fctDates.map(() => null)];
+  const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
+  const fctLine       = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctBase];
+  const highLine      = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctHigh];
+  const lowLine       = [...actDates.map((_,i) => i === nAct - 1 ? lastActual : null), ...fctLow];
+  const fctPromoLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoArr];
+  const promoHighLine = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoHighArr];
+  const promoLowLine  = [...actDates.map((_,i) => i === nAct - 1 ? lastTotal  : null), ...fctPromoLowArr];
 
   const optsSku = baseOpts('Weekly Units');
   optsSku.plugins.vertLine = { index: nAct - 1, label: '→ Forecast' };
-  new Chart(document.getElementById('chartSku'), {
+  chartSku = new Chart(document.getElementById('chartSku'), {
     type: 'line',
     plugins: [vertLinePlugin],
     data: {
@@ -1089,10 +1232,22 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           backgroundColor: 'rgba(79,142,247,0.10)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
         { label: 'Band Low',  data: lowLine,  fill: false,
           borderWidth: 0, pointRadius: 0, tension: 0.3 },
-        { label: 'Forecast', data: fctLine, borderColor: '#4f8ef7',
+        { label: 'Base Forecast', data: fctLine, borderColor: '#4f8ef7',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
-        { label: 'Actual', data: actLine, borderColor: '#38c9a0',
+        { label: 'Base Units', data: actLine, borderColor: '#38c9a0',
           borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+        // Promo overlay (hidden by default)
+        { label: 'Total w/ Promo', data: actTotalLine, borderColor: '#f5a623',
+          borderWidth: 2, pointRadius: 1.5, pointBackgroundColor: '#f5a623',
+          tension: 0.3, fill: false, hidden: true, _promo: true },
+        { label: 'Promo Band High', data: promoHighLine, fill: '+1',
+          backgroundColor: 'rgba(245,166,35,0.09)', borderWidth: 0, pointRadius: 0,
+          tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Band Low', data: promoLowLine, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Forecast', data: fctPromoLine, borderColor: 'rgba(245,166,35,0.75)',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3,
+          fill: false, hidden: true, _promo: true },
       ]
     },
     options: optsSku
@@ -1129,27 +1284,34 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const r2ActDates = r2a.map(r => r.week_ending);
 
   const allLabels = [...r1ActDates, ...r1FctDates];
+  const totalLen  = allLabels.length;
 
-  const r1ActVals = r1a.map(r => parseFloat(r.actual_units)   || null);
-  const r1FctVals = r1f.map(r => parseFloat(r.forecast_units) || null);
-  const r2ActVals = r2a.map(r => parseFloat(r.actual_units)   || null);
-  const r2FctVals = r2f.map(r => parseFloat(r.forecast_units) || null);
+  const r1ActVals   = r1a.map(r => parseFloat(r.actual_units)        || null);
+  const r1TotalVals = r1a.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+  const r1FctVals   = r1f.map(r => parseFloat(r.forecast_units)      || null);
+  const r1FctPromo  = r1f.map(r => parseFloat(r.forecast_units_promo)|| null);
+  const r2ActVals   = r2a.map(r => parseFloat(r.actual_units)        || null);
+  const r2TotalVals = r2a.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+  const r2FctVals   = r2f.map(r => parseFloat(r.forecast_units)      || null);
+  const r2FctPromo  = r2f.map(r => parseFloat(r.forecast_units_promo)|| null);
 
-  const nR1   = r1ActDates.length;
-  const lastR1 = r1ActVals.length ? r1ActVals[r1ActVals.length - 1] : null;
-  const nR2   = r2ActDates.length;
-  const lastR2 = r2ActVals.length ? r2ActVals[Math.min(nR2, allLabels.length) - 1] : null;
+  const nR1    = r1ActDates.length;
+  const lastR1 = r1ActVals.length ? r1ActVals[r1ActVals.length - 1]         : null;
+  const lastR1T = r1TotalVals.length ? r1TotalVals[r1TotalVals.length - 1]  : null;
+  const nR2    = r2ActDates.length;
+  const lastR2 = r2ActVals.length ? r2ActVals[Math.min(nR2, totalLen) - 1]  : null;
+  const lastR2T = r2TotalVals.length ? r2TotalVals[Math.min(nR2, totalLen) - 1] : null;
 
   function padAct(vals, n) {
-    return [...vals, ...Array(allLabels.length - n).fill(null)];
+    return [...vals, ...Array(totalLen - n).fill(null)];
   }
   function padFct(vals, baseN, connector) {
     return [...Array(baseN - 1).fill(null), connector, ...vals,
-            ...Array(allLabels.length - baseN - vals.length).fill(null)];
+            ...Array(totalLen - baseN - vals.length).fill(null)];
   }
 
   const datasets = [
-    { label: DATA.primary_acct + ' Actual',
+    { label: DATA.primary_acct + ' Base',
       data: padAct(r1ActVals, nR1),
       borderColor: '#38c9a0', borderWidth: 2.5, pointRadius: 2,
       pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
@@ -1157,34 +1319,53 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
       data: padFct(r1FctVals, nR1, lastR1),
       borderColor: '#38c9a0', borderDash: [5,4], borderWidth: 2,
       pointRadius: 0, tension: 0.3, fill: false },
+    // Promo overlays for r1 (hidden by default)
+    { label: DATA.primary_acct + ' Total w/ Promo',
+      data: padAct(r1TotalVals, nR1),
+      borderColor: 'rgba(56,201,160,0.55)', borderWidth: 1.5, pointRadius: 0,
+      tension: 0.3, fill: false, borderDash: [3,3], hidden: true, _promo: true },
+    { label: DATA.primary_acct + ' Promo Forecast',
+      data: padFct(r1FctPromo, nR1, lastR1T),
+      borderColor: 'rgba(56,201,160,0.5)', borderDash: [5,4], borderWidth: 1.5,
+      pointRadius: 0, tension: 0.3, fill: false, hidden: true, _promo: true },
   ];
 
   if (r2a.length) {
-    const r2ActPadded = padAct(r2ActVals.slice(0, allLabels.length), Math.min(nR2, allLabels.length));
-    const r2FctPadded = padFct(r2FctVals, Math.min(nR2, allLabels.length), lastR2);
+    const r2ActPadded   = padAct(r2ActVals.slice(0, totalLen),   Math.min(nR2, totalLen));
+    const r2TotalPadded = padAct(r2TotalVals.slice(0, totalLen), Math.min(nR2, totalLen));
+    const r2FctPadded   = padFct(r2FctVals,  Math.min(nR2, totalLen), lastR2);
+    const r2PromoPadded = padFct(r2FctPromo, Math.min(nR2, totalLen), lastR2T);
     datasets.push(
-      { label: DATA.secondary_acct + ' Actual',
+      { label: DATA.secondary_acct + ' Base',
         data: r2ActPadded,
         borderColor: '#9b6dff', borderWidth: 2.5, pointRadius: 2,
         pointBackgroundColor: '#9b6dff', tension: 0.3, fill: false },
       { label: DATA.secondary_acct + ' Forecast',
         data: r2FctPadded,
         borderColor: '#9b6dff', borderDash: [5,4], borderWidth: 2,
-        pointRadius: 0, tension: 0.3, fill: false }
+        pointRadius: 0, tension: 0.3, fill: false },
+      // Promo overlays for r2 (hidden by default)
+      { label: DATA.secondary_acct + ' Total w/ Promo',
+        data: r2TotalPadded,
+        borderColor: 'rgba(155,109,255,0.55)', borderWidth: 1.5, pointRadius: 0,
+        tension: 0.3, fill: false, borderDash: [3,3], hidden: true, _promo: true },
+      { label: DATA.secondary_acct + ' Promo Forecast',
+        data: r2PromoPadded,
+        borderColor: 'rgba(155,109,255,0.5)', borderDash: [5,4], borderWidth: 1.5,
+        pointRadius: 0, tension: 0.3, fill: false, hidden: true, _promo: true }
     );
   }
 
-  const colors = {'#38c9a0': DATA.primary_acct, '#9b6dff': DATA.secondary_acct};
   const legendEl = document.getElementById('comp-legend');
-  Object.entries(colors).forEach(([c, label]) => {
+  [[DATA.primary_acct, '#38c9a0'], [DATA.secondary_acct, '#9b6dff']].forEach(([label, c]) => {
     if (!label) return;
-    legendEl.innerHTML += `<div class="leg-item"><div class="leg-line" style="background:${c}"></div>${label} actual</div>
+    legendEl.innerHTML += `<div class="leg-item"><div class="leg-line" style="background:${c}"></div>${label} base</div>
       <div class="leg-item"><div class="leg-dash" style="color:${c}"></div>${label} forecast</div>`;
   });
 
   const optsComp = baseOpts('Weekly Units');
   optsComp.plugins.vertLine = { index: nR1 - 1, label: '→ Forecast' };
-  new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
+  chartComparison = new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
 })();
 
 // ── Chart 4: Accuracy proof ───────────────────────────────────────────
@@ -1220,17 +1401,22 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   // Build unified timeline (ISO strings; tick formatter handles display)
   const histDates   = history.map(r => r.week_ending);
   const histActuals = history.map(r => parseFloat(r.actual_units) || null);
+  const histTotal   = history.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
 
   const holdDates   = holdout.map(r => r.week_ending);
   const holdActuals = holdout.map(r => parseFloat(r.actual_units) || null);
+  const holdTotal   = holdout.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
   const holdPred    = holdout.map(r => parseFloat(r.pred_q50) || null);
   const holdLow     = holdout.map(r => parseFloat(r.pred_q10) || null);
   const holdHigh    = holdout.map(r => parseFloat(r.pred_q90) || null);
 
-  const fwdDates    = fwd.map(r => r.week_ending);
-  const fwdBase     = fwd.map(r => parseFloat(r.forecast_units) || null);
-  const fwdLow      = fwd.map(r => parseFloat(r.forecast_low)   || null);
-  const fwdHigh     = fwd.map(r => parseFloat(r.forecast_high)  || null);
+  const fwdDates     = fwd.map(r => r.week_ending);
+  const fwdBase      = fwd.map(r => parseFloat(r.forecast_units)       || null);
+  const fwdLow       = fwd.map(r => parseFloat(r.forecast_low)         || null);
+  const fwdHigh      = fwd.map(r => parseFloat(r.forecast_high)        || null);
+  const fwdPromoArr  = fwd.map(r => parseFloat(r.forecast_units_promo) || null);
+  const fwdPromoHArr = fwd.map(r => parseFloat(r.forecast_high_promo)  || null);
+  const fwdPromoLArr = fwd.map(r => parseFloat(r.forecast_low_promo)   || null);
 
   const allLabels = [...histDates, ...holdDates, ...fwdDates];
   const nHist = histDates.length;
@@ -1238,20 +1424,23 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const nFwd  = fwdDates.length;
   const total = allLabels.length;
 
-  // Helper: pad array to total length with leading/trailing nulls
-  function padSeg(vals, offset) {
-    return [...Array(offset).fill(null), ...vals, ...Array(total - offset - vals.length).fill(null)];
-  }
-
-  // Actuals: history + holdout continuous
+  // Actuals: history + holdout continuous (base)
   const combinedActuals = [
     ...histActuals,
     ...holdActuals,
     ...Array(nFwd).fill(null)
   ];
 
+  // Actuals: history + holdout continuous (total incl. promo)
+  const combinedTotal = [
+    ...histTotal,
+    ...holdTotal,
+    ...Array(nFwd).fill(null)
+  ];
+
   // Connector between history and holdout (avoid gap)
-  const lastHist = histActuals.length ? histActuals[histActuals.length - 1] : null;
+  const lastHist      = histActuals.length ? histActuals[histActuals.length - 1] : null;
+  const lastHistTotal = histTotal.length   ? histTotal[histTotal.length - 1]     : null;
 
   // Holdout predictions: start at history end, span holdout
   const predLine = [
@@ -1273,8 +1462,9 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     ...Array(nFwd).fill(null)
   ];
 
-  // Forward forecast: start at last holdout actual
-  const lastHold = holdActuals.length ? holdActuals[holdActuals.length - 1] : null;
+  // Forward forecast base: start at last holdout actual
+  const lastHold      = holdActuals.length ? holdActuals[holdActuals.length - 1] : null;
+  const lastHoldTotal = holdTotal.length   ? holdTotal[holdTotal.length - 1]     : null;
   const fwdLine = [
     ...Array(nHist + nHold - 1).fill(null),
     lastHold,
@@ -1290,6 +1480,11 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     lastHold,
     ...fwdLow
   ];
+
+  // Forward promo forecast
+  const fwdPromoLine  = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoArr];
+  const fwdPromoHLine = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoHArr];
+  const fwdPromoLLine = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoLArr];
 
   // Two-line accuracy plugin: one at training cutoff, one at holdout/forward boundary
   const twoLinePlugin = {
@@ -1321,13 +1516,15 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     }
   };
 
-  new Chart(document.getElementById('chartAccuracy'), {
+  const bandLabels = ['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low',
+                       'Promo Fwd Band High','Promo Fwd Band Low'];
+  chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
     type: 'line',
     plugins: [twoLinePlugin],
     data: {
       labels: allLabels,
       datasets: [
-        // Forward forecast band (behind everything)
+        // Forward forecast band (base, behind everything)
         { label: 'Fwd Band High', data: fwdHighLine, fill: '+1',
           backgroundColor: 'rgba(79,142,247,0.08)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
         { label: 'Fwd Band Low', data: fwdLowLine, fill: false,
@@ -1337,15 +1534,27 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           backgroundColor: 'rgba(245,166,35,0.12)', borderWidth: 0, pointRadius: 0, tension: 0.3 },
         { label: 'Pred Band Low', data: lowAmber, fill: false,
           borderWidth: 0, pointRadius: 0, tension: 0.3 },
-        // Forward forecast line
+        // Forward forecast line (base)
         { label: 'Forward Forecast', data: fwdLine, borderColor: '#4f8ef7',
           borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
-        // Holdout prediction
+        // Holdout model prediction (amber stays always — accuracy context)
         { label: 'Model Prediction', data: predLine, borderColor: '#f5a623',
           borderDash: [5,4], borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
-        // Actuals (on top)
-        { label: 'Actual (SPINS)', data: combinedActuals, borderColor: '#38c9a0',
+        // Base actuals (on top)
+        { label: 'Base Units (SPINS)', data: combinedActuals, borderColor: '#38c9a0',
           borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+        // Promo overlays (hidden by default)
+        { label: 'Total w/ Promo', data: combinedTotal, borderColor: 'rgba(56,201,160,0.6)',
+          borderWidth: 1.5, borderDash: [3,3], pointRadius: 0,
+          tension: 0.3, fill: false, hidden: true, _promo: true },
+        { label: 'Promo Fwd Band High', data: fwdPromoHLine, fill: '+1',
+          backgroundColor: 'rgba(79,142,247,0.06)', borderWidth: 0, pointRadius: 0,
+          tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Fwd Band Low', data: fwdPromoLLine, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Forward Forecast', data: fwdPromoLine, borderColor: 'rgba(79,142,247,0.55)',
+          borderDash: [5,4], borderWidth: 1.5, pointRadius: 0,
+          tension: 0.3, fill: false, hidden: true, _promo: true },
       ]
     },
     options: {
@@ -1355,12 +1564,11 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
         tooltip: {
           callbacks: {
             label: ctx => {
-              const labels = ['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low'];
-              if (labels.includes(ctx.dataset.label)) return null;
+              if (bandLabels.includes(ctx.dataset.label)) return null;
               return ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`;
             }
           },
-          filter: item => !['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low'].includes(item.dataset.label)
+          filter: item => !bandLabels.includes(item.dataset.label)
         }
       }
     }
@@ -1374,6 +1582,8 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
 # ── Inject data and write file ────────────────────────────────────────
 html_out = HTML.replace("__DATA_JSON__", json.dumps(payload, default=str))
 html_out = html_out.replace("__GENERATED__", payload["generated"])
+html_out = html_out.replace("__R1_LIFT_PCT__",  str(payload["r1_lift_pct"]))
+html_out = html_out.replace("__SKU_LIFT_PCT__", str(payload["sku_lift_pct"]))
 
 out_path = Path(__file__).parent / "bracken_forecast_charts.html"
 out_path.write_text(html_out, encoding="utf-8")
