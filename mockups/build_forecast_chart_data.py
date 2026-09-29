@@ -618,6 +618,11 @@ for row in backtest_history:
     row["incr_units"] = acc_incr_map.get(row["week_ending"], 0.0)
 for row in backtest_holdout:
     row["incr_units"] = acc_incr_map.get(row["week_ending"], 0.0)
+    # Promo-adjusted holdout predictions: same lift rate used for forward forecast
+    mult = 1.0 + r1_lift
+    row["pred_q50_promo"] = (safe_float(row.get("pred_q50")) or 0) * mult
+    row["pred_q10_promo"] = (safe_float(row.get("pred_q10")) or 0) * mult
+    row["pred_q90_promo"] = (safe_float(row.get("pred_q90")) or 0) * mult
 
 # ── Bundle payload ────────────────────────────────────────────────────
 payload = {
@@ -928,6 +933,8 @@ tr:last-child td{border-bottom:none;}
       <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>Model prediction (holdout)</div>
       <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3)"></div>Confidence band (q10–q90)</div>
       <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast (base)</div>
+      <div class="leg-item" id="promo-leg-acc" style="display:none"><div class="leg-line" style="background:var(--accent2);opacity:.5;border-top:2px dotted var(--accent2);background:none"></div>Total w/ Promo</div>
+      <div class="leg-item" id="promo-pred-leg-acc" style="display:none"><div class="leg-dash" style="color:var(--purple)"></div>Promo prediction (holdout)</div>
     </div>
     <button class="promo-toggle" id="promo-btn-acc" data-lift-pct="__R1_LIFT_PCT__" onclick="setPromoMode(!promoOn)">＋ Promo Lift (__R1_LIFT_PCT__% avg)</button>
     <div class="cw" style="height:380px"><canvas id="chartAccuracy"></canvas></div>
@@ -981,6 +988,11 @@ function setPromoMode(on) {
     if (!ch) return;
     ch.data.datasets.forEach(ds => { if (ds._promo) ds.hidden = !on; });
     ch.update('none');
+  });
+  // Show/hide accuracy tab promo legend items
+  ['promo-leg-acc','promo-pred-leg-acc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? '' : 'none';
   });
 }
 
@@ -1403,12 +1415,15 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const histActuals = history.map(r => parseFloat(r.actual_units) || null);
   const histTotal   = history.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
 
-  const holdDates   = holdout.map(r => r.week_ending);
-  const holdActuals = holdout.map(r => parseFloat(r.actual_units) || null);
-  const holdTotal   = holdout.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
-  const holdPred    = holdout.map(r => parseFloat(r.pred_q50) || null);
-  const holdLow     = holdout.map(r => parseFloat(r.pred_q10) || null);
-  const holdHigh    = holdout.map(r => parseFloat(r.pred_q90) || null);
+  const holdDates      = holdout.map(r => r.week_ending);
+  const holdActuals    = holdout.map(r => parseFloat(r.actual_units)  || null);
+  const holdTotal      = holdout.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+  const holdPred       = holdout.map(r => parseFloat(r.pred_q50)      || null);
+  const holdLow        = holdout.map(r => parseFloat(r.pred_q10)      || null);
+  const holdHigh       = holdout.map(r => parseFloat(r.pred_q90)      || null);
+  const holdPredPromo  = holdout.map(r => parseFloat(r.pred_q50_promo)|| null);
+  const holdLowPromo   = holdout.map(r => parseFloat(r.pred_q10_promo)|| null);
+  const holdHighPromo  = holdout.map(r => parseFloat(r.pred_q90_promo)|| null);
 
   const fwdDates     = fwd.map(r => r.week_ending);
   const fwdBase      = fwd.map(r => parseFloat(r.forecast_units)       || null);
@@ -1486,6 +1501,11 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const fwdPromoHLine = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoHArr];
   const fwdPromoLLine = [...Array(nHist + nHold - 1).fill(null), lastHoldTotal, ...fwdPromoLArr];
 
+  // Promo-adjusted holdout prediction (base pred × (1+lift)) — connects from history end
+  const predPromoLine  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdPredPromo,  ...Array(nFwd).fill(null)];
+  const highPromoAmber = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdHighPromo,  ...Array(nFwd).fill(null)];
+  const lowPromoAmber  = [...Array(nHist - 1).fill(null), lastHistTotal, ...holdLowPromo,   ...Array(nFwd).fill(null)];
+
   // Two-line accuracy plugin: one at training cutoff, one at holdout/forward boundary
   const twoLinePlugin = {
     id: 'twoLine',
@@ -1517,7 +1537,8 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   };
 
   const bandLabels = ['Fwd Band High','Fwd Band Low','Pred Band High','Pred Band Low',
-                       'Promo Fwd Band High','Promo Fwd Band Low'];
+                       'Promo Fwd Band High','Promo Fwd Band Low',
+                       'Promo Pred Band High','Promo Pred Band Low'];
   chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
     type: 'line',
     plugins: [twoLinePlugin],
@@ -1554,6 +1575,15 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
           borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
         { label: 'Promo Forward Forecast', data: fwdPromoLine, borderColor: 'rgba(79,142,247,0.55)',
           borderDash: [5,4], borderWidth: 1.5, pointRadius: 0,
+          tension: 0.3, fill: false, hidden: true, _promo: true },
+        // Promo-adjusted holdout prediction band + line (purple — distinct from base amber)
+        { label: 'Promo Pred Band High', data: highPromoAmber, fill: '+1',
+          backgroundColor: 'rgba(155,109,255,0.09)', borderWidth: 0, pointRadius: 0,
+          tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Pred Band Low', data: lowPromoAmber, fill: false,
+          borderWidth: 0, pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Model Prediction', data: predPromoLine, borderColor: '#9b6dff',
+          borderDash: [5,4], borderWidth: 2.5, pointRadius: 0,
           tension: 0.3, fill: false, hidden: true, _promo: true },
       ]
     },
