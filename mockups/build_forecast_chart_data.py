@@ -637,6 +637,9 @@ try:
         ("Q4 2025", "Oct–Dec 2025", "2025-09-28", "2025-10-05", "2025-12-28"),
         ("Q1 2026", "Jan–Mar 2026", "2025-12-28", "2026-01-04", "2026-03-29"),
         ("Q2 2026", "Apr–Jun 2026", "2026-03-29", "2026-04-05", "2026-06-28"),
+        # Q3 2026: cutoff Jun 29 (post training cutoff May 10) — also genuinely out-of-sample
+        # Partial actuals: SPINS through ~Sep 6 gives ~9 of 13 weeks
+        ("Q3 2026", "Jul–Sep 2026", "2026-06-29", "2026-07-06", "2026-09-28"),
     ]
     for _ql, _qlong, _qcutoff, _qstart, _qend in _Q_CUTOFFS:
         _qts = pd.Timestamp(_qcutoff, tz="UTC")
