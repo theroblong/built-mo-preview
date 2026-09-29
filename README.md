@@ -6,6 +6,37 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 188: Rob standup brief — demand model signal inventory; cannibalization + elasticity context (2026-09-29)
+
+**Rob standup (Sept 30, 2026):** Walking through what's in the demand forecast (E1) and what's handled by separate Mo suites.
+
+**Four signal categories in E1:**
+1. **Historical pattern + seasonality** — 2yr weekly SPINS actuals per SKU × retailer × channel; seasonal anchor via lag52; ETS for <52wk series
+2. **Distribution (TDP + velocity)** — store count, week-over-week distribution momentum, velocity per store; ETS adapts to recent velocity without needing a full year
+3. **Cannibalization pressure** — `donor_count` (# other BUILT SKUs active at same retailer) is a live training feature; when a new flavor launches, donor_count rises and the model adjusts; explicit pairwise rates (E2a) will be wired in as a forward-looking adjustment on the roadmap
+4. **Price + promo (historical)** — ARP, price volatility, week-over-week price change, and SPINS incr_units are features; the model has learned price elasticity response from 2+ years of variation; planned future price changes and committed promos are NOT yet inputs
+
+**What's in separate suites (not yet integrated into E1 forward predictions):**
+- E2a Cannibalization — explicit pairwise cross-SKU substitution rates
+- E2b Price Elasticity — forward-looking elasticity modeling (historical ARP response IS in E1; explicit forward scenarios are in E2b)
+
+**Retailer/channel context:** Every series fit independently per SKU × retailer × geography. Channel is a categorical feature. Kroger everyday-low-price behavior is learned entirely separately from Publix sporadic-promo behavior.
+
+**External factors (TikTok, virality):** Non-stationary demand shocks are not predictable. ETS's recency weighting incorporates a spike into the level/trend within 2–3 weeks; damped trend prevents extrapolating the spike forever. The cone of uncertainty widens appropriately. FRED macro context (MO_76 candidate) is the next external-factor layer.
+
+**Honest model gaps:**
+
+| Gap | Impact | Path to close |
+|---|---|---|
+| Forward store expansion plans | Underpredicts at expanding accounts (Albertsons 50.8%) | NS2 sell-in pipeline (Ebad) |
+| Planned promos / TPR commitments | Misses forward promo lift | Brian's promo plan file; NS2 trade spend |
+| Explicit elasticity adjustments | Price-change scenarios not forward-projected | E2b suite → forecast integration |
+| Pairwise cannibalization rates | Launch impact on sibling SKUs | E2a suite → donor signal integration |
+
+**Standup note:** At standup, ask Rob for his ShopTalk meeting itinerary — so we avoid messaging him during prospect meetings the rest of the day.
+
+---
+
 ## README update 187: Multi-retailer backtest comparison; velocity_spm_lag52 unit scaling diagnosis (2026-09-29)
 
 `build_forecast_chart_data.py` — `run_single_backtest()` refactored to accept `target_df` parameter (default: Kroger). After the Kroger quarterly loop, the script now automatically runs quarterly + holdout backtests for the next three largest retailers by volume (currently PUBLIX, ALBERTSONS, UNFI) and prints a comparison. No change to the chart payload or Kroger results.
