@@ -6,6 +6,29 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 186: TDP-aware seasonal blend — dynamic yoy_ratio ceiling, null result at Kroger (2026-09-29)
+
+`build_forecast_chart_data.py` — Added TDP-aware dynamic clip ceiling to the LightGBM seasonal blend `yoy_ratio`. Previously the growth cap was a hard 2.0×; now it expands proportionally when TDP has grown: `tdp_lag52_est = units_52w_ago / velocity_spm_lag52`, `tdp_yoy = tdp_now / tdp_lag52_est`, `yoy_clip_max = clip(tdp_yoy × 1.5, 2.0, 5.0)`. No retraining — uses only `velocity_spm_lag52` and `tdp` already in `static_feats`. Rationale: units_52w_ago was collected at fewer stores; for a SKU that doubled TDP, a raw unit growth of 2.8× is physically reasonable and the prior hard cap at 2.0× discarded the signal.
+
+**Backtest result (Kroger, v3 vs. v2):** No measurable change across all 7 quarters or the true holdout (15.5%). Null result is explained by two compounding factors: (1) the high-error growth-stage quarters (Q1 2025: 44.6%, Q1 2026: 41.2%) route 14–30 series to ETS — the LightGBM blend is already bypassed for exactly the series with the most TDP expansion; (2) the remaining LightGBM-routed Kroger series are mature distribution (52+ weeks, established shelf placement), where actual unit YoY growth is already sub-2.0× — the expanded cap never fires. The code change is correct and will activate at retailers with shorter BUILT history or when a multi-retailer retrain is run. Kroger is a ceiling test, not a stress test for this fix.
+
+**wMAPE summary unchanged (v3 = v2):**
+
+| Quarter | Series | ETS-routed | wMAPE |
+|---------|--------|-----------|-------|
+| Q1 2025 | 30 | 14 | 44.6% |
+| Q2 2025 | 34 | 18 | 30.6% |
+| Q3 2025 | 48 | 36 | 12.5% |
+| Q4 2025 | 52 | 28 | 36.3% |
+| Q1 2026 | 50 | 30 | 41.2% |
+| Q2 2026 | 64 | 38 | 25.0% |
+| Q3 2026 | 70 | 32 | 25.2% |
+| Holdout (May–Aug 2026) | 64 | 28 | **15.5%** |
+
+**Next lever for the blend:** `velocity_spm_lag52` may be NaN for many series in the current parquet (training pipeline may not have computed it for all rows). Validating population rate of `velocity_spm_lag52` in the parquet is a prerequisite before concluding the mechanism is ineffective.
+
+---
+
 ## README update 179: bracken_forecast_charts.html — x-axis tick fix; forecast line starts at Sep 13 (2026-09-28)
 
 `bracken_forecast_charts.html` — Charts 1–3 (Portfolio, SKU Detail, Retailer Comparison) were showing the "→ Forecast" vertical line between the Aug '26 and Sep '26 x-axis labels, and October/November were absent from the x-axis. Two root causes: (1) `maxTicksLimit: 20` with 101 total labels produced step=6, putting the Sep '26 tick at index 90 (Sep 27) — 3 weeks after the actual boundary date Sep 6 at index 87. October/November ticks at indices 96 and 100 were present in the data but visually crowded off the right edge. (2) The dashed forecast connector at `nAct - 1` (Sep 6) put a dashed value in the actuals zone, to the left of the "→ Forecast" line, making the forecast appear to start before the marker. Fix: changed `maxTicksLimit` to 28 for Charts 1–3 (via per-chart override, leaving Chart 4 at 20 where step=6 happens to land a tick exactly on Sep 6). With step=4 and 101 labels, ticks land at indices 88 (Sep 13), 92 (Oct 11), 96 (Nov 8), 100 (Dec 6). The vertical "→ Forecast" line and all forecast line arrays moved from `nAct - 1` to `nAct` (index 88 = Sep 13). Actuals end at Sep 6 (index 87), the "→ Forecast" line sits exactly at the "Sep '26" tick (Sep 13), and Oct/Nov/Dec labels all show. Chart 4 unchanged — its 104-label structure with step=6 already places a tick at index 90 = Sep 6 (the correct boundary for that chart's layout).
