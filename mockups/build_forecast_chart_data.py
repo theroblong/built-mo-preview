@@ -626,10 +626,25 @@ try:
         _qts = pd.Timestamp(_qcutoff, tz="UTC")
         print(f"    {_ql} (cutoff {_qcutoff})...", end=" ", flush=True)
         try:
-            _qw, _qwmape = run_single_backtest(_qts)
+            _qw, _ = run_single_backtest(_qts)
             if _qw.empty:
                 print("no data — skip")
                 continue
+            # Clip predictions to the target quarter window [q_start, q_end].
+            # Different SKUs have staggered last-actual dates so the raw
+            # aggregate spans more than 13 weeks.  Clipping ensures each
+            # quarterly segment contains only weeks that belong to that quarter.
+            _qstart_ts = pd.Timestamp(_qstart, tz="UTC")
+            _qend_ts   = pd.Timestamp(_qend,   tz="UTC") + pd.Timedelta(days=6)
+            _qw_clip   = _qw[(_qw["__time"] >= _qstart_ts) & (_qw["__time"] <= _qend_ts)].copy()
+            if _qw_clip.empty:
+                print("no predictions in target quarter window — skip")
+                continue
+            # Recompute wMAPE for the clipped window only
+            _valid_clip = _qw_clip[_qw_clip["actual_units"] > 0]
+            _ta_clip  = _valid_clip["actual_units"].sum()
+            _ae_clip  = (_valid_clip["actual_units"] - _valid_clip["pred_q50"]).abs().sum()
+            _qwmape   = round(_ae_clip / _ta_clip * 100, 1) if _ta_clip > 0 else 0.0
             _qpreds = [
                 {
                     "week_ending": _r["__time"].strftime("%Y-%m-%d"),
@@ -638,7 +653,7 @@ try:
                     "pred_q90":    float(_r["pred_q90"]),
                     "actual":      float(_r["actual_units"]),
                 }
-                for _, _r in _qw.iterrows()
+                for _, _r in _qw_clip.iterrows()
             ]
             quarterly_backtests.append({
                 "quarter_label": _ql,
