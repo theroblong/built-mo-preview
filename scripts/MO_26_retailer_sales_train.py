@@ -38,7 +38,7 @@ import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v4"  # v4: total_units model retrained on correct SPINS units (not base+units_promo)
+MODEL_VERSION = "v5"  # v5: tdp_lag52 + velocity_per_tdp + momentum features + recency-weighted training
 QUANTILES     = [0.10, 0.50, 0.90]
 Q_TAGS        = ["q10", "q50", "q90"]
 
@@ -74,6 +74,11 @@ FEATURE_COLS = [
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
     # YAGO — year-ago lags (Bracken: "are 3 years of data comparable?")
     "base_units_lag52", "velocity_spm_lag52",
+    # v5 new features (MO_77): growth-aware signals for hyper-growth brand accuracy
+    "tdp_lag52",                  # real TDP from 52wk ago — replaces broken velocity_spm proxy
+    "velocity_per_tdp",           # units per active store — separates sell-through from distribution
+    "base_units_13wk_momentum",   # QoQ growth rate — quarterly trend vs. seasonal noise
+    "base_units_4wk_momentum",    # 4wk acceleration — catching momentum build or decay
     # Categorical
     "channel_outlet",
     # Removed by ablation (hurt or below threshold): implied_elasticity, max_donor_cannibal_prob,
@@ -81,7 +86,7 @@ FEATURE_COLS = [
     # MO_56: cannibal_rate (−0.104pp global, −0.073pp event) and price_elasticity_effect
     # (−0.092pp) also rejected. AR lags already encode cannibalization damage via lagged outcomes;
     # ARP pct changes too small (mean 0.33%) for elasticity interaction to carry signal.
-    # MO_53 28-feature set is the CONFIRMED stopping point for feature engineering.
+    # MO_53 28-feature set confirmed stopping point; v5 extends with 4 growth-aware features.
 ]
 
 # Total-units model swaps base_units AR lags for total_units lags; same demand-driver features
@@ -166,6 +171,19 @@ if __name__ == "__main__":
     y_val_log   = val["log_base_units"].values        # log-space for pinball
     y_val_units = val["base_units"].values            # original units for MAE/RMSE
 
+    # Recency-weighted training: exponential decay λ=0.02 over weeks_ago.
+    # Rationale: BUILT is a hyper-growth brand — recent data (last 26 weeks) better
+    # represents current distribution trajectory and velocity patterns than data from
+    # 2+ years ago when the brand had far fewer stores. Downweighting older rows lets
+    # the model align to the current growth regime without discarding history entirely.
+    # λ=0.02: row from 52wk ago → weight ≈ 0.35; row from 104wk ago → weight ≈ 0.12.
+    # Explainability: "the model trusts recent performance more than old baselines."
+    _cutoff_ts    = train["__time"].max()
+    _weeks_ago    = (_cutoff_ts - train["__time"]).dt.total_seconds() / (7 * 24 * 3600)
+    sample_weights = np.exp(-0.02 * _weeks_ago.clip(lower=0).values)
+    print(f"  Recency weights: min={sample_weights.min():.3f}  "
+          f"mean={sample_weights.mean():.3f}  max={sample_weights.max():.3f}")
+
     # ── Train base_units models (q10/q50/q90) ────────────────────────────────
     models  = {}
     metrics = {}
@@ -179,6 +197,7 @@ if __name__ == "__main__":
         )
         model.fit(
             X_train, y_train,
+            sample_weight=sample_weights,
             eval_set=[(X_val, y_val_log)],
             callbacks=[
                 lgb.early_stopping(50, verbose=False),

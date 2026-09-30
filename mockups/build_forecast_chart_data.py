@@ -366,7 +366,13 @@ FEATURE_COLS = [
     "velocity_spm_z8", "velocity_spm_z13", "tdp", "tdp_z8", "tdp_wow_delta",
     "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std", "weeks_since_launch",
     "donor_count", "week_of_year", "base_units_lag1", "base_units_lag4",
-    "base_units_lag13", "base_units_lag52", "velocity_spm_lag52", "channel_outlet",
+    "base_units_lag13", "base_units_lag52", "velocity_spm_lag52",
+    # v5 features (MO_77): growth-aware signals
+    "tdp_lag52",                 # real TDP from 52wk ago — from parquet after MO_25 re-run
+    "velocity_per_tdp",          # units per active store — dynamic each forecast step
+    "base_units_13wk_momentum",  # QoQ growth rate — static from seed
+    "base_units_4wk_momentum",   # 4wk acceleration — static from seed
+    "channel_outlet",
 ]
 
 # Features updated dynamically each step (all others held flat from latest actual row)
@@ -374,6 +380,7 @@ AR_DYNAMIC = {
     "channel_outlet", "week_of_year", "weeks_since_launch",
     "base_units_lag1", "base_units_lag4", "base_units_lag13", "base_units_lag52",
     "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
+    "velocity_per_tdp",          # updates as forecast units accumulate each step
 }
 
 SEASONAL_BLEND_WEIGHT = 0.40   # must match MO_27 constant
@@ -424,11 +431,11 @@ try:
     df_r1 = df_r1.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
     # Load v4 quantile models
-    with open(MODEL_DIR / "model_retailer_sales_q50_v4.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q50_v5.pkl", "rb") as f:
         m50 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q10_v4.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q10_v5.pkl", "rb") as f:
         m10 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q90_v4.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q90_v5.pkl", "rb") as f:
         m90 = pickle.load(f)
 
     channel_cats = m50._Booster.pandas_categorical[0]
@@ -595,6 +602,8 @@ try:
                         "base_units_lag4":    lag4,
                         "base_units_lag13":   lag13,
                         "base_units_lag52":   lag52,
+                        # v5: velocity_per_tdp updates each step as forecast units accumulate
+                        "velocity_per_tdp":   units_history[-1] / max(float(static_feats.get("tdp") or 1.0), 1.0),
                     }
 
                     X = pd.DataFrame([feature_row])[FEATURE_COLS]

@@ -630,6 +630,31 @@ if __name__ == "__main__":
     # YAGO
     df["base_units_lag52"]   = df.groupby(GROUP_COLS)["base_units"].shift(52)
     df["velocity_spm_lag52"] = df.groupby(GROUP_COLS)["avg_weekly_units_spm"].shift(52)
+    df["tdp_lag52"]          = df.groupby(GROUP_COLS)["tdp"].shift(52)
+
+    # Velocity per store — separates sell-through from distribution count.
+    # Key signal for expanding brands: if units grow 2× because TDP grew 2×
+    # but velocity_per_tdp is flat, the model knows growth is distribution-driven
+    # (not demand-driven). Stable velocity_per_tdp is also an honest signal that
+    # per-store demand is NOT accelerating, preventing lag52 over-amplification.
+    df["velocity_per_tdp"] = (
+        df["base_units"] / df["tdp"].clip(lower=1.0)
+    ).clip(upper=500.0)
+
+    # Quarterly momentum (QoQ growth rate): current 13wk avg vs 13 weeks prior.
+    # The model's top feature (base_units_roll4_avg at 68.7%) is short-memory.
+    # This gives it a quarterly lens to catch sustained trend vs. seasonal noise.
+    _r13_prior = df.groupby(GROUP_COLS)["base_units_roll13_avg"].shift(13)
+    df["base_units_13wk_momentum"] = (
+        (df["base_units_roll13_avg"] / _r13_prior.clip(lower=0.01)) - 1
+    ).clip(-1.0, 5.0).fillna(0.0)
+
+    # 4-week acceleration: current 4wk avg vs 4 weeks prior.
+    # Catches whether recent momentum is building or decelerating.
+    _r4_prior = df.groupby(GROUP_COLS)["base_units_roll4_avg"].shift(4)
+    df["base_units_4wk_momentum"] = (
+        (df["base_units_roll4_avg"] / _r4_prior.clip(lower=0.01)) - 1
+    ).clip(-1.0, 5.0).fillna(0.0)
 
     # Autoregressive lags on total_units
     for lag, col in [(1, "total_units_lag1"), (4, "total_units_lag4"), (13, "total_units_lag13")]:
@@ -805,8 +830,12 @@ if __name__ == "__main__":
         # Demand AR lags (v8: lag2 + lag3 added)
         "base_units_lag1", "base_units_lag2", "base_units_lag3",
         "base_units_lag4", "base_units_lag13",
-        # YAGO
+        # YAGO + new v5 features
         "base_units_lag52", "velocity_spm_lag52",
+        "tdp_lag52",                  # direct TDP from 52 weeks ago (replaces broken proxy)
+        "velocity_per_tdp",           # units per active store (sell-through vs distribution)
+        "base_units_13wk_momentum",   # QoQ growth rate (quarterly trend signal)
+        "base_units_4wk_momentum",    # 4wk acceleration (recent momentum build/decay)
         # Total-units model lags
         "total_units_lag1", "total_units_lag4", "total_units_lag13", "total_units_lag52",
         # Seasonality — integer + Fourier encoding (v8) + per-event binary flags
