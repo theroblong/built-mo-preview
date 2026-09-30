@@ -1,4 +1,4 @@
-"""MO_25 v9 — Build retailer_sales_weekly: historical panel for sales forecasting.
+"""MO_25 v10 — Build retailer_sales_weekly: historical panel for sales forecasting.
 
 WHY THIS EXISTS
 ---------------
@@ -37,6 +37,25 @@ v5 fixes detection to use absolute dollar discount ≥ $0.05 (nickel standard):
   units_promo absent  → is_promo_arp (arp_dollar_discount > $0.05)
 New: promo_lift_ratio = incr_units / base_units (true SPINS promo lift, capped at 5.0)
 promo_source audit column: "units_promo" | "arp_inferred" | "none"
+
+BOGO DETECTION (v10 addition)
+------------------------------
+Publix and some other accounts run BOGO (Buy One Get One Free) events that look
+fundamentally different from standard TPR in both magnitude and demand shape:
+  - Standard TPR: 10–15% ARP drop, 1.2–1.8× lift, continuous cadence
+  - BOGO: ~40–50% ARP drop, 3–5× lift spike, followed by post-event demand trough
+The average promo_lift_ratio understates BOGO impact (diluted by non-event weeks).
+is_bogo_week: 1 when arp_dollar_discount ≥ 35% of 8w baseline ARP, OR promo_intensity ≥ 50%.
+
+PROMO LIFT DISTRIBUTION STATS (v10 addition)
+---------------------------------------------
+A single per-week promo_lift_ratio doesn't describe a SKU's promotional character.
+Distribution statistics (computed across all historical is_promo_week=1 rows per series)
+capture both typical lift (mean/median) and outlier BOGO-class events (max, p90):
+  promo_lift_mean, promo_lift_median, promo_lift_min, promo_lift_max
+  promo_lift_p25, promo_lift_p75, promo_lift_p90 (BOGO-class outlier tier)
+  promo_lift_std, promo_lift_n_events
+Joined back to every row as static series-level features. Null for series with no events → 0.
 
 DONOR SIGNALS — BRAND-SPLIT (v5 addition)
 ------------------------------------------
@@ -150,7 +169,7 @@ if __name__ == "__main__":
 
     # ── 1. Foundation: event_detection_weekly ───────────────────────────────
     print("=" * 70)
-    print("MO_25 v9 — Retailer Sales Actuals")
+    print("MO_25 v10 — Retailer Sales Actuals")
     print("=" * 70)
     print("\n[1] Loading event_detection_weekly …")
     edw = query_druid(f"""
@@ -755,6 +774,14 @@ if __name__ == "__main__":
         np.where(df["is_promo_arp"] == 1, "arp_inferred", "none")
     )
 
+    # is_bogo_week: BOGO-class event detection.
+    # Publix-style BOGO shows ≥35% ARP drop vs baseline OR ≥50% promo unit intensity.
+    # Standard TPR is 10–15% off — well below 35% threshold.
+    _bogo_pct_drop = df["arp_dollar_discount"] / df["arp_roll8_avg"].clip(lower=0.01)
+    df["is_bogo_week"] = (
+        (_bogo_pct_drop >= 0.35) | (df["promo_intensity"] >= 0.50)
+    ).astype(float)
+
     promo_src = df["promo_source"].value_counts()
     print(f"\n  Promo source breakdown: "
           f"units_promo={promo_src.get('units_promo', 0):,}  "
@@ -762,6 +789,8 @@ if __name__ == "__main__":
           f"none={promo_src.get('none', 0):,}")
     print(f"  is_promo_week=1: {df['is_promo_week'].sum():,} rows "
           f"({df['is_promo_week'].mean()*100:.1f}%)")
+    print(f"  is_bogo_week=1:  {df['is_bogo_week'].sum():,} rows "
+          f"({df['is_bogo_week'].mean()*100:.1f}%)")
     print(f"  arp_dollar_discount>$0.05: {(df['arp_dollar_discount']>0.05).sum():,} rows")
     print(f"  promo_lift_ratio>0: {(df['promo_lift_ratio']>0).sum():,} rows  "
           f"mean={df['promo_lift_ratio'].mean():.3f}")
@@ -803,6 +832,53 @@ if __name__ == "__main__":
     df = df.dropna(subset=["base_units_lag1"]).copy()
     print(f"  After lag1 dropna: {len(df):,} rows")
 
+    # ── 14b. Promo lift distribution stats (v10) ────────────────────────────
+    # Compute distributional stats of promo_lift_ratio across all historical
+    # promo weeks per series, then join back to every row as static features.
+    # These describe the SKU's promo character: typical lift, BOGO-class outliers,
+    # and spread. A single per-week ratio is non-resistant to outliers (BOGO weeks).
+    _promo_events = df[
+        (df["is_promo_week"] == 1) &
+        (df["promo_lift_ratio"] > 0) &
+        df["promo_lift_ratio"].notna()
+    ]
+    if len(_promo_events) > 0:
+        _ps = _promo_events.groupby(GROUP_COLS)["promo_lift_ratio"].agg(
+            promo_lift_mean="mean",
+            promo_lift_median="median",
+            promo_lift_min="min",
+            promo_lift_max="max",
+            promo_lift_std="std",
+            promo_lift_n_events="count",
+        ).reset_index()
+        _pct = (
+            _promo_events.groupby(GROUP_COLS)["promo_lift_ratio"]
+            .quantile([0.25, 0.75, 0.90])
+            .unstack()
+            .reset_index()
+        )
+        _pct.columns = GROUP_COLS + ["promo_lift_p25", "promo_lift_p75", "promo_lift_p90"]
+        _ps = _ps.merge(_pct, on=GROUP_COLS, how="left")
+        df = df.merge(_ps, on=GROUP_COLS, how="left")
+        _stat_cols = ["promo_lift_mean", "promo_lift_median", "promo_lift_min",
+                      "promo_lift_max", "promo_lift_std", "promo_lift_n_events",
+                      "promo_lift_p25", "promo_lift_p75", "promo_lift_p90"]
+        df[_stat_cols] = df[_stat_cols].fillna(0)
+        print(f"\n[14b] Promo lift stats joined: {len(_promo_events):,} promo event rows "
+              f"across {_ps['upc'].nunique() if 'upc' in _ps.columns else '?'} UPC×accounts")
+        print(f"  Distribution: min={_promo_events['promo_lift_ratio'].min():.2f}  "
+              f"p25={_promo_events['promo_lift_ratio'].quantile(0.25):.2f}  "
+              f"median={_promo_events['promo_lift_ratio'].median():.2f}  "
+              f"p75={_promo_events['promo_lift_ratio'].quantile(0.75):.2f}  "
+              f"p90={_promo_events['promo_lift_ratio'].quantile(0.90):.2f}  "
+              f"max={_promo_events['promo_lift_ratio'].max():.2f}")
+    else:
+        print("\n[14b] No promo events found — skipping promo lift stats")
+        for _c in ["promo_lift_mean", "promo_lift_median", "promo_lift_min",
+                   "promo_lift_max", "promo_lift_std", "promo_lift_n_events",
+                   "promo_lift_p25", "promo_lift_p75", "promo_lift_p90"]:
+            df[_c] = 0.0
+
     # ── 15. Assemble output ──────────────────────────────────────────────────
     df["first_week_selling"] = df["first_week_selling"].dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     df["scored_at"] = SCORED_AT
@@ -843,7 +919,11 @@ if __name__ == "__main__":
         "is_new_year_week", "is_superbowl_week", "is_memorial_day_week",
         "is_labor_day_week", "is_thanksgiving_week", "is_christmas_week",
         # Promo signals (model features)
-        "is_promo_week", "promo_intensity", "arp_dollar_discount", "promo_lift_ratio",
+        "is_promo_week", "is_bogo_week", "promo_intensity", "arp_dollar_discount", "promo_lift_ratio",
+        # Promo lift distribution stats (v10): per-series historical promo character
+        "promo_lift_mean", "promo_lift_median", "promo_lift_min", "promo_lift_max",
+        "promo_lift_p25", "promo_lift_p75", "promo_lift_p90",
+        "promo_lift_std", "promo_lift_n_events",
         # Promo audit (not model features)
         "arp_discount_pct", "promo_source",
         # Elasticity — static coefficient + time-varying interaction term (v7)
@@ -875,7 +955,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")
-    print("MO_25 v9 COMPLETE")
+    print("MO_25 v10 COMPLETE")
     print(f"{'='*70}")
     print(f"  Total rows:        {len(out):,}")
     print(f"  Weeks covered:     {out['__time'].nunique():,}")
@@ -889,6 +969,14 @@ if __name__ == "__main__":
           f"({out['is_promo_week'].mean()*100:.1f}%)")
     print(f"    units_promo:     {(out['promo_source']=='units_promo').sum():,}")
     print(f"    arp_inferred:    {(out['promo_source']=='arp_inferred').sum():,}")
+    print(f"  BOGO weeks:        {out['is_bogo_week'].sum():,} rows "
+          f"({out['is_bogo_week'].mean()*100:.1f}%)  "
+          f"[≥35% ARP drop or ≥50% promo intensity]")
+    if "promo_lift_n_events" in out.columns:
+        _ev = out[out["promo_lift_n_events"] > 0]
+        print(f"  Promo lift stats:  {len(_ev):,} rows with event history | "
+              f"median_of_medians={_ev['promo_lift_median'].median():.2f}  "
+              f"p90_of_p90={_ev['promo_lift_p90'].quantile(0.90):.2f}")
     print(f"  Competitor TDP:    {out['top_donor_tdp_sum'].notna().sum():,} rows "
           f"({out['top_donor_tdp_sum'].notna().mean()*100:.1f}%)")
     print(f"  BUILT TDP share:   {out['built_tdp_share'].notna().sum():,} rows | "
