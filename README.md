@@ -6,6 +6,74 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 189: Model enhancement roadmap + explainability framework; Q4 2025 miss diagnosis; high-growth forecasting research (2026-09-30)
+
+**Context:** Sept 30 standup with Rob (ShopTalk) + Q4 2025 forecast miss analysis. Synthesis of root cause, 7-item enhancement queue, client-facing explainability framework for Bracken/BUILT, and high-growth forecasting research.
+
+**Q4 2025 miss — root cause:**
+Q4 2025 wMAPE ~41% (worst quarterly result). The lag52 seasonal anchor pointed to Q4 2024 actuals — when BUILT had materially lower distribution and velocity. The model over-applied seasonal dampening to a brand 3–5× larger in distribution than a year prior. Three compounding forces:
+1. **lag52 under-anchors for expanding brands** — last year's Q4 at fewer stores ≠ this year's Q4; new doors with no lag52 drag aggregate forecast down
+2. **Non-stationarity post-TikTok virality** — structural break in consumer awareness; pre-viral training data drags expected demand toward lower baseline
+3. **No velocity-per-TDP separation** — model conflates "how many stores" with "how fast each store sells"
+
+Multi-scale momentum features (4-week, 13-week delta) would have caught the sustained Q1–Q3 uptrend and prevented the Q4 down call.
+
+**Model enhancement priority queue:**
+
+| # | Task | Impact | Effort |
+|---|---|---|---|
+| 1 | `tdp_lag52` pipeline fix (LAG parquet column) | High — unlocks growth-adjusted lag52 | Low (1 day) |
+| 2 | Recency-weighted training (`exp(-λ × weeks_ago)`) | High — fixes seasonality-over-momentum | Low (2 lines + tuning) |
+| 3 | `velocity_per_tdp` feature (units / max(tdp,1)) | Medium-high — separates sell-through from door count | Low-medium |
+| 4 | Brian's promo file → forward promo flags | High — Rob's exogenous signal ask; data in hand | Medium |
+| 5 | Prophet prototype on 3–5 series | Medium — changepoint detection for TikTok/structural breaks | Medium |
+| 6 | SHAP waterfall explainability layer | High for Bracken trust-building | Medium |
+| 7 | NS2 forward TDP integration | Highest potential; fixes Albertsons 50.8% | Long (needs NS2 schema) |
+
+**Multi-scale momentum features (companion to items 1–3):**
+- `units_4wk_ma`, `units_4wk_delta_pct` — local trend + acceleration
+- `units_13wk_ma`, `units_13wk_delta_pct` — quarterly baseline + QoQ growth rate
+- `velocity_4wk_ma` — store-level momentum
+
+**Exogenous signal ingestion plan (Rob's ask):**
+- Known future events: Brian's promo file + BUILT marketing calendar + NS2 sell-in → items 4 and 7
+- Real-time exogenous (TikTok going viral, news events): social listening API → weekly ingest → anomaly flag feature → separate sprint
+
+**High-growth forecasting methods (Rob's research ask):**
+Three methods to evaluate for BUILT's hyper-growth profile:
+1. **Prophet (Meta)** — built-in changepoint detection for structural breaks (TikTok, major retail wins); multivariate regressors (TDP, promo flags); SHAP-compatible; fastest to prototype; item 5 in queue
+2. **Time-varying parameter models** — seasonal weight adapts over time; hyper-growth brands get lower seasonality weight; directly addresses seasonality-over-momentum problem
+3. **Bass diffusion model** — models adoption rate across available market (stores × consumers); strong fit for distribution-expansion-driven growth
+
+**Method inventory — current view:**
+
+| Method | Status | Verdict |
+|---|---|---|
+| LightGBM (gradient boosting) | Active, ≥52wk series | Strong baseline; lag52 drag is ceiling for hyper-growth; items 1–3 fix this |
+| ETS (Holt-Winters: Error, Trend, Seasonality) | Active, <52wk series | Working well; confidence bands preserved and honest |
+| SARIMA | Evaluated | Comparable to ETS on CPG; more hyperparameters; not preferred |
+| Simple/double exponential smoothing | Subsumed by ETS | ETS is the full triple-smoothing generalization; no reason to step back |
+| Linear/multiple regression | Baseline reference | Too rigid for seasonal CPG; useful as explainability sanity check |
+| Prophet | Prototype planned | Best candidate for exogenous event + changepoint handling; item 5 |
+| Time-varying parameters | Research phase | Medium-term; promising for adaptive seasonality weight |
+| Bass diffusion | Research phase | Long-term; strong for new product / distribution-expansion growth |
+
+**Client-facing explainability framework (for Bracken/BUILT meetings):**
+
+*Posture: never defensive — continuous improvement. Every miss has a named fix and a timeline.*
+
+- **LightGBM ("gradient boosting"):** "A committee of forecasters, each one studying the mistakes of the previous and correcting them — hundreds of rounds until the committee reaches consensus. One of the most proven methods in retail demand forecasting."
+- **ETS:** "A smarter moving average — recent weeks count more, older data fades naturally. It picks up early momentum without over-reacting to one unusual week. It also produces honest confidence bands that widen when history is short."
+- **SHAP:** "Every forecast number has a signed, ranked explanation — distribution expansion contributed +34K, seasonal trend +22K, promo headwind −9K. No black box."
+
+**Current features in the model:** lag52 / lag13 (seasonal anchors), TDP (store count), ACV (store weight), velocity per store, 4-week + 13-week rolling averages, ARP, week-over-week price change, SPINS incremental units, distribution momentum, donor_count (cannibalization pressure).
+
+**Forward-looking signals being added:** committed promos/TPR (Brian's file + NS2), forward store expansion (NS2 sell-in), paid media/TikTok campaigns (BUILT marketing calendar), macro indicators (FRED), explicit price elasticity (E2b), pairwise cannibalization (E2a).
+
+**Confidence bands:** Q10/Q90 bootstrap. Width = genuine growth uncertainty. Wide cone on short-history/expanding series is honest and correct. Narrowing is the forward-signal roadmap, not a cosmetic fix.
+
+---
+
 ## README update 188: Rob standup brief — demand model signal inventory; cannibalization + elasticity context (2026-09-29)
 
 **Rob standup (Sept 30, 2026):** Walking through what's in the demand forecast (E1) and what's handled by separate Mo suites.
