@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-06-08 (session 9 — Q20–Q22 COMPLETE; full price elasticity section done; next: push)
+Last synced: 2026-09-30 (MO_77 v5 COMPLETE — tdp_lag52 + velocity_per_tdp + momentum features + recency-weighted training; full pipeline retrain; v5 chart archived)
 
 ## Repository
 
@@ -85,6 +85,7 @@ README.md updated: all new docs added to core documents list (positions 18–22 
 - `b9a7496` — (prior) Druid query/error register updates: Q2 batch progress, E19/E20.
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
 - Pending push — Q6–Q22 COMPLETE; full price elasticity section done; price_event_queue seeded with 3,345 deterministic events.
+- 2026-09-30 — MO_77 v5: 4 new features (tdp_lag52, velocity_per_tdp, base_units_13wk_momentum, base_units_4wk_momentum) + recency-weighted training (λ=0.02). Full pipeline: MO_25 → MO_26 (v5 PKLs) → build_forecast_chart_data.py. Kroger holdout 15.7% (vs v4 15.5%) — flat within noise; Q1 2026 improved 41.2%→40.5%; recent quarters stable. velocity_per_tdp ranked #6 by split importance; 4wk_momentum ranked #7 — both new features immediately signal-bearing. Druid retry logic added to mo_druid_client.py (3× with exponential backoff). Auto-versioning added to build_forecast_chart_data.py; versions archived at mockups/versions/. SPINS actuals through Sept 6 2026.
 
 ## Druid Cluster Constraints (discovered during live testing)
 

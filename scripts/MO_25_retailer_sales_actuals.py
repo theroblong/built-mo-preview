@@ -437,7 +437,7 @@ if __name__ == "__main__":
               AND upc IN ('{upc_list}')
               AND retail_account IS NOT NULL
               AND retail_account <> ''
-        """)
+        """, timeout=300)
         donor_bfw["__time"]     = pd.to_datetime(donor_bfw["__time"], utc=True)
         donor_bfw["tdp"]        = pd.to_numeric(donor_bfw["tdp"],        errors="coerce").fillna(0)
         donor_bfw["base_units"] = pd.to_numeric(donor_bfw["base_units"], errors="coerce").fillna(0)

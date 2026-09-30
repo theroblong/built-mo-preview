@@ -2031,3 +2031,15 @@ out_path = Path(__file__).parent / "bracken_forecast_charts.html"
 out_path.write_text(html_out, encoding="utf-8")
 print(f"\n✓ Written to {out_path}")
 print(f"  Open with: open {out_path}")
+
+# ── Auto-archive versioned copy ──────────────────────────────────────────────
+import datetime as _dt
+_versions_dir = Path(__file__).parent / "versions"
+_versions_dir.mkdir(exist_ok=True)
+_model_tag = "v5"   # bump when MODEL_VERSION in MO_26 changes
+_date_tag   = _dt.date.today().isoformat()
+_archive    = _versions_dir / f"bracken_forecast_charts_{_model_tag}_{_date_tag}.html"
+if not _archive.exists():
+    import shutil as _shutil
+    _shutil.copy(out_path, _archive)
+    print(f"  Archived → {_archive}")

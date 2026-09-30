@@ -17,18 +17,41 @@ _HEADERS = {"Content-Type": "application/json"}
 _TERMINAL_FAIL_STATES = {"FAILED", "CANCELED", "CANCELLED"}
 
 
-def query_druid(sql: str, context: dict | None = None, timeout: int = 120) -> pd.DataFrame:
-    """Run a SELECT query and return results as a DataFrame."""
+def query_druid(
+    sql: str,
+    context: dict | None = None,
+    timeout: int = 120,
+    retries: int = 3,
+    retry_delay: float = 15.0,
+) -> pd.DataFrame:
+    """Run a SELECT query and return results as a DataFrame.
+
+    retries: number of additional attempts after a ConnectTimeout or ReadTimeout
+    retry_delay: seconds to wait before each retry (doubles each attempt)
+    """
     payload: dict = {"query": sql}
     if context:
         payload["context"] = context
-    resp = requests.post(
-        f"{DRUID_HOST}/druid/v2/sql/",
-        json=payload, auth=_AUTH, headers=_HEADERS, timeout=timeout,
-    )
-    if not resp.ok:
-        raise RuntimeError(f"Druid query failed {resp.status_code}:\n{resp.text}")
-    return pd.DataFrame(resp.json())
+
+    last_exc: Exception | None = None
+    for attempt in range(1 + retries):
+        try:
+            resp = requests.post(
+                f"{DRUID_HOST}/druid/v2/sql/",
+                json=payload, auth=_AUTH, headers=_HEADERS, timeout=timeout,
+            )
+            if not resp.ok:
+                raise RuntimeError(f"Druid query failed {resp.status_code}:\n{resp.text}")
+            return pd.DataFrame(resp.json())
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as exc:
+            last_exc = exc
+            if attempt < retries:
+                wait = retry_delay * (2 ** attempt)
+                print(f"  query_druid timeout (attempt {attempt + 1}/{1 + retries}), "
+                      f"retrying in {wait:.0f}s …")
+                time.sleep(wait)
+            else:
+                raise
 
 
 def submit_msq(sql: str, context: dict | None = None) -> str:
