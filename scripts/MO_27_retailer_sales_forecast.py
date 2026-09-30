@@ -54,7 +54,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v4"
+MODEL_VERSION  = "v6"
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
@@ -70,9 +70,13 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
 
 def _load_models_and_meta() -> tuple[dict, dict, dict]:
+    # Load _full models (trained on all data) for production deployment.
+    # Val-split models are used only for backtest evaluation in build_forecast_chart_data.py.
     models = {}
     for tag in Q_TAGS:
-        path = f"outputs/model_retailer_sales_{tag}_{MODEL_VERSION}.pkl"
+        path = f"outputs/model_retailer_sales_{tag}_{MODEL_VERSION}_full.pkl"
+        if not Path(path).exists():
+            path = f"outputs/model_retailer_sales_{tag}_{MODEL_VERSION}.pkl"
         with open(path, "rb") as f:
             models[tag] = pickle.load(f)
         print(f"  Loaded {path}")
@@ -81,7 +85,9 @@ def _load_models_and_meta() -> tuple[dict, dict, dict]:
     models_total = {}
     if meta.get("total_units_trained"):
         for tag in Q_TAGS:
-            path = f"outputs/model_total_units_{tag}_{MODEL_VERSION}.pkl"
+            path = f"outputs/model_total_units_{tag}_{MODEL_VERSION}_full.pkl"
+            if not Path(path).exists():
+                path = f"outputs/model_total_units_{tag}_{MODEL_VERSION}.pkl"
             if Path(path).exists():
                 with open(path, "rb") as f:
                     models_total[tag] = pickle.load(f)
@@ -89,11 +95,19 @@ def _load_models_and_meta() -> tuple[dict, dict, dict]:
     return models, meta, models_total
 
 
-def _build_feature_row(state: dict, features_used: list[str]) -> pd.DataFrame:
+def _build_feature_row(state: dict, features_used: list[str], model=None) -> pd.DataFrame:
     row = {col: state.get(col, np.nan) for col in features_used}
     df  = pd.DataFrame([row])
-    if "channel_outlet" in df.columns:
-        df["channel_outlet"] = df["channel_outlet"].astype("category")
+    if model is not None:
+        _pc = model._Booster.pandas_categorical
+        cat_names = ["channel_outlet", "retail_account", "pack_count"]
+        for i, cname in enumerate(cat_names):
+            if cname in df.columns and i < len(_pc):
+                df[cname] = pd.Categorical(df[cname].astype(str), categories=_pc[i])
+    else:
+        for cname in ("channel_outlet", "retail_account", "pack_count"):
+            if cname in df.columns:
+                df[cname] = df[cname].astype("category")
     return df
 
 
@@ -143,10 +157,16 @@ if __name__ == "__main__":
     df_actual = pd.read_parquet("outputs/retailer_sales_weekly.parquet")
     df_actual["__time"] = pd.to_datetime(df_actual["__time"], utc=True)
 
-    num_cols = [c for c in features_used if c not in ("channel_outlet", "week_of_year")]
+    _cat_cols = {"channel_outlet", "retail_account", "pack_count"}
+    num_cols = [c for c in features_used if c not in _cat_cols and c != "week_of_year"]
     for c in num_cols:
         if c in df_actual.columns:
             df_actual[c] = pd.to_numeric(df_actual[c], errors="coerce")
+    # Derive semi-annual seasonality if not in parquet
+    if "week_of_year" in df_actual.columns:
+        _woy = df_actual["week_of_year"].fillna(1)
+        df_actual["week_sin26"] = np.sin(2 * np.pi * _woy / 26)
+        df_actual["week_cos26"] = np.cos(2 * np.pi * _woy / 26)
 
     df_actual = df_actual.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
@@ -243,21 +263,23 @@ if __name__ == "__main__":
         }
 
         # Static features (unchanged across forecast horizon)
+        _cat_skip = {"channel_outlet", "retail_account", "pack_count"}
         static_feats = {}
-        skip = {"channel_outlet", "week_of_year",
+        skip = _cat_skip | {"week_of_year", "week_sin", "week_cos", "week_sin26", "week_cos26",
                 "base_units_lag1", "base_units_lag4", "base_units_lag13",
                 "base_units_lag52",                          # dynamic — updated per step
                 "total_units_lag1", "total_units_lag4", "total_units_lag13",
                 "total_units_lag52",                         # dynamic — updated per step
                 "arp_lag1", "arp_lag4", "arp_wow_delta",
                 "arp_roll8_avg", "arp_roll8_std", "arp",
-                # MO_46 rolling signals — held static at last observed values;
-                # no autoregressive update (we don't forecast competitive dynamics)
                 "rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity"}
         for col in features_used:
             if col not in skip:
                 val = latest.get(col)
                 static_feats[col] = float(pd.to_numeric(val, errors="coerce") or 0)
+
+        retail_acct_val = str(latest.get("retail_account") or account)
+        pack_count_val  = str(latest.get("pack_count") or "")
 
         # ARP for dollar conversion — assume flat (user can slide in UI)
         forecast_arp = meta_fields["anchor_arp"] or float(latest.get("post_13w_arp") or 0)
@@ -272,15 +294,22 @@ if __name__ == "__main__":
             lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
             lag52 = lag52_seq[step - 1]     # precomputed from actuals — no leakage
 
-            arp_cur  = arp_history[-1] if arp_history else forecast_arp
-            arp_lag1 = arp_history[-1] if len(arp_history) >= 1 else np.nan
-            arp_lag4 = arp_history[-4] if len(arp_history) >= 4 else np.nan
+            arp_cur   = arp_history[-1] if arp_history else forecast_arp
+            arp_lag1  = arp_history[-2] if len(arp_history) >= 2 else arp_cur
+            arp_lag4  = arp_history[-4] if len(arp_history) >= 4 else np.nan
 
             # ARP rolling stats (trailing 8 prior ARP values)
-            arp_window = arp_history[-8:]
+            arp_window    = arp_history[-8:]
             arp_roll8_avg = float(np.nanmean(arp_window)) if arp_window else np.nan
             arp_roll8_std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
             arp_wow_delta = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
+
+            # Cyclical seasonality — computed from forecast date each step
+            _fw     = int(forecast_date.isocalendar().week)
+            _wsin   = float(np.sin(2 * np.pi * _fw / 52))
+            _wcos   = float(np.cos(2 * np.pi * _fw / 52))
+            _wsin26 = float(np.sin(2 * np.pi * _fw / 26))
+            _wcos26 = float(np.cos(2 * np.pi * _fw / 26))
 
             # total_units AR lags (from combined actuals + prior predictions)
             t_lag1  = total_history[-1]  if len(total_history) >= 1  else np.nan
@@ -292,7 +321,12 @@ if __name__ == "__main__":
                 **static_feats,
                 **rolling_seed,             # MO_46: static competitive signals
                 "channel_outlet":       channel,
-                "week_of_year":         int(forecast_date.isocalendar().week),
+                "retail_account":       retail_acct_val,
+                "pack_count":           pack_count_val,
+                "week_sin":             _wsin,
+                "week_cos":             _wcos,
+                "week_sin26":           _wsin26,
+                "week_cos26":           _wcos26,
                 "weeks_since_launch":   wsl,
                 "arp":                  arp_cur,
                 "arp_lag1":             arp_lag1,
@@ -310,7 +344,7 @@ if __name__ == "__main__":
                 "total_units_lag52":    t_lag52,
             }
 
-            X = _build_feature_row(state, features_used)
+            X = _build_feature_row(state, features_used, model=models["q50"])
 
             # Models predict in log1p space — invert with expm1
             units_low  = float(np.expm1(max(0, models["q10"].predict(X)[0])))

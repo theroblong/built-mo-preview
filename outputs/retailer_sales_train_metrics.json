@@ -1,6 +1,6 @@
 {
-  "model_version": "v5",
-  "trained_at": "2026-09-30T15:31:13.954582+00:00",
+  "model_version": "v6",
+  "trained_at": "2026-09-30T16:47:55.381249+00:00",
   "features_used": [
     "base_units_roll4_avg",
     "base_units_roll8_avg",
@@ -17,13 +17,22 @@
     "tdp",
     "tdp_z8",
     "tdp_wow_delta",
+    "tdp_4w_momentum",
     "arp",
     "arp_wow_delta",
     "arp_roll8_avg",
     "arp_roll8_std",
+    "arp_lag1",
+    "arp_dollar_discount",
     "weeks_since_launch",
     "donor_count",
-    "week_of_year",
+    "top_donor_tdp_sum",
+    "competitor_price_gap",
+    "promo_lift_ratio",
+    "week_sin",
+    "week_cos",
+    "week_sin26",
+    "week_cos26",
     "base_units_lag1",
     "base_units_lag4",
     "base_units_lag13",
@@ -33,7 +42,9 @@
     "velocity_per_tdp",
     "base_units_13wk_momentum",
     "base_units_4wk_momentum",
-    "channel_outlet"
+    "channel_outlet",
+    "retail_account",
+    "pack_count"
   ],
   "features_missing": [],
   "train_rows": 153776,
@@ -50,43 +61,43 @@
   "quantile_metrics": {
     "q10": {
       "quantile": 0.1,
-      "best_iteration": 1497,
-      "val_pinball_loss": 0.006161820578666675
+      "best_iteration": 2000,
+      "val_pinball_loss": 0.006859588004536024
     },
     "q50": {
       "quantile": 0.5,
-      "best_iteration": 1499,
-      "val_pinball_loss": 0.010363906155961337,
-      "val_mae": 64.84003782795595,
-      "val_rmse": 392.3439660656419
+      "best_iteration": 2000,
+      "val_pinball_loss": 0.011922879677056394,
+      "val_mae": 70.80165741883772,
+      "val_rmse": 400.4118650050311
     },
     "q90": {
       "quantile": 0.9,
-      "best_iteration": 1500,
-      "val_pinball_loss": 0.005363515501328082
+      "best_iteration": 1996,
+      "val_pinball_loss": 0.006261252378961647
     }
   },
   "top_features_q50": {
-    "base_units_lag1": 11032,
-    "base_units_wow_delta": 8792,
-    "base_units_roll4_avg": 8654,
-    "base_units_z8": 6944,
-    "base_units_roll8_std": 5523,
-    "velocity_per_tdp": 4816,
-    "base_units_4wk_momentum": 4629,
-    "base_units_roll8_avg": 4066,
-    "tdp": 3357,
-    "base_units_z13": 2997,
-    "base_units_roll13_std": 2990,
-    "base_units_roll13_avg": 2498,
-    "weeks_since_launch": 2386,
-    "base_units_lag4": 2295,
-    "tdp_wow_delta": 2028,
-    "tdp_z8": 1847,
-    "arp_roll8_avg": 1696,
-    "arp_roll8_std": 1681,
-    "base_units_lag13": 1669,
-    "arp_wow_delta": 1475
+    "base_units_lag1": 10581,
+    "retail_account": 9742,
+    "base_units_wow_delta": 9107,
+    "base_units_roll4_avg": 8980,
+    "base_units_z8": 7062,
+    "base_units_4wk_momentum": 5492,
+    "velocity_per_tdp": 5434,
+    "base_units_roll8_std": 5300,
+    "base_units_z13": 3926,
+    "tdp": 3508,
+    "base_units_roll8_avg": 3030,
+    "tdp_4w_momentum": 2852,
+    "tdp_wow_delta": 2738,
+    "base_units_lag4": 2730,
+    "base_units_roll13_std": 2655,
+    "tdp_z8": 2500,
+    "top_donor_tdp_sum": 2387,
+    "base_units_lag13": 2339,
+    "weeks_since_launch": 2287,
+    "arp_roll8_std": 2147
   },
   "total_units_trained": true,
   "total_units_features_used": [
@@ -105,19 +116,30 @@
     "tdp",
     "tdp_z8",
     "tdp_wow_delta",
+    "tdp_4w_momentum",
     "arp",
     "arp_wow_delta",
     "arp_roll8_avg",
     "arp_roll8_std",
+    "arp_lag1",
+    "arp_dollar_discount",
     "weeks_since_launch",
     "donor_count",
-    "week_of_year",
+    "top_donor_tdp_sum",
+    "competitor_price_gap",
+    "promo_lift_ratio",
+    "week_sin",
+    "week_cos",
+    "week_sin26",
+    "week_cos26",
     "velocity_spm_lag52",
     "tdp_lag52",
     "velocity_per_tdp",
     "base_units_13wk_momentum",
     "base_units_4wk_momentum",
     "channel_outlet",
+    "retail_account",
+    "pack_count",
     "total_units_lag1",
     "total_units_lag4",
     "total_units_lag13",
@@ -127,20 +149,20 @@
   "total_units_quantile_metrics": {
     "q10": {
       "quantile": 0.1,
-      "best_iteration": 1500,
-      "val_pinball_loss": 0.0176608871913529
+      "best_iteration": 2000,
+      "val_pinball_loss": 0.016104034880467213
     },
     "q50": {
       "quantile": 0.5,
-      "best_iteration": 1500,
-      "val_pinball_loss": 0.03702219826808769,
-      "val_mae": 242.82160891610178,
-      "val_rmse": 1577.8692623623333
+      "best_iteration": 1996,
+      "val_pinball_loss": 0.029689141386302294,
+      "val_mae": 213.0518967800605,
+      "val_rmse": 1250.6708129609833
     },
     "q90": {
       "quantile": 0.9,
-      "best_iteration": 1476,
-      "val_pinball_loss": 0.020764971743669047
+      "best_iteration": 1953,
+      "val_pinball_loss": 0.015170915064627024
     }
   }
 }

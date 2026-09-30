@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-09-30 (MO_77 v5 COMPLETE — tdp_lag52 + velocity_per_tdp + momentum features + recency-weighted training; full pipeline retrain; v5 chart archived)
+Last synced: 2026-09-30 (MO_77 v6 COMPLETE — 12 new features + n_estimators 2000 + full-data final retrain; retail_account #2 feature; Kroger holdout 14.3%; v6 chart archived)
 
 ## Repository
 
@@ -86,6 +86,7 @@ README.md updated: all new docs added to core documents list (positions 18–22 
 - Latest push — Q2c COMPLETE (subquery + null-bucket fixes); Q3 COMPLETE (131 UPCs, 14,939 rows); flavor_mapping refresh needed (131 vs 91 UPCs); next: Q2d.
 - Pending push — Q6–Q22 COMPLETE; full price elasticity section done; price_event_queue seeded with 3,345 deterministic events.
 - 2026-09-30 — MO_77 v5: 4 new features (tdp_lag52, velocity_per_tdp, base_units_13wk_momentum, base_units_4wk_momentum) + recency-weighted training (λ=0.02). Full pipeline: MO_25 → MO_26 (v5 PKLs) → build_forecast_chart_data.py. Kroger holdout 15.7% (vs v4 15.5%) — flat within noise; Q1 2026 improved 41.2%→40.5%; recent quarters stable. velocity_per_tdp ranked #6 by split importance; 4wk_momentum ranked #7 — both new features immediately signal-bearing. Druid retry logic added to mo_druid_client.py (3× with exponential backoff). Auto-versioning added to build_forecast_chart_data.py; versions archived at mockups/versions/. SPINS actuals through Sept 6 2026.
+- 2026-09-30 — MO_77 v6: 12 new v6 features — pack_count, retail_account, tdp_4w_momentum, top_donor_tdp_sum, competitor_price_gap, promo_lift_ratio, arp_dollar_discount, arp_lag1, week_sin/cos (annual), week_sin26/cos26 (semi-annual). n_estimators bumped 1500→2000; full-data _full.pkl retrain for production deployment. retail_account = #2 feature (gain 9,742) for base_units; #1 for total_units (gain 11,462). promo_lift_ratio = #5 for total_units. All models still hit n_estimators cap — v7 should bump to 3000. Results: Kroger holdout 14.3% (vs v5 15.7%, −1.4pp); Q4 2025 33.6% (vs 37.2%, −3.6pp); Publix holdout 12.0%; UNFI holdout 11.8%; Albertsons holdout 50.7% (structural NS2 issue unchanged). MO_27 updated: arp_lag1 bug fixed (was using [-1] instead of [-2]), week_sin/cos/26 dynamic, retail_account + pack_count categoricals, loads _full models for production. Backtest channel logic: RMA (CONVENTIONAL|FOOD) first; MASS MERCH RMA for club/mass; MULO fallback only. Per-retailer promo lift ratios logged (Kroger 153.1%, Publix 52.8%) — Brian wants these surfaced. Next: n_estimators 3000 for v7.
 
 ## Druid Cluster Constraints (discovered during live testing)
 

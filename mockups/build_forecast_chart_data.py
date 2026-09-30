@@ -364,22 +364,39 @@ FEATURE_COLS = [
     "base_units_roll13_avg", "base_units_roll13_std", "base_units_wow_delta",
     "base_units_z8", "base_units_z13", "velocity_spm_roll8_avg", "velocity_spm_roll13_avg",
     "velocity_spm_z8", "velocity_spm_z13", "tdp", "tdp_z8", "tdp_wow_delta",
-    "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std", "weeks_since_launch",
-    "donor_count", "week_of_year", "base_units_lag1", "base_units_lag4",
+    "tdp_4w_momentum",
+    "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
+    "arp_lag1",                  # dynamic: previous step ARP
+    "arp_dollar_discount",       # static from seed (no forward promo plan yet)
+    "weeks_since_launch",
+    "donor_count",
+    "top_donor_tdp_sum",
+    "competitor_price_gap",
+    "promo_lift_ratio",
+    # Seasonality — cyclical encoding; both pairs computed dynamically from forecast_dt
+    "week_sin", "week_cos",
+    "week_sin26", "week_cos26",
+    "base_units_lag1", "base_units_lag4",
     "base_units_lag13", "base_units_lag52", "velocity_spm_lag52",
-    # v5 features (MO_77): growth-aware signals
-    "tdp_lag52",                 # real TDP from 52wk ago — from parquet after MO_25 re-run
-    "velocity_per_tdp",          # units per active store — dynamic each forecast step
-    "base_units_13wk_momentum",  # QoQ growth rate — static from seed
-    "base_units_4wk_momentum",   # 4wk acceleration — static from seed
+    # v5 growth-aware signals
+    "tdp_lag52",
+    "velocity_per_tdp",
+    "base_units_13wk_momentum",
+    "base_units_4wk_momentum",
+    # Categoricals
     "channel_outlet",
+    "retail_account",
+    "pack_count",
 ]
 
 # Features updated dynamically each step (all others held flat from latest actual row)
 AR_DYNAMIC = {
-    "channel_outlet", "week_of_year", "weeks_since_launch",
+    "channel_outlet", "retail_account", "pack_count",
+    "week_sin", "week_cos", "week_sin26", "week_cos26",
+    "weeks_since_launch",
     "base_units_lag1", "base_units_lag4", "base_units_lag13", "base_units_lag52",
     "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
+    "arp_lag1",                  # previous step's ARP
     "velocity_per_tdp",          # updates as forecast units accumulate each step
 }
 
@@ -424,21 +441,32 @@ try:
     if len(df_r1) == 0:
         raise ValueError(f"No parquet rows for {top_acct}")
 
+    CAT_COLS = {"channel_outlet", "retail_account", "pack_count"}
     for c in FEATURE_COLS:
-        if c != "channel_outlet" and c in df_r1.columns:
+        if c not in CAT_COLS and c in df_r1.columns:
             df_r1[c] = pd.to_numeric(df_r1[c], errors="coerce")
+    # Compute semi-annual seasonality columns if not in parquet
+    if "week_of_year" in df_r1.columns:
+        _woy = df_r1["week_of_year"].fillna(1)
+        df_r1["week_sin26"] = np.sin(2 * np.pi * _woy / 26)
+        df_r1["week_cos26"] = np.cos(2 * np.pi * _woy / 26)
 
     df_r1 = df_r1.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
     # Load v4 quantile models
-    with open(MODEL_DIR / "model_retailer_sales_q50_v5.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q50_v6.pkl", "rb") as f:
         m50 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q10_v5.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q10_v6.pkl", "rb") as f:
         m10 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q90_v5.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q90_v6.pkl", "rb") as f:
         m90 = pickle.load(f)
 
-    channel_cats = m50._Booster.pandas_categorical[0]
+    # pandas_categorical order matches FEATURE_COLS categorical position:
+    # [0] = channel_outlet, [1] = retail_account, [2] = pack_count
+    _pc = m50._Booster.pandas_categorical
+    channel_cats       = _pc[0] if len(_pc) > 0 else []
+    retail_acct_cats   = _pc[1] if len(_pc) > 1 else []
+    pack_count_cats    = _pc[2] if len(_pc) > 2 else []
 
     # Gain-based feature importance — SHAP proxy; no extra library needed.
     # Gain measures how much each feature reduces prediction error across all splits.
@@ -522,13 +550,17 @@ try:
 
             static_feats = {}
             for col in FEATURE_COLS:
-                if col in AR_DYNAMIC or col == "channel_outlet":
+                if col in AR_DYNAMIC:
                     continue
                 raw = latest.get(col)
                 try:
                     static_feats[col] = float(raw) if pd.notna(raw) else np.nan
                 except (TypeError, ValueError):
                     static_feats[col] = np.nan
+
+            # Categorical identity — pulled from seed, held constant across forecast
+            retail_acct_val = str(latest.get("retail_account") or "")
+            pack_count_val  = str(latest.get("pack_count") or "")
 
             arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
             arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
@@ -583,18 +615,31 @@ try:
                     lag13 = units_history[-13] if len(units_history) >= 13 else np.nan
 
                     arp_cur      = arp_history[-1] if arp_history else arp_val
-                    arp_lag1     = arp_history[-1] if len(arp_history) >= 1 else np.nan
+                    arp_lag1_val = arp_history[-2] if len(arp_history) >= 2 else arp_cur
                     arp_window   = arp_history[-8:]
                     arp_roll8avg = float(np.nanmean(arp_window)) if arp_window else np.nan
                     arp_roll8std = float(np.nanstd(arp_window))  if len(arp_window) > 1 else 0.0
-                    arp_wow_d    = (arp_cur - arp_lag1) if pd.notna(arp_lag1) else 0.0
+                    arp_wow_d    = (arp_cur - arp_lag1_val) if pd.notna(arp_lag1_val) else 0.0
+
+                    # Cyclical seasonality: compute from forecast week for both annual + semi-annual
+                    _fw       = int(forecast_dt.isocalendar().week)
+                    _wsin     = float(np.sin(2 * np.pi * _fw / 52))
+                    _wcos     = float(np.cos(2 * np.pi * _fw / 52))
+                    _wsin26   = float(np.sin(2 * np.pi * _fw / 26))
+                    _wcos26   = float(np.cos(2 * np.pi * _fw / 26))
 
                     feature_row = {
                         **static_feats,
                         "channel_outlet":     channel,
-                        "week_of_year":       int(forecast_dt.isocalendar().week),
+                        "retail_account":     retail_acct_val,
+                        "pack_count":         pack_count_val,
+                        "week_sin":           _wsin,
+                        "week_cos":           _wcos,
+                        "week_sin26":         _wsin26,
+                        "week_cos26":         _wcos26,
                         "weeks_since_launch": wsl_anchor + step,
                         "arp":                arp_cur,
+                        "arp_lag1":           arp_lag1_val,
                         "arp_wow_delta":      arp_wow_d,
                         "arp_roll8_avg":      arp_roll8avg,
                         "arp_roll8_std":      arp_roll8std,
@@ -602,12 +647,14 @@ try:
                         "base_units_lag4":    lag4,
                         "base_units_lag13":   lag13,
                         "base_units_lag52":   lag52,
-                        # v5: velocity_per_tdp updates each step as forecast units accumulate
+                        # velocity_per_tdp updates each step as forecast units accumulate
                         "velocity_per_tdp":   units_history[-1] / max(float(static_feats.get("tdp") or 1.0), 1.0),
                     }
 
                     X = pd.DataFrame([feature_row])[FEATURE_COLS]
-                    X["channel_outlet"] = pd.Categorical(X["channel_outlet"], categories=channel_cats)
+                    X["channel_outlet"]  = pd.Categorical(X["channel_outlet"],  categories=channel_cats)
+                    X["retail_account"]  = pd.Categorical(X["retail_account"],  categories=retail_acct_cats)
+                    X["pack_count"]      = pd.Categorical(X["pack_count"],       categories=pack_count_cats)
 
                     units_base = float(np.expm1(max(0.0, m50.predict(X)[0])))
                     units_low  = float(np.expm1(max(0.0, m10.predict(X)[0])))
@@ -794,18 +841,27 @@ try:
     # Also try top retailers that aren't Kroger for TDP-blend stress-test
     _try_accounts = [r["retail_account"] for r in named[1:5] if r.get("retail_account")]
     for _cmp_acct in _try_accounts[:3]:
-        _mask_cmp = (
-            (df["retail_account"] == _cmp_acct) &
-            (df["channel_outlet"] == "CONVENTIONAL|FOOD")
-        )
+        # Channel priority: CONVENTIONAL|FOOD RMA first (actual retailer sales);
+        # fall back to MASS MERCH RMA for club/mass (Walmart/Sam's), then
+        # CONVENTIONAL|MULTI OUTLET (MULO aggregate) as last resort.
+        # Brian: "MULO/CRMA is aggregate; RMA is actual retailer sales."
+        _cmp_channel = None
+        for _try_ch in ["CONVENTIONAL|FOOD", "MASS MERCH RMA", "CONVENTIONAL|MULTI OUTLET"]:
+            if ((df["retail_account"] == _cmp_acct) & (df["channel_outlet"] == _try_ch)).any():
+                _cmp_channel = _try_ch
+                break
+        if _cmp_channel is None:
+            continue
+        _mask_cmp = (df["retail_account"] == _cmp_acct) & (df["channel_outlet"] == _cmp_channel)
         _df_cmp = df[_mask_cmp].copy()
         if len(_df_cmp) == 0:
             continue
+        _cmp_cat_cols = {"channel_outlet", "retail_account", "pack_count"}
         for _c in FEATURE_COLS:
-            if _c != "channel_outlet" and _c in _df_cmp.columns:
+            if _c not in _cmp_cat_cols and _c in _df_cmp.columns:
                 _df_cmp[_c] = pd.to_numeric(_df_cmp[_c], errors="coerce")
         _df_cmp = _df_cmp.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
-        print(f"\n  ── {_cmp_acct} quarterly backtests ──")
+        print(f"\n  ── {_cmp_acct} quarterly backtests ({_cmp_channel}) ──")
         for _ql, _qlong, _qcutoff, _qstart, _qend in _Q_CUTOFFS:
             _qts = pd.Timestamp(_qcutoff, tz="UTC")
             print(f"    {_ql} (cutoff {_qcutoff})...", end=" ", flush=True)
@@ -2036,7 +2092,7 @@ print(f"  Open with: open {out_path}")
 import datetime as _dt
 _versions_dir = Path(__file__).parent / "versions"
 _versions_dir.mkdir(exist_ok=True)
-_model_tag = "v5"   # bump when MODEL_VERSION in MO_26 changes
+_model_tag = "v6"   # bump when MODEL_VERSION in MO_26 changes
 _date_tag   = _dt.date.today().isoformat()
 _archive    = _versions_dir / f"bracken_forecast_charts_{_model_tag}_{_date_tag}.html"
 if not _archive.exists():

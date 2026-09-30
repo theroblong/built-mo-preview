@@ -38,7 +38,10 @@ import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v5"  # v5: tdp_lag52 + velocity_per_tdp + momentum features + recency-weighted training
+MODEL_VERSION = "v6"  # v6: pack_count + retail_account + tdp_4w_momentum + top_donor_tdp_sum +
+                      #     competitor_price_gap + promo_lift_ratio + arp_dollar_discount +
+                      #     arp_lag1 + week_sin/cos annual + week_sin26/cos26 semi-annual +
+                      #     n_estimators 1500→2000 + full-data final retrain
 QUANTILES     = [0.10, 0.50, 0.90]
 Q_TAGS        = ["q10", "q50", "q90"]
 
@@ -54,39 +57,42 @@ FEATURE_COLS = [
     # Velocity
     "velocity_spm_roll8_avg", "velocity_spm_roll13_avg",
     "velocity_spm_z8", "velocity_spm_z13",
-    # Distribution (level + week-over-week change — MO_53 champion: tdp_wow_delta promoted)
-    "tdp", "tdp_z8",
-    "tdp_wow_delta",
-    # Price trend (from built_filtered_weekly — the spins_full lineage)
+    # Distribution — level, rate, and acceleration
+    "tdp", "tdp_z8", "tdp_wow_delta",
+    "tdp_4w_momentum",            # v6: distribution acceleration (monthly trend direction)
+    # Price — level, trend, discount depth, stickiness
     "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
+    "arp_lag1",                   # v6: price stickiness; AR loop updates dynamically
+    "arp_dollar_discount",        # v6: absolute $ discount vs 8w baseline (catalog-preferred)
     # Lifecycle
     "weeks_since_launch",
-    # Competitive pool size (MO_53 champion: donor_count promoted at −0.081pp)
-    # Total pool count (BUILT + competitor donors) = competitive complexity signal
-    # Note: competitor_donor_count alone HURT (+0.090pp) — aggregate pool size is what matters
+    # Competitive signals
     "donor_count",
-    # Seasonality
-    "week_of_year",
-    # Note: stl_seasonal_index (MO_59) is NOT a LightGBM feature — it is redundant
-    # alongside week_of_year (zero importance in ablation). Applied instead as a
-    # Layer 1 post-prediction multiplier in MO_27 for new SKUs lacking lag52.
-    # Autoregressive lags (lagged at time T — no leakage)
+    "top_donor_tdp_sum",          # v6: TDP weight of top-3 competitive donors
+    "competitor_price_gap",       # v6: focal ARP minus competitor TDP-weighted ARP
+    # Promo character
+    "promo_lift_ratio",           # v6: incr/base lift ratio — SKU historical promo profile
+    # Seasonality — cyclical encoding (sin+cos pair encodes position AND slope of cycle)
+    # Annual cycle (52-week): encodes where in the year and whether demand is rising/falling
+    "week_sin", "week_cos",
+    # Semi-annual cycle (26-week): captures mid-year fitness / back-to-school patterns
+    "week_sin26", "week_cos26",   # v6: derived from week_of_year in __main__ below
+    # Autoregressive lags (seeded with actuals at train time; fed from q50 predictions in MO_27)
     "base_units_lag1", "base_units_lag4", "base_units_lag13",
-    # YAGO — year-ago lags (Bracken: "are 3 years of data comparable?")
+    # YAGO — year-ago lags
     "base_units_lag52", "velocity_spm_lag52",
-    # v5 new features (MO_77): growth-aware signals for hyper-growth brand accuracy
-    "tdp_lag52",                  # real TDP from 52wk ago — replaces broken velocity_spm proxy
-    "velocity_per_tdp",           # units per active store — separates sell-through from distribution
-    "base_units_13wk_momentum",   # QoQ growth rate — quarterly trend vs. seasonal noise
-    "base_units_4wk_momentum",    # 4wk acceleration — catching momentum build or decay
-    # Categorical
+    # v5 growth-aware features (MO_77)
+    "tdp_lag52",
+    "velocity_per_tdp",
+    "base_units_13wk_momentum",
+    "base_units_4wk_momentum",
+    # Categorical — LightGBM native category encoding
     "channel_outlet",
-    # Removed by ablation (hurt or below threshold): implied_elasticity, max_donor_cannibal_prob,
-    # rolling_cannibal_pressure, rolling_cannibal_trend, rolling_elasticity (MO_50–MO_53)
-    # MO_56: cannibal_rate (−0.104pp global, −0.073pp event) and price_elasticity_effect
-    # (−0.092pp) also rejected. AR lags already encode cannibalization damage via lagged outcomes;
-    # ARP pct changes too small (mean 0.33%) for elasticity interaction to carry signal.
-    # MO_53 28-feature set confirmed stopping point; v5 extends with 4 growth-aware features.
+    "retail_account",             # v6: Kroger / Albertsons / Publix / UNFI / etc.
+    "pack_count",                 # v6: pack ladder (1 / 4 / 8 / 12 / 18)
+    # Removed by ablation: implied_elasticity, elasticity_band, max_donor_cannibal_prob,
+    # cannibal_rate, price_elasticity_effect (MO_50–MO_56)
+    # Catalog audit-only: built_tdp_share, arp_discount_pct
 ]
 
 # Total-units model swaps base_units AR lags for total_units lags; same demand-driver features
@@ -97,7 +103,7 @@ TOTAL_UNIT_FEATURE_COLS = [
 
 LGBM_BASE = dict(
     boosting_type="gbdt",
-    n_estimators=1500,
+    n_estimators=2000,
     learning_rate=0.04,
     num_leaves=63,
     min_child_samples=20,
@@ -127,15 +133,25 @@ if __name__ == "__main__":
     df["__time"] = pd.to_datetime(df["__time"], utc=True)
     df = df.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
+    # ── Derive semi-annual cyclical seasonality ──────────────────────────────
+    # week_sin/cos (annual, 52-week) already in parquet from MO_25.
+    # week_sin26/cos26 (semi-annual, 26-week) encode mid-year patterns.
+    if "week_of_year" in df.columns:
+        woy = pd.to_numeric(df["week_of_year"], errors="coerce").fillna(1)
+        df["week_sin26"] = np.sin(2 * np.pi * woy / 26)
+        df["week_cos26"] = np.cos(2 * np.pi * woy / 26)
+
     # ── Numeric coercion ────────────────────────────────────────────────────
-    num_cols = [c for c in FEATURE_COLS if c != "channel_outlet"]
+    CAT_COLS = {"channel_outlet", "retail_account", "pack_count"}
+    num_cols = [c for c in FEATURE_COLS if c not in CAT_COLS]
     for c in num_cols:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
 
     # ── Categorical encoding ─────────────────────────────────────────────────
-    if "channel_outlet" in df.columns:
-        df["channel_outlet"] = df["channel_outlet"].astype("category")
+    for cat_col in CAT_COLS:
+        if cat_col in df.columns:
+            df[cat_col] = df[cat_col].astype("category")
 
     # ── Drop rows where target is null (can't train or evaluate on these) ──────
     before = len(df)
@@ -298,6 +314,48 @@ if __name__ == "__main__":
         print("\n  Skipping total_units training (column not found in parquet).")
         avail_total = []
         miss_total  = []
+
+    # ── Full-data final retrain ──────────────────────────────────────────────
+    # Standard practice: val split found best_iteration_ via early stopping;
+    # now retrain on ALL data with that fixed n_estimators for production deployment.
+    # These "full" models are what MO_27 loads — more training data, same stopping point.
+    X_full = df[available]
+    y_full = df["log_base_units"].values
+    _weeks_ago_full = (df["__time"].max() - df["__time"]).dt.total_seconds() / (7 * 24 * 3600)
+    weights_full    = np.exp(-0.02 * _weeks_ago_full.clip(lower=0).values)
+
+    models_full = {}
+    for q, tag in zip(QUANTILES, Q_TAGS):
+        best_n = models[tag].best_iteration_
+        print(f"\nFull-data retrain base_units quantile={q} ({tag}), n_estimators={best_n} …")
+        m_full = lgb.LGBMRegressor(
+            objective="quantile",
+            alpha=q,
+            **{**LGBM_BASE, "n_estimators": best_n},
+        )
+        m_full.fit(X_full, y_full, sample_weight=weights_full)
+        models_full[tag] = m_full
+        path = f"outputs/model_retailer_sales_{tag}_{MODEL_VERSION}_full.pkl"
+        with open(path, "wb") as f:
+            pickle.dump(m_full, f)
+        print(f"  Saved {path}")
+
+    if has_total:
+        X_full_t = df[avail_total]
+        y_full_t = df["log_total_units"].values
+        for q, tag in zip(QUANTILES, Q_TAGS):
+            best_n_t = models_total[tag].best_iteration_
+            print(f"\nFull-data retrain total_units quantile={q} ({tag}), n_estimators={best_n_t} …")
+            m_full_t = lgb.LGBMRegressor(
+                objective="quantile",
+                alpha=q,
+                **{**LGBM_BASE, "n_estimators": best_n_t},
+            )
+            m_full_t.fit(X_full_t, y_full_t)
+            path = f"outputs/model_total_units_{tag}_{MODEL_VERSION}_full.pkl"
+            with open(path, "wb") as f:
+                pickle.dump(m_full_t, f)
+            print(f"  Saved {path}")
 
     # ── Save metrics + feature list ──────────────────────────────────────────
     meta = {
