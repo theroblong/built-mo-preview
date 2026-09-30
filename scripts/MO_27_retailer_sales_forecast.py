@@ -54,7 +54,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v6"
+MODEL_VERSION  = "v8"
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
@@ -98,14 +98,16 @@ def _load_models_and_meta() -> tuple[dict, dict, dict]:
 def _build_feature_row(state: dict, features_used: list[str], model=None) -> pd.DataFrame:
     row = {col: state.get(col, np.nan) for col in features_used}
     df  = pd.DataFrame([row])
+    # v8: spins_flavor_canonical added as 4th categorical (index 3 in pandas_categorical)
+    # v12: source_brand added as 5th categorical (index 4) — authoritative SPINS sub-brand
+    cat_names = ["channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"]
     if model is not None:
         _pc = model._Booster.pandas_categorical
-        cat_names = ["channel_outlet", "retail_account", "pack_count"]
         for i, cname in enumerate(cat_names):
             if cname in df.columns and i < len(_pc):
                 df[cname] = pd.Categorical(df[cname].astype(str), categories=_pc[i])
     else:
-        for cname in ("channel_outlet", "retail_account", "pack_count"):
+        for cname in cat_names:
             if cname in df.columns:
                 df[cname] = df[cname].astype("category")
     return df
@@ -262,10 +264,39 @@ if __name__ == "__main__":
             "rolling_elasticity":        float(_re) if pd.notna(_re) else np.nan,
         }
 
+        # v8: precompute promo-52w history for leakage-free forward promo cadence signal
+        if "is_promo_week" in g.columns:
+            promo_hist  = g["is_promo_week"].fillna(0).tolist()
+            N_promo     = len(promo_hist)
+            promo_52w_seq = [
+                float(promo_hist[N_promo - 53 + k])
+                if 0 <= (N_promo - 53 + k) < N_promo else 0.0
+                for k in range(1, FORECAST_WEEKS + 1)
+            ]
+        else:
+            promo_52w_seq = [0.0] * FORECAST_WEEKS
+
+        # v8: per-series × week-of-year promo rate from history (no future leakage)
+        if "is_promo_week" in g.columns and "week_of_year" in g.columns:
+            _woy_num = pd.to_numeric(g["week_of_year"], errors="coerce")
+            promo_rate_by_woy = (
+                g.assign(_woy_int=_woy_num.fillna(0).astype(int))
+                .groupby("_woy_int")["is_promo_week"]
+                .mean()
+                .to_dict()
+            )
+        else:
+            promo_rate_by_woy = {}
+
         # Static features (unchanged across forecast horizon)
-        _cat_skip = {"channel_outlet", "retail_account", "pack_count"}
+        _cat_skip = {"channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"}
         static_feats = {}
         skip = _cat_skip | {"week_of_year", "week_sin", "week_cos", "week_sin26", "week_cos26",
+                # v8: AR dynamic promo activity flags — set to 0 in base forecast
+                "is_promo_week", "promo_intensity",
+                "units_lift_tpr", "units_lift_any_display", "units_lift_any_feature",
+                # v8: promo cadence signals — computed per step from history
+                "promo_52w_lag", "promo_rate_woy",
                 "base_units_lag1", "base_units_lag4", "base_units_lag13",
                 "base_units_lag52",                          # dynamic — updated per step
                 "total_units_lag1", "total_units_lag4", "total_units_lag13",
@@ -320,28 +351,39 @@ if __name__ == "__main__":
             state = {
                 **static_feats,
                 **rolling_seed,             # MO_46: static competitive signals
-                "channel_outlet":       channel,
-                "retail_account":       retail_acct_val,
-                "pack_count":           pack_count_val,
-                "week_sin":             _wsin,
-                "week_cos":             _wcos,
-                "week_sin26":           _wsin26,
-                "week_cos26":           _wcos26,
-                "weeks_since_launch":   wsl,
-                "arp":                  arp_cur,
-                "arp_lag1":             arp_lag1,
-                "arp_lag4":             arp_lag4,
-                "arp_roll8_avg":        arp_roll8_avg,
-                "arp_roll8_std":        arp_roll8_std,
-                "arp_wow_delta":        arp_wow_delta,
-                "base_units_lag1":      lag1,
-                "base_units_lag4":      lag4,
-                "base_units_lag13":     lag13,
-                "base_units_lag52":     lag52,
-                "total_units_lag1":     t_lag1,
-                "total_units_lag4":     t_lag4,
-                "total_units_lag13":    t_lag13,
-                "total_units_lag52":    t_lag52,
+                "channel_outlet":           channel,
+                "retail_account":           retail_acct_val,
+                "pack_count":               pack_count_val,
+                "spins_flavor_canonical":   str(latest.get("spins_flavor_canonical") or "UNKNOWN"),
+                "source_brand":             str(latest.get("source_brand") or "BUILT BAR"),
+                "week_sin":                 _wsin,
+                "week_cos":                 _wcos,
+                "week_sin26":               _wsin26,
+                "week_cos26":               _wcos26,
+                "weeks_since_launch":       wsl,
+                # v8: AR dynamic promo flags — 0 in base forecast (no promo assumed)
+                "is_promo_week":            0.0,
+                "promo_intensity":          0.0,
+                "units_lift_tpr":           0.0,
+                "units_lift_any_display":   0.0,
+                "units_lift_any_feature":   0.0,
+                # v8: promo cadence signals from history (leakage-free)
+                "promo_52w_lag":            promo_52w_seq[step - 1],
+                "promo_rate_woy":           promo_rate_by_woy.get(_fw, 0.0),
+                "arp":                      arp_cur,
+                "arp_lag1":                 arp_lag1,
+                "arp_lag4":                 arp_lag4,
+                "arp_roll8_avg":            arp_roll8_avg,
+                "arp_roll8_std":            arp_roll8_std,
+                "arp_wow_delta":            arp_wow_delta,
+                "base_units_lag1":          lag1,
+                "base_units_lag4":          lag4,
+                "base_units_lag13":         lag13,
+                "base_units_lag52":         lag52,
+                "total_units_lag1":         t_lag1,
+                "total_units_lag4":         t_lag4,
+                "total_units_lag13":        t_lag13,
+                "total_units_lag52":        t_lag52,
             }
 
             X = _build_feature_row(state, features_used, model=models["q50"])

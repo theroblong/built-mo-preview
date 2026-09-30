@@ -25,8 +25,8 @@ training for any series.
 
 OUTPUT
 ------
-  outputs/model_retailer_sales_q{10,50,90}_v4.pkl
-  outputs/model_total_units_q{10,50,90}_v4.pkl  (trained on correct SPINS units target)
+  outputs/model_retailer_sales_q{10,50,90}_v8.pkl
+  outputs/model_total_units_q{10,50,90}_v8.pkl  (trained on correct SPINS units target)
   outputs/retailer_sales_train_metrics.json
 """
 
@@ -38,7 +38,13 @@ import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v6"  # v6: pack_count + retail_account + tdp_4w_momentum + top_donor_tdp_sum +
+MODEL_VERSION = "v8"  # v8: is_promo_week + promo_intensity + units_lift_tpr/display/feature +
+                      #     promo_52w_lag + promo_rate_woy + spins_flavor_canonical (from MO_25 v11) +
+                      #     drop is_bogo_week (0.06% gain, redundant w/ arp_dollar_discount) +
+                      #     n_estimators 3000→4000 (v7 q50 still climbing at cap 2999/3000)
+                      # v7: is_bogo_week + promo_lift_median/p90/n_events/std (from MO_25 v10) +
+                      #     n_estimators 2000→3000 (v6 still climbing at cap)
+                      # v6: pack_count + retail_account + tdp_4w_momentum + top_donor_tdp_sum +
                       #     competitor_price_gap + promo_lift_ratio + arp_dollar_discount +
                       #     arp_lag1 + week_sin/cos annual + week_sin26/cos26 semi-annual +
                       #     n_estimators 1500→2000 + full-data final retrain
@@ -70,8 +76,22 @@ FEATURE_COLS = [
     "donor_count",
     "top_donor_tdp_sum",          # v6: TDP weight of top-3 competitive donors
     "competitor_price_gap",       # v6: focal ARP minus competitor TDP-weighted ARP
-    # Promo character
-    "promo_lift_ratio",           # v6: incr/base lift ratio — SKU historical promo profile
+    # Promo character — event-level and distributional
+    "promo_lift_ratio",           # v6: incr/base lift ratio this week (AR dynamic — 0 in base forecast)
+    # v8: dropped is_bogo_week (0.06% gain; arp_dollar_discount already encodes BOGO price signal)
+    "promo_lift_median",          # v7: typical lift for this SKU×account (static distributional)
+    "promo_lift_p90",             # v7: extreme event lift (static; identifies BOGO-class series)
+    "promo_lift_n_events",        # v7: how frequently this SKU is promoted (static)
+    "promo_lift_std",             # v7: variance of promo response (static; widens PI for volatile SKUs)
+    # v8: promo activity + mechanic signals (AR dynamic — set to 0 in base forward forecast)
+    "is_promo_week",              # v8: any promo activity at stores this week (binary)
+    "promo_intensity",            # v8: fraction of units at promo stores (0–1)
+    "units_lift_tpr",             # v8: % lift from Temporary Price Reduction
+    "units_lift_any_display",     # v8: % lift from display / placement
+    "units_lift_any_feature",     # v8: % lift from feature ad / circular
+    # v8: forward promo prediction signals (leakage-free from historical cadence)
+    "promo_52w_lag",              # v8: was promo same calendar week last year? (binary)
+    "promo_rate_woy",             # v8: historical promo frequency at this WoY per series
     # Seasonality — cyclical encoding (sin+cos pair encodes position AND slope of cycle)
     # Annual cycle (52-week): encodes where in the year and whether demand is rising/falling
     "week_sin", "week_cos",
@@ -90,6 +110,8 @@ FEATURE_COLS = [
     "channel_outlet",
     "retail_account",             # v6: Kroger / Albertsons / Publix / UNFI / etc.
     "pack_count",                 # v6: pack ladder (1 / 4 / 8 / 12 / 18)
+    "spins_flavor_canonical",     # v8: canonical flavor group (override+family normalization)
+    "source_brand",               # v12: authoritative SPINS sub-brand (BUILT BAR / PUFF / SOUR PUFF)
     # Removed by ablation: implied_elasticity, elasticity_band, max_donor_cannibal_prob,
     # cannibal_rate, price_elasticity_effect (MO_50–MO_56)
     # Catalog audit-only: built_tdp_share, arp_discount_pct
@@ -103,7 +125,7 @@ TOTAL_UNIT_FEATURE_COLS = [
 
 LGBM_BASE = dict(
     boosting_type="gbdt",
-    n_estimators=2000,
+    n_estimators=4000,
     learning_rate=0.04,
     num_leaves=63,
     min_child_samples=20,
@@ -142,13 +164,17 @@ if __name__ == "__main__":
         df["week_cos26"] = np.cos(2 * np.pi * woy / 26)
 
     # ── Numeric coercion ────────────────────────────────────────────────────
-    CAT_COLS = {"channel_outlet", "retail_account", "pack_count"}
+    CAT_COLS = {"channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"}
     num_cols = [c for c in FEATURE_COLS if c not in CAT_COLS]
     for c in num_cols:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
 
     # ── Categorical encoding ─────────────────────────────────────────────────
+    if "spins_flavor_canonical" in df.columns:
+        df["spins_flavor_canonical"] = df["spins_flavor_canonical"].fillna("UNKNOWN").astype(str)
+    if "source_brand" in df.columns:
+        df["source_brand"] = df["source_brand"].fillna("BUILT BAR").astype(str)
     for cat_col in CAT_COLS:
         if cat_col in df.columns:
             df[cat_col] = df[cat_col].astype("category")

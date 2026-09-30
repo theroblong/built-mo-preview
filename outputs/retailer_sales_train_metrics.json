@@ -1,6 +1,6 @@
 {
-  "model_version": "v6",
-  "trained_at": "2026-09-30T16:47:55.381249+00:00",
+  "model_version": "v7",
+  "trained_at": "2026-09-30T18:12:02.205941+00:00",
   "features_used": [
     "base_units_roll4_avg",
     "base_units_roll8_avg",
@@ -29,6 +29,11 @@
     "top_donor_tdp_sum",
     "competitor_price_gap",
     "promo_lift_ratio",
+    "is_bogo_week",
+    "promo_lift_median",
+    "promo_lift_p90",
+    "promo_lift_n_events",
+    "promo_lift_std",
     "week_sin",
     "week_cos",
     "week_sin26",
@@ -61,43 +66,43 @@
   "quantile_metrics": {
     "q10": {
       "quantile": 0.1,
-      "best_iteration": 2000,
-      "val_pinball_loss": 0.006859588004536024
+      "best_iteration": 1739,
+      "val_pinball_loss": 0.0071623273040005405
     },
     "q50": {
       "quantile": 0.5,
-      "best_iteration": 2000,
-      "val_pinball_loss": 0.011922879677056394,
-      "val_mae": 70.80165741883772,
-      "val_rmse": 400.4118650050311
+      "best_iteration": 2999,
+      "val_pinball_loss": 0.011246313709785946,
+      "val_mae": 63.39493021335597,
+      "val_rmse": 347.076034362287
     },
     "q90": {
       "quantile": 0.9,
-      "best_iteration": 1996,
-      "val_pinball_loss": 0.006261252378961647
+      "best_iteration": 1753,
+      "val_pinball_loss": 0.0064698959016869974
     }
   },
   "top_features_q50": {
-    "base_units_lag1": 10581,
-    "retail_account": 9742,
-    "base_units_wow_delta": 9107,
-    "base_units_roll4_avg": 8980,
-    "base_units_z8": 7062,
-    "base_units_4wk_momentum": 5492,
-    "velocity_per_tdp": 5434,
-    "base_units_roll8_std": 5300,
-    "base_units_z13": 3926,
-    "tdp": 3508,
-    "base_units_roll8_avg": 3030,
-    "tdp_4w_momentum": 2852,
-    "tdp_wow_delta": 2738,
-    "base_units_lag4": 2730,
-    "base_units_roll13_std": 2655,
-    "tdp_z8": 2500,
-    "top_donor_tdp_sum": 2387,
-    "base_units_lag13": 2339,
-    "weeks_since_launch": 2287,
-    "arp_roll8_std": 2147
+    "retail_account": 13673,
+    "base_units_lag1": 12403,
+    "base_units_wow_delta": 11133,
+    "base_units_roll4_avg": 11068,
+    "base_units_z8": 9389,
+    "base_units_4wk_momentum": 7484,
+    "velocity_per_tdp": 7197,
+    "base_units_roll8_std": 7153,
+    "base_units_z13": 5890,
+    "base_units_roll8_avg": 4953,
+    "tdp_4w_momentum": 4905,
+    "tdp": 4408,
+    "base_units_roll13_std": 4401,
+    "tdp_z8": 4356,
+    "weeks_since_launch": 4265,
+    "tdp_wow_delta": 4264,
+    "base_units_lag13": 4095,
+    "top_donor_tdp_sum": 4081,
+    "base_units_lag4": 3612,
+    "arp_wow_delta": 3498
   },
   "total_units_trained": true,
   "total_units_features_used": [
@@ -128,6 +133,11 @@
     "top_donor_tdp_sum",
     "competitor_price_gap",
     "promo_lift_ratio",
+    "is_bogo_week",
+    "promo_lift_median",
+    "promo_lift_p90",
+    "promo_lift_n_events",
+    "promo_lift_std",
     "week_sin",
     "week_cos",
     "week_sin26",
@@ -149,20 +159,20 @@
   "total_units_quantile_metrics": {
     "q10": {
       "quantile": 0.1,
-      "best_iteration": 2000,
-      "val_pinball_loss": 0.016104034880467213
+      "best_iteration": 2402,
+      "val_pinball_loss": 0.016421107659684728
     },
     "q50": {
       "quantile": 0.5,
-      "best_iteration": 1996,
-      "val_pinball_loss": 0.029689141386302294,
-      "val_mae": 213.0518967800605,
-      "val_rmse": 1250.6708129609833
+      "best_iteration": 2997,
+      "val_pinball_loss": 0.0289036926190229,
+      "val_mae": 207.82217875845546,
+      "val_rmse": 1252.846594371333
     },
     "q90": {
       "quantile": 0.9,
-      "best_iteration": 1953,
-      "val_pinball_loss": 0.015170915064627024
+      "best_iteration": 2979,
+      "val_pinball_loss": 0.015056030861895246
     }
   }
 }

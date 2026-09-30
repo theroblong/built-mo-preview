@@ -1,4 +1,4 @@
-"""MO_25 v10 — Build retailer_sales_weekly: historical panel for sales forecasting.
+"""MO_25 v12 — Build retailer_sales_weekly: historical panel for sales forecasting.
 
 WHY THIS EXISTS
 ---------------
@@ -35,7 +35,7 @@ v4 used arp_discount_pct (percentage-based: 5% of $10 = $0.50 threshold — too 
 v5 fixes detection to use absolute dollar discount ≥ $0.05 (nickel standard):
   units_promo present → is_promo_units (promo_intensity > 10%)
   units_promo absent  → is_promo_arp (arp_dollar_discount > $0.05)
-New: promo_lift_ratio = incr_units / base_units (true SPINS promo lift, capped at 5.0)
+New: promo_lift_ratio = incr_units / base_units (true SPINS promo lift, capped at 8.0)
 promo_source audit column: "units_promo" | "arp_inferred" | "none"
 
 BOGO DETECTION (v10 addition)
@@ -56,6 +56,27 @@ capture both typical lift (mean/median) and outlier BOGO-class events (max, p90)
   promo_lift_p25, promo_lift_p75, promo_lift_p90 (BOGO-class outlier tier)
   promo_lift_std, promo_lift_n_events
 Joined back to every row as static series-level features. Null for series with no events → 0.
+promo_lift_ratio cap raised 5.0 → 8.0 to preserve BOGO magnitude (v11).
+
+PROMO MECHANIC SIGNALS (v11 addition)
+--------------------------------------
+SPINS decomposes promo lift by mechanic. Three new features from built_filtered_weekly:
+  units_lift_tpr          — % lift attributable to Temporary Price Reduction (TPR)
+  units_lift_any_display  — % lift from display / placement (end-cap, floor stack, etc.)
+  units_lift_any_feature  — % lift from feature ad / circular / digital coupon
+Set to 0.0 in the base forward forecast (no promo assumed); become scenario toggles in UI.
+Also adds spins_flavor_raw (raw SPINS flavor string) and spins_flavor_canonical (from
+built_enriched_weekly Q1 enrichment — override + family normalization applied).
+
+FORWARD PROMO PREDICTION SIGNALS (v11 addition)
+-------------------------------------------------
+Three leakage-free signals that let the model anticipate promotional cadence:
+  promo_52w_lag       — was this series in promo same calendar week last year? (binary)
+  weeks_since_last_promo — how many weeks since the last is_promo_week=1 event (clipped 0–104)
+  promo_rate_woy      — historical promo frequency for this series at this week-of-year
+promo_rate_woy is a per-series promo seasonality signal: "this SKU tends to be on promo
+20% of weeks in early Q1 but 60% in the Back-to-School window." Computed from full
+history; no future leakage since it is a base-rate over observed data.
 
 DONOR SIGNALS — BRAND-SPLIT (v5 addition)
 ------------------------------------------
@@ -223,8 +244,8 @@ if __name__ == "__main__":
     built_upc_set = set(edw["upc"].unique())
     print(f"  BUILT focal UPCs: {len(built_upc_set):,}")
 
-    # ── 2. Focal brand weekly ARP + promo units ──────────────────────────────
-    print("\n[2] Loading focal ARP + promo units from built_filtered_weekly …")
+    # ── 2. Focal brand weekly ARP + promo units + lift mechanics + flavor ───
+    print("\n[2] Loading focal ARP + promo units + lift mechanics from built_filtered_weekly …")
     bfw = query_druid(f"""
         SELECT
             __time,
@@ -236,7 +257,12 @@ if __name__ == "__main__":
             units,
             units_promo,
             units_non_promo,
-            incr_units
+            incr_units,
+            units_lift_tpr,
+            units_lift_any_display,
+            units_lift_any_feature,
+            spins_flavor_raw,
+            source_brand
         FROM "built_filtered_weekly"
         WHERE __time >= CURRENT_TIMESTAMP - {LOOKBACK}
           AND retail_account IS NOT NULL
@@ -244,10 +270,34 @@ if __name__ == "__main__":
           AND arp > 0
     """)
     print(f"  Rows: {len(bfw):,} | ARP coverage: {bfw['arp'].notna().sum():,}")
-    for c in ["arp", "units", "units_promo", "units_non_promo", "incr_units"]:
+    for c in ["arp", "units", "units_promo", "units_non_promo", "incr_units",
+              "units_lift_tpr", "units_lift_any_display", "units_lift_any_feature"]:
         bfw[c] = pd.to_numeric(bfw[c], errors="coerce")
     bfw = bfw.drop_duplicates(subset=["__time"] + GROUP_COLS)
     bfw["__time"] = pd.to_datetime(bfw["__time"], utc=True)
+
+    # ── 2b. Canonical flavor from built_enriched_weekly (Q1 enrichment) ────────
+    # built_filtered_weekly (Q0) carries spins_flavor_raw only; canonical flavor
+    # with override corrections and family normalization lives in built_enriched_weekly (Q1).
+    # Join by UPC only — flavor is static per product, not time-varying.
+    print("\n[2b] Loading canonical flavor from built_enriched_weekly …")
+    flv = query_druid("""
+        SELECT DISTINCT
+            upc,
+            spins_flavor_canonical
+        FROM "built_enriched_weekly"
+        WHERE source_brand = 'BUILT'
+          AND spins_flavor_canonical IS NOT NULL
+          AND spins_flavor_canonical <> ''
+    """)
+    if len(flv) > 0:
+        flv = flv.drop_duplicates(subset=["upc"])
+        print(f"  Flavor UPC count: {len(flv):,} | Unique flavors: {flv['spins_flavor_canonical'].nunique():,}")
+        bfw = bfw.merge(flv[["upc", "spins_flavor_canonical"]], on="upc", how="left")
+    else:
+        print("  WARNING: No flavor data returned — spins_flavor_canonical will be UNKNOWN")
+        bfw["spins_flavor_canonical"] = "UNKNOWN"
+    bfw["spins_flavor_canonical"] = bfw["spins_flavor_canonical"].fillna("UNKNOWN")
 
     # ── 3. Merge focal ARP + promo onto foundation ───────────────────────────
     print("\n[3] Merging focal ARP + promo onto event_detection_weekly …")
@@ -759,9 +809,10 @@ if __name__ == "__main__":
     # promo_lift_ratio: true SPINS promotional lift = Incr Units / Base Units.
     # Incr Units = Units - Base Units (SPINS MRM derived, always ≥ 0).
     # This is the SPINS standard lift ratio, not units_promo / base (Units,Promo / Base).
+    # v11: cap raised 5.0 → 8.0 to preserve BOGO-class magnitude (Publix BOGO ~5–7×).
     df["promo_lift_ratio"] = (
         df["incr_units"].fillna(0) / df["base_units"].clip(lower=1)
-    ).clip(0, 5).fillna(0)
+    ).clip(0, 8).fillna(0)
 
     # Combined promo flag (model feature)
     df["is_promo_week"] = (
@@ -797,6 +848,52 @@ if __name__ == "__main__":
 
     # Clean up intermediate promo flags (audit columns only need promo_source)
     df = df.drop(columns=["is_promo_units", "is_promo_arp"])
+
+    # ── 12b. Forward promo prediction signals (v11) ──────────────────────────
+    # Leakage-free signals that let the model anticipate promotional cadence.
+    # All three are computable at forecast time from historical data only.
+
+    # promo_52w_lag: was this series in promo the same calendar week last year?
+    # Mirrors how base_units_lag52 works — 52-week shift of is_promo_week.
+    df["promo_52w_lag"] = (
+        df.groupby(GROUP_COLS)["is_promo_week"].shift(52).fillna(0)
+    )
+
+    # weeks_since_last_promo: recency since last promotional event.
+    # A short lag suggests demand may be recovering from post-event trough.
+    # A long lag suggests the next promo event may be approaching.
+    def _weeks_since_last_promo(s: "pd.Series") -> "pd.Series":
+        last = float("nan")
+        out  = np.empty(len(s), dtype=float)
+        for i, v in enumerate(s.values):
+            if v == 1:
+                last = float(i)
+            out[i] = float("nan") if np.isnan(last) else float(i) - last
+        return pd.Series(out, index=s.index)
+
+    df["weeks_since_last_promo"] = (
+        df.groupby(GROUP_COLS)["is_promo_week"]
+        .transform(_weeks_since_last_promo)
+        .clip(0, 104)
+        .fillna(0)
+    )
+
+    # promo_rate_woy: historical promo frequency for this series at this week-of-year.
+    # "This SKU is on promo ~60% of weeks in WoY 5 (Super Bowl week) but only 10% in WoY 30."
+    # Computed as the mean of is_promo_week across all observations at each (series × WoY).
+    df["promo_rate_woy"] = (
+        df.groupby(GROUP_COLS + ["week_of_year"])["is_promo_week"]
+        .transform("mean")
+        .fillna(0)
+    )
+
+    print(f"\n  Forward promo signals (v11):")
+    print(f"  promo_52w_lag=1:          {(df['promo_52w_lag']==1).sum():,} rows "
+          f"({(df['promo_52w_lag']==1).mean()*100:.1f}%)")
+    print(f"  weeks_since_last_promo:   mean={df['weeks_since_last_promo'].mean():.1f}  "
+          f"p75={df['weeks_since_last_promo'].quantile(0.75):.0f}")
+    print(f"  promo_rate_woy>0:         {(df['promo_rate_woy']>0).sum():,} rows "
+          f"mean={df['promo_rate_woy'].mean():.3f}")
 
     # ── 13. MO_46 rolling signals join ───────────────────────────────────────
     _rolling_path = Path("outputs/rolling_signals_weekly.parquet")
@@ -888,6 +985,10 @@ if __name__ == "__main__":
         "__time",
         "upc", "description",
         "channel_outlet", "retail_account", "geography_raw", "geography_display", "geography_level",
+        # Brand + Flavor (v12): authoritative SPINS sub-brand + canonical flavor
+        "source_brand",             # model categorical: SPINS brand (BUILT BAR / BUILT PUFF / BUILT SOUR PUFF)
+        "spins_flavor_canonical",   # model categorical: COALESCE(override, family, raw)
+        "spins_flavor_raw",         # audit: raw SPINS FLAVOR field
         # Lifecycle
         "first_week_selling", "weeks_since_launch", "pack_count",
         # Demand — raw
@@ -920,6 +1021,14 @@ if __name__ == "__main__":
         "is_labor_day_week", "is_thanksgiving_week", "is_christmas_week",
         # Promo signals (model features)
         "is_promo_week", "is_bogo_week", "promo_intensity", "arp_dollar_discount", "promo_lift_ratio",
+        # Promo mechanic breakdown (v11): lift % by promotion type from SPINS MRM
+        "units_lift_tpr",           # % lift from Temporary Price Reduction
+        "units_lift_any_display",   # % lift from display / placement
+        "units_lift_any_feature",   # % lift from feature ad / circular
+        # Forward promo prediction signals (v11): leakage-free historical cadence
+        "promo_52w_lag",            # was promo same calendar week last year? (binary)
+        "weeks_since_last_promo",   # recency since last promo event (weeks, clipped 0–104)
+        "promo_rate_woy",           # historical promo frequency at this week-of-year per series
         # Promo lift distribution stats (v10): per-series historical promo character
         "promo_lift_mean", "promo_lift_median", "promo_lift_min", "promo_lift_max",
         "promo_lift_p25", "promo_lift_p75", "promo_lift_p90",
@@ -955,7 +1064,7 @@ if __name__ == "__main__":
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")
-    print("MO_25 v10 COMPLETE")
+    print("MO_25 v12 COMPLETE")
     print(f"{'='*70}")
     print(f"  Total rows:        {len(out):,}")
     print(f"  Weeks covered:     {out['__time'].nunique():,}")

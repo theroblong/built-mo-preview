@@ -373,6 +373,20 @@ FEATURE_COLS = [
     "top_donor_tdp_sum",
     "competitor_price_gap",
     "promo_lift_ratio",
+    # v8: dropped is_bogo_week (0.06% gain; arp_dollar_discount captures BOGO price signal)
+    "promo_lift_median",         # v7: static distributional — typical lift for this SKU×account
+    "promo_lift_p90",            # v7: static — extreme event lift (BOGO-class indicator)
+    "promo_lift_n_events",       # v7: static — promo frequency for this SKU×account
+    "promo_lift_std",            # v7: static — variance of promo response
+    # v8: promo activity + mechanic signals (AR dynamic — 0 in base forecast)
+    "is_promo_week",             # v8: any promo activity this week (binary)
+    "promo_intensity",           # v8: fraction of units at promo stores
+    "units_lift_tpr",            # v8: % lift from TPR
+    "units_lift_any_display",    # v8: % lift from display
+    "units_lift_any_feature",    # v8: % lift from feature ad
+    # v8: forward promo prediction (computed from history — not zeroed)
+    "promo_52w_lag",             # v8: promo same week last year?
+    "promo_rate_woy",            # v8: historical promo frequency at this WoY
     # Seasonality — cyclical encoding; both pairs computed dynamically from forecast_dt
     "week_sin", "week_cos",
     "week_sin26", "week_cos26",
@@ -387,17 +401,24 @@ FEATURE_COLS = [
     "channel_outlet",
     "retail_account",
     "pack_count",
+    "spins_flavor_canonical",    # v8: canonical flavor group
+    "source_brand",              # v12: authoritative SPINS sub-brand (BUILT BAR / PUFF / SOUR PUFF)
 ]
 
 # Features updated dynamically each step (all others held flat from latest actual row)
 AR_DYNAMIC = {
-    "channel_outlet", "retail_account", "pack_count",
+    "channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand",
     "week_sin", "week_cos", "week_sin26", "week_cos26",
     "weeks_since_launch",
     "base_units_lag1", "base_units_lag4", "base_units_lag13", "base_units_lag52",
     "arp", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
     "arp_lag1",                  # previous step's ARP
     "velocity_per_tdp",          # updates as forecast units accumulate each step
+    # v8: AR dynamic promo activity flags — set to 0.0 in base forecast
+    "is_promo_week", "promo_intensity",
+    "units_lift_tpr", "units_lift_any_display", "units_lift_any_feature",
+    # v8: promo cadence signals — computed per step from history lookups
+    "promo_52w_lag", "promo_rate_woy",
 }
 
 SEASONAL_BLEND_WEIGHT = 0.40   # must match MO_27 constant
@@ -441,10 +462,14 @@ try:
     if len(df_r1) == 0:
         raise ValueError(f"No parquet rows for {top_acct}")
 
-    CAT_COLS = {"channel_outlet", "retail_account", "pack_count"}
+    CAT_COLS = {"channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"}
     for c in FEATURE_COLS:
         if c not in CAT_COLS and c in df_r1.columns:
             df_r1[c] = pd.to_numeric(df_r1[c], errors="coerce")
+    if "spins_flavor_canonical" in df_r1.columns:
+        df_r1["spins_flavor_canonical"] = df_r1["spins_flavor_canonical"].fillna("UNKNOWN").astype(str)
+    if "source_brand" in df_r1.columns:
+        df_r1["source_brand"] = df_r1["source_brand"].fillna("BUILT BAR").astype(str)
     # Compute semi-annual seasonality columns if not in parquet
     if "week_of_year" in df_r1.columns:
         _woy = df_r1["week_of_year"].fillna(1)
@@ -453,20 +478,22 @@ try:
 
     df_r1 = df_r1.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
-    # Load v4 quantile models
-    with open(MODEL_DIR / "model_retailer_sales_q50_v6.pkl", "rb") as f:
+    # Load v8 quantile models
+    with open(MODEL_DIR / "model_retailer_sales_q50_v8.pkl", "rb") as f:
         m50 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q10_v6.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q10_v8.pkl", "rb") as f:
         m10 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q90_v6.pkl", "rb") as f:
+    with open(MODEL_DIR / "model_retailer_sales_q90_v8.pkl", "rb") as f:
         m90 = pickle.load(f)
 
     # pandas_categorical order matches FEATURE_COLS categorical position:
-    # [0] = channel_outlet, [1] = retail_account, [2] = pack_count
+    # [0] = channel_outlet, [1] = retail_account, [2] = pack_count, [3] = spins_flavor_canonical, [4] = source_brand
     _pc = m50._Booster.pandas_categorical
     channel_cats       = _pc[0] if len(_pc) > 0 else []
     retail_acct_cats   = _pc[1] if len(_pc) > 1 else []
     pack_count_cats    = _pc[2] if len(_pc) > 2 else []
+    flavor_cats        = _pc[3] if len(_pc) > 3 else []
+    source_brand_cats  = _pc[4] if len(_pc) > 4 else []
 
     # Gain-based feature importance — SHAP proxy; no extra library needed.
     # Gain measures how much each feature reduces prediction error across all splits.
@@ -544,6 +571,29 @@ try:
                 for k in range(1, FORECAST_WEEKS + 1)
             ]
 
+            # v8: precompute promo history for leakage-free cadence signals
+            if "is_promo_week" in seed.columns:
+                _promo_hist = seed["is_promo_week"].fillna(0).tolist()
+                _N_p        = len(_promo_hist)
+                promo_52w_seq = [
+                    float(_promo_hist[_N_p - 53 + k])
+                    if 0 <= (_N_p - 53 + k) < _N_p else 0.0
+                    for k in range(1, FORECAST_WEEKS + 1)
+                ]
+            else:
+                promo_52w_seq = [0.0] * FORECAST_WEEKS
+
+            if "is_promo_week" in seed.columns and "week_of_year" in seed.columns:
+                _woy_num = pd.to_numeric(seed["week_of_year"], errors="coerce")
+                promo_rate_by_woy = (
+                    seed.assign(_woy_int=_woy_num.fillna(0).astype(int))
+                    .groupby("_woy_int")["is_promo_week"]
+                    .mean()
+                    .to_dict()
+                )
+            else:
+                promo_rate_by_woy = {}
+
             latest     = seed.iloc[-1]
             anchor_dt  = latest["__time"]
             wsl_anchor = int(pd.to_numeric(latest.get("weeks_since_launch"), errors="coerce") or 0)
@@ -559,8 +609,10 @@ try:
                     static_feats[col] = np.nan
 
             # Categorical identity — pulled from seed, held constant across forecast
-            retail_acct_val = str(latest.get("retail_account") or "")
-            pack_count_val  = str(latest.get("pack_count") or "")
+            retail_acct_val    = str(latest.get("retail_account") or "")
+            pack_count_val     = str(latest.get("pack_count") or "")
+            flavor_val         = str(latest.get("spins_flavor_canonical") or "UNKNOWN")
+            source_brand_val   = str(latest.get("source_brand") or "BUILT BAR")
 
             arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
             arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
@@ -630,31 +682,44 @@ try:
 
                     feature_row = {
                         **static_feats,
-                        "channel_outlet":     channel,
-                        "retail_account":     retail_acct_val,
-                        "pack_count":         pack_count_val,
-                        "week_sin":           _wsin,
-                        "week_cos":           _wcos,
-                        "week_sin26":         _wsin26,
-                        "week_cos26":         _wcos26,
-                        "weeks_since_launch": wsl_anchor + step,
-                        "arp":                arp_cur,
-                        "arp_lag1":           arp_lag1_val,
-                        "arp_wow_delta":      arp_wow_d,
-                        "arp_roll8_avg":      arp_roll8avg,
-                        "arp_roll8_std":      arp_roll8std,
-                        "base_units_lag1":    lag1,
-                        "base_units_lag4":    lag4,
-                        "base_units_lag13":   lag13,
-                        "base_units_lag52":   lag52,
+                        "channel_outlet":         channel,
+                        "retail_account":         retail_acct_val,
+                        "pack_count":             pack_count_val,
+                        "spins_flavor_canonical": flavor_val,
+                        "source_brand":           source_brand_val,
+                        "week_sin":               _wsin,
+                        "week_cos":               _wcos,
+                        "week_sin26":             _wsin26,
+                        "week_cos26":             _wcos26,
+                        "weeks_since_launch":     wsl_anchor + step,
+                        # v8: promo activity flags — 0 in base forecast (no promo assumed)
+                        "is_promo_week":          0.0,
+                        "promo_intensity":        0.0,
+                        "units_lift_tpr":         0.0,
+                        "units_lift_any_display": 0.0,
+                        "units_lift_any_feature": 0.0,
+                        # v8: promo cadence from history (leakage-free)
+                        "promo_52w_lag":          promo_52w_seq[step - 1],
+                        "promo_rate_woy":         promo_rate_by_woy.get(_fw, 0.0),
+                        "arp":                    arp_cur,
+                        "arp_lag1":               arp_lag1_val,
+                        "arp_wow_delta":          arp_wow_d,
+                        "arp_roll8_avg":          arp_roll8avg,
+                        "arp_roll8_std":          arp_roll8std,
+                        "base_units_lag1":        lag1,
+                        "base_units_lag4":        lag4,
+                        "base_units_lag13":       lag13,
+                        "base_units_lag52":       lag52,
                         # velocity_per_tdp updates each step as forecast units accumulate
-                        "velocity_per_tdp":   units_history[-1] / max(float(static_feats.get("tdp") or 1.0), 1.0),
+                        "velocity_per_tdp":       units_history[-1] / max(float(static_feats.get("tdp") or 1.0), 1.0),
                     }
 
                     X = pd.DataFrame([feature_row])[FEATURE_COLS]
-                    X["channel_outlet"]  = pd.Categorical(X["channel_outlet"],  categories=channel_cats)
-                    X["retail_account"]  = pd.Categorical(X["retail_account"],  categories=retail_acct_cats)
-                    X["pack_count"]      = pd.Categorical(X["pack_count"],       categories=pack_count_cats)
+                    X["channel_outlet"]         = pd.Categorical(X["channel_outlet"],         categories=channel_cats)
+                    X["retail_account"]         = pd.Categorical(X["retail_account"],         categories=retail_acct_cats)
+                    X["pack_count"]             = pd.Categorical(X["pack_count"],              categories=pack_count_cats)
+                    X["spins_flavor_canonical"] = pd.Categorical(X["spins_flavor_canonical"],  categories=flavor_cats)
+                    X["source_brand"]           = pd.Categorical(X["source_brand"],             categories=source_brand_cats)
 
                     units_base = float(np.expm1(max(0.0, m50.predict(X)[0])))
                     units_low  = float(np.expm1(max(0.0, m10.predict(X)[0])))

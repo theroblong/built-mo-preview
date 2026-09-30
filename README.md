@@ -6,6 +6,27 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 190: v8 pipeline complete + MO_28 Optuna study + geography_raw gap + NS2 Ebad handoff (2026-09-30)
+
+**v8 full pipeline run complete (2026-09-30):**
+- MO_25 v12 — added `source_brand` + `spins_flavor_raw` to actuals extract
+- MO_26 v8 — `source_brand` (BUILT BAR / BUILT PUFF / BUILT SOUR PUFF) added as 5th LightGBM categorical; 187,127 training rows; recency-weighted (λ=0.02)
+- MO_27 v8 — 41,249 forecast rows, 3,173 series
+- MO_55 — 657,391 units redistributed (0.89% portfolio); zero-sum constraint satisfied; Druid ingest ✅
+- PKL archive: `outputs/model_{retailer_sales,total_units}_{q10,q50,q90}_v8{,_full}.pkl`
+
+**v8 holdout wMAPE:** Kroger 15.8% (+0.3 vs v7), Publix 12.6% (+0.2), Albertsons 50.3% (−0.5), UNFI 13.0% (+1.4). Flat — good baseline for Optuna comparison. q10/q50 models hit 4000/4000 cap; early stopping too tight at lr=0.04.
+
+**MO_28 Optuna study launched:** 75 trials, 3-fold walk-forward CV, EARLY_STOP=100, N_ESTIMATORS_MAX=5000. Optimizes q50 pinball. Outputs → `outputs/lgbm_best_params.json`. Currently running.
+
+**geography_raw gap identified:** `channel_outlet` (CONVENTIONAL|FOOD vs CONVENTIONAL|MULTI OUTLET) is in FEATURE_COLS and already distinguishes RMA account-level from MULO CRMA aggregate data. But `geography_raw` is only a GROUP_COL — not a model feature. Kroger has 2 CONVENTIONAL|FOOD geographic variants; Albertsons has 3. Adding `geography_raw` as a 6th categorical in v9 will give the model this context.
+
+**v9 plan:** Optuna best params + `geography_raw` as 6th categorical → full pipeline retrain → before/after wMAPE comparison vs Bracken v8 baseline.
+
+**NS2 handoff — Ebad covering Justin's items:** Brian asked Ebad to pick up Justin's non-Circana outstanding items: product dimension CSV + salesperson→customer mapping CSV. Ebad already owns CustomerDim_v2 (1,003 rows, channel codes resolved). Two open refinements: `isinactive = 'F'` filter + `abbrevtype = 'Invoice'` in address CTE. Chase Sparrow (BUILT Finance, new contact) owns GL trade deduction codes.
+
+---
+
 ## README update 189: Model enhancement roadmap + explainability framework; Q4 2025 miss diagnosis; high-growth forecasting research (2026-09-30)
 
 **Context:** Sept 30 standup with Rob (ShopTalk) + Q4 2025 forecast miss analysis. Synthesis of root cause, 7-item enhancement queue, client-facing explainability framework for Bracken/BUILT, and high-growth forecasting research.
