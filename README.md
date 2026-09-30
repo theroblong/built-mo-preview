@@ -6,6 +6,39 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 191: Pinball loss + Optuna hyperparameter space + CV split methodology (2026-09-30)
+
+**Pinball loss — the quantile regression objective:**
+
+For target quantile τ and prediction error `e = actual − predicted`:
+```
+loss = τ × e          if e ≥ 0  (under-predicted)
+loss = (τ − 1) × e   if e < 0  (over-predicted)
+```
+The asymmetry produces the target quantile. q50 (τ=0.5): symmetric → median. q10 (τ=0.1): over-predicting penalized 9× → model sits at the 10th percentile. q90 (τ=0.9): under-predicting penalized 9× → model sits at the 90th percentile. Called "pinball" because the loss function is a kinked ramp. MO_28 optimizes q50 pinball in log-space; best params then applied to q10 and q90.
+
+**Optuna hyperparameter search space (MO_28 — 7 params simultaneously):**
+
+| Parameter | Range | What it controls |
+|---|---|---|
+| `learning_rate` | [0.005, 0.08] log | Step size per tree — lower = more trees, often better generalization |
+| `num_leaves` | [31, 191] | Tree complexity — more leaves = more expressive, more overfit risk |
+| `min_child_samples` | [10, 80] | Min rows in a leaf — primary regularizer for sparse series |
+| `feature_fraction` | [0.5, 1.0] | Random feature subset per tree — like dropout |
+| `bagging_fraction` | [0.5, 1.0] | Random row subset per tree — stochastic gradient boosting |
+| `reg_alpha` | [0, 2.0] | L1 regularization — encourages sparse feature usage |
+| `reg_lambda` | [0, 2.0] | L2 regularization — penalizes large split values |
+
+Key tradeoff: `learning_rate` ↔ `n_estimators`. v8 lr=0.04 hits the 4000-cap on q50 — still improving at cutoff. Optuna may find a lower lr + more iterations converges to a better minimum.
+
+**Walk-forward CV structure — why it's fixed, not searched:**
+
+MO_28 uses 3-fold walk-forward CV with VAL_WEEKS=13 (fixed constants). Optuna evaluates each hyperparameter trial across all 3 folds; the winning params must generalize across 3 time windows, not just one. The 13-week window matches the production forecast horizon exactly — this is a methodological decision, not a hyperparameter. Searching over it would risk selecting the split that makes the model look best rather than the one that tests it most honestly.
+
+What Optuna does NOT address: `RECENCY_LAMBDA=0.02` (how aggressively recent data is upweighted). Fixed in MO_28. A separate tuning axis — worth its own study after v9 is stable.
+
+---
+
 ## README update 190: v8 pipeline complete + MO_28 Optuna study + geography_raw gap + NS2 Ebad handoff (2026-09-30)
 
 **v8 full pipeline run complete (2026-09-30):**
