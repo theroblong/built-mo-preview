@@ -396,6 +396,7 @@ holdout_series_count = 0
 holdout_ets_count    = 0
 backtest_cutoff      = _TRAINING_CUTOFF_STR
 backtest_val_end     = "2026-08-09"
+feature_importance   = {}   # populated after model load; gain-based SHAP proxy
 
 try:
     import pandas as pd
@@ -431,6 +432,24 @@ try:
         m90 = pickle.load(f)
 
     channel_cats = m50._Booster.pandas_categorical[0]
+
+    # Gain-based feature importance — SHAP proxy; no extra library needed.
+    # Gain measures how much each feature reduces prediction error across all splits.
+    # This is the explainability anchor: "why does the model weight lag52 over velocity?"
+    feature_importance = {}
+    try:
+        _booster  = m50._Booster                           # LightGBM Booster underneath sklearn wrapper
+        _fi_gains = _booster.feature_importance('gain')
+        _fi_names = _booster.feature_name()
+        _fi_total = float(sum(_fi_gains)) or 1.0
+        feature_importance = {
+            name: round(gain / _fi_total * 100, 2)
+            for name, gain in sorted(zip(_fi_names, _fi_gains), key=lambda x: -x[1])
+        }
+        print(f"  Feature importance (top 5): "
+              + ", ".join(f"{k}={v}%" for k, v in list(feature_importance.items())[:5]))
+    except Exception as _e:
+        print(f"  Feature importance unavailable: {_e}")
 
     def run_ets_series(history_vals, steps=13):
         """Damped additive-trend ETS for < 52-week series. Returns (q50s, q10s, q90s) or None."""
@@ -507,24 +526,27 @@ try:
             arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
             arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
 
-            # TDP-aware yoy_ratio: expand the growth cap when distribution has grown.
-            # Estimate tdp_lag52 from (units_52w_ago / velocity_spm_lag52) — both already in
-            # static_feats — then allow up to 1.5× the TDP expansion as the unit growth ceiling.
-            # Falls back to the original 2.0× cap if velocity_spm_lag52 or tdp is missing.
+            # Real TDP history — extracted for diagnostics and future use as a training feature.
+            # The correct fix for TDP-expansion-driven under-prediction is to add tdp_lag52 as
+            # a direct parquet column and retrain the model (MO_77). Adjusting yoy_clip_max here
+            # improved Q4 2025 (36.3%→10.8%) but regressed the May–Aug 2026 holdout (15.5%→37.2%)
+            # because the blend amplification doesn't generalise to decelerating growth periods.
+            tdp_history = list(pd.to_numeric(seed["tdp"], errors="coerce").fillna(0))
+            N_tdp = len(tdp_history)
+
             yoy_ratio = None
             if N_actual >= 52:
                 _units_52 = float(units_history[N_actual - 52])
                 if _units_52 > 0:
                     _raw_yoy     = float(units_history[-1]) / _units_52
                     yoy_clip_max = 2.0
-                    _vel_52 = static_feats.get("velocity_spm_lag52")
-                    _tdp    = static_feats.get("tdp")
-                    if (pd.notna(_vel_52) and float(_vel_52) > 0 and
-                            pd.notna(_tdp) and float(_tdp) > 0):
-                        _tdp_lag52_est = _units_52 / float(_vel_52)
-                        if _tdp_lag52_est > 0:
-                            _tdp_yoy     = float(_tdp) / _tdp_lag52_est
-                            yoy_clip_max = float(np.clip(_tdp_yoy * 1.5, 2.0, 5.0))
+                    # Diagnostic: log real TDP growth (tdp_lag52 from history, not proxy estimate).
+                    # Used to confirm TDP expansion is the structural driver — not applied to blend
+                    # until model is retrained with tdp_lag52 as a feature.
+                    _tdp_now = float(tdp_history[-1])         if N_tdp >= 1  else None
+                    _tdp_52  = float(tdp_history[N_tdp - 53]) if N_tdp >= 53 else None
+                    # (future: reduce SEASONAL_BLEND_WEIGHT proportionally to _tdp_yoy
+                    #  so LightGBM dominates when distribution is rapidly expanding)
                     yoy_ratio = float(np.clip(_raw_yoy, 0.5, yoy_clip_max))
 
             # Route series with < 52 weeks of history to ETS (avoids near-zero lag52 drag)
@@ -853,6 +875,7 @@ payload = {
     "r1_lift_pct":          round(r1_lift * 100, 1),
     "r2_lift_pct":          round(r2_lift * 100, 1),
     "sku_lift_pct":         round(sku_lift * 100, 1),
+    "feature_importance":   feature_importance,   # gain-based SHAP proxy; top-N in chart
 }
 
 # ── HTML template ─────────────────────────────────────────────────────
