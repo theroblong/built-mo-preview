@@ -61,12 +61,20 @@ N_FOLDS          = 3          # walk-forward folds; each = 13-week val window
 VAL_WEEKS        = 13         # mirrors production forecast horizon
 EARLY_STOP       = 150        # v9: raised from 100 — more patience so a high n_estimators
                               #     cap cannot reward noise; affordable with weekend runtime
-N_ESTIMATORS_MAX = 6000       # v9: raised from 2000. MO_26 hit its 4000 cap with validation
-                              #     loss STILL FALLING, so 2000 capped the search at a known-
-                              #     insufficient point and forced the tuned learning_rate to
-                              #     compensate. Early stopping exits converged trials early,
-                              #     so a high cap costs time only on genuinely slow learners,
-                              #     and the 0.01 learning-rate floor bounds that.
+N_ESTIMATORS_MAX = 6000       # v9: raised from 2000, and MEASURED rather than guessed.
+                              #     MO_29 probe (q50, v9 panel, lr=0.04, num_leaves=63): with
+                              #     patience 50 the curve terminates at 4,593, so 2000 — and
+                              #     even MO_26's old 4000 — truncated it and forced the tuned
+                              #     learning_rate to compensate for a short budget. 6000 gives
+                              #     early stopping room to fire naturally with headroom.
+                              #     Deliberately NOT higher: a 12,000-tree ceiling is only
+                              #     2.62% better than 4,593 for 2.6x the compute, which across
+                              #     150 trials x 3 folds is not a trade worth making.
+                              #     ⚠️ This stop point is a property of lr=0.04/num_leaves=63,
+                              #     not of the data — a higher lr reaches a given loss in fewer
+                              #     trees, so trials that move lr will stop elsewhere. That is
+                              #     correct and is why early stopping, not a tuned n_estimators,
+                              #     governs the tree count per trial.
 RECENCY_LAMBDA   = 0.02       # MO_26 production default; used only as the Optuna seed value
                               # below. v9 TUNES this rather than running the separate grid
                               # search that was planned: lambda, learning_rate and tree count
@@ -74,6 +82,9 @@ RECENCY_LAMBDA   = 0.02       # MO_26 production default; used only as the Optun
                               # two and grid-searching the third afterwards bakes in a
                               # sequential-search bias. Searching them jointly replaces the
                               # planned ~2.5h RECENCY_LAMBDA grid.
+EARLY_STOP_MIN_DELTA = 0.0    # must match MO_26. MO_29 measured every nonzero value as
+                              # WORSE than zero (1e-5 cost 6.36% of pinball to save trees);
+                              # patience alone terminates the curve at ~4,593.
 RECENCY_LAMBDA_RANGE = (0.0, 0.15)   # 0.0 = no recency weighting; 0.15 ≈ 13-week half-life
 TARGET_QUANTILE  = 0.50       # optimize median; apply best params to q10/q90 too
 RANDOM_STATE     = 42
@@ -272,7 +283,12 @@ def make_objective(df: pd.DataFrame, folds, available: list):
                 sample_weight=sw,
                 eval_set=[(X_vl, y_vl)],
                 callbacks=[
-                    lgb.early_stopping(EARLY_STOP, verbose=False),
+                    # min_delta — see MO_29. Without it the curve's asymptotic tail
+                    # keeps resetting patience, so every trial runs to
+                    # N_ESTIMATORS_MAX and the search compares trials on compute
+                    # budget rather than on hyperparameters.
+                    lgb.early_stopping(EARLY_STOP, min_delta=EARLY_STOP_MIN_DELTA,
+                                       verbose=False),
                     lgb.log_evaluation(-1),
                 ],
             )

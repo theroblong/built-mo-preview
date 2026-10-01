@@ -6,6 +6,111 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 198: v9 trained; tree budget measured (cap was never the constraint); NS2 bridge received (2026-10-01)
+
+### v9 trained on the final panel
+
+186,427 → **94,186 training rows** through the five panel rules (null target, military,
+zero-volume, RMA priority, short-series). 77,609 train / 16,577 val / 56 features.
+
+| model | best_iter | pinball |
+|---|---|---|
+| base **q50** | **3998** | 0.0141 |
+| base q10 | 1097 | 0.0099 |
+| base q90 | 1203 | 0.0087 |
+| total **q50** | **3997** | 0.0209 |
+| total q10 | 3004 | 0.0125 |
+| total q90 | 1645 | 0.0118 |
+
+**`spins_flavor_canonical` is now live at #12 by gain** (6,078) with 34 real families, after being
+inert at inference since v8. Top of the list is unchanged in character — `retail_account` 19,406,
+then AR and momentum features — with distribution signals (`tdp_4w_momentum` 7,912, `tdp_wow_delta`
+6,812, `tdp_z8` 6,558) clustering just below, consistent with update 197's finding that TDP drives
+the lifecycle ramp.
+
+Metrics remain **not comparable to v8's** — different validation-set composition. Only v9 → v10
+will be a clean comparison, which is why the runs are split.
+
+### Tree budget: the cap was never the constraint
+
+q50 pegged its `n_estimators` cap at **every** version (v6 2000, v7 2999/3000, v8 4000, v9
+3998/4000) with validation loss still falling, which read as capacity starvation. New
+`scripts/MO_29_tree_budget_probe.py` fits q50 once at a 12,000-tree cap, then simulates every
+stopping tolerance off the saved curve — one fit answers all candidates.
+
+**With no tolerance and patience 50, the curve terminates at 4,593.** Early stopping was never
+broken; the 4,000 cap never gave it room to fire. Four versions of apparent starvation were a
+ceiling artifact.
+
+| trees | pinball | vs 4,000 |
+|---|---|---|
+| 4,000 | 0.014087 | — |
+| 6,000 | 0.013890 | +1.4% |
+| 8,000 | 0.013777 | +2.2% |
+| 12,000 | 0.013655 | +3.1% |
+
+The curve is **asymptotic, not convergent** — it never flattens, only decays. So `n_estimators` is a
+compute-budget decision, not a value to optimise. Set MO_26 `n_estimators = 6000` and MO_28
+`N_ESTIMATORS_MAX = 6000`: room for patience-50 stopping to fire naturally, and deliberately no
+higher, since the 12,000 ceiling buys 2.62% for 2.6× compute — untenable across 150 trials × 3
+folds. Only the medians were ever near the cap; q10/q90 converge at ~1,100–1,650.
+
+**Negative result — `min_delta` is the wrong tool.** Every nonzero value is *worse* than zero,
+truncating earlier at real accuracy cost: 1e-6 → 4,416 trees / 2.73%; 5e-6 → 2,523 / 5.66%; 1e-5 →
+2,153 / **6.36%**; 1e-4 → 778 / 16.34%. It was wired in before being measured, and is now set to
+`0.0` with the table retained in the MO_26 comment so it is not re-proposed.
+
+**Caveat: 4,593 is not a constant.** It is a property of lr=0.04 / num_leaves=63 — a higher learning
+rate reaches a given loss in fewer trees, so the stop point moves whenever Optuna moves lr. That is
+precisely why early stopping, not a tuned `n_estimators`, must govern the tree count per trial.
+Measured on one 13-week window spanning the Aug–Sep trough; confirm with 3-fold CV.
+
+### NS2 customer-retailer-distributor bridge received
+
+Ebad delivered `docs/SalesRepTables.xlsx`: `SalesRepCustomerMap` (116 rows — Retailer, Built
+Customer, NetSuite Customer ID, SPINS Customer, Channel, Sales Manager) and `SalesRepDim` (14 reps).
+This closes the third of the three open Ebad asks and is the bridge earlier work flagged as a gap.
+
+**The SPINS join key is `geography_raw`, not `retail_account`** — 39 of 60 populated values match
+`geography_raw`, only 2 match `retail_account`. It is the RMA-level identifier, which aligns neatly
+with RMA now being the priority basis. 21 unmatched, in two patterns: divisional rollups we do not
+extract (Albertsons JEWEL / HAGGENS / UNITED; Ahold GIANT CARLISLE / GIANT LANDOVER / STOP & SHOP)
+and different naming conventions (ALEX LEE - LOWES FOODS, FAREWAY). `KROGER BANNER TOTAL - RMA` is
+cited but absent from our panel. BUILT's map is finer-grained than our extract at those accounts.
+
+**Distributor fan-out is severe:** 54 Built Customers → 97 Retailers across only 52 NetSuite IDs.
+CORE-MARK serves **18** retailers under one ID; UNFI 13, DOT FOODS 12, KEHE 10, McLane 8. Distributor
+sell-in is one invoice stream across many retailers and needs an allocation rule.
+
+**But every data-dark retailer is direct** — WINCO, H-E-B, ALDI, Costco, Costco Canada all buy direct
+with no SPINS id. That removes the circularity that would otherwise sink the plan: splitting pooled
+distributor volume for a retailer with no SPINS would need a SPINS share we do not have. The inverse
+holds too — the pooled accounts mostly *have* SPINS (Walmart via McLane, Sprouts via KeHE), so they
+do not need sell-in.
+
+| route | rows | retailers | with SPINS |
+|---|---|---|---|
+| direct | 45 | 26 | 12 |
+| distributor | 71 | 71 | 48 |
+
+**14 direct-and-dark retailers** = cleanly addressable. **23 distributor-served with no SPINS** = the
+hard bucket.
+
+**Open: no effective dating.** `ns2.customer.salesrep` and the sheet are both current-state, so a
+customer that changed reps — or a retailer that changed distributor — has its full history attributed
+to today's owner. Territory and distributor changes would read as demand shifts in any rep-level
+trend. Same conclusion as the Level 1 / Level 2 retailer bridge: hold the relationship with effective
+dates. Worth asking whether NS2 retains change history on these fields, since capturing it at initial
+load is far cheaper than reconstructing it. The employee query also carries no `isinactive` filter,
+so terminated reps appear in the dimension.
+
+### Decisions register → v0.5, 77 entries
+
+Added GRD-08 (tree budget + min_delta negative result), GEO-11 (SPINS Customer joins geography_raw),
+COV-06 (distributor attribution, dark retailers direct), OPN-11 (no effective dating on rep mapping).
+
+---
+
 ## README update 197: cold-start ramp — 41% of demand forecast with no ramp signal (2026-10-01)
 
 Reliability audit ahead of showing the forecast to Bracken. Conclusion: the forecast is

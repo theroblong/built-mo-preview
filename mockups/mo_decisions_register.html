@@ -609,7 +609,7 @@
     <span class="section-anchor" id="retailer-geo"></span>
     <div class="section-head">
       <span class="section-title">Retailer &amp; Geography Exclusions</span>
-      <span class="section-count">10 entries</span>
+      <span class="section-count">11 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -697,6 +697,14 @@
             <td><div class="entry-title">geography_raw REJECTED as a model feature — 99.1% redundant once phantoms are filtered</div><div class="entry-body">README updates 190 and 194 named <code>geography_raw</code> as the v9 win for distribution expansion and the MULO CRMA artifact. Measurement reversed it. <code>geography_level</code> (CRMA / RMA / KEY ACCOUNT) is a <b>deterministic function of <code>channel_outlet</code></b>, so the aggregate-vs-account distinction is already in the model. Decisive: account × channel combos with 2+ geography variants = <b>7 before</b> the zero-volume filter, <b>1 after</b> (Circle K, 1,392 rows, 0.9%). Arithmetic closes exactly — 134 surviving geographies, 133 combos, one with two. It stays a GROUP_COL and stays in CAT_COLS (so it is never coerced to numeric) but is NOT in FEATURE_COLS.</div></td>
             <td><span class="where-tag">MO_26.FEATURE_COLS</span><span class="where-tag">MO_28</span><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">GEO-07</span></td>
             <td>Generalisable lesson: when a high-cardinality categorical looks predictive, check whether its apparent signal is separating real data from junk. Here the signal WAS the phantom rows — so the fix is a filter, not a feature. Adding it would have bought 154 levels of redundancy and the overfitting that comes with them.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-11</td>
+            <td><div class="entry-title">SPINS Customer in BUILT's SalesRepCustomerMap joins on geography_raw, not retail_account</div><div class="entry-body"><code>docs/SalesRepTables.xlsx</code> sheet <code>SalesRepCustomerMap</code> (116 rows) carries a <code>SPINS Customer</code> column. Of 60 populated values, <b>39 match our <code>geography_raw</code></b> and only <b>2</b> match <code>retail_account</code> — it is the RMA-level identifier. Convenient, since RMA is now the priority basis (GEO-07). 21 unmatched in two patterns: <b>divisional rollups we do not extract</b> (ALBERTSONSCO JEWEL / HAGGENS / UNITED DIV; AHOLD GIANT CARLISLE / GIANT LANDOVER / STOP &amp; SHOP DIV) and <b>different naming conventions</b> (ALEX LEE - LOWES FOODS, FAREWAY, GOOD FOOD HOLDINGS - BRISTOL FARMS). <code>KROGER BANNER TOTAL - RMA</code> is cited but absent from our panel — we extract the MULO CRMA and CONVENTIONAL|FOOD variants.</div></td>
+            <td><span class="where-tag">docs/SalesRepTables.xlsx</span><span class="where-tag">geography_raw</span><span class="where-tag">GEO-07</span><span class="where-tag">NS2 sell-in</span><span class="where-tag">Experience 1 Book of Business</span></td>
+            <td>BUILT's map is finer-grained than our SPINS extract at Albertsons, Ahold and Kroger, so those joins need either a crosswalk or a wider extract. Coverage is 60/116 rows (51.7%) — the unpopulated ones are largely the data-dark retailers, which is expected rather than a defect.</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
@@ -803,7 +811,7 @@
     <span class="section-anchor" id="guardrails"></span>
     <div class="section-head">
       <span class="section-title">Model Guardrails</span>
-      <span class="section-count">7 entries</span>
+      <span class="section-count">8 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -870,6 +878,14 @@
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
+          <tr>
+            <td class="entry-id">GRD-08</td>
+            <td><div class="entry-title">n_estimators is a compute-budget ceiling, not a tuned value — 4000 → 6000; min_delta measured and REJECTED</div><div class="entry-body">MO_26's q50 pegged its cap at <b>every</b> version (v6 2000, v7 2999/3000, v8 4000, v9 3998/4000) with validation loss still falling, which read as capacity starvation. <code>MO_29_tree_budget_probe.py</code> disproved it: with <code>min_delta=0</code> and patience 50 the curve <b>terminates at 4,593</b>. Early stopping was never broken — the 4,000 cap never gave it room to fire. Marginal value beyond 4,000: 5,000 +0.8%, 6,000 +1.4%, 8,000 +2.2%, 12,000 +3.1%. The curve is <b>asymptotic, not convergent</b> — it never flattens, only decays. Set MO_26 <code>n_estimators=6000</code> and MO_28 <code>N_ESTIMATORS_MAX=6000</code>. <b>NEGATIVE RESULT:</b> <code>min_delta</code> is the wrong tool — every nonzero value is worse than zero (1e-6 → 4,416 stops / 2.73% cost; 5e-6 → 2,523 / 5.66%; 1e-5 → 2,153 / <b>6.36%</b>; 1e-4 → 778 / 16.34%). It truncates earlier at real accuracy cost. Set to 0.0, table left in the MO_26 comment so it is not re-proposed.</div></td>
+            <td><span class="where-tag">MO_26.LGBM_BASE</span><span class="where-tag">MO_28.N_ESTIMATORS_MAX</span><span class="where-tag">MO_29 probe</span><span class="where-tag">EARLY_STOP_MIN_DELTA</span></td>
+            <td>Deliberately not higher than 6000: the 12,000-tree ceiling is only 2.62% better than 4,593 for 2.6× the compute, which across 150 Optuna trials × 3 folds is not a trade worth making. q10/q90 converge at ~1,100–1,650 and were never near the cap — only the medians. ⚠️ 4,593 is NOT a constant: it is a property of lr=0.04 / num_leaves=63, and a higher lr reaches a given loss in fewer trees, so the stop point moves whenever Optuna moves lr. That is why early stopping, not a tuned n_estimators, must govern the tree count per trial. Measured on a single 13-week window spanning the Aug–Sep trough; confirm with 3-fold CV.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -880,7 +896,7 @@
     <span class="section-anchor" id="coverage"></span>
     <div class="section-head">
       <span class="section-title">Coverage &amp; Scoring Behavior</span>
-      <span class="section-count">5 entries</span>
+      <span class="section-count">6 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -928,6 +944,14 @@
             <td><div class="entry-title">41% of demand is forecast with no ramp signal; 1.2% gets no forecast at all</div><div class="entry-body">Share of the last 13 weeks of actual demand by series history length: <code>&lt;13 wks</code> = 123,971 units (<b>1.2%</b>, 34 series) → <b>no forecast at all</b>; <code>13–51 wks</code> = 4,176,293 (<b>40.9%</b>, 761 series) → forecast, but <b>no year-ago anchor</b>; <code>≥52 wks</code> = 5,915,975 (57.9%, 601 series) → full YAGO blend. The lifecycle ramp curve (each series indexed to its own weeks 5–8) shows demand doubling over 60 weeks — 1.09 at weeks 14–20, 1.81 at 40–52, 2.09 at 53–60 — with TDP tracking closely (1.01 → 1.69). So the 13–51 band should grow <b>+66%</b> across weeks 14→52, but receives pure AR plus a month-of-year seasonal multiplier. Neither carries ramp.</div></td>
             <td><span class="where-tag">MO_27</span><span class="where-tag">COV-01</span><span class="where-tag">GRD-06</span><span class="where-tag">ANO-08</span><span class="where-tag">Q4 2025 miss</span></td>
             <td>The forecast is therefore structurally LOW for ~41% of demand — the Q4 2025 miss mechanism, still live. ⚠️ MEASUREMENT TRAP: a per-series CALENDAR comparison (last 4 wks vs prior 4) shows median demand −6.5% and TDP −1% in EVERY band, which appears to disprove the ramp but is just the Aug–Sep seasonal trough masking it. Ramp must be measured on weeks_since_launch, never a calendar window. <code>&lt;13wk</code> share is compounding: 0.2% of Q2 2026 → 1.5% of Q3.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-06</td>
+            <td><div class="entry-title">NS2 distributor sell-in cannot be attributed to a retailer 1:1 — but every data-dark retailer is DIRECT</div><div class="entry-body">From <code>SalesRepCustomerMap</code>: 54 Built Customers → 97 Retailers, 52 NetSuite IDs across 116 rows. Distributor fan-out is severe — CORE-MARK INTERNATIONAL serves <b>18</b> retailers under one NetSuite ID (C0761137), UNFI 13, DOT FOODS 12, KEHE 10, MCLANE 8. So distributor sell-in is a single invoice stream across many retailers and needs an allocation rule. <b>The good news:</b> WINCO, H-E-B, ALDI GROCERY, COSTCO and COSTCO CANADA are all <b>direct</b> customers, so the data-dark retailers' sell-in is a clean 1:1 stream. By route: direct 45 rows / 26 retailers / 12 with SPINS; distributor 71 rows / 71 retailers / 48 with SPINS.</div></td>
+            <td><span class="where-tag">docs/SalesRepTables.xlsx</span><span class="where-tag">NS2 sell-in</span><span class="where-tag">data-dark retailers</span><span class="where-tag">GEO-11</span></td>
+            <td>This removes the circularity risk that would otherwise sink the plan: splitting pooled distributor sell-in for a retailer with no SPINS would require SPINS share you do not have. Because the dark retailers buy direct, that case does not arise — and the distributor-pooled accounts mostly DO have SPINS (WALMART via MCLANE, SPROUTS via KEHE), so they do not need sell-in. Addressable: 14 direct-and-dark retailers. Hard bucket: 23 distributor-served with no SPINS (pooled sell-in AND no POS).</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
@@ -1154,7 +1178,7 @@
     <span class="section-anchor" id="open"></span>
     <div class="section-head">
       <span class="section-title">Open Items to Review</span>
-      <span class="section-count">10 entries</span>
+      <span class="section-count">11 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -1242,6 +1266,14 @@
             <td><div class="entry-title">Optuna deferred until the model architecture is stable</div><div class="entry-body">MO_28 is configured and ready (N_ESTIMATORS_MAX 6000, EARLY_STOP 150, RECENCY_LAMBDA tuned 0.0–0.15 rather than grid-searched separately, widened categorical regularisation, 150 trials, SQLite storage so it is resumable). It is deliberately <b>not launched</b>. Two earlier runs were discarded: one killed at trial 15 for 2-hour ultra-low-lr trials, one killed at 25/60 because it had been tuning on the unfiltered panel where 14.1% of rows were a point mass at <code>log1p(0)</code>.</div></td>
             <td><span class="where-tag">MO_28</span><span class="where-tag">OPN-08</span><span class="where-tag">ANO-08</span></td>
             <td>Rationale (Jason): hyperparameter tuning is better spent once the model is decided and stable. Each structural change — a cold-start method, a recomputed seasonal index, ensemble routing — moves the optimum and invalidates the params, so tuning now means tuning twice. Same principle as 'tune on the panel you will train on', one level up: tune the architecture you will ship.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-11</td>
+            <td><div class="entry-title">Sales rep / customer mapping has no effective dating</div><div class="entry-body">Both <code>ns2.customer.salesrep</code> and BUILT's <code>SalesRepCustomerMap</code> sheet are <b>current-state only</b>. A customer that changed reps has ALL of its history attributed to today's owner, and a retailer that changed distributor likewise. Territory or distributor changes would therefore read as demand shifts in any rep-level or customer-level trend. Also open: the employee query has no <code>isinactive</code> filter, so terminated reps will appear in the dimension and in UI pickers.</div></td>
+            <td><span class="where-tag">ns2.customer.salesrep</span><span class="where-tag">docs/SalesRepTables.xlsx</span><span class="where-tag">Experience 1 Book of Business</span><span class="where-tag">CustomerDim_v2</span></td>
+            <td>Same defect class the Connor workflow meeting flagged for the Level 1 (Built Customer) / Level 2 (Retailer) bridge, which concluded Mo must hold the relationship WITH effective dates, not a static mapping. Worth asking Ebad now whether NS2 has any change-history table on customer.salesrep — capturing it with the initial load is far cheaper than reconstructing territory history later. The isinactive question mirrors the refinement already open on CustomerDim_v2; omitting it may be correct for historical attribution, but should be deliberate.</td>
             <td><span class="badge badge-open">Open</span></td>
             <td>2026-10-01</td>
           </tr>

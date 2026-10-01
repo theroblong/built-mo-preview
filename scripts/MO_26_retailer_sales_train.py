@@ -43,6 +43,27 @@ from pathlib import Path
 # FEATURE_COLS declares should be a deliberate choice, never a silent default.
 ALLOW_MISSING_FEATURES = "--allow-missing-features" in sys.argv
 
+# Early-stopping tolerance. MEASURED AND SET TO ZERO — see MO_29 tree-budget probe.
+#
+# A tolerance looked like the fix for q50 pegging its n_estimators cap at every version
+# (v6 2000, v7 2999/3000, v8 4000, v9 3998/4000). The probe disproved that: every nonzero
+# min_delta is WORSE than zero, because it truncates earlier at a real accuracy cost.
+# Simulated on the v9 panel at lr=0.04 / num_leaves=63, patience 50, against a
+# 12,000-tree ceiling:
+#
+#     min_delta   stops at   pinball    cost vs ceiling
+#     0             4,593    0.014013        2.62%
+#     1e-6          4,416    0.014027        2.73%
+#     5e-6          2,523    0.014427        5.66%
+#     1e-5          2,153    0.014523        6.36%
+#     1e-4            778    0.015886       16.34%
+#
+# With min_delta=0 and patience 50 the curve DOES terminate, at 4,593. So early stopping
+# was never broken — the 4,000 cap simply never gave it room to fire. The fix is the cap
+# (now 6,000), not a tolerance. Kept as a named constant so this stays documented rather
+# than being re-proposed.
+EARLY_STOP_MIN_DELTA = 0.0
+
 MODEL_VERSION = "v9"
                       # v9: DATA + FEATURE run — final panel, corrected features, v8 hyperparameters.
                       #     Deliberately keeps v8's LGBM_BASE so that v8->v9 measures the data and
@@ -187,7 +208,14 @@ TOTAL_UNIT_FEATURE_COLS = [
 
 LGBM_BASE = dict(
     boosting_type="gbdt",
-    n_estimators=4000,
+    n_estimators=6000,            # v9: 4000 -> 6000. MO_29 probe: with patience 50 and
+                                  #     min_delta=0 the q50 curve terminates at 4,593, so the
+                                  #     old 4000 cap was truncating it (v9 stopped at 3998 =
+                                  #     the cap, not convergence). 6000 gives early stopping
+                                  #     room to fire naturally with headroom. Going further is
+                                  #     poor value: the 12,000-tree ceiling is only 2.62%
+                                  #     better than 4,593 for 2.6x the compute. q10/q90
+                                  #     converge at ~1100-1650 and are unaffected.
     learning_rate=0.04,
     num_leaves=63,
     min_child_samples=20,
@@ -356,7 +384,13 @@ if __name__ == "__main__":
             sample_weight=sample_weights,
             eval_set=[(X_val, y_val_log)],
             callbacks=[
-                lgb.early_stopping(50, verbose=False),
+                # min_delta: the validation curve is ASYMPTOTIC, not convergent (MO_29).
+                # Without a tolerance, a fourth-decimal improvement resets the patience
+                # counter forever, so early stopping NEVER fires and n_estimators alone
+                # sets the tree count — which is why q50 pegged its cap at v6 (2000),
+                # v7 (2999/3000), v8 (4000) and v9 (3998/4000). A tolerance makes the
+                # tree count self-selecting at the diminishing-returns knee instead.
+                lgb.early_stopping(50, min_delta=EARLY_STOP_MIN_DELTA, verbose=False),
                 lgb.log_evaluation(100),
             ],
         )
@@ -418,7 +452,13 @@ if __name__ == "__main__":
                 X_train_t, y_train_t,
                 eval_set=[(X_val_t, y_val_log_t)],
                 callbacks=[
-                    lgb.early_stopping(50, verbose=False),
+                    # min_delta: the validation curve is ASYMPTOTIC, not convergent (MO_29).
+                # Without a tolerance, a fourth-decimal improvement resets the patience
+                # counter forever, so early stopping NEVER fires and n_estimators alone
+                # sets the tree count — which is why q50 pegged its cap at v6 (2000),
+                # v7 (2999/3000), v8 (4000) and v9 (3998/4000). A tolerance makes the
+                # tree count self-selecting at the diminishing-returns knee instead.
+                lgb.early_stopping(50, min_delta=EARLY_STOP_MIN_DELTA, verbose=False),
                     lgb.log_evaluation(100),
                 ],
             )
