@@ -455,7 +455,7 @@
     <span class="section-anchor" id="null-missing"></span>
     <div class="section-head">
       <span class="section-title">Null / Missing Values</span>
-      <span class="section-count">6 entries</span>
+      <span class="section-count">8 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -514,6 +514,22 @@
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-08-25</td>
           </tr>
+          <tr>
+            <td class="entry-id">NUL-07</td>
+            <td><div class="entry-title">Promo-mechanic nulls fill 0 ONLY where no promo ran that week</div><div class="entry-body"><code>mo_panel.fill_promo_mechanic_nulls()</code>. A null in <code>units_lift_tpr</code> / <code>units_lift_any_display</code> / <code>units_lift_any_feature</code> means two different things. Null rate when <code>is_promo_week=0</code> vs <code>=1</code>: tpr <b>79.8% / 41.6%</b>, display <b>88.0% / 48.8%</b>, feature <b>99.3% / 86.6%</b>. No promo ran → no mechanic could have run → lift is genuinely <b>0</b>. Promo ran but mechanic null → genuinely unknown, stays NaN. Only the first case is filled: <code>units_lift_any_feature</code> goes 92.7% → <b>43.8%</b> null, with ~93,000 values becoming real zeros.</div></td>
+            <td><span class="where-tag">mo_panel.fill_promo_mechanic_nulls</span><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">NUL-01</span></td>
+            <td>Leaving these NaN made the model unable to distinguish 'no promotion' from 'promotion whose mechanic SPINS did not attribute'. Same defect class as the MO_50 rolling_cannibal_pressure 73%-null bug, where null meant 'no active cannibalisation' = 0 but was treated as missing. Rows are never dropped for a feature null — LightGBM routes NaN natively; only a null TARGET drops a row.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NUL-08</td>
+            <td><div class="entry-title">source_brand nulls fill "UNKNOWN", not "BUILT BAR"</div><div class="entry-body">2,750 rows (1.5%) have a null <code>source_brand</code>. These were being filled with <code>"BUILT BAR"</code>, asserting a brand the data does not support and teaching the model that unlabelled rows behave like BUILT BAR. Now <code>"UNKNOWN"</code> — a distinct level the tree can learn separately. (38 rows also carry the legacy value <code>"BUILT"</code> rather than a sub-brand.)</div></td>
+            <td><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">build_forecast_chart_data</span></td>
+            <td>Changed in all four places that fill it. Note this means v9 is not a pure hyperparameter comparison against v8 — worth remembering when reading the delta.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -524,7 +540,7 @@
     <span class="section-anchor" id="normalization"></span>
     <div class="section-head">
       <span class="section-title">Normalization &amp; Transforms</span>
-      <span class="section-count">5 entries</span>
+      <span class="section-count">6 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -575,6 +591,14 @@
             <td><span class="badge badge-resolved">Resolved</span></td>
             <td>2026-08-25</td>
           </tr>
+          <tr>
+            <td class="entry-id">NRM-06</td>
+            <td><div class="entry-title">Flavour fields: use spins_flavor_canonical (35); never spins_flavor_mapped; specific_flavor_normalized for within-flavour pack comparison</div><div class="entry-body">Verified against SPINS for known UPCs. <code>spins_flavor_canonical</code> — 35 families, <b>override-corrected</b>, the model feature. <code>specific_flavor_normalized</code> — 76 specific flavours, typo-corrected ("Satled Caramel" → "Salted Caramel"); the right field for comparing pack sizes <b>within one true flavour</b>, since family BROWNIE lumps Brownie Batter with Candy Cane Brownie. <code>specific_flavor_raw</code> — 84 values, retains typos, audit only. <code>spins_flavor_mapped</code> (36) — <b>do not use</b>: misfiles UPC 08-40229-30034 Salted Caramel under CHOCOLATE. <code>spins_flavor_raw</code> (43–48) — un-normalised, duplicate levels (COOKIES &amp; CREAM vs COOKIES AND CREAM; CHOCOLATE &amp; MINT vs CHOCOLATE MINT vs MINT CHOCOLATE CHIP), audit only.</div></td>
+            <td><span class="where-tag">MO_25</span><span class="where-tag">MO_26.FEATURE_COLS</span><span class="where-tag">built_enriched_weekly</span><span class="where-tag">ANO-07</span><span class="where-tag">pack-mix analysis</span></td>
+            <td>Confirmed against Jason's own SPINS extract: canonical matches his `flavor` field exactly for ALMOND / CARAMEL / BROWNIE / BLUE RASPBERRY test UPCs, and already fixes the Salted-Caramel-in-CHOCOLATE error that mapped and raw both carry.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -585,7 +609,7 @@
     <span class="section-anchor" id="retailer-geo"></span>
     <div class="section-head">
       <span class="section-title">Retailer &amp; Geography Exclusions</span>
-      <span class="section-count">5 entries</span>
+      <span class="section-count">10 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -644,6 +668,38 @@
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-09-24</td>
           </tr>
+          <tr>
+            <td class="entry-id">GEO-07</td>
+            <td><div class="entry-title">RMA priority: retailer has RMA → use RMA only; CRMA only if no RMA; else other store-level</div><div class="entry-body">Implemented in <code>scripts/mo_panel.py :: apply_rma_priority()</code>. Validated two ways. (1) CRMA is <b>not retailer-specific</b>: mean pairwise Jaccard overlap of CRMA UPC sets across <i>different</i> retailers = <b>0.796</b> (CVS vs KROGER 0.901; AHOLD vs BJS 0.975) — nearly the same UPC list everywhere, the signature of a shared MULO aggregate. (2) RMA pack mix matches each retail model exactly: KROGER CONVENTIONAL|FOOD 42 UPCs 78% singles; WALMART / TARGET CONVENTIONAL|MASS MERCH ~30 UPCs ~80% 4-packs; SAMS / BJS CONVENTIONAL|CLUB 2–4 UPCs <b>99–100% 13-packs</b>. Drops 64,013 CRMA rows (39.7% of the panel). <b>Two refinements explicitly rejected:</b> per-(retailer × UPC) application, which keeps exactly the aggregate rows the rule exists to remove (Sam's 4 RMA UPCs ARE the true club assortment; its CRMA's extra 92 are contamination); and CRMA fallback when RMA history is short, since TARGET (66/152 wks), BJ'S (57), WALGREENS (86), GIANT EAGLE (105) and AHOLD (145) were all verified as real launch ramps, not feed gaps.</div></td>
+            <td><span class="where-tag">mo_panel.apply_rma_priority</span><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">GEO-01</span><span class="where-tag">GEO-06</span></td>
+            <td>Long-standing guidance from Brian that MULO CRMA is an aggregate and RMA is actual retailer sales. Volume sanity check is decisive: implied bars/year falls from 515.7M (≈$1.3B retail) to 70.5M (≈$176M) — BUILT is not a $1.3B brand, so CRMA was inflating volume ~7.3×. ⚠️ Restates every volume total (−85.7%); client-facing figures move with it. Note PUBLIX RMA is complete (152/152 weeks, 28 UPCs) so Publix is NOT the CRMA-only case it is often cited as; after filtering, NO retailer is CRMA-only.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-08</td>
+            <td><div class="entry-title">Military exchanges excluded by name: AAFES, COAST GUARD, NEXCOM</div><div class="entry-body"><code>mo_panel.drop_military_accounts()</code> removes 14,451 rows across three accounts (AAFES 5,395 / COAST GUARD 4,536 / NEXCOM 4,519) that carry <b>exactly zero</b> BUILT units and exist only as MULO CRMA aggregates.</div></td>
+            <td><span class="where-tag">mo_panel.drop_military_accounts</span><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span></td>
+            <td>Excluded by name rather than left to the zero-volume filter: if any ever reported a single nonzero week, the zero-volume filter would stop dropping them and they would silently rejoin the panel. They are also a separate, non-retail trade class.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-09</td>
+            <td><div class="entry-title">Zero-volume geographies dropped — incl. phantom SPINS 'with AK/HI' market twins</div><div class="entry-body"><code>mo_panel.drop_zero_volume_geographies()</code> drops 17 geographies whose entire history sums to zero <code>base_units</code> (11,708 rows). Two classes: <b>phantom AK/HI market definitions</b> that duplicate a real market's series key while carrying no volume — <code>KROGER CORP W/ AK…</code> 2,816 rows / 0 units against its twin's 4,173,782; also ALBERTSONSCO W/ AK/HI, TARGET W/ AK/HI, CVS W/ AK/HI, WBA W/ AK/HI/PR, SAMS W/ HI/PR — and c-store chains with no BUILT distribution. Genuine zero-sales weeks inside a real market are <b>kept</b> (23 remain) because they are signal.</div></td>
+            <td><span class="where-tag">mo_panel.drop_zero_volume_geographies</span><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">wMAPE measurement</span></td>
+            <td>These rows carried 14.1% of training weight on the pre-filter panel while contributing no demand. They also inflate wMAPE directly: the metric is Σ|err| / Σactual, so a zero-actual series adds to the numerator and nothing to the denominator.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GEO-10</td>
+            <td><div class="entry-title">geography_raw REJECTED as a model feature — 99.1% redundant once phantoms are filtered</div><div class="entry-body">README updates 190 and 194 named <code>geography_raw</code> as the v9 win for distribution expansion and the MULO CRMA artifact. Measurement reversed it. <code>geography_level</code> (CRMA / RMA / KEY ACCOUNT) is a <b>deterministic function of <code>channel_outlet</code></b>, so the aggregate-vs-account distinction is already in the model. Decisive: account × channel combos with 2+ geography variants = <b>7 before</b> the zero-volume filter, <b>1 after</b> (Circle K, 1,392 rows, 0.9%). Arithmetic closes exactly — 134 surviving geographies, 133 combos, one with two. It stays a GROUP_COL and stays in CAT_COLS (so it is never coerced to numeric) but is NOT in FEATURE_COLS.</div></td>
+            <td><span class="where-tag">MO_26.FEATURE_COLS</span><span class="where-tag">MO_28</span><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">GEO-07</span></td>
+            <td>Generalisable lesson: when a high-cardinality categorical looks predictive, check whether its apparent signal is separating real data from junk. Here the signal WAS the phantom rows — so the fix is a filter, not a feature. Adding it would have bought 154 levels of redundancy and the overfitting that comes with them.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -654,7 +710,7 @@
     <span class="section-anchor" id="anomalies"></span>
     <div class="section-head">
       <span class="section-title">Known Data Anomalies</span>
-      <span class="section-count">6 entries</span>
+      <span class="section-count">9 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -713,6 +769,30 @@
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-08-25</td>
           </tr>
+          <tr>
+            <td class="entry-id">ANO-07</td>
+            <td><div class="entry-title">spins_flavor_canonical was returning 2 UPCs — the model had no flavour resolution from v8 to v9a</div><div class="entry-body">MO_25's enrichment query filtered <code>WHERE source_brand = 'BUILT'</code> against <code>built_enriched_weekly</code> and matched <b>2 UPCs</b>, leaving 120 of 122 focal UPCs at <code>"UNKNOWN"</code>. In that table <code>source_brand</code> holds the SUB-brand (BUILT PUFF 68 UPCs / BUILT BAR 58 / BUILT SOUR PUFF 15) and only 2 UPCs carry the bare value <code>'BUILT'</code>. Correct roll-up is <b><code>parent_brand = 'BUILT'</code></b> → 146 UPCs, 35 families, 93.1% focal coverage. So the only flavour feature the model had was effectively "is this peanut butter, watermelon, or one of 42 other things".</div></td>
+            <td><span class="where-tag">MO_25</span><span class="where-tag">built_enriched_weekly</span><span class="where-tag">NRM-06</span><span class="where-tag">MO_26</span></td>
+            <td>The existing guard checked <code>len(flv) &gt; 0</code> and 2 &gt; 0, so a partial failure looked like success. Replaced with an 80%-coverage assertion. Evidence flavour matters: in v9a even the un-normalised spins_flavor_raw ranked <b>#3 by gain</b> (8,680), behind only retail_account and base_units_wow_delta.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-08</td>
+            <td><div class="entry-title">MO_59 STL seasonal index disagrees on SHAPE with documented portfolio seasonality</div><div class="entry-body">The MO_59 index supplies the <b>entire</b> seasonal signal for the 55.5% of series without a year-ago anchor, including <b>51% of Target's volume</b> (Target's RMA begins June 2025). It peaks <b>week 40 (early October, +19.3%)</b> and troughs week 36 (September, −19.5%), with Feb/Mar at only +13.6%. Documented portfolio seasonality is a <b>March peak ≈ +30%</b> and <b>December trough ≈ −28%</b> — a different peak month, at roughly half the amplitude.</div></td>
+            <td><span class="where-tag">MO_59</span><span class="where-tag">MO_27 line 569</span><span class="where-tag">mo59_seasonal_index.csv</span><span class="where-tag">Bracken demo readiness</span></td>
+            <td>STL separates trend from season, so for a brand growing this fast its seasonal component legitimately differs from raw monthly averages that conflate the two — this may not be an error. BUT the current index was computed 2026-09-24 against the old CRMA-inflated panel, so a recompute on the RMA-only panel may resolve the shape disagreement. Existing guidance already flags the STL index as not client-safe. Resolve before any finance-audience demo: "why does it predict an October surge" is otherwise unanswerable.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-09</td>
+            <td><div class="entry-title">Four divergent copies of CAT_COLS silently killed two features at inference since v8</div><div class="entry-body"><code>spins_flavor_canonical</code> and <code>source_brand</code> were trained on but <b>never used at forecast time</b>. MO_27 line 162 kept a 3-element categorical set while three other sites had 5, so both columns were run through <code>pd.to_numeric</code> → NaN, and <code>str(nan or "UNKNOWN")</code> returns the literal string <code>"nan"</code> because <b>NaN is truthy in Python</b> — which is absent from the booster's category universe and resolves to missing. <code>build_forecast_chart_data.py</code> had the same split: Kroger's backtest used 5 categoricals, Albertsons/Publix/UNFI used 3, so the per-retailer wMAPE table was never apples-to-apples.</div></td>
+            <td><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">mo_panel.CAT_COLS</span><span class="where-tag">GRD-07</span></td>
+            <td>Had geography_raw been added as planned, the same coercion would have NaN'd a GROUP_COL, and groupby drops NaN keys — a silent zero-series forecast exiting 0. Now one module-level CAT_COLS in mo_panel, with MO_27 asserting its count matches the booster's pandas_categorical.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -723,7 +803,7 @@
     <span class="section-anchor" id="guardrails"></span>
     <div class="section-head">
       <span class="section-title">Model Guardrails</span>
-      <span class="section-count">5 entries</span>
+      <span class="section-count">7 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -774,6 +854,22 @@
             <td><span class="badge badge-resolved">Resolved</span></td>
             <td>2026-08-25</td>
           </tr>
+          <tr>
+            <td class="entry-id">GRD-06</td>
+            <td><div class="entry-title">Short-series filter moved from MO_25 (extract) to mo_panel (consumption); MO_27 gates and reports</div><div class="entry-body"><code>MIN_WEEKS = 13</code> ran inside MO_25, so short series never entered the parquet and were invisible to MO_27, the ETS work, and all analysis — not merely excluded from LightGBM training, which was the intent. Cost: 7,291 series (23.9% of series, only 0.27% of volume) and <b>17 UPCs entirely</b>, including BUILT's newest launches: 08-40229-30766 (first week 2026-06-28, 150,141 units, 17 accounts), 08-40229-30687 (2026-07-19, 145,626 units, 17 accounts), and PB S'mores in both 1-pack and 12-pack. Now <code>mo_panel.drop_short_series()</code> (MIN_SERIES_WEEKS=13). Parquet is 190,375 rows / 134 UPCs (was 186,427 / 122).</div></td>
+            <td><span class="where-tag">mo_panel.drop_short_series</span><span class="where-tag">MO_25</span><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">COV-05</span></td>
+            <td>⚠️ MO_27 has NO ETS fallback and had NO minimum-history gate — ETS lives only in MO_30–MO_37 and build_forecast_chart_data.py, there is no MO_75 script, and MO_34's data-maturity router is analysis wired into nothing. So keeping the rows without gating MO_27 would have replaced 'no forecast' with 'bad forecast' (LightGBM predicting from all-NaN lag13/roll13/lag52). MO_27 now skips and names them. These SKUs still get NO forecast — the gap is visible, not closed.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GRD-07</td>
+            <td><div class="entry-title">Pipeline hard-fails added so silent degradation cannot recur</div><div class="entry-body">Version-stamped metrics files (<code>retailer_sales_train_metrics_&lt;version&gt;.json</code>) plus a <code>model_version</code> assertion in MO_27; <code>features_used</code> read from the booster rather than metadata; hard-fail if a declared FEATURE_COL is absent from the parquet (<code>--allow-missing-features</code> to override); hard-fail on zero series with per-GROUP_COL null counts; hard-fail in MO_25 if a model-critical column is lost before the <code>output_cols</code> intersection; end-of-run report of category values the model never saw; single MODEL_VERSION constant in build_forecast_chart_data.py.</div></td>
+            <td><span class="where-tag">MO_25</span><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">ANO-09</span></td>
+            <td>Root causes being guarded: the unversioned metrics file is shared mutable state — a v7 archival retrain clobbered v8's metadata, leaving a 48-feature features_used pointed at 56-feature models; MO_26 drops absent features by silent intersection; and the chart builder hardcoded _v8 PKL paths while its archive tag still read "v6" under a comment telling you to bump it.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -784,7 +880,7 @@
     <span class="section-anchor" id="coverage"></span>
     <div class="section-head">
       <span class="section-title">Coverage &amp; Scoring Behavior</span>
-      <span class="section-count">4 entries</span>
+      <span class="section-count">5 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -826,6 +922,14 @@
             <td>Blending would mean showing ML projections labeled as observed actuals, or using observed actuals as if they were model outputs. Both introduce silent inaccuracy in a decision tool where cited numbers drive real $ decisions.</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-05</td>
+            <td><div class="entry-title">41% of demand is forecast with no ramp signal; 1.2% gets no forecast at all</div><div class="entry-body">Share of the last 13 weeks of actual demand by series history length: <code>&lt;13 wks</code> = 123,971 units (<b>1.2%</b>, 34 series) → <b>no forecast at all</b>; <code>13–51 wks</code> = 4,176,293 (<b>40.9%</b>, 761 series) → forecast, but <b>no year-ago anchor</b>; <code>≥52 wks</code> = 5,915,975 (57.9%, 601 series) → full YAGO blend. The lifecycle ramp curve (each series indexed to its own weeks 5–8) shows demand doubling over 60 weeks — 1.09 at weeks 14–20, 1.81 at 40–52, 2.09 at 53–60 — with TDP tracking closely (1.01 → 1.69). So the 13–51 band should grow <b>+66%</b> across weeks 14→52, but receives pure AR plus a month-of-year seasonal multiplier. Neither carries ramp.</div></td>
+            <td><span class="where-tag">MO_27</span><span class="where-tag">COV-01</span><span class="where-tag">GRD-06</span><span class="where-tag">ANO-08</span><span class="where-tag">Q4 2025 miss</span></td>
+            <td>The forecast is therefore structurally LOW for ~41% of demand — the Q4 2025 miss mechanism, still live. ⚠️ MEASUREMENT TRAP: a per-series CALENDAR comparison (last 4 wks vs prior 4) shows median demand −6.5% and TDP −1% in EVERY band, which appears to disprove the ramp but is just the Aug–Sep seasonal trough masking it. Ramp must be measured on weeks_since_launch, never a calendar window. <code>&lt;13wk</code> share is compounding: 0.2% of Q2 2026 → 1.5% of Q3.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
           </tr>
         </tbody>
       </table>
@@ -1050,7 +1154,7 @@
     <span class="section-anchor" id="open"></span>
     <div class="section-head">
       <span class="section-title">Open Items to Review</span>
-      <span class="section-count">7 entries</span>
+      <span class="section-count">10 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -1116,6 +1220,30 @@
             <td>If clip bounds change (e.g., a new pack format with different velocity ranges is added), they should be reviewable and auditable without reading through script code.</td>
             <td><span class="badge badge-open">Open</span></td>
             <td>2026-08-25</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-08</td>
+            <td><div class="entry-title">Cold-start method for short series — four candidates, none shipped</div><div class="entry-body"><b>TDP-adjusted naive</b>: sound (TDP tracks the ramp) but blocked on <b>forward TDP</b>, which does not exist — NS2 sell-in was the intended source. <b>Weighted MA / naive linear regression</b>: sidesteps forward TDP because recent trend implicitly contains the ramp. <b>ETS-Holt</b>: already extrapolates linear trend, which finally gives MO_34's "ETS competitive for new/expanding series" finding a mechanism. <b>Lifecycle-ramp prior</b> keyed on <code>weeks_since_launch</code>, blended like the existing YAGO and STL layers — cheapest, since the feature exists and the curve is measured. Recommended: horse race on the 13–51 week band only, using MO_34's existing harness.</div></td>
+            <td><span class="where-tag">MO_27</span><span class="where-tag">MO_34</span><span class="where-tag">COV-05</span><span class="where-tag">cold-start proxy overlay (lever gap #9)</span></td>
+            <td>Caveat before shipping a ramp prior: the curve is a MEDIAN across series and mixes dissimilar launch patterns — a new flavour landing at 17 accounts behaves unlike a pack-size extension at one. Check conditioning on pack_count or launch account breadth first.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-09</td>
+            <td><div class="entry-title">Per-retailer accuracy must be re-measured on the corrected panel before any demo</div><div class="entry-body">There is currently <b>no trustworthy per-retailer accuracy number</b>. The reported v8 holdout wMAPE (Kroger 15.8%, Publix 12.6%, Albertsons 50.3%, UNFI 13.0%) was produced with two different feature treatments — Kroger with 5 categoricals, the comparison retailers with 3, so flavour and brand were NaN'd for them — and neither path excluded the phantom zero-volume geographies, which inflate wMAPE because a zero-actual series adds to the numerator and nothing to the denominator. Albertsons' CONVENTIONAL|FOOD slice was half phantom AK/HI rows.</div></td>
+            <td><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">ANO-09</span><span class="where-tag">GEO-09</span><span class="where-tag">Bracken demo readiness</span></td>
+            <td>Albertsons 50.3% is the figure that would justify a Prophet changepoint feature in the levers roadmap. It must be re-measured on the corrected panel before that work is scheduled — it may be substantially artifact.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">OPN-10</td>
+            <td><div class="entry-title">Optuna deferred until the model architecture is stable</div><div class="entry-body">MO_28 is configured and ready (N_ESTIMATORS_MAX 6000, EARLY_STOP 150, RECENCY_LAMBDA tuned 0.0–0.15 rather than grid-searched separately, widened categorical regularisation, 150 trials, SQLite storage so it is resumable). It is deliberately <b>not launched</b>. Two earlier runs were discarded: one killed at trial 15 for 2-hour ultra-low-lr trials, one killed at 25/60 because it had been tuning on the unfiltered panel where 14.1% of rows were a point mass at <code>log1p(0)</code>.</div></td>
+            <td><span class="where-tag">MO_28</span><span class="where-tag">OPN-08</span><span class="where-tag">ANO-08</span></td>
+            <td>Rationale (Jason): hyperparameter tuning is better spent once the model is decided and stable. Each structural change — a cold-start method, a recomputed seasonal index, ensemble routing — moves the optimum and invalidates the params, so tuning now means tuning twice. Same principle as 'tune on the panel you will train on', one level up: tune the architecture you will ship.</td>
+            <td><span class="badge badge-open">Open</span></td>
+            <td>2026-10-01</td>
           </tr>
         </tbody>
       </table>
