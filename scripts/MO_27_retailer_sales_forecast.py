@@ -54,7 +54,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v9"   # must match the MO_26 run whose PKLs + metrics this loads;
+MODEL_VERSION  = "v10"  # must match the MO_26 run whose PKLs + metrics this loads;
                         # the guard in _load_models_and_meta() hard-fails on a mismatch
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
@@ -65,7 +65,25 @@ Q_TAGS         = ["q10", "q50", "q90"]
 # to a flat mean after ~4 steps — the AR lags become self-predictions and
 # drown out the weekly seasonal variation in lag52.
 # 0.0 = pure AR (flat); 1.0 = pure seasonal naive.  0.40 is the default.
-SEASONAL_BLEND_WEIGHT = 0.40
+SEASONAL_BLEND_WEIGHT = 0.10
+# 0.40 -> 0.10, measured by MO_27f across four cutoffs on the YAGO band:
+#     W      pooled wMAPE   bias(pred/act)   cutoffs won
+#     0.00      25.15           1.079             1
+#     0.10      24.24           1.077             1      <- best pooled, -2.49pp vs 0.40
+#     0.20      24.33           1.076             1
+#     0.30      25.20           1.074             1
+#     0.40      26.73           1.072             0      <- production; NEVER wins
+# W=0.40 loses at every cutoff. 0.10 is best pooled but NOT uniformly better (0.40 beats it at
+# the 2025-09-07 cutoff), so 0.1-0.2 is the honest range.
+#
+# ⚠️ WHAT THIS KNOB ACTUALLY DOES: it is an accidental BIAS CORRECTOR, not a seasonality
+# mechanism. The forecast runs 7.9% HIGH (pooled bias 1.079; per-cutoff 1.111 / 1.130 / 0.887 /
+# 1.183), and the optimal W tracks the direction of that bias — at the one cutoff where the
+# forecast ran LOW (0.887), a HIGHER W won. The same pattern holds for the STL multiplier, whose
+# benefit depends on whether it deflates or inflates rather than on season (MO_27e: the STL swap
+# was REJECTED, failing badly at 2026-03-08, 40.35 vs 33.65).
+# So lowering W treats a symptom. The disease is the bias: the recursive forecast predicts
+# last_actual x 1.03 while the median mature series declines 34% YoY. Fix that and re-sweep W.
 
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
@@ -78,6 +96,7 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
                       apply_rma_priority, fill_promo_mechanic_nulls,
                       drop_military_accounts, drop_short_series,
+                      drop_ak_hi_market_variants, warn_nested_rma_duplicates,
                       MIN_SERIES_WEEKS)
 
 
@@ -286,36 +305,43 @@ if __name__ == "__main__":
     print("\n  ── Panel rules (v9) — MUST match MO_26 exactly ──")
     df_actual = fill_promo_mechanic_nulls(df_actual)
     df_actual = drop_military_accounts(df_actual)
+    # AK/HI supplementary markets are nested duplicates of the base market (Circle K was
+    # being counted twice). Excluded BY DEFINITION, not by their happening to be zero-volume.
+    df_actual = drop_ak_hi_market_variants(df_actual)
     df_actual = drop_zero_volume_geographies(df_actual, target="base_units")
     df_actual = apply_rma_priority(df_actual)
 
-    # Short-series gate. MO_27 has NO minimum-history check of its own and NO ETS
-    # fallback — ETS lives only in MO_30–MO_37 and the chart builder, and MO_34's
-    # data-maturity router ("new/expanding -> ETS, mature -> LightGBM") is analysis, not
-    # production code. Now that MIN_WEEKS no longer runs at extract, these series DO
-    # reach the parquet, so without this gate MO_27 would build feature rows whose
-    # lag13 / roll13 / lag52 are all NaN and serve the predictions as if they were sound.
-    # Skipping with a logged, named list is the honest behaviour until a real ETS route
-    # is wired in — these are BUILT's newest launches and they need one.
-    _pre = df_actual.groupby(GROUP_COLS, observed=True).ngroups
-    _short = df_actual.groupby(GROUP_COLS, observed=True)["base_units"].transform("count") < MIN_SERIES_WEEKS
-    if _short.any():
-        _skipped_upcs = sorted(set(df_actual.loc[_short, "upc"]))
-        _skipped_series = df_actual.loc[_short].groupby(GROUP_COLS, observed=True).ngroups
-        print(f"\n  NOT FORECAST — {_skipped_series:,} series across {len(_skipped_upcs)} UPC(s) "
-              f"have <{MIN_SERIES_WEEKS} weeks of history:")
-        for _u in _skipped_upcs[:12]:
-            _s = df_actual[(df_actual["upc"] == _u) & _short]
-            _d = str(_s["description"].iloc[0])[:44] if "description" in _s else ""
-            print(f"      {_u}  {int(_s['base_units'].sum()):>9,} units  "
-                  f"{_s['retail_account'].nunique():>3} accounts  {_d}")
-        if len(_skipped_upcs) > 12:
-            print(f"      … and {len(_skipped_upcs) - 12} more")
-        print(f"      These need an ETS / cold-start route (MO_34 establishes the rule);")
-        print(f"      LightGBM cannot forecast them — lag13/roll13/lag52 are all NaN.")
-    df_actual = drop_short_series(df_actual, verbose=False)
-    print(f"  Series to forecast: {df_actual.groupby(GROUP_COLS, observed=True).ngroups:,} "
-          f"of {_pre:,}")
+    # ── SHORT-SERIES ROUTING — every series gets a forecast, no exceptions ──────
+    # Previously these were SKIPPED: 462 series touching 108 of 133 UPCs returned nothing.
+    # That is unacceptable for a brand whose growth comes from new flavours, new pack sizes
+    # and new doors — those are precisely the series a planner needs a number for, and
+    # "the model needs 13 weeks of history first" is not a deliverable answer.
+    #
+    # Judging the gap by share of HISTORICAL volume is circular: new items are small today
+    # BECAUSE they are new. The decisions (how much to ship, how much shelf, is it working)
+    # live on exactly these series.
+    #
+    # So LightGBM no longer gates coverage — it gates METHOD. Series with enough history take
+    # the autoregressive path; everything else takes a carry-forward path. One week of history
+    # is enough to carry a level forward and adjust it for season and lifecycle stage, and that
+    # is strictly better than a blank.
+    #
+    # Every output row carries `forecast_method` so the UI can show confidence honestly rather
+    # than presenting a 2-week-old SKU's number as if it were a mature one.
+    _short_mask = (df_actual.groupby(GROUP_COLS, observed=True)["base_units"]
+                   .transform("count") < MIN_SERIES_WEEKS)
+    _short_keys = set(map(tuple, df_actual.loc[_short_mask, GROUP_COLS].drop_duplicates().values))
+    _n_short = len(_short_keys)
+    _n_total = df_actual.groupby(GROUP_COLS, observed=True).ngroups
+    if _n_short:
+        _u = sorted(set(df_actual.loc[_short_mask, "upc"]))
+        print(f"\n  Short-series routing: {_n_short:,} of {_n_total:,} series have "
+              f"<{MIN_SERIES_WEEKS} weeks and will use the CARRY-FORWARD path")
+        print(f"      (spanning {len(_u)} UPCs — these are the newest launches and new doors)")
+        print(f"      method = flat 4-week level x seasonal index; NOT skipped "
+              f"(no lifecycle ramp — MO_79 measured it losing to flat in every band)")
+    print(f"  Series to forecast: {_n_total:,}  "
+          f"({_n_total - _n_short:,} autoregressive + {_n_short:,} carry-forward)")
 
     # CAT_COLS from mo_panel — NOT a local copy. geography_raw is a GROUP_COL, so
     # coercing it to numeric turns the whole column to NaN and groupby(GROUP_COLS)
@@ -361,9 +387,146 @@ if __name__ == "__main__":
     scored_at = datetime.now(timezone.utc).isoformat()
     all_rows  = []
 
+    # ── NO LIFECYCLE RAMP — measured and REJECTED (MO_79) ────────────────────
+    # A lifecycle ramp used to be applied here: median demand index by weeks_since_launch,
+    # on the evidence that series roughly double over their first 60 weeks (they do — 0.98 at
+    # weeks 1-4 rising to 2.09 at 53-60, with TDP tracking it).
+    #
+    # MO_79 horse-raced it against flat carry-forward on 4 cutoffs with pre-cutoff-only fits.
+    # It LOST in every history band:
+    #       band      naive_last   ramp+seasonal
+    #       1-4            94.7        105.7
+    #       5-12           55.1         69.8
+    #       13-25          36.5         56.1
+    # and it carried +21 to +23% positive bias in the 13-51 bands, which would compound the
+    # +7.9% over-forecast the autoregressive path already has.
+    #
+    # The ramp is real IN AGGREGATE but not predictive PER SERIES: the portfolio-median curve
+    # mixes genuinely different launch patterns (a new flavour at 17 accounts vs a pack-size
+    # extension at one door), so applying it adds more variance than the trend it recovers.
+    # Do not re-add it without beating naive_last on MO_79. A donor-surrogate arm (borrow a
+    # mature series' week-of-year shape) was also measured and also lost, including on the
+    # subset where the donor was the SAME UPC at another account.
+    #
+    # ── LAPSE CLASSIFIER (this is the real defect the horse race did not cover) ──
+    # 209 of 473 short series had recorded no sale for 9+ weeks; 103 of them not for over a
+    # year (median 74 weeks). Carrying a level that stale forward invents phantom demand, which
+    # is worse than a blank because it lands in a shipment plan. The horse race could not see
+    # this: its MIN_TEST_WEEKS=4 filter excludes series with no future actuals, i.e. precisely
+    # the lapsed ones.
+    #
+    # The 9-week threshold is not arbitrary — the distribution has a clean gap. 250 series sold
+    # within 4 weeks of the anchor, only 14 sit in the 5-8 week grey zone, then 209 at 9+ weeks.
+    #
+    # We do NOT call these delisted: most have TDP > 0 at their last observation, but that TDP
+    # reading is itself as stale as the sales, so it cannot support a distribution claim.
+    # The honest label is "no recent sales recorded".
+    LAPSE_WEEKS = 9
+    _last_seen = df_actual.groupby(GROUP_COLS, observed=True)["__time"].max()
+    _lapse_wks = ((df_actual["__time"].max() - _last_seen).dt.days / 7).round()
+    _lapsed_keys = set(map(tuple, _lapse_wks[_lapse_wks >= LAPSE_WEEKS].index.to_frame().values))
+    _n_lapsed_short = len(_lapsed_keys & _short_keys)
+    print(f"  Lapse classifier: {len(_lapsed_keys):,} of {_n_total:,} series have no sale in "
+          f"{LAPSE_WEEKS}+ weeks")
+    print(f"      {_n_lapsed_short:,} are short-series; "
+          f"{len(_lapsed_keys) - _n_lapsed_short:,} have >={MIN_SERIES_WEEKS} weeks of history "
+          f"and were previously forecast by the AR model off a stale tail")
+    print(f"      all forecast ZERO with method 'lapsed_no_recent_sales' — never a carried "
+          f"stale level. anchor_date still records the real last observed week.")
+    _n_ar = _n_total - len(_short_keys | _lapsed_keys)
+    print(f"  Method split: {_n_ar:,} autoregressive + "
+          f"{len(_short_keys - _lapsed_keys):,} carry-forward + {len(_lapsed_keys):,} lapsed-zero")
+
+
     for group_keys, g in df_seed.groupby(GROUP_COLS):
         g = g.sort_values("__time")
         upc, channel, account, geo = group_keys
+
+        # ── SHORT-SERIES PATH for series too short for the AR model ───────────
+        # One week of history is enough to carry a level forward; a blank is not a forecast.
+        # Three sub-cases, each with an honest method tag:
+        #   lapsed_no_recent_sales — no sale for LAPSE_WEEKS+; forecast ZERO, zero band.
+        #   no_level_available     — last 4 weeks are all NULL; forecast ZERO, flagged, not
+        #                            silently zero (the old `max(0.0, nan)` returned 0.0 and
+        #                            presented an unknown as a confident zero — 16 series).
+        #   carry_forward_seasonal — flat level x seasonal index. NO lifecycle ramp: MO_79
+        #                            measured the ramp losing to flat carry-forward in every
+        #                            band (see the rejection note above).
+        # The band is deliberately WIDE (+/-45%) because this method carries real uncertainty,
+        # and a narrow band on a 2-week-old SKU would misrepresent what we know.
+        # NOTE the `or _lapsed_keys`: the lapse gate applies to EVERY series, not just short
+        # ones. 315 series with >=13 weeks of history are also lapsed (195 with no sale for over
+        # a year), and the autoregressive path was seeding lags from their stale tail and
+        # emitting current-dated forecasts for them. That is the same phantom demand, on a
+        # larger population than the short-series case.
+        if tuple(group_keys) in _short_keys or tuple(group_keys) in _lapsed_keys:
+            _lat  = g.iloc[-1]
+            # Forecast WEEKS come from the GLOBAL anchor_date, exactly as the autoregressive
+            # path does (line ~634). Using this series' own last observation would date a
+            # 74-week-stale series' forecast 74 weeks in the PAST, overlapping actuals.
+            # `anchor_date` below still records the series' own last observed week, so a
+            # reviewer can see how stale the level behind the number is.
+            _last_obs = g["__time"].max()
+            _arp  = float(pd.to_numeric(_lat.get("arp"), errors="coerce") or 0.0)
+            _w0   = int(pd.to_numeric(_lat.get("weeks_since_launch"), errors="coerce") or 0)
+
+            # Level: mean of the last up-to-4 OBSERVED weeks. Keep NaN distinguishable from 0.
+            _tail = pd.to_numeric(g["base_units"].tail(4), errors="coerce")
+            _lvl_raw = _tail.mean()
+            _no_level = not np.isfinite(_lvl_raw)
+            _lvl = 0.0 if _no_level else float(_lvl_raw)
+
+            _is_lapsed = tuple(group_keys) in _lapsed_keys
+            if _is_lapsed:
+                _method, _lvl, _bw = "lapsed_no_recent_sales", 0.0, 0.0
+            elif _no_level:
+                _method, _bw = "no_level_available", 0.0
+            else:
+                _method, _bw = "carry_forward_seasonal", 0.45
+            # Carry total_units forward on the SAME level+ramp+season path, scaled by this
+            # series' own observed total/base ratio. Leaving it null would make a short series
+            # look promo-free, which is the opposite of true: new items launch ON promo.
+            _tr = 1.0
+            if forecast_total and "total_units" in g.columns:
+                _bt = pd.to_numeric(g["base_units"].tail(4), errors="coerce").sum()
+                _tt = pd.to_numeric(g["total_units"].tail(4), errors="coerce").fillna(
+                    pd.to_numeric(g["base_units"].tail(4), errors="coerce")).sum()
+                if _bt and _bt > 0 and np.isfinite(_tt):
+                    _tr = max(1.0, float(_tt) / float(_bt))
+            for _s in range(1, FORECAST_WEEKS + 1):
+                _fd  = anchor_date + pd.Timedelta(weeks=_s)
+                _woy = int(_fd.isocalendar().week)
+                _sf  = 1.0 + seasonal_lookup.get(_woy, 0.0) if seasonal_lookup else 1.0
+                _u   = _lvl * max(0.1, _sf)
+                # Explicit, not max(0.0, nan): that returns 0.0 and turns "we don't know"
+                # into "we predict zero".
+                _u   = 0.0 if not np.isfinite(_u) else max(0.0, _u)
+                all_rows.append({
+                    "upc": upc, "description": _lat.get("description"),
+                    "channel_outlet": channel, "retail_account": account,
+                    "geography_raw": geo,
+                    "geography_display": _lat.get("geography_display", geo),
+                    "geography_level": _lat.get("geography_level"),
+                    "anchor_date": _last_obs.isoformat(),
+                    "anchor_base_units": float(_lat["base_units"]) if pd.notna(_lat["base_units"]) else 0.0,
+                    "anchor_arp": _arp,
+                    "arp_fallback": int(_lat.get("arp_fallback") or 0),
+                    "__time": _fd, "forecast_week_number": _s,
+                    "forecast_units_low":  round(_u * (1 - _bw), 2),
+                    "forecast_units_base": round(_u, 2),
+                    "forecast_units_high": round(_u * (1 + _bw), 2),
+                    "forecast_dollars_low":  round(_u * (1 - _bw) * _arp, 2),
+                    "forecast_dollars_base": round(_u * _arp, 2),
+                    "forecast_dollars_high": round(_u * (1 + _bw) * _arp, 2),
+                    "forecast_total_units_low":  round(_u * (1 - _bw) * _tr, 2) if forecast_total else None,
+                    "forecast_total_units_base": round(_u * _tr, 2) if forecast_total else None,
+                    "forecast_total_units_high": round(_u * (1 + _bw) * _tr, 2) if forecast_total else None,
+                    "weeks_since_launch": _w0 + _s,
+                    "model_version": MODEL_VERSION,
+                    "forecast_method": _method,
+                    "scored_at": scored_at,
+                })
+            continue
 
         # Seed lag history from actuals
         units_history = g["base_units"].tolist()
@@ -638,6 +801,7 @@ if __name__ == "__main__":
 
             all_rows.append({
                 **meta_fields,
+                "forecast_method":      "lightgbm_autoregressive",
                 "__time":               forecast_date,
                 "forecast_week_number": step,
                 "forecast_units_low":   units_low,

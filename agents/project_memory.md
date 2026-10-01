@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-09-30 (MO_77 v6 COMPLETE — 12 new features + n_estimators 2000 + full-data final retrain; retail_account #2 feature; Kroger holdout 14.3%; v6 chart archived)
+Last synced: 2026-10-01 (v10 forecast: zero-skip coverage + lapse gate; MO_79 cold-start horse race rejected the lifecycle ramp and donor surrogate; decisions register v0.8 / 89 entries)
 
 ## Repository
 
@@ -197,6 +197,63 @@ All four SET commands added to Q2, Q4, Q5 in the query register:
 - SET sqlSortMergeDiskBuffered = 'true' — spills merge buffers to disk; complements durable shuffle
 - SET maxNumTasks = 4 — adds parallelism (effective if cluster has multiple task slots)
 - SET rowsPerSegment = 5000000 — increases output segment size from 3M to 5M rows
+
+
+## Session 2026-10-01 — v10 forecast coverage, lapse gate, cold-start horse race
+
+### Decisions made
+
+- **MO_27 no longer skips any series.** The `<13`-week gate became a *method* router, not a
+  coverage gate. Previously 473 of 2,137 series (110 of 133 focal UPCs) returned nothing.
+  Output is now 2,137 x 13 = 27,781 rows with zero skips, every row tagged `forecast_method`.
+- **Lapse gate added (`LAPSE_WEEKS = 9`), applied to ALL series.** 524 of 2,137 series (24.5%)
+  had recorded no sale in 9+ weeks — 209 short-series and **315 that the autoregressive path was
+  forecasting off a stale tail** (195 with no sale for over a year). All now forecast 0 with a
+  zero-width band and method `lapsed_no_recent_sales`. Threshold chosen on a clean distribution
+  gap (250 series within 4 weeks, only 14 in the 5-8 week zone, then 209 at 9+).
+  Deliberately **not** labelled "delisted" — the TDP reading is as stale as the sales.
+- **Lifecycle ramp REJECTED** and removed from MO_27. Real in aggregate (series double over 60
+  weeks) but lost to flat carry-forward in every history band and carried +21 to +23% positive
+  bias in the 13-51 bands. Aggregate truth is not per-series predictive signal.
+- **Donor surrogate REJECTED.** Its apparent tier effect was a confound — `naive` is also better
+  on the same easier subset.
+- **Final MO_27 method split: 1,349 autoregressive + 264 carry-forward + 524 lapsed-zero.**
+
+### Artifacts created
+
+- `scripts/MO_79_coldstart_horserace.py` — 6-arm cold-start horse race, 4 cutoffs, all fits
+  refit pre-cutoff only; reports pooled wMAPE, per-series win rate, bias and an oracle ceiling
+  per history band. Outputs `outputs/mo79_coldstart_horserace.json` + `mo79_coldstart_per_series.csv`.
+- `mockups/mo_decisions_register.html` v0.8 — 89 entries; new COV-07, COV-08, GRD-09, GRD-10,
+  ANO-15, ANO-16. Header stats and section counts resynced (they were stale at v0.1 / 56).
+
+### Bugs found and fixed
+
+- `max(0.0, nan)` returns `0.0`, so a NaN level was presented as a confident zero forecast on 16
+  series. `x or default` does not catch it either — NaN is truthy. Now an explicit `np.isfinite`
+  test routes these to method `no_level_available`.
+- Carry-forward dated forecast weeks from each series' own last observation instead of the global
+  `anchor_date`, which for a 74-week-stale series emits rows dated 74 weeks **in the past**,
+  overlapping actuals in the same datasource.
+
+### Open questions
+
+- **Stage B not yet run:** Chronos-2 and the production LightGBM recursive path as arms on the
+  MO_79 harness. The bar to beat is naive at 94.7 (band 1-4) and 55.1 (5-12); the oracle says
+  74.5 / 40.8 is the ceiling. `chronos-forecasting 2.3.1`, `statsforecast`, `mlforecast` and
+  `autogluon.timeseries` are already installed — no new dependency, only a ~500MB HF weight fetch.
+- MO_62 and MO_65 do **not** already answer this: both set `MIN_HISTORY = 52`, so every
+  foundation-model result we have was measured on mature series only.
+- The **+7.9% recursive over-forecast** remains the root defect and is untouched by this work.
+- A router that picks the best arm *ex ante* is unproven — the 20.2pp oracle headroom is hindsight.
+- TimeGPT would send BUILT's paid POS data to Nixtla's servers. Rob's call, not taken.
+- NS2: why do 359/513 UPCs have a null `upccode`?
+
+### Note on the MO_27 "HUMAN REVIEW REQUIRED" banner
+
+That gate is our own code — `scripts/mo_writeback.py:208`, from the Druid schema-safety work.
+MO_27 uploads the parquet to MinIO and writes an ingest spec but never POSTs to Druid, so running
+it does **not** change what the Mo UI serves. Submitting is a separate explicit step.
 
 ## Open Follow-Ups
 

@@ -6,6 +6,152 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 201: coverage, the lapse gate, and why every exogenous patch failed (2026-10-01)
+
+Three measured rejections, two real bugs, and one method that works. The headline: **the
+recursive loop cannot be patched — it has to be replaced.**
+
+### Every series now gets a forecast
+
+MO_27 skipped every series with <13 weeks of history: **473 of 2,137 series, spanning 110 of 133
+focal UPCs**, returned nothing. `drop_short_series()` was never a *model* requirement, it was a
+*lag-feature* requirement. LightGBM no longer gates coverage, it gates **method**. Output is
+2,137 x 13 = **27,781 rows, zero skips**, every row carrying `forecast_method`.
+
+A framing correction worth keeping: the gap was first sized as "only 1.2% of recent volume,"
+which is circular — new items are small *because* they are new. Never rank a coverage gap by the
+current volume share of what it excludes.
+
+### The lapse gate — 524 series were being given demand off a stale tail
+
+Found while validating the new path. **524 of 2,137 series (24.5%) had recorded no sale for 9+
+weeks** — 209 short-series and **315 that the autoregressive path was forecasting anyway**, 195
+of them with no sale for over a year. Both paths carried a stale level into current-dated weeks,
+i.e. phantom demand landing in a shipment plan.
+
+The 9-week threshold is not arbitrary: 250 series sold within 4 weeks of the anchor, only **14**
+sit in the 5-8 week grey zone, then 209 at 9+. These forecast **zero** with method
+`lapsed_no_recent_sales`. We deliberately do NOT call them delisted — most have TDP > 0 at their
+last observation, but that reading is exactly as stale as the sales.
+
+Final split: **1,349 autoregressive + 264 carry-forward + 524 lapsed-zero.**
+
+### Cold-start horse race: naive wins, three methods rejected
+
+`MO_79_coldstart_horserace.py` — 6 arms, 4 cutoffs, every fit refit pre-cutoff only, band
+eligibility measured **as of the cutoff** (using full-panel history is the easiest way to fake a
+cold-start result).
+
+| band | naive_last | window_avg4 | drift | ETS-Holt | ramp+season | donor |
+|---|---|---|---|---|---|---|
+| 1-4 | **94.7** | 97.4 | 136.7 | 117.5 | 105.7 | 105.0 |
+| 5-12 | **55.1** | 58.5 | 77.5 | 70.7 | 69.8 | 85.0 |
+| 13-25 | **36.5** | 39.4 | 45.8 | 50.9 | 56.1 | 50.6 |
+| 26-51 | **26.1** | 28.2 | 30.0 | 27.4 | 44.0 | 41.5 |
+
+`naive_last` wins every band and 3 of 4 cutoffs. So **carry-forward is what shipped**, and
+**ETS is not in production because it lost**, not by oversight.
+
+**Lifecycle ramp — REJECTED.** Real in aggregate (series double over 60 weeks, TDP 1.01 -> 1.69)
+but it lost in every band and carried +21 to +23% bias in the 13-51 bands. Aggregate truth is not
+per-series predictive signal: the portfolio-median curve mixes a new flavor at 17 accounts with a
+pack-size extension at one door.
+
+**Donor surrogate — REJECTED.** Its apparent tier effect (72.8 with an exact-UPC donor vs 96.1 on
+siblings) is a *confound*: naive scores 60.1 vs 67.3 on those same subsets, so donor-having series
+are simply easier series. The tier check was built to catch this and did.
+
+**Oracle ceiling:** best-arm-per-series would give 74.5 (band 1-4) vs naive's 94.7 — 20.2pp of
+headroom. That is hindsight, not an achievable number, but it says routing is worth building.
+
+### TDP projection — the stated #1 fix — FAILED
+
+Update 200 ranked "project TDP forward in the recursive loop" as the largest lever. `MO_27g`
+measured it:
+
+| TDP cap | no-YAGO wMAPE | flattening ratio |
+|---|---|---|
+| 0 (frozen = production) | 37.12 | 0.062 |
+| 0.25%/wk | 37.26 | 0.064 |
+| 0.5%/wk | 37.26 | 0.063 |
+
+A 14% TDP increase over 13 weeks moved the flattening ratio by 0.001. That is the tell: `lag1`
+**is** the previous prediction, the model's mapping on it is near-identity, and no exogenous
+feature can get a word in. We were feeding better inputs into a loop that ignores them.
+
+### Correction: v10's feature list is unchanged, but flavor finally works
+
+v8 and v10 both carry 56 features with identical names, which reads as "nothing changed." The
+real gain numbers say otherwise:
+
+| feature | v8 | v10 |
+|---|---|---|
+| `retail_account` | #1 | #4, gain 63,214 |
+| `spins_flavor_canonical` | **~nothing** | **#15, gain 16,400** |
+| `channel_outlet` | - | #53, gain 73 |
+| `source_brand` | - | #54, gain 42 |
+| `pack_count` | - | #56, gain 17 (last) |
+
+Flavor contributed nothing in v8 because the join returned 2 UPCs and the `CAT_COLS` drift NaN'd
+it at inference. The `parent_brand='BUILT'` fix took it to 146 UPCs / 98.3% coverage and it is now
+top-15. Brand, channel and pack size **are** features — they are simply inert.
+`specific_flavor_normalized` (68 levels vs canonical's 34) remains the one untested candidate.
+
+### Circle K was double-counted; AK/HI variants now excluded by definition
+
+`CK - CIRCLE K CORP TOTAL W/ ALASKA - RMA` (908,545 units) and `CIRCLE K CORP - RMA` (900,911)
+cover the same stores. Identical 694 rows and 9 UPCs; the wider market is >= the narrower in
+**100.0%** of 690 shared item-weeks with **59.7% exactly equal**, and `Built Peanut Butter Puff
+1.41oz` is identical across all 124 of its weeks. Circle K was forecast twice.
+
+Six further "W/ AK/HI" markets exist (Albertsons, CVS, Kroger, Sam's, Target, Walgreens) and were
+being removed only because they carry zero units — a coincidence, not a safeguard.
+
+`drop_ak_hi_market_variants()` now excludes all seven **by definition**. Jason's call: keep
+`CIRCLE K CORP`, ignore the with-Alaska variant — note this is the *narrower* market, which a
+"keep the superset" heuristic would have got backwards. Which market is canonical is a business
+decision, so the value-based detector was demoted to `warn_nested_rma_duplicates()`, which
+reports and never drops.
+
+Giant Eagle (GETGO) and Hy-Vee (FAST & FRESH) were tested and **kept** — 25 and 34 item-weeks
+where the banner exceeds the parent, impossible under nesting, so they are genuinely separate
+store sets. Review doc: `mockups/duplicate_market_review.html`.
+
+### Two silent-NaN traps
+
+`max(0.0, nan)` returns **0.0** — Python compares `nan > 0.0` as False and returns the first
+argument — so a NaN level was presented as a confident zero forecast on 16 series. `x or default`
+does not catch it either, because NaN is truthy. Both make "unknown" indistinguishable from a real
+zero in a forecast table.
+
+Separately, a per-series date anchor emitted forecast rows dated **74 weeks in the past** for
+lapsed series. Forecast weeks must come from the global `anchor_date`, as the AR path does.
+
+### The chart's "Accuracy Proof" tab was not proving accuracy
+
+A broad `except` was silently degrading the recursive backtest to a portfolio-wMAPE fallback,
+hiding three stacked failures: a partial `mo_panel` fallback import, `MODEL_DIR` pointing at the
+committed repo-root `outputs/` instead of the live `scripts/outputs/`, and a missing `_cat_str`.
+It now hard-exits. Note the tab also routes 14 of 36 series to ETS while MO_27 ships none — it
+measures a hybrid we do not deploy.
+
+### Next: direct multi-horizon (MO_26D / MO_27D)
+
+`MO_30b` prototype, cutoff 2026-06-07, all 2,126 series including short:
+
+| | recursive | direct multi-horizon |
+|---|---|---|
+| pooled wMAPE | ~37 no-YAGO / ~23 YAGO | **28.6** |
+| **bias** | **1.064 - 1.165** | **0.995** |
+
+The 7.9% over-forecast disappears, and at h=13 the top features become `spins_flavor_canonical`,
+`promo_lift_n_events`, `weeks_since_launch`, `week_sin`/`week_cos` — the exogenous signals the
+recursive loop freezes. Now productionized as `MO_26D_direct_multihorizon_train.py` (13 horizons
+x 3 quantiles, target-week seasonality, short series included) and `MO_27D_direct_forecast.py`
+(same output schema, lapse gate retained).
+
+---
+
 ## README update 200: the recursive forecast collapses to a random walk — and the tuning objective is 9x optimistic (2026-10-01)
 
 The most consequential measurement of the forecast work so far. It reorders the roadmap and

@@ -30,6 +30,7 @@ from pathlib import Path
 
 from mo_panel import (CAT_COLS, drop_zero_volume_geographies, apply_rma_priority,
                       fill_promo_mechanic_nulls, drop_military_accounts,
+                      drop_ak_hi_market_variants, warn_nested_rma_duplicates,
                       drop_short_series, GROUP_COLS)
 
 # Import MO_26's exact feature list and params so the probe measures the real model,
@@ -77,6 +78,9 @@ def main(cap: int, patience: int):
     print("  ── Panel rules (must match MO_26) ──")
     df = fill_promo_mechanic_nulls(df)
     df = drop_military_accounts(df)
+    # AK/HI supplementary markets are nested duplicates of the base market (Circle K was
+    # being counted twice). Excluded BY DEFINITION, not by their happening to be zero-volume.
+    df = drop_ak_hi_market_variants(df)
     df = drop_zero_volume_geographies(df, target="base_units")
     df = apply_rma_priority(df)
     df = drop_short_series(df)

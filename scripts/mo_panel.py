@@ -16,6 +16,8 @@ Import from the repo root or from scripts/:
 
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 
 # Series key. geography_raw is part of the key but NOT a model feature — see below.
@@ -345,3 +347,148 @@ def drop_zero_volume_geographies(
             print(f"      … and {len(dead) - 8} more")
         print(f"  Rows: {len(df):,} → {len(kept):,}")
     return kept
+
+
+AK_HI_MARKET_PATTERN = re.compile(
+    r"W/\s*(AK|HI|PR|ALASKA|HAWAII|PUERTO\s+RICO)\b", re.I)
+
+
+def drop_ak_hi_market_variants(
+    df: pd.DataFrame,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """Exclude SPINS "with Alaska / Hawaii / Puerto Rico" market variants BY DEFINITION.
+
+    SPINS ships a supplementary market for some retailers covering the same chain plus the
+    AK/HI/PR stores. Where both the base market and the supplement are present, counting both
+    double-counts the retailer.
+
+    DECIDED BY JASON 2026-10-01 (to be confirmed with Brian):
+      * **Circle K — ignore the W/ ALASKA variant.** Keep `CIRCLE K CORP - RMA`, drop
+        `CK - CIRCLE K CORP TOTAL W/ ALASKA - RMA`. Note this is the NARROWER market, which a
+        value-based "keep the superset" heuristic would have got backwards. Which market is
+        canonical is a business decision about BUILT's book of business, not something a
+        nesting test can infer.
+      * **Ignore the six zero-unit AK/HI markets** (Albertsons, CVS, Kroger, Sam's, Target,
+        Walgreens). They were already being removed by `drop_zero_volume_geographies`, but only
+        because they happen to carry no units — a coincidence, not a safeguard. Excluding them
+        by definition means a future SPINS refresh that populates one cannot silently double a
+        top-5 retailer.
+      * **Giant Eagle and Hy-Vee both count** — GETGO/FAST & FRESH are convenience banners and
+        the CORP markets are supermarkets, i.e. genuinely different store sets. They do not
+        match this pattern, so they are untouched. Verified: 25 and 34 item-weeks respectively
+        where the banner exceeds the parent, which is impossible under nesting.
+      * **Murphy USA — `MURPHY CORP TOTAL - RMA` is all we receive; use it.** It contains
+        "CORP TOTAL" but no AK/HI supplement, so it is correctly not matched.
+
+    The pattern deliberately requires AK/HI/PR immediately after "W/", so legitimate markets
+    whose names contain "W/" or "TOTAL" survive. Verified against all 159 geographies in the
+    extract — 7 matched, and these all correctly did NOT match:
+        MURPHY CORP TOTAL - RMA
+        KROGER CORP W/ HARRIS TEETER, ROUNDYS AND RULER - RMA   (the real Kroger market)
+        K-VA-T FOODS W/ CHATTANOOGA, TN - RMA
+        WAKEFERN CORP W/O PRICE RITE - RMA · WEGMANS CORP W/O METRO NY - RMA
+        SPROUTS FARMERS MARKET - TOTAL US W/O PL   + 92 other "- TOTAL US" markets
+    """
+    if "geography_raw" not in df.columns:
+        return df
+    geos = [g for g in df["geography_raw"].dropna().unique()
+            if AK_HI_MARKET_PATTERN.search(str(g))]
+    if not geos:
+        if verbose:
+            print("  AK/HI market-variant filter: none present")
+        return df
+    mask = df["geography_raw"].isin(geos)
+    kept = df[~mask].copy()
+    if verbose:
+        print(f"  AK/HI market-variant filter: dropped {len(geos)} supplementary "
+              f"market{'' if len(geos) == 1 else 's'}, {int(mask.sum()):,} rows")
+        for g in sorted(geos):
+            u = pd.to_numeric(df.loc[df["geography_raw"] == g, "base_units"],
+                              errors="coerce").sum() if "base_units" in df.columns else float("nan")
+            print(f"      - {g}  ({u:,.0f} units)")
+        print(f"  Rows: {len(df):,} → {len(kept):,}")
+    return kept
+
+
+def warn_nested_rma_duplicates(
+    df: pd.DataFrame,
+    target: str = "base_units",
+    min_cells: int = 30,
+    min_jaccard: float = 0.75,
+    min_nesting: float = 0.98,
+    min_equal: float = 0.25,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """SAFETY NET — detect, report, and DO NOT drop nested duplicate markets.
+
+    Returns `df` unchanged. This exists because the Circle K duplicate was found by accident
+    while answering an unrelated question, and nothing in the pipeline would have caught it.
+
+    It is WARN-ONLY on purpose. The detector can prove two markets describe the same stores,
+    but it cannot decide which one is canonical — that is a business call. On Circle K the
+    "keep the superset" heuristic would have kept the with-Alaska market; the actual decision
+    was the opposite. So a new nested pair is surfaced loudly for a human, never auto-dropped.
+
+    Run AFTER `drop_ak_hi_market_variants`, `apply_rma_priority` and
+    `drop_zero_volume_geographies`. With those applied, this should report NOTHING; anything it
+    prints is a new SPINS market structure that needs review with Brian before the next retrain.
+
+    Tests (all four must hold): >= `min_cells` shared (upc, week) cells, cell-set Jaccard >=
+    `min_jaccard`, one side >= the other in >= `min_nesting` of shared cells, and >= `min_equal`
+    exactly equal. The exact-equality floor and the reversal count are what separate a true
+    nested duplicate from sibling banners.
+    """
+    need = {"geography_raw", "retail_account", "upc", "__time", target}
+    if not need.issubset(df.columns):
+        return df
+
+    d = df[["retail_account", "geography_raw", "upc", "__time", target]].copy()
+    d[target] = pd.to_numeric(d[target], errors="coerce")
+    d = d.dropna(subset=[target])
+
+    hits = []
+    for acct, sub in d.groupby("retail_account", observed=True):
+        geos = sorted(sub["geography_raw"].dropna().unique())
+        if len(geos) < 2:
+            continue
+        agg = {g: s.groupby(["upc", "__time"])[target].sum()
+               for g, s in sub.groupby("geography_raw", observed=True)}
+        for i in range(len(geos)):
+            for k in range(i + 1, len(geos)):
+                g1, g2 = geos[i], geos[k]
+                a, b = agg.get(g1), agg.get(g2)
+                if a is None or b is None:
+                    continue
+                s1, s2 = set(a.index), set(b.index)
+                inter, union = s1 & s2, s1 | s2
+                if len(inter) < min_cells or not union:
+                    continue
+                if len(inter) / len(union) < min_jaccard:
+                    continue
+                j = pd.concat([a.rename("a"), b.rename("b")], axis=1).dropna()
+                if not len(j):
+                    continue
+                eq = float((abs(j["a"] - j["b"]) < 1e-6).mean())
+                nest = max(float((j["a"] >= j["b"] - 1e-6).mean()),
+                           float((j["b"] >= j["a"] - 1e-6).mean()))
+                if eq >= min_equal and nest >= min_nesting:
+                    hits.append((acct, g1, g2, len(inter), len(inter) / len(union), eq, nest,
+                                 float(a.sum()), float(b.sum())))
+
+    if verbose:
+        if not hits:
+            print("  Nested-market safety net: clean (no undeclared duplicates)")
+        else:
+            print("\n  " + "!" * 66)
+            print(f"  NESTED MARKET DUPLICATE DETECTED — {len(hits)} pair(s). NOT dropped.")
+            print("  Review with Brian and add an explicit rule before the next retrain;")
+            print("  which market is canonical is a business decision, not a heuristic.")
+            for acct, g1, g2, n, jac, eq, nest, u1, u2 in hits:
+                print(f"    {acct}:")
+                print(f"      {g1}  ({u1:,.0f} units)")
+                print(f"      {g2}  ({u2:,.0f} units)")
+                print(f"      {n:,} shared cells | Jaccard {jac:.3f} | "
+                      f"{eq*100:.1f}% exactly equal | {nest*100:.1f}% nested")
+            print(f"  {'!' * 66}\n")
+    return df

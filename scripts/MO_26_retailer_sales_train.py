@@ -64,7 +64,7 @@ ALLOW_MISSING_FEATURES = "--allow-missing-features" in sys.argv
 # than being re-proposed.
 EARLY_STOP_MIN_DELTA = 0.0
 
-MODEL_VERSION = "v9"
+MODEL_VERSION = "v10"
                       # v9: DATA + FEATURE run — final panel, corrected features, v8 hyperparameters.
                       #     Deliberately keeps v8's LGBM_BASE so that v8->v9 measures the data and
                       #     feature work alone, and v9->v10 measures the Optuna retune alone. One
@@ -104,7 +104,8 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 # backtesting cannot drift apart again (four divergent copies shipped a silent v8 bug).
 from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
                       apply_rma_priority, fill_promo_mechanic_nulls,
-                      drop_military_accounts, drop_short_series)
+                      drop_military_accounts, drop_short_series,
+                      drop_ak_hi_market_variants, warn_nested_rma_duplicates)
 
 FEATURE_COLS = [
     # Rolling demand stats (backward-looking, no leakage)
@@ -300,6 +301,9 @@ if __name__ == "__main__":
     # 144,148 u/wk), i.e. correct distribution-expansion history, not feed gaps.
     df = fill_promo_mechanic_nulls(df)
     df = drop_military_accounts(df)
+    # AK/HI supplementary markets are nested duplicates of the base market (Circle K was
+    # being counted twice). Excluded BY DEFINITION, not by their happening to be zero-volume.
+    df = drop_ak_hi_market_variants(df)
     df = drop_zero_volume_geographies(df, target="base_units")
     df = apply_rma_priority(df)
     # Was MO_25.MIN_WEEKS (extract-time). Moved here so BUILT's newest launches stay

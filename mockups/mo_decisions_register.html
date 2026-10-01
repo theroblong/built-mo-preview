@@ -404,12 +404,12 @@
       <div class="doc-eyebrow">Mo · Living Reference Document</div>
       <h1 class="doc-title">Decisions &amp; Caveats Register</h1>
       <p class="doc-subtitle">Ongoing record of data handling decisions, known anomalies, exclusion rules, and open items. Update this register whenever a new decision is made or a new caveat is discovered.</p>
-      <div class="doc-meta">Last updated 2026-08-25 · v0.1 — entries added as decisions are made, not at release boundaries</div>
+      <div class="doc-meta">Last updated 2026-10-01 · v0.8 — entries added as decisions are made, not at release boundaries</div>
     </div>
     <div class="header-stats">
-      <div class="stat-box"><div class="stat-num">56</div><div class="stat-label">Entries</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--amber)">12</div><div class="stat-label">Open</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--red)">2</div><div class="stat-label">Blocked</div></div>
+      <div class="stat-box"><div class="stat-num">89</div><div class="stat-label">Entries</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--amber)">19</div><div class="stat-label">Open</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--red)">5</div><div class="stat-label">Blocked</div></div>
     </div>
   </header>
 
@@ -726,7 +726,7 @@
     <span class="section-anchor" id="anomalies"></span>
     <div class="section-head">
       <span class="section-title">Known Data Anomalies</span>
-      <span class="section-count">14 entries</span>
+      <span class="section-count">16 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -849,6 +849,22 @@
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
+          <tr>
+            <td class="entry-id">ANO-15</td>
+            <td><div class="entry-title"><code>max(0.0, nan)</code> returns 0.0 — a NaN level was presented as a confident zero forecast (16 series)</div><div class="entry-body">In the first cut of MO_27's carry-forward path the level was computed as <code>float(tail(4).mean() or 0.0)</code> and then clamped with <code>max(0.0, _lvl * …)</code>. Python's <code>max</code> compares <code>nan &gt; 0.0</code> → <code>False</code> and so <b>returns 0.0</b>, silently converting "we have no level for this series" into "we predict zero units." 16 series (all-NULL last 4 weeks, out of 1,535 NULL <code>base_units</code> rows in the panel) were affected. Note the <code>or 0.0</code> idiom does <b>not</b> catch it either — <code>nan</code> is truthy, so <code>nan or 0.0</code> evaluates to <code>nan</code>. Now an explicit <code>np.isfinite</code> test routes these to method <code>no_level_available</code> with a zero-width band.</div></td>
+            <td><span class="where-tag">MO_27 _no_level</span><span class="where-tag">no_level_available</span><span class="where-tag">COV-08</span></td>
+            <td>Two general traps, both worth guarding anywhere a fallback level is computed: (1) <code>max()</code>/<code>min()</code> silently swallow NaN depending on argument order — <code>max(0.0, nan)</code> is 0.0 but <code>max(nan, 0.0)</code> is nan; (2) <code>x or default</code> does not substitute for NaN because NaN is truthy. Both make "unknown" indistinguishable from a real zero in the output, which is the worst kind of bug in a forecast table because it looks like data.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-16</td>
+            <td><div class="entry-title">Per-series date anchoring put carry-forward forecasts in the PAST — must use the global anchor_date</div><div class="entry-body">MO_27's autoregressive path dates every forecast week from the <b>global</b> <code>anchor_date</code> (<code>forecast_date = anchor_date + Timedelta(weeks=step)</code>) while recording each series' own last observed week in the <code>anchor_date</code> <i>field</i>. The first cut of the carry-forward path instead derived forecast dates from <code>g["__time"].max()</code> — the series' own last observation. For a lapsed series stale by 74 weeks that emits 13 forecast rows dated <b>74 weeks in the past</b>, overlapping actuals in the same datasource. Fixed to use the global anchor for <code>__time</code> while keeping the per-series last-observed week in <code>anchor_date</code>, matching the AR path exactly.</div></td>
+            <td><span class="where-tag">MO_27 _last_obs</span><span class="where-tag">anchor_date</span><span class="where-tag">retailer_sales_forecast</span></td>
+            <td>Caught by inspecting a sampled carry-forward series' output rows rather than by any aggregate check — the row counts, band widths and null checks all passed. Adds to the <a href="#chart-integrity">chart-data-integrity</a> family of date gotchas: a forecast datasource that also contains actuals will silently accept past-dated forecast rows and the UI will interleave them. Any new forecast path must date from the global anchor.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -859,7 +875,7 @@
     <span class="section-anchor" id="guardrails"></span>
     <div class="section-head">
       <span class="section-title">Model Guardrails</span>
-      <span class="section-count">8 entries</span>
+      <span class="section-count">10 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -934,6 +950,22 @@
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
+          <tr>
+            <td class="entry-id">GRD-09</td>
+            <td><div class="entry-title">Lifecycle ramp and donor-surrogate both measured and REJECTED for short series — flat carry-forward wins</div><div class="entry-body">The lifecycle ramp is <b>real in aggregate</b>: indexed to each series' own weeks 5–8, demand runs 0.98 at weeks 1–4 → 1.09 at 14–20 → 1.81 at 40–52 → <b>2.09 at 53–60</b>, with TDP tracking it (1.01 → 1.69). Series genuinely double over their first 60 weeks. It was therefore shipped into MO_27's short-series path as <code>level × ramp × season</code>. <code>MO_79_coldstart_horserace.py</code> then measured it against flat carry-forward across 4 cutoffs with all fits refit pre-cutoff — and it <b>LOST in every history band</b>: band 1–4 naive <b>94.7</b> vs ramp <b>105.7</b>; 5–12 <b>55.1</b> vs <b>69.8</b>; 13–25 <b>36.5</b> vs <b>56.1</b>. It also carried <b>+21 to +23% positive bias</b> in the 13–51 bands, which would compound the +7.9% over-forecast the AR path already has. <b>Ramp removed.</b> A <b>donor-surrogate</b> arm (borrow a mature series' week-of-year shape, scale to this series' level) was measured in the same race and also lost — 72.8 vs naive's 60.1 even on the subset where the donor was the <i>same UPC at another account</i>.</div></td>
+            <td><span class="where-tag">MO_79 horse race</span><span class="where-tag">MO_27 carry_forward_seasonal</span><span class="where-tag">naive_last</span><span class="where-tag">GRD-10</span></td>
+            <td><b>Why the ramp fails despite being real:</b> the portfolio-median curve mixes genuinely different launch patterns (a new flavour at 17 accounts vs a pack-size extension at one door), so applying one universal curve adds more variance than the trend it recovers. Aggregate truth ≠ per-series predictive signal. <b>Do not re-add either method without first beating <code>naive_last</code> on MO_79.</b> ⚠️ The donor arm's apparent tier effect (72.8 with an exact-UPC donor vs 96.1 on sibling fallback) is a <b>confound, not a result</b>: naive also scores 60.1 vs 67.3 on those same two subsets, so series with an exact donor are simply easier series. The tier check was built to catch exactly this and did.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">GRD-10</td>
+            <td><div class="entry-title">Oracle router ceiling: 20.2pp of headroom in band 1–4 — routing has real value, but ex-ante selection is unproven</div><div class="entry-body">MO_79 also reports the <b>oracle</b>: the pooled wMAPE if we always picked the best of the six arms per series. Band 1–4 naive <b>94.7</b> → oracle <b>74.5</b> (20.2pp); 5–12 <b>55.1</b> → <b>40.8</b> (14.3pp); 13–25 <b>36.5</b> → <b>24.7</b> (11.8pp); 26–51 7.8pp; 52+ 6.7pp. Per-series win rates confirm no method dominates — in band 1–4, naive wins only <b>34%</b> of series, the rejected ramp still wins 24%, window-avg 15%, drift 14%. So a router is worth building, and this is the bar any new method (Chronos-2, direct multi-horizon) must clear.</div></td>
+            <td><span class="where-tag">MO_79 oracle</span><span class="where-tag">win_rate_pct</span><span class="where-tag">Stage B / MO_79b</span></td>
+            <td>⚠️ <b>The oracle is a ceiling, not an achievable number.</b> It uses holdout actuals to pick the winner, so it is pure hindsight. Nothing measured so far shows we can select the right arm <i>ex ante</i>; quoting 74.5 as an attainable wMAPE would be dishonest. Treat it only as evidence that routing effort is justified. Also note MO_79's absolute wMAPE is <b>not comparable to production</b>: it uses a cheap pre-cutoff volume-weighted week-of-year index rather than the full-panel MO_59 STL index, deliberately, to avoid leaking the holdout. Cross-arm comparison is valid; absolute levels are not.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -944,7 +976,7 @@
     <span class="section-anchor" id="coverage"></span>
     <div class="section-head">
       <span class="section-title">Coverage &amp; Scoring Behavior</span>
-      <span class="section-count">6 entries</span>
+      <span class="section-count">8 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -1000,6 +1032,22 @@
             <td><div class="entry-title">NS2 distributor sell-in cannot be attributed to a retailer 1:1 — but every data-dark retailer is DIRECT</div><div class="entry-body">From <code>SalesRepCustomerMap</code>: 54 Built Customers → 97 Retailers, 52 NetSuite IDs across 116 rows. Distributor fan-out is severe — CORE-MARK INTERNATIONAL serves <b>18</b> retailers under one NetSuite ID (C0761137), UNFI 13, DOT FOODS 12, KEHE 10, MCLANE 8. So distributor sell-in is a single invoice stream across many retailers and needs an allocation rule. <b>The good news:</b> WINCO, H-E-B, ALDI GROCERY, COSTCO and COSTCO CANADA are all <b>direct</b> customers, so the data-dark retailers' sell-in is a clean 1:1 stream. By route: direct 45 rows / 26 retailers / 12 with SPINS; distributor 71 rows / 71 retailers / 48 with SPINS.</div></td>
             <td><span class="where-tag">docs/SalesRepTables.xlsx</span><span class="where-tag">NS2 sell-in</span><span class="where-tag">data-dark retailers</span><span class="where-tag">GEO-11</span></td>
             <td>This removes the circularity risk that would otherwise sink the plan: splitting pooled distributor sell-in for a retailer with no SPINS would require SPINS share you do not have. Because the dark retailers buy direct, that case does not arise — and the distributor-pooled accounts mostly DO have SPINS (WALMART via MCLANE, SPROUTS via KEHE), so they do not need sell-in. Addressable: 14 direct-and-dark retailers. Hard bucket: 23 distributor-served with no SPINS (pooled sell-in AND no POS).</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-07</td>
+            <td><div class="entry-title">Every series now gets a forecast — the &lt;13-week skip gate became a METHOD router, not a coverage gate</div><div class="entry-body">MO_27 previously <b>skipped</b> every series with fewer than <code>MIN_SERIES_WEEKS=13</code> observations: <b>473 of 2,137 series, spanning 110 of 133 focal UPCs</b>, returned nothing at all. For a brand whose growth comes from new flavours, new pack sizes and new doors, those are precisely the series a planner needs a number for, and "the model needs 13 weeks of history first" is not a deliverable answer. <code>drop_short_series()</code> was never a <i>model</i> requirement — it was a <i>lag-feature</i> requirement. LightGBM no longer gates coverage, it gates <b>method</b>. Output is now 2,137 × 13 = <b>27,781 rows with zero skips</b>, and every row carries a <code>forecast_method</code> field so the UI can present confidence honestly instead of showing a 2-week-old SKU's number as if it were a mature one.</div></td>
+            <td><span class="where-tag">MO_27 _short_keys</span><span class="where-tag">forecast_method</span><span class="where-tag">mo_panel.MIN_SERIES_WEEKS</span><span class="where-tag">COV-08</span></td>
+            <td><b>Framing correction worth keeping:</b> the gap was first sized as "only 1.2% of recent volume," which is a circular measure — new items are small today <i>because</i> they are new. Never rank a coverage gap by the current volume share of the items it excludes. Report series and UPC counts alongside units.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">COV-08</td>
+            <td><div class="entry-title">LAPSED series forecast ZERO — 524 series (24.5%) were being given current demand off a stale tail</div><div class="entry-body">Found while validating COV-07's new path. <b>524 of 2,137 series had recorded no sale for 9+ weeks</b> — 209 short-series and <b>315 with ≥13 weeks of history that the autoregressive path was happily forecasting</b>. 195 of them had no sale for <b>over a year</b> (short-series median: 74 weeks). Both paths were carrying a stale level forward into current-dated weeks, i.e. inventing phantom demand that lands in a shipment plan. Worse than a blank. All now forecast <b>0 with a zero-width band</b> and method <code>lapsed_no_recent_sales</code>; <code>anchor_date</code> still records the real last observed week so a reviewer can see the staleness. Final split: <b>1,349 autoregressive + 264 carry-forward + 524 lapsed-zero</b>.</div></td>
+            <td><span class="where-tag">MO_27 LAPSE_WEEKS=9</span><span class="where-tag">_lapsed_keys</span><span class="where-tag">lapsed_no_recent_sales</span><span class="where-tag">ANO-15</span></td>
+            <td>The 9-week threshold is <b>not arbitrary</b> — the distribution has a clean gap: 250 series sold within 4 weeks of the anchor, only <b>14</b> sit in the 5–8 week grey zone, then 209 at 9+ weeks. ⚠️ We deliberately do <b>NOT</b> label these delisted: most have TDP &gt; 0 at their last observation, but that TDP reading is exactly as stale as the sales, so it cannot support a distribution claim. The honest label is "no recent sales recorded." MO_79's horse race could not have caught this — its <code>MIN_TEST_WEEKS=4</code> filter excludes series with no future actuals, i.e. precisely the lapsed ones. Found by inspecting output rows, not by a metric.</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>

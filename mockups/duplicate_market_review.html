@@ -1,0 +1,221 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Duplicate Market Review</title>
+<style>
+:root{--bg:#fbfaf8;--card:#fff;--ink:#1a1a18;--ink2:#4a4a46;--mut:#8a8a84;--line:#e6e4df;
+--green:#1f7a4d;--greenbg:#e8f5ee;--red:#b3261e;--redbg:#fdecea;--amber:#8a5a00;--amberbg:#fdf3e0;--accent:#2d5d8a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161614;--card:#1e1e1b;--ink:#f2f1ee;
+--ink2:#c2c0ba;--mut:#8a8a84;--line:#33322e;--greenbg:#12301f;--redbg:#3a1512;--amberbg:#33260d;
+--green:#5fd08c;--red:#f2857c;--amber:#e0b35c;--accent:#7fb0dd}}
+:root[data-theme="dark"]{--bg:#161614;--card:#1e1e1b;--ink:#f2f1ee;--ink2:#c2c0ba;--mut:#8a8a84;--line:#33322e;
+--greenbg:#12301f;--redbg:#3a1512;--amberbg:#33260d;--green:#5fd08c;--red:#f2857c;--amber:#e0b35c;--accent:#7fb0dd}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 16px 80px}
+h1{font-size:27px;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:19px;margin:44px 0 6px;letter-spacing:-.01em}
+.sub{color:var(--ink2);margin:0 0 4px;font-size:15px}
+.meta{color:var(--mut);font-size:13px;margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:16px 0}
+.verdict{border-left:4px solid var(--accent)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+.s{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:12px 16px;flex:1 1 150px}
+.s .v{font-size:21px;font-weight:650;letter-spacing:-.02em}
+.s .l{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);
+padding:9px 10px;border-bottom:1px solid var(--line);font-weight:600;vertical-align:bottom}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.fire{background:var(--redbg)} tr.pass{background:var(--greenbg)}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ok{text-align:right;font-variant-numeric:tabular-nums;color:var(--green);font-weight:600;white-space:nowrap}
+.no{text-align:right;font-variant-numeric:tabular-nums;color:var(--red);font-weight:600;white-space:nowrap}
+.need{display:block;color:var(--mut);font-size:10.5px;font-weight:400;letter-spacing:.03em}
+.geo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5}
+.upc{color:var(--mut);font-size:11px;font-family:ui-monospace,Menlo,monospace;margin-top:2px}
+.lbl{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);
+border:1px solid var(--line);border-radius:3px;padding:1px 5px;margin-right:5px;font-family:system-ui}
+.ch{color:var(--mut);font-size:11px}
+.num{color:var(--ink2);font-size:11.5px;margin:3px 0 11px;font-family:system-ui}
+.imp{font-size:12.5px;line-height:1.45}
+.b{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:3px 8px;margin-top:5px;font-family:system-ui}
+.b-green{background:var(--greenbg);color:var(--green);border:1px solid var(--green)}
+.b-red{background:var(--redbg);color:var(--red);border:1px solid var(--red)}
+.b-amber{background:var(--amberbg);color:var(--amber);border:1px solid var(--amber)}
+ul{padding-left:20px} li{margin:7px 0;color:var(--ink2)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--bg);
+border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+.q{color:var(--ink2);font-size:14px}
+.scroll{overflow-x:auto}
+</style></head><body><div class="wrap">
+
+<h1>Duplicate Market Review</h1>
+<p class="sub">Every retailer market pair tested for double-counting, with the evidence for each verdict.</p>
+<p class="meta">BUILT &middot; SPINS weekly POS &middot; 1 October 2026 &middot; panel through week ending 6 September 2026</p>
+
+<div class="card verdict">
+<h2 style="margin-top:0">What this found</h2>
+<p><b>One real duplicate: Circle K.</b> Circle K reports under two SPINS market definitions that
+cover the same stores &mdash; one with Alaska, one without. Both were being counted, so Circle K
+entered the forecast at roughly <b>twice its true volume</b>.</p>
+<p class="q">Giant Eagle and Hy-Vee each also appear under two markets. Both were tested and are
+<b>genuinely different stores</b> (supermarket banner vs. convenience banner), so both are kept.
+Six further &ldquo;with Alaska/Hawaii&rdquo; markets exist for Albertsons, CVS, Kroger, Sam&rsquo;s,
+Target and Walgreens, but all carry zero units and are already excluded.</p>
+</div>
+
+<div class="stats">
+<div class="s"><div class="v">123</div><div class="l">Retailers in panel</div></div>
+<div class="s"><div class="v">134</div><div class="l">BUILT items</div></div>
+<div class="s"><div class="v">2,137</div><div class="l">Item &times; market series</div></div>
+<div class="s"><div class="v">3</div><div class="l">Market pairs tested</div></div>
+<div class="s"><div class="v" style="color:var(--red)">1</div><div class="l">Duplicates found</div></div>
+</div>
+
+<h2>1. Every market pair tested</h2>
+<p class="q">A pair is called a duplicate only when all four tests agree. The last test is the
+decisive one: if the narrower market is really <i>inside</i> the wider one, it can never report
+<i>more</i> units in any week. Even one reversal means they are different stores.</p>
+<div class="scroll"><table>
+<thead><tr><th>Retailer</th><th>Markets compared</th><th>Same<br>item-weeks</th>
+<th>Weeks<br>identical</th><th>Wider ≥<br>narrower</th><th>Reversals</th><th>Impact</th></tr></thead>
+<tbody><tr class="fire">
+<td><b>CIRCLE K</b><br><span class="b b-red">DUPLICATE — remove narrower</span></td>
+<td class="geo"><span class="lbl">wider</span> CK - CIRCLE K CORP TOTAL W/ ALASKA - RMA<br><span class="ch">CONVENTIONAL|CONVENIENCE</span>
+<div class="num">908,545 units · 694 rows · 9 UPCs</div>
+<span class="lbl">narrower</span> CIRCLE K CORP - RMA<br><span class="ch">CONVENTIONAL|CONVENIENCE</span>
+<div class="num">900,911 units · 694 rows · 9 UPCs</div></td>
+<td class="ok">1.000<span class="need">need ≥ 0.75</span></td>
+<td class="ok">59.6%<span class="need">need ≥ 25%</span></td>
+<td class="ok">100.0%<span class="need">need ≥ 98%</span></td>
+<td class="ok">0<span class="need">need = 0</span></td>
+<td class="imp"><b>900,911</b> units<br>double-counted</td></tr><tr class="pass">
+<td><b>GIANT EAGLE</b><br><span class="b b-green">DISTINCT — keep both</span></td>
+<td class="geo"><span class="lbl">wider</span> GIANT EAGLE CORP - RMA<br><span class="ch">CONVENTIONAL|FOOD</span>
+<div class="num">385,950 units · 648 rows · 14 UPCs</div>
+<span class="lbl">narrower</span> GIANT EAGLE - GETGO CORP - RMA<br><span class="ch">CONVENTIONAL|CONVENIENCE</span>
+<div class="num">128,582 units · 588 rows · 10 UPCs</div></td>
+<td class="no">0.518<span class="need">need ≥ 0.75</span></td>
+<td class="no">0.0%<span class="need">need ≥ 25%</span></td>
+<td class="no">94.1%<span class="need">need ≥ 98%</span></td>
+<td class="no">25<span class="need">need = 0</span></td>
+<td class="imp">—</td></tr><tr class="pass">
+<td><b>HY-VEE</b><br><span class="b b-green">DISTINCT — keep both</span></td>
+<td class="geo"><span class="lbl">wider</span> HY-VEE CORP - RMA<br><span class="ch">CONVENTIONAL|FOOD</span>
+<div class="num">1,562,946 units · 3,114 rows · 59 UPCs</div>
+<span class="lbl">narrower</span> HY-VEE FAST &amp; FRESH - RMA<br><span class="ch">CONVENTIONAL|CONVENIENCE</span>
+<div class="num">53,011 units · 1,302 rows · 22 UPCs</div></td>
+<td class="no">0.409<span class="need">need ≥ 0.75</span></td>
+<td class="no">0.5%<span class="need">need ≥ 25%</span></td>
+<td class="no">97.3%<span class="need">need ≥ 98%</span></td>
+<td class="no">34<span class="need">need = 0</span></td>
+<td class="imp">—</td></tr></tbody></table></div>
+
+<h2>2. Circle K &mdash; item-level evidence</h2>
+<p class="q">All nine items tell the same story: identical week counts in both markets, a tiny
+positive difference that is the Alaska stores, and <b>zero</b> weeks where the without-Alaska
+market reports more. <b>Built Peanut Butter Puff 1.41oz</b> is identical in every one of its 124
+weeks &mdash; Alaska carries none of that item, so the two markets report exactly the same number.</p>
+<div class="scroll"><table>
+<thead><tr><th>Item</th><th>Units<br>w/ Alaska</th><th>Units<br>w/o Alaska</th><th>Difference<br>(Alaska)</th>
+<th>as %</th><th>Weeks<br>both mkts</th><th>Weeks<br>identical</th><th>Reversals</th></tr></thead>
+<tbody><tr><td class="geo">Built Puff Brownie Batter Protein Bar 1.41 Oz<div class="upc">UPC 08-40229-30362</div></td>
+<td class="n">372,230</td><td class="n">369,453</td>
+<td class="n">2,777</td><td class="n">0.75%</td>
+<td class="n">152 / 152</td>
+<td class="n">48%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Puff Coconut Protein Bar 1.41 Oz<div class="upc">UPC 08-40229-30037</div></td>
+<td class="n">311,708</td><td class="n">309,336</td>
+<td class="n">2,372</td><td class="n">0.76%</td>
+<td class="n">152 / 152</td>
+<td class="n">47%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz<div class="upc">UPC 08-40229-30333</div></td>
+<td class="n">84,896</td><td class="n">83,963</td>
+<td class="n">934</td><td class="n">1.10%</td>
+<td class="n">116 / 116</td>
+<td class="n">78%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Protein Bar Puff Sour Peach 1.45 Oz<div class="upc">UPC 08-40229-30651</div></td>
+<td class="n">40,964</td><td class="n">40,822</td>
+<td class="n">142</td><td class="n">0.35%</td>
+<td class="n">27 / 27</td>
+<td class="n">19%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Puff Peanut Butter Protein Bar 1.41 Oz<div class="upc">UPC 08-40229-30642</div></td>
+<td class="n">31,458</td><td class="n">30,658</td>
+<td class="n">800</td><td class="n">2.54%</td>
+<td class="n">33 / 33</td>
+<td class="n">24%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Puff Sour Blu Razz Blast Bar 1.45 Oz<div class="upc">UPC 08-40229-30653</div></td>
+<td class="n">26,285</td><td class="n">26,197</td>
+<td class="n">87</td><td class="n">0.33%</td>
+<td class="n">27 / 27</td>
+<td class="n">59%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Puff Sour Green Apple Crush Bar 1.45 Oz<div class="upc">UPC 08-40229-30655</div></td>
+<td class="n">23,677</td><td class="n">23,593</td>
+<td class="n">85</td><td class="n">0.36%</td>
+<td class="n">27 / 27</td>
+<td class="n">56%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Puff Cookies N Cream Protein Bar 1.41 Oz<div class="upc">UPC 08-40229-30550</div></td>
+<td class="n">9,124</td><td class="n">8,686</td>
+<td class="n">438</td><td class="n">4.80%</td>
+<td class="n">36 / 36</td>
+<td class="n">31%</td>
+<td class="n ok">0</td></tr><tr><td class="geo">Built Peanut Butter Puff 1.41oz<div class="upc">UPC 08-40229-30449</div></td>
+<td class="n">8,203</td><td class="n">8,203</td>
+<td class="n">0</td><td class="n">0.00%</td>
+<td class="n">124 / 124</td>
+<td class="n">100%</td>
+<td class="n ok">0</td></tr></tbody></table></div>
+
+<h2>3. All &ldquo;with Alaska / Hawaii&rdquo; style markets in the SPINS extract</h2>
+<p class="q">These nested market definitions are the pattern to watch. Most are harmless today only
+because they carry no units &mdash; which is luck, not protection. If a future SPINS refresh
+populates one, it would silently double that retailer.</p>
+<div class="scroll"><table>
+<thead><tr><th>SPINS market</th><th>Retailer</th><th class="n">Units</th><th class="n">Rows</th>
+<th class="n">Items</th><th>Status</th></tr></thead>
+<tbody><tr><td class="geo">CK - CIRCLE K CORP TOTAL W/ ALASKA - RMA</td><td>CIRCLE K</td>
+<td class="n">908,545</td><td class="n">690</td><td class="n">9</td>
+<td><span class="b b-red"><b>LIVE duplicate</b> — fixed by this rule</span></td></tr><tr><td class="geo">MURPHY CORP TOTAL - RMA</td><td>MURPHY USA</td>
+<td class="n">165,493</td><td class="n">395</td><td class="n">7</td>
+<td><span class="b b-green">In panel, <b>no sibling market</b> — not a duplicate</span></td></tr><tr><td class="geo">AC - ALBERTSONSCO CORP W/ AK/HI - RMA</td><td>ALBERTSONS COMPANIES</td>
+<td class="n">0</td><td class="n">1,921</td><td class="n">36</td>
+<td><span class="b b-amber">Zero units — already excluded</span></td></tr><tr><td class="geo">CVS CORP TTL W/ AK/HI - RMA</td><td>CVS</td>
+<td class="n">0</td><td class="n">579</td><td class="n">13</td>
+<td><span class="b b-amber">Zero units — already excluded</span></td></tr><tr><td class="geo">KROGER CORP W/ AK, HARRIS TEETER, ROUNDYS AND RULER - RMA</td><td>KROGER</td>
+<td class="n">0</td><td class="n">2,794</td><td class="n">48</td>
+<td><span class="b b-amber">Zero units — already excluded</span></td></tr><tr><td class="geo">SAMS CORP W/ HI/PR - RMA</td><td>SAMS</td>
+<td class="n">0</td><td class="n">241</td><td class="n">4</td>
+<td><span class="b b-amber">Zero units — already excluded</span></td></tr><tr><td class="geo">TARGET CORP W/ AK/HI - RMA</td><td>TARGET</td>
+<td class="n">0</td><td class="n">1,053</td><td class="n">34</td>
+<td><span class="b b-amber">Zero units — already excluded</span></td></tr><tr><td class="geo">WALGREENS BOOTS ALLIANCE (WBA) CORP W/ AK/HI/PR - RMA</td><td>WALGREENS BOOTS ALLIANCE</td>
+<td class="n">0</td><td class="n">239</td><td class="n">12</td>
+<td><span class="b b-amber">Zero units — already excluded</span></td></tr></tbody></table></div>
+
+<h2>4. What we would like Brian to confirm</h2>
+<div class="card">
+<ul>
+<li><b>Circle K:</b> is <code>CK - CIRCLE K CORP TOTAL W/ ALASKA</code> the market BUILT treats as
+Circle K total, with <code>CIRCLE K CORP</code> being the same chain excluding Alaska? We propose
+keeping the <i>with-Alaska</i> market as the more complete figure.</li>
+<li><b>Giant Eagle:</b> confirm <code>GIANT EAGLE - GETGO CORP</code> (convenience) and
+<code>GIANT EAGLE CORP</code> (supermarket) are separate store sets that should both count.</li>
+<li><b>Hy-Vee:</b> same question for <code>HY-VEE FAST &amp; FRESH</code> vs <code>HY-VEE CORP</code>.</li>
+<li><b>Murphy USA:</b> <code>MURPHY CORP TOTAL</code> is the only market we receive for Murphy.
+Is anything missing, or is that the complete picture?</li>
+<li><b>The six zero-unit markets</b> (Albertsons, CVS, Kroger, Sam&rsquo;s, Target, Walgreens
+&ldquo;with AK/HI&rdquo;): should these ever carry volume? If they are permanently empty we can
+exclude them by definition rather than by measurement.</li>
+</ul>
+</div>
+
+<h2>5. Effect if the Circle K duplicate is removed</h2>
+<div class="card">
+<p>Portfolio base units move from <b>61.42M to 60.52M (&minus;1.5%)</b>, and series from 2,137 to
+2,128. Circle K&rsquo;s own 13-week forecast drops from <b>314,246 to about 160,117 units</b>, which
+is the correction, not a loss.</p>
+<p class="q">Nothing is live on this yet &mdash; the change is staged pending this review. Because the
+current models learned from the double-counted history, adopting it means retraining rather than
+only re-scoring.</p>
+</div>
+
+</div></body></html>
