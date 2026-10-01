@@ -6,6 +6,99 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 199: seasonal index was stale and unreproducible; now volume-weighted over all series (2026-10-01)
+
+Reliability item #1 of three. `outputs/mo59_seasonal_index.csv` is the **only** seasonal signal for
+the ~55% of series with no year-ago anchor — MO_27's `elif seasonal_lookup` branch — including 51%
+of Target's volume. Its shape silently shapes most of the forecast.
+
+### What was actually wrong
+
+The live CSV is dated **2026-09-24**, is **untracked**, and peaks week 40 (October, +0.193).
+Re-running MO_59's own selection logic today gives a **week-6** peak on *both* the Sep-30 and Oct-1
+panels. **The production curve cannot be reproduced from any panel we still have.**
+
+Being untracked is the root cause. A file that shapes most of the forecast had no version history,
+so there was no way to establish when or from what it was generated. It should be committed
+alongside the code that produces it.
+
+### Two claims in update 196/197 and register ANO-08 that were WRONG
+
+1. **"The index is built from 3 series."** No — MO_59 calls
+   `compute_seasonal_index(df, qualifying[:20])`. That is **20** series by volume with ≥104 weeks.
+   `TOP_N = 3` only picks the decomposition-chart panels, exactly as its comment says. The call site
+   was misread and the claim repeated several times.
+2. **"The October peak is a CRMA artifact."** No — MO_59 already excludes CRMA at load
+   (`EXCLUDE_GEO = {"CRMA"}`), so the inflated panel was never the cause.
+
+Both are logged as register corrections (ANO-10 supersedes ANO-08) rather than quiet edits, since
+the register exists to stop plausible-but-unverified diagnoses from being inherited.
+
+### The real mechanism: bimodal curve, unstable median argmax
+
+The curve has a **March mode and an October mode that are nearly tied**, so a median's `argmax`
+flips between them on trivial changes:
+
+| n | median peak | **vol-weighted peak** |
+|---|---|---|
+| 20 | wk 6 | **wk 11** |
+| 40 | wk 41 | **wk 10** |
+| 80 | wk 10 / wk 40 (two panels) | **wk 10 / wk 10** |
+| 265 | wk 9 | **wk 10** |
+
+**Correlation is the wrong stability metric here.** Across two panels at n=80 the median's peak moved
+**30 weeks** while correlation stayed at **0.9851**. The shape barely changes; only which near-tied
+mode wins — and `argmax` is what matters, because this index multiplies a forecast.
+
+Related: **single-series STL is numerically unstable at BUILT's history length.** With `period=52`
+and only ~2.9 annual cycles, one extra week of data on one Walmart series (153 → 152 weeks) moved a
+small-sample peak by 30 weeks. Averaging over hundreds of series is what makes the estimate usable.
+
+### The fix
+
+MO_59 now computes the index from **all qualifying series, volume-weighted**, not a 20-series median.
+Full sample, 265 of 281 fitted:
+
+| | week | index |
+|---|---|---|
+| **Primary peak** | wk 10 — Mar 05 | **+0.199** |
+| Pre-summer shoulder | wk 17 — Apr 23 | +0.089 |
+| October secondary | wk 41 — Oct 08 | +0.063 |
+| **Trough** | wk 52 — Dec | **−0.190** |
+
+Matches documented BUILT seasonality (March peak, December trough) at **both** ends. The 20-series
+median agreed on the peak month but put the trough in **September (wk 36)** — the full sample is
+specifically required for the trough.
+
+Three genuinely positive regions: Feb/Mar primary, late-April pre-summer shoulder, October
+secondary — New Year and spring fitness, pre-summer, back-to-school/Q4. **Jason's recollection of a
+summer bump is half-right:** week 17 (late April, +0.089) is a real local maximum and April runs
++0.068 to +0.140, but May declines monotonically and **July is the deepest trough of the year**
+(−0.134). It is a spring shoulder, not a summer peak.
+
+The October mode shrinks from +0.104 (n=40) to +0.063 (n=265), consistent with a mass/club pattern
+diluting once the full portfolio is represented — likely why it kept winning `argmax` in small
+samples.
+
+Amplitude ~0.39 vs the documented ~0.58 is expected, not a discrepancy: STL strips trend, so its
+seasonal component is smaller than raw monthly averages that conflate the two. This is also why
+client-facing charts should use the 12-month raw monthly index, not the STL curve.
+
+### Outstanding
+
+The production CSV has **not** been regenerated. MO_59 is patched, but running it end-to-end also
+performs changepoint detection and HTML rendering, so it is deliberately a separate step rather than
+a side effect. After regeneration the forecast needs re-checking for the 55% of series that depend
+on it.
+
+New diagnostic: `scripts/MO_59b_seasonal_index_rebuild.py` — writes alongside the production file,
+never overwrites it, and saves the full comparison to `outputs/mo59b_seasonal_comparison.json`.
+
+Register → v0.6, 80 entries: ANO-10 (supersedes ANO-08), NRM-07 (volume-weighted decision),
+ANO-11 (single-series STL instability).
+
+---
+
 ## README update 198: v9 trained; tree budget measured (cap was never the constraint); NS2 bridge received (2026-10-01)
 
 ### v9 trained on the final panel

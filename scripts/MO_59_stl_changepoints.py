@@ -177,8 +177,29 @@ def compute_monthly_demand_index(df: pd.DataFrame, top_series: list[tuple]) -> p
     })
 
 
-def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple]) -> pd.DataFrame:
-    """Average the STL seasonal component by week_of_year across top series."""
+def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple],
+                           weighted: bool = True) -> pd.DataFrame:
+    """Aggregate the STL seasonal component by week_of_year across series.
+
+    `weighted=True` takes a VOLUME-WEIGHTED mean rather than a median. Measured on the
+    2026-10-01 panel (MO_59b), the median's argmax is unstable and the weighted mean is not:
+
+        n       median peak        vol-weighted peak
+        20      wk  6              wk 11
+        40      wk 41              wk 10
+        80      wk 10 / wk 40 *    wk 10 / wk 10 *
+        265     wk  9              wk 10
+        (* the two values are the Oct-1 and Sep-30 panels)
+
+    The curve is BIMODAL — a real March mode and a real October secondary bump, nearly
+    tied — so the median's peak flips between them on trivial changes in sample size or
+    panel while correlation stays ~0.95-0.99. Correlation is the wrong stability metric
+    here; argmax is what matters, because this index multiplies a forecast.
+
+    Volume-weighted over ALL qualifying series gives peak week 10 (March) and trough week
+    52 (December), matching BUILT's documented portfolio seasonality at both ends. The
+    trough specifically requires the full sample: at n=40 the weighted trough is week 36.
+    """
     all_seasonal = []
     for acct, upc, desc in top_series:
         s = extract_series(df, acct, upc)
@@ -196,12 +217,26 @@ def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple]) -> pd.Data
         all_seasonal.append(seasonal_df)
 
     combined = pd.concat(all_seasonal, ignore_index=True)
-    index_df = (
-        combined.groupby("week_of_year")["seasonal_norm"]
-        .median()
-        .reset_index()
-        .rename(columns={"seasonal_norm": "seasonal_index"})
-    )
+    if weighted:
+        # Weight each series by its own mean level, so the index reflects where the
+        # volume actually is rather than treating a tiny c-store series as equal to
+        # a top Walmart SKU.
+        combined["_w"] = combined["baseline"].where(
+            combined["baseline"].notna() & (combined["baseline"] > 0), other=np.nan)
+        combined["_w"] = combined["_w"].fillna(combined.groupby("week_of_year")["_w"].transform("median"))
+        combined = combined.dropna(subset=["_w", "seasonal_norm"])
+        index_df = (
+            combined.groupby("week_of_year")
+            .apply(lambda d: np.average(d["seasonal_norm"], weights=d["_w"]))
+            .reset_index(name="seasonal_index")
+        )
+    else:
+        index_df = (
+            combined.groupby("week_of_year")["seasonal_norm"]
+            .median()
+            .reset_index()
+            .rename(columns={"seasonal_norm": "seasonal_index"})
+        )
     # Shift so mean = 0 (show deviation from average)
     index_df["seasonal_index"] -= index_df["seasonal_index"].mean()
     return index_df
@@ -586,7 +621,13 @@ if __name__ == "__main__":
     print(f"  Top {TOP_N}: {labels}")
 
     print("\nComputing portfolio seasonal index (STL) …")
-    index_df = compute_seasonal_index(df, qualifying[:20])  # used by forecasting model
+    # ALL qualifying series, volume-weighted — NOT qualifying[:20]. See the docstring on
+    # compute_seasonal_index: a 20-series median put the trough in September (week 36)
+    # where the full volume-weighted sample puts it in December (week 52), matching
+    # documented seasonality. This index is the ONLY seasonal signal for the ~55% of
+    # series with no year-ago anchor (MO_27's `elif seasonal_lookup` branch), so a wrong
+    # shape here silently mis-shapes the majority of the forecast.
+    index_df = compute_seasonal_index(df, qualifying, weighted=True)  # used by forecasting model
     index_df.to_csv(OUT_INDEX_CSV, index=False)
     print(f"  Saved seasonal index CSV → {OUT_INDEX_CSV.name}")
 

@@ -540,7 +540,7 @@
     <span class="section-anchor" id="normalization"></span>
     <div class="section-head">
       <span class="section-title">Normalization &amp; Transforms</span>
-      <span class="section-count">6 entries</span>
+      <span class="section-count">7 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -596,6 +596,14 @@
             <td><div class="entry-title">Flavour fields: use spins_flavor_canonical (35); never spins_flavor_mapped; specific_flavor_normalized for within-flavour pack comparison</div><div class="entry-body">Verified against SPINS for known UPCs. <code>spins_flavor_canonical</code> — 35 families, <b>override-corrected</b>, the model feature. <code>specific_flavor_normalized</code> — 76 specific flavours, typo-corrected ("Satled Caramel" → "Salted Caramel"); the right field for comparing pack sizes <b>within one true flavour</b>, since family BROWNIE lumps Brownie Batter with Candy Cane Brownie. <code>specific_flavor_raw</code> — 84 values, retains typos, audit only. <code>spins_flavor_mapped</code> (36) — <b>do not use</b>: misfiles UPC 08-40229-30034 Salted Caramel under CHOCOLATE. <code>spins_flavor_raw</code> (43–48) — un-normalised, duplicate levels (COOKIES &amp; CREAM vs COOKIES AND CREAM; CHOCOLATE &amp; MINT vs CHOCOLATE MINT vs MINT CHOCOLATE CHIP), audit only.</div></td>
             <td><span class="where-tag">MO_25</span><span class="where-tag">MO_26.FEATURE_COLS</span><span class="where-tag">built_enriched_weekly</span><span class="where-tag">ANO-07</span><span class="where-tag">pack-mix analysis</span></td>
             <td>Confirmed against Jason's own SPINS extract: canonical matches his `flavor` field exactly for ALMOND / CARAMEL / BROWNIE / BLUE RASPBERRY test UPCs, and already fixes the Salted-Caramel-in-CHOCOLATE error that mapped and raw both carry.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">NRM-07</td>
+            <td><div class="entry-title">Seasonal index: ALL qualifying series, VOLUME-WEIGHTED — the median's argmax is unstable on a bimodal curve</div><div class="entry-body">The curve has a <b>March mode and an October mode that are nearly tied</b>, so the median's <code>argmax</code> flips between them on trivial changes in sample size or panel: n=20 → wk 6; n=40 → wk 41; n=80 → wk 10 (Oct-1) vs wk 40 (Sep-30); n=265 → wk 9. Volume-weighted is <b>stable at week 10–11 across every sample size and both panels</b>. MO_59 now calls <code>compute_seasonal_index(df, qualifying, weighted=True)</code>. Full sample (265 of 281 fitted): primary peak <b>wk 10 (Mar 05) +0.199</b>; pre-summer shoulder <b>wk 17 (Apr 23) +0.089</b>; October secondary wk 41 +0.063; trough <b>wk 52 (Dec) −0.190</b>. Matches documented BUILT seasonality (March peak, December trough) at BOTH ends; the 20-series median put the trough in September (wk 36), so the full sample is specifically required for the trough.</div></td>
+            <td><span class="where-tag">MO_59.compute_seasonal_index</span><span class="where-tag">mo59_seasonal_index.csv</span><span class="where-tag">MO_27</span><span class="where-tag">reference CPG seasonality</span></td>
+            <td>⚠️ CORRELATION IS THE WRONG STABILITY METRIC HERE: across the two panels at n=80 the median's peak moved 30 weeks while correlation stayed at 0.9851. The shape barely changes; only which near-tied mode wins — and argmax is what matters because this index multiplies a forecast. Amplitude ~0.39 vs the documented ~0.58 is expected, not a discrepancy: STL strips trend. The October mode shrinks from +0.104 (n=40) to +0.063 (n=265), consistent with a mass/club pattern diluting once the full portfolio is represented — likely why it won argmax in small samples.</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
@@ -718,7 +726,7 @@
     <span class="section-anchor" id="anomalies"></span>
     <div class="section-head">
       <span class="section-title">Known Data Anomalies</span>
-      <span class="section-count">9 entries</span>
+      <span class="section-count">11 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -798,6 +806,22 @@
             <td><div class="entry-title">Four divergent copies of CAT_COLS silently killed two features at inference since v8</div><div class="entry-body"><code>spins_flavor_canonical</code> and <code>source_brand</code> were trained on but <b>never used at forecast time</b>. MO_27 line 162 kept a 3-element categorical set while three other sites had 5, so both columns were run through <code>pd.to_numeric</code> → NaN, and <code>str(nan or "UNKNOWN")</code> returns the literal string <code>"nan"</code> because <b>NaN is truthy in Python</b> — which is absent from the booster's category universe and resolves to missing. <code>build_forecast_chart_data.py</code> had the same split: Kroger's backtest used 5 categoricals, Albertsons/Publix/UNFI used 3, so the per-retailer wMAPE table was never apples-to-apples.</div></td>
             <td><span class="where-tag">MO_26</span><span class="where-tag">MO_27</span><span class="where-tag">MO_28</span><span class="where-tag">build_forecast_chart_data</span><span class="where-tag">mo_panel.CAT_COLS</span><span class="where-tag">GRD-07</span></td>
             <td>Had geography_raw been added as planned, the same coercion would have NaN'd a GROUP_COL, and groupby drops NaN keys — a silent zero-series forecast exiting 0. Now one module-level CAT_COLS in mo_panel, with MO_27 asserting its count matches the booster's pandas_categorical.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-10</td>
+            <td><div class="entry-title">SUPERSEDES ANO-08 — the seasonal index was stale and unreproducible, not CRMA-inflated and not 3-series</div><div class="entry-body">ANO-08 attributed the MO_59 index's October peak to the old CRMA-inflated panel. <b>That diagnosis was wrong on two counts.</b> (1) MO_59 already excludes CRMA at load (<code>EXCLUDE_GEO = {"CRMA"}</code>), so the inflated panel was never the cause. (2) The index is built from <code>qualifying[:20]</code> — <b>20</b> series ranked by volume with ≥104 weeks — not from <code>TOP_N = 3</code>, which only selects the decomposition-chart panels. The real finding: <code>outputs/mo59_seasonal_index.csv</code> is dated <b>2026-09-24</b>, is <b>untracked</b>, and peaks week 40 (October) — but re-running MO_59's own n=20 logic today gives a <b>week-6</b> peak on BOTH the Sep-30 and Oct-1 panels. The production curve is <b>not reproducible from any panel we still have</b>. Being untracked is the root cause: a file that shapes ~55% of the forecast had no version history.</div></td>
+            <td><span class="where-tag">MO_59</span><span class="where-tag">mo59_seasonal_index.csv</span><span class="where-tag">MO_27 elif seasonal_lookup</span><span class="where-tag">ANO-08</span></td>
+            <td>Logged as a correction rather than an edit so the wrong hypothesis stays visible — the register exists to stop exactly this kind of plausible-but-unverified diagnosis from being inherited. Recommend committing the CSV alongside the code that generates it.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-11</td>
+            <td><div class="entry-title">Single-series STL is numerically unstable at BUILT's history length</div><div class="entry-body">With <code>period=52</code> and only ~2.9 annual cycles of history, the STL seasonal estimate for an individual series is poorly constrained. Demonstrated: one extra week of data on a Walmart series (153 → 152 weeks between panels) flipped a 3-series index's peak from <b>week 40 to week 10</b> — a 30-week swing from a single row. Averaging across hundreds of series is what makes the estimate usable.</div></td>
+            <td><span class="where-tag">MO_59</span><span class="where-tag">STL period=52</span><span class="where-tag">MIN_WEEKS=104</span><span class="where-tag">MO_59b probe</span></td>
+            <td>Consequence: never trust a seasonal curve derived from a handful of series at this history length, and treat any per-series STL seasonal component as high-variance. MO_59's MIN_WEEKS=104 (2 cycles) is the bare minimum for STL to run, not enough for a stable single-series estimate.</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>
