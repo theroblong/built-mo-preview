@@ -54,7 +54,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v8"
+MODEL_VERSION  = "v9"   # must match the MO_26 run whose PKLs + metrics this loads;
+                        # the guard in _load_models_and_meta() hard-fails on a mismatch
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]
 
@@ -76,7 +77,8 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 # and must be supplied explicitly in `state`.
 from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
                       apply_rma_priority, fill_promo_mechanic_nulls,
-                      drop_military_accounts)
+                      drop_military_accounts, drop_short_series,
+                      MIN_SERIES_WEEKS)
 
 
 # Category values seen at inference that the model was never trained on.
@@ -258,6 +260,34 @@ if __name__ == "__main__":
     df_actual = drop_military_accounts(df_actual)
     df_actual = drop_zero_volume_geographies(df_actual, target="base_units")
     df_actual = apply_rma_priority(df_actual)
+
+    # Short-series gate. MO_27 has NO minimum-history check of its own and NO ETS
+    # fallback — ETS lives only in MO_30–MO_37 and the chart builder, and MO_34's
+    # data-maturity router ("new/expanding -> ETS, mature -> LightGBM") is analysis, not
+    # production code. Now that MIN_WEEKS no longer runs at extract, these series DO
+    # reach the parquet, so without this gate MO_27 would build feature rows whose
+    # lag13 / roll13 / lag52 are all NaN and serve the predictions as if they were sound.
+    # Skipping with a logged, named list is the honest behaviour until a real ETS route
+    # is wired in — these are BUILT's newest launches and they need one.
+    _pre = df_actual.groupby(GROUP_COLS, observed=True).ngroups
+    _short = df_actual.groupby(GROUP_COLS, observed=True)["base_units"].transform("count") < MIN_SERIES_WEEKS
+    if _short.any():
+        _skipped_upcs = sorted(set(df_actual.loc[_short, "upc"]))
+        _skipped_series = df_actual.loc[_short].groupby(GROUP_COLS, observed=True).ngroups
+        print(f"\n  NOT FORECAST — {_skipped_series:,} series across {len(_skipped_upcs)} UPC(s) "
+              f"have <{MIN_SERIES_WEEKS} weeks of history:")
+        for _u in _skipped_upcs[:12]:
+            _s = df_actual[(df_actual["upc"] == _u) & _short]
+            _d = str(_s["description"].iloc[0])[:44] if "description" in _s else ""
+            print(f"      {_u}  {int(_s['base_units'].sum()):>9,} units  "
+                  f"{_s['retail_account'].nunique():>3} accounts  {_d}")
+        if len(_skipped_upcs) > 12:
+            print(f"      … and {len(_skipped_upcs) - 12} more")
+        print(f"      These need an ETS / cold-start route (MO_34 establishes the rule);")
+        print(f"      LightGBM cannot forecast them — lag13/roll13/lag52 are all NaN.")
+    df_actual = drop_short_series(df_actual, verbose=False)
+    print(f"  Series to forecast: {df_actual.groupby(GROUP_COLS, observed=True).ngroups:,} "
+          f"of {_pre:,}")
 
     # CAT_COLS from mo_panel — NOT a local copy. geography_raw is a GROUP_COL, so
     # coercing it to numeric turns the whole column to NaN and groupby(GROUP_COLS)

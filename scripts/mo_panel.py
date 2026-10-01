@@ -79,6 +79,65 @@ MILITARY_ACCOUNTS = {"AAFES", "COAST GUARD", "NEXCOM"}
 
 PROMO_MECHANIC_COLS = ["units_lift_tpr", "units_lift_any_display", "units_lift_any_feature"]
 
+# Minimum series length for the LightGBM autoregressive models. Was MO_25.MIN_WEEKS,
+# i.e. applied at EXTRACT — which silently kept BUILT's newest launches out of the
+# parquet entirely and therefore out of reach of every downstream consumer, not just
+# training. Moved here so it is a training/serving decision, not a data decision.
+MIN_SERIES_WEEKS = 13
+
+
+def drop_short_series(
+    df: pd.DataFrame,
+    min_weeks: int = MIN_SERIES_WEEKS,
+    target: str = "base_units",
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """Drop series with fewer than `min_weeks` observations of the target.
+
+    Legitimate for the LightGBM models: the feature set needs lag13 / roll13 / lag52,
+    so an 8-week series contributes rows whose most important features are all NaN.
+
+    NOT legitimate at extract time, which is where this used to live. On the
+    2026-10-01 panel MO_25's MIN_WEEKS=13 removed 7,291 series (23.9% of all series,
+    though only 0.27% of volume) AND 17 UPCs entirely — including BUILT's newest and
+    fastest-ramping launches:
+
+        08-40229-30766  first week 2026-06-28  150,141 units  17 accounts  (11 wks)
+        08-40229-30687  first week 2026-07-19  145,626 units  17 accounts  ( 8 wks)
+        08-40229-30771  first week 2026-07-19   23,162 units   3 accounts  ( 8 wks)
+        08-40229-30772  first week 2026-07-12      758 units   1 account   ( 9 wks)
+
+    Those are real, broadly distributed new SKUs (a new PB S'mores flavour in both
+    1-pack and 12-pack, plus a new variety pack). Dropping them in MO_25 made them
+    invisible to MO_27, to the ETS work, and to any analysis reading the parquet.
+
+    ⚠️ MO_27 must apply this too. It has NO minimum-history gate of its own and NO ETS
+    fallback — ETS lives only in the MO_30–MO_37 analysis scripts and the chart builder,
+    and MO_34's data-maturity router ("new/expanding -> ETS, mature -> LightGBM") is
+    analysis, not production code. So without an explicit gate MO_27 would forecast an
+    8-week series from NaN lags and serve the result as if it were sound. Skipping with
+    a logged count is the honest behaviour until a real ETS route is wired in.
+    """
+    if target not in df.columns:
+        return df
+    lengths = df.groupby(GROUP_COLS, observed=True)[target].transform("count")
+    mask = lengths < min_weeks
+    if not mask.any():
+        if verbose:
+            print(f"  Short-series filter (<{min_weeks} wks): none found")
+        return df
+    kept = df[~mask].copy()
+    if verbose:
+        n_series = df.loc[mask].groupby(GROUP_COLS, observed=True).ngroups
+        lost_upcs = sorted(set(df.loc[mask, "upc"]) - set(kept["upc"])) if "upc" in df else []
+        print(f"  Short-series filter (<{min_weeks} wks): dropped {int(mask.sum()):,} rows "
+              f"across {n_series:,} series")
+        if lost_upcs:
+            print(f"      {len(lost_upcs)} UPC(s) excluded entirely (too new to model): "
+                  f"{lost_upcs[:6]}{' …' if len(lost_upcs) > 6 else ''}")
+        print(f"  Rows: {len(df):,} → {len(kept):,}")
+    return kept
+
 
 def drop_military_accounts(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """Drop military exchange / commissary accounts.

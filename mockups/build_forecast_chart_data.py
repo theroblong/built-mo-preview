@@ -431,6 +431,9 @@ SEASONAL_BLEND_WEIGHT = 0.40   # must match MO_27 constant
 FORECAST_WEEKS        = 13
 GROUP_COLS            = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
+# Must match MO_26.MODEL_VERSION — drives both the PKL paths and the archive tag.
+MODEL_VERSION         = "v9"
+
 ROOT_ML   = Path(__file__).parent.parent
 PARQUET   = ROOT_ML / "outputs" / "retailer_sales_weekly.parquet"
 MODEL_DIR = ROOT_ML / "outputs"
@@ -504,13 +507,21 @@ try:
 
     df_r1 = df_r1.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
-    # Load v8 quantile models
-    with open(MODEL_DIR / "model_retailer_sales_q50_v8.pkl", "rb") as f:
-        m50 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q10_v8.pkl", "rb") as f:
-        m10 = pickle.load(f)
-    with open(MODEL_DIR / "model_retailer_sales_q90_v8.pkl", "rb") as f:
-        m90 = pickle.load(f)
+    # Load quantile models for MODEL_VERSION. Paths were hardcoded to _v8 while the
+    # archive tag below still said v6 — a third place for the version to drift out of
+    # sync with MO_26. One constant now drives both.
+    def _load_q(tag):
+        _p = MODEL_DIR / f"model_retailer_sales_{tag}_{MODEL_VERSION}.pkl"
+        if not _p.exists():
+            raise SystemExit(
+                f"\nFATAL: {_p} not found.\n"
+                f"  build_forecast_chart_data.py MODEL_VERSION={MODEL_VERSION!r}.\n"
+                f"  Run MO_26 with that MODEL_VERSION, or update the constant here."
+            )
+        with open(_p, "rb") as f:
+            return pickle.load(f)
+    m50, m10, m90 = _load_q("q50"), _load_q("q10"), _load_q("q90")
+    print(f"  Loaded {MODEL_VERSION} quantile models")
 
     # pandas_categorical order matches FEATURE_COLS categorical position:
     # [0] = channel_outlet, [1] = retail_account, [2] = pack_count, [3] = spins_flavor_canonical, [4] = source_brand
@@ -2196,7 +2207,8 @@ print(f"  Open with: open {out_path}")
 import datetime as _dt
 _versions_dir = Path(__file__).parent / "versions"
 _versions_dir.mkdir(exist_ok=True)
-_model_tag = "v6"   # bump when MODEL_VERSION in MO_26 changes
+_model_tag  = MODEL_VERSION   # single source of truth — was hardcoded "v6" while the
+                             # model paths loaded _v8; do not reintroduce a literal here
 _date_tag   = _dt.date.today().isoformat()
 _archive    = _versions_dir / f"bracken_forecast_charts_{_model_tag}_{_date_tag}.html"
 if not _archive.exists():

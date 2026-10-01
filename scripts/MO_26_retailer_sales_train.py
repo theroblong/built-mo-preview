@@ -43,14 +43,27 @@ from pathlib import Path
 # FEATURE_COLS declares should be a deliberate choice, never a silent default.
 ALLOW_MISSING_FEATURES = "--allow-missing-features" in sys.argv
 
-MODEL_VERSION = "v9b"
-                      # v9a: ATTRIBUTION BASELINE — new panel + new features, v8 hyperparameters.
-                      #      Isolates the effect of (a) the zero-volume geography filter
-                      #      (26,187 rows / 14.0% removed) and (b) spins_flavor_raw, separately
-                      #      from the Optuna retune that follows as v9. Without this split, a v8→v9
-                      #      delta cannot be attributed between data cleaning and hyperparameters.
-                      #      Also: source_brand nulls now fill "UNKNOWN" not "BUILT BAR" (2,750 rows).
-                      #      geography_raw deliberately NOT a feature; nfp_protein_range is constant.
+MODEL_VERSION = "v9"
+                      # v9: DATA + FEATURE run — final panel, corrected features, v8 hyperparameters.
+                      #     Deliberately keeps v8's LGBM_BASE so that v8->v9 measures the data and
+                      #     feature work alone, and v9->v10 measures the Optuna retune alone. One
+                      #     combined jump could not be attributed between the two.
+                      #     Panel (mo_panel.py, applied at consumption): promo-mechanic null fill,
+                      #     military exclusion, zero-volume geographies, RMA priority.
+                      #     186,427 -> 96,153 rows | 1,716 series | 120 UPCs | 61.1M units.
+                      #     Features: spins_flavor_canonical now carries 35 override-corrected SPINS
+                      #     families instead of 2 — MO_25 was filtering source_brand='BUILT' against
+                      #     built_enriched_weekly, which matched 2 UPCs; parent_brand='BUILT' matches
+                      #     146. source_brand nulls fill "UNKNOWN" not "BUILT BAR" (2,750 rows).
+                      #     geography_raw deliberately NOT a feature (1:1 with retail_account x
+                      #     channel_outlet for 99.1% of rows once phantoms are filtered);
+                      #     nfp_protein_range is constant for BUILT, so extracted but not modelled.
+                      # v10 (next): v9 panel + Optuna params from outputs/lgbm_best_params.json.
+                      #     THREE edits, not one — LGBM_BASE, RECENCY_LAMBDA (a separate constant;
+                      #     it drives the sample weights, not LightGBM), and MODEL_VERSION.
+                      #     Check hit_n_estimators_cap first. See MO_28's docstring.
+                      # (A discarded intermediate labelled v9a sits in outputs/ — trained before the
+                      #  RMA/military/promo-null rules and on spins_flavor_raw. Not comparable.)
                       # v8: is_promo_week + promo_intensity + units_lift_tpr/display/feature +
                       #     promo_52w_lag + promo_rate_woy + spins_flavor_canonical (from MO_25 v11) +
                       #     drop is_bogo_week (0.06% gain, redundant w/ arp_dollar_discount) +
@@ -70,7 +83,7 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 # backtesting cannot drift apart again (four divergent copies shipped a silent v8 bug).
 from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
                       apply_rma_priority, fill_promo_mechanic_nulls,
-                      drop_military_accounts)
+                      drop_military_accounts, drop_short_series)
 
 FEATURE_COLS = [
     # Rolling demand stats (backward-looking, no leakage)
@@ -261,6 +274,10 @@ if __name__ == "__main__":
     df = drop_military_accounts(df)
     df = drop_zero_volume_geographies(df, target="base_units")
     df = apply_rma_priority(df)
+    # Was MO_25.MIN_WEEKS (extract-time). Moved here so BUILT's newest launches stay
+    # in the parquet and remain reachable by MO_27/analysis, while still being kept out
+    # of the LightGBM fit, where lag13/roll13/lag52 would all be NaN for them.
+    df = drop_short_series(df)
     # Categorical dtypes retain dropped levels after a row filter; unused levels
     # would be carried into the model's category universe and inflate split search.
     for cat_col in CAT_COLS:

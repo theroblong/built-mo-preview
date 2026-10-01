@@ -8,15 +8,37 @@ Each fold = 13-week validation window (mirrors production forecast horizon).
 
 Outputs
 -------
-  outputs/lgbm_best_params.json      — best params for MO_26 v9 to consume
+  outputs/lgbm_best_params.json      — best params for MO_26 to consume
   outputs/lgbm_optuna_study.pkl      — full Optuna study for later analysis
+  outputs/mo28_optuna_study.db       — SQLite storage; resumable and inspectable mid-run
 
 Usage
 -----
-  python MO_28_lgbm_optuna_study.py [--trials 75] [--jobs 1]
+  python MO_28_lgbm_optuna_study.py [--trials 150] [--jobs 1]
 
-After completion, update LGBM_BASE in MO_26 with the best params and bump
-MODEL_VERSION to v9.
+Resuming an interrupted run: the study is stored in SQLite with load_if_exists=True,
+so re-invoking with the same study_name continues it. The first v9 attempt ran
+in-memory and its best params were unrecoverable when it had to be killed.
+
+APPLYING THE RESULT TO MO_26 — three separate edits, not one
+------------------------------------------------------------
+1. LGBM_BASE        <- lgbm_best_params.json["lgbm_base_v9"]
+                       (n_estimators here is the best trial's ACTUAL converged count,
+                        not the search cap)
+2. RECENCY_LAMBDA   <- lgbm_best_params.json["recency_lambda_tuned"]
+                       NOT part of LGBM_BASE — it drives the exp(-lambda*weeks_ago)
+                       sample weights, so it is a separate module constant. Forgetting
+                       this silently leaves the production default of 0.02 in place and
+                       discards one of the tuned dimensions.
+3. MODEL_VERSION    <- bump
+
+FIRST check lgbm_best_params.json["hit_n_estimators_cap"]. If true, the search was
+budget-constrained and the tuned learning_rate is compensating for a truncated tree
+budget — raise N_ESTIMATORS_MAX and re-run rather than applying those params.
+
+ALSO check ["panel_rows"] / ["panel_series"] against what MO_26 reports. These params
+are only valid for the panel they were tuned on; the first v9 attempt was discarded
+because it had been tuned on the unfiltered panel.
 """
 
 import argparse
@@ -37,9 +59,22 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 N_FOLDS          = 3          # walk-forward folds; each = 13-week val window
 VAL_WEEKS        = 13         # mirrors production forecast horizon
-EARLY_STOP       = 100        # more patience than current 50 — lets lr settle
-N_ESTIMATORS_MAX = 2000       # hard cap; 5000 allowed ultra-low-lr trials to run 2+ hrs
-RECENCY_LAMBDA   = 0.02       # fixed — same as MO_26; tune separately if needed
+EARLY_STOP       = 150        # v9: raised from 100 — more patience so a high n_estimators
+                              #     cap cannot reward noise; affordable with weekend runtime
+N_ESTIMATORS_MAX = 6000       # v9: raised from 2000. MO_26 hit its 4000 cap with validation
+                              #     loss STILL FALLING, so 2000 capped the search at a known-
+                              #     insufficient point and forced the tuned learning_rate to
+                              #     compensate. Early stopping exits converged trials early,
+                              #     so a high cap costs time only on genuinely slow learners,
+                              #     and the 0.01 learning-rate floor bounds that.
+RECENCY_LAMBDA   = 0.02       # MO_26 production default; used only as the Optuna seed value
+                              # below. v9 TUNES this rather than running the separate grid
+                              # search that was planned: lambda, learning_rate and tree count
+                              # all control how hard the model leans on recent data, so fixing
+                              # two and grid-searching the third afterwards bakes in a
+                              # sequential-search bias. Searching them jointly replaces the
+                              # planned ~2.5h RECENCY_LAMBDA grid.
+RECENCY_LAMBDA_RANGE = (0.0, 0.15)   # 0.0 = no recency weighting; 0.15 ≈ 13-week half-life
 TARGET_QUANTILE  = 0.50       # optimize median; apply best params to q10/q90 too
 RANDOM_STATE     = 42
 
@@ -87,7 +122,7 @@ FEATURE_COLS = [
 # Rule: tune on the panel you will train on.
 from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
                       apply_rma_priority, fill_promo_mechanic_nulls,
-                      drop_military_accounts)
+                      drop_military_accounts, drop_short_series)
 
 
 # ── Data prep ─────────────────────────────────────────────────────────────────
@@ -134,6 +169,10 @@ def load_and_prepare() -> pd.DataFrame:
     df = drop_military_accounts(df)
     df = drop_zero_volume_geographies(df, target="base_units")
     df = apply_rma_priority(df)
+    # Was MO_25.MIN_WEEKS (extract-time). Moved here so BUILT's newest launches stay
+    # in the parquet and remain reachable by MO_27/analysis, while still being kept out
+    # of the LightGBM fit, where lag13/roll13/lag52 would all be NaN for them.
+    df = drop_short_series(df)
     for cat_col in CAT_COLS:
         if cat_col in df.columns and isinstance(df[cat_col].dtype, pd.CategoricalDtype):
             df[cat_col] = df[cat_col].cat.remove_unused_categories()
@@ -162,10 +201,11 @@ def make_folds(df: pd.DataFrame, n_folds: int, val_weeks: int):
     return folds
 
 
-def recency_weights(df_train: pd.DataFrame) -> np.ndarray:
+def recency_weights(df_train: pd.DataFrame, recency_lambda: float = RECENCY_LAMBDA) -> np.ndarray:
+    """exp(-lambda * weeks_ago) sample weights. lambda is a tuned parameter in v9."""
     t_max = df_train["__time"].max()
     weeks_ago = (t_max - df_train["__time"]).dt.total_seconds() / (7 * 24 * 3600)
-    return np.exp(-RECENCY_LAMBDA * weeks_ago.clip(lower=0).values)
+    return np.exp(-recency_lambda * weeks_ago.clip(lower=0).values)
 
 
 # ── Optuna objective ──────────────────────────────────────────────────────────
@@ -179,32 +219,42 @@ def make_objective(df: pd.DataFrame, folds, available: list):
             alpha            = TARGET_QUANTILE,
             n_estimators     = N_ESTIMATORS_MAX,
             learning_rate    = trial.suggest_float("learning_rate",    0.01,  0.08, log=True),
-            num_leaves       = trial.suggest_int(  "num_leaves",       31,    191),
-            min_child_samples= trial.suggest_int(  "min_child_samples",10,    80),
+            num_leaves       = trial.suggest_int(  "num_leaves",       15,    191),
+            # v9: upper bound raised 80 -> 200. The panel halved (187,127 -> 96,153 rows,
+            # 3,173 -> 1,716 series) while spins_flavor_canonical went 2 -> 35 levels, so
+            # overfitting risk rose; give the optimizer room to regularise harder.
+            min_child_samples= trial.suggest_int(  "min_child_samples",10,    200, log=True),
             feature_fraction = trial.suggest_float("feature_fraction", 0.5,   1.0),
             bagging_fraction = trial.suggest_float("bagging_fraction", 0.5,   1.0),
             bagging_freq     = 5,
             reg_alpha        = trial.suggest_float("reg_alpha",        0.0,   2.0),
             reg_lambda       = trial.suggest_float("reg_lambda",       0.0,   2.0),
             # ── v9: categorical regularisation ───────────────────────────────
-            # Previously untuned, which was fine at 5 categoricals topping out at
-            # 132 levels. v9 adds spins_flavor_raw (43 levels), and retail_account
-            # is the #1 feature by gain, so the split search over category subsets
-            # is where overfitting will show up first. These four knobs control it:
+            # Previously untuned, which was fine when categoricals topped out at
+            # retail_account. Now spins_flavor_canonical carries 35 real families on a
+            # HALVED panel, and retail_account is the #1 feature by gain — so the split
+            # search over category subsets is where overfitting shows up first. Ranges
+            # widened vs the first v9 draft for the smaller panel. Four knobs:
             #   min_data_per_group — rows a category needs before it can be split out
             #   cat_smooth         — shrinks thin categories toward the global mean
             #   cat_l2             — L2 penalty on categorical split gain
             #   max_cat_threshold  — caps levels on one side of a split
-            min_data_per_group= trial.suggest_int(  "min_data_per_group", 20,  300, log=True),
-            cat_smooth        = trial.suggest_float("cat_smooth",         1.0, 200.0, log=True),
-            cat_l2            = trial.suggest_float("cat_l2",             1.0, 50.0,  log=True),
+            min_data_per_group= trial.suggest_int(  "min_data_per_group", 20,  500, log=True),
+            cat_smooth        = trial.suggest_float("cat_smooth",         1.0, 400.0, log=True),
+            cat_l2            = trial.suggest_float("cat_l2",             1.0, 100.0, log=True),
             max_cat_threshold = trial.suggest_int(  "max_cat_threshold",  8,   64),
             random_state     = RANDOM_STATE,
             n_jobs           = -1,
             verbose          = -1,
         )
 
+        # v9: tuned jointly with learning_rate and tree count rather than grid-searched
+        # afterwards — all three govern how hard the model leans on recent data, and for a
+        # brand growing this fast that trade-off is the point of the exercise.
+        recency_lambda = trial.suggest_float("recency_lambda", *RECENCY_LAMBDA_RANGE)
+
         fold_scores = []
+        fold_best_iters = []
         for train_mask, val_mask in folds:
             train_df = df[train_mask]
             val_df   = df[val_mask]
@@ -214,7 +264,7 @@ def make_objective(df: pd.DataFrame, folds, available: list):
             X_vl = val_df[available]
             y_vl = val_df["log_base_units"].values
 
-            sw = recency_weights(train_df)
+            sw = recency_weights(train_df, recency_lambda)
 
             model = lgb.LGBMRegressor(**params)
             model.fit(
@@ -233,10 +283,22 @@ def make_objective(df: pd.DataFrame, folds, available: list):
             )))
             fold_scores.append(pinball)
 
+            # Where early stopping actually landed. MO_28 used to write
+            # n_estimators = N_ESTIMATORS_MAX into lgbm_base_v9, which told MO_26 to train
+            # the full cap regardless of where the best trial converged — harmless at a
+            # 2000 cap, actively wrong at 6000. Record it so MO_26 gets a real number.
+            bi = getattr(model, "best_iteration_", None) or N_ESTIMATORS_MAX
+            fold_best_iters.append(int(bi))
+
             # Prune unpromising trials early (after first fold)
             trial.report(np.mean(fold_scores), step=len(fold_scores))
             if trial.should_prune():
                 raise optuna.TrialPruned()
+
+        trial.set_user_attr("fold_best_iters", fold_best_iters)
+        trial.set_user_attr("best_iter_max", max(fold_best_iters))
+        trial.set_user_attr("best_iter_mean", int(np.mean(fold_best_iters)))
+        trial.set_user_attr("hit_cap", max(fold_best_iters) >= N_ESTIMATORS_MAX)
 
         return float(np.mean(fold_scores))
 
@@ -247,7 +309,7 @@ def make_objective(df: pd.DataFrame, folds, available: list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trials", type=int, default=75,
+    parser.add_argument("--trials", type=int, default=150,
                         help="Number of Optuna trials (default 75)")
     parser.add_argument("--jobs", type=int, default=1,
                         help="Parallel jobs for Optuna (default 1; set >1 carefully with LightGBM n_jobs=-1)")
@@ -304,12 +366,34 @@ if __name__ == "__main__":
     for k, v in best.params.items():
         print(f"  {k:25s} = {v}")
 
-    # Suggested LGBM_BASE for MO_26 v9
+    # Where the best trial actually converged, per fold.
+    _fold_iters = best.user_attrs.get("fold_best_iters") or []
+    _iter_max   = best.user_attrs.get("best_iter_max") or N_ESTIMATORS_MAX
+    _hit_cap    = bool(best.user_attrs.get("hit_cap"))
+    print(f"\n  best_iteration per fold: {_fold_iters}  (max {_iter_max})")
+    if _hit_cap:
+        print(f"  *** WARNING: best trial hit the n_estimators cap ({N_ESTIMATORS_MAX}).")
+        print(f"      Validation loss was still falling — raise N_ESTIMATORS_MAX and re-run,")
+        print(f"      otherwise the tuned learning_rate is compensating for a truncated budget.")
+    else:
+        print(f"  Converged below the cap — the tuned learning_rate is not budget-constrained.")
+
+    # recency_lambda is a tuned param in v9; report it against the production default.
+    _lam = best.params.get("recency_lambda")
+    if _lam is not None:
+        print(f"\n  recency_lambda = {_lam:.4f}  (MO_26 production default {RECENCY_LAMBDA}) "
+              f"-> {'MORE' if _lam > RECENCY_LAMBDA else 'LESS'} weight on recent weeks")
+
+    # Suggested LGBM_BASE for MO_26. n_estimators is the best trial's ACTUAL converged
+    # count (max across folds, +10% headroom for the full-data retrain which sees more
+    # rows), not the search cap — writing the cap told MO_26 to train 6000 trees
+    # regardless of where the search landed.
+    _n_est = N_ESTIMATORS_MAX if _hit_cap else int(_iter_max * 1.1)
     best_params_full = {
         "boosting_type":     "gbdt",
-        "n_estimators":      N_ESTIMATORS_MAX,    # cap; early stopping governs
+        "n_estimators":      _n_est,
         "early_stop_rounds": EARLY_STOP,
-        **best.params,
+        **{k: v for k, v in best.params.items() if k != "recency_lambda"},
         "bagging_freq":      5,
         "random_state":      RANDOM_STATE,
         "n_jobs":            -1,
@@ -332,11 +416,34 @@ if __name__ == "__main__":
         "target_quantile": TARGET_QUANTILE,
         "early_stop_rounds": EARLY_STOP,
         "n_estimators_max":  N_ESTIMATORS_MAX,
-        "recency_lambda":    RECENCY_LAMBDA,
         "best_value":      best.value,
         "best_params":     best.params,
         "lgbm_base_v9":    best_params_full,
         "v8_baseline":     v8_baseline,
+
+        # ── Values MO_26 must apply by hand, separately from LGBM_BASE ──────────
+        # recency_lambda is NOT an LGBM parameter — it drives the exp(-lambda*weeks_ago)
+        # sample weights — so it is deliberately excluded from lgbm_base_v9 and surfaced
+        # here. Set MO_26.RECENCY_LAMBDA to recency_lambda_tuned.
+        "recency_lambda_tuned":   best.params.get("recency_lambda"),
+        "recency_lambda_prior":   RECENCY_LAMBDA,
+        "recency_lambda_range":   list(RECENCY_LAMBDA_RANGE),
+
+        # Where the best trial actually converged. If hit_cap is true the search was
+        # budget-constrained and the tuned learning_rate is compensating — raise
+        # n_estimators_max and re-run rather than trusting these params.
+        "best_fold_best_iters":   _fold_iters,
+        "best_iter_max":          _iter_max,
+        "hit_n_estimators_cap":   _hit_cap,
+
+        # Panel the tuning actually ran on — params are only valid for this definition.
+        # The first v9 attempt was killed because it had been tuned on the unfiltered
+        # panel (14.1% phantom zero rows = a point mass at log1p(0)).
+        "panel_rows":             int(len(df)),
+        "panel_series":           int(df.groupby(GROUP_COLS).ngroups),
+        "panel_features":         len(available),
+        "panel_rules":            ["fill_promo_mechanic_nulls", "drop_military_accounts",
+                                   "drop_zero_volume_geographies", "apply_rma_priority"],
     }
 
     params_path = Path("outputs/lgbm_best_params.json")

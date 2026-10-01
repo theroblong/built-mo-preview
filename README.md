@@ -6,6 +6,133 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 196: short-series filter moved out of the extract; MO_27 has no ETS fallback (2026-10-01)
+
+Audit of "are we training on all valid BUILT data" — prompted by the RMA/CRMA work. Result: the
+panel rules lose nothing real, but a filter upstream of them was quietly excluding BUILT's newest
+launches from the entire pipeline.
+
+### The panel rules lose no valid volume
+
+| geography_level | raw units | kept units | retained |
+|---|---|---|---|
+| RMA | 53,550,044 | 53,550,044 | **100.0%** |
+| KEY ACCOUNT | 7,587,422 | 7,587,422 | **100.0%** |
+| CRMA | 365,500,694 | 0 | 0.0% |
+
+Every unit of account-level and KEY ACCOUNT volume survives. RMA *rows* fall 49,376 → 37,639,
+but only because the zero-unit AK/HI variants go — no volume attached. Two UPCs disappear, both
+CRMA-only, carrying 227 and 2,127 units across three years. So the rules remove exactly two
+things: zero-unit rows, and the CRMA double-count.
+
+### But `MIN_WEEKS` was excluding the newest launches from everything
+
+`MIN_WEEKS = 13` ran inside **MO_25**, at extract. The intent was to keep short series out of
+LightGBM training, where `lag13` / `roll13` / `lag52` are necessarily NaN. Applying it at extract
+instead meant those series never reached the parquet — invisible to MO_27, to the ETS
+experiments, and to any analysis reading the panel.
+
+Cost: 7,291 series (23.9% of series, **0.27% of volume**) and **17 UPCs entirely**:
+
+| UPC | first week | units | accounts | longest series | product |
+|---|---|---|---|---|---|
+| `08-40229-30766` | 2026-06-28 | 150,141 | 17 | 11 wks | Sour Blue Razz & Green Apple 13-pk |
+| `08-40229-30687` | 2026-07-19 | 145,626 | 17 | 8 wks | Puff PB Cup 8-pk |
+| `08-40229-30771` | 2026-07-19 | 23,162 | 3 | 8 wks | Puff PB S'mores 1-pk |
+| `08-40229-30772` | 2026-07-12 | 758 | 1 | 9 wks | Puff PB S'mores 12-pk |
+
+Not fragments — 150K and 146K units across 17 retail accounts each, a new flavour in two pack
+sizes plus a new variety pack. Excluded solely because no single series had reached 13 weeks
+against a panel ending 2026-09-06.
+
+Now `mo_panel.drop_short_series()` (`MIN_SERIES_WEEKS = 13`), called by MO_26, MO_27 and MO_28.
+Same stewardship principle as the other panel rules: keep the rows, decide at consumption.
+
+### Correction: MO_27 has no ETS fallback, and there is no MO_75 script
+
+Stated plainly because the routing is widely assumed to exist:
+
+- `MO_27_retailer_sales_forecast.py` contains **zero** ETS / `ExponentialSmoothing` references,
+  and had **no minimum-history gate** at all — it took `.tail(65)` per series and forecast
+  whatever it was handed.
+- ETS exists only in `MO_30/31/34/35/36/37` and `mockups/build_forecast_chart_data.py` — all
+  backtest, analysis or reporting paths.
+- **There is no `MO_75` script**, despite earlier notes citing "ETS fallback (MO_75) for
+  ≥4-actuals series".
+- `MO_34_ensemble_trigger.py` establishes the data-maturity routing rule ("route new/expanding
+  series to ETS, mature series to LightGBM") but is wired into nothing. The router is a
+  documented intention, not production code.
+
+This mattered: moving the filter without also gating MO_27 would have replaced *no forecast* with
+*bad forecast* — LightGBM predicting an 8-week series from all-NaN lag features and serving it as
+sound. MO_27 now skips sub-13-week series explicitly and logs each UPC with units and account
+count plus a note that they need an ETS route.
+
+**These SKUs still get no forecast.** The gap is visible and named rather than silent at the
+extract. Making them forecastable is separate work — MO_34 already establishes the rule.
+
+### Version scheme simplified to v9 / v10
+
+The `v9a` / `v9b` letter suffixes are dropped. `v9a` was trained before the RMA, military and
+promo-null rules and on `spins_flavor_raw`, so its panel (157,902 rows) no longer exists and it is
+not comparable to anything. Back to the integer convention:
+
+- **v9** = final panel + corrected features + **v8 hyperparameters** — isolates the data and
+  feature work
+- **v10** = v9 panel + Optuna params — isolates the tuning
+
+Renaming surfaced a third drift instance, the same failure mode as the `CAT_COLS` bug:
+`build_forecast_chart_data.py` hardcoded its PKL paths to `_v8` while `_model_tag` for the HTML
+archive still read `"v6"`, under a comment saying "bump when MODEL_VERSION in MO_26 changes" that
+had not been bumped in two versions. So archived Bracken charts were labelled v6 while loading v8
+models. Both now derive from one `MODEL_VERSION` constant, and a missing PKL hard-fails with the
+expected path.
+
+### MO_28 configured for the weekend run
+
+| knob | was | now |
+|---|---|---|
+| `N_ESTIMATORS_MAX` | 2000 | **6000** |
+| `EARLY_STOP` | 100 | **150** |
+| `RECENCY_LAMBDA` | fixed 0.02 | **tuned, 0.0–0.15** |
+| `min_child_samples` | 10–80 | **10–200** (log) |
+| `num_leaves` | 31–191 | **15–191** |
+| `min_data_per_group` | 20–300 | **20–500** |
+| `cat_smooth` | 1–200 | **1–400** |
+| `cat_l2` | 1–50 | **1–100** |
+| trials | 75 | **150** |
+
+`RECENCY_LAMBDA` is now a tuned dimension rather than the separately planned grid search: lambda,
+learning rate and tree count all govern how hard the model leans on recent weeks, so fixing two
+and grid-searching the third bakes in a sequential-search bias. This replaces the planned ~2.5h
+grid.
+
+Two correctness fixes beyond the ranges. `n_estimators` in `lgbm_base_v9` is now the best trial's
+**actual** converged count (max `best_iteration_` across folds, +10% headroom for the full-data
+retrain), not the search cap — writing the cap would have told MO_26 to train 6,000 trees
+regardless. And `hit_n_estimators_cap` is reported, with a loud warning: if the best trial pegged
+the cap, the tuned learning rate is compensating for a truncated budget and the params should not
+be applied at all. `recency_lambda` is deliberately **excluded** from `lgbm_base_v9` (it drives
+sample weights, not LightGBM) and surfaced as `recency_lambda_tuned`, since applying LGBM_BASE and
+forgetting the separate constant would silently discard a tuned dimension. The output also stamps
+`panel_rows` / `panel_series` / `panel_rules`, so params can never again be applied to a panel
+they were not tuned on.
+
+### Open items
+
+- `lag52` is **100%** null where `weeks_since_launch < 52`, and 51.8% of rows are that young, yet
+  `SEASONAL_BLEND_WEIGHT = 0.40` pulls every forecast toward `lag52 × YoY`. For half the panel
+  there is no anchor to blend toward — the Q4 2025 miss mechanism, live in the forecast path.
+- ETS route for sub-13-week series is unbuilt. MO_34 has the rule; nothing consumes it.
+- Albertsons 50.3% wMAPE still needs re-measuring on the final panel before it justifies a
+  Prophet changepoint feature.
+- After RMA priority the panel is **61% KEY ACCOUNT rows** but those carry a minority of volume
+  (Walmart, Target, Sam's, Publix, Kroger alone are 35M of 61M units). Row-weighted log-space loss
+  therefore gives a small convenience account the same weight as Walmart — defensible as relative
+  error, worth revisiting if the business case is dollars.
+
+---
+
 ## README update 195: v9 panel definition — RMA priority, flavour join fix, CRMA 7.3x double-count (2026-10-01)
 
 Prep for v9 turned up four defects in the panel and feature plumbing. All are fixed; the Optuna

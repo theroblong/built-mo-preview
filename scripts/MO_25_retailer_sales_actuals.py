@@ -323,11 +323,18 @@ if __name__ == "__main__":
         bfw[_c] = bfw[_c].fillna("UNKNOWN")
 
     # Coverage guard. The old bug passed the `len(flv) > 0` check with 2 rows, so a
-    # partial failure looked like success. Assert that most focal UPCs actually matched.
-    _focal_upcs   = bfw["upc"].nunique()
-    _matched_upcs = bfw.loc[bfw["spins_flavor_canonical"] != "UNKNOWN", "upc"].nunique()
+    # partial failure looked like success. Assert that most FOCAL UPCs actually matched.
+    #
+    # The denominator must be the focal BUILT UPCs from event_detection_weekly (~145),
+    # NOT bfw["upc"]: built_filtered_weekly carries the full SPINS universe including
+    # every competitor brand (~5,700 UPCs), and BUILT flavour enrichment is not expected
+    # to cover competitors. Using bfw made a working fix look like a 2.4% failure.
+    _focal_set    = set(edw["upc"].unique())
+    _matched_set  = set(bfw.loc[bfw["spins_flavor_canonical"] != "UNKNOWN", "upc"].unique())
+    _focal_upcs   = len(_focal_set)
+    _matched_upcs = len(_focal_set & _matched_set)
     _cov = _matched_upcs / _focal_upcs if _focal_upcs else 0.0
-    print(f"  Flavor coverage: {_matched_upcs}/{_focal_upcs} focal UPCs ({_cov*100:.1f}%)")
+    print(f"  Flavor coverage: {_matched_upcs}/{_focal_upcs} focal BUILT UPCs ({_cov*100:.1f}%)")
     if _cov < 0.80:
         raise SystemExit(
             f"\nFATAL: flavour enrichment covered only {_cov*100:.1f}% of focal UPCs "
@@ -959,10 +966,24 @@ if __name__ == "__main__":
 
     # ── 14. Quality filters ──────────────────────────────────────────────────
     print("\n[14] Applying quality filters …")
+    # MIN_WEEKS filter REMOVED from the extract (2026-10-01) and moved to
+    # mo_panel.drop_short_series(), applied by MO_26 / MO_27 / MO_28.
+    #
+    # Dropping it here removed 7,291 series (23.9% of series, 0.27% of volume) AND 17
+    # UPCs entirely — including BUILT's newest launches: 08-40229-30766 (first week
+    # 2026-06-28, 150,141 units, 17 accounts) and 08-40229-30687 (2026-07-19, 145,626
+    # units, 17 accounts). Because it ran at extract, those SKUs never reached the
+    # parquet and were therefore invisible to MO_27, to the ETS experiments, and to any
+    # analysis — not merely excluded from LightGBM training, which is all that was
+    # intended. Same stewardship principle as the panel rules: keep the rows, decide at
+    # consumption.
     series_len = df.groupby(GROUP_COLS)["base_units"].transform("count")
-    before = len(df)
-    df = df[series_len >= MIN_WEEKS].copy()
-    print(f"  Dropped {before - len(df):,} rows (series < {MIN_WEEKS} weeks)")
+    _n_short = int((series_len < MIN_WEEKS).sum())
+    _n_short_series = df.loc[series_len < MIN_WEEKS].groupby(GROUP_COLS).ngroups
+    print(f"  Short series RETAINED: {_n_short:,} rows across {_n_short_series:,} series "
+          f"with <{MIN_WEEKS} weeks (newest launches)")
+    print(f"    -> excluded from LightGBM training by mo_panel.drop_short_series(), "
+          f"not from the panel")
 
     df = df.dropna(subset=["base_units_lag1"]).copy()
     print(f"  After lag1 dropna: {len(df):,} rows")
