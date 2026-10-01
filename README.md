@@ -6,6 +6,116 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 197: cold-start ramp — 41% of demand forecast with no ramp signal (2026-10-01)
+
+Reliability audit ahead of showing the forecast to Bracken. Conclusion: the forecast is
+**structurally low for roughly 41% of demand**, and this is the Q4 2025 miss mechanism still live
+in the forecast path. Not a hypothesis — measured.
+
+### The lifecycle ramp curve
+
+Each series indexed to **its own** weeks 5–8 mean, so launch dates are comparable:
+
+| weeks since launch | demand | TDP | n series |
+|---|---|---|---|
+| 1–4 | 0.98 | 1.00 | 1,567 |
+| 5–8 | 1.00 | 1.01 | 1,618 |
+| 9–13 | 0.99 | 1.06 | 1,501 |
+| 14–20 | **1.09** | 1.16 | 1,360 |
+| 21–26 | 1.19 | 1.24 | 1,154 |
+| 27–39 | 1.37 | 1.39 | 1,057 |
+| 40–52 | **1.81** | 1.60 | 876 |
+| 53–60 | **2.09** | 1.69 | 620 |
+
+Series **double** over their first 60 weeks, and **TDP tracks demand closely** (1.01 → 1.69).
+Demand outruns TDP slightly, so velocity per store improves too, but distribution is the main
+engine — which supports a distribution × velocity framing for new items.
+
+### Lifecycle time ≠ calendar time
+
+A per-series *calendar* comparison (last 4 weeks vs prior 4) shows median demand −6.5% and median
+TDP −1% in **every** history band, with only ~33% of series showing TDP growth and velocity/TDP CV
+≈ 0.40 even for mature series. That looks like it disproves the ramp. It does not — the window is
+Aug–Sep, the seasonal trough (STL has Aug at −14.8%), so everything declines at once and the
+lifecycle pattern is masked.
+
+**Ramp must be measured on `weeks_since_launch`, never on a calendar window.** Both measurements
+are correct; they answer different questions. Worth recording because the calendar view is the
+intuitive one and it points the wrong way.
+
+### The gap, quantified
+
+Share of the last 13 weeks of actual demand by series history length:
+
+| band | units | share | series | what it gets |
+|---|---|---|---|---|
+| `<13 wks` | 123,971 | **1.2%** | 34 | **no forecast at all** |
+| `13–51 wks` | 4,176,293 | **40.9%** | 761 | forecast, but **no year-ago anchor** |
+| `≥52 wks` | 5,915,975 | 57.9% | 601 | full YAGO blend |
+
+The 13–51 week band should grow **+66%** across weeks 14→52 per the curve above. What it gets is
+pure AR — which MO_27's own comment says "collapses to a flat mean after ~4 steps" — plus the
+MO_59 portfolio STL multiplier, which encodes **month-of-year, not lifecycle stage**. Neither
+carries ramp.
+
+The `<13 wks` share is small but compounding: 0.2% of Q2 2026 demand → 1.5% of Q3.
+
+### Candidate methods (none shipped)
+
+| method | assessment |
+|---|---|
+| TDP-adjusted naive | Sound — TDP tracks the ramp — but blocked on **forward TDP**, which does not exist. NS2 sell-in was the intended source. Holding TDP flat yields no ramp. |
+| Weighted MA / naive linear regression | Sidesteps forward TDP: recent trend implicitly contains the ramp. |
+| ETS-Holt | Already extrapolates linear trend, so it should capture ramp — this gives MO_34's "ETS competitive for new/expanding series" finding an actual mechanism. |
+| Lifecycle-ramp prior | Use the curve keyed on `weeks_since_launch`, blended like the existing YAGO and STL layers. Cheapest — the feature exists and the curve is measured. This is the "cold-start proxy overlay", gap #9 in update 194's levers list. |
+
+**Recommended test:** horse race on the 13–51 week band only — LightGBM vs ETS-Holt vs weighted MA
+vs naive-last vs lifecycle-ramp overlay. MO_34 already has the LGB-vs-ETS harness, so this adds
+arms rather than infrastructure, and all arms are cheap to fit. Higher value than the Optuna run;
+they do not conflict.
+
+**Caveat before shipping a ramp prior:** the curve is a median across series and mixes different
+launch patterns — a new flavour at 17 accounts behaves unlike a pack-size extension at one. Check
+whether to condition on pack count or account breadth at launch first.
+
+### Short series now reach the panel
+
+MO_25 re-run with `MIN_WEEKS` moved to consumption: **190,375 rows, 134 UPCs** (was 186,427 /
+122). 12,999 rows across 1,017 short series are retained and flagged rather than dropped. All four
+newest launches confirmed present: `08-40229-30766` (168 rows), `08-40229-30687` (115),
+`08-40229-30771` (13), `08-40229-30772` (8). They are still excluded from LightGBM training, and
+MO_27 still skips them — but they are now visible to analysis and to whatever cold-start method
+wins the horse race.
+
+### Open: the portfolio seasonal index disagrees with documented seasonality
+
+The MO_59 STL index supplies the **entire** seasonal signal for the 55.5% of series without a
+year-ago anchor, including **51% of Target's volume** (Target's RMA only begins June 2025). It
+peaks in **week 40 (early October, +19.3%)** and troughs week 36 (September, −19.5%), with
+Feb/Mar at only +13.6% — a different *shape* from the documented portfolio pattern of a March peak
+≈ +30% and December trough ≈ −28%, and `feedback` notes already flag the STL index as not
+client-safe.
+
+STL separates trend from season, so for a fast-growing brand its seasonal component legitimately
+differs from raw monthly averages that conflate the two. But the current index was computed
+**2026-09-24 on the old CRMA-inflated panel**, so recomputing it on the RMA-only panel may resolve
+the disagreement. Settle this before any finance-audience demo — "why does it predict an October
+surge" is otherwise unanswerable.
+
+### Reliability agenda before showing Bracken
+
+1. Resolve the seasonal-index shape conflict (drives 55.5% of series).
+2. Re-measure per-retailer error on the corrected panel — the 50.3% Albertsons figure was produced
+   with flavour and brand NaN'd and half its slice phantom rows, so there is currently **no**
+   trustworthy per-retailer accuracy number.
+3. Ship a cold-start method so new launches get forecasts at all.
+4. Then tune. Optuna is worth a few percent on a correct panel; items 1–3 are structural.
+
+Version numbering is internal bookkeeping and not a client concern — v9/v10 exist so we can
+attribute which change earned which gain, nothing more.
+
+---
+
 ## README update 196: short-series filter moved out of the extract; MO_27 has no ETS fallback (2026-10-01)
 
 Audit of "are we training on all valid BUILT data" — prompted by the RMA/CRMA work. Result: the
