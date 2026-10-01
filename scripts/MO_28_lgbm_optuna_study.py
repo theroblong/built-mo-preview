@@ -69,10 +69,25 @@ FEATURE_COLS = [
     "base_units_13wk_momentum", "base_units_4wk_momentum",
     "channel_outlet", "retail_account", "pack_count",
     "spins_flavor_canonical", "source_brand",
+    # NOT added: spins_flavor_raw (un-normalised, duplicate levels) — superseded by
+    #            spins_flavor_canonical, which now carries 35 corrected families.
+    # NOT added: specific_flavor_normalized (76 levels) — ablation candidate.
+    # NOT added: nfp_protein_range (constant — 95.3% "15 TO < 20G PROTEIN")
+    # v9: geography_raw deliberately NOT a feature. Once zero-volume geographies are
+    # filtered it is 1:1 with retail_account x channel_outlet for 99.1% of rows.
 ]
 
-CAT_COLS = {"channel_outlet", "retail_account", "pack_count",
-            "spins_flavor_canonical", "source_brand"}
+# CAT_COLS + the zero-volume filter come from mo_panel so the tuning panel is
+# IDENTICAL to the one MO_26 trains on. The first v9 attempt (killed at trial 25/60)
+# tuned on the unfiltered panel, where 14.1% of rows were zero-volume phantom
+# geographies — and since the target is log1p(base_units), that was a 14% point mass
+# at exactly 0. Those rows are perfectly separable by geography, so capacity spent
+# isolating them paid off in the loss and biased the search toward higher num_leaves
+# and lower min_child_samples than the clean problem needs.
+# Rule: tune on the panel you will train on.
+from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
+                      apply_rma_priority, fill_promo_mechanic_nulls,
+                      drop_military_accounts)
 
 
 # ── Data prep ─────────────────────────────────────────────────────────────────
@@ -100,15 +115,35 @@ def load_and_prepare() -> pd.DataFrame:
     if "spins_flavor_canonical" in df.columns:
         df["spins_flavor_canonical"] = df["spins_flavor_canonical"].fillna("UNKNOWN").astype(str)
     if "source_brand" in df.columns:
-        df["source_brand"] = df["source_brand"].fillna("BUILT BAR").astype(str)
+        # "UNKNOWN" not "BUILT BAR" — matches MO_26; filling with a real brand
+        # asserts a fact the data does not support.
+        df["source_brand"] = df["source_brand"].fillna("UNKNOWN").astype(str)
+    for _c in ("geography_raw", "spins_flavor_raw", "nfp_protein_range"):
+        if _c in df.columns:
+            df[_c] = (df[_c].fillna("UNKNOWN").astype(str).str.strip()
+                            .replace("", "UNKNOWN"))
     for cat_col in CAT_COLS:
         if cat_col in df.columns:
             df[cat_col] = df[cat_col].astype("category")
 
     df = df.dropna(subset=["base_units"]).copy()
+
+    # v9: must match MO_26 exactly — see the CAT_COLS import comment above.
+    print("\n  ── Panel rules (v9) — MUST match MO_26 exactly ──")
+    df = fill_promo_mechanic_nulls(df)
+    df = drop_military_accounts(df)
+    df = drop_zero_volume_geographies(df, target="base_units")
+    df = apply_rma_priority(df)
+    for cat_col in CAT_COLS:
+        if cat_col in df.columns and isinstance(df[cat_col].dtype, pd.CategoricalDtype):
+            df[cat_col] = df[cat_col].cat.remove_unused_categories()
+
     df["log_base_units"] = np.log1p(df["base_units"])
 
     print(f"  Rows: {len(df):,} | Series: {df.groupby(GROUP_COLS).ngroups:,}")
+    _zero = (df["base_units"] == 0).mean() * 100
+    print(f"  Remaining zero-target rows: {_zero:.1f}% "
+          f"(real out-of-stock / pre-launch weeks, not phantom markets)")
     return df
 
 
@@ -151,6 +186,19 @@ def make_objective(df: pd.DataFrame, folds, available: list):
             bagging_freq     = 5,
             reg_alpha        = trial.suggest_float("reg_alpha",        0.0,   2.0),
             reg_lambda       = trial.suggest_float("reg_lambda",       0.0,   2.0),
+            # ── v9: categorical regularisation ───────────────────────────────
+            # Previously untuned, which was fine at 5 categoricals topping out at
+            # 132 levels. v9 adds spins_flavor_raw (43 levels), and retail_account
+            # is the #1 feature by gain, so the split search over category subsets
+            # is where overfitting will show up first. These four knobs control it:
+            #   min_data_per_group — rows a category needs before it can be split out
+            #   cat_smooth         — shrinks thin categories toward the global mean
+            #   cat_l2             — L2 penalty on categorical split gain
+            #   max_cat_threshold  — caps levels on one side of a split
+            min_data_per_group= trial.suggest_int(  "min_data_per_group", 20,  300, log=True),
+            cat_smooth        = trial.suggest_float("cat_smooth",         1.0, 200.0, log=True),
+            cat_l2            = trial.suggest_float("cat_l2",             1.0, 50.0,  log=True),
+            max_cat_threshold = trial.suggest_int(  "max_cat_threshold",  8,   64),
             random_state     = RANDOM_STATE,
             n_jobs           = -1,
             verbose          = -1,
@@ -224,12 +272,22 @@ if __name__ == "__main__":
 
     sampler = optuna.samplers.TPESampler(seed=RANDOM_STATE)
     pruner  = optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=1)
+    # Persistent storage. The first v9 attempt ran in-memory, so when it had to be
+    # killed at trial 25/60 its best params were unrecoverable — they are only
+    # written to JSON at completion. SQLite makes a multi-hour study resumable and
+    # inspectable mid-run (`optuna.load_study(...).trials_dataframe()`).
+    _study_name = f"lgbm_quantile_q50_v9_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}"
+    _storage    = "sqlite:///outputs/mo28_optuna_study.db"
     study   = optuna.create_study(
         direction="minimize",
         sampler=sampler,
         pruner=pruner,
-        study_name=f"lgbm_quantile_q50_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}",
+        study_name=_study_name,
+        storage=_storage,
+        load_if_exists=True,
     )
+    print(f"  Study:   {_study_name}")
+    print(f"  Storage: {_storage}  (resumable)")
 
     objective = make_objective(df, folds, available)
     study.optimize(

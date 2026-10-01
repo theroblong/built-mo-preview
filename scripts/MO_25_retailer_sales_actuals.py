@@ -262,7 +262,8 @@ if __name__ == "__main__":
             units_lift_any_display,
             units_lift_any_feature,
             spins_flavor_raw,
-            source_brand
+            source_brand,
+            nfp_protein_range
         FROM "built_filtered_weekly"
         WHERE __time >= CURRENT_TIMESTAMP - {LOOKBACK}
           AND retail_account IS NOT NULL
@@ -281,23 +282,60 @@ if __name__ == "__main__":
     # with override corrections and family normalization lives in built_enriched_weekly (Q1).
     # Join by UPC only — flavor is static per product, not time-varying.
     print("\n[2b] Loading canonical flavor from built_enriched_weekly …")
+    # FILTER FIX (2026-10-01): this was `WHERE source_brand = 'BUILT'`, which matched
+    # exactly TWO UPCs and left 120 of 122 at "UNKNOWN" — the model has had almost no
+    # flavour signal since v8. In built_enriched_weekly, source_brand holds the SUB-brand
+    # (BUILT PUFF 68 UPCs / BUILT BAR 58 / BUILT SOUR PUFF 15) and only 2 UPCs carry the
+    # bare value 'BUILT'. `parent_brand = 'BUILT'` is the correct roll-up: 146 UPCs.
+    #
+    # Field choice, verified against SPINS for known UPCs:
+    #   spins_flavor_canonical     — 35 families, OVERRIDE-CORRECTED. Fixes e.g. UPC
+    #                                08-40229-30034 Salted Caramel, which spins_flavor_mapped
+    #                                and spins_flavor_raw both misfile under CHOCOLATE.
+    #   specific_flavor_normalized — 76 specific flavours, typo-corrected ("Satled Caramel"
+    #                                -> "Salted Caramel"). Needed to compare pack sizes WITHIN
+    #                                one true flavour: family BROWNIE lumps Brownie Batter and
+    #                                Candy Cane Brownie together, which breaks that comparison.
+    #   specific_flavor_raw        — 84 values, keeps typos. Audit only.
     flv = query_druid("""
         SELECT DISTINCT
             upc,
-            spins_flavor_canonical
+            spins_flavor_canonical,
+            specific_flavor_normalized,
+            specific_flavor_raw
         FROM "built_enriched_weekly"
-        WHERE source_brand = 'BUILT'
+        WHERE parent_brand = 'BUILT'
           AND spins_flavor_canonical IS NOT NULL
           AND spins_flavor_canonical <> ''
     """)
+    _FLAVOR_COLS = ["spins_flavor_canonical", "specific_flavor_normalized", "specific_flavor_raw"]
     if len(flv) > 0:
         flv = flv.drop_duplicates(subset=["upc"])
-        print(f"  Flavor UPC count: {len(flv):,} | Unique flavors: {flv['spins_flavor_canonical'].nunique():,}")
-        bfw = bfw.merge(flv[["upc", "spins_flavor_canonical"]], on="upc", how="left")
+        print(f"  Flavor UPC count: {len(flv):,} | "
+              f"canonical families: {flv['spins_flavor_canonical'].nunique():,} | "
+              f"specific flavours: {flv['specific_flavor_normalized'].nunique():,}")
+        bfw = bfw.merge(flv[["upc"] + _FLAVOR_COLS], on="upc", how="left")
     else:
-        print("  WARNING: No flavor data returned — spins_flavor_canonical will be UNKNOWN")
-        bfw["spins_flavor_canonical"] = "UNKNOWN"
-    bfw["spins_flavor_canonical"] = bfw["spins_flavor_canonical"].fillna("UNKNOWN")
+        print("  WARNING: No flavor data returned — flavour fields will be UNKNOWN")
+        for _c in _FLAVOR_COLS:
+            bfw[_c] = "UNKNOWN"
+    for _c in _FLAVOR_COLS:
+        bfw[_c] = bfw[_c].fillna("UNKNOWN")
+
+    # Coverage guard. The old bug passed the `len(flv) > 0` check with 2 rows, so a
+    # partial failure looked like success. Assert that most focal UPCs actually matched.
+    _focal_upcs   = bfw["upc"].nunique()
+    _matched_upcs = bfw.loc[bfw["spins_flavor_canonical"] != "UNKNOWN", "upc"].nunique()
+    _cov = _matched_upcs / _focal_upcs if _focal_upcs else 0.0
+    print(f"  Flavor coverage: {_matched_upcs}/{_focal_upcs} focal UPCs ({_cov*100:.1f}%)")
+    if _cov < 0.80:
+        raise SystemExit(
+            f"\nFATAL: flavour enrichment covered only {_cov*100:.1f}% of focal UPCs "
+            f"({_matched_upcs}/{_focal_upcs}).\n"
+            f"  Expected >=80%. Check the built_enriched_weekly brand filter — "
+            f"source_brand holds SUB-brands (BUILT PUFF / BUILT BAR / BUILT SOUR PUFF); "
+            f"parent_brand = 'BUILT' is the correct roll-up."
+        )
 
     # ── 3. Merge focal ARP + promo onto foundation ───────────────────────────
     print("\n[3] Merging focal ARP + promo onto event_detection_weekly …")
@@ -987,8 +1025,17 @@ if __name__ == "__main__":
         "channel_outlet", "retail_account", "geography_raw", "geography_display", "geography_level",
         # Brand + Flavor (v12): authoritative SPINS sub-brand + canonical flavor
         "source_brand",             # model categorical: SPINS brand (BUILT BAR / BUILT PUFF / BUILT SOUR PUFF)
-        "spins_flavor_canonical",   # model categorical: COALESCE(override, family, raw)
-        "spins_flavor_raw",         # audit: raw SPINS FLAVOR field
+        "spins_flavor_canonical",     # model categorical: 35 override-corrected SPINS families
+        "specific_flavor_normalized", # model categorical (v9): 76 specific flavours, typo-corrected.
+                                      #   Enables pack-size comparison WITHIN one true flavour —
+                                      #   family BROWNIE lumps Brownie Batter with Candy Cane Brownie.
+        "specific_flavor_raw",        # audit: 84 values, retains source typos ("Satled Caramel")
+        "spins_flavor_raw",           # audit: un-normalised family from built_filtered_weekly, with
+                                      #   duplicate levels (COOKIES & CREAM vs COOKIES AND CREAM;
+                                      #   CHOCOLATE & MINT vs CHOCOLATE MINT vs MINT CHOCOLATE CHIP).
+                                      #   Superseded as a feature by spins_flavor_canonical.
+        "nfp_protein_range",          # audit: constant for BUILT (95.3% "15 TO < 20G PROTEIN") so
+                                      #   not a model feature — but ingested per data stewardship
         # Lifecycle
         "first_week_selling", "weeks_since_launch", "pack_count",
         # Demand — raw
@@ -1061,6 +1108,26 @@ if __name__ == "__main__":
         # Meta
         "scored_at",
     ]
+    # Declared-but-absent columns are dropped silently by this intersection. That
+    # is how source_brand went missing from the committed v8 parquet while still
+    # being a trained model feature — MO_26 then also drops it by intersection, so
+    # a brand-less model trains and reports success. Fail loudly for the columns
+    # the model actually depends on.
+    _MODEL_CRITICAL = [
+        "source_brand", "spins_flavor_canonical", "spins_flavor_raw",
+        "specific_flavor_normalized", "specific_flavor_raw",
+        "nfp_protein_range", "geography_raw", "channel_outlet",
+        "retail_account", "pack_count",
+    ]
+    _crit_missing = [c for c in _MODEL_CRITICAL if c not in df.columns]
+    if _crit_missing:
+        raise SystemExit(
+            f"\nFATAL: model-critical column(s) absent from the assembled frame:\n"
+            f"  {_crit_missing}\n"
+            f"  These are declared in output_cols but were lost upstream (check the\n"
+            f"  built_filtered_weekly merge for _x/_y suffixes or a dropped key).\n"
+            f"  Writing the parquet now would silently train a model without them."
+        )
     out = df[[c for c in output_cols if c in df.columns]].copy()
 
     print(f"\n{'='*70}")

@@ -403,11 +403,17 @@ FEATURE_COLS = [
     "pack_count",
     "spins_flavor_canonical",    # v8: canonical flavor group
     "source_brand",              # v12: authoritative SPINS sub-brand (BUILT BAR / PUFF / SOUR PUFF)
+    # NOT a feature: spins_flavor_raw (un-normalised) / specific_flavor_normalized (76 lv,
+                                 #   ablation candidate). spins_flavor_canonical now has 35 corrected families.
+    # NOT a feature: nfp_protein_range — constant (95.3% "15 TO < 20G PROTEIN")
+    # v9: geography_raw deliberately NOT a feature — 1:1 with retail_account x
+    # channel_outlet for 99.1% of rows once zero-volume geographies are filtered.
 ]
 
 # Features updated dynamically each step (all others held flat from latest actual row)
 AR_DYNAMIC = {
     "channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand",
+
     "week_sin", "week_cos", "week_sin26", "week_cos26",
     "weeks_since_launch",
     "base_units_lag1", "base_units_lag4", "base_units_lag13", "base_units_lag52",
@@ -454,6 +460,23 @@ try:
     df = pd.read_parquet(PARQUET)
     df["__time"] = pd.to_datetime(df["__time"], utc=True)
 
+    # v9: drop zero-volume geographies BEFORE any backtest slicing, matching MO_26 /
+    # MO_27. These inflate wMAPE directly: the metric is SUM|err| / SUM(actual), so a
+    # zero-actual series contributes to the numerator and nothing to the denominator.
+    # Albertsons' CONVENTIONAL|FOOD slice was half phantom AK/HI rows, which is a live
+    # suspect for its 50.3% outlier vs Kroger's 15.8%.
+    try:
+        from mo_panel import (drop_zero_volume_geographies, apply_rma_priority,
+                              fill_promo_mechanic_nulls, drop_military_accounts)
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        from mo_panel import drop_zero_volume_geographies
+    print("\n  ── Panel rules (v9) — MUST match MO_26 exactly ──")
+    df = fill_promo_mechanic_nulls(df)
+    df = drop_military_accounts(df)
+    df = drop_zero_volume_geographies(df, target="base_units")
+    df = apply_rma_priority(df)
+
     mask = (
         (df["retail_account"] == top_acct) &
         (df["channel_outlet"] == "CONVENTIONAL|FOOD")
@@ -462,14 +485,17 @@ try:
     if len(df_r1) == 0:
         raise ValueError(f"No parquet rows for {top_acct}")
 
-    CAT_COLS = {"channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"}
+    # From mo_panel — do not retype it. geography_raw is a GROUP_COL, so coercing it
+    # to numeric NaNs the column and groupby then drops every row, yielding a
+    # silently empty backtest.
+    from mo_panel import CAT_COLS
     for c in FEATURE_COLS:
         if c not in CAT_COLS and c in df_r1.columns:
             df_r1[c] = pd.to_numeric(df_r1[c], errors="coerce")
     if "spins_flavor_canonical" in df_r1.columns:
         df_r1["spins_flavor_canonical"] = df_r1["spins_flavor_canonical"].fillna("UNKNOWN").astype(str)
     if "source_brand" in df_r1.columns:
-        df_r1["source_brand"] = df_r1["source_brand"].fillna("BUILT BAR").astype(str)
+        df_r1["source_brand"] = df_r1["source_brand"].fillna("UNKNOWN").astype(str)
     # Compute semi-annual seasonality columns if not in parquet
     if "week_of_year" in df_r1.columns:
         _woy = df_r1["week_of_year"].fillna(1)
@@ -611,8 +637,11 @@ try:
             # Categorical identity — pulled from seed, held constant across forecast
             retail_acct_val    = str(latest.get("retail_account") or "")
             pack_count_val     = str(latest.get("pack_count") or "")
-            flavor_val         = str(latest.get("spins_flavor_canonical") or "UNKNOWN")
-            source_brand_val   = str(latest.get("source_brand") or "BUILT BAR")
+            # _cat_str, not `x or default` — NaN is truthy in Python, so the `or`
+            # fallback never fires and str(nan) leaks "nan" into the category lookup,
+            # where it is absent from the trained universe and becomes missing.
+            flavor_val         = _cat_str(latest.get("spins_flavor_canonical"), "UNKNOWN")
+            source_brand_val   = _cat_str(latest.get("source_brand"), "UNKNOWN")
 
             arp_val     = float(pd.to_numeric(latest.get("arp"), errors="coerce") or 0)
             arp_history = list(pd.to_numeric(seed["arp"], errors="coerce").fillna(arp_val))
@@ -921,10 +950,20 @@ try:
         _df_cmp = df[_mask_cmp].copy()
         if len(_df_cmp) == 0:
             continue
-        _cmp_cat_cols = {"channel_outlet", "retail_account", "pack_count"}
+        # Use the SAME CAT_COLS as the primary path. This set was stuck at 3
+        # elements while the primary path (Kroger) used 5, so the comparison
+        # retailers were backtested with spins_flavor_canonical + source_brand
+        # coerced to NaN — the v8 per-retailer wMAPE table was not apples-to-apples.
         for _c in FEATURE_COLS:
-            if _c not in _cmp_cat_cols and _c in _df_cmp.columns:
+            if _c not in CAT_COLS and _c in _df_cmp.columns:
                 _df_cmp[_c] = pd.to_numeric(_df_cmp[_c], errors="coerce")
+        for _cc, _fill in (("spins_flavor_canonical", "UNKNOWN"),
+                           ("source_brand", "UNKNOWN"),
+                           ("geography_raw", "UNKNOWN"),
+                           ("spins_flavor_raw", "UNKNOWN"),
+                           ("nfp_protein_range", "UNKNOWN")):
+            if _cc in _df_cmp.columns:
+                _df_cmp[_cc] = _df_cmp[_cc].fillna(_fill).astype(str)
         _df_cmp = _df_cmp.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
         print(f"\n  ── {_cmp_acct} quarterly backtests ({_cmp_channel}) ──")
         for _ql, _qlong, _qcutoff, _qstart, _qend in _Q_CUTOFFS:

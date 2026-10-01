@@ -6,6 +6,142 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 195: v9 panel definition — RMA priority, flavour join fix, CRMA 7.3x double-count (2026-10-01)
+
+Prep for v9 turned up four defects in the panel and feature plumbing. All are fixed; the Optuna
+retune is deferred until the panel is settled, because every panel change invalidates prior
+comparisons.
+
+### Supersedes update 194 / 190: `geography_raw` is NOT a v9 feature
+
+Updates 190 and 194 list `geography_raw` as the v9 win for distribution expansion and the MULO
+CRMA artifact. Measurement reversed it:
+
+- `geography_level` (CRMA / RMA / KEY ACCOUNT) is a **deterministic function of
+  `channel_outlet`**, so the aggregate-vs-account distinction is already in the model.
+- All 6 AK/HI market variants carry **exactly zero** units and each duplicates a real market's
+  series key (`KROGER CORP W/ AK…` 2,816 rows / 0 units vs its twin's 4,173,782).
+- Decisive: account × channel combos with 2+ geography variants = **7 before** the zero-volume
+  filter, **1 after** (Circle K, 0.9% of rows). So once phantoms are gone, `geography_raw` is
+  1:1 with `retail_account` × `channel_outlet` for 99.1% of rows — 154 levels of redundancy.
+
+The apparent geography signal *was* the phantom rows. The fix is a filter, not a feature.
+Generalisable: when a high-cardinality categorical looks predictive, check whether its signal is
+separating real data from junk.
+
+### Flavour enrichment was returning 2 UPCs — the biggest feature win
+
+MO_25 filtered `WHERE source_brand = 'BUILT'` against `built_enriched_weekly`, which returned
+**2 UPCs**, leaving 120 of 122 at `"UNKNOWN"`. That column holds the sub-brand (BUILT PUFF 68 /
+BUILT BAR 58 / BUILT SOUR PUFF 15); only 2 UPCs carry bare `'BUILT'`. Correct roll-up is
+**`parent_brand = 'BUILT'`** → 146 UPCs. The old `len(flv) > 0` guard passed with 2 rows, so
+partial failure looked like success; there is now an 80%-coverage assertion.
+
+**The demand model had almost no flavour resolution from v8 through v9a** — effectively "is this
+peanut butter, watermelon, or one of 42 other things." Evidence it matters: in v9a even the
+un-normalised `spins_flavor_raw` ranked **#3 by gain** (8,680), behind only `retail_account` and
+`base_units_wow_delta`.
+
+| field | levels | use |
+|---|---|---|
+| `spins_flavor_canonical` | 35 | **model feature** — override-corrected |
+| `specific_flavor_normalized` | 76 | ablation candidate; typo-corrected |
+| `specific_flavor_raw` | 84 | audit — keeps "Satled Caramel" |
+| `spins_flavor_mapped` | 36 | **do not use** — misfiles Salted Caramel under CHOCOLATE |
+| `spins_flavor_raw` | 43–48 | audit — duplicate levels |
+
+`specific_flavor_normalized` is the field for comparing pack sizes **within one true flavour** —
+family BROWNIE lumps Brownie Batter with Candy Cane Brownie.
+
+### RMA priority implemented — CRMA was a ~7.3x double-count
+
+Brian's rule, now enforced: **retailer has RMA → use RMA only; CRMA only if no RMA; otherwise
+keep other store-level data.** Validated two ways:
+
+1. **CRMA is not retailer-specific.** Mean pairwise Jaccard of CRMA UPC sets across *different*
+   retailers = **0.796** (CVS vs Kroger 0.901; Ahold vs BJ's 0.975) — a shared MULO aggregate.
+2. **RMA matches each retail model.** Kroger CONVENTIONAL|FOOD 42 UPCs 78% singles; Walmart and
+   Target CONVENTIONAL|MASS MERCH ~30 UPCs ~80% 4-packs; Sam's and BJ's CONVENTIONAL|CLUB 2–4
+   UPCs **99–100% 13-packs**.
+
+**Volume sanity check:** implied bars/year **515.7M (≈$1.3B retail) → 70.5M (≈$176M)**. BUILT is
+not a $1.3B brand. The 85.7% reduction is double-counting removed, not lost sales — but it
+restates every volume total, so client-facing figures move.
+
+Two refinements rejected: per-(retailer × UPC) application keeps exactly the aggregate rows the
+rule exists to remove (Sam's 4 RMA UPCs are the true club assortment); and short RMA history is
+not grounds for CRMA fallback — Target (66/152 wks), BJ's (57), Walgreens (86), Giant Eagle (105)
+are all real **launch ramps** (Target 119 → 2,165 → 15,904 → … → 144,148 u/wk). **Publix RMA is
+complete** (152/152 weeks), so it is not the CRMA-only case it is often cited as; after filtering
+**no** retailer is CRMA-only.
+
+### Four divergent copies of `CAT_COLS` killed two features at inference
+
+`spins_flavor_canonical` and `source_brand` were trained on but **never used at forecast time**
+since v8. `MO_27:162` kept a 3-element categorical set while three other sites had 5, so both
+columns were run through `pd.to_numeric` → NaN → and `str(nan or "UNKNOWN")` returns `"nan"`
+(**NaN is truthy in Python**, so the fallback never fires), which is absent from the booster's
+category universe and resolves to missing. `build_forecast_chart_data.py` had the same split —
+Kroger's backtest used 5 categoricals, Albertsons/Publix/UNFI used 3, so the per-retailer wMAPE
+table was never apples-to-apples.
+
+Had `geography_raw` been added as planned, the same coercion would have NaN'd a `GROUP_COL`, and
+`groupby` drops NaN keys — a silent zero-series forecast exiting 0.
+
+### New: `scripts/mo_panel.py` — one definition, four rules
+
+Applied at **consumption**, never in MO_25, so the parquet keeps every row per the data
+stewardship rule.
+
+| step | rows |
+|---|---|
+| MO_25 output | 186,427 |
+| − military exchanges (AAFES / COAST GUARD / NEXCOM — 0 units) | 171,977 |
+| − zero-volume geographies (17) | 160,240 |
+| − CRMA where RMA exists | **96,153** |
+
+Final: 96,153 rows · 1,716 series · 120 UPCs · 118 retailers · 61.1M base_units · 23 genuine
+zero-sales weeks preserved.
+
+Also fixed: promo-mechanic nulls now fill 0 **only** where no promo ran that week (`units_lift_*`
+null is 79.8–99.3% in non-promo weeks but 41.6–86.6% in promo weeks, where it is genuinely
+unknown). `units_lift_any_feature` goes 92.7% → **43.7%** null. Same defect class as the MO_50
+`rolling_cannibal_pressure` 73%-null bug. `source_brand` nulls now fill `"UNKNOWN"` not
+`"BUILT BAR"` (2,750 rows were being assigned a brand the data does not support).
+
+Guards added so these cannot recur silently: version-stamped metrics files + a `model_version`
+assertion in MO_27, `features_used` taken from the booster rather than metadata, hard-fail on a
+declared-but-absent feature, hard-fail on zero series with per-`GROUP_COL` null counts, and an
+end-of-run report of category values the model never saw.
+
+### Metrics are not comparable across panels
+
+v9a q50 pinball 0.01261 vs v8 0.01145 looks like a regression, but v8 validated on 30,603 rows
+and v9a on 26,426 — the difference being phantom zeros that score near-perfectly and flattered
+v8. **Albertsons' 50.3% wMAPE must be re-measured** before it justifies a Prophet changepoint
+feature: that slice was half phantom rows *and* had flavour + brand NaN'd.
+
+Process rule: settle the panel, then refit every version on the identical panel.
+
+### Open items
+
+- MO_28 killed at trial 25/60 (in-memory study, params unrecoverable — v9 version adds SQLite).
+  It was tuning on the unfiltered panel: 14.1% of rows were a point mass at `log1p(0)`, which
+  biases toward more capacity than the clean problem needs.
+- **Tree-budget mismatch:** MO_26 uses `n_estimators=4000` and hits the cap still improving;
+  MO_28 caps at 2000 and writes that into `lgbm_base_v9`. Applying its output would halve the
+  budget of a capacity-starved model. Resolve before tuning — a q50 fit at 8000 with early
+  stopping would locate the real convergence point.
+- `lag52` is **100%** null where `weeks_since_launch < 52`, and 51.8% of rows are that young, yet
+  `SEASONAL_BLEND_WEIGHT = 0.40` pulls every forecast toward `lag52 × YoY` — for half the panel
+  there is no anchor to blend toward. This is the Q4 2025 miss mechanism, live in the forecast path.
+- MO_25 drops 12,999 rows as "series < 13 weeks", removing the newest launches — the cold-start
+  population where product attributes matter most.
+- `nfp_protein_range` extracted but **not** a feature: constant for BUILT (95.3% "15 TO < 20G
+  PROTEIN").
+
+---
+
 ## README update 194: Forecast accuracy — revenue framing + under/over-prediction force taxonomy (2026-10-01)
 
 ### The real accuracy metric is dollars, not wMAPE

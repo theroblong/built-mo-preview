@@ -32,13 +32,26 @@ OUTPUT
 
 import json
 import pickle
+import sys
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
 from datetime import datetime, timezone
 from pathlib import Path
 
-MODEL_VERSION = "v8"  # v8: is_promo_week + promo_intensity + units_lift_tpr/display/feature +
+# Opt-out for the declared-feature guard below. Training on fewer features than
+# FEATURE_COLS declares should be a deliberate choice, never a silent default.
+ALLOW_MISSING_FEATURES = "--allow-missing-features" in sys.argv
+
+MODEL_VERSION = "v9b"
+                      # v9a: ATTRIBUTION BASELINE — new panel + new features, v8 hyperparameters.
+                      #      Isolates the effect of (a) the zero-volume geography filter
+                      #      (26,187 rows / 14.0% removed) and (b) spins_flavor_raw, separately
+                      #      from the Optuna retune that follows as v9. Without this split, a v8→v9
+                      #      delta cannot be attributed between data cleaning and hyperparameters.
+                      #      Also: source_brand nulls now fill "UNKNOWN" not "BUILT BAR" (2,750 rows).
+                      #      geography_raw deliberately NOT a feature; nfp_protein_range is constant.
+                      # v8: is_promo_week + promo_intensity + units_lift_tpr/display/feature +
                       #     promo_52w_lag + promo_rate_woy + spins_flavor_canonical (from MO_25 v11) +
                       #     drop is_bogo_week (0.06% gain, redundant w/ arp_dollar_discount) +
                       #     n_estimators 3000→4000 (v7 q50 still climbing at cap 2999/3000)
@@ -52,6 +65,12 @@ QUANTILES     = [0.10, 0.50, 0.90]
 Q_TAGS        = ["q10", "q50", "q90"]
 
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
+
+# CAT_COLS + the zero-volume filter live in mo_panel so training, forecasting and
+# backtesting cannot drift apart again (four divergent copies shipped a silent v8 bug).
+from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
+                      apply_rma_priority, fill_promo_mechanic_nulls,
+                      drop_military_accounts)
 
 FEATURE_COLS = [
     # Rolling demand stats (backward-looking, no leakage)
@@ -112,6 +131,36 @@ FEATURE_COLS = [
     "pack_count",                 # v6: pack ladder (1 / 4 / 8 / 12 / 18)
     "spins_flavor_canonical",     # v8: canonical flavor group (override+family normalization)
     "source_brand",               # v12: authoritative SPINS sub-brand (BUILT BAR / PUFF / SOUR PUFF)
+    # spins_flavor_canonical (already listed above) now carries 35 override-corrected SPINS
+    # families instead of 2. Root cause of the old 2-value version: MO_25's enrichment join
+    # filtered `source_brand = 'BUILT'`, but that column holds the SUB-brand (BUILT PUFF /
+    # BUILT BAR / BUILT SOUR PUFF) and only 2 UPCs carry the bare 'BUILT'. Fixed to
+    # `parent_brand = 'BUILT'` -> 146 UPCs. So from v9b the model finally has real flavour
+    # resolution; v8 and v9a effectively had none.
+    # NOT added (ablation candidate): specific_flavor_normalized — 76 typo-corrected specific
+    # flavours. It is the right field for comparing pack sizes WITHIN one true flavour
+    # (family BROWNIE lumps Brownie Batter with Candy Cane Brownie), but at 76 levels over
+    # ~2,740 series it averages ~36 series/level, so it must earn its slot by ablation
+    # rather than assumption. It is in the panel either way for the pack-mix analysis.
+    # NOT added: spins_flavor_raw — un-normalised family with duplicate levels
+    # (COOKIES & CREAM vs COOKIES AND CREAM; CHOCOLATE & MINT vs CHOCOLATE MINT vs
+    # MINT CHOCOLATE CHIP). Superseded by spins_flavor_canonical.
+    # NOT added: nfp_protein_range. Extracted by MO_25 (it belongs in the panel), but it is a
+    # CONSTANT — 95.3% of rows are "15 TO < 20G PROTEIN" and the remainder are null/empty.
+    # Every BUILT SKU sits in the same protein band, so it is a brand-level constant rather
+    # than a product differentiator and carries zero split information.
+    # NOTE for a future ablation: spins_flavor_canonical is now strictly redundant given
+    # spins_flavor_raw (raw subsumes both of canonical's real levels). Kept for v8
+    # comparability; a candidate for removal once v9 is measured.
+    # NOT added: geography_raw. It looked like the obvious v9 win (README update 190,
+    # and retail_account is the #1 feature by gain) but measurement says otherwise.
+    # geography_level is a deterministic function of channel_outlet, and once the 20
+    # zero-volume geographies are filtered, geography_raw is 1:1 with
+    # retail_account x channel_outlet for 99.1% of rows — one remaining multi-variant
+    # combo (Circle K, 1,392 rows). The apparent signal was entirely the phantom AK/HI
+    # markets, which drop_zero_volume_geographies() now removes. Adding it would buy
+    # 154 levels of redundancy and the overfitting that comes with them. It stays a
+    # GROUP_COL (series key) and stays in CAT_COLS so it is never coerced to numeric.
     # Removed by ablation: implied_elasticity, elasticity_band, max_donor_cannibal_prob,
     # cannibal_rate, price_elasticity_effect (MO_50–MO_56)
     # Catalog audit-only: built_tdp_share, arp_discount_pct
@@ -164,7 +213,9 @@ if __name__ == "__main__":
         df["week_cos26"] = np.cos(2 * np.pi * woy / 26)
 
     # ── Numeric coercion ────────────────────────────────────────────────────
-    CAT_COLS = {"channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"}
+    # CAT_COLS is module-level — do NOT shadow it with a local copy. MO_27 carried
+    # three divergent copies of this set and v8 updated only two of them, which
+    # silently nulled source_brand + spins_flavor_canonical at inference.
     num_cols = [c for c in FEATURE_COLS if c not in CAT_COLS]
     for c in num_cols:
         if c in df.columns:
@@ -174,7 +225,18 @@ if __name__ == "__main__":
     if "spins_flavor_canonical" in df.columns:
         df["spins_flavor_canonical"] = df["spins_flavor_canonical"].fillna("UNKNOWN").astype(str)
     if "source_brand" in df.columns:
-        df["source_brand"] = df["source_brand"].fillna("BUILT BAR").astype(str)
+        # "UNKNOWN", not "BUILT BAR": 2,750 rows (1.5%) have a null source_brand, and
+        # filling them with a real brand asserts a fact the data does not support —
+        # it teaches the model that unlabelled rows behave like BUILT BAR. A distinct
+        # level lets the tree learn what unlabelled actually looks like.
+        # (38 rows also carry the legacy value "BUILT" rather than a sub-brand.)
+        df["source_brand"] = df["source_brand"].fillna("UNKNOWN").astype(str)
+    # v9 categoricals: fill before the .astype("category") pass so NaN becomes an
+    # explicit level instead of a missing value the tree routes by default.
+    for _c in ("geography_raw", "spins_flavor_raw", "nfp_protein_range"):
+        if _c in df.columns:
+            df[_c] = (df[_c].fillna("UNKNOWN").astype(str).str.strip()
+                            .replace("", "UNKNOWN"))
     for cat_col in CAT_COLS:
         if cat_col in df.columns:
             df[cat_col] = df[cat_col].astype("category")
@@ -184,6 +246,26 @@ if __name__ == "__main__":
     df = df.dropna(subset=["base_units"]).copy()
     if len(df) < before:
         print(f"  Dropped {before - len(df):,} rows with null base_units")
+
+    # ── v9: drop geographies with zero volume across their entire history ──────
+    # Nulls were already handled above; zeros were NOT, so ~14% of training weight
+    # sat on phantom AK/HI market definitions and no-distribution accounts.
+    print("\n  ── Panel rules (v9) ──")
+    # Order matters. Military accounts and phantom markets come out first so that by the
+    # time RMA priority runs, every surviving retailer genuinely has an RMA feed and the
+    # CRMA-fallback branch correctly never fires. Short RMA histories are NOT a reason to
+    # fall back to CRMA: Target (66 wks), BJ's (57), Walgreens (86) and Giant Eagle (105)
+    # were all verified as real launch ramps (Target 119 -> 2,165 -> 15,904 -> ... ->
+    # 144,148 u/wk), i.e. correct distribution-expansion history, not feed gaps.
+    df = fill_promo_mechanic_nulls(df)
+    df = drop_military_accounts(df)
+    df = drop_zero_volume_geographies(df, target="base_units")
+    df = apply_rma_priority(df)
+    # Categorical dtypes retain dropped levels after a row filter; unused levels
+    # would be carried into the model's category universe and inflate split search.
+    for cat_col in CAT_COLS:
+        if cat_col in df.columns and isinstance(df[cat_col].dtype, pd.CategoricalDtype):
+            df[cat_col] = df[cat_col].cat.remove_unused_categories()
 
     # ── Log-transform target: log1p compresses heavy tail, forces positivity ───
     # Predictions are in log-space; MO_27 inverts with expm1 before output.
@@ -206,6 +288,21 @@ if __name__ == "__main__":
     missing   = [c for c in FEATURE_COLS if c not in df.columns]
     if missing:
         print(f"  WARNING — feature columns not found (will be skipped): {missing}")
+
+    # Silently training on fewer features than FEATURE_COLS declares is how a
+    # feature regression ships unnoticed: the v8 PKLs carry source_brand, but the
+    # committed parquet does not, so a v9 run against a stale parquet would drop
+    # brand and still report success. week_sin26/week_cos26 are derived in-script
+    # above, so they are legitimately absent from the parquet and exempt here.
+    _DERIVED_IN_SCRIPT = {"week_sin26", "week_cos26"}
+    _unexpected = [c for c in missing if c not in _DERIVED_IN_SCRIPT]
+    if _unexpected and not ALLOW_MISSING_FEATURES:
+        raise SystemExit(
+            f"\nFATAL: {len(_unexpected)} declared feature(s) absent from the parquet:\n"
+            f"  {_unexpected}\n"
+            f"  Re-run MO_25 to regenerate outputs/retailer_sales_weekly.parquet, or pass\n"
+            f"  --allow-missing-features to train without them deliberately."
+        )
 
     X_train = train[available]
     y_train = train["log_base_units"].values          # log-space target
@@ -401,7 +498,15 @@ if __name__ == "__main__":
         "total_units_features_missing": miss_total,
         "total_units_quantile_metrics": metrics_total,
     }
-    meta_path = "outputs/retailer_sales_train_metrics.json"
-    with open(meta_path, "w") as f:
-        json.dump(meta, f, indent=2)
-    print(f"\n  Metrics → {meta_path}")
+    # Write a version-stamped copy ALONGSIDE the legacy unversioned path.
+    # The unversioned file is shared mutable state — whichever training run finishes
+    # last owns it regardless of MODEL_VERSION. That is how v8 broke: a v7 archival
+    # retrain clobbered v8's metadata, leaving MO_27 with a 48-feature features_used
+    # pointed at 56-feature v8 models. MO_27 prefers the versioned file and asserts
+    # model_version matches, so a future clobber cannot go unnoticed.
+    meta_versioned = f"outputs/retailer_sales_train_metrics_{MODEL_VERSION}.json"
+    meta_legacy    = "outputs/retailer_sales_train_metrics.json"
+    for meta_path in (meta_versioned, meta_legacy):
+        with open(meta_path, "w") as f:
+            json.dump(meta, f, indent=2)
+        print(f"\n  Metrics → {meta_path}")

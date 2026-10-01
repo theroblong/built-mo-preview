@@ -68,6 +68,45 @@ SEASONAL_BLEND_WEIGHT = 0.40
 
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
+# CAT_COLS comes from mo_panel — do NOT redefine it here. Three separate copies of
+# this set used to live in this file (the numeric-coercion step, the static-feature
+# skip set, and _build_feature_row's cat_names list) and v8 updated only two of the
+# three, silently coercing source_brand + spins_flavor_canonical to NaN and killing
+# both categoricals at inference. Anything in CAT_COLS is exempt from pd.to_numeric
+# and must be supplied explicitly in `state`.
+from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
+                      apply_rma_priority, fill_promo_mechanic_nulls,
+                      drop_military_accounts)
+
+
+# Category values seen at inference that the model was never trained on.
+# Collected across all series and reported once at the end of the run.
+_UNSEEN_CATS: dict[str, set[str]] = {}
+
+
+def _cat_str(val, default: str) -> str:
+    """Categorical value as a string, with a fallback that survives NaN.
+
+    `str(val or default)` is wrong here: float('nan') is truthy, so the fallback
+    never fires and the literal string "nan" reaches pd.Categorical, where it is
+    absent from the trained category universe and silently becomes missing.
+    """
+    if val is None or (isinstance(val, float) and np.isnan(val)):
+        return default
+    s = str(val).strip()
+    return default if s in ("", "nan", "None", "NaN", "<NA>") else s
+
+
+def _ordered_cat_names(features_used: list[str]) -> list[str]:
+    """Categorical feature names in training-column order.
+
+    LightGBM's Booster.pandas_categorical is a positional list: index i holds the
+    category universe of the i-th categorical column *as ordered in the training
+    DataFrame*. MO_26 trains on df[[c for c in FEATURE_COLS if c in df.columns]],
+    so that order is simply the order within features_used.
+    """
+    return [c for c in features_used if c in CAT_COLS]
+
 
 def _load_models_and_meta() -> tuple[dict, dict, dict]:
     # Load _full models (trained on all data) for production deployment.
@@ -80,8 +119,53 @@ def _load_models_and_meta() -> tuple[dict, dict, dict]:
         with open(path, "rb") as f:
             models[tag] = pickle.load(f)
         print(f"  Loaded {path}")
-    with open("outputs/retailer_sales_train_metrics.json") as f:
+    # ── Metadata: prefer the version-stamped file, then guard, then trust the PKL ──
+    # The unversioned metrics file is shared mutable state: whichever MO_26 run
+    # finishes last owns it, regardless of MODEL_VERSION. That is exactly how v8
+    # broke — a v7 archival retrain clobbered the v8 metadata, leaving a 48-feature
+    # features_used pointed at 56-feature v8 models. Three defences, in order:
+    #   1. read outputs/retailer_sales_train_metrics_<version>.json when present
+    #   2. hard-fail on a version mismatch rather than mispredicting quietly
+    #   3. take features_used from the model artifact itself, which cannot drift
+    meta_versioned = Path(f"outputs/retailer_sales_train_metrics_{MODEL_VERSION}.json")
+    meta_legacy    = Path("outputs/retailer_sales_train_metrics.json")
+    meta_path      = meta_versioned if meta_versioned.exists() else meta_legacy
+    with open(meta_path) as f:
         meta = json.load(f)
+    print(f"  Loaded {meta_path}")
+
+    meta_version = meta.get("model_version")
+    if meta_version != MODEL_VERSION:
+        raise SystemExit(
+            f"\nFATAL: model metadata version mismatch.\n"
+            f"  {meta_path} reports model_version={meta_version!r}\n"
+            f"  MO_27 MODEL_VERSION={MODEL_VERSION!r} (loading *_{MODEL_VERSION}_full.pkl)\n"
+            f"  Re-run MO_26 with MODEL_VERSION={MODEL_VERSION!r} to regenerate metadata."
+        )
+
+    # features_used from the booster — authoritative, immune to metadata drift.
+    pkl_features = list(models["q50"].feature_name_)
+    meta_features = meta.get("features_used", [])
+    if meta_features and list(meta_features) != pkl_features:
+        print(f"  WARNING: features_used disagrees with the q50 booster "
+              f"(metadata {len(meta_features)}, model {len(pkl_features)}) — "
+              f"using the model's feature list")
+        print(f"    only in metadata: {sorted(set(meta_features) - set(pkl_features))}")
+        print(f"    only in model:    {sorted(set(pkl_features) - set(meta_features))}")
+    meta["features_used"] = pkl_features
+
+    # Verify the positional categorical contract _build_feature_row depends on.
+    n_cat_model = len(models["q50"]._Booster.pandas_categorical or [])
+    cat_names   = _ordered_cat_names(pkl_features)
+    if n_cat_model != len(cat_names):
+        raise SystemExit(
+            f"\nFATAL: categorical count mismatch.\n"
+            f"  q50 booster carries {n_cat_model} pandas_categorical list(s)\n"
+            f"  MO_27 CAT_COLS resolves to {len(cat_names)}: {cat_names}\n"
+            f"  CAT_COLS in MO_27 must mirror MO_26 for the model version being loaded."
+        )
+    print(f"  Features: {len(pkl_features)} | categoricals: {cat_names}")
+
     models_total = {}
     if meta.get("total_units_trained"):
         for tag in Q_TAGS:
@@ -98,14 +182,21 @@ def _load_models_and_meta() -> tuple[dict, dict, dict]:
 def _build_feature_row(state: dict, features_used: list[str], model=None) -> pd.DataFrame:
     row = {col: state.get(col, np.nan) for col in features_used}
     df  = pd.DataFrame([row])
-    # v8: spins_flavor_canonical added as 4th categorical (index 3 in pandas_categorical)
-    # v12: source_brand added as 5th categorical (index 4) — authoritative SPINS sub-brand
-    cat_names = ["channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"]
+    # Derived from CAT_COLS in training-column order, not hardcoded — a hardcoded
+    # list silently mis-indexes pandas_categorical whenever FEATURE_COLS changes.
+    cat_names = _ordered_cat_names(features_used)
     if model is not None:
         _pc = model._Booster.pandas_categorical
         for i, cname in enumerate(cat_names):
             if cname in df.columns and i < len(_pc):
-                df[cname] = pd.Categorical(df[cname].astype(str), categories=_pc[i])
+                _raw = df[cname].astype(str)
+                df[cname] = pd.Categorical(_raw, categories=_pc[i])
+                # An out-of-universe value becomes NaN here with no error. That is
+                # correct behaviour for a genuinely new retailer/geography, but it
+                # must be visible — a systematic mismatch (e.g. a renamed channel)
+                # otherwise degrades every forecast while looking perfectly healthy.
+                if df[cname].isna().any() and _raw.notna().any():
+                    _UNSEEN_CATS.setdefault(cname, set()).add(_raw.iloc[0])
     else:
         for cname in cat_names:
             if cname in df.columns:
@@ -159,8 +250,20 @@ if __name__ == "__main__":
     df_actual = pd.read_parquet("outputs/retailer_sales_weekly.parquet")
     df_actual["__time"] = pd.to_datetime(df_actual["__time"], utc=True)
 
-    _cat_cols = {"channel_outlet", "retail_account", "pack_count"}
-    num_cols = [c for c in features_used if c not in _cat_cols and c != "week_of_year"]
+    # v9: same zero-volume geography filter as training. Forecasting a market that
+    # has never sold a unit produces rows the UI must then explain, and it is the
+    # training/inference symmetry that matters — the model has not seen these.
+    print("\n  ── Panel rules (v9) — MUST match MO_26 exactly ──")
+    df_actual = fill_promo_mechanic_nulls(df_actual)
+    df_actual = drop_military_accounts(df_actual)
+    df_actual = drop_zero_volume_geographies(df_actual, target="base_units")
+    df_actual = apply_rma_priority(df_actual)
+
+    # CAT_COLS from mo_panel — NOT a local copy. geography_raw is a GROUP_COL, so
+    # coercing it to numeric turns the whole column to NaN and groupby(GROUP_COLS)
+    # then drops every row (pandas dropna=True) for a silent zero-series forecast
+    # that still exits 0.
+    num_cols = [c for c in features_used if c not in CAT_COLS and c != "week_of_year"]
     for c in num_cols:
         if c in df_actual.columns:
             df_actual[c] = pd.to_numeric(df_actual[c], errors="coerce")
@@ -181,7 +284,20 @@ if __name__ == "__main__":
     )
     anchor_date = df_actual["__time"].max()
     print(f"  Anchor date:      {anchor_date.date()}")
-    print(f"  Series to forecast: {df_seed.groupby(GROUP_COLS).ngroups:,}")
+    _n_series = df_seed.groupby(GROUP_COLS).ngroups
+    print(f"  Series to forecast: {_n_series:,}")
+
+    # Fail loudly on an empty panel. groupby(GROUP_COLS) drops rows with a NaN in
+    # ANY key column, so one all-NaN group key (e.g. geography_raw wrongly run
+    # through pd.to_numeric) silently yields zero series and a clean exit 0.
+    if _n_series == 0:
+        _null_keys = {c: int(df_actual[c].isna().sum()) for c in GROUP_COLS}
+        raise SystemExit(
+            f"\nFATAL: zero series to forecast from {len(df_actual):,} actual rows.\n"
+            f"  Nulls per GROUP_COL: {_null_keys}\n"
+            f"  A GROUP_COL that is 100% null was almost certainly coerced by\n"
+            f"  pd.to_numeric — check that every categorical is listed in CAT_COLS."
+        )
 
     # ── 3. Rolling 13-week autoregressive forecast ───────────────────────────
     scored_at = datetime.now(timezone.utc).isoformat()
@@ -289,9 +405,8 @@ if __name__ == "__main__":
             promo_rate_by_woy = {}
 
         # Static features (unchanged across forecast horizon)
-        _cat_skip = {"channel_outlet", "retail_account", "pack_count", "spins_flavor_canonical", "source_brand"}
         static_feats = {}
-        skip = _cat_skip | {"week_of_year", "week_sin", "week_cos", "week_sin26", "week_cos26",
+        skip = CAT_COLS | {"week_of_year", "week_sin", "week_cos", "week_sin26", "week_cos26",
                 # v8: AR dynamic promo activity flags — set to 0 in base forecast
                 "is_promo_week", "promo_intensity",
                 "units_lift_tpr", "units_lift_any_display", "units_lift_any_feature",
@@ -354,8 +469,12 @@ if __name__ == "__main__":
                 "channel_outlet":           channel,
                 "retail_account":           retail_acct_val,
                 "pack_count":               pack_count_val,
-                "spins_flavor_canonical":   str(latest.get("spins_flavor_canonical") or "UNKNOWN"),
-                "source_brand":             str(latest.get("source_brand") or "BUILT BAR"),
+                # _cat_str, not `x or default` — NaN is truthy in Python, so the
+                # `or` fallback never fires and str(nan) leaks the string "nan"
+                # into the category lookup, which then resolves to missing.
+                "spins_flavor_canonical":   _cat_str(latest.get("spins_flavor_canonical"), "UNKNOWN"),
+                "source_brand":             _cat_str(latest.get("source_brand"), "UNKNOWN"),
+                "geography_raw":            _cat_str(geo, "UNKNOWN"),   # v9: 6th categorical
                 "week_sin":                 _wsin,
                 "week_cos":                 _wcos,
                 "week_sin26":               _wsin26,
@@ -486,6 +605,16 @@ if __name__ == "__main__":
     print(f"  q50 unit range:        {out['forecast_units_base'].min():.0f} – {out['forecast_units_base'].max():.0f}")
     print(f"  q50 dollar range:      ${out['forecast_dollars_base'].min():.0f} – ${out['forecast_dollars_base'].max():.0f}")
     print(f"  Median band width:     {(out['forecast_units_high'] - out['forecast_units_low']).median():.0f} units")
+
+    # Unseen categoricals — these predicted with the category treated as missing.
+    if _UNSEEN_CATS:
+        print("\n  WARNING: category values absent from the trained model:")
+        for _c, _vals in sorted(_UNSEEN_CATS.items()):
+            _shown = sorted(_vals)[:5]
+            print(f"    {_c}: {len(_vals)} unseen — {_shown}"
+                  f"{' …' if len(_vals) > 5 else ''}")
+        print("    These series predicted with that categorical as missing. "
+              "Expected for genuinely new doors; retrain if it is systematic.")
     if forecast_total and "forecast_total_units_base" in out.columns and out["forecast_total_units_base"].notna().any():
         print(f"  q50 total_units range: {out['forecast_total_units_base'].min():.0f} – {out['forecast_total_units_base'].max():.0f}")
         promo_est = out["forecast_total_units_base"] - out["forecast_units_base"]
