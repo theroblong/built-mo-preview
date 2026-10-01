@@ -6,6 +6,49 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 192: Architecture assessment — LightGBM+ETS vs transformers/neural/RL (2026-09-30)
+
+**Question:** Is LightGBM + ETS the best available method, or would transformers, neural forecasting, RNNs, or RL do significantly better?
+
+**Answer: LightGBM + ETS is the right core architecture for this dataset. Two experiments remain worth running.**
+
+**Why trees dominate here:**
+1. **Feature-rich tabular data is tree country** — 47 engineered domain features (TDP, velocity, ARP, promo, lags). Neural architectures have to rediscover what we already know. With 3,173 series they won't.
+2. **Sample size is modest for neural** — ~476K rows is plenty for LightGBM, too small for transformers to generalize without heavy regularization.
+3. **Quantile forecasting is mature for trees** — LightGBM Q10/Q50/Q90 is directly calibrated. Neural intervals require distributional architectures or conformal prediction on top.
+
+**Benchmarks already run:**
+
+| Method | Result | Verdict |
+|---|---|---|
+| AutoGluon (SeasonalNaive+ETS+Theta+LGBM) | 8× worse at Dec 2025 | ❌ |
+| TimesFM (Google foundation model) | 6× worse | ❌ |
+| N-BEATS / N-HiTS | 10–30× worse | ❌ |
+| ETS (<52wk series routing) | Beats LightGBM on short-history series | ✅ |
+
+N-BEATS/N-HiTS are purpose-built for time series and still lost — because they're univariate and can't see TDP, ARP, or promo history. That's the decisive result.
+
+**Genuinely worth testing (not yet benchmarked):**
+1. **TFT (Temporal Fusion Transformer)** — only transformer designed for multivariate time series with static + dynamic covariates; could use our full feature set. Failed in MO_38/66 due to `torchvision` version conflict. Fix conflict and benchmark properly before declaring LightGBM the ceiling.
+2. **Prophet changepoint feature** — not a replacement, a complement. Use Prophet's trend+changepoint component as an additional LightGBM feature. 2-day experiment; targets BUILT's structural break (TikTok virality, rapid distribution expansion).
+
+**Skipped and why:**
+- **LSTM/GRU/RNN** — superseded by transformers; no advantage over our lag features
+- **Reinforcement learning** — optimizes sequential decisions (ordering, pricing), not forecasts; wrong problem frame
+- **Foundation models (Chronos, Moirai, TimesFM)** — zero-shot already benchmarked poorly; fine-tuning requires injecting 47 domain covariates into architectures not built for them
+
+**Pragmatic experiment sequence:**
+```
+v9 (Optuna + geography_raw)
+  → RECENCY_LAMBDA grid search
+    → if Albertsons still ~50%: Prophet changepoint feature experiment
+      → TFT benchmark (fix torchvision, global model with our feature set)
+```
+
+Each step has a clear pass/fail before proceeding. Albertsons 50%+ is likely a data problem (distribution expansion / delistings in SPINS) more than a model problem — NS2 sell-in as a forward signal is the real fix there.
+
+---
+
 ## README update 191: Pinball loss + Optuna hyperparameter space + CV split methodology (2026-09-30)
 
 **Pinball loss — the quantile regression objective:**
