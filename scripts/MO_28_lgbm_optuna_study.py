@@ -38,7 +38,7 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 N_FOLDS          = 3          # walk-forward folds; each = 13-week val window
 VAL_WEEKS        = 13         # mirrors production forecast horizon
 EARLY_STOP       = 100        # more patience than current 50 — lets lr settle
-N_ESTIMATORS_MAX = 5000       # hard cap; early stopping governs actual depth
+N_ESTIMATORS_MAX = 2000       # hard cap; 5000 allowed ultra-low-lr trials to run 2+ hrs
 RECENCY_LAMBDA   = 0.02       # fixed — same as MO_26; tune separately if needed
 TARGET_QUANTILE  = 0.50       # optimize median; apply best params to q10/q90 too
 RANDOM_STATE     = 42
@@ -143,7 +143,7 @@ def make_objective(df: pd.DataFrame, folds, available: list):
             objective        = "quantile",
             alpha            = TARGET_QUANTILE,
             n_estimators     = N_ESTIMATORS_MAX,
-            learning_rate    = trial.suggest_float("learning_rate",    0.005, 0.08, log=True),
+            learning_rate    = trial.suggest_float("learning_rate",    0.01,  0.08, log=True),
             num_leaves       = trial.suggest_int(  "num_leaves",       31,    191),
             min_child_samples= trial.suggest_int(  "min_child_samples",10,    80),
             feature_fraction = trial.suggest_float("feature_fraction", 0.5,   1.0),

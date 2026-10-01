@@ -6,6 +6,38 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 193: MO_28 Optuna restart + RECENCY_LAMBDA grid search plan (2026-10-01)
+
+### MO_28 restarted — v2 config
+
+First run (75 trials, lr floor 0.005, N_ESTIMATORS_MAX=5000) killed at trial 15. Ultra-low lr trials (0.005–0.01) were running 2+ hours each — ETA had stretched to 5 days. Key finding before kill: best pinball 0.0105 at trial 7 (9% better than v8 baseline 0.0116), found in the moderate lr range. Slow trials after trial 7 produced no improvement, confirming the gain is in the moderate range, not the ultra-low end.
+
+**v2 changes:** lr floor raised to 0.01, N_ESTIMATORS_MAX lowered to 2000, 60 trials. Trial time ≤20 min → finish overnight.
+
+### RECENCY_LAMBDA grid search plan (post-v9)
+
+After v9, grid search over 7 λ values using the same 3-fold walk-forward CV (Optuna best params held fixed):
+
+**Grid:** [0.005, 0.01, 0.02, 0.04, 0.07, 0.10, 0.15]  
+**Metric:** q50 pinball (log-space), 3-fold walk-forward CV  
+**Runtime:** ~2.5 hours total  
+
+For high-growth brands (frequent new SKUs), optimal λ is likely 0.05–0.15 vs. current 0.02. Higher λ = recent launch patterns dominate; lower λ = stable long history trusted equally.
+
+**Two lambda types — kept distinct:**
+- **Loss-level λ** (active): `sample_weight = exp(-λ × weeks_ago)` — tree splitter weighting
+- **Feature-level λ** (EWMA lags, deferred): EWMA of past sales as a smooth momentum input feature — too many moving parts / stacked tuning dimensions; held in reserve pending post-grid results
+
+**Experiment sequence confirmed:**
+```
+v9 (Optuna best + geography_raw)
+  → RECENCY_LAMBDA grid search
+    → Albertsons still ~50%? → Prophet changepoint feature
+      → TFT benchmark
+```
+
+---
+
 ## README update 192: Architecture assessment — LightGBM+ETS vs transformers/neural/RL (2026-09-30)
 
 **Question:** Is LightGBM + ETS the best available method, or would transformers, neural forecasting, RNNs, or RL do significantly better?
