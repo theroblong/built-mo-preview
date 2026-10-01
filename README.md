@@ -6,6 +6,48 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 194: Forecast accuracy — revenue framing + under/over-prediction force taxonomy (2026-10-01)
+
+### The real accuracy metric is dollars, not wMAPE
+
+wMAPE is an internal engineering scorecard. BUILT will judge the forecast by prediction vs. outcome on the specific weeks and SKUs they remember — one missed Kroger Q1 peak week sticks longer than 6.1% portfolio accuracy. The ROI frame: at Brian's own framing, every 1pp wMAPE improvement ≈ $1M better planning value.
+
+The **killer client capability** is what-if scenario modeling: "If we add 20 TDP at Albertsons and run a 25% TPR for 4 weeks, what's the net demand lift and how much cannibalizes the 4-pack?" That requires E1 + E2b + E2a working together. The forecast is the foundation; the scenario layer is the planning tool.
+
+### Forces driving systematic under-prediction
+
+| Force | Root cause | Lever |
+|---|---|---|
+| New SKU cold-start | No lag52/lag13; ETS helps but undershoots peak | Cold-start proxy overlay (gap #9) |
+| Distribution expansion | TDP growing faster than training data range | geography_raw (v9), NS2 sell-in |
+| Demand shocks (TikTok/PR) | Exogenous; absent from training data | Prophet changepoint (detects after fact) |
+| Promo lift underestimation | MO_70: model captures price-elasticity only; 2× underestimate on highly elastic events | UI disclosure done; structural fix deferred |
+| Brand heat / rapid growth | RECENCY_LAMBDA=0.02 trusts 3-year history near-equally; anchors too low for current velocity | RECENCY_LAMBDA grid post-v9 |
+
+### Forces driving systematic over-prediction
+
+| Force | Root cause | Lever |
+|---|---|---|
+| SKU delisting | Model predicts units no longer on shelf | TDP=0 signal; lag52 catches after 1yr |
+| Distribution contraction | Retailer reduces shelf space | tdp_wow_delta in model; forward TDP signal deferred |
+| Supply chain constraints | Real demand, empty shelf; SPINS records 0 not OOS | No reliable OOS signal yet |
+| Promo cadence pullback | Historical promo frequency; brand reduces TPR cadence | Forward confirmed TPR file (Brian) |
+| MULO CRMA artifact | Geographically inflated base for multi-outlet retailers | channel_outlet; geography_raw (v9) |
+
+### Levers roadmap by scenario
+```
+geography_raw + Optuna params → v9
+  → RECENCY_LAMBDA grid (brand heat anchoring)
+    → Confirmed forward TPRs (promo timing)
+      → NS2 sell-in (distribution expansion early warning)
+        → Prophet changepoint (structural break detection)
+          → Cold-start proxy overlay (new SKU year-1)
+```
+
+Client posture: SHAP is the audit trail. Lead with specific prediction vs. outcome. When wrong, name the missing signal and the lever that closes the gap. Never defend wMAPE as an abstract number.
+
+---
+
 ## README update 193: MO_28 Optuna restart + RECENCY_LAMBDA grid search plan (2026-10-01)
 
 ### MO_28 restarted — v2 config
