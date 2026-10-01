@@ -36,7 +36,8 @@ Production note on ruptures
 """
 
 from __future__ import annotations
-import base64, warnings
+import base64, json, warnings
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -59,6 +60,7 @@ HTML_PATH  = SCRIPT_DIR / "outputs" / "built_demand_intelligence_report.html"
 OUT_SEAS      = SCRIPT_DIR / "outputs" / "mo59_seasonal_index.png"
 OUT_DECOMP    = SCRIPT_DIR / "outputs" / "mo59_stl_decomp.png"
 OUT_INDEX_CSV = SCRIPT_DIR / "outputs" / "mo59_seasonal_index.csv"
+OUT_INDEX_META = SCRIPT_DIR / "outputs" / "mo59_seasonal_index_meta.json"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 STL_PERIOD       = 52    # annual seasonality
@@ -178,7 +180,7 @@ def compute_monthly_demand_index(df: pd.DataFrame, top_series: list[tuple]) -> p
 
 
 def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple],
-                           weighted: bool = True) -> pd.DataFrame:
+                           weighted: bool = True, return_n: bool = False):
     """Aggregate the STL seasonal component by week_of_year across series.
 
     `weighted=True` takes a VOLUME-WEIGHTED mean rather than a median. Measured on the
@@ -214,6 +216,13 @@ def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple],
         # Normalize seasonal component as % of trend level
         baseline_mean = s[s > 0].mean()
         seasonal_df["seasonal_norm"] = seasonal_df["seasonal"] / baseline_mean
+        # PER-SERIES constant level, used as the weight below. Deliberately NOT the
+        # `baseline` rolling mean: that varies week to week, so weighting by it would make
+        # each series' later (larger) weeks count more than its earlier ones — recency
+        # weighting disguised as volume weighting, which inflated the amplitude from 0.389
+        # to 0.532 when it slipped in. The stability results in MO_59c were established for
+        # per-series weighting, so that is what must be used here.
+        seasonal_df["series_level"] = baseline_mean
         all_seasonal.append(seasonal_df)
 
     combined = pd.concat(all_seasonal, ignore_index=True)
@@ -221,10 +230,9 @@ def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple],
         # Weight each series by its own mean level, so the index reflects where the
         # volume actually is rather than treating a tiny c-store series as equal to
         # a top Walmart SKU.
-        combined["_w"] = combined["baseline"].where(
-            combined["baseline"].notna() & (combined["baseline"] > 0), other=np.nan)
-        combined["_w"] = combined["_w"].fillna(combined.groupby("week_of_year")["_w"].transform("median"))
+        combined["_w"] = combined["series_level"]
         combined = combined.dropna(subset=["_w", "seasonal_norm"])
+        combined = combined[combined["_w"] > 0]
         index_df = (
             combined.groupby("week_of_year")
             .apply(lambda d: np.average(d["seasonal_norm"], weights=d["_w"]))
@@ -239,6 +247,8 @@ def compute_seasonal_index(df: pd.DataFrame, top_series: list[tuple],
         )
     # Shift so mean = 0 (show deviation from average)
     index_df["seasonal_index"] -= index_df["seasonal_index"].mean()
+    if return_n:
+        return index_df, len(all_seasonal)
     return index_df
 
 
@@ -627,9 +637,53 @@ if __name__ == "__main__":
     # documented seasonality. This index is the ONLY seasonal signal for the ~55% of
     # series with no year-ago anchor (MO_27's `elif seasonal_lookup` branch), so a wrong
     # shape here silently mis-shapes the majority of the forecast.
-    index_df = compute_seasonal_index(df, qualifying, weighted=True)  # used by forecasting model
+    index_df, n_fitted = compute_seasonal_index(df, qualifying, weighted=True, return_n=True)
     index_df.to_csv(OUT_INDEX_CSV, index=False)
     print(f"  Saved seasonal index CSV → {OUT_INDEX_CSV.name}")
+
+    # Provenance sidecar. MO_59c measured that the index needs ~200 series for its peak
+    # week to be reliable: at n=20 the March mode wins only 41% of bootstrap draws (a coin
+    # flip against the October mode), at n=80 76%, at n=200 98%. Correlation to the full
+    # index reaches 0.93 at n=80, so correlation CANNOT be used to validate this — argmax
+    # can be wrong while correlation looks fine.
+    #
+    # Only ~281 series qualify at MIN_WEEKS=104, and MIN_WEEKS cannot go lower because STL
+    # with period=52 needs two full cycles. So the headroom above the reliability threshold
+    # is thin, and a consumer must be able to tell what the curve was built from. The old
+    # CSV was untracked and unstamped, which is why a stale, unreproducible curve shaped
+    # ~55% of the forecast for a week without anyone being able to tell.
+    _idx = index_df.set_index("week_of_year")["seasonal_index"]
+    _meta = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        # Series actually FITTED, not merely qualifying — STL can fail or a series can have
+        # a non-positive mean level, and reporting the qualifying count overstated it (281
+        # qualifying vs 265 fitted).
+        "n_series": int(n_fitted),
+        "n_qualifying": int(len(qualifying)),
+        "min_weeks": int(MIN_WEEKS),
+        "method": "STL seasonal component, volume-weighted mean across series",
+        "weighted": True,
+        "stl_period": int(STL_PERIOD),
+        "excluded_geography_level": sorted(EXCLUDE_GEO),
+        "peak_week": int(_idx.idxmax()), "peak_value": float(_idx.max()),
+        "trough_week": int(_idx.idxmin()), "trough_value": float(_idx.min()),
+        "reliability": {
+            "min_n_for_95pct_peak_agreement": 200,
+            "sufficient": bool(len(qualifying) >= 200),
+            "source": "MO_59c_index_stability.py bootstrap, 200 draws",
+            "note": ("Below ~200 series the peak week becomes a coin flip between the March "
+                     "and October modes. Do NOT validate this curve by correlation."),
+        },
+    }
+    OUT_INDEX_META.write_text(json.dumps(_meta, indent=2))
+    print(f"  Saved provenance → {OUT_INDEX_META.name}  "
+          f"(n_series={_meta['n_series']}, peak wk {_meta['peak_week']}, "
+          f"trough wk {_meta['trough_week']}, "
+          f"{'OK' if _meta['reliability']['sufficient'] else 'BELOW RELIABILITY THRESHOLD'})")
+    if not _meta["reliability"]["sufficient"]:
+        print(f"  *** WARNING: only {len(qualifying)} series qualify; ~200 needed for a")
+        print(f"      reliable peak week. The seasonal index is the ONLY seasonal signal for")
+        print(f"      series without a year-ago anchor — treat its peak as unreliable.")
 
     print("Computing raw monthly demand pattern …")
     monthly_df = compute_monthly_demand_index(df, qualifying[:20])

@@ -236,13 +236,41 @@ if __name__ == "__main__":
         print("  q90 calibration constants not found — applying raw q90 predictions")
 
     # ── 1c. Load MO_59 seasonal index (week_of_year → stl_seasonal_index) ───
+    # This curve is the ONLY seasonal signal for the ~55% of series with no year-ago
+    # anchor (the `elif seasonal_lookup` branch below), including 51% of Target's volume.
+    # It therefore shapes the majority of the forecast and is checked before use.
+    #
+    # MO_59c measured that its peak week needs ~200 contributing series to be reliable:
+    # at n=20 the March mode beats the October mode in only 41% of bootstrap draws — a
+    # coin flip — while correlation to the full-sample curve is already 0.77. So
+    # correlation CANNOT validate this; only the contributing series count can.
+    # Only ~281 series qualify, so the headroom is thin and worth asserting on.
     _seas_path = Path("outputs/mo59_seasonal_index.csv")
+    _seas_meta = Path("outputs/mo59_seasonal_index_meta.json")
+    SEASONAL_MIN_SERIES = 200
     if _seas_path.exists():
         _seas_df = pd.read_csv(_seas_path)
         seasonal_lookup: dict[int, float] = dict(
             zip(_seas_df["week_of_year"].astype(int), _seas_df["seasonal_index"])
         )
-        print(f"  Loaded STL seasonal index ({len(seasonal_lookup)} weeks)")
+        if _seas_meta.exists():
+            _sm = json.loads(_seas_meta.read_text())
+            _n = int(_sm.get("n_series", 0))
+            print(f"  Loaded STL seasonal index ({len(seasonal_lookup)} weeks) — "
+                  f"n_series={_n}, peak wk {_sm.get('peak_week')}, "
+                  f"trough wk {_sm.get('trough_week')}, built {_sm.get('generated_at','?')[:10]}")
+            if _n < SEASONAL_MIN_SERIES:
+                print(f"  *** WARNING: seasonal index built from {_n} series; "
+                      f"~{SEASONAL_MIN_SERIES} needed for a reliable peak week.")
+                print(f"      Its peak is close to a coin flip between the March and October")
+                print(f"      modes, and it drives the seasonal signal for every series")
+                print(f"      without a year-ago anchor. Re-run MO_59 or treat with caution.")
+        else:
+            # No provenance = we cannot tell what this curve was built from. That is
+            # exactly the state that let a stale, unreproducible index ship: the old CSV
+            # was untracked and unstamped, so there was no way to date or reproduce it.
+            print(f"  *** WARNING: {_seas_meta.name} missing — cannot verify how many series")
+            print(f"      the seasonal index was built from, or when. Re-run MO_59 to stamp it.")
     else:
         seasonal_lookup = {}
         print("  STL seasonal index not found — stl_seasonal_index will be 0.0")

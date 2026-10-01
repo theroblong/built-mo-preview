@@ -726,7 +726,7 @@
     <span class="section-anchor" id="anomalies"></span>
     <div class="section-head">
       <span class="section-title">Known Data Anomalies</span>
-      <span class="section-count">11 entries</span>
+      <span class="section-count">14 entries</span>
     </div>
     <div class="reg-wrap">
       <table class="reg-table">
@@ -822,6 +822,30 @@
             <td><div class="entry-title">Single-series STL is numerically unstable at BUILT's history length</div><div class="entry-body">With <code>period=52</code> and only ~2.9 annual cycles of history, the STL seasonal estimate for an individual series is poorly constrained. Demonstrated: one extra week of data on a Walmart series (153 → 152 weeks between panels) flipped a 3-series index's peak from <b>week 40 to week 10</b> — a 30-week swing from a single row. Averaging across hundreds of series is what makes the estimate usable.</div></td>
             <td><span class="where-tag">MO_59</span><span class="where-tag">STL period=52</span><span class="where-tag">MIN_WEEKS=104</span><span class="where-tag">MO_59b probe</span></td>
             <td>Consequence: never trust a seasonal curve derived from a handful of series at this history length, and treat any per-series STL seasonal component as high-variance. MO_59's MIN_WEEKS=104 (2 cycles) is the bare minimum for STL to run, not enough for a stable single-series estimate.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-12</td>
+            <td><div class="entry-title">The recursive forecast collapses to last_actual x 1.03 — 31 of 56 features are FROZEN, including ALL TDP</div><div class="entry-body">For no-YAGO series (<52 wks, <b>40.9% of demand</b>) MO_27's recursive forecast reaches a fixed point by <b>step 3</b> and flatlines: median ratio to the last actual week runs 1.022 / 1.028 / 1.029 then 1.029-1.031 for steps 4-13 (changes of ±0.1%). SD(forecast)/SD(actual) = <b>0.062</b> — it retains 6% of actual week-to-week variation. Cause: everything outside MO_27's <code>skip</code> set is held at its last observed value, which is 31 of 56 features and includes <b>every distribution and velocity feature</b> — tdp, tdp_z8, tdp_wow_delta, tdp_4w_momentum, tdp_lag52, velocity_per_tdp, velocity_spm_*, donor_count, top_donor_tdp_sum. Of the 20 that do vary, promo flags are hardcoded 0, ARP is flat, and the base_units lags are self-referential — leaving <b>week_sin/week_cos as the only exogenous time-varying inputs</b>, and they rank outside the top 20 by gain.</div></td>
+            <td><span class="where-tag">MO_27 forecast loop</span><span class="where-tag">MO_27c recursive test</span><span class="where-tag">COV-05</span><span class="where-tag">cold-start ramp</span></td>
+            <td>So the model CANNOT produce a ramp: the lifecycle ramp is TDP-driven (TDP 1.01->1.69 over 60 weeks) and TDP is pinned to a constant for the whole horizon. The features are right — tdp is #8 and velocity_per_tdp #15 by gain — the loop just never moves them. Jason's original proposal (last actual adjusted for TDP expansion) is precisely the missing half. NOT caused by RECENCY_LAMBDA: that weights training rows and cannot make an AR loop converge; the fixed point is structural.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-13</td>
+            <td><div class="entry-title">MO_28 optimises a teacher-forced objective that is 9x optimistic vs production</div><div class="entry-body">Same band, same models: teacher-forced wMAPE (MO_28's CV pinball objective) <b>4.15%</b> vs recursive production wMAPE <b>37.12%</b>. The gap is directional, not noise — training rewards leaning on <code>lag1</code> because it is the best one-step predictor, and recursion punishes exactly that because <code>lag1</code> becomes the model's own prior output. <b>So the tuning objective actively selects for the collapse in ANO-12.</b> Fix: make the Optuna objective a recursive backtest. The recursive test runs 554 series x 13 steps x 2 arms in ~1-2 min, so ~1-2 min/trial is affordable and 150 trials fits a weekend.</div></td>
+            <td><span class="where-tag">MO_28</span><span class="where-tag">MO_27c</span><span class="where-tag">ANO-12</span><span class="where-tag">GRD-08</span></td>
+            <td>Consequence for planning: hyperparameter tuning against CV pinball may not improve production accuracy at all, and could make it worse by further rewarding lag1 dependence. This supersedes the assumption behind the whole Optuna effort. Also means seasonal-index n is not worth a tuning dimension — MO_59d measured out-of-sample accuracy moving only 0.472->0.485 from n=20 to n=241.</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td>2026-10-01</td>
+          </tr>
+          <tr>
+            <td class="entry-id">ANO-14</td>
+            <td><div class="entry-title">SUPERSEDED TEST — MO_27b showed the seasonal multiplier 'hurting' by 8.5pp; it was teacher-forced and invalid</div><div class="entry-body">MO_27b evaluated the STL multiplier on MO_26's validation split and reported wMAPE 4.15% -> 12.68% (+8.53pp, 99% of series hurt). <b>That test could not answer the question.</b> The validation window sat almost entirely in the seasonal trough (mean multiplier <b>x0.890</b>, an 11% haircut) and predictions used ACTUAL lags that already carried the seasonal decline, so the multiplier double-counted — the result is close to an arithmetic artifact of applying an 11% haircut to already-accurate predictions. The valid recursive test (MO_27c) found the multiplier <b>HELPS: 37.12% -> 34.47%, -2.65pp</b>.</div></td>
+            <td><span class="where-tag">MO_27b (superseded)</span><span class="where-tag">MO_27c</span><span class="where-tag">NRM-07</span></td>
+            <td>Logged because the failure mode is instructive: a test was built whose result had already been predicted, it produced a large effect, and it was nearly reported as confirmation. Teacher-forced evaluation cannot answer questions about a recursive forecast. Per-series the multiplier helps only 54% of the time — the aggregate gain comes from being right on larger series. Net: the seasonal index is a 2.65pp patch on a 37% problem; keep it, stop optimising it.</td>
             <td><span class="badge badge-active">Active</span></td>
             <td>2026-10-01</td>
           </tr>

@@ -6,6 +6,122 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 200: the recursive forecast collapses to a random walk — and the tuning objective is 9x optimistic (2026-10-01)
+
+The most consequential measurement of the forecast work so far. It reorders the roadmap and
+retires the seasonal-index effort.
+
+### The forecast is `last_actual × 1.03`, held flat for 13 weeks
+
+For no-YAGO series (<52 weeks of history — **40.9% of demand**), MO_27's recursive forecast
+reaches a fixed point by **step 3**. Median trajectory as a ratio to the last actual week, 465
+series:
+
+| step | ratio | step-over-step |
+|---|---|---|
+| 1 | 1.022 | |
+| 2 | 1.028 | +0.54% |
+| 3 | 1.029 | +0.06% |
+| 4–13 | 1.029–1.031 | ±0.1% |
+
+Confirmed independently: **SD(forecast)/SD(actual) = 0.062**. The forecast retains 6% of actual
+week-to-week variation. It is a random walk with 3% drift, wearing 56 features.
+
+### Why: 31 of 56 features are FROZEN for the entire horizon
+
+Everything outside MO_27's `skip` set is pinned at its last observed value — including **every
+distribution and velocity feature**:
+
+```
+tdp, tdp_z8, tdp_wow_delta, tdp_4w_momentum, tdp_lag52, velocity_per_tdp,
+velocity_spm_roll8_avg/roll13_avg/z8/z13/lag52, donor_count, top_donor_tdp_sum
+```
+
+Of the 20 that do vary: promo flags hardcoded to 0, ARP flat, `base_units` lags self-referential.
+That leaves the four `week_sin`/`week_cos` terms as the **only exogenous time-varying inputs** —
+and they rank outside the top 20 by gain.
+
+**So the model cannot produce a ramp.** Update 197 measured the lifecycle ramp as TDP-driven (TDP
+1.01 → 1.69 over 60 weeks, demand 1.00 → 2.09). TDP is held constant for the whole horizon. The
+features are correct — `tdp` is #8 and `velocity_per_tdp` #15 by gain — the loop never moves them.
+
+**Jason's original proposal was the right fix and I under-rated it:** "use the most recent week's
+demand adjusted for any additional TDP expansion." The model already does the first half; the TDP
+adjustment is exactly the missing half, and the model would respond because those features are
+already trained.
+
+**Not RECENCY_LAMBDA.** Checked and ruled out — it weights training rows and cannot make an AR loop
+converge. The fixed point is structural.
+
+### MO_28 is optimising a metric 9x optimistic versus production
+
+| objective | wMAPE |
+|---|---|
+| teacher-forced (MO_28's CV pinball) | **4.15%** |
+| recursive (production) | **37.12%** |
+
+Directional, not noise: training rewards leaning on `lag1` because it's the best one-step
+predictor; recursion punishes exactly that, because `lag1` becomes the model's own prior output.
+**The tuning objective actively selects for the collapse.**
+
+Consequence: tuning against CV pinball may not improve production accuracy at all, and could worsen
+it by further rewarding lag-dependence. **The fix is a recursive-backtest objective** — the
+recursive test runs 554 series × 13 steps × 2 arms in ~1–2 min, so ~1–2 min/trial is affordable and
+150 trials fits a weekend.
+
+This also answers whether Optuna can tune the seasonal-index `n`: **no, and it shouldn't.** MO_28's
+objective never sees the index (it's applied post-hoc in MO_27), and MO_59d already showed `n`
+barely matters out-of-sample (correlation 0.472 → 0.485 from n=20 to n=241). Not a lever.
+
+### Seasonal multiplier: keep it, stop optimising it
+
+Recursive test, no-YAGO band: OFF **37.12%** → ON **34.47%** (**−2.65pp, HELPS**). Per-series it
+helps only 54% — the aggregate gain comes from being right on larger series.
+
+**A superseded test worth recording.** `MO_27b` evaluated the multiplier teacher-forced and
+reported it *hurting* by +8.53pp with 99% of series worse. That test was **invalid**: the window sat
+in the seasonal trough (mean multiplier ×0.890) and predictions used actual lags already carrying
+the decline, so the multiplier double-counted — close to an arithmetic artifact of an 11% haircut. I
+built a test whose result I had predicted, got a large effect, and nearly reported it as
+confirmation. **Teacher-forced evaluation cannot answer questions about a recursive forecast.**
+
+Net: the seasonal index is a **2.65pp patch on a 37% problem**. The sample-size and segmentation
+work (updates 199, MO_59b–e) is closed: use all qualifying series, volume-weighted, and move on.
+
+### Revised priorities
+
+1. **Project TDP forward in the recursive loop** — same 40.9% of demand, far larger lever than
+   2.65pp. Crude projection (capped `tdp_4w_momentum`) would let existing machinery generate ramp.
+   Caveat: forward TDP is itself a forecast, so a bad projection injects error — which is exactly
+   why NS2 sell-in was wanted as a real forward signal.
+2. **Recursive Optuna objective** — stop tuning against a 9×-optimistic proxy.
+3. **Horse race** (Jason's framing): "last actual × TDP projection" vs "STL seasonal adjustment" as
+   competing arms, plus ETS-Holt, weighted MA, lifecycle-ramp prior. Not "can simple methods beat
+   LightGBM" — LightGBM has already collapsed into one.
+
+### Not yet measured — do not assume
+
+The same recursive test on the **YAGO band (≥52 weeks)**. If those come back ~10%, then 37% is
+specifically the cold-start penalty. If they also come back ~30%, recursive AR is weak everywhere
+and the problem is the method rather than cold-start — a materially larger conclusion. Also: one
+cutoff (2026-06-07), one window; reproduce at a second cutoff first.
+
+### New scripts
+
+- `MO_27c_recursive_seasonal_test.py` — recursive backtest reusing MO_27's own `_build_feature_row`,
+  with a self-check that the OFF arm flattens (ratio 0.062, passed) so the loop is verifiably
+  reproducing production behaviour
+- `MO_27b_seasonal_multiplier_test.py` — superseded; kept with its limitation documented
+- `MO_59c/d/e` — index stability, out-of-sample holdout validation, segmentation test
+
+Register → v0.7, 83 entries: ANO-12 (the collapse), ANO-13 (wrong objective), ANO-14 (superseded
+test).
+
+Also noted: **NS2 is MSSQL (`bb-db`), SPINS is Druid.** Two engines in one project — Druid's
+constraints don't apply to NS2 queries and vice versa.
+
+---
+
 ## README update 199: seasonal index was stale and unreproducible; now volume-weighted over all series (2026-10-01)
 
 Reliability item #1 of three. `outputs/mo59_seasonal_index.csv` is the **only** seasonal signal for
