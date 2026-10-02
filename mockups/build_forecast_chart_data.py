@@ -432,7 +432,7 @@ FORECAST_WEEKS        = 13
 GROUP_COLS            = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
 # Must match MO_26.MODEL_VERSION — drives both the PKL paths and the archive tag.
-MODEL_VERSION         = "v10"
+MODEL_VERSION         = "v11"
 
 ROOT_ML   = Path(__file__).parent.parent
 # scripts/outputs/ is the LIVE artifact directory — MO_25/26/27 all run with cwd=scripts, so
@@ -960,6 +960,63 @@ try:
             print(f"{len(_qpreds)} weeks, wMAPE={_qwmape}%")
         except Exception as _qe:
             print(f"WARN: {_qe}")
+
+    # ── HONEST QUARTERLY OVERRIDE ────────────────────────────────────────────
+    # The quarterly retrospectives above are built by run_single_backtest(), which reuses the
+    # ALREADY-LOADED production models at every cutoff. A model trained through 2026-06-07
+    # therefore "predicts" Q1 2025 having already seen eighteen months of the answer — six of
+    # seven quarters leak, and that is why the badges used to read 13-23% and wander.
+    #
+    # MO_80_quarterly_honest_backtest.py retrains BOTH arms at every cutoff on pre-cutoff data
+    # only. Where its output exists we replace the leaked numbers AND the plotted series, so the
+    # lines and the badges come from the same honest source. Never swap one without the other.
+    _mo80 = Path("outputs/mo80_quarterly_honest_backtest.json")
+    if not _mo80.exists():
+        _mo80 = Path(__file__).parent.parent / "scripts" / "outputs" / "mo80_quarterly_honest_backtest.json"
+    if _mo80.exists():
+        _hb = json.loads(_mo80.read_text())
+        _repl, _miss = 0, []
+        for _q in quarterly_backtests:
+            _r = _hb.get(_q.get("quarter_label"))
+            if not _r or not _r.get("recursive"):
+                _miss.append(_q.get("quarter_label")); continue
+            _q["wmape"]        = round(_r["recursive"]["wmape"], 1)
+            _q["naive_wmape"]  = round(_r["naive"]["wmape"], 1) if _r.get("naive") else None
+            _q["series_count"] = _r.get("n_series", _q.get("series_count"))
+            _q["honest"]       = True
+            _q["bias"]         = round(_r["recursive"]["bias"], 3)
+            # Key names MUST match what the chart JS reads: week_ending / pred_q50 / actual /
+            # naive_units. Writing week/predicted instead renders an empty line with no error.
+            _wk = (_r.get("weekly") or {})
+            _act = _wk.get("actual") or {}
+            _pred = _wk.get("recursive") or {}
+            _nv = _wk.get("naive_yoy") or {}
+            if _act and _pred:
+                _q["predictions"] = [
+                    {"week_ending": _d,
+                     "actual":      round(_act.get(_d, 0.0), 1),
+                     "pred_q50":    round(_pred.get(_d, 0.0), 1),
+                     # MO_80 scores the median only, so there is no honest per-week band for
+                     # the retrospective lines. Mirror q50 rather than invent an interval.
+                     "pred_q10":    round(_pred.get(_d, 0.0), 1),
+                     "pred_q90":    round(_pred.get(_d, 0.0), 1),
+                     "naive_units": round(_nv.get(_d, 0.0), 1)}
+                    for _d in sorted(set(_act) & set(_pred))]
+            _repl += 1
+        print(f"  Quarterly badges: {_repl} replaced with HONEST retrained numbers from MO_80")
+        if _miss:
+            print(f"    not found in MO_80 output, left as-is: {_miss}")
+        if _repl == 0:
+            raise SystemExit(
+                "\nFATAL: MO_80 output present but no quarter labels matched, so the chart would "
+                "silently ship leaked numbers under honest-looking labels.\n"
+                f"  chart labels: {[q.get('quarter_label') for q in quarterly_backtests]}\n"
+                f"  MO_80 keys  : {[k for k in _hb if not k.startswith('_')]}")
+    else:
+        raise SystemExit(
+            "\nFATAL: outputs/mo80_quarterly_honest_backtest.json not found.\n"
+            "  The quarterly badges would be LEAKED (production models scoring quarters they\n"
+            "  were trained through). Run MO_80_quarterly_honest_backtest.py first.")
 
     print(f"  History weeks    : {len(backtest_history)}")
     print(f"  Holdout weeks    : {len(backtest_holdout)}")
