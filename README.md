@@ -6,6 +6,108 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 205: growth is DISTRIBUTION, not velocity — the finding that explains everything (2026-10-02)
+
+Two days of forecasting work produced a long list of approaches that fail to beat holding last
+week's value forward. One measurement explains all of them.
+
+### 61% of BUILT's growth is series that did not exist a year ago
+
+Last 52 weeks vs the 52 before, full panel after all rules:
+
+| component | units | share of growth |
+|---|---|---|
+| **NEW series** (did not exist a year ago) | 11,888,266 | **61%** |
+| same series, organic change | 7,766,081 | 40% |
+| lost series | −275,409 | −1% |
+| **total** | **+19,378,939 (2.05x)** | |
+
+**1,008 new series appeared against 759 continuing ones.** And the continuing ones are mixed:
+median growth **1.46x over a FULL YEAR** — about **0.7% a week**, well inside weekly volatility —
+with 64% growing and **36% shrinking**.
+
+### Why that settles it
+
+**For an existing series there is almost no trend to extract.** At 0.7%/week, last week genuinely
+is the best estimate of next week. That is why `flat` beat ~20 approaches, and why the gap WIDENED
+under aggregation (systematic bias, not noise).
+
+**The dominant driver is not in SPINS history at all.** Which SKU×retailer combinations appear, and
+when, is decided by authorisations, launch plans and door counts. No time-series method on existing
+series can anticipate a combination that has never sold.
+
+It also explains a result that looked strange alone: applying portfolio growth to each series made
+forecasts WORSE (`flat_x_growth` 39.7 vs `flat` 32.4). That growth mostly is not happening inside
+existing series, so applying it to them double-counts.
+
+### MO_90 — the composite that failed, and was still worth running
+
+Logic was sound: estimate each component where it IS estimable — level per series, trend and
+seasonality at portfolio level (per-series trend scored 61.3; per-series seasonality needs cycles
+we do not have).
+
+| arm | SKU-week | retailer-month | portfolio-month |
+|---|---|---|---|
+| **flat** | **32.4** | **22.7** | **15.8** |
+| flat × seasonal | 36.6 | 27.0 | 23.1 |
+| flat × growth | 39.7 | 30.0 | 24.9 |
+| flat × both | 43.9 | 33.8 | 31.1 |
+
+Both adjustments hurt. Growth for the double-count above; seasonality likely because the pooled
+index is contaminated by composition change as new series enter.
+
+### The second hard constraint: fewer than two seasonal cycles
+
+At the Q4 2025 cutoff, **ZERO series have 104+ weeks of history**:
+
+    <26 wks 539 | 26-51 246 | 52-103 370 | >=104 **0**
+
+The panel starts 2023-10-15, so the maximum possible is 103 weeks. Every classical seasonal method
+— ETS, Theta, MSTL, SARIMA — needs two complete cycles and **fails outright** rather than degrading
+(statsforecast raises a broadcast error). Same reason seasonal features earn only ~4% of model gain
+and why every seasonal fix this week failed.
+
+### MO_89 — decomposition horse race
+
+| arm | SKU-week | retailer-month | portfolio-month |
+|---|---|---|---|
+| flat | **39.4** | **29.7** | **22.2** |
+| lightgbm | 43.3 | 33.1 | 28.1 |
+| lin52_gbdt (hybrid) | 52.0 | 40.4 | **25.6** |
+| lin52 | 61.3 | 47.1 | 31.7 |
+
+(two hardest quarters only, so levels run high). The trend+GBDT hybrid lost at SKU level — the
+per-series trend fits are too noisy — but **did beat plain LightGBM at portfolio-month**, which is
+where trend information becomes usable.
+
+### The full tally of what flat beats
+
+Features: six seasonal arms (MO_86), raw `week_of_year` (MO_85), TDP projection (MO_27g), lifecycle
+ramp, donor surrogate, hierarchical allocation.
+Targets: log1p / raw / ratio13 / ratio52 / seasonal differencing — ratio families blow up through
+the recursive loop (126.4 worst), tried twice.
+Objectives: quantile / l2 / huber / poisson / tweedie / mape — tweedie's Kroger win (−2.2pp) did
+**not** replicate portfolio-wide; variance power, monotone constraints and dynamic momentum all
+flat (MO_88).
+Prior: Ridge 60-81, Lasso 57-80 (MO_38), N-BEATS 46-118 (MO_32A) — all lost to naive too.
+
+### Where the value actually is
+
+For existing series on SPINS history alone, **flat is close to the information limit**, and we have
+now demonstrated that across roughly twenty approaches. The remaining value sits in the **61% the
+sales history cannot see**: NS2 sell-in, authorisations, planned door counts, a confirmed promo
+calendar. That is a data-access conversation with Ebad and Rob — now with a quantified ask behind it.
+
+The defensible claims are the ones that do not depend on beating a carry-forward: full coverage
+including the newest launches that previously got no forecast at all, quantile bands, the
+distribution-vs-velocity decomposition, and roughly **2x the accuracy of year-over-year** (54.5 vs
+36.6 portfolio-wide).
+
+⚠️ Do NOT break the `mo-ml` env. TFT / N-BEATS / Chronos-2 are all blocked by a torch/torchvision
+ABI mismatch; if revisited, use a separate `mo-neural` env. MPS is available.
+
+---
+
 ## README update 204: the extrapolation ceiling — a FIFTH mechanism, and it reorders the fix (2026-10-02)
 
 Consulted the official LightGBM documentation. It surfaced a constraint we had never accounted
