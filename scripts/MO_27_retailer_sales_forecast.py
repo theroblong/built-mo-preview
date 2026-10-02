@@ -338,7 +338,7 @@ if __name__ == "__main__":
         print(f"\n  Short-series routing: {_n_short:,} of {_n_total:,} series have "
               f"<{MIN_SERIES_WEEKS} weeks and will use the CARRY-FORWARD path")
         print(f"      (spanning {len(_u)} UPCs — these are the newest launches and new doors)")
-        print(f"      method = flat 4-week level x seasonal index; NOT skipped "
+        print(f"      method = last observed value x seasonal index; NOT skipped "
               f"(no lifecycle ramp — MO_79 measured it losing to flat in every band)")
     print(f"  Series to forecast: {_n_total:,}  "
           f"({_n_total - _n_short:,} autoregressive + {_n_short:,} carry-forward)")
@@ -470,9 +470,14 @@ if __name__ == "__main__":
             _arp  = float(pd.to_numeric(_lat.get("arp"), errors="coerce") or 0.0)
             _w0   = int(pd.to_numeric(_lat.get("weeks_since_launch"), errors="coerce") or 0)
 
-            # Level: mean of the last up-to-4 OBSERVED weeks. Keep NaN distinguishable from 0.
+            # Level: the LAST observed week, not a 4-week mean. Measured three times:
+            #   MO_83 (short band, 4 cutoffs)  naive x seasonal 65.4  vs  mean4 x seasonal 67.7
+            #   MO_82 (short band, 4 cutoffs)  naive 65.6             vs  mean4 68.9
+            #   MO_79 (bands 1-4 / 5-12)       naive 94.7 / 55.1      vs  window_avg4 97.4 / 58.5
+            # A 4-week mean smooths away the most recent level, which on a ramping new item is
+            # the only real information there is. Keep NaN distinguishable from 0.
             _tail = pd.to_numeric(g["base_units"].tail(4), errors="coerce")
-            _lvl_raw = _tail.mean()
+            _lvl_raw = _tail.dropna().iloc[-1] if _tail.notna().any() else float("nan")
             _no_level = not np.isfinite(_lvl_raw)
             _lvl = 0.0 if _no_level else float(_lvl_raw)
 
@@ -482,7 +487,7 @@ if __name__ == "__main__":
             elif _no_level:
                 _method, _bw = "no_level_available", 0.0
             else:
-                _method, _bw = "carry_forward_seasonal", 0.45
+                _method, _bw = "last_value_seasonal", 0.45
             # Carry total_units forward on the SAME level+ramp+season path, scaled by this
             # series' own observed total/base ratio. Leaving it null would make a short series
             # look promo-free, which is the opposite of true: new items launch ON promo.
