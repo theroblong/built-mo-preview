@@ -87,6 +87,19 @@ def wmape(a, p):
     return float(np.abs(a - p).sum() / d * 100) if d > 0 else float("nan")
 
 
+def total_err(a, p):
+    """|sum(forecast) - sum(actual)| / sum(actual) — a BIAS measure, not accuracy.
+
+    This is what a single low "forecast error" figure usually means when a company quotes one:
+    over- and under-calls on individual items CANCEL inside it, so it is always <= wMAPE and
+    usually far smaller. It answers "did we plan the right total volume", not "did we get each
+    item right". Reported alongside wMAPE so BUILT's ~7% can be compared like for like.
+    """
+    a, p = np.asarray(a, float), np.asarray(p, float)
+    d = a.sum()
+    return float(abs(p.sum() - d) / d * 100) if d > 0 else float("nan")
+
+
 def load_panel():
     df = pd.read_parquet(PARQUET)
     df["__time"] = pd.to_datetime(df["__time"], utc=True)
@@ -154,13 +167,13 @@ def stat_forecasts(hist, keys, h, arms):
     sdf = pd.DataFrame(recs)
     models, names = [], []
     if "SES_opt" in arms:
-        models.append(SimpleExponentialSmoothingOptimized()); names.append("SES_opt")
+        models.append(SimpleExponentialSmoothingOptimized(alias="SES_opt")); names.append("SES_opt")
     if "Holt_damped" in arms:
-        models.append(AutoETS(season_length=1, damped=True)); names.append("Holt_damped")
+        models.append(AutoETS(season_length=1, damped=True, alias="Holt_damped")); names.append("Holt_damped")
     if "AutoETS_ns" in arms:
-        models.append(AutoETS(season_length=1)); names.append("AutoETS_ns")
+        models.append(AutoETS(season_length=1, alias="AutoETS_ns")); names.append("AutoETS_ns")
     if "AutoTheta_ns" in arms:
-        models.append(AutoTheta(season_length=1)); names.append("AutoTheta_ns")
+        models.append(AutoTheta(season_length=1, alias="AutoTheta_ns")); names.append("AutoTheta_ns")
     if not models:
         return out
     try:
@@ -171,14 +184,14 @@ def stat_forecasts(hist, keys, h, arms):
         return out
     fc = fc.sort_values(["unique_id", "ds"])
     fc["_step"] = fc.groupby("unique_id").cumcount()
-    cols = [c for c in fc.columns if c not in ("unique_id", "ds", "_step")]
     for _, r in fc.iterrows():
         key = tuple(str(r["unique_id"]).split("|"))
         st = int(r["_step"])
-        for c, nm in zip(cols, names[:len(cols)]):
-            v = r[c]
-            if np.isfinite(v):
-                out[nm][(key, st)] = max(0.0, float(v))
+        for nm in names:                       # aliases ARE the column names now
+            if nm in fc.columns:
+                v = r[nm]
+                if np.isfinite(v):
+                    out[nm][(key, st)] = max(0.0, float(v))
     return out
 
 
@@ -235,7 +248,8 @@ def main(nq, arms):
     levels = [("SKU x retailer x week", ["upc", "acct", "t"]),
               ("retailer x month", ["acct", "month"]),
               ("portfolio x month", ["month"])]
-    print(f"  {'arm':<22s} " + "".join(f"{n:>22s}" for n, _ in levels))
+    print(f"  {'':<22s} " + "".join(f"{n:>22s}" for n, _ in levels))
+    print(f"  {'arm':<22s} " + "".join(f"{'wMAPE':>13s}{'TOTAL':>9s}" for _ in levels))
     summ = {}
     for a in arms:
         if a not in J.columns or J[a].notna().sum() == 0:
@@ -244,7 +258,9 @@ def main(nq, arms):
         cells, rec = "", {}
         for nm, kk in levels:
             gg = sub.groupby(kk, observed=True)[["actual", a]].sum()
-            v = wmape(gg["actual"], gg[a]); rec[nm] = v; cells += f"{v:>22.1f}"
+            v = wmape(gg["actual"], gg[a]); t = total_err(gg["actual"], gg[a])
+            rec[nm] = v; rec[nm + " TOTAL"] = t
+            cells += f"{v:>13.1f}{t:>9.1f}"
         summ[a] = rec
         print(f"  {a:<22s}{cells}")
     for nm, _ in levels:

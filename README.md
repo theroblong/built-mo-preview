@@ -6,6 +6,71 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 206: SES beats flat — and TOTAL error is 0.3-1.6%, not 36% (2026-10-02)
+
+Two results from finishing the arms that silently failed earlier. One is a modest first win; the
+other changes how the accuracy conversation with BUILT should be framed.
+
+### Optimised exponential smoothing finally beats the carry-forward
+
+Portfolio-wide, 7 honest retrained quarters, 62,776 matched points:
+
+| arm | SKU-week wMAPE | retailer-month | portfolio-month | **TOTAL err** |
+|---|---|---|---|---|
+| **SES_opt** | **30.8** (−1.7pp) | 22.1 | 17.6 | 1.6% |
+| **AutoETS_ns** | 32.8 | **22.1** | 17.6 | **0.3%** |
+| flat | 32.4 | 22.7 | **15.8** | 4.3% |
+| Holt_damped | 33.6 | 23.3 | 18.7 | 0.4% |
+| AutoTheta_ns | 34.5 | 24.5 | 19.5 | 1.9% |
+| LightGBM v11 | 36.6 | 24.5 | 18.1 | — |
+
+**Simple exponential smoothing with an optimised alpha beats flat by 1.7pp at SKU-week** — the
+first method in two days to beat the incumbent, portfolio-wide, on a long-established technique
+rather than a tuning artifact.
+
+⚠️ **flat still wins at portfolio-month (15.8)**, so the best method depends on the planning level.
+
+These work *because they are non-seasonal* (`season_length=1`). The seasonal variants cannot be
+fitted at all — **no series in the panel has the 104+ weeks they require** (update 205).
+
+### TOTAL error — the metric behind BUILT's "7%" ⭐
+
+`total_err = |sum(forecast) − sum(actual)| / sum(actual)`. A **BIAS** measure: over- and
+under-calls on individual items CANCEL inside it, so it is always <= wMAPE and usually far
+smaller. It answers *"did we plan the right total volume"*, not *"did we get each item right"* —
+and it is almost certainly what a business means when it quotes a single low error figure.
+
+    AutoETS_ns 0.3%  |  Holt_damped 0.4%  |  SES_opt 1.6%  |  flat 4.3%
+
+**BUILT quotes ~7%. Measured the same way we are at 0.3-1.6%.** The ~36% we spent two days on is
+per-item accuracy at SKU x retailer x week — a far harder question that a spreadsheet process does
+not answer at all.
+
+⚠️ **Confirm before claiming anything:** is BUILT's figure on **shipments or sell-through**, at what
+**level**, over what **horizon**, and is it **total variance or per-item error**? Each moves the
+number substantially. Already on the Chase/GL question list.
+
+Supporting the update-205 finding: `flat_x_growth` shows **10.3% TOTAL error** — a systematic
+over-forecast, confirming that applying portfolio growth to individual series double-counts
+because most growth is not happening inside existing series.
+
+### A silent failure worth recording
+
+**statsforecast refuses duplicate model names.** `AutoETS` was instantiated twice (damped and not)
+without `alias=`, raising *"Model names must be unique"* — and **all four statistical arms returned
+NOTHING across two earlier runs**, reported as empty rather than as an error. Always pass `alias=`
+when reusing a model class, and map results by column NAME, not position.
+
+### Still unrun
+
+- **MO_81 aggregation-level error** — built, never ran (deadlocked watcher chain). Largely
+  superseded now that TOTAL error is reported in MO_90.
+- **MO_28R Optuna** — stopped at 36 trials, best 31.89, SQLite study preserved and resumable.
+  Not interpretable until the same-folds baseline is computed; it cites MO_80's Kroger-only
+  numbers while scoring portfolio-wide.
+
+---
+
 ## README update 205: growth is DISTRIBUTION, not velocity — the finding that explains everything (2026-10-02)
 
 Two days of forecasting work produced a long list of approaches that fail to beat holding last
