@@ -54,7 +54,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from mo_writeback import write_back
 
-MODEL_VERSION  = "v10"  # must match the MO_26 run whose PKLs + metrics this loads;
+MODEL_VERSION  = "v11"  # must match the MO_26 run whose PKLs + metrics this loads;
                         # the guard in _load_models_and_meta() hard-fails on a mismatch
 FORECAST_WEEKS = 13
 Q_TAGS         = ["q10", "q50", "q90"]

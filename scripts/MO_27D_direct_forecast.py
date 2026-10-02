@@ -19,11 +19,23 @@ so:
 TARGET-WEEK SEASONALITY: week_sin/cos must describe the week being PREDICTED (t+h), exactly as
 MO_26D trained them. Passing the anchor week's values would silently mismatch train and score.
 
-STILL ROUTED, NOT MODELLED
---------------------------
-The lapse gate from MO_27 is kept: 524 of 2,137 series had no recorded sale for 9+ weeks and were
-being given current demand off a stale tail. Those forecast zero with method
-`lapsed_no_recent_sales` regardless of what any model would say.
+LAPSED SERIES GET AN EXPECTED VALUE, NOT A ZERO
+-----------------------------------------------
+513 series have no recorded SPINS row for 9+ weeks. Carrying their stale level forward invents
+demand; forecasting a hard zero is equally wrong, because measurement says lapses are often not
+terminal. Across 878 lapse episodes (365 resumed, 513 still silent), a series resumes within 13
+weeks with probability 17.5% at 9-13 weeks silent, 20.0% at 14-26, decaying to 0.5-1.7% beyond
+two years — and when it resumes it comes back at ~1.06x its pre-gap level.
+
+So a lapsed SKU is forecast at `pre-gap level x P(resume | weeks silent) x 1.06`, which decays
+smoothly toward zero with staleness instead of snapping to it. Total across all 513 series is
+~134 units/week against a ~770K portfolio (0.02%), so this is about being explainable and
+defensible rather than about accuracy.
+
+Each lapsed row also carries `same_shelf_launch_upc` when a DIFFERENT SKU launched beside it on
+the same shelf (138 of 513; 91 of those BAR<->PUFF). That is an observational label only — every
+UPC is its own SKU with its own forecast, no history is transferred between them, and the label
+never changes a number.
 
 Run:  python MO_27D_direct_forecast.py [--version v11d] [--no-writeback]
 """
@@ -43,7 +55,9 @@ warnings.filterwarnings("ignore")
 
 from mo_panel import (CAT_COLS, GROUP_COLS, drop_zero_volume_geographies, apply_rma_priority,
                       fill_promo_mechanic_nulls, drop_military_accounts,
-                      drop_ak_hi_market_variants, warn_nested_rma_duplicates)
+                      drop_ak_hi_market_variants, warn_nested_rma_duplicates,
+                      lapse_resume_probability, find_same_shelf_launches,
+                      classify_lapse_cause, LAPSE_TDP_MULT, LAPSE_RESUME_LEVEL)
 from mo_writeback import write_back
 
 PARQUET        = Path("outputs/retailer_sales_weekly.parquet")
@@ -114,9 +128,24 @@ def main(version: str, writeback: bool):
     # ── Lapse gate (carried over from MO_27) ──
     last_seen = df.groupby(GROUP_COLS, observed=True)["__time"].max()
     lapse_wks = ((anchor_date - last_seen).dt.days / 7).round()
-    lapsed = set(map(tuple, lapse_wks[lapse_wks >= LAPSE_WEEKS].index.to_frame().values))
-    print(f"  Lapse gate: {len(lapsed):,} series with no sale in {LAPSE_WEEKS}+ weeks "
-          f"-> forecast ZERO (method 'lapsed_no_recent_sales')")
+    lapsed = {tuple(k): float(v) for k, v in lapse_wks[lapse_wks >= LAPSE_WEEKS].items()}
+    print(f"  Lapse handling: {len(lapsed):,} series with no SPINS row in {LAPSE_WEEKS}+ weeks")
+    print(f"      forecast = pre-gap level x P(resume | weeks silent) x {LAPSE_RESUME_LEVEL}")
+    print(f"      (NOT a hard zero — 365 of 878 historical lapses resumed at ~1.06x)")
+    co_launch = find_same_shelf_launches(df)
+    # Pre-gap level: mean of each lapsed series' last up-to-4 OBSERVED weeks.
+    pre_level = (df.groupby(GROUP_COLS, observed=True)["base_units"]
+                 .apply(lambda s: float(pd.to_numeric(s.tail(4), errors="coerce").mean()))
+                 .to_dict())
+    # Why each lapsed series went quiet, from its pre-lapse TDP trend. A stockout stops selling
+    # while still distributed; a delisting winds TDP down first. Measured 45.2% vs 31.7% resume.
+    cause = (df.groupby(GROUP_COLS, observed=True)["tdp"].apply(classify_lapse_cause).to_dict()
+             if "tdp" in df.columns else {})
+    if cause:
+        from collections import Counter
+        _c = Counter(cause[k] for k in lapsed if k in cause)
+        print("      lapse cause (pre-lapse TDP trend): "
+              + ", ".join(f"{k}={v}" for k, v in _c.most_common()))
     print(f"  Direct-model series: {n_series - len(lapsed):,}\n")
 
     # One feature row per series, taken from its last observed week.
@@ -140,7 +169,18 @@ def main(version: str, writeback: bool):
         for i, r in X.iterrows():
             key = tuple(r[c] for c in GROUP_COLS)
             is_lapsed = key in lapsed
-            u_lo, u_b, u_hi = (0.0, 0.0, 0.0) if is_lapsed else (lo[i], bs[i], hi[i])
+            if is_lapsed:
+                _cause = cause.get(key, "unknown")
+                _p = lapse_resume_probability(lapsed[key]) * LAPSE_TDP_MULT.get(_cause, 1.0)
+                _lvl = pre_level.get(key, 0.0)
+                _e = (0.0 if not np.isfinite(_lvl)
+                      else max(0.0, _lvl * _p * LAPSE_RESUME_LEVEL))
+                # Band spans "stays gone" to "comes back at full strength" — that IS the
+                # uncertainty, and a narrow band here would misrepresent it.
+                u_lo, u_b, u_hi = 0.0, _e, (0.0 if not np.isfinite(_lvl)
+                                            else max(0.0, _lvl * LAPSE_RESUME_LEVEL))
+            else:
+                u_lo, u_b, u_hi = lo[i], bs[i], hi[i]
             arp = float(pd.to_numeric(r.get("arp"), errors="coerce") or 0.0)
             wsl = pd.to_numeric(r.get("weeks_since_launch"), errors="coerce")
             rows.append({
@@ -165,8 +205,11 @@ def main(version: str, writeback: bool):
                 "forecast_total_units_high": round(float(u_hi), 2),
                 "weeks_since_launch": int(wsl + h) if np.isfinite(wsl) else None,
                 "model_version": version,
-                "forecast_method": ("lapsed_no_recent_sales" if is_lapsed
+                "forecast_method": ("lapsed_resume_expected_value" if is_lapsed
                                     else "direct_multihorizon"),
+                "weeks_silent": round(lapsed[key], 0) if is_lapsed else 0,
+                "lapse_cause": cause.get(key, "unknown") if is_lapsed else None,
+                "same_shelf_launch_upc": co_launch.get(key) if is_lapsed else None,
                 "scored_at": scored_at,
             })
         print(f"    h={h:>2d} week {fd.date()}  q50 sum {bs.sum():>12,.0f}")

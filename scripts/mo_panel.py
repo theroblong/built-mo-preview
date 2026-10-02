@@ -492,3 +492,120 @@ def warn_nested_rma_duplicates(
                       f"{eq*100:.1f}% exactly equal | {nest*100:.1f}% nested")
             print(f"  {'!' * 66}\n")
     return df
+
+
+# Survival estimate of P(a lapsed series resumes within the next 13 weeks | silent k weeks).
+# Measured 2026-10-01 on 878 lapse episodes (365 resumed, 513 right-censored), strictly WITHIN
+# one series: the SAME UPC returning to the SAME retailer x channel x geography. A UPC selling
+# at another retailer is a different series and is NOT a resume.
+LAPSE_RESUME_P = [(13, 0.175), (26, 0.200), (39, 0.077), (52, 0.043),
+                  (78, 0.033), (104, 0.005), (10**6, 0.017)]
+# When a lapsed series does resume, it returns at ~1.06x its pre-gap 4-week level (median).
+LAPSE_RESUME_LEVEL = 1.06
+
+
+def lapse_resume_probability(weeks_silent: float) -> float:
+    """P(this series resumes in the next 13 weeks), given it has been silent `weeks_silent`.
+
+    Used to replace the hard zero that lapsed series used to receive. Expected value, not a
+    binary: a series quiet for 10 weeks still has a 17.5% chance of returning at full strength,
+    so forecasting it at exactly 0 is as wrong as carrying its stale level forward.
+    """
+    for upper, p in LAPSE_RESUME_P:
+        if weeks_silent <= upper:
+            return p
+    return LAPSE_RESUME_P[-1][1]
+
+
+def find_same_shelf_launches(df: pd.DataFrame, lapse_weeks: int = 9,
+                             window_weeks: int = 13, verbose: bool = True) -> dict:
+    """Observational label: a DIFFERENT SKU that launched on the same shelf as this one went quiet.
+
+    ⚠️ THIS IS NOT A SUCCESSOR RELATIONSHIP AND MUST NEVER BE USED AS A MODELING INPUT.
+
+    **Every UPC is its own SKU with its own series and its own forecast.** Built Coconut 1-pack
+    and Built Coconut 4-pack are two DIFFERENT SKUs. The 1-pack does not "become" the 4-pack.
+    No history is transferred, no series are merged, no lifecycle is shared, and the lapsed SKU's
+    forecast comes from `lapse_resume_probability()` for that UPC on that shelf regardless of
+    whether anything launched beside it.
+
+    All this records is a CO-OCCURRENCE for a planner to read: UPC A stopped being reported and
+    UPC B started being reported, within +/-`window_weeks`, at the same retailer x channel x
+    geography, sharing a flavor. It explains why a number is low; it does not set the number.
+    There is no universal rule that a 1-pack is retired when a 4-pack launches — it varies by
+    retailer, channel and shelf, so treating this as causal would bake in an assumption the data
+    does not support.
+
+    "Same shelf" is strict: same retailer, channel AND geography. A UPC selling at a different
+    retailer is a different series entirely and is never matched here.
+
+    Measured on the 2026-10-01 panel: 138 of 513 lapsed series (26.9%) have a co-occurring launch.
+        brand switch (BAR <-> PUFF)   91  (17.7%)
+        same flavor, different pack   37  ( 7.2%)
+        same flavor, different UPC    10  ( 1.9%)
+        none observed                375  (73.1%)
+
+    Returns {series_key: co_occurring_upc} purely for labelling.
+    """
+    need = {"__time", "specific_flavor_normalized", "spins_flavor_canonical"}
+    if not need.issubset(df.columns):
+        return {}
+    end = df["__time"].max()
+    first = df.groupby(GROUP_COLS, observed=True)["__time"].min()
+    last = df.groupby(GROUP_COLS, observed=True)["__time"].max()
+    att = df.groupby(GROUP_COLS, observed=True)[
+        ["specific_flavor_normalized", "spins_flavor_canonical"]].last()
+    shelf: dict = {}
+    for k, ft in first.items():
+        shelf.setdefault((k[1], k[2], k[3]), []).append((k[0], ft))
+
+    out = {}
+    for key, lt in last.items():
+        if (end - lt).days / 7 < lapse_weeks:
+            continue
+        a = att.loc[key]
+        for u2, ft in shelf.get((key[1], key[2], key[3]), []):
+            if u2 == key[0]:
+                continue
+            if not (lt - pd.Timedelta(weeks=window_weeks) <= ft
+                    <= lt + pd.Timedelta(weeks=window_weeks)):
+                continue
+            b = att.loc[(u2, key[1], key[2], key[3])]
+            sf, cf = str(a.specific_flavor_normalized), str(a.spins_flavor_canonical)
+            if ((sf == str(b.specific_flavor_normalized) and sf not in ("nan", "UNKNOWN"))
+                    or (cf == str(b.spins_flavor_canonical) and cf not in ("nan", "UNKNOWN"))):
+                out[key] = u2
+                break
+    if verbose:
+        print(f"  Same-shelf launch scan: {len(out):,} lapsed series have a DIFFERENT SKU that "
+              f"launched beside them (label only — does not change any forecast)")
+    return out
+
+
+# Pre-lapse TDP trajectory separates a stockout from a delisting, and it predicts resumption.
+# Measured on 749 lapse episodes with usable pre-lapse TDP (4-week ratio, last/first):
+#     stable or rising (>=0.95x)  445 episodes, 45.2% resumed   <- still distributed = STOCKOUT-like
+#     softening (0.60-0.95x)       80 episodes, 32.5% resumed
+#     collapsing (<0.60x)         224 episodes, 31.7% resumed   <- wound down = DELIST-like
+#     overall                     749 episodes, 39.8% resumed
+# Applied as a multiplier on lapse_resume_probability(), which is calibrated to the overall rate.
+LAPSE_TDP_MULT = {"stockout_like": 45.2 / 39.8, "softening": 32.5 / 39.8,
+                  "delist_like": 31.7 / 39.8, "unknown": 1.0}
+
+
+def classify_lapse_cause(tdp_tail: "pd.Series") -> str:
+    """Why did this series go quiet? From the TDP trend over its last 4 observed weeks.
+
+    A stockout stops selling while still on shelf, so TDP holds steady right up to the gap.
+    A delisting winds distribution down first, so TDP is already collapsing when sales stop.
+    We cannot observe TDP DURING the lapse (there are no rows at all), so the trajectory going
+    INTO it is the only evidence available.
+
+    SPINS gives no out-of-stock field; Circana CRX has one but it is still null pending vendor
+    follow-up, so this inference is the best signal we have today.
+    """
+    w = pd.to_numeric(tdp_tail, errors="coerce").dropna().tail(4)
+    if len(w) < 2 or not w.iloc[0] or w.iloc[0] <= 0:
+        return "unknown"
+    r = float(w.iloc[-1]) / float(w.iloc[0])
+    return "stockout_like" if r >= 0.95 else ("softening" if r >= 0.60 else "delist_like")

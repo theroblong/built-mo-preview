@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Forecast Value Case</title>
+<style>
+:root{--bg:#fbfaf8;--card:#fff;--ink:#1a1a18;--ink2:#4a4a46;--mut:#8a8a84;--line:#e6e4df;
+--green:#1f7a4d;--greenbg:#e8f5ee;--red:#b3261e;--redbg:#fdecea;--amber:#8a5a00;--amberbg:#fdf3e0;--accent:#2d5d8a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161614;--card:#1e1e1b;--ink:#f2f1ee;
+--ink2:#c2c0ba;--mut:#8a8a84;--line:#33322e;--greenbg:#12301f;--redbg:#3a1512;--amberbg:#33260d;
+--green:#5fd08c;--red:#f2857c;--amber:#e0b35c;--accent:#7fb0dd}}
+:root[data-theme="dark"]{--bg:#161614;--card:#1e1e1b;--ink:#f2f1ee;--ink2:#c2c0ba;--mut:#8a8a84;--line:#33322e;
+--greenbg:#12301f;--redbg:#3a1512;--amberbg:#33260d;--green:#5fd08c;--red:#f2857c;--amber:#e0b35c;--accent:#7fb0dd}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 16px 90px}
+h1{font-size:30px;margin:0 0 8px;letter-spacing:-.025em}
+h2{font-size:21px;margin:46px 0 4px;letter-spacing:-.015em}
+.sub{color:var(--ink2);margin:0 0 4px;font-size:16px}
+.meta{color:var(--mut);font-size:13px;margin-bottom:30px}
+.lede{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+border-radius:10px;padding:22px 24px;margin:22px 0}
+.lede p{margin:0 0 10px} .lede p:last-child{margin:0}
+.stats{display:flex;gap:11px;flex-wrap:wrap;margin:20px 0 6px}
+.s{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px 18px;flex:1 1 170px}
+.s .v{font-size:25px;font-weight:650;letter-spacing:-.025em}
+.s .l{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.07em;margin-top:4px;line-height:1.4}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);
+padding:10px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:13px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rg{color:var(--ink2);font-size:12.5px}
+.p{font-weight:500;line-height:1.45}
+.u{color:var(--mut);font-size:11.5px;font-family:ui-monospace,Menlo,monospace;margin-top:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:14px 0}
+.win{border-left:4px solid var(--green)} .fix{border-left:4px solid var(--amber)}
+.big{font-size:27px;font-weight:650;letter-spacing:-.025em;color:var(--green)}
+.bigr{font-size:27px;font-weight:650;letter-spacing:-.025em;color:var(--amber)}
+ul{padding-left:20px;margin:10px 0} li{margin:9px 0;color:var(--ink2)}
+.q{color:var(--ink2);font-size:15px}
+.ask{background:var(--amberbg);border:1px solid var(--amber);border-radius:10px;padding:18px 22px;margin:18px 0}
+.scroll{overflow-x:auto}
+</style></head><body><div class="wrap">
+
+<h1>What the Forecast Is Worth</h1>
+<p class="sub">Three decisions BUILT can now make that were not previously possible &mdash; and what they are worth.</p>
+<p class="meta">Prepared for Bracken &middot; 1 October 2026 &middot; All figures from BUILT&rsquo;s own measured retail sales through 6 September 2026</p>
+
+<div class="lede">
+<p><b>The forecast is not a single number for the business. It is a number for every product, at every
+retailer, for every week.</b> That is what makes it usable for decisions rather than reporting.</p>
+<p>This note sets out three things that changed, each measured in BUILT&rsquo;s actual retail dollars:
+demand we were counting that did not exist, demand we were planning for on products that stopped
+selling, and the newest products that had no forward number at all.</p>
+</div>
+
+<div class="stats">
+<div class="s"><div class="v">$269M</div><div class="l">Retail sales measured, last 52 weeks</div></div>
+<div class="s"><div class="v">$60.3M</div><div class="l">Forecast, next 13 weeks</div></div>
+<div class="s"><div class="v">2,117</div><div class="l">Product &times; retailer combinations, every one with a number</div></div>
+<div class="s"><div class="v">133</div><div class="l">Products covered</div></div>
+</div>
+
+<h2>1. We were counting one retailer twice</h2>
+<div class="card fix">
+<p>Circle K was being reported to us under two overlapping market definitions, and both were being
+added into the plan. The same cases were counted twice.</p>
+<div class="bigr">$2.29M</div>
+<p class="q">of Circle K demand in the last 52 weeks that was never actually there. Circle K&rsquo;s
+real measured sales are <b>$2.27M</b>, not the <b>$4.55M</b> the plan was carrying.</p>
+<p class="q"><b>What this changes:</b> any volume commitment, trade spend or production plan sized off
+Circle K was built on roughly double the real demand. Six other retailers &mdash; Albertsons, CVS,
+Kroger, Sam&rsquo;s, Target and Walgreens &mdash; have the same duplicate market definitions sitting in the
+data today carrying no volume. They are now excluded by rule, so this cannot reappear quietly if
+one of them starts reporting.</p>
+</div>
+
+<h2>2. We were planning demand for products that had stopped selling</h2>
+<div class="card fix">
+<p><b>513 product-retailer combinations have recorded no sales for nine weeks or more</b> &mdash; half of
+them for more than a year. The plan was carrying their last known sales rate forward as if they
+were still selling.</p>
+<div class="bigr">$631K</div>
+<p class="q">of demand per year removed from the plan that no longer exists.</p>
+<p class="q">These are not written to zero either, which would be equally wrong. BUILT&rsquo;s own history
+shows items do come back: of the gaps of this kind we can measure, a meaningful share resumed
+selling at close to their previous rate. So each one now carries a number weighted by how likely it
+is to return, and that likelihood falls the longer it stays quiet. Items still on shelf are treated
+differently from items that were wound down.</p>
+<p class="q"><b>What this changes:</b> inventory and production were being planned against demand that
+had already gone. This is working capital tied up against sales that were not coming.</p>
+</div>
+
+<h2>3. The newest products had no forward number at all</h2>
+<div class="card win">
+<p><b>108 products across 462 product-retailer combinations were producing sales but receiving no
+forecast.</b> They sold <b>$1.81M in the last 13 weeks</b> &mdash; 2.5% of recent sales &mdash; with no
+forward view whatsoever. These are BUILT&rsquo;s newest launches: exactly the products where
+distribution, production and trade decisions are being made right now.</p>
+<div class="big">$738K</div>
+<p class="q">of forward visibility created on the five largest alone, over the next 13 weeks.</p>
+</div>
+
+<div class="scroll"><table>
+<thead><tr><th>Product</th><th class="n">Sold, last 13 wks</th><th class="n">Retailers</th>
+<th class="n">Forecast, next 13 wks</th><th class="n">Range</th></tr></thead>
+<tbody><tr><td class="p">Built Puff Peanut Butter Cup Protein Nutritional Snack Bar 1.41 Oz<div class="u">08-40229-30687</div></td>
+<td class="n">$179,675</td><td class="n">1</td><td class="n"><b>$326,715</b></td>
+<td class="n rg">$192,249 &ndash; $384,056</td></tr><tr><td class="p">Built Sour Blue Razz Blast &amp; Green Apple Crush 1.45 Oz (13 Pk)<div class="u">08-40229-30766</div></td>
+<td class="n">$200,839</td><td class="n">1</td><td class="n"><b>$189,790</b></td>
+<td class="n rg">$143,288 &ndash; $210,208</td></tr><tr><td class="p">Built Puff S&#x27;mores Chunk Protein Bar 1.52 Oz<div class="u">08-40229-30343</div></td>
+<td class="n">$160,339</td><td class="n">10</td><td class="n"><b>$115,677</b></td>
+<td class="n rg">$75,661 &ndash; $188,124</td></tr><tr><td class="p">Built Puff Orange Cream Pop Protein Bar 1.41 Oz (4 Pk)<div class="u">08-40229-30697</div></td>
+<td class="n">$202,043</td><td class="n">8</td><td class="n"><b>$57,851</b></td>
+<td class="n rg">$30,390 &ndash; $148,638</td></tr><tr><td class="p">Built Puff Rocky Road Protein Bar 1.41 Oz (4 Pk)<div class="u">08-40229-30696</div></td>
+<td class="n">$212,866</td><td class="n">8</td><td class="n"><b>$48,051</b></td>
+<td class="n rg">$24,372 &ndash; $160,032</td></tr></tbody></table></div>
+<p class="q">The range is deliberately wide on a product with only a few weeks of selling history.
+A wide honest range is decision-useful; a narrow confident number on a brand-new item is not.</p>
+
+<h2>Why a single company-level accuracy number cannot do this</h2>
+<div class="card">
+<p>A total-volume forecast can be very accurate and still answer none of the questions above,
+because over- and under-calls on individual products cancel each other out inside the total.</p>
+<ul>
+<li>It cannot tell you <b>Built Puff Peanut Butter Cup</b> is tracking to <b>$327K</b> over the next
+quarter at a single retailer, so that retailer&rsquo;s supply can be sized for it.</li>
+<li>It cannot tell you <b>$2.29M</b> of Circle K demand was double-counted, because the total was
+still roughly right once other items absorbed it.</li>
+<li>It cannot tell you which <b>513</b> product-retailer combinations to stop producing for.</li>
+</ul>
+<p class="q">Both numbers are useful and they measure different things. Total accuracy answers
+<i>&ldquo;did we plan the right overall volume?&rdquo;</i> Item-level accuracy answers <i>&ldquo;which
+product, at which retailer, in which week?&rdquo;</i> &mdash; and only the second one can be acted on.
+Mo is built to complement the company view, not replace it.</p>
+</div>
+
+<h2>What we would like to confirm</h2>
+<div class="ask">
+<p style="margin:0 0 8px"><b>So we can line our numbers up against BUILT&rsquo;s own, we would like to know
+how the current forecast accuracy figure is measured:</b></p>
+<ul style="margin:6px 0 0">
+<li>Is it measured on <b>shipments</b> to retailers, or on <b>consumer sales</b> at the register?</li>
+<li>At what level &mdash; total company, brand, or individual product at individual retailer?</li>
+<li>Over what period ahead &mdash; next month, next quarter?</li>
+<li>Is it total volume variance, or the average miss on each item added up?</li>
+</ul>
+<p style="margin:10px 0 0" class="q">These four choices can move a reported accuracy figure by a very
+large margin, in either direction. Once we know them we can report ours the same way and the two
+will be directly comparable.</p>
+</div>
+
+</div></body></html>

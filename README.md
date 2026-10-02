@@ -6,6 +6,131 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 202: the backtest was leaking; honest numbers, and what actually beats what (2026-10-01)
+
+Every quarterly accuracy figure this project has reported was measured wrong. Fixing it reorders
+what we believe about the model.
+
+### Six of seven quarters were scored by a model that had seen the future
+
+`build_forecast_chart_data.py`'s quarterly "retrospectives" call `run_single_backtest(cutoff)` with
+the **already-loaded production models**, trained through 2026-06-07. So "Q1 2025, cutoff
+2024-12-29" was forecast by a model holding eighteen months of the answer. Only Q3 2026 was
+genuinely out-of-sample — and the code's own comment says so, while the badges present all seven as
+backtests.
+
+That is why the numbers wandered (45.4 / 30.1 / 13.9 / 35.1 / 36.5 / 23.3 / 23.1) instead of
+trending, and why **the headline 15.5-15.7% was never a 13-week-ahead holdout number**.
+
+Three different things have been quoted interchangeably. They must now be labelled:
+
+| figure | what it actually is |
+|---|---|
+| 3.4-4.3% | teacher-forced: one step ahead with ACTUAL lags supplied |
+| 15.5-15.7% | leaked: production model scoring quarters it was trained through |
+| **32-41%** | **honest: retrained at each cutoff, full 13-week recursive horizon** |
+
+### Honest results — `MO_80`, 7 true holdouts, both arms retrained at every cutoff
+
+| method | mean wMAPE | \|bias-1\| |
+|---|---|---|
+| naive (hold last week flat) | **32.9** | 0.166 |
+| direct multi-horizon | 34.0 | 0.189 |
+| ensemble routed at 52 weeks | 36.1 | 0.185 |
+| recursive (incumbent) | 40.6 | 0.240 |
+| year-over-year baseline | 62.0 | 0.460 |
+
+Per quarter, direct vs recursive: 49.9/49.7 · 44.7/54.7 · 26.7/37.3 · 25.5/19.4 · **31.2/58.7** ·
+43.1/40.9 · **16.7/23.4**.
+
+Three readings, all of which matter:
+
+1. **We halve the year-over-year approach** (62.0 to ~34). That is the real-world comparison.
+2. **We do not beat a flat carry-forward** on mature high-volume series. naive wins 4 of 7
+   quarters and has the best bias. That is the honest position and it is where naive is strongest.
+3. **Q3 2026 — most recent, most history — direct reached 16.7% and beat naive (19.5) outright.**
+   First quarter where the model wins, and the one most like going-forward conditions.
+
+### Direct multi-horizon beats recursive by 6.6pp, but the architecture call is not settled
+
+Direct wins on average and wins enormously in the growth quarter — Q1 2026, BUILT's March peak:
+**31.2 vs 58.7**, bias **0.902 vs 0.467**. Recursive predicted less than half of actual demand.
+
+Measured cost, against the usual objection that direct is 13x more expensive: direct's 13 q50
+models total **13,506 trees** (each early-stops at 269-1,998) versus recursive's single q50 at
+**6,000** — about **2.2x**, not 13x, and direct is roughly **100x faster at inference** (seconds
+versus a ~10-minute loop). The genuine limitation is horizon: direct is fixed at 13 weeks, while
+one recursive model serves any horizon on demand.
+
+Production therefore stays on the **single recursive model**, which is the architecture worth
+keeping if it can be made competitive. Direct remains a scored comparison arm.
+
+### The remaining lever: the tuning objective has been selecting for the failure mode
+
+Every Optuna run has optimised **one-step pinball loss**. The same model scores **4.15% that way
+and 37.12% recursively** - so every hyperparameter ever chosen was selected for a task we do not
+perform. Worse, that objective *rewards* leaning on `lag1`, which is exactly what collapses the
+13-week forecast to `last_actual x 1.03` by step 3.
+
+`MO_28R_recursive_objective_optuna.py` scores each trial on the full recursive 13-week loop, with
+`recency_lambda` tuned jointly because it governs how hard the model leans on recent weeks. Not yet
+run.
+
+### Everything else that was proposed got measured and rejected
+
+- **Projecting TDP forward** — ranked the #1 fix in update 200. A 14% forward TDP increase moved
+  the flattening ratio from 0.062 to **0.064**. Dead.
+- **Lifecycle ramp** — real in aggregate (series double over 60 weeks) but lost in every history
+  band and carried +21 to +23% bias. Aggregate truth is not per-series signal.
+- **Donor surrogate** — its apparent tier effect was a confound; naive is also better on the same
+  easier subset.
+- **ETS-Holt** — lost to naive in every band (117.5 vs 94.7 at 1-4 weeks). It is absent from
+  production because it was beaten, not by oversight.
+
+### Circle K was double-counted; AK/HI market variants now excluded by rule
+
+Two overlapping RMA markets, identical 694 rows and 9 UPCs, the wider one >= the narrower in
+**100% of 690 shared item-weeks** with 59.7% exactly equal. Six other retailers carry the same
+duplicate definitions at zero volume — excluded only by coincidence until now.
+`drop_ak_hi_market_variants()` removes all seven by definition. Giant Eagle (GETGO) and Hy-Vee
+(FAST & FRESH) were tested and **kept**: 25 and 34 item-weeks where the banner exceeds the parent,
+impossible under nesting, so they are genuinely separate store sets.
+
+Jason's call was to keep `CIRCLE K CORP` and drop the with-Alaska variant — the **narrower** market,
+which a "keep the superset" heuristic would have got backwards. Which market is canonical is a
+business decision, so the value-based detector was demoted to `warn_nested_rma_duplicates()`, which
+reports and never drops.
+
+### Lapsed series: expected value, not zero
+
+513 series have no SPINS row for 9+ weeks. Carrying their stale level forward invents demand; a
+hard zero is equally wrong. Across 878 lapse episodes, **365 resumed at ~1.06x their pre-gap
+level**, so each is forecast at `pre-gap level x P(resume | weeks silent) x 1.06`, decaying from
+17.5% at 9-13 weeks to 0.5% beyond two years. Pre-lapse distribution trend separates likely
+stockouts from likely delistings (**45.2% vs 31.7%** resumption) and adjusts P accordingly.
+
+Where a different SKU launched on the same shelf the row is labelled (138 of 513; 91 BAR<->PUFF).
+**That is observational only** — every UPC is its own SKU with its own forecast, no history is
+transferred, and the label never changes a number.
+
+### Two silent-failure bugs, both caught by guards rather than by review
+
+`max(0.0, nan)` returns **0.0**, so a NaN level was published as a confident zero on 16 series
+(`x or default` does not catch it either — NaN is truthy). And forecast dates built as
+`cutoff + N weeks` break whenever a cutoff is off the SPINS weekday grid: Q3 2026's Monday cutoff
+against Sunday weeks produced dates matching no actual, scoring nothing while exiting 0. Forecast
+weeks must step along the panel's real `__time` sequence.
+
+### v11 production
+
+Single recursive LightGBM, every rule from today: promo-null fill, military, AK/HI variants,
+zero-volume geographies, RMA priority, flavour join on `parent_brand`, unified categoricals.
+**2,128 series, zero skips** — 1,340 autoregressive (92.3% of volume), 264 carry-forward (7.7%),
+524 lapsed. Whether the carry-forward path can be absorbed into the single model is being measured
+in `MO_82`.
+
+---
+
 ## README update 201: coverage, the lapse gate, and why every exogenous patch failed (2026-10-01)
 
 Three measured rejections, two real bugs, and one method that works. The headline: **the
