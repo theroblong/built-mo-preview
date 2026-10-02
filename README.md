@@ -6,6 +6,126 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 203: the seasonal signal is real — growth was masking it (2026-10-02)
+
+Chasing the Q1 2026 failure — forecast **fell 41%** while actual demand **rose 53%** — produced
+the most useful measurement of the week, and it reverses an earlier conclusion.
+
+### The model gives seasonality 4% of its attention, and that is CORRECT for how we train it
+
+Every seasonal and year-ago feature combined accounts for **~4% of total splitting power**; none
+ranks better than **27th of 56**. That is not blindness. We train one-step-ahead, where `lag1`
+explains nearly everything and seasonality genuinely adds little. We then run that model 13 weeks
+forward, where the AR features are its own output and **seasonality is the only real information
+left**.
+
+Proof it is the TARGET and not the model: the **direct h=13 model puts `week_sin`/`week_cos` in
+its top 8 features** — same algorithm, same data, same encoding.
+
+**`week_of_year` as a raw feature: TESTED AND REJECTED** (MO_85). 0.15pp worse on average
+(37.9 → 38.0), Q1 2026 moved only 58.7 → 58.1, and the seasonal share of gain went just
+1.6% → 1.8% with the feature itself ranking 30th–40th of 57. **Representation is not the bottleneck.**
+
+### Growth makes year-ago LEVELS useless — but the SHAPE is stable
+
+BUILT grew **4.01x** (2024→2025) then **1.63x** (2025→2026). Raw `base_units_lag52` therefore
+understates current demand by **~39%**, so the model either ignores it (rank 33) or is dragged
+down by it.
+
+Normalising each year's week-of-year profile by that year's own mean suggests seasonality is
+unstable — correlations come out **negative**. ⚠️ **That is an artifact.** With 4x growth the
+growth curve masquerades as a season. Detrend first (centred 52-week rolling mean) and it reverses:
+
+| years | normalised to year mean | **detrended** |
+|---|---|---|
+| 2024 vs 2025 | −0.030 | **+0.659** |
+| 2023 vs 2025 | — | **+0.760** |
+| 2024 vs 2026 | −0.550 | **+0.451** |
+
+And the pivot repeats across independent years:
+
+| year | Dec index | Jan index | swing |
+|---|---|---|---|
+| 2024 | 0.750 | 0.862 | **+0.112** |
+| 2025 | 0.841 | 0.948 | **+0.107** |
+
+Week by week, every year climbs from ~0.80 in week 1 to ~1.14 by week 10.
+
+**The seasonal pattern is learnable; the level is not.** Every seasonal feature must be a ratio to
+local trend, never a year-ago absolute. Jason put it exactly right: *"we're trying to capture the
+seasonal trend patterns more than the value from some week last year."*
+
+### Three calendar mechanisms that never talk to each other
+
+1. **Fourier features** — `week_sin/cos` (52) + `week_sin26/cos26` (26). Two harmonics.
+2. **`base_units_lag52`** — raw year-ago LEVEL, rank 33.
+3. **MO_59 STL index** — **not a feature**; applied post-hoc as `SEASONAL_BLEND_WEIGHT = 0.10`.
+
+The model cannot learn that the index is trustworthy for a mature series and useless for a
+6-week-old SKU, because it never sees it.
+
+**Two harmonics structurally under-represent the pivot.** Against BUILT's actual shape (real swing
++48%: wk50–52 index 0.774 → wk10–12 1.148):
+
+| harmonics | R² | Dec→Mar swing captured |
+|---|---|---|
+| 1 | 0.566 | 41% |
+| **2 = shipped** | **0.772** | **77%** |
+| 4 | 0.845 | 87% |
+| 6 | 0.880 | 94% |
+
+A smooth annual sine cannot produce a sharp December dip followed by a January ramp.
+
+### Sample weighting discards our only seasonal evidence
+
+`exp(−0.02·weeks_ago)` over a panel starting 2023-10-15 — only **three Januaries exist**, and the
+two complete ones are weighted **0.20 and 0.07**. Q1 is 24.5% of raw rows but **20.1% of weighted
+training**.
+
+Jason's power-law alternative is `weight = t**exponent` (verified: 52^0.5 = 7.2111,
+52^0.7 = 15.8929). Both families reach a similar newest:oldest ratio; the **shape** differs where
+it counts:
+
+| weeks ago | exp(−0.02a) | power 0.5 | power 0.7 |
+|---|---|---|---|
+| 52 | 0.35 | 0.80 | 0.73 |
+| **87 (Q1 2025)** | **0.18** | **0.62** | **0.51** |
+
+A von Mises circular kernel `exp(−λa)·exp(κ·cos(2πa/52))` goes further — at λ=0.01, κ=2.0 it
+weights same-week-last-year at **0.595** versus a quarter ago at **0.119**, i.e. recent AND
+year-ago high, opposite season low. ⚠️ At κ=2 it nearly zeroes the mid-range; tune κ and keep a
+recency floor so promo and price response remain learnable.
+
+### MO_86 — the queued horse race (7 arms, all native, none post-hoc)
+
+Scored on the 7 honest quarters (MO_80 harness, retrained per cutoff), Q1 2026 reported
+separately. Baselines: production recursive **37.0 mean / 56.9 Q1 2026**; flat_anchor 32.7;
+direct 34.0.
+
+| arm | change |
+|---|---|
+| `seasonal_ratio_feat` | `lag52 ÷ trailing-52wk mean` as a feature |
+| `index_as_feature` | detrended week-of-year index at the TARGET week, as a feature |
+| `seasonal_diff_target` | train on `log(y_t) − log(y_{t−52})` |
+| `harmonics_4` | add Fourier at 52/3 and 52/4 |
+| `powerlaw_weight` | `t**λ`, λ ∈ {0, 0.2, 0.5, 0.7} |
+| `vonmises_weight` | `exp(−λa)·exp(κ·cos(2πa/52))` |
+| `recency_sweep` | exponential λ ∈ {0, 0.005, 0.01, 0.02, 0.05} |
+
+⚠️ The detrending above used a **centred** window, which peeks ahead. Fine for estimating an index
+from history; any forecast-time feature must use a **trailing** window, and the +0.66 stability
+must be re-confirmed under that constraint before shipping.
+
+### MO_28R status and a caveat on its baseline
+
+Optuna on the recursive objective: **trial 30 of 60, best 31.89**. ~13 hours per 30 trials.
+
+⚠️ Its docstring cites MO_80's **Kroger-only** baseline while the study scores **portfolio-wide**
+on 3 folds — not comparable. The same-folds baseline with current params must be computed before
+claiming any improvement from it.
+
+---
+
 ## README update 202: the backtest was leaking; honest numbers, and what actually beats what (2026-10-01)
 
 Every quarterly accuracy figure this project has reported was measured wrong. Fixing it reorders
