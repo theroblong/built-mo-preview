@@ -6,6 +6,78 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 204: the extrapolation ceiling — a FIFTH mechanism, and it reorders the fix (2026-10-02)
+
+Consulted the official LightGBM documentation. It surfaced a constraint we had never accounted
+for, and it changes which remedy leads.
+
+### A constant-leaf GBDT cannot project a trend
+
+Every GBDT prediction is a combination of **leaf constants taken from training targets**. The model
+interpolates among levels it has seen and strongly resists producing anything beyond them. It has
+no mechanism for extrapolating growth.
+
+Confirmed on a controlled trending series: trained on targets up to **60.1**, the highest
+prediction was **59.39** when the truth required **80.17**.
+
+### It binds hard on Q1 2026 — 39% of the quarter's volume
+
+| | Q1 2026 |
+|---|---|
+| series scored | 957 |
+| **peaked above their own pre-cutoff max** | **292 (30.5%)** |
+| **share of Q1 units from those series** | **39.0%** |
+| overshoot | median **1.66x**, p75 2.72x, p90 7.14x |
+
+Kroger CONVENTIONAL|FOOD: **9 of 26 series (35%)**; weekly portfolio max 50,155 -> 62,113.
+
+So nearly two fifths of Q1 demand required predictions the model structurally resists making —
+on top of the four mechanisms in update 203 (frozen momentum, the trough anchor, one seasonal
+feature in 56, and `lag52`'s 39% level drag).
+
+### This makes seasonal differencing the lead remedy, not one option among several
+
+Training on `log(y_t) − log(y_{t−52})` fixes **two** problems in one move:
+
+* the target becomes **year-over-year growth** — a ratio that stays inside the training range even
+  when the level does not, so the ceiling never binds;
+* the absolute level is restored afterwards from `lag52`, **not** produced by a leaf constant, so
+  the 39% growth drag disappears instead of dragging the forecast down.
+
+That is exactly why SARIMA differences a trending seasonal series, and it is the textbook remedy
+for a bounded learner on a growing one. A ratio target (`y_t / roll13_avg`) has the same property.
+
+### Two levers closed off by the docs and testing
+
+* **`monotone_constraints` is UNUSABLE.** LightGBM errors outright: *"Cannot use
+  monotone_constraints in quantile objective."* We use quantile for q10/q50/q90, so forcing
+  `lag52` to push predictions upward is not available to us.
+* **`linear_tree=True`** is the documented fix for leaf-constant extrapolation (a linear model per
+  leaf) but tested **worse** in a first trial — 37.48 vs 59.39. Documented caveats are real:
+  significantly higher memory, *"requires rescaling data for optimal performance"*, incompatible
+  with `regression_l1`, and categorical features split but never enter the linear models. Our
+  features span unit counts in the thousands alongside ratios near 1 and sin/cos at ±1, so it
+  needs a proper test **with feature scaling** before any claim.
+
+### Confirmed correct as-is
+
+`use_missing` defaults to **true** and `zero_as_missing` to **false**, and we override neither — so
+NaN lags are handled natively and a genuine zero is never confused with absent history. No change.
+
+### Revised MO_86 arm order
+
+1. **`seasonal_diff_target`** ⭐ — `log(y_t) − log(y_{t−52})`; fixes ceiling + level drag together
+2. `seasonal_ratio_feat` — `lag52 ÷ trailing-52wk mean` as a feature
+3. `index_as_feature` — detrended week-of-year index at the TARGET week
+4. `harmonics_4` — Fourier at 52/3 and 52/4 (K=2 captures only 77% of the swing)
+5. `powerlaw_weight` — `t**λ`, λ ∈ {0, 0.2, 0.5, 0.7}
+6. `vonmises_weight` — `exp(−λa)·exp(κ·cos(2πa/52))`
+7. `recency_sweep` — exponential λ ∈ {0, 0.005, 0.01, 0.02, 0.05}
+
+Baselines: production recursive **37.0 mean / 56.9 Q1 2026**; flat_anchor 32.7; direct 34.0.
+
+---
+
 ## README update 203: the seasonal signal is real — growth was masking it (2026-10-02)
 
 Chasing the Q1 2026 failure — forecast **fell 41%** while actual demand **rose 53%** — produced
