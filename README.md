@@ -91,11 +91,68 @@ totals 400K Jun → 147K Jul). A uniform uplift helps the accelerating half, hur
 ⚠️ **Do not ship B–E as an accuracy improvement.** Next: estimate arrival *volume* directly instead
 of count × curve, and make the uplift regime-aware.
 
-### The good news
+### ⚠️ CORRECTION: the "halves naive error" claim was invalid
 
-Naive carry-forward at 13 weeks misses **14.9%** median monthly. MO_27 measured the same way misses
-**7.6%** — the model roughly **halves** the error of a sensible simple method at that horizon. Real
-forecast value added, and defensible with Bracken/FP&A.
+An earlier draft of this entry said naive misses 14.9% at 13 weeks against MO_27's 7.6%, framed as
+halving the error. **Withdrawn.** MO_91's 14.9% is a SINGLE MONTH at T+3; the 7.6% was a 3-month
+block from an ad hoc calculation that could not be reproduced. Different periods, not comparable.
+
+MO_92 gives the reproducible numbers — 17 rolling monthly origins, retrained at each one:
+
+| basis | median abs | mean abs | bias | within ±7% |
+|---|---|---|---|---|
+| T+1, matched cells | 4.4% | 8.7% | −2.8% | 53% |
+| T+1, **FULL portfolio** | **8.8%** | 11.0% | −9.2% | 35% |
+| 13wk block, matched | 10.1% | 14.1% | +0.6% | 24% |
+| 13wk block, **FULL portfolio** | **11.8%** | 14.9% | **−11.8%** | 29% |
+
+⚠️ **We do NOT meet a 7%-per-month standard.** Only about a third of months land inside ±7%.
+
+**But the structural finding cross-validates hard.** The −11.8% full-portfolio bias at 13wk
+independently reproduces MO_91's −10.7% new-cell gap through a completely different code path. And
+the matched-cell bias over the same window is **+0.6%** — so essentially the entire systematic lean
+is unseen cells, not modeling error on cells the model could see.
+
+Dollar reality (arp from the panel; the book averages ~$18.7M retail/month):
+
+- worst month: **Jan 2026 −40.8% / −$8.80M**
+- worst 13wk block: Dec 2025 origin **−49.2% / −$36.4M**; the very next origin **+23.1% / +$17.6M**
+- across 17 months: sum of ABS misses **$33.5M**, signed sum −$26.7M — mostly the same direction, so
+  they do not even offset each other well; mean absolute monthly miss **$1.97M**
+- 5 of 17 months inside ±5%; **6 of 17 worse than 15%**
+
+Never quote 4.8%/7.6% again — unreproducible.
+
+### ⭐ THE RESULT: flat beats the model at portfolio-month level
+
+MO_92 re-run with per-month leads, aligned to MO_91's flat benchmark on **identical target months**
+(partial-coverage months dropped — MO_92's T+3 window does not always cover a whole month, which
+differed by up to 743K units and would have made the comparison invalid):
+
+**T+1, full portfolio, n=15 months**
+
+| method | median abs | mean abs | bias | within ±7% |
+|---|---|---|---|---|
+| **flat carry-forward** | **4.7%** | **6.9%** | **−3.8%** | **67%** |
+| LightGBM (MO_27 path) | 7.7% | 10.0% | −8.0% | 40% |
+
+**T+3, full portfolio, n=13 months**
+
+| method | median abs | mean abs | bias | within ±7% |
+|---|---|---|---|---|
+| flat carry-forward | 14.9% | **13.0%** | −11.0% | **38%** |
+| flat + arrival layer | **13.1%** | 14.2% | **−1.4%** | 15% |
+| LightGBM (MO_27 path) | 13.8% | 18.6% | −12.5% | 31% |
+
+⚠️ **Flat wins outright at T+1 on every statistic.** At T+3 the model's median is marginally better
+but its mean is far worse — it misses much harder when it misses. The model's four worst T+3 months
+were **−26%, −48%, −55%, +34%** (Jan–Apr 2026); flat over the same months was −17%, −24%, −32%, −9%.
+
+This re-confirms the earlier "flat beats model at every aggregation level" finding, now at portfolio
+month with an honest rolling backtest and retraining at every origin. **Closing this is the top
+accuracy priority** — and it means the client value proposition cannot rest on accuracy today.
+
+Also note: T+4 has n=1 (truncated origin) — ignore that row entirely.
 
 ### Rejected today
 

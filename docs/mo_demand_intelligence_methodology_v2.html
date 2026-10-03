@@ -95,38 +95,119 @@ systematically high or low over time, which is a real diagnostic and one we use.
 about how close any given month will be, and it should not be quoted as one.</p>
 
 <h3 style="margin-top:28px">Measured the way a finance team tracks it</h3>
-<p>If forecast is compared against actual <b>each month</b> and the misses are tallied &mdash; which is
-how a finance team watching real money would do it &mdash; this is where Mo stands today:</p>
+<p>This is the table that matters, and it replaces earlier figures. Seventeen rolling monthly
+forecasts, each produced by a model that had seen <b>only</b> data up to that point, then compared
+against what actually happened. Dollars use BUILT's own average retail price from the same data, not
+an assumed price.</p>
+
 <table>
-<thead><tr><th>Basis</th><th class="n">Typical month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(median miss)</span></th><th class="n">Average month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(incl. seasonal misses)</span></th></tr></thead>
+<thead><tr><th>Basis</th><th class="n">Typical month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(median miss)</span></th><th class="n">Average month</th><th class="n">Months inside<br>&plusmn;7%</th><th class="n">Systematic<br>lean</th></tr></thead>
 <tbody>
-<tr class="hl"><td><b>Portfolio month, forecasting one month ahead</b></td><td class="n"><b>4.8%</b></td><td class="n">11.1%</td></tr>
-<tr><td>Portfolio month, forecasting thirteen weeks ahead</td><td class="n"><b>7.6%</b></td><td class="n">17.0%</td></tr>
-<tr><td>Portfolio quarter, thirteen weeks ahead</td><td class="n">14.2%</td><td class="n">16.4%</td></tr>
+<tr class="hl"><td><b>One month ahead &mdash; total portfolio</b><br><span style="color:#64748b;font-size:13px">Every unit BUILT actually sold</span></td><td class="n"><b>8.8%</b></td><td class="n">11.0%</td><td class="n">35%</td><td class="n">&minus;9.2%</td></tr>
+<tr><td>One month ahead &mdash; items Mo was forecasting<br><span style="color:#64748b;font-size:13px">Excludes items that did not exist yet</span></td><td class="n">4.4%</td><td class="n">8.7%</td><td class="n">53%</td><td class="n">&minus;2.8%</td></tr>
+<tr class="hl"><td><b>Thirteen weeks ahead &mdash; total portfolio</b></td><td class="n"><b>11.8%</b></td><td class="n">14.9%</td><td class="n">29%</td><td class="n">&minus;11.8%</td></tr>
+<tr><td>Thirteen weeks ahead &mdash; items Mo was forecasting</td><td class="n">10.1%</td><td class="n">14.1%</td><td class="n">24%</td><td class="n">+0.6%</td></tr>
 </tbody></table>
 
-<div class="card note">
-<p style="margin:0 0 10px"><b>In a typical month the forecast is within 5&ndash;8% of actual</b>, which
-is comparable to a well-run manual process. The average is higher than the median because the misses
-are not evenly spread.</p>
-<p style="margin:0"><b>Fifteen of twenty-one months tested fall inside &plusmn;8%.</b> Nearly all of the
-error is concentrated in two windows: January through March, where the forecast runs low, and
-November&ndash;December, where it runs high.</p>
+<div class="card warn">
+<p style="margin:0 0 10px"><b>Stated plainly: the forecast does not yet meet a 7%-per-month standard.</b>
+A typical month is 9&ndash;12% away on total portfolio volume, and only about a third of months land
+inside &plusmn;7%. We would rather put that in front of you now than have it discovered later.</p>
+<p style="margin:0">The two rows for each horizon exist because they answer different questions. The
+<b>total portfolio</b> row is what BUILT's P&amp;L experiences. The <b>items Mo was forecasting</b> row
+is what the model can be held responsible for. The difference between them is almost entirely items and
+retailer combinations that did not exist when the forecast was made &mdash; quantified in Section 3.</p>
 </div>
 
-<h3>Where the error actually sits</h3>
+<h3>The misses are large, and they do not cancel in practice</h3>
+<p>A median hides what a finance team actually has to absorb. These are the worst individual periods
+from the same seventeen forecasts, in units and in retail dollars:</p>
+
 <table>
-<thead><tr><th>Period</th><th class="n">Miss</th><th>Pattern</th></tr></thead>
+<thead><tr><th>Forecast made</th><th>Period covered</th><th class="n">Miss</th><th class="n">Retail dollars</th></tr></thead>
 <tbody>
-<tr><td>Jan &ndash; Mar 2025</td><td class="n">&minus;37% to &minus;61%</td><td>Under-forecast through the new-year ramp</td></tr>
-<tr class="hl"><td><b>Apr &ndash; Oct 2025</b></td><td class="n"><b>&plusmn;7%</b></td><td><b>Stable months &mdash; forecast performs well</b></td></tr>
-<tr><td>Nov &ndash; Dec 2025</td><td class="n">+20% to +32%</td><td>Over-forecast through the holiday slowdown</td></tr>
-<tr><td>Jan &ndash; Mar 2026</td><td class="n">&minus;21% to &minus;29%</td><td>Under-forecast again, though improving year over year</td></tr>
-<tr class="hl"><td><b>Apr &ndash; Sep 2026</b></td><td class="n"><b>&plusmn;8% (one month +20%)</b></td><td><b>Stable months &mdash; forecast performs well</b></td></tr>
+<tr class="hl"><td><b>December 2025</b></td><td><b>Jan &ndash; Mar 2026</b></td><td class="n"><b>&minus;49.2%</b></td><td class="n"><b>&minus;$36.4M</b></td></tr>
+<tr><td>November 2025</td><td>Dec 2025 &ndash; Feb 2026</td><td class="n">&minus;37.9%</td><td class="n">&minus;$24.5M</td></tr>
+<tr class="hl"><td><b>January 2026</b></td><td><b>Feb &ndash; Apr 2026</b></td><td class="n"><b>+23.1%</b></td><td class="n"><b>+$17.6M</b></td></tr>
+<tr><td>December 2025</td><td>January 2026 alone</td><td class="n">&minus;40.8%</td><td class="n">&minus;$8.8M</td></tr>
+<tr><td>January 2026</td><td>February 2026 alone</td><td class="n">+13.3%</td><td class="n">+$3.0M</td></tr>
 </tbody></table>
-<p>This is a seasonal learning problem rather than a general accuracy problem, and it is the clearest
-single target for improvement. The January miss already narrowed from &minus;61% to &minus;29% between
-2025 and 2026 as a second year of history became available.</p>
+
+<div class="card warn">
+<p style="margin:0 0 10px"><b>One quarterly forecast was &minus;$36M. The next was +$18M.</b> Added
+together those two largely offset, and that offsetting is exactly why a single cumulative accuracy
+figure should not be trusted. They do not offset in the business &mdash; cash, production runs and
+inventory were committed against each one separately.</p>
+<p style="margin:0">Scaled against the book: the portfolio averages about <b>$18.7M of retail sales a
+month</b> over this period, and the average month-ahead forecast is off by <b>$2.0M</b> in absolute
+terms. Across seventeen months the absolute misses total <b>$33.5M</b>, while the signed total is
+&minus;$26.7M &mdash; the misses are mostly in the same direction, so they do not even offset each
+other well.</p>
+</div>
+
+<h3>Every month, forecast one month ahead</h3>
+<p>The full record rather than a summary. Actual is total portfolio volume, so this is the complete
+picture including items that did not exist when the forecast was made. The final column shows the same
+month judged only on items Mo was forecasting.</p>
+
+<table>
+<thead><tr><th>Month</th><th class="n">Actual units</th><th class="n">Forecast</th><th class="n">% off</th><th class="n">$ off</th><th class="n">% off, items<br>Mo forecast</th></tr></thead>
+<tbody>
+<tr><td>Feb 2025</td><td class="n">1,317,859</td><td class="n">1,101,848</td><td class="n">&minus;16.4%</td><td class="n">&minus;$1.38M</td><td class="n">&minus;15.5%</td></tr>
+<tr><td>Mar 2025</td><td class="n">2,020,534</td><td class="n">1,598,527</td><td class="n">&minus;20.9%</td><td class="n">&minus;$2.89M</td><td class="n">&minus;20.3%</td></tr>
+<tr class="hl"><td>Apr 2025</td><td class="n">1,609,254</td><td class="n">1,550,161</td><td class="n">&minus;3.7%</td><td class="n">&minus;$0.40M</td><td class="n">&minus;2.6%</td></tr>
+<tr><td>May 2025</td><td class="n">1,863,788</td><td class="n">1,540,158</td><td class="n">&minus;17.4%</td><td class="n">&minus;$2.17M</td><td class="n">&minus;14.3%</td></tr>
+<tr><td>Jun 2025</td><td class="n">2,430,622</td><td class="n">2,217,429</td><td class="n">&minus;8.8%</td><td class="n">&minus;$1.55M</td><td class="n">+0.6%</td></tr>
+<tr class="hl"><td>Jul 2025</td><td class="n">1,982,939</td><td class="n">1,975,878</td><td class="n">&minus;0.4%</td><td class="n">&minus;$0.05M</td><td class="n">+7.8%</td></tr>
+<tr><td>Aug 2025</td><td class="n">2,936,734</td><td class="n">2,469,987</td><td class="n">&minus;15.9%</td><td class="n">&minus;$3.48M</td><td class="n">&minus;0.7%</td></tr>
+<tr class="hl"><td>Sep 2025</td><td class="n">2,301,969</td><td class="n">2,334,200</td><td class="n">+1.4%</td><td class="n">+$0.24M</td><td class="n">+3.4%</td></tr>
+<tr><td>Oct 2025</td><td class="n">2,439,581</td><td class="n">2,263,123</td><td class="n">&minus;7.2%</td><td class="n">&minus;$1.29M</td><td class="n">+4.4%</td></tr>
+<tr><td>Nov 2025</td><td class="n">3,000,727</td><td class="n">2,769,361</td><td class="n">&minus;7.7%</td><td class="n">&minus;$1.52M</td><td class="n">+4.2%</td></tr>
+<tr><td>Dec 2025</td><td class="n">2,250,317</td><td class="n">1,862,759</td><td class="n">&minus;17.2%</td><td class="n">&minus;$2.54M</td><td class="n">&minus;13.3%</td></tr>
+<tr><td style="color:#b91c1c"><b>Jan 2026</b></td><td class="n">2,927,294</td><td class="n">1,732,068</td><td class="n" style="color:#b91c1c"><b>&minus;40.8%</b></td><td class="n" style="color:#b91c1c"><b>&minus;$8.80M</b></td><td class="n">&minus;28.9%</td></tr>
+<tr><td>Feb 2026</td><td class="n">3,179,407</td><td class="n">3,600,899</td><td class="n">+13.3%</td><td class="n">+$3.01M</td><td class="n">+18.9%</td></tr>
+<tr><td>Mar 2026</td><td class="n">4,135,657</td><td class="n">3,915,930</td><td class="n">&minus;5.3%</td><td class="n">&minus;$1.58M</td><td class="n">&minus;0.2%</td></tr>
+<tr class="hl"><td>Apr 2026</td><td class="n">3,207,562</td><td class="n">3,225,598</td><td class="n">+0.6%</td><td class="n">+$0.13M</td><td class="n">+7.5%</td></tr>
+<tr class="hl"><td>May 2026</td><td class="n">3,851,822</td><td class="n">3,836,363</td><td class="n">&minus;0.4%</td><td class="n">&minus;$0.11M</td><td class="n">+3.4%</td></tr>
+<tr><td>Jun 2026</td><td class="n">3,214,547</td><td class="n">2,888,521</td><td class="n">&minus;10.1%</td><td class="n">&minus;$2.34M</td><td class="n">&minus;2.0%</td></tr>
+</tbody></table>
+
+<div class="card warn">
+<p style="margin:0 0 10px"><b>The hardest result in this document, and the newest.</b> We re-ran the
+simplest possible benchmark &mdash; carry last month's selling rate forward, nothing else &mdash; over
+exactly the same months, and compared it like for like against the model.</p>
+<table style="margin:14px 0 10px">
+<thead><tr><th>One month ahead, total portfolio</th><th class="n">Typical month</th><th class="n">Average month</th><th class="n">Months inside &plusmn;7%</th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>Carry forward, no model</b></td><td class="n"><b>4.7%</b></td><td class="n"><b>6.9%</b></td><td class="n"><b>67%</b></td></tr>
+<tr><td>Mo's machine-learning model</td><td class="n">7.7%</td><td class="n">10.0%</td><td class="n">40%</td></tr>
+</tbody></table>
+<table style="margin:0 0 10px">
+<thead><tr><th>Thirteen weeks ahead, total portfolio</th><th class="n">Typical month</th><th class="n">Average month</th><th class="n">Months inside &plusmn;7%</th></tr></thead>
+<tbody>
+<tr><td>Carry forward, no model</td><td class="n">14.9%</td><td class="n"><b>13.0%</b></td><td class="n"><b>38%</b></td></tr>
+<tr><td>Mo's machine-learning model</td><td class="n"><b>13.8%</b></td><td class="n">18.6%</td><td class="n">31%</td></tr>
+</tbody></table>
+<p style="margin:0 0 10px"><b>At the portfolio-month level the model does not currently beat carrying
+the last month forward.</b> At one month the simple method wins on every measure. At thirteen weeks the
+model's typical month is slightly better, but its average month is considerably worse, because when it
+misses it misses much harder.</p>
+<p style="margin:0">The model's four worst months at thirteen weeks were &minus;26%, &minus;48%,
+&minus;55% and +34%, all between January and April 2026. The carry-forward over the same four months
+was &minus;17%, &minus;24%, &minus;32% and &minus;9%. We are telling you this rather than selecting the
+view that favors the model, and it is the top priority on the accuracy workstream.</p>
+</div>
+
+<div class="card note">
+<p style="margin:0 0 10px"><b>Reading the month-by-month table.</b> Five of seventeen months land inside &plusmn;5%,
+which shows the method is sound when conditions are stable. But <b>six months are worse than 15%</b>.
+January 2026 is the single worst at &minus;40.8%, and December 2025 and February 2026 either side of it
+are also poor &mdash; the turn of the year is where this forecast is weakest.</p>
+<p style="margin:0"><b>The pattern worth noting</b> is that the final column is often much better than
+the fourth. August 2025 was 15.9% low on total volume but only 0.7% off on the items it was actually
+forecasting. That gap is new distribution, and it is the mechanism explained in Section 3 &mdash; not
+a modeling failure on the items Mo could see, but volume arriving from items that did not exist yet.</p>
+</div>
 
 <div class="card warn">
 <p style="margin:0 0 8px"><b>A correction to our earlier material.</b> A previous version of this paper
@@ -219,9 +300,11 @@ method applied to past sales can anticipate a combination that has never sold.</
 
 <h3>A practical consequence we tested</h3>
 <p>Applying the portfolio's overall growth rate to each individual item made forecasts <i>worse</i>,
-producing a systematic 10.3% over-forecast. Most of that growth is not happening inside existing
-items, so applying it to them double-counts. This is the kind of error that is invisible without
-decomposition.</p>
+leaning systematically 10.3% high. Most of that growth is not happening inside existing items, so
+applying it to them double-counts. This is the kind of error that is invisible without decomposition.
+<span style="color:#64748b">(That 10.3% is a measure of systematic lean over the whole period, which is
+the one thing such a figure is good for &mdash; it is not an accuracy claim, for the reason given
+earlier.)</span></p>
 </div>
 
 <div class="section">
@@ -315,11 +398,16 @@ sized on the earlier period overshoots the later one. We are reporting this as a
 with an incomplete remedy rather than as an improvement, and the next step is estimating arrival
 <i>volume</i> directly instead of inferring it from counts.</p>
 
-<div class="card good">
-<p style="margin:0"><b>One clear positive from the same test.</b> A naive carry-forward measured at
-thirteen weeks misses by 14.9% in the median month. Mo's current model measured the same way misses
-by 7.6%. Whatever remains to be improved, the model is roughly halving the error a sensible
-simple method would produce at that distance.</p>
+<div class="card warn">
+<p style="margin:0 0 10px"><b>A claim we withdrew.</b> An earlier draft of this paper put the model
+against the carry-forward as 7.6% against 14.9%, framed as halving the error. <b>That comparison was
+invalid.</b> The two figures covered different periods &mdash; one a single month, the other a
+three-month block &mdash; and the 7.6% came from a calculation we could not reproduce.</p>
+<p style="margin:0">We rebuilt it properly, on identical months, and the honest answer is the opposite
+of the original claim: the carry-forward is the <b>better</b> portfolio-month forecaster today. Those
+numbers are in the table at the start of this document. Of the three methods compared there, the one
+that removes the systematic bias most effectively is the <b>arrival layer</b> &mdash; which is
+consistent with everything in this section, since the bias is what new-combination volume causes.</p>
 </div>
 </div>
 
@@ -441,8 +529,49 @@ moves as history accumulates, and it moves faster with forward-looking data.</li
 <div class="section">
 <div class="eyebrow">Section 6</div>
 <h2>What Mo provides that a point forecast does not</h2>
-<p class="lead">Accuracy on a single number is one measure of value. These are capabilities that a
-spreadsheet process does not produce at all, regardless of its accuracy.</p>
+<p class="lead">Accuracy on a single number is one measure of value, and the sections above are candid
+about where it stands. It is not the only measure, and for a team BUILT's size it may not be the most
+important one.</p>
+
+<h3>Always on, and already processed</h3>
+<p>Every week SPINS delivers, Mo ingests it, rebuilds the panel, re-scores cannibalization and
+elasticity, refreshes every forecast and updates every screen &mdash; without anyone opening a
+workbook. The POS data arrives already cleaned, deduplicated, hierarchy-mapped and joined across
+accounts, channels and markets. When an analyst sits down, the question in front of them is
+<b>what should we do</b>, not <b>what does the data say</b>.</p>
+
+<div class="card good">
+<p style="margin:0 0 10px"><b>This is where the time goes today.</b> Pulling extracts, reconciling
+accounts and UPCs across sources, rebuilding pivots, chasing why two numbers disagree, and rebuilding
+the same structure again next week. That work is real, skilled, and almost entirely repeated. It is
+also the work that has to finish before any analysis can start.</p>
+<p style="margin:0"><b>Mo is built to absorb that layer, not to replace the people above it.</b> The
+judgment calls &mdash; which accounts are ready for another SKU, whether a launch is worth the shelf
+slot, how hard to push a promotion &mdash; stay exactly where they are. What changes is how much of
+the week is still available to make them, and how current the numbers are when they are made.</p>
+</div>
+
+<p>Three practical consequences worth naming:</p>
+<ul>
+<li><b>The analysis is standing, not commissioned.</b> Questions like the Meijer assortment review in
+Section 4 took a conversation rather than a project, because the underlying scoring was already
+computed and current. The same questions at any other account are available the same way.</li>
+<li><b>Everyone reads the same numbers.</b> One processed source behind the forecast, the
+cannibalization rates, the elasticities and the screens &mdash; so sales, finance and the broker deck
+are not reconciling three different versions of the week.</li>
+<li><b>It improves without being rebuilt.</b> Every refresh adds history, which matures the
+cannibalization pairs sitting behind the eight-week confidence gate and tightens the elasticities.
+A spreadsheet does not get better on its own between Mondays.</li>
+</ul>
+
+<div class="card note">
+<p style="margin:0">Framed honestly: on the raw accuracy of a monthly volume number, Mo is not yet
+clearly ahead of a careful manual process, and this document says so plainly. On <b>how much analyst
+time that number costs, how quickly it can be re-cut by account or channel, and what else comes with
+it</b> &mdash; cannibalization, elasticity, distribution decomposition, confidence ranges &mdash;
+the comparison is not close. The accuracy work continues; the time savings and the decision support
+are available now.</p>
+</div>
 
 <h3>Complete coverage, including new launches</h3>
 <p>Every item-retailer combination receives a forecast &mdash; 2,128 of them, with none skipped.
@@ -461,7 +590,7 @@ versus more sales per store. Given that 61% of growth is distribution, this is t
 a number and an explanation.</p>
 
 <h3>Cannibalization and price elasticity</h3>
-<p>When a new flavour launches, how much is genuinely incremental and how much came from BUILT's own
+<p>When a new flavor launches, how much is genuinely incremental and how much came from BUILT's own
 existing items &mdash; measured per retailer. Price sensitivity is measured per retailer and used for
 scenario modeling. Neither is available from a sales history alone.</p>
 
@@ -510,13 +639,23 @@ than either, by letting monthly misses offset each other &mdash; we do not quote
 be used to judge whether the forecast is good enough to plan against.</li>
 <li>Every method runs at roughly <b>half the error of a year-over-year comparison</b> (31&ndash;37%
 against 54.5%).</li>
-<li>Tracked the way a finance team tracks it &mdash; forecast vs actual each month &mdash; a typical
-month lands within <b>5&ndash;8%</b>. Fifteen of twenty-one months tested are inside &plusmn;8%.</li>
-<li>The remaining error is concentrated in <b>January&ndash;March and November&ndash;December</b>, the
-two windows where annual seasonality dominates and where under two years of history limits what can
-be learned. The January gap narrowed from &minus;61% to &minus;29% year over year.</li>
-<li>On mature items the model does not beat a simple carry-forward. We say so rather than select a
-flattering view.</li>
+<li>Tracked the way a finance team tracks it &mdash; forecast vs actual each month on total portfolio
+volume &mdash; a typical month lands <b>8.8% out at one month and 11.8% out at thirteen weeks</b>, with
+only about a third of months inside &plusmn;7%. <b>That does not yet meet a 7%-per-month standard</b>,
+and two consecutive quarterly forecasts swung from &minus;$36M to +$18M.</li>
+<li><b>Mo runs continuously and the POS data arrives already processed.</b> Every SPINS refresh
+rebuilds the panel, re-scores cannibalization and elasticity, and updates every forecast with nobody
+opening a workbook. On raw monthly accuracy Mo is not yet clearly ahead of a careful manual process.
+On the analyst time that number costs, how fast it can be re-cut by account, and what comes with it,
+the comparison is not close.</li>
+<li>The error is concentrated in <b>January&ndash;March and November&ndash;December</b>, but it is
+<b>not</b> primarily a seasonality problem &mdash; that assumption was tested this week and does not
+hold. At thirteen weeks the forecast leans <b>11.8% low</b>, and a measured 14.4% of volume in a target
+month comes from items and retailer combinations that did not exist when the forecast was made.</li>
+<li><b>At the portfolio-month level the model does not currently beat simply carrying the last month
+forward</b> &mdash; 7.7% against 4.7% at one month, and worse on the average month at thirteen weeks
+because its misses are larger when they come. We measured it like for like and are reporting it
+rather than selecting a flattering view. Closing that gap is the top accuracy priority.</li>
 <li><b>61% of growth comes from items and doors that did not exist a year ago</b>, which is the main
 reason sales history alone has limits here.</li>
 <li>The evaluation method was rebuilt so that every reported figure comes from a genuine hold-out.

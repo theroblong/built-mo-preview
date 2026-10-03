@@ -92,8 +92,12 @@ def main() -> None:
         fut = df[(df["__time"] >= qs) & (df["__time"] <= qe)].copy()
         fut["key"] = list(zip(*[fut[c] for c in GROUP_COLS]))
 
-        for lbl, sel in (("T+1", [origin + 1]),
-                         ("13wk", sorted(P["ym"].unique()))):
+        # One row per target month (so each lead is comparable to MO_91's
+        # single-month flat benchmark), plus the whole 13-week block.
+        months_in_window = sorted(P["ym"].unique())
+        arms = [(f"T+{(m - origin).n}", [m]) for m in months_in_window]
+        arms.append(("13wk", months_in_window))
+        for lbl, sel in arms:
             pm = P[P["ym"].isin(sel)]
             fm = fut[fut["ym"].isin(sel)]
             if pm.empty or fm.empty:
@@ -120,7 +124,7 @@ def main() -> None:
         raise SystemExit("MO_92: produced no rows")
     R.to_csv(OUT_CSV, index=False)
 
-    for lbl in ("T+1", "13wk"):
+    for lbl in sorted(R["horizon"].unique(), key=lambda x: (x == "13wk", x)):
         s = R[R["horizon"] == lbl]
         if s.empty:
             continue
@@ -149,7 +153,7 @@ def main() -> None:
                     "bias": float(R.loc[R.horizon == lbl, col].mean()),
                     "within_7pct": float((R.loc[R.horizon == lbl, col].abs() <= 0.07).mean()),
                 } for col in ("err_matched", "err_full")
-            } for lbl in ("T+1", "13wk") if (R.horizon == lbl).any()
+            } for lbl in sorted(R["horizon"].unique())
         },
     }, indent=2, default=str))
     print(f"\nwrote {OUT_CSV}\nwrote {OUT_JSON}")
