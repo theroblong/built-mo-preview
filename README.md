@@ -6,6 +6,117 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 207: it was never seasonality — 14.4% of Q volume comes from cells that don't exist yet (2026-10-03)
+
+Jason stopped a month-of-year bias correction before it was built, on the grounds that distribution
+expansion makes last January unusable for predicting this January. He was right, and chasing the
+mechanism produced the clearest reframe of the whole forecasting effort.
+
+### The structural gap ⭐
+
+A forecast made at T cannot contain a (upc, channel, account, geography) cell that does not exist
+at T. Share of a target month's **actual** volume from cells unseen at forecast time:
+
+| horizon | median | mean | max |
+|---|---|---|---|
+| T+1 month | 2.8% | 3.1% | 12.1% |
+| **T+3 months** | **14.4%** | **15.0%** | **25.7%** |
+
+This is a **floor** on under-forecast error at 13 weeks. No model of existing series can recover it.
+
+It also reframes the headline: the reported **7.6%** median monthly miss at 13 weeks is the **NET**
+of ~14% structural under-coverage against an over-forecast on existing series that partly cancels
+it. Two errors masking each other — a usable average but an unstable one, which is exactly the
+observed pattern of occasional large misses rather than consistent small ones. And it explains
+cleanly why T+1 (4.8%) beats T+3 (7.6%): at one month the gap is only 2.8%.
+
+⚠️ **Any future diagnosis of a "seasonal" miss must decompose into existing-series error and
+unseen-cell coverage first.** Attributing the Q1 gap to seasonality was wrong.
+
+### Why the YoY anchor cannot work — comp basis collapsed
+
+Cells selling in both a month and the same month 12 months prior:
+
+| month | comp cells | comp YoY | total YoY | new-cell share |
+|---|---|---|---|---|
+| 2025-03 | 255 | 3.26x | 4.39x | 31.3% |
+| 2025-08 | 255 | 3.91x | 6.12x | 41.4% |
+| 2025-12 | 344 | 1.08x | 2.40x | 58.2% |
+| 2026-03 | 432 | 0.98x | 2.05x | 54.4% |
+| 2026-08 | 624 | **0.73x** | 1.39x | 47.9% |
+
+Comp growth collapsed **3.3x → 0.73x** in 18 months. Same items, same accounts, same markets now
+sell **27% fewer units than a year ago** while the total business still grows 1.39x. All net growth
+is newly distributed cells.
+
+The arithmetic kills the ratio correction directly: Jan 2025 ratio 1.58 (629K forecast / 995K
+actual), Jan 2026 ratio 1.27 (1,920K / 2,438K). Applying 1.58 to Jan 2026 **overshoots 24%**.
+
+### Velocity converged — and it is NOT a mix effect
+
+May–Aug 2025 vs 2026, units per TDP point:
+
+- portfolio **23.03 → 15.10** (−34.4%)
+- **same 655 comp cells 23.62 → 15.57** — the decline is INSIDE established cells
+- cells new in 2026 arrive at **14.53**, already at the new level
+
+Age bands show no new-door dilution: 15.47 (0–12wk), 15.46 (13–26), 15.40 (27–52), 18.23 (53–104),
+27.24 (105+). Older = higher is **survivorship of winners**, not a ramp.
+
+⚠️ **TDP is not a fixed multiplier on volume.** Its productivity is itself a moving quantity, so
+projecting units from TDP growth overstates them — likely the mechanism behind the 7.9%-high run.
+
+Dividing by TDP also does **not** clean seasonality: detrended aggregate shape correlates r=+0.097
+across years (8 shared months), and the velocity shape correlates *worse* than raw units.
+
+### MO_91 arrival layer: bias fixed, error not
+
+~1,000 observed launches in 3 years is far more information than 2 observed Januaries. Launch curve
+from fully-observed cohorts + trailing arrival rate (autocorr **+0.974**). 5 arms, 15 rolling
+origins, every quantity estimated from data <= origin.
+
+| T+3 arm | bias | median abs | mean abs |
+|---|---|---|---|
+| A existing cells only (flat last-4wk) | −10.7% | 14.9% | 12.9% |
+| B + arrival layer (count × curve) | **−1.3%** | 13.7% | 14.6% |
+| C + ramp for young existing cells | −0.2% | 15.1% | 15.0% |
+| D uplift by trailing-3mo realized share | +3.6% | 14.6% | 15.0% |
+| E same, trailing-6mo | +2.7% | 14.4% | 14.8% |
+
+Bias almost eliminated; month-to-month error unchanged. Residuals flip sign inside the window —
+−15% to −21% through late 2025, then +17% to +29% by mid-2026 — because the growth regime changed.
+Arrival **count** rose (109, 164 in May/Jun 2026) while volume **per arrival** fell (13wk cohort
+totals 400K Jun → 147K Jul). A uniform uplift helps the accelerating half, hurts the other.
+
+⚠️ **Do not ship B–E as an accuracy improvement.** Next: estimate arrival *volume* directly instead
+of count × curve, and make the uplift regime-aware.
+
+### The good news
+
+Naive carry-forward at 13 weeks misses **14.9%** median monthly. MO_27 measured the same way misses
+**7.6%** — the model roughly **halves** the error of a sensible simple method at that horizon. Real
+forecast value added, and defensible with Bracken/FP&A.
+
+### Rejected today
+
+- Per-TDP normalization as a seasonality fix (normalized shape less stable than raw units)
+- Month-of-year bias correction from prior-year errors (ratio not transferable)
+- ⚠️ Within-shelf UPC-count elasticity as causal. `log(shelf units) ~ log(upc count)` returns
+  **+1.146**, implying assortment expansion is more than fully incremental. **Confounded** — UPC
+  count and volume both rise over time, so it is largely the brand's own trend. **Do not cite it.**
+
+### Shipped
+
+- `scripts/MO_91_new_item_arrival_layer.py` — arrival layer, 5 arms, honest rolling origins
+- `scripts/MO_92_portfolio_monthly_backtest.py` — portfolio monthly backtest in finance units;
+  dollars from the panel's own `arp`, not an assumed price; reports MATCHED (model skill) and FULL
+  (what finance feels) side by side, so the new-cell gap is visible in the table itself
+- `docs/mo_demand_intelligence_methodology_v2.html` — new Section 3 (this analysis) and Section 4
+  (**delivered wins**: Meijer brief, cross-account cannibalization rates, flavor incrementality,
+  Dreamwich/portfolio triage) for review with Rob and Brian
+
+---
+
 ## README update 206: SES beats flat — and TOTAL error is 0.3-1.6%, not 36% (2026-10-02)
 
 Two results from finishing the arms that silently failed earlier. One is a modest first win; the

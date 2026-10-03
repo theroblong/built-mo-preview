@@ -1,0 +1,505 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mo Demand Intelligence — Methodology &amp; Findings</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f3f5fa;color:#1a1a2e;margin:0;padding:0;line-height:1.65}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 20px 80px}
+.section{background:#fff;border-radius:12px;padding:38px 42px;margin-bottom:28px;box-shadow:0 1px 5px rgba(0,0,0,.07)}
+.hero{background:linear-gradient(135deg,#0f2744,#1a3a5c);color:#fff;border-radius:12px;padding:40px 44px;margin-bottom:28px}
+.hero h1{margin:0 0 10px;font-size:30px;letter-spacing:-.02em;line-height:1.25}
+.hero p{margin:0;color:#c7d6e8;font-size:16px}
+.hero .meta{margin-top:18px;font-size:13px;color:#8fa9c4}
+h2{font-size:21px;margin:0 0 6px;color:#0f2744;letter-spacing:-.01em}
+h3{font-size:15.5px;margin:26px 0 8px;color:#1e4fa8}
+.lead{color:#475569;font-size:15.5px;margin:0 0 20px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#64748b;font-weight:700;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:10px 12px;border-bottom:2px solid #e2e8f4;font-weight:700}
+td{padding:11px 12px;border-bottom:1px solid #eef2f8;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hl{background:#eff6ff}
+.card{border:1px solid #e2e8f4;border-radius:10px;padding:20px 22px;background:#fafbff;margin:14px 0}
+.good{border-left:4px solid #16a34a;background:#f0fdf4}
+.warn{border-left:4px solid #ca8a04;background:#fffbeb}
+.note{border-left:4px solid #2563eb;background:#eff6ff}
+.big{font-size:27px;font-weight:700;color:#0f2744;letter-spacing:-.02em}
+.stat{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+.stat>div{flex:1 1 170px;background:#fafbff;border:1px solid #e2e8f4;border-radius:10px;padding:15px 18px}
+.stat .v{font-size:23px;font-weight:700;color:#0f2744;letter-spacing:-.02em}
+.stat .l{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-top:4px;line-height:1.4}
+ul{padding-left:20px;margin:10px 0}li{margin:8px 0;color:#334155}
+code{background:#f1f5f9;border:1px solid #e2e8f4;border-radius:3px;padding:1px 5px;font-size:12.5px}
+.foot{color:#64748b;font-size:13px;text-align:center;padding:10px}
+</style></head><body><div class="wrap">
+
+<div class="hero">
+<h1>Mo Demand Intelligence<br>Methodology, Findings &amp; Current Accuracy</h1>
+<p>An updated view of how the forecast works, what it measures, and what we have learned building it.<br><span style="color:#8fa9c4;font-size:14px">All percentages in this document are <b style="color:#fff">error rates</b> &mdash; lower is better.</span></p>
+<div class="meta">Prepared for BUILT &middot; 2 October 2026 &middot; All figures from BUILT's own SPINS data through 6 September 2026</div>
+</div>
+
+<div class="section">
+<div class="eyebrow">Start here</div>
+<h2>Forecast error depends entirely on which question you ask</h2>
+<p class="lead">The single most important correction in this update. A forecast does not have one accuracy
+number &mdash; it has several, and they answer different business questions. Quoting one without
+saying which can mislead in either direction.</p>
+
+<table>
+<thead><tr><th>Question being asked</th><th>How it is measured</th><th class="n">Error</th><th class="n">= Accuracy</th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>Did we plan the right total volume?</b><br><span style="color:#64748b;font-size:13px">Over- and under-calls on individual items cancel out</span></td>
+<td>Total forecast vs total actual, across the portfolio</td><td class="n"><b>0.3% &ndash; 4.3%</b></td><td class="n"><b>95.7% &ndash; 99.7%</b></td></tr>
+<tr><td><b>Did we get the company-level month right?</b></td><td>Error at portfolio &times; month</td><td class="n"><b>15.8% &ndash; 18.1%</b></td><td class="n"><b>81.9% &ndash; 84.2%</b></td></tr>
+<tr><td><b>Did we get each retailer's month right?</b></td><td>Error at retailer &times; month</td><td class="n"><b>22.1% &ndash; 24.5%</b></td><td class="n"><b>75.5% &ndash; 77.9%</b></td></tr>
+<tr><td><b>Did we get each item, at each retailer, in each week right?</b><br><span style="color:#64748b;font-size:13px">The hardest question. Nothing cancels.</span></td>
+<td>Error at item &times; retailer &times; week</td><td class="n"><b>30.8% &ndash; 36.6%</b></td><td class="n"><b>63.4% &ndash; 69.2%</b></td></tr>
+</tbody></table>
+
+<div class="card warn">
+<p style="margin:0 0 8px"><b>Every percentage in this document is ERROR, not accuracy.</b> Lower is
+better. A 0.3% figure means the forecast was within three-tenths of a percent of actual &mdash; that is
+99.7% accurate, not 0.3% accurate.</p>
+<p style="margin:0">Where a comparison figure is quoted from elsewhere, please confirm which convention
+it uses. A reported "7% forecast accuracy" and "7% forecast error" mean opposite things, and the two
+are used interchangeably across the industry.</p>
+</div>
+
+<div class="card note">
+<p style="margin:0 0 10px"><b>Why the range in each row.</b> Each is measured across several forecasting
+methods we run and compare. The spread is the difference between the best and the current production
+method &mdash; not uncertainty about the measurement.</p>
+<p style="margin:0"><b>Why these are all legitimate.</b> A total-volume figure is the right number for
+production planning and financial commitment. An item-week figure is the right number for
+replenishment and assortment decisions. Neither is "the" accuracy.</p>
+</div>
+
+<h3 style="margin-top:28px">Measured the way a finance team tracks it</h3>
+<p>If forecast is compared against actual <b>each month</b> and the misses are tallied &mdash; which is
+how a finance team watching real money would do it &mdash; this is where Mo stands today:</p>
+<table>
+<thead><tr><th>Basis</th><th class="n">Typical month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(median miss)</span></th><th class="n">Average month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(incl. seasonal misses)</span></th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>Portfolio month, forecasting one month ahead</b></td><td class="n"><b>4.8%</b></td><td class="n">11.1%</td></tr>
+<tr><td>Portfolio month, forecasting thirteen weeks ahead</td><td class="n"><b>7.6%</b></td><td class="n">17.0%</td></tr>
+<tr><td>Portfolio quarter, thirteen weeks ahead</td><td class="n">14.2%</td><td class="n">16.4%</td></tr>
+</tbody></table>
+
+<div class="card note">
+<p style="margin:0 0 10px"><b>In a typical month the forecast is within 5&ndash;8% of actual</b>, which
+is comparable to a well-run manual process. The average is higher than the median because the misses
+are not evenly spread.</p>
+<p style="margin:0"><b>Fifteen of twenty-one months tested fall inside &plusmn;8%.</b> Nearly all of the
+error is concentrated in two windows: January through March, where the forecast runs low, and
+November&ndash;December, where it runs high.</p>
+</div>
+
+<h3>Where the error actually sits</h3>
+<table>
+<thead><tr><th>Period</th><th class="n">Miss</th><th>Pattern</th></tr></thead>
+<tbody>
+<tr><td>Jan &ndash; Mar 2025</td><td class="n">&minus;37% to &minus;61%</td><td>Under-forecast through the new-year ramp</td></tr>
+<tr class="hl"><td><b>Apr &ndash; Oct 2025</b></td><td class="n"><b>&plusmn;7%</b></td><td><b>Stable months &mdash; forecast performs well</b></td></tr>
+<tr><td>Nov &ndash; Dec 2025</td><td class="n">+20% to +32%</td><td>Over-forecast through the holiday slowdown</td></tr>
+<tr><td>Jan &ndash; Mar 2026</td><td class="n">&minus;21% to &minus;29%</td><td>Under-forecast again, though improving year over year</td></tr>
+<tr class="hl"><td><b>Apr &ndash; Sep 2026</b></td><td class="n"><b>&plusmn;8% (one month +20%)</b></td><td><b>Stable months &mdash; forecast performs well</b></td></tr>
+</tbody></table>
+<p>This is a seasonal learning problem rather than a general accuracy problem, and it is the clearest
+single target for improvement. The January miss already narrowed from &minus;61% to &minus;29% between
+2025 and 2026 as a second year of history became available.</p>
+
+<div class="card warn">
+<p style="margin:0 0 8px"><b>A correction to our earlier material.</b> A previous version of this paper
+cited <b>4.4%</b> for a 13-week hold-out. That figure came from a validation method we have since
+found to be too generous: the model was being scored on quarters it had partly been trained on.</p>
+<p style="margin:0">We rebuilt the evaluation so that <b>every quarter is forecast by a model trained
+only on data available before that quarter began</b>. The numbers above come from that corrected
+method. They are less flattering and they are real. We would rather hand you a number you can defend.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 1</div>
+<h2>How the forecast is evaluated</h2>
+<p class="lead">The methodology matters more than the model, and it is the single biggest change since
+the last version.</p>
+
+<h3>Seven quarters, each one a genuine hold-out</h3>
+<p>For every quarter from the start of 2025 through Q3 2026, the model is retrained using only data
+that existed before that quarter, then asked to forecast the next thirteen weeks. It never sees the
+answer. Results are compared against what BUILT actually sold.</p>
+
+<div class="stat">
+<div><div class="v">7</div><div class="l">quarters, each a true hold-out</div></div>
+<div><div class="v">2,128</div><div class="l">item &times; retailer series</div></div>
+<div><div class="v">62,776</div><div class="l">forecast points scored</div></div>
+<div><div class="v">13 wk</div><div class="l">forecast horizon</div></div>
+</div>
+
+<h3>Every method is measured against doing nothing</h3>
+<p>The benchmark is deliberately unforgiving: simply carrying last week's sales forward. In published
+industry studies roughly half of corporate forecasts fail to beat that benchmark, so any method that
+cannot clear it is not adding value. We also measure against a year-over-year comparison, which is
+closer to how most teams forecast today.</p>
+
+<table>
+<thead><tr><th>Method</th><th class="n">Item &times; week<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th><th class="n">Portfolio &times; month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th><th class="n">Total volume<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>Optimized exponential smoothing</b></td><td class="n"><b>30.8%</b></td><td class="n">17.6%</td><td class="n">1.6%</td></tr>
+<tr><td>Automatic exponential smoothing</td><td class="n">32.8%</td><td class="n">17.6%</td><td class="n"><b>0.3%</b></td></tr>
+<tr><td>Carry last week forward <i>(the benchmark)</i></td><td class="n">32.4%</td><td class="n"><b>15.8%</b></td><td class="n">4.3%</td></tr>
+<tr><td>Machine-learning model</td><td class="n">36.6%</td><td class="n">18.1%</td><td class="n">&mdash;</td></tr>
+<tr><td>Year-over-year comparison</td><td class="n">54.5%</td><td class="n">&mdash;</td><td class="n">&mdash;</td></tr>
+</tbody></table>
+
+<div class="card good">
+<p style="margin:0"><b>The clearest result.</b> Every method we run is roughly <b>twice as accurate as a
+year-over-year comparison</b> (30&ndash;37% against 54.5%). That is the comparison that reflects how
+most demand planning is done today, and it is where the forecast earns its place.</p>
+</div>
+<div class="card warn">
+<p style="margin:0"><b>Stated plainly:</b> on mature, high-volume items the machine-learning model does
+not currently beat a simple carry-forward. We report that rather than select a flattering slice. The
+sections below explain why, and where the model does add value that no simple method can.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 2 &mdash; the key finding</div>
+<h2>BUILT's growth is distribution, not velocity</h2>
+<p class="lead">This single measurement explains most of what we learned, and it has direct consequences
+for planning.</p>
+
+<p>Comparing the last fifty-two weeks against the fifty-two before:</p>
+<table>
+<thead><tr><th>Source of growth</th><th class="n">Units</th><th class="n">Share</th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>Items at retailers that did not exist a year ago</b></td><td class="n">11,888,266</td><td class="n"><b>61%</b></td></tr>
+<tr><td>Existing item-retailer combinations growing</td><td class="n">7,766,081</td><td class="n">40%</td></tr>
+<tr><td>Combinations that stopped selling</td><td class="n">&minus;275,409</td><td class="n">&minus;1%</td></tr>
+</tbody></table>
+
+<p><b>1,008 new item-retailer combinations appeared against 759 continuing ones.</b> Among the
+continuing ones, the median grew 1.46&times; across a full year &mdash; under one percent a week &mdash;
+with 64% growing and <b>36% shrinking</b>.</p>
+
+<div class="card note">
+<p style="margin:0 0 10px"><b>What this means for planning.</b> For an item already selling at a
+retailer, week-to-week movement is small relative to normal volatility. There is genuinely little
+trend to project, which is why a carry-forward performs as well as it does.</p>
+<p style="margin:0"><b>And the bigger implication:</b> the dominant driver of BUILT's volume is
+<b>which items reach which retailers, and when</b>. That is decided by authorizations, launch plans
+and door counts &mdash; information that does not appear in sales history at all. No forecasting
+method applied to past sales can anticipate a combination that has never sold.</p>
+</div>
+
+<h3>A practical consequence we tested</h3>
+<p>Applying the portfolio's overall growth rate to each individual item made forecasts <i>worse</i>,
+producing a systematic 10.3% over-forecast. Most of that growth is not happening inside existing
+items, so applying it to them double-counts. This is the kind of error that is invisible without
+decomposition.</p>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 3 &mdash; new analysis, 3 October</div>
+<h2>Why last January does not predict this January</h2>
+<p class="lead">A forecast that leans on the same month a year earlier assumes the business was
+comparable then. For a brand expanding distribution this fast, it was not. We measured exactly how
+far from comparable, and found the structural reason the forecast runs low.</p>
+
+<h3>Same-store sales are falling while the business doubles</h3>
+<p>Restricting to item-retailer-market combinations selling in both a month and the same month a year
+earlier &mdash; the comparable-store basis retail uses &mdash; separates expansion from underlying demand:</p>
+
+<table>
+<thead><tr><th>Month</th><th class="n">Comparable cells</th><th class="n">Comparable-basis YoY</th><th class="n">Total YoY</th><th class="n">Volume from cells new in the year</th></tr></thead>
+<tbody>
+<tr><td>March 2025</td><td class="n">255</td><td class="n">3.26&times;</td><td class="n">4.39&times;</td><td class="n">31.3%</td></tr>
+<tr><td>August 2025</td><td class="n">255</td><td class="n">3.91&times;</td><td class="n">6.12&times;</td><td class="n">41.4%</td></tr>
+<tr><td>December 2025</td><td class="n">344</td><td class="n">1.08&times;</td><td class="n">2.40&times;</td><td class="n">58.2%</td></tr>
+<tr class="hl"><td><b>March 2026</b></td><td class="n">432</td><td class="n"><b>0.98&times;</b></td><td class="n">2.05&times;</td><td class="n">54.4%</td></tr>
+<tr class="hl"><td><b>August 2026</b></td><td class="n">624</td><td class="n"><b>0.73&times;</b></td><td class="n">1.39&times;</td><td class="n">47.9%</td></tr>
+</tbody></table>
+
+<p>Comparable-basis growth fell from <b>3.3&times; to 0.73&times;</b> in eighteen months. The same items,
+in the same accounts and markets, now sell <b>27% fewer units than a year ago</b>, while the total
+business still grows 1.39&times;. Every unit of net growth is coming from newly distributed combinations.</p>
+
+<div class="card warn">
+<p style="margin:0"><b>This is why a year-ago anchor cannot carry the forecast.</b> A method that reads
+last January and scales it is reading a business with roughly half as many selling combinations, each
+running at a materially different rate. The relationship between the two Januaries is not stable
+enough to lean on &mdash; and it is still moving.</p>
+</div>
+
+<h3>Units per distribution point converged across the whole portfolio</h3>
+<p>Dividing volume by distribution should isolate per-store demand. Instead it revealed a second
+movement running the other way, comparing the same four months a year apart:</p>
+
+<div class="stat">
+<div><div class="v">23.0 &rarr; 15.1</div><div class="l">Portfolio units per distribution point, May&ndash;Aug 2025 vs 2026</div></div>
+<div><div class="v">23.6 &rarr; 15.6</div><div class="l">Same 655 comparable cells &mdash; not a mix effect</div></div>
+<div><div class="v">14.5</div><div class="l">Combinations new in 2026, at the same level</div></div>
+</div>
+
+<p>Because the comparable cells moved just as far as the portfolio, this is not newer, weaker doors
+diluting an average &mdash; the decline happened <i>inside</i> established combinations, and new ones
+arrive already at the new level. The practical consequence is that distribution points are not a fixed
+multiplier on volume. Their productivity is itself a moving quantity, so projecting volume from
+distribution growth alone overstates it.</p>
+
+<h3>The structural reason the forecast runs low</h3>
+<p>A forecast produced in one month cannot contain an item-retailer combination that does not exist yet.
+We measured how much of each target month's actual volume came from combinations invisible at forecast time:</p>
+
+<table>
+<thead><tr><th>Forecast horizon</th><th class="n">Median share of actual volume from combinations not yet existing</th><th class="n">Maximum observed</th></tr></thead>
+<tbody>
+<tr><td>One month ahead</td><td class="n">2.8%</td><td class="n">12.1%</td></tr>
+<tr class="hl"><td><b>Thirteen weeks ahead</b></td><td class="n"><b>14.4%</b></td><td class="n">25.7%</td></tr>
+</tbody></table>
+
+<div class="card note">
+<p style="margin:0 0 10px"><b>This explains the shape of the error, and it reframes the accuracy numbers.</b>
+At a quarter's distance, roughly one unit in seven comes from combinations no history-based method could
+have known about. That sets a floor on how low a forecast of existing items can run, and it is the single
+clearest reason the quarterly view reads lower than the one-month view.</p>
+<p style="margin:0">It also means the headline error is partly two offsetting errors. The forecast misses
+new combinations downward while running somewhat high on existing ones, and the two partly cancel. That
+nets to a usable number but an unstable one &mdash; which matches the pattern of occasional large misses
+rather than consistent small ones.</p>
+</div>
+
+<h3>We tested the obvious fix, and it is not yet a fix</h3>
+<p>Roughly 1,000 launches are observable in three years of SPINS &mdash; far more information about how
+new items behave than the two Januaries a seasonal method gets. We used them to estimate how many new
+combinations arrive each month and how much they sell, then added that to the forecast. Five variants
+were tested across fifteen rolling origins, with every quantity estimated only from data available at
+the time.</p>
+
+<table>
+<thead><tr><th>Thirteen weeks ahead</th><th class="n">Systematic bias</th><th class="n">Median monthly error</th></tr></thead>
+<tbody>
+<tr><td>Existing combinations only</td><td class="n">&minus;10.7%</td><td class="n">14.9%</td></tr>
+<tr class="hl"><td><b>Plus a new-arrival layer</b></td><td class="n"><b>&minus;1.3%</b></td><td class="n">13.7%</td></tr>
+</tbody></table>
+
+<p>The layer does what it was built to do: it removes almost all of the systematic under-forecast.
+But it does not yet reduce month-to-month error, because arrival volume itself changed regime inside
+the test window &mdash; new combinations arrived in rising numbers while each one sold less. A correction
+sized on the earlier period overshoots the later one. We are reporting this as a confirmed diagnosis
+with an incomplete remedy rather than as an improvement, and the next step is estimating arrival
+<i>volume</i> directly instead of inferring it from counts.</p>
+
+<div class="card good">
+<p style="margin:0"><b>One clear positive from the same test.</b> A naive carry-forward measured at
+thirteen weeks misses by 14.9% in the median month. Mo's current model measured the same way misses
+by 7.6%. Whatever remains to be improved, the model is roughly halving the error a sensible
+simple method would produce at that distance.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 4 &mdash; delivered</div>
+<h2>What Mo has already answered</h2>
+<p class="lead">The accuracy work above is one workstream. Alongside it, Mo has been answering account
+and assortment questions that were asked and delivered against real meetings. These are the outputs
+already in BUILT's hands.</p>
+
+<h3>Meijer assortment and cannibalization brief &mdash; delivered 25 September</h3>
+<p>Built for Brian's Meijer broker meeting on 29 September, answering two questions: did the P4 2026
+flavor launches cannibalize the existing set, and what belongs in the ideal assortment including the
+first check-lane placement.</p>
+
+<table>
+<thead><tr><th>What Mo established at Meijer</th><th>Finding</th></tr></thead>
+<tbody>
+<tr><td>Confirmed BUILT assortment</td><td>9 UPCs in Meijer Food account data over the last thirteen weeks</td></tr>
+<tr><td>Core distribution</td><td>5 four-packs at <b>93&ndash;97%</b> distribution &mdash; effectively full</td></tr>
+<tr><td>Cannibalization scored</td><td><b>211 product pairs</b>, overall rate <b>46.9%</b></td></tr>
+<tr class="hl"><td><b>Widest competitive displacement</b></td><td><b>BUILT BAR Coconut 4-pack (08-40229-30381)</b> taking share from <b>10 distinct competitor brands</b></td></tr>
+<tr><td>Own-brand overlap flagged</td><td>BUILT BAR Cookies N Cream 4-pack (08-40229-30581) drawing only from BUILT BAR Brownie Batter 4-pack (08-40229-30380)</td></tr>
+<tr><td>Price sensitivity</td><td>Meijer elasticity &minus;0.489 &mdash; moderately elastic; a 10% price rise implies roughly 4.9% volume decline</td></tr>
+</tbody></table>
+
+<h3>Cannibalization rates are comparable across accounts</h3>
+<p>The same measurement run at each account turns a single-account answer into a ranking, which is what
+makes it useful for deciding where the next SKU should go:</p>
+
+<table>
+<thead><tr><th>Account</th><th class="n">Cannibalization rate</th><th>Reading</th></tr></thead>
+<tbody>
+<tr><td>Target</td><td class="n">54.9%</td><td>More of a new item's volume comes out of the existing set</td></tr>
+<tr><td>Walmart</td><td class="n">54.5%</td><td>Similar &mdash; the shelf is already working hard</td></tr>
+<tr class="hl"><td><b>Meijer</b></td><td class="n"><b>46.9%</b></td><td><b>More incremental &mdash; room for distribution expansion</b></td></tr>
+<tr><td>Kroger</td><td class="n">43.0%</td><td>Most incremental of the four</td></tr>
+</tbody></table>
+
+<div class="card warn">
+<p style="margin:0">Confidence on the Meijer pairs is currently marked low. That reflects <b>data
+maturity</b> &mdash; the P4 2026 launches have under twenty weeks of history &mdash; and not uncertainty
+in the model. These rates sharpen as the launches age. Follow-up clarifications from the most recent
+BUILT session are still pending and may refine the assortment reading.</p>
+</div>
+
+<h3>When a new flavor is additive, and when it is not</h3>
+<p>Prepared for the CCO question "when is adding a new flavor not advised." The useful diagnostic turned
+out not to be whether Mo labels a pair cannibalizing, but <b>how many of the donors are BUILT's own items</b>:</p>
+
+<table>
+<thead><tr><th>Launch</th><th>Account</th><th class="n">Incremental share</th><th class="n">Own-brand donors</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>BUILT SOUR PUFF Green Apple Crush 4-pack</b><br><span style="color:#64748b;font-size:13px">08-40229-30656</span></td><td>Kroger</td><td class="n"><b>83.6%</b></td><td class="n"><b>0</b></td><td>Approve without swapping</td></tr>
+<tr class="hl"><td colspan="1"></td><td>Walmart</td><td class="n"><b>86.7%</b></td><td class="n"><b>0</b></td><td>Approve without swapping</td></tr>
+<tr><td><b>BUILT PUFF PB Cup 4-pack</b><br><span style="color:#64748b;font-size:13px">08-40229-30646</span></td><td>Kroger</td><td class="n">52.9%</td><td class="n">1</td><td>Approve, monitor the sibling</td></tr>
+</tbody></table>
+
+<p>Green Apple Crush took its volume from outside BUILT entirely at both accounts &mdash; that is market
+share, and it settles by week nine at Kroger and week four at Walmart, which also showed that planogram
+reset timing differs by account. PB Cup's single own-brand donor was the single-serve puff being
+deliberately replaced, so the overlap was a planned format upgrade rather than an unintended loss.
+That distinction is the whole decision, and it is not visible without donor-level detail.</p>
+
+<h3>Where the next SKU should and should not go</h3>
+<p>Brian's three portfolio questions &mdash; when does another SKU stop growing an account, where should
+SKUs be reduced, and should Dreamwich launch as pure incremental distribution or trade out weaker items
+&mdash; are all answerable from the models already running. The output is a two-bucket account triage:</p>
+<ul>
+<li><b>Incremental bucket</b> &mdash; accounts with a low BUILT SKU count, strong per-SKU velocity and
+predicted low cannibalization. Dreamwich goes in as pure net-new distribution.</li>
+<li><b>Trade-out bucket</b> &mdash; accounts already saturated, where marginal cannibalization exceeds
+marginal volume. Here Mo names the weakest current item &mdash; lowest velocity, highest cannibalization
+contribution &mdash; as the displacement candidate.</li>
+</ul>
+<p>This is actionable before Dreamwich ships, because the triage runs on current portfolio health. Once
+launch data flows, Dreamwich's own measured rate sharpens the placement call and validates the decisions
+made ahead of it.</p>
+
+<div class="card note">
+<p style="margin:0"><b>One honest limit on coverage.</b> Cannibalization is currently scored for about
+48% of product-account-market combinations. The cause is a deliberate quality gate requiring eight weeks
+of history on both sides of a pair before it is scored, so the gap sits mostly on recent launches and on
+BUILT's newer convenience and club distribution. It closes as those combinations mature.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 5</div>
+<h2>What we tried, and what we learned</h2>
+<p class="lead">Roughly twenty distinct approaches were tested against the carry-forward benchmark on
+the corrected methodology. Most did not beat it. The negative results are as useful as the positive
+ones, because they tell us where the limits actually are.</p>
+
+<table>
+<thead><tr><th>Approach</th><th>Result</th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>Optimized exponential smoothing</b></td><td><b>Best at item level.</b> Beats the benchmark by 1.7 points.</td></tr>
+<tr><td>Seasonal decomposition (STL, seasonal ETS, Theta, seasonal ARIMA)</td><td><b>Cannot be fitted.</b> These require two complete years per item; the data begins October 2023, so no item yet has two full cycles.</td></tr>
+<tr><td>Seasonal adjustments and calendar features</td><td>No improvement. Seasonality is measurable at portfolio level but not yet per item.</td></tr>
+<tr><td>Trend extrapolation, and trend combined with machine learning</td><td>Worse at item level; modest help at portfolio level only.</td></tr>
+<tr><td>Alternative statistical objectives and target transformations</td><td>No reliable improvement once tested across the full portfolio.</td></tr>
+<tr><td>Deep-learning forecasters</td><td>Previously reported; could not be run in the current environment, and the one completed test did not beat simpler methods.</td></tr>
+</tbody></table>
+
+<h3>Three lessons worth recording</h3>
+<ul>
+<li><b>Validation method matters more than model choice.</b> The difference between our old and new
+evaluation was far larger than the difference between any two models.</li>
+<li><b>A result on one retailer is not a result.</b> Several promising improvements appeared on a
+single account and disappeared when tested across all 2,128 series. Everything is now confirmed
+portfolio-wide before it is reported.</li>
+<li><b>History has a floor.</b> With under two years of seasonal history and most growth coming from
+items that did not previously exist, there is a limit to what past sales alone can predict. That limit
+moves as history accumulates, and it moves faster with forward-looking data.</li>
+</ul>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 6</div>
+<h2>What Mo provides that a point forecast does not</h2>
+<p class="lead">Accuracy on a single number is one measure of value. These are capabilities that a
+spreadsheet process does not produce at all, regardless of its accuracy.</p>
+
+<h3>Complete coverage, including new launches</h3>
+<p>Every item-retailer combination receives a forecast &mdash; 2,128 of them, with none skipped.
+Previously <b>110 items produced no forecast at all</b>, including the newest launches, which are
+exactly where distribution and production decisions are being made. A carry-forward cannot
+meaningfully forecast an item with three weeks of history; the system now routes those to an
+appropriate method and labels them as such.</p>
+
+<h3>Ranges, not just a number</h3>
+<p>Every forecast carries a low, expected and high figure, so a planner can see where the forecast is
+confident and where it is not &mdash; and size inventory risk accordingly.</p>
+
+<h3>Distribution versus velocity decomposition</h3>
+<p>For any change in demand, the system separates how much came from more stores carrying the item
+versus more sales per store. Given that 61% of growth is distribution, this is the difference between
+a number and an explanation.</p>
+
+<h3>Cannibalization and price elasticity</h3>
+<p>When a new flavour launches, how much is genuinely incremental and how much came from BUILT's own
+existing items &mdash; measured per retailer. Price sensitivity is measured per retailer and used for
+scenario modeling. Neither is available from a sales history alone.</p>
+
+<h3>Data quality that compounds</h3>
+<p>Building the forecast surfaced issues worth more than the model itself. One retailer was being
+counted twice in the underlying data through two overlapping market definitions, inflating its demand
+by roughly 2.3 million units a year. Several hundred item-retailer combinations with no sales for
+over a year were still being planned for. Both are now corrected and guarded against.</p>
+</div>
+
+<div class="section">
+<div class="eyebrow">Section 7</div>
+<h2>What would improve accuracy most</h2>
+<p class="lead">Ranked by expected impact, based on what the measurements show.</p>
+
+<table>
+<thead><tr><th>#</th><th>Input</th><th>Why it matters</th></tr></thead>
+<tbody>
+<tr class="hl"><td><b>1</b></td><td><b>Planned distribution &mdash; authorizations, launch dates, door counts</b></td>
+<td>Addresses the 61% of growth that sales history cannot see. The single largest available improvement.</td></tr>
+<tr><td><b>2</b></td><td><b>Shipment data for retailers not covered by SPINS</b></td>
+<td>Accounts such as KwikTrip and Casey's are currently invisible to the forecast despite active trade investment.</td></tr>
+<tr><td><b>3</b></td><td><b>Confirmed promotional calendar</b></td>
+<td>The current file records planned commitments; knowing which promotions are confirmed and funded converts them into a forward signal.</td></tr>
+<tr><td><b>4</b></td><td><b>Actual trade spend by account and period</b></td>
+<td>Enables true cost-per-incremental-unit, which is currently unavailable for most events.</td></tr>
+<tr><td><b>5</b></td><td>More sales history</td>
+<td>Two full seasonal cycles would unlock a class of seasonal methods that cannot currently be fitted. This arrives with time.</td></tr>
+</tbody></table>
+
+<div class="card good">
+<p style="margin:0">Items 1 through 4 are all data BUILT already generates internally. None requires a
+new modeling approach &mdash; they require connecting information that already exists to the forecast
+that needs it.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="eyebrow">In summary</div>
+<h2>Where things stand</h2>
+<ul>
+<li>Forecast error depends on the question. <b>Total volume error sits between 0.3% and 4.3%</b>
+(95.7&ndash;99.7% accurate); item-level weekly error sits around <b>31%</b> (69% accurate). Both are
+real and they measure different things.</li>
+<li>Every method runs at roughly <b>half the error of a year-over-year comparison</b> (31&ndash;37%
+against 54.5%).</li>
+<li>Tracked the way a finance team tracks it &mdash; forecast vs actual each month &mdash; a typical
+month lands within <b>5&ndash;8%</b>. Fifteen of twenty-one months tested are inside &plusmn;8%.</li>
+<li>The remaining error is concentrated in <b>January&ndash;March and November&ndash;December</b>, the
+two windows where annual seasonality dominates and where under two years of history limits what can
+be learned. The January gap narrowed from &minus;61% to &minus;29% year over year.</li>
+<li>On mature items the model does not beat a simple carry-forward. We say so rather than select a
+flattering view.</li>
+<li><b>61% of growth comes from items and doors that did not exist a year ago</b>, which is the main
+reason sales history alone has limits here.</li>
+<li>The evaluation method was rebuilt so that every reported figure comes from a genuine hold-out.
+Earlier figures were optimistic and have been corrected.</li>
+<li>The clearest path to improvement is forward-looking distribution and promotional data, not a
+different algorithm.</li>
+</ul>
+</div>
+
+<div class="foot">Mo by BUILT &middot; prepared by Aevah &middot; figures from SPINS data through 6 September 2026</div>
+</div></body></html>
