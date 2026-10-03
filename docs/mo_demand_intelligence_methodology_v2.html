@@ -49,9 +49,7 @@ saying which can mislead in either direction.</p>
 <table>
 <thead><tr><th>Question being asked</th><th>How it is measured</th><th class="n">Error</th><th class="n">= Accuracy</th></tr></thead>
 <tbody>
-<tr class="hl"><td><b>Did we plan the right total volume?</b><br><span style="color:#64748b;font-size:13px">Over- and under-calls on individual items cancel out</span></td>
-<td>Total forecast vs total actual, across the portfolio</td><td class="n"><b>0.3% &ndash; 4.3%</b></td><td class="n"><b>95.7% &ndash; 99.7%</b></td></tr>
-<tr><td><b>Did we get the company-level month right?</b></td><td>Error at portfolio &times; month</td><td class="n"><b>15.8% &ndash; 18.1%</b></td><td class="n"><b>81.9% &ndash; 84.2%</b></td></tr>
+<tr class="hl"><td><b>Did we get the company-level month right?</b><br><span style="color:#64748b;font-size:13px">The number a finance team actually plans against</span></td><td>Error at portfolio &times; month</td><td class="n"><b>15.8% &ndash; 18.1%</b></td><td class="n"><b>81.9% &ndash; 84.2%</b></td></tr>
 <tr><td><b>Did we get each retailer's month right?</b></td><td>Error at retailer &times; month</td><td class="n"><b>22.1% &ndash; 24.5%</b></td><td class="n"><b>75.5% &ndash; 77.9%</b></td></tr>
 <tr><td><b>Did we get each item, at each retailer, in each week right?</b><br><span style="color:#64748b;font-size:13px">The hardest question. Nothing cancels.</span></td>
 <td>Error at item &times; retailer &times; week</td><td class="n"><b>30.8% &ndash; 36.6%</b></td><td class="n"><b>63.4% &ndash; 69.2%</b></td></tr>
@@ -59,8 +57,8 @@ saying which can mislead in either direction.</p>
 
 <div class="card warn">
 <p style="margin:0 0 8px"><b>Every percentage in this document is ERROR, not accuracy.</b> Lower is
-better. A 0.3% figure means the forecast was within three-tenths of a percent of actual &mdash; that is
-99.7% accurate, not 0.3% accurate.</p>
+better. A 16% figure means the forecast was sixteen percent away from actual &mdash; that is 84%
+accurate, not 16% accurate.</p>
 <p style="margin:0">Where a comparison figure is quoted from elsewhere, please confirm which convention
 it uses. A reported "7% forecast accuracy" and "7% forecast error" mean opposite things, and the two
 are used interchangeably across the industry.</p>
@@ -70,10 +68,31 @@ are used interchangeably across the industry.</p>
 <p style="margin:0 0 10px"><b>Why the range in each row.</b> Each is measured across several forecasting
 methods we run and compare. The spread is the difference between the best and the current production
 method &mdash; not uncertainty about the measurement.</p>
-<p style="margin:0"><b>Why these are all legitimate.</b> A total-volume figure is the right number for
-production planning and financial commitment. An item-week figure is the right number for
+<p style="margin:0"><b>Why both rows are legitimate.</b> A portfolio-month figure is the right number
+for production planning and financial commitment. An item-week figure is the right number for
 replenishment and assortment decisions. Neither is "the" accuracy.</p>
 </div>
+
+<h3 style="margin-top:28px">One measure we are deliberately not quoting</h3>
+<p>A forecast can also be scored by summing all forecast volume, summing all actual volume, and
+comparing the two totals across the whole test period. On that basis these forecasts score under 2%.
+<b>We are not presenting that as an accuracy figure, because for an operating business it is not one.</b></p>
+
+<div class="card warn">
+<p style="margin:0 0 10px"><b>Why it is misleading.</b> That calculation adds signed errors together
+before taking the difference, so a month forecast several million units low cancels against a later
+month forecast several million high. The two never actually cancel in the business &mdash; cash,
+production and inventory are committed month by month, and a shortfall in March is not repaid by an
+overage in December. A single sub-2% figure describes cumulative drift over nearly two years. It says
+almost nothing about any month anyone has to manage.</p>
+<p style="margin:0">The same forecasts that produce that sub-2% total miss individual months by
+&minus;37%, &minus;61%, +32% and &minus;29%. Both numbers are arithmetically correct. Only the monthly
+one is decision-relevant, so the monthly one is what this document reports throughout.</p>
+</div>
+
+<p>It remains useful internally as a <b>bias</b> check &mdash; it tells us whether the model leans
+systematically high or low over time, which is a real diagnostic and one we use. It is not a statement
+about how close any given month will be, and it should not be quoted as one.</p>
 
 <h3 style="margin-top:28px">Measured the way a finance team tracks it</h3>
 <p>If forecast is compared against actual <b>each month</b> and the misses are tallied &mdash; which is
@@ -144,14 +163,18 @@ cannot clear it is not adding value. We also measure against a year-over-year co
 closer to how most teams forecast today.</p>
 
 <table>
-<thead><tr><th>Method</th><th class="n">Item &times; week<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th><th class="n">Portfolio &times; month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th><th class="n">Total volume<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th></tr></thead>
+<thead><tr><th>Method</th><th class="n">Item &times; week<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th><th class="n">Portfolio &times; month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">error</span></th></tr></thead>
 <tbody>
-<tr class="hl"><td><b>Optimized exponential smoothing</b></td><td class="n"><b>30.8%</b></td><td class="n">17.6%</td><td class="n">1.6%</td></tr>
-<tr><td>Automatic exponential smoothing</td><td class="n">32.8%</td><td class="n">17.6%</td><td class="n"><b>0.3%</b></td></tr>
-<tr><td>Carry last week forward <i>(the benchmark)</i></td><td class="n">32.4%</td><td class="n"><b>15.8%</b></td><td class="n">4.3%</td></tr>
-<tr><td>Machine-learning model</td><td class="n">36.6%</td><td class="n">18.1%</td><td class="n">&mdash;</td></tr>
-<tr><td>Year-over-year comparison</td><td class="n">54.5%</td><td class="n">&mdash;</td><td class="n">&mdash;</td></tr>
+<tr class="hl"><td><b>Optimized exponential smoothing</b></td><td class="n"><b>30.8%</b></td><td class="n">17.6%</td></tr>
+<tr><td>Automatic exponential smoothing</td><td class="n">32.8%</td><td class="n">17.6%</td></tr>
+<tr><td>Carry last week forward <i>(the benchmark)</i></td><td class="n">32.4%</td><td class="n"><b>15.8%</b></td></tr>
+<tr><td>Machine-learning model</td><td class="n">36.6%</td><td class="n">18.1%</td></tr>
+<tr><td>Year-over-year comparison</td><td class="n">54.5%</td><td class="n">&mdash;</td></tr>
 </tbody></table>
+<p style="color:#64748b;font-size:13.5px;margin:-4px 0 0">A cumulative total-volume column has been
+deliberately left out of this comparison, for the reason given at the start of this document: it
+rewards offsetting monthly errors and would rank these methods in an order that has no operational
+meaning.</p>
 
 <div class="card good">
 <p style="margin:0"><b>The clearest result.</b> Every method we run is roughly <b>twice as accurate as a
@@ -480,9 +503,11 @@ that needs it.</p>
 <div class="eyebrow">In summary</div>
 <h2>Where things stand</h2>
 <ul>
-<li>Forecast error depends on the question. <b>Total volume error sits between 0.3% and 4.3%</b>
-(95.7&ndash;99.7% accurate); item-level weekly error sits around <b>31%</b> (69% accurate). Both are
-real and they measure different things.</li>
+<li>Forecast error depends on the question. <b>Portfolio-month error sits around 16&ndash;18%</b>
+(82&ndash;84% accurate); item-level weekly error sits around <b>31%</b> (69% accurate). Both are real
+and they measure different things. A cumulative total-volume figure can be made to look far better
+than either, by letting monthly misses offset each other &mdash; we do not quote it, and it should not
+be used to judge whether the forecast is good enough to plan against.</li>
 <li>Every method runs at roughly <b>half the error of a year-over-year comparison</b> (31&ndash;37%
 against 54.5%).</li>
 <li>Tracked the way a finance team tracks it &mdash; forecast vs actual each month &mdash; a typical
