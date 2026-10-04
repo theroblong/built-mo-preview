@@ -109,6 +109,66 @@ def load_panel(feats):
     return df.sort_values(GROUP_COLS + ["__time"]).reset_index(drop=True)
 
 
+def recursive_wmape_fast(model, df, feats, cats, cut, weeks):
+    """Vectorized twin of recursive_wmape — identical math, one predict per STEP.
+
+    The scalar version issues a single-row predict per series per step: ~2,000
+    series x 13 steps = ~26,000 predict calls per fold, which dominates trial
+    wall-clock and made a few-hundred-trial search cost >100 hours. Series are
+    independent within a step, so all of them can be advanced together: 13
+    predicts per fold instead of 26,000. Verified equal to the scalar version
+    before use (see --verify).
+    """
+    fw = list(weeks[weeks > cut][:HORIZON])
+    if not fw:
+        return float("nan")
+    hist_df = df[df["__time"] <= cut]
+    fut = df[(df["__time"] > cut) & (df["__time"] <= fw[-1])]
+    truth = fut.groupby(GROUP_COLS + ["__time"], observed=True)["base_units"].sum()
+    if truth.empty:
+        return float("nan")
+    want = {(u, c, a, g) for (u, c, a, g, _t) in truth.index}
+    tmap = {((u, c, a, g), t): v for (u, c, a, g, t), v in truth.items()}
+
+    keys, states, hists = [], [], []
+    for key, g in hist_df.groupby(GROUP_COLS, observed=True):
+        if key not in want:
+            continue
+        g = g.sort_values("__time")
+        if len(g) < 4:
+            continue
+        keys.append(key)
+        states.append(g.iloc[-1])
+        hists.append(list(pd.to_numeric(g["base_units"], errors="coerce").fillna(0)))
+    if not keys:
+        return float("nan")
+
+    S = pd.DataFrame(states).reset_index(drop=True)
+    acts, preds = [], []
+    for fd in fw:
+        t2 = float(fd.isocalendar().week)
+        S["week_sin"] = np.sin(2 * np.pi * t2 / 52)
+        S["week_cos"] = np.cos(2 * np.pi * t2 / 52)
+        S["week_sin26"] = np.sin(2 * np.pi * t2 / 26)
+        S["week_cos26"] = np.cos(2 * np.pi * t2 / 26)
+        S["base_units_lag1"] = [h[-1] for h in hists]
+        S["base_units_roll4_avg"] = [float(np.mean(h[-4:])) for h in hists]
+        S["base_units_roll8_avg"] = [float(np.mean(h[-8:])) for h in hists]
+        S["base_units_roll13_avg"] = [float(np.mean(h[-13:])) for h in hists]
+        S["base_units_wow_delta"] = [h[-1] - h[-2] if len(h) > 1 else 0.0 for h in hists]
+        X = S[feats].copy()
+        for c, cc in cats.items():
+            if c in X.columns:
+                X[c] = pd.Categorical(X[c], categories=cc)
+        p = np.clip(np.expm1(model.predict(X)), 0, None)
+        for i, key in enumerate(keys):
+            hists[i].append(float(p[i]))
+            k = (key, fd)
+            if k in tmap:
+                acts.append(tmap[k]); preds.append(float(p[i]))
+    return wmape(acts, preds) if acts else float("nan")
+
+
 def recursive_wmape(model, df, feats, cats, cut, weeks):
     """Run the production recursive loop and score it. THIS is the objective."""
     fw = list(weeks[weeks > cut][:HORIZON])
@@ -154,7 +214,7 @@ def recursive_wmape(model, df, feats, cats, cut, weeks):
     return wmape(acts, preds) if acts else float("nan")
 
 
-def main(trials, cutoffs_back, study_name):
+def main(trials, cutoffs_back, study_name, timeout=None, seed_from=None):
     feats = list(pickle.load(
         open("outputs/model_retailer_sales_q50_v10_full.pkl", "rb")).feature_name_)
     df = load_panel(feats)
@@ -196,7 +256,7 @@ def main(trials, cutoffs_back, study_name):
                   eval_set=[(va[feats], np.log1p(va["base_units"]))], eval_metric="quantile",
                   callbacks=[lgb.early_stopping(EARLY_STOP, verbose=False),
                              lgb.log_evaluation(-1)])
-            s = recursive_wmape(m, df, feats, cats, cut, weeks)
+            s = recursive_wmape_fast(m, df, feats, cats, cut, weeks)
             if np.isfinite(s):
                 scores.append(s)
             trial.report(float(np.mean(scores)) if scores else 1e9, len(scores))
@@ -214,7 +274,24 @@ def main(trials, cutoffs_back, study_name):
             print(f"  trial {tr.number:>3d}  recursive wMAPE {tr.value:>6.2f}   "
                   f"best {st.best_value:>6.2f}")
 
-    study.optimize(objective, n_trials=trials, callbacks=[cb], show_progress_bar=False)
+    if seed_from:
+        src = optuna.load_study(study_name=seed_from, storage=STORAGE)
+        done = [t for t in src.trials if t.state.name == "COMPLETE"]
+        for t in done:
+            study.enqueue_trial(t.params, skip_if_exists=True)
+        print(f"  seeded {len(done)} parameter sets from '{seed_from}' "
+              f"(re-scored on these folds, not imported as values)\n")
+    folds_tag = ",".join(str(w) for w in cutoffs_back)
+    prior = study.user_attrs.get("cutoffs_back")
+    if prior is not None and prior != folds_tag:
+        raise SystemExit(
+            f"\nFATAL: study '{study_name}' was built on folds [{prior}] but this run asks for "
+            f"[{folds_tag}].\n  Different folds = a different objective; resuming would mix two "
+            f"scales in one study.\n  Use a new --study-name, or pass --cutoffs {prior}.")
+    study.set_user_attr("cutoffs_back", folds_tag)
+    study.set_user_attr("scorer", "recursive_wmape_fast")
+    study.optimize(objective, n_trials=trials, callbacks=[cb], show_progress_bar=False,
+                   timeout=timeout)
 
     best = dict(study.best_params)
     lam = best.pop("recency_lambda")
@@ -243,5 +320,7 @@ if __name__ == "__main__":
     ap.add_argument("--trials", type=int, default=60)
     ap.add_argument("--cutoffs", type=str, default="13,26,39")
     ap.add_argument("--study-name", default="mo28r_recursive_v1")
+    ap.add_argument("--timeout", type=float, default=None, help="wall-clock seconds")
+    ap.add_argument("--seed-from", default=None, help="study whose params to enqueue first")
     a = ap.parse_args()
-    main(a.trials, [int(x) for x in a.cutoffs.split(",")], a.study_name)
+    main(a.trials, [int(x) for x in a.cutoffs.split(",")], a.study_name, a.timeout, a.seed_from)
