@@ -1971,6 +1971,13 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
   const fwdData  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_units) || null}));
   const fwdHighD = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_high)  || null}));
   const fwdLowD  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_low)   || null}));
+  // Promo-lifted FORWARD forecast. The holdout had a promo variant and the forward
+  // segment did not, so turning Promo Lift on changed the retrospective and holdout
+  // lines but left the forward forecast sitting at its base level — the one segment
+  // a planner is actually deciding against. r1_forecast already carries these fields.
+  const fwdPromoData  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_units_promo) || null}));
+  const fwdPromoHighD = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_high_promo)  || null}));
+  const fwdPromoLowD  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_low_promo)   || null}));
 
   // Confidence band plugin — draws q10-q90 fills BEFORE dataset lines
   const retroColors = [
@@ -2174,6 +2181,18 @@ document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
     // Forward forecast line
     { label: 'Forward Forecast', data: fwdData, borderColor: '#4f8ef7',
       borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+    // Promo-lifted forward forecast + its band. Hidden until Promo Lift is switched on,
+    // which is what setPromoMode toggles via the _promo flag.
+    { label: 'Fwd Promo Band High', data: fwdPromoHighD, fill: '+1',
+      backgroundColor: 'rgba(245,166,35,0.10)',
+      borderColor: 'rgba(245,166,35,0.26)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    { label: 'Fwd Promo Band Low', data: fwdPromoLowD, fill: false,
+      borderColor: 'rgba(245,166,35,0.26)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    { label: 'Forward Forecast (with promo)', data: fwdPromoData, borderColor: '#f5a623',
+      borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false,
+      hidden: true, _promo: true },
     // True holdout prediction (stronger amber)
     { label: 'Model Prediction (Holdout)', data: holdPredData, borderColor: '#f5a623',
       borderDash: [5,4], borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },

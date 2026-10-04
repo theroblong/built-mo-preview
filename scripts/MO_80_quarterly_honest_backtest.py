@@ -93,6 +93,7 @@ SEASONAL_BLEND_WEIGHT = 0.10   # MO_27 line 68 — keep in lockstep
 MIN_SERIES_WEEKS_LOCAL = 13    # mo_panel.MIN_SERIES_WEEKS
 SEASONAL_INDEX_CSV = Path("outputs/mo59_seasonal_index.csv")
 SHORT_BAND_WIDTH = 0.45        # MO_27 `_bw` for last_value_seasonal
+_SKIP_LAG52 = False            # MO_93 ablation hook; production always refreshes lag52
 
 QUARTERS = [
     ("Q1 2025", "2024-12-29", "2025-01-05", "2025-03-30"),
@@ -332,7 +333,7 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             state["base_units_roll13_avg"] = float(np.mean(hist[-13:]))
             state["base_units_wow_delta"] = hist[-1] - hist[-2] if len(hist) > 1 else 0.0
             lag52 = lag52_seq[h - 1]
-            if "base_units_lag52" in feats and np.isfinite(lag52):
+            if "base_units_lag52" in feats and np.isfinite(lag52) and not _SKIP_LAG52:
                 state["base_units_lag52"] = lag52
             X = pd.DataFrame([state])[feats]
             for c, cc in cats.items():
