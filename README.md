@@ -6,6 +6,92 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 209: distribution is frozen during the forecast — and unfreezing it is worth 0.6pp (2026-10-03)
+
+Jason: "We are seeing the retailer bubble up the SHAP waterfall... why wouldn't number of stores per
+SKU / UPC be an important factor? ... you might sell 10 puffs per week at 1 store, but that could go
+to 10 x 10 = 100 puffs if you had 10 stores."
+
+He was asking it right, and it found a structural defect. Then testing it produced a negative result
+that matters more than the defect.
+
+### The structural finding
+
+Distribution is NOT ignored — 6 of the top 20 features are distribution-related:
+
+| rank | feature |
+|---|---|
+| 1 | retail_account |
+| **7** | **tdp_4w_momentum** |
+| **10** | **tdp_wow_delta** |
+| **12** | **tdp_z8** |
+| 14 | top_donor_tdp_sum |
+| 15 | velocity_per_tdp |
+| 19 | tdp |
+
+And the arithmetic holds: within a cell, units scale ~1:1 with TDP — **median elasticity 1.05**, 84%
+of cells ≥0.8. (Cross-cell in one week it is 0.77 — mild diminishing returns between cells.)
+
+⚠️ **But only 10 of 56 features update during the 13-step forecast. All 7 TDP features are FROZEN**
+at the anchor row, while real TDP moves a **median 21.7% per 13 weeks** and **>10% in 67% of windows**.
+It is also incoherent: `tdp_wow_delta` and `tdp_4w_momentum` are frozen at NON-ZERO values, so the
+model is told distribution is still moving while the level never changes.
+
+### ⭐ MO_95: the oracle says the ceiling is 0.6pp
+
+Jason stopped the Optuna run to settle this first — "are we optimizing before we confirm the model to
+optimize?" Correct, and the answer took 20 minutes instead of 10 hours. One fitted model per cutoff;
+only the INFERENCE loop differs. KROGER Food, 7 honest quarters:
+
+| arm | mean wMAPE | mean abs bias | vs frozen | Q1 2026 | Q3 2026 |
+|---|---|---|---|---|---|
+| frozen (today) | 40.6 | 0.240 | — | 58.7 | 23.4 |
+| **coherent** (zero momentum feats) | **39.9** | **0.220** | **−0.7pp** | 53.5 | **21.5** |
+| projected (per-cell damped trend) | 40.0 | 0.226 | −0.5pp | **52.5** | 23.6 |
+| **oracle** (ACTUAL future TDP) | 40.0 | 0.234 | **−0.6pp** | 54.9 | 25.6 |
+
+**Feeding ACTUAL future distribution — the ceiling on this entire direction, including perfect
+authorization data from BUILT — is worth 0.6pp.** Not 5pp, not 10pp.
+
+**Why:** TDP and units are collinear, so the autoregressive units chain already carries the
+distribution signal. Freezing TDP costs little because the information arrives another way.
+**Feature importance is not marginal value at forecast time.**
+
+### ⚠️ CORRECTION
+
+Earlier in this session I told Jason that planned-distribution data was "the input that would unfreeze
+the single most predictive feature class we have" and that this justified the white paper's #1 data
+ask. **The oracle test shows that was overclaimed.** Do not pitch authorization data to Brian as a
+large accuracy lever on this evidence. It may still matter for COVERAGE of items that do not exist yet
+(14.4% of quarterly volume — a different mechanism), but not for improving items already selling.
+
+### What survives
+
+- **`coherent` is free and is the best arm.** Zero the momentum features when the level is frozen.
+  −0.7pp, no new data, no projector, no leakage. Shippable.
+- **`projected` is viable too** (Jason's read) — strongest on Q1 2026, 52.5 vs 58.7.
+- Both help the RAMP quarters; the flat mean comes from losses in Q2/Q3 2025.
+- ⚠️ **KROGER Food only, 20–39 series/quarter.** Next: confirm against **total portfolio demand**
+  before treating the negative as settled.
+- Do NOT retry a uniform global TDP rate — that is MO_27g, which failed for a different reason
+  (13-week change is median 22% / mean 226% / p90 148%; no single rate fits it).
+
+### Optuna: paused, preserved, resumable
+
+Tuning optimizes against a specific inference loop, so the loop had to be settled first. The v2 study
+holds **12 completed trials, best 32.55** against a production baseline of **34.42** (~1.9pp), with
+folds and scorer recorded so a resumed run cannot silently change the objective.
+
+Also shipped earlier today: `recursive_wmape_fast`, a vectorized twin of the recursive scorer —
+one predict per STEP instead of per series per step. Verified identical (31.42293960 both ways,
+diff 7.1e-15) at **55x** speed. This is what made a 20-minute architecture test possible.
+
+### Everything paused
+
+No MO jobs, no Optuna, no uvicorn, no caffeinate running. Resume Sunday or Monday.
+
+---
+
 ## README update 208: the retrospective line was never the production model (2026-10-03)
 
 Jason, comparing bracken chart v5 against v11: "It seems like we were getting closer to the Q1 2026
