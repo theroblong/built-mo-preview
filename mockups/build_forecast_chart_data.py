@@ -978,28 +978,41 @@ try:
         _repl, _miss = 0, []
         for _q in quarterly_backtests:
             _r = _hb.get(_q.get("quarter_label"))
-            if not _r or not _r.get("recursive"):
+            # Prefer MO_80's PRODUCTION arm. Its `recursive` arm is a BARE LightGBM with no
+            # seasonal blend, no STL fallback and no short/lapsed router, so badging it while
+            # the forward line came from MO_27 made the legend's "same model" claim false and
+            # flattened the retrospective slope (Q1 2026 ran -928 units/wk against actual
+            # +1,647). The production arm restores slope capture to +0.50 on that quarter.
+            _arm = "production" if (_r or {}).get("production") else "recursive"
+            if not _r or not _r.get(_arm):
                 _miss.append(_q.get("quarter_label")); continue
-            _q["wmape"]        = round(_r["recursive"]["wmape"], 1)
+            _q["wmape"]        = round(_r[_arm]["wmape"], 1)
             _q["naive_wmape"]  = round(_r["naive"]["wmape"], 1) if _r.get("naive") else None
             _q["series_count"] = _r.get("n_series", _q.get("series_count"))
             _q["honest"]       = True
-            _q["bias"]         = round(_r["recursive"]["bias"], 3)
+            _q["arm"]          = _arm
+            _q["bias"]         = round(_r[_arm]["bias"], 3)
             # Key names MUST match what the chart JS reads: week_ending / pred_q50 / actual /
             # naive_units. Writing week/predicted instead renders an empty line with no error.
             _wk = (_r.get("weekly") or {})
             _act = _wk.get("actual") or {}
-            _pred = _wk.get("recursive") or {}
+            _pred = _wk.get(_arm) or {}
             _nv = _wk.get("naive_yoy") or {}
+            # MO_80 now fits q10/q90 alongside q50 for the production arm, so the retrospective
+            # band is measured rather than mirrored. Fall back to mirroring only if a run
+            # predates that change, and say so rather than showing a zero-width band silently.
+            _lo = _wk.get(f"{_arm}_q10") or {}
+            _hi = _wk.get(f"{_arm}_q90") or {}
+            if not (_lo and _hi):
+                print(f"    {_q.get('quarter_label')}: no q10/q90 in MO_80 output — "
+                      f"band mirrored from q50 (re-run MO_80 to restore it)")
             if _act and _pred:
                 _q["predictions"] = [
                     {"week_ending": _d,
                      "actual":      round(_act.get(_d, 0.0), 1),
                      "pred_q50":    round(_pred.get(_d, 0.0), 1),
-                     # MO_80 scores the median only, so there is no honest per-week band for
-                     # the retrospective lines. Mirror q50 rather than invent an interval.
-                     "pred_q10":    round(_pred.get(_d, 0.0), 1),
-                     "pred_q90":    round(_pred.get(_d, 0.0), 1),
+                     "pred_q10":    round(_lo.get(_d, _pred.get(_d, 0.0)), 1),
+                     "pred_q90":    round(_hi.get(_d, _pred.get(_d, 0.0)), 1),
                      "naive_units": round(_nv.get(_d, 0.0), 1)}
                     for _d in sorted(set(_act) & set(_pred))]
             _repl += 1

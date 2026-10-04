@@ -103,16 +103,22 @@ an assumed price.</p>
 <table>
 <thead><tr><th>Basis</th><th class="n">Typical month<br><span style="font-weight:400;text-transform:none;letter-spacing:0">(median miss)</span></th><th class="n">Average month</th><th class="n">Months inside<br>&plusmn;7%</th><th class="n">Systematic<br>lean</th></tr></thead>
 <tbody>
-<tr class="hl"><td><b>One month ahead &mdash; total portfolio</b><br><span style="color:#64748b;font-size:13px">Every unit BUILT actually sold</span></td><td class="n"><b>8.8%</b></td><td class="n">11.0%</td><td class="n">35%</td><td class="n">&minus;9.2%</td></tr>
-<tr><td>One month ahead &mdash; items Mo was forecasting<br><span style="color:#64748b;font-size:13px">Excludes items that did not exist yet</span></td><td class="n">4.4%</td><td class="n">8.7%</td><td class="n">53%</td><td class="n">&minus;2.8%</td></tr>
-<tr class="hl"><td><b>Thirteen weeks ahead &mdash; total portfolio</b></td><td class="n"><b>11.8%</b></td><td class="n">14.9%</td><td class="n">29%</td><td class="n">&minus;11.8%</td></tr>
-<tr><td>Thirteen weeks ahead &mdash; items Mo was forecasting</td><td class="n">10.1%</td><td class="n">14.1%</td><td class="n">24%</td><td class="n">+0.6%</td></tr>
+<tr class="hl"><td><b>One month ahead &mdash; total portfolio</b><br><span style="color:#64748b;font-size:13px">Every unit BUILT actually sold</span></td><td class="n"><b>11.5%</b></td><td class="n">14.3%</td><td class="n">18%</td><td class="n">&minus;5.2%</td></tr>
+<tr><td>One month ahead &mdash; items Mo was forecasting<br><span style="color:#64748b;font-size:13px">Excludes items that did not exist yet</span></td><td class="n">10.1%</td><td class="n">12.6%</td><td class="n">41%</td><td class="n">&minus;2.6%</td></tr>
+<tr class="hl"><td><b>Thirteen weeks ahead &mdash; total portfolio</b></td><td class="n"><b>21.3%</b></td><td class="n">19.8%</td><td class="n">12%</td><td class="n">&minus;7.9%</td></tr>
+<tr><td>Thirteen weeks ahead &mdash; items Mo was forecasting</td><td class="n">12.2%</td><td class="n">16.3%</td><td class="n">24%</td><td class="n">+0.4%</td></tr>
 </tbody></table>
 
 <div class="card warn">
 <p style="margin:0 0 10px"><b>Stated plainly: the forecast does not yet meet a 7%-per-month standard.</b>
-A typical month is 9&ndash;12% away on total portfolio volume, and only about a third of months land
-inside &plusmn;7%. We would rather put that in front of you now than have it discovered later.</p>
+A typical month is 11&ndash;12% away on total portfolio volume at one month, 21% at a quarter's
+distance, and fewer than one month in five lands inside &plusmn;7%. We would rather put that in front
+of you now than have it discovered later.</p>
+<p style="margin:0 0 10px"><b>These figures measure the shipping system</b>, including its seasonal
+adjustment and its handling of new and dormant items. An earlier draft of this page reported better
+numbers (8.8% and 11.8%) that had been measured on a stripped-down version of the model without
+those components. Correcting that made the numbers worse, not better, and the corrected ones are
+what appear above.</p>
 <p style="margin:0">The two rows for each horizon exist because they answer different questions. The
 <b>total portfolio</b> row is what BUILT's P&amp;L experiences. The <b>items Mo was forecasting</b> row
 is what the model can be held responsible for. The difference between them is almost entirely items and
@@ -126,11 +132,10 @@ from the same seventeen forecasts, in units and in retail dollars:</p>
 <table>
 <thead><tr><th>Forecast made</th><th>Period covered</th><th class="n">Miss</th><th class="n">Retail dollars</th></tr></thead>
 <tbody>
-<tr class="hl"><td><b>December 2025</b></td><td><b>Jan &ndash; Mar 2026</b></td><td class="n"><b>&minus;49.2%</b></td><td class="n"><b>&minus;$36.4M</b></td></tr>
-<tr><td>November 2025</td><td>Dec 2025 &ndash; Feb 2026</td><td class="n">&minus;37.9%</td><td class="n">&minus;$24.5M</td></tr>
-<tr class="hl"><td><b>January 2026</b></td><td><b>Feb &ndash; Apr 2026</b></td><td class="n"><b>+23.1%</b></td><td class="n"><b>+$17.6M</b></td></tr>
-<tr><td>December 2025</td><td>January 2026 alone</td><td class="n">&minus;40.8%</td><td class="n">&minus;$8.8M</td></tr>
-<tr><td>January 2026</td><td>February 2026 alone</td><td class="n">+13.3%</td><td class="n">+$3.0M</td></tr>
+<tr class="hl"><td><b>January 2026</b></td><td><b>Feb &ndash; Apr 2026</b></td><td class="n"><b>+50.4%</b></td><td class="n"><b>+$38.5M</b></td></tr>
+<tr><td>December 2025</td><td>January 2026 alone</td><td class="n">&minus;36.3%</td><td class="n">&minus;$7.82M</td></tr>
+<tr><td>January 2026</td><td>February 2026 alone</td><td class="n">+30.5%</td><td class="n">+$6.93M</td></tr>
+<tr><td>July 2025</td><td>August 2025 alone</td><td class="n">&minus;24.4%</td><td class="n">&minus;$5.33M</td></tr>
 </tbody></table>
 
 <div class="card warn">
@@ -153,23 +158,23 @@ month judged only on items Mo was forecasting.</p>
 <table>
 <thead><tr><th>Month</th><th class="n">Actual units</th><th class="n">Forecast</th><th class="n">% off</th><th class="n">$ off</th><th class="n">% off, items<br>Mo forecast</th></tr></thead>
 <tbody>
-<tr><td>Feb 2025</td><td class="n">1,317,859</td><td class="n">1,101,848</td><td class="n">&minus;16.4%</td><td class="n">&minus;$1.38M</td><td class="n">&minus;15.5%</td></tr>
-<tr><td>Mar 2025</td><td class="n">2,020,534</td><td class="n">1,598,527</td><td class="n">&minus;20.9%</td><td class="n">&minus;$2.89M</td><td class="n">&minus;20.3%</td></tr>
-<tr class="hl"><td>Apr 2025</td><td class="n">1,609,254</td><td class="n">1,550,161</td><td class="n">&minus;3.7%</td><td class="n">&minus;$0.40M</td><td class="n">&minus;2.6%</td></tr>
-<tr><td>May 2025</td><td class="n">1,863,788</td><td class="n">1,540,158</td><td class="n">&minus;17.4%</td><td class="n">&minus;$2.17M</td><td class="n">&minus;14.3%</td></tr>
-<tr><td>Jun 2025</td><td class="n">2,430,622</td><td class="n">2,217,429</td><td class="n">&minus;8.8%</td><td class="n">&minus;$1.55M</td><td class="n">+0.6%</td></tr>
-<tr class="hl"><td>Jul 2025</td><td class="n">1,982,939</td><td class="n">1,975,878</td><td class="n">&minus;0.4%</td><td class="n">&minus;$0.05M</td><td class="n">+7.8%</td></tr>
-<tr><td>Aug 2025</td><td class="n">2,936,734</td><td class="n">2,469,987</td><td class="n">&minus;15.9%</td><td class="n">&minus;$3.48M</td><td class="n">&minus;0.7%</td></tr>
-<tr class="hl"><td>Sep 2025</td><td class="n">2,301,969</td><td class="n">2,334,200</td><td class="n">+1.4%</td><td class="n">+$0.24M</td><td class="n">+3.4%</td></tr>
-<tr><td>Oct 2025</td><td class="n">2,439,581</td><td class="n">2,263,123</td><td class="n">&minus;7.2%</td><td class="n">&minus;$1.29M</td><td class="n">+4.4%</td></tr>
-<tr><td>Nov 2025</td><td class="n">3,000,727</td><td class="n">2,769,361</td><td class="n">&minus;7.7%</td><td class="n">&minus;$1.52M</td><td class="n">+4.2%</td></tr>
-<tr><td>Dec 2025</td><td class="n">2,250,317</td><td class="n">1,862,759</td><td class="n">&minus;17.2%</td><td class="n">&minus;$2.54M</td><td class="n">&minus;13.3%</td></tr>
-<tr><td style="color:#b91c1c"><b>Jan 2026</b></td><td class="n">2,927,294</td><td class="n">1,732,068</td><td class="n" style="color:#b91c1c"><b>&minus;40.8%</b></td><td class="n" style="color:#b91c1c"><b>&minus;$8.80M</b></td><td class="n">&minus;28.9%</td></tr>
-<tr><td>Feb 2026</td><td class="n">3,179,407</td><td class="n">3,600,899</td><td class="n">+13.3%</td><td class="n">+$3.01M</td><td class="n">+18.9%</td></tr>
-<tr><td>Mar 2026</td><td class="n">4,135,657</td><td class="n">3,915,930</td><td class="n">&minus;5.3%</td><td class="n">&minus;$1.58M</td><td class="n">&minus;0.2%</td></tr>
-<tr class="hl"><td>Apr 2026</td><td class="n">3,207,562</td><td class="n">3,225,598</td><td class="n">+0.6%</td><td class="n">+$0.13M</td><td class="n">+7.5%</td></tr>
-<tr class="hl"><td>May 2026</td><td class="n">3,851,822</td><td class="n">3,836,363</td><td class="n">&minus;0.4%</td><td class="n">&minus;$0.11M</td><td class="n">+3.4%</td></tr>
-<tr><td>Jun 2026</td><td class="n">3,214,547</td><td class="n">2,888,521</td><td class="n">&minus;10.1%</td><td class="n">&minus;$2.34M</td><td class="n">&minus;2.0%</td></tr>
+<tr><td>Feb 2025</td><td class="n">1,317,859</td><td class="n">1,185,401</td><td class="n">&minus;10.1%</td><td class="n">&minus;$0.84M</td><td class="n">&minus;9.9%</td></tr>
+<tr><td>Mar 2025</td><td class="n">2,020,534</td><td class="n">1,803,082</td><td class="n">&minus;10.8%</td><td class="n">&minus;$1.49M</td><td class="n">&minus;10.1%</td></tr>
+<tr class="hl"><td>Apr 2025</td><td class="n">1,609,254</td><td class="n">1,606,552</td><td class="n">&minus;0.2%</td><td class="n">&minus;$0.02M</td><td class="n">+0.2%</td></tr>
+<tr><td>May 2025</td><td class="n">1,863,788</td><td class="n">1,574,573</td><td class="n">&minus;15.5%</td><td class="n">&minus;$1.94M</td><td class="n">&minus;13.4%</td></tr>
+<tr><td>Jun 2025</td><td class="n">2,430,622</td><td class="n">2,253,462</td><td class="n">&minus;7.3%</td><td class="n">&minus;$1.29M</td><td class="n">&minus;4.1%</td></tr>
+<tr><td>Jul 2025</td><td class="n">1,982,939</td><td class="n">1,795,968</td><td class="n">&minus;9.4%</td><td class="n">&minus;$1.32M</td><td class="n">&minus;6.8%</td></tr>
+<tr><td>Aug 2025</td><td class="n">2,936,734</td><td class="n">2,221,351</td><td class="n">&minus;24.4%</td><td class="n">&minus;$5.33M</td><td class="n">&minus;14.0%</td></tr>
+<tr class="hl"><td>Sep 2025</td><td class="n">2,301,969</td><td class="n">2,177,649</td><td class="n">&minus;5.4%</td><td class="n">&minus;$0.92M</td><td class="n">&minus;3.9%</td></tr>
+<tr class="hl"><td>Oct 2025</td><td class="n">2,439,581</td><td class="n">2,341,049</td><td class="n">&minus;4.0%</td><td class="n">&minus;$0.72M</td><td class="n">&minus;0.3%</td></tr>
+<tr><td>Nov 2025</td><td class="n">3,000,727</td><td class="n">2,654,191</td><td class="n">&minus;11.5%</td><td class="n">&minus;$2.27M</td><td class="n">&minus;6.5%</td></tr>
+<tr><td>Dec 2025</td><td class="n">2,250,317</td><td class="n">1,761,599</td><td class="n">&minus;21.7%</td><td class="n">&minus;$3.21M</td><td class="n">&minus;20.4%</td></tr>
+<tr><td style="color:#b91c1c"><b>Jan 2026</b></td><td class="n">2,927,294</td><td class="n">1,865,180</td><td class="n" style="color:#b91c1c"><b>&minus;36.3%</b></td><td class="n" style="color:#b91c1c"><b>&minus;$7.82M</b></td><td class="n">&minus;34.5%</td></tr>
+<tr><td style="color:#b91c1c"><b>Feb 2026</b></td><td class="n">3,179,407</td><td class="n">4,150,076</td><td class="n" style="color:#b91c1c"><b>+30.5%</b></td><td class="n" style="color:#b91c1c"><b>+$6.93M</b></td><td class="n">+32.3%</td></tr>
+<tr><td>Mar 2026</td><td class="n">4,135,657</td><td class="n">4,829,743</td><td class="n">+16.8%</td><td class="n">+$5.00M</td><td class="n">+20.2%</td></tr>
+<tr><td>Apr 2026</td><td class="n">3,207,562</td><td class="n">3,785,626</td><td class="n">+18.0%</td><td class="n">+$4.30M</td><td class="n">+19.6%</td></tr>
+<tr><td>May 2026</td><td class="n">3,851,822</td><td class="n">4,299,149</td><td class="n">+11.6%</td><td class="n">+$3.29M</td><td class="n">+12.7%</td></tr>
+<tr><td>Jun 2026</td><td class="n">3,214,547</td><td class="n">2,905,134</td><td class="n">&minus;9.6%</td><td class="n">&minus;$2.22M</td><td class="n">&minus;5.7%</td></tr>
 </tbody></table>
 
 <div class="card warn">
@@ -180,22 +185,27 @@ exactly the same months, and compared it like for like against the model.</p>
 <thead><tr><th>One month ahead, total portfolio</th><th class="n">Typical month</th><th class="n">Average month</th><th class="n">Months inside &plusmn;7%</th></tr></thead>
 <tbody>
 <tr class="hl"><td><b>Carry forward, no model</b></td><td class="n"><b>4.7%</b></td><td class="n"><b>6.9%</b></td><td class="n"><b>67%</b></td></tr>
-<tr><td>Mo's machine-learning model</td><td class="n">7.7%</td><td class="n">10.0%</td><td class="n">40%</td></tr>
+<tr><td>Carry forward + new-arrival layer</td><td class="n">4.2%</td><td class="n">6.9%</td><td class="n">60%</td></tr>
+<tr><td>Mo's machine-learning model</td><td class="n">11.6%</td><td class="n">14.8%</td><td class="n">20%</td></tr>
 </tbody></table>
 <table style="margin:0 0 10px">
 <thead><tr><th>Thirteen weeks ahead, total portfolio</th><th class="n">Typical month</th><th class="n">Average month</th><th class="n">Months inside &plusmn;7%</th></tr></thead>
 <tbody>
-<tr><td>Carry forward, no model</td><td class="n">14.9%</td><td class="n"><b>13.0%</b></td><td class="n"><b>38%</b></td></tr>
-<tr><td>Mo's machine-learning model</td><td class="n"><b>13.8%</b></td><td class="n">18.6%</td><td class="n">31%</td></tr>
+<tr class="hl"><td><b>Carry forward, no model</b></td><td class="n">14.9%</td><td class="n"><b>13.0%</b></td><td class="n"><b>38%</b></td></tr>
+<tr><td>Carry forward + new-arrival layer</td><td class="n"><b>13.1%</b></td><td class="n">14.2%</td><td class="n">15%</td></tr>
+<tr><td>Mo's machine-learning model</td><td class="n">23.9%</td><td class="n">25.0%</td><td class="n">8%</td></tr>
 </tbody></table>
 <p style="margin:0 0 10px"><b>At the portfolio-month level the model does not currently beat carrying
-the last month forward.</b> At one month the simple method wins on every measure. At thirteen weeks the
-model's typical month is slightly better, but its average month is considerably worse, because when it
-misses it misses much harder.</p>
-<p style="margin:0">The model's four worst months at thirteen weeks were &minus;26%, &minus;48%,
-&minus;55% and +34%, all between January and April 2026. The carry-forward over the same four months
-was &minus;17%, &minus;24%, &minus;32% and &minus;9%. We are telling you this rather than selecting the
-view that favors the model, and it is the top priority on the accuracy workstream.</p>
+the last month forward.</b> The simple method wins at both horizons and on every measure. This is the
+most uncomfortable number in this document and it is the top priority on the accuracy workstream.</p>
+<p style="margin:0 0 10px">The one method that does improve on the carry-forward is the
+<b>new-arrival layer</b> &mdash; adding an estimate of volume from items not yet selling. It cuts the
+systematic lean from &minus;3.8% to &minus;0.9% at one month and from &minus;11.0% to &minus;1.4% at
+thirteen weeks. That is consistent with Section 3: the dominant error is missing new distribution, not
+mis-modeling existing items.</p>
+<p style="margin:0">A note on how this was measured, because it changed the answer. These comparisons
+originally scored a simplified version of the model rather than the one that ships. Correcting that
+made the model look <i>worse</i>, not better. We are reporting the corrected figures.</p>
 </div>
 
 <div class="card note">
@@ -640,9 +650,9 @@ be used to judge whether the forecast is good enough to plan against.</li>
 <li>Every method runs at roughly <b>half the error of a year-over-year comparison</b> (31&ndash;37%
 against 54.5%).</li>
 <li>Tracked the way a finance team tracks it &mdash; forecast vs actual each month on total portfolio
-volume &mdash; a typical month lands <b>8.8% out at one month and 11.8% out at thirteen weeks</b>, with
-only about a third of months inside &plusmn;7%. <b>That does not yet meet a 7%-per-month standard</b>,
-and two consecutive quarterly forecasts swung from &minus;$36M to +$18M.</li>
+volume &mdash; a typical month lands <b>11.5% out at one month and 21.3% out at thirteen weeks</b>,
+with fewer than one month in five inside &plusmn;7%. <b>That does not yet meet a 7%-per-month
+standard</b>, and the worst quarterly forecast was +$38.5M against a book averaging $18.7M a month.</li>
 <li><b>Mo runs continuously and the POS data arrives already processed.</b> Every SPINS refresh
 rebuilds the panel, re-scores cannibalization and elasticity, and updates every forecast with nobody
 opening a workbook. On raw monthly accuracy Mo is not yet clearly ahead of a careful manual process.
@@ -650,10 +660,12 @@ On the analyst time that number costs, how fast it can be re-cut by account, and
 the comparison is not close.</li>
 <li>The error is concentrated in <b>January&ndash;March and November&ndash;December</b>, but it is
 <b>not</b> primarily a seasonality problem &mdash; that assumption was tested this week and does not
-hold. At thirteen weeks the forecast leans <b>11.8% low</b>, and a measured 14.4% of volume in a target
-month comes from items and retailer combinations that did not exist when the forecast was made.</li>
+hold. At thirteen weeks the forecast leans <b>7.9% low</b>, and a measured 14.4% of volume in a target
+month comes from items and retailer combinations that did not exist when the forecast was made. Adding
+an estimate of that arriving volume cuts the lean to <b>1.4%</b> &mdash; the clearest single lever we
+have found.</li>
 <li><b>At the portfolio-month level the model does not currently beat simply carrying the last month
-forward</b> &mdash; 7.7% against 4.7% at one month, and worse on the average month at thirteen weeks
+forward</b> &mdash; 11.6% against 4.7% at one month, and worse again at thirteen weeks
 because its misses are larger when they come. We measured it like for like and are reporting it
 rather than selecting a flattering view. Closing that gap is the top accuracy priority.</li>
 <li><b>61% of growth comes from items and doors that did not exist a year ago</b>, which is the main

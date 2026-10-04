@@ -80,6 +80,20 @@ RECENCY_LAMBDA = 0.02
 LAPSE_WEEKS    = 9
 BOUNDARIES     = [13, 52]
 
+# ── Production parity (added 2026-10-03) ───────────────────────────────────────
+# Until now this script's `recursive` arm was a BARE recursive LightGBM, while
+# MO_27 production runs that model PLUS a seasonal blend, an STL fallback, and a
+# short/lapsed router. The chart legend called the retrospective line "same
+# model", which was false, and the retrospective line sloped flat or downward
+# through quarters where actuals ramped (Q1 2026: forecast -928 units/wk against
+# actual +1,647). `run_production` below replicates MO_27 so the honest backtest
+# measures what actually ships. `run_recursive` is kept as the bare arm so the
+# contribution of each production piece stays visible.
+SEASONAL_BLEND_WEIGHT = 0.10   # MO_27 line 68 — keep in lockstep
+MIN_SERIES_WEEKS_LOCAL = 13    # mo_panel.MIN_SERIES_WEEKS
+SEASONAL_INDEX_CSV = Path("outputs/mo59_seasonal_index.csv")
+SHORT_BAND_WIDTH = 0.45        # MO_27 `_bw` for last_value_seasonal
+
 QUARTERS = [
     ("Q1 2025", "2024-12-29", "2025-01-05", "2025-03-30"),
     ("Q2 2025", "2025-03-30", "2025-04-06", "2025-06-29"),
@@ -221,6 +235,133 @@ def run_recursive(df, feats, cut, qs, qe, eval_keys, trees, fweeks):
     return out
 
 
+def load_seasonal_index() -> dict[int, float]:
+    """MO_59 week_of_year -> stl_seasonal_index, as MO_27 loads it."""
+    if not SEASONAL_INDEX_CSV.exists():
+        print(f"  WARNING: {SEASONAL_INDEX_CSV} missing — STL fallback disabled, "
+              f"production parity is INCOMPLETE")
+        return {}
+    d = pd.read_csv(SEASONAL_INDEX_CSV)
+    return dict(zip(d["week_of_year"].astype(int), d["seasonal_index"].astype(float)))
+
+
+def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, want_band=False):
+    """MO_27's production path, evaluated honestly at `cut`.
+
+    Differs from run_recursive by everything MO_27 does on top of the bare model:
+      - short/lapsed router (lapsed -> 0; <13wk -> last value x STL seasonal)
+      - YAGO seasonal blend: pull each step toward lag52 x yoy_ratio
+      - STL fallback where lag52 is unavailable
+      - optional q10/q90 so the retrospective line can carry a real band
+
+    Every quantity is computed from data <= cut. lag52 at step k indexes
+    history[N-53+k] with k<=13, i.e. never past N-40, so it is always an actual.
+    """
+    tr = df[df["__time"] <= cut]
+    if len(tr) < 500:
+        return {}
+    va = tr.tail(max(200, len(tr) // 10))
+    models = {"q50": fit(tr[feats], np.log1p(tr["base_units"]),
+                         va[feats], np.log1p(va["base_units"]), trees)}
+    if want_band:
+        for tag, alpha in (("q10", 0.1), ("q90", 0.9)):
+            m = lgb.LGBMRegressor(objective="quantile", alpha=alpha,
+                                  n_estimators=trees, **LGBM)
+            m.fit(tr[feats], np.log1p(tr["base_units"]))
+            models[tag] = m
+
+    cats = {c: df[c].cat.categories for c in CAT_COLS if c in df.columns}
+
+    # Router state, from history at the cutoff only.
+    counts = tr.groupby(GROUP_COLS, observed=True)["base_units"].count()
+    short_keys = set(counts[counts < MIN_SERIES_WEEKS_LOCAL].index)
+    last_seen = tr.groupby(GROUP_COLS, observed=True)["__time"].max()
+    lapse_wk = ((cut - last_seen).dt.days / 7).round()
+    lapsed_keys = set(lapse_wk[lapse_wk >= LAPSE_WEEKS].index)
+
+    out = {}
+    for key, g in tr.groupby(GROUP_COLS, observed=True):
+        if key not in eval_keys:
+            continue
+        g = g.sort_values("__time")
+
+        # ── short / lapsed router, mirroring MO_27 ──────────────────────────
+        if key in short_keys or key in lapsed_keys:
+            if key in lapsed_keys:
+                lvl, bw = 0.0, 0.0                      # lapsed_no_recent_sales
+            else:
+                tail = pd.to_numeric(g["base_units"].tail(4), errors="coerce")
+                lvl = (float(tail.dropna().iloc[-1]) if tail.notna().any()
+                       else float("nan"))               # last_value_seasonal
+                bw = SHORT_BAND_WIDTH
+            for h, fd in enumerate(fweeks[:HORIZON], start=1):
+                if not (qs <= fd <= qe):
+                    continue
+                sf = 1.0 + seasonal.get(int(fd.isocalendar().week), 0.0) if seasonal else 1.0
+                u = lvl * max(0.1, sf)
+                u = 0.0 if not np.isfinite(u) else max(0.0, u)
+                out[(key, fd)] = ({"q50": u, "q10": max(0.0, u * (1 - bw)),
+                                   "q90": u * (1 + bw)} if want_band else u)
+            continue
+
+        if len(g) < 4:
+            continue
+
+        # ── autoregressive path with the production seasonal blend ──────────
+        hist = list(pd.to_numeric(g["base_units"], errors="coerce").fillna(0))
+        n = len(hist)
+        lag52_seq = [float(hist[n - 53 + k]) if 0 <= (n - 53 + k) < n else np.nan
+                     for k in range(1, HORIZON + 1)]
+        yago_anchor = float(hist[n - 52]) if n >= 52 else None
+        yoy_ratio = (float(np.clip(hist[-1] / yago_anchor, 0.5, 2.0))
+                     if yago_anchor and yago_anchor > 0 else None)
+
+        state = g.iloc[-1].copy()
+        for h in range(1, HORIZON + 1):
+            if h > len(fweeks):
+                break
+            fd = fweeks[h - 1]
+            t2 = float(fd.isocalendar().week)
+            state["week_sin"] = np.sin(2 * np.pi * t2 / 52)
+            state["week_cos"] = np.cos(2 * np.pi * t2 / 52)
+            state["week_sin26"] = np.sin(2 * np.pi * t2 / 26)
+            state["week_cos26"] = np.cos(2 * np.pi * t2 / 26)
+            state["base_units_lag1"] = hist[-1]
+            state["base_units_roll4_avg"] = float(np.mean(hist[-4:]))
+            state["base_units_roll8_avg"] = float(np.mean(hist[-8:]))
+            state["base_units_roll13_avg"] = float(np.mean(hist[-13:]))
+            state["base_units_wow_delta"] = hist[-1] - hist[-2] if len(hist) > 1 else 0.0
+            lag52 = lag52_seq[h - 1]
+            if "base_units_lag52" in feats and np.isfinite(lag52):
+                state["base_units_lag52"] = lag52
+            X = pd.DataFrame([state])[feats]
+            for c, cc in cats.items():
+                if c in X.columns:
+                    X[c] = pd.Categorical(X[c], categories=cc)
+
+            vals = {t: float(np.clip(np.expm1(m.predict(X))[0], 0, None))
+                    for t, m in models.items()}
+            base = vals["q50"]
+
+            # Seasonal blend (MO_27 lines 741-772): pull toward lag52 x yoy_ratio.
+            # Without this the AR signal collapses to flat and the retrospective
+            # line slopes the wrong way through a ramping quarter.
+            if yoy_ratio is not None and np.isfinite(lag52) and lag52 > 0 and base > 0:
+                seasonal_ref = lag52 * yoy_ratio
+                mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * base
+                        + SEASONAL_BLEND_WEIGHT * seasonal_ref) / base
+                vals = {t: max(0.0, v * mult) for t, v in vals.items()}
+            elif seasonal and base > 0:
+                # STL fallback, only when the YAGO blend did not fire
+                stl = seasonal.get(int(fd.isocalendar().week), 0.0)
+                vals = {t: max(0.0, v * max(0.1, 1.0 + stl)) for t, v in vals.items()}
+
+            hist.append(vals["q50"])     # blended q50 seeds the next step, as MO_27 does
+            if qs <= fd <= qe:
+                out[(key, fd)] = vals if want_band else vals["q50"]
+    return out
+
+
 def score(truth, pred):
     keys = [k for k in truth if k in pred]
     if not keys:
@@ -234,6 +375,7 @@ def score(truth, pred):
 def main(account, channel, trees):
     feats = list(pickle.load(
         open("outputs/model_retailer_sales_q50_v10_full.pkl", "rb")).feature_name_)
+    seasonal_idx = load_seasonal_index()
     df = load_panel(feats)
     end = df["__time"].max()
     # SPINS weeks land on a fixed weekday grid. Deriving forecast dates as `cutoff + N weeks`
@@ -248,7 +390,7 @@ def main(account, channel, trees):
     print(f"  evaluate on {account} {channel}: {int(ev.sum()):,} rows")
     print(f"  router: lapsed->0 | history < N weeks -> DIRECT | >= N -> RECURSIVE  (N in {BOUNDARIES})\n")
 
-    hdr = ["ENSEMBLE-13", "ENSEMBLE-52", "direct", "recursive", "naive", "naiveYoY"]
+    hdr = ["ENSEMBLE-13", "ENSEMBLE-52", "direct", "recursive", "PRODUCTION", "naive", "naiveYoY"]
     print(f"  {'quarter':<9s} {'ser':>4s} {'actual':>10s} | " +
           " ".join(f"{h:>14s}" for h in hdr))
     results = {}
@@ -279,6 +421,10 @@ def main(account, channel, trees):
         fweeks = future_weeks(WEEKS, cut, HORIZON)
         dpred = run_direct(df, feats, cut, qs, qe, anchors, trees, fweeks)
         rpred = run_recursive(df, feats, cut, qs, qe, eval_keys, trees, fweeks)
+        # Production parity arm: what MO_27 actually ships, with a real band.
+        pband = run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks,
+                               seasonal_idx, want_band=True)
+        ppred = {k: v["q50"] for k, v in pband.items()}
         lastv, yoy = {}, {}
         for key, g in hist_at_cut.groupby(GROUP_COLS, observed=True):
             if key not in eval_keys:
@@ -326,6 +472,7 @@ def main(account, channel, trees):
         cells = []
         for name, pred in (("ensemble_13", ens[13]), ("ensemble_52", ens[52]),
                            ("direct", dpred), ("recursive", rpred),
+                           ("production", ppred),
                            ("naive", lastv), ("naive_yoy", yoy)):
             sc = score(truth, pred)
             row[name] = sc
@@ -335,12 +482,21 @@ def main(account, channel, trees):
         wk = {}
         for name, pred in (("ensemble_13", ens[13]), ("ensemble_52", ens[52]),
                            ("direct", dpred), ("recursive", rpred),
+                           ("production", ppred),
                            ("naive", lastv), ("naive_yoy", yoy)):
             agg = {}
             for k, v in pred.items():
                 if k in truth:
                     agg[str(k[1].date())] = agg.get(str(k[1].date()), 0.0) + float(v)
             wk[name] = agg
+        # Real q10/q90 for the production arm. Before this, the chart mirrored q50
+        # into both bounds, so the retrospective "confidence band" had zero width.
+        for tag in ("q10", "q90"):
+            agg = {}
+            for k, v in pband.items():
+                if k in truth:
+                    agg[str(k[1].date())] = agg.get(str(k[1].date()), 0.0) + float(v[tag])
+            wk[f"production_{tag}"] = agg
         wk["actual"] = {}
         for k, v in truth.items():
             wk["actual"][str(k[1].date())] = wk["actual"].get(str(k[1].date()), 0.0) + float(v)
@@ -352,7 +508,8 @@ def main(account, channel, trees):
     if ok:
         print(f"\n  MEAN over {len(ok)} honest quarters (every one a true holdout):")
         summ = {}
-        for name in ("ensemble_13", "ensemble_52", "direct", "recursive", "naive", "naive_yoy"):
+        for name in ("ensemble_13", "ensemble_52", "direct", "recursive", "production",
+                     "naive", "naive_yoy"):
             vals = [results[q][name]["wmape"] for q in ok if results[q].get(name)]
             bias = [abs(results[q][name]["bias"] - 1) for q in ok if results[q].get(name)]
             if vals:

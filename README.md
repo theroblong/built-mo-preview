@@ -6,6 +6,79 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 208: the retrospective line was never the production model (2026-10-03)
+
+Jason, comparing bracken chart v5 against v11: "It seems like we were getting closer to the Q1 2026
+forecast with v5... Did we lose something good there?" Then, on the charts: "at least v5 has a better
+trend slope than v11." Both observations were right, and chasing them found a real defect.
+
+### What the chart was actually showing
+
+MO_80's `recursive` arm is a **bare** recursive LightGBM. Production MO_27 is that model **plus** a
+seasonal blend (`SEASONAL_BLEND_WEIGHT = 0.10`), the MO_59 STL fallback, and the short/lapsed router.
+When the quarterly badges were rewired to MO_80 on Oct 1, the retrospective line silently became a
+different model from the forward line — while the legend still read "Quarterly retrospective (same
+model)". That label was false.
+
+Measured consequence, within-quarter slope capture (forecast slope ÷ actual slope):
+
+| | median | Q1 2026 |
+|---|---|---|
+| v5 (leaked, in-house path) | +0.29 | +0.50 |
+| v11 (bare recursive) | **+0.08** | **−0.56** |
+| **new (production parity)** | **+0.29** | **+0.50** |
+
+v11's Q1 2026 retrospective **declined −928 units/wk through a quarter where actuals rose +1,647**.
+It sloped the wrong way. Leakage cannot cause that — a leaked model tracks trend too well, not
+inverted. This was a genuine regression.
+
+### Three things were lost, all now restored
+
+1. **Seasonal blend** — the reason the slope inverted
+2. **Real q10/q90 band** — v11 mirrored q50 into both bounds, so the "confidence band" had zero
+   width. MO_80 now fits alpha=0.1/0.9 alongside 0.5
+3. **The "same model" guarantee** — `run_production()` replicates MO_27, and the generator prefers it
+
+Q1 2026 chart badge: **−56.1% → −38.3%**, better than v5's *leaked* −40.5%, and honest.
+
+### ⚠️ But production parity makes the model look WORSE, not better
+
+This also hit MO_92, which imported `run_recursive` — so yesterday's white-paper numbers scored a
+strawman. Re-run on the production path, like-for-like on identical months, full portfolio:
+
+**T+1 (n=15)**
+
+| method | median | mean | bias | within ±7% |
+|---|---|---|---|---|
+| **flat carry-forward** | **4.7%** | **6.9%** | −3.8% | **67%** |
+| flat + arrival layer | 4.2% | 6.9% | **−0.9%** | 60% |
+| LightGBM bare recursive | 7.7% | 10.0% | −8.0% | 40% |
+| **LightGBM PRODUCTION** | 11.6% | 14.8% | −4.6% | 20% |
+
+**T+3 (n=13)**: flat 14.9/13.0/−11.0%; arrival 13.1/14.2/−1.4%; bare 13.8/18.6/−12.5%;
+**production 23.9/25.0/−12.3%**.
+
+MO_80 means over 7 honest quarters: naive 32.9 < direct 34.0 < recursive 40.6 < **production 43.8**.
+Production wins the *ramp* quarters (Q1 2025 47.2 vs 49.7; Q1 2026 51.5 vs 58.7) and has better bias
+(0.223 vs 0.240) and slope, but costs ~3pp mean wMAPE.
+
+**So the "flat beats the model" finding from update 207 survives and strengthens.** The correction I
+expected to rehabilitate the model did the opposite. White paper updated to the production figures:
+portfolio-month error 11.5% at T+1 and 21.3% at 13wk, fewer than 1 month in 5 inside ±7%.
+
+Likely cause worth chasing: production hard-zeroes lapsed series (`lapsed_no_recent_sales`), while
+MO_80's ensemble uses `lapse_resume_probability` expected value. 365 of 878 lapses resumed at ~1.06x.
+
+### Shipped
+
+- `MO_80`: `run_production()` + `load_seasonal_index()` + q10/q90 + `production` arm in output
+- `MO_92`: scores the production path, not bare recursive
+- `build_forecast_chart_data.py`: prefers the `production` arm, uses its real band, warns loudly if
+  a stale MO_80 output forces band mirroring
+- chart regenerated; `outputs/mo80_prev_bare_recursive.json` + `mo92_bare_recursive.csv` kept for diff
+
+---
+
 ## README update 207: it was never seasonality — 14.4% of Q volume comes from cells that don't exist yet (2026-10-03)
 
 Jason stopped a month-of-year bias correction before it was built, on the grounds that distribution

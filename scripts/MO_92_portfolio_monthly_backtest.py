@@ -27,13 +27,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from MO_80_quarterly_honest_backtest import fit, load_panel, run_recursive  # noqa: F401
+from MO_80_quarterly_honest_backtest import (  # noqa: F401
+    fit, load_panel, load_seasonal_index, run_production, run_recursive)
 from mo_panel import GROUP_COLS
 
 OUT_JSON = Path("outputs/mo92_portfolio_monthly_backtest.json")
 OUT_CSV = Path("outputs/mo92_portfolio_monthly_backtest.csv")
 TREES = 2000
 ORIGINS = pd.period_range("2025-01", "2026-05", freq="M")
+SEASONAL: dict[int, float] = {}
 PKL_CANDIDATES = [
     "outputs/model_retailer_sales_q50_v11_full.pkl",
     "outputs/model_retailer_sales_q50_v10_full.pkl",
@@ -50,6 +52,8 @@ def feature_list() -> list[str]:
 
 def main() -> None:
     feats = feature_list()
+    global SEASONAL
+    SEASONAL = load_seasonal_index()
     df = load_panel(feats)
     df["ym"] = df["__time"].dt.tz_convert("UTC").dt.to_period("M")
     weeks = pd.DatetimeIndex(pd.to_datetime(sorted(pd.unique(df["__time"])), utc=True))
@@ -80,7 +84,10 @@ def main() -> None:
 
         hist = df[df["__time"] <= cut]
         eval_keys = set(hist.groupby(GROUP_COLS, observed=True).groups.keys())
-        pred = run_recursive(df, feats, cut, qs, qe, eval_keys, TREES, fweeks)
+        # Production path, not bare recursive. run_recursive omits the seasonal blend,
+        # the STL fallback and the short/lapsed router that MO_27 actually ships, so
+        # scoring it understated production and made the flat-vs-model comparison unfair.
+        pred = run_production(df, feats, cut, qs, qe, eval_keys, TREES, fweeks, SEASONAL)
         if not pred:
             print(f"  {origin}: no predictions - skipped")
             continue
