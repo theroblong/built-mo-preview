@@ -6,6 +6,84 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 211: seasonality doesn't repeat, linear_tree loses — but capping at 1.5x is free (2026-10-05)
+
+Jason: "How can we best capture the growth and seasonal trend that LightGBM can't see? Should we add
+linear regression, prophet or SARIMAX besides STL?"
+
+Testing the premise settled it, and the guardrail built along the way produced the only win.
+
+### SEASONALITY: the signal doesn't repeat, so no seasonal method can work
+
+YoY correlation of the DETRENDED weekly shape, 271 mature series (>=104wk, 53.7% of volume):
+
+| statistic | value |
+|---|---|
+| median | **+0.079** |
+| volume-weighted | **+0.259** |
+| share r > 0.6 | **4%** (6% of volume) |
+| share r > 0.4 | 14% (29% of volume) |
+
+A genuinely seasonal CPG series shows r > 0.6. **4% of ours do.**
+
+- **SARIMAX** — worst candidate. Period-52 on ~150 obs needs 52 seasonal lags. Skip.
+- **Prophet** — no, not per-series. Would fit noise, same trap STL is in.
+- **Linear regression standalone** — already lost (Ridge 60-81, Lasso 57-80).
+- ⚠️ **STL is NOT data-starved.** Panel = 152 weeks = 2.92 cycles, vs the 104 STL needs. "Wait for
+  more data" was the wrong diagnosis for STL's failure.
+- Only seasonal idea still alive: a **pooled** factor on high-volume mature series, justified solely
+  by volume-weighted +0.259 being 3x the median +0.079 (big series are more seasonal).
+
+### GROWTH: linear_tree lifts the ceiling, then loses badly
+
+MO_97 Part A replicates README 204 exactly and proves the mechanism is fixable:
+
+| leaves | max prediction | above training max |
+|---|---|---|
+| constant | **59.39** (README 204's exact number) | 0% — still capped |
+| linear_tree | **81.02** | 100% — **CEILING LIFTED** |
+
+MO_98, real data, all 4 folds:
+
+| arm | cap 1.5 | cap 2.0 | cap 3.0 | no cap |
+|---|---|---|---|---|
+| **constant leaves** | **34.23** | 34.59 | 34.80 | 34.68 |
+| linear_tree λ=1 | 47.68 | 49.89 | 52.88 | **1.4e18** |
+| linear_tree λ=10 | 39.68 | 41.88 | 45.97 | 1.1e18 |
+| linear_tree λ=100 | 37.74 | 38.96 | 40.42 | 3.7e17 |
+
+Best linear_tree 37.74 vs best constant 34.23 = **+3.51pp WORSE**. Uncapped it diverges to ~1e18;
+raw log predictions hit **26.9 = 498 BILLION units** for a brand selling ~4M/month. More
+regularization is monotonically better — i.e. the closer to constant leaves, the better.
+
+⚠️ An intermediate **single-fold** reading (32.49 vs 32.97) looked like a win and was an ARTIFACT.
+All four folds reversed it. Never call a mechanism on one fold.
+
+### ⭐ FREE WIN: cap each forecast at 1.5x that series' own historical max
+
+| cap | 2026-06-07 | 2026-03-08 | 2025-12-07 | 2025-09-07 | mean |
+|---|---|---|---|---|---|
+| **1.5x** | 32.60 | 31.06 | 41.39 | 31.88 | **34.23** |
+| 2.0x | 33.22 | 31.38 | 41.75 | 32.02 | 34.59 |
+| none | 32.97 | 31.75 | 41.90 | 32.08 | 34.68 |
+
+**−0.45pp and it helps ALL FOUR folds** (−0.37, −0.69, −0.51, −0.20). It even helps the fold
+forecasting into Q1 2026 despite 39% of Q1 volume exceeding pre-cutoff max — because the model never
+predicted those breakouts anyway, so the cap only trims over-predictions it shouldn't have made.
+
+⚠️ 1.5 was the TIGHTEST tested and the trend is monotonic toward tighter. Test 1.2/1.3 — but a cap
+below ~1.3 starts clamping normal variation and becomes bias correction dressed as a guardrail.
+
+### Shipped
+
+- `MO_97_linear_tree.py` — controlled extrapolation probe + objective sweep
+- `MO_98_linear_tree_guardrail.py` — bounded extrapolation; one fit per (lambda, fold) scored at
+  every cap; baseline scored under the SAME caps so the cap can't be what wins
+
+All jobs stopped. Optuna v2 preserved at 12 trials, best 32.55 vs 34.42 baseline.
+
+---
+
 ## README update 210: pack_count predicts TREND, not LEVEL — and the model can't use it (2026-10-05)
 
 Jason: "Is pack count being properly considered by LightGBM? ... I just want to make sure it's not
