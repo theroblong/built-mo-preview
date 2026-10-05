@@ -157,20 +157,88 @@ r1_actuals = druid(f"""
 """, f"{top_acct} actuals (from {_LOOKBACK_DATE})")
 r1_actuals = normalize_dates(r1_actuals)
 
+
+# ── Forward-forecast source switch ────────────────────────────────────
+# The forward forecast normally comes from Druid's `retailer_sales_forecast`,
+# which holds the RECURSIVE production output. Setting MO_FORECAST_SOURCE=direct
+# reads MO_27D's local parquet instead, so the direct multi-horizon forecast can
+# be charted and compared without ingesting a second datasource into Druid.
+# MO_103 measured direct at 32.83 against recursive 36.44, winning at every
+# horizon -- but direct trains one model per horizon, so adjacent weeks come from
+# different models and the curve can jigsaw. That is exactly what this chart is
+# for: the by-horizon numbers cannot show smoothness, only the plot can.
+FORECAST_SOURCE = os.environ.get("MO_FORECAST_SOURCE", "druid").lower().strip()
+_DIRECT_PARQUET = Path(__file__).parent.parent / "scripts" / "outputs" / "retailer_sales_forecast_direct.parquet"
+_direct_cache = {}
+
+
+def _direct_df():
+    # pandas is imported locally further down this script (line ~501), so it is
+    # not in scope when this runs at module level. Import it here rather than
+    # moving the existing import and changing load order.
+    import pandas as pd
+    if "df" not in _direct_cache:
+        if not _DIRECT_PARQUET.exists():
+            raise SystemExit(
+                f"\nFATAL: MO_FORECAST_SOURCE=direct but {_DIRECT_PARQUET} is missing.\n"
+                f"  Run scripts/MO_27D_direct_forecast.py first.")
+        _direct_cache["df"] = pd.read_parquet(_DIRECT_PARQUET)
+        print(f"  forward forecast source: DIRECT multi-horizon "
+              f"({len(_direct_cache['df']):,} rows from MO_27D)")
+    return _direct_cache["df"]
+
+
+def forecast_rows(label, account=None, upc=None, channel="CONVENTIONAL|FOOD",
+                  with_anchor=False):
+    """Forward forecast in the shape the chart expects, from Druid or MO_27D."""
+    if FORECAST_SOURCE != "direct":
+        extra = ("  ANY_VALUE(anchor_base_units) AS anchor_units,\n"
+                 "      ANY_VALUE(anchor_arp) AS anchor_arp,\n      ") if with_anchor else ""
+        where = [f"channel_outlet = '{channel}'"]
+        if account:
+            where.append(f"retail_account = '{account}'")
+        if upc:
+            where.append(f"upc = '{upc}'")
+        return druid(f"""
+            SELECT
+              ANY_VALUE(anchor_date) AS anchor_date,
+              {extra}forecast_week_number,
+              SUM(forecast_units_base) AS forecast_units,
+              SUM(forecast_units_low)  AS forecast_low,
+              SUM(forecast_units_high) AS forecast_high
+            FROM "retailer_sales_forecast"
+            WHERE {' AND '.join(where)}
+            GROUP BY forecast_week_number
+            ORDER BY forecast_week_number
+        """, label)
+    import pandas as pd  # noqa: F401 - same local-scope reason as _direct_df
+    d = _direct_df()
+    m = d["channel_outlet"] == channel
+    if account:
+        m &= d["retail_account"] == account
+    if upc:
+        m &= d["upc"] == upc
+    d = d[m]
+    if d.empty:
+        print(f"  {label}: no direct rows matched — empty")
+        return []
+    g = d.groupby("forecast_week_number", as_index=False).agg(
+        anchor_date=("anchor_date", "first"),
+        anchor_units=("anchor_base_units", "first"),
+        anchor_arp=("anchor_arp", "first"),
+        forecast_units=("forecast_units_base", "sum"),
+        forecast_low=("forecast_units_low", "sum"),
+        forecast_high=("forecast_units_high", "sum"))
+    g["forecast_week_number"] = g["forecast_week_number"].astype(int)
+    g = g.sort_values("forecast_week_number")
+    print(f"  {label}: {len(g)} weeks from MO_27D direct parquet")
+    cols = ["anchor_date", "forecast_week_number", "forecast_units",
+            "forecast_low", "forecast_high"] + (["anchor_units", "anchor_arp"] if with_anchor else [])
+    return g[cols].to_dict("records")
+
+
 # 3. Primary retailer — 13-week forward forecast
-r1_forecast = druid(f"""
-    SELECT
-      ANY_VALUE(anchor_date)       AS anchor_date,
-      forecast_week_number,
-      SUM(forecast_units_base)     AS forecast_units,
-      SUM(forecast_units_low)      AS forecast_low,
-      SUM(forecast_units_high)     AS forecast_high
-    FROM "retailer_sales_forecast"
-    WHERE channel_outlet = 'CONVENTIONAL|FOOD'
-      AND retail_account = '{top_acct}'
-    GROUP BY forecast_week_number
-    ORDER BY forecast_week_number
-""", f"{top_acct} forecast (13w)")
+r1_forecast = forecast_rows(f"{top_acct} forecast (13w)", account=top_acct)
 r1_forecast = add_forecast_dates(r1_forecast)
 
 # 4. Secondary retailer — actuals from start of prior year (base + incr)
@@ -195,19 +263,7 @@ if second_acct:
 # 5. Secondary retailer — 13-week forward forecast
 r2_forecast = []
 if second_acct:
-    r2_forecast = druid(f"""
-        SELECT
-          ANY_VALUE(anchor_date)       AS anchor_date,
-          forecast_week_number,
-          SUM(forecast_units_base)     AS forecast_units,
-          SUM(forecast_units_low)      AS forecast_low,
-          SUM(forecast_units_high)     AS forecast_high
-        FROM "retailer_sales_forecast"
-        WHERE channel_outlet = 'CONVENTIONAL|FOOD'
-          AND retail_account = '{second_acct}'
-        GROUP BY forecast_week_number
-        ORDER BY forecast_week_number
-    """, f"{second_acct} forecast (13w)")
+    r2_forecast = forecast_rows(f"{second_acct} forecast (13w)", account=second_acct)
     r2_forecast = add_forecast_dates(r2_forecast)
 
 # 6. Top 5 SKUs at primary retailer (last 13 weeks)
@@ -253,22 +309,7 @@ if focal_upc:
     """, f"Top SKU actuals: {focal_desc[:40]}")
     sku_actuals = normalize_dates(sku_actuals)
 
-    sku_forecast = druid(f"""
-        SELECT
-          ANY_VALUE(anchor_date)       AS anchor_date,
-          ANY_VALUE(anchor_base_units) AS anchor_units,
-          ANY_VALUE(anchor_arp)        AS anchor_arp,
-          forecast_week_number,
-          SUM(forecast_units_base)     AS forecast_units,
-          SUM(forecast_units_low)      AS forecast_low,
-          SUM(forecast_units_high)     AS forecast_high
-        FROM "retailer_sales_forecast"
-        WHERE upc = '{focal_upc}'
-          AND channel_outlet = 'CONVENTIONAL|FOOD'
-          AND retail_account = '{top_acct}'
-        GROUP BY forecast_week_number
-        ORDER BY forecast_week_number
-    """, f"Top SKU forecast: {focal_desc[:40]}")
+    sku_forecast = forecast_rows(f"Top SKU forecast: {focal_desc[:40]}", account=top_acct, upc=focal_upc, with_anchor=True)
     sku_forecast = add_forecast_dates(sku_forecast)
 
 # ── Summary stats ─────────────────────────────────────────────────────
@@ -983,7 +1024,14 @@ try:
             # the forward line came from MO_27 made the legend's "same model" claim false and
             # flattened the retrospective slope (Q1 2026 ran -928 units/wk against actual
             # +1,647). The production arm restores slope capture to +0.50 on that quarter.
-            _arm = "production" if (_r or {}).get("production") else "recursive"
+            # The retrospective arm MUST match the forward line, or the chart shows
+            # one model's history beside another model's forecast under a legend
+            # that claims they are the same. MO_FORECAST_SOURCE=direct switches
+            # both. MO_80 Q1 2026: direct 31.2 against production 51.5.
+            if FORECAST_SOURCE == "direct" and (_r or {}).get("direct"):
+                _arm = "direct"
+            else:
+                _arm = "production" if (_r or {}).get("production") else "recursive"
             if not _r or not _r.get(_arm):
                 _miss.append(_q.get("quarter_label")); continue
             _q["wmape"]        = round(_r[_arm]["wmape"], 1)
@@ -1435,7 +1483,7 @@ tr:last-child td{border-bottom:none;}
     <div class="kpi"><div class="kv g" id="acc-wmape">—</div><div class="kl">Mo wMAPE (holdout)</div><div class="ks">vs Naive YoY: <span id="acc-naive-wmape">—</span></div></div>
     <div class="kpi"><div class="kv b" id="acc-holdout-wks">13 wk</div><div class="kl">Holdout window</div><div class="ks">No actuals used after training cutoff</div></div>
     <div class="kpi"><div class="kv a" id="acc-train-cutoff">—</div><div class="kl">Training cutoff</div><div class="ks">Anchor for all predictions</div></div>
-    <div class="kpi"><div class="kv p">Recursive AR</div><div class="kl">Forecast method</div><div class="ks">No crystal ball — directional signal</div></div>
+    <div class="kpi"><div class="kv p">{{FORECAST_METHOD_LABEL}}</div><div class="kl">Forecast method</div><div class="ks">{{FORECAST_METHOD_SUB}}</div></div>
   </div>
 
   <div class="chart-card">
@@ -2324,7 +2372,18 @@ html_out = html_out.replace("__GENERATED__", payload["generated"])
 html_out = html_out.replace("__R1_LIFT_PCT__",  str(payload["r1_lift_pct"]))
 html_out = html_out.replace("__SKU_LIFT_PCT__", str(payload["sku_lift_pct"]))
 
-out_path = Path(__file__).parent / "bracken_forecast_charts.html"
+# The method tile was hardcoded to "Recursive AR" and stayed that way on the
+# direct chart, labelling one model's output as another's. Drive it from the source.
+_method_label = ("Direct multi-horizon" if FORECAST_SOURCE == "direct" else "Recursive AR")
+_method_sub = ("One model per week ahead — no lag chain"
+               if FORECAST_SOURCE == "direct"
+               else "No crystal ball — directional signal")
+html_out = html_out.replace("{{FORECAST_METHOD_LABEL}}", _method_label)
+html_out = html_out.replace("{{FORECAST_METHOD_SUB}}", _method_sub)
+
+out_path = Path(__file__).parent / ("bracken_forecast_charts_direct.html"
+                                    if FORECAST_SOURCE == "direct"
+                                    else "bracken_forecast_charts.html")
 out_path.write_text(html_out, encoding="utf-8")
 print(f"\n✓ Written to {out_path}")
 print(f"  Open with: open {out_path}")

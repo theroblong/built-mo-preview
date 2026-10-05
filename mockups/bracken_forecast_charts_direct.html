@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Forecast vs. Actuals</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+:root {
+  --bg:#0d0f14; --surface:#161921; --surface2:#1e2330; --border:#2a2f3d;
+  --text:#e8ecf4; --muted:#8892a4; --accent:#4f8ef7; --accent2:#38c9a0;
+  --amber:#f5a623; --red:#e05252; --purple:#9b6dff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+  font-size:14px;line-height:1.6;padding:0 40px;
+  padding-bottom:env(safe-area-inset-bottom,0px);}
+.page{max-width:1600px;margin:0 auto;padding:40px 0 72px;}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:10px;}
+h1{font-size:22px;font-weight:700;margin-bottom:6px;}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px;}
+.data-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+  font-weight:600;padding:4px 10px;border-radius:20px;
+  background:rgba(56,201,160,.12);color:var(--accent2);
+  border:1px solid rgba(56,201,160,.25);margin-bottom:28px;}
+.data-badge::before{content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--accent2);flex-shrink:0;}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;margin-bottom:24px;background:var(--surface);
+  border-radius:10px;padding:4px;border:1px solid var(--border);overflow-x:auto;}
+.tab{flex:1;min-width:120px;padding:9px 14px;border-radius:7px;font-size:12px;
+  font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;text-align:center;}
+.tab:hover{color:var(--text);}
+.tab.active{background:var(--surface2);color:var(--text);font-weight:600;}
+.panel{display:none;} .panel.active{display:block;}
+
+/* KPIs */
+.kpi-strip{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 18px;flex:1;min-width:120px;}
+.kv{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.kv.g{color:var(--accent2);} .kv.b{color:var(--accent);}
+.kv.a{color:var(--amber);}   .kv.p{color:var(--purple);}
+.kl{font-size:11px;color:var(--muted);margin-top:2px;}
+.ks{font-size:10px;color:var(--accent);margin-top:1px;}
+
+/* Charts */
+.chart-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:24px;margin-bottom:16px;}
+.ct{font-size:13px;font-weight:600;margin-bottom:3px;}
+.cs{font-size:11px;color:var(--muted);margin-bottom:18px;}
+.cw{position:relative;height:340px;}
+
+/* Insight */
+.insight{border-radius:8px;padding:16px 20px;font-size:13px;line-height:1.6;
+  display:flex;gap:14px;align-items:flex-start;margin-top:4px;}
+.insight.g{background:rgba(56,201,160,.07);border:1px solid rgba(56,201,160,.2);}
+.insight.b{background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);}
+.insight.a{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);}
+.ii{font-size:16px;flex-shrink:0;margin-top:2px;}
+.il{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.insight.g .il{color:var(--accent2);} .insight.b .il{color:var(--accent);}
+.insight.a .il{color:var(--amber);}
+
+/* SKU table */
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+  font-weight:600;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:10px 10px;border-bottom:1px solid rgba(42,47,61,.5);color:var(--text);}
+tr:last-child td{border-bottom:none;}
+.rank{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+.units-cell{font-variant-numeric:tabular-nums;}
+.fcast-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:3px;
+  background:rgba(79,142,247,.12);color:var(--accent);}
+
+/* Context chip row */
+.ctx-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.ctx{font-size:11px;padding:4px 10px;border-radius:20px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);}
+.ctx strong{color:var(--text);}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-line{width:24px;height:2px;flex-shrink:0;}
+.leg-dash{width:24px;height:2px;flex-shrink:0;
+  background:repeating-linear-gradient(90deg,currentColor 0,currentColor 4px,transparent 4px,transparent 8px);}
+.leg-band{width:16px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* Accuracy proof divider */
+.holdout-label{display:inline-flex;align-items:center;gap:6px;font-size:11px;
+  font-weight:600;padding:3px 10px;border-radius:4px;
+  background:rgba(245,166,35,.12);color:var(--amber);
+  border:1px solid rgba(245,166,35,.25);}
+
+.footnote{font-size:11px;color:var(--muted);margin-top:20px;line-height:1.5;
+  padding-top:16px;border-top:1px solid var(--border);}
+.footnote strong{color:var(--text);}
+
+/* Promo lift toggle */
+.promo-toggle{display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);font-size:11px;font-weight:600;
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;
+  margin-bottom:12px;letter-spacing:.02em;}
+.promo-toggle:hover{color:var(--text);border-color:var(--muted);}
+.promo-toggle.on{background:rgba(245,166,35,.12);border-color:rgba(245,166,35,.35);color:var(--amber);}
+
+@media(max-width:640px){.kpi{min-width:100px;} h1{font-size:18px;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="eyebrow">BUILT × Aevah — Forecasting Use Case</div>
+<h1>Forecast vs. Actuals — Live Data</h1>
+<p class="subtitle" id="subtitle">Sell-through demand · Conventional Food · SPINS retailers</p>
+<div class="data-badge" id="data-badge">Live SPINS data · generated 2026-10-05 15:01</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('portfolio')">Portfolio View</button>
+  <button class="tab" onclick="showTab('sku')">SKU Detail</button>
+  <button class="tab" onclick="showTab('comparison')">Retailer Comparison</button>
+  <button class="tab" onclick="showTab('accuracy')">Accuracy Proof</button>
+</div>
+
+<!-- ── TAB 1: Portfolio (Bracken) ──────────────────────────────────── -->
+<div class="panel active" id="tab-portfolio">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Retailer:</strong> <span id="r1-label">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food</div>
+    <div class="ctx"><strong>Scope:</strong> All BUILT products</div>
+    <div class="ctx"><strong>Actuals thru:</strong> <span id="anchor-label">—</span></div>
+    <div class="ctx"><strong>Forecast:</strong> <span id="fcast-range-label">—</span></div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kv g" id="kpi-wmape">3.4%</div><div class="kl">Model error (wMAPE)</div><div class="ks">vs 39.7% naive baseline</div></div>
+    <div class="kpi"><div class="kv b" id="kpi-series">—</div><div class="kl">Active forecast series</div><div class="ks">SKU × retailer × geography</div></div>
+    <div class="kpi"><div class="kv g" id="kpi-yoy">—</div><div class="kl">YoY unit change (L13w)</div></div>
+    <div class="kpi"><div class="kv a">13 wk</div><div class="kl">Forward forecast horizon</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct" id="chart1-title">Weekly Demand — Actuals + 13-Week Forecast</div>
+    <div class="cs">SPINS sell-through actuals (prior year to present) · dashed = 13-week forward forecast · band = confidence interval (low/high)</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Base Forecast</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.14);border:1px dashed rgba(79,142,247,.38)"></div>Confidence band (q10–q90)</div>
+    </div>
+    <button class="promo-toggle" id="promo-btn-portfolio" data-lift-pct="153.1" onclick="setPromoMode(!promoOn)">＋ Promo Lift (153.1% avg)</button>
+    <div class="cw"><canvas id="chartPortfolio"></canvas></div>
+  </div>
+
+  <div class="insight g">
+    <div class="ii">◎</div>
+    <div>
+      <div class="il">What Bracken sees</div>
+      <div id="bracken-narrative">The model tracks sell-through demand across all BUILT products and projects the next 13 weeks. The confidence band narrows where velocity has been stable and widens around promotional windows. At 3.4% wMAPE, the forecast is 10× more accurate than a simple prior-year baseline — comparable to the best CPG forecasting systems on the market.</div>
+    </div>
+  </div>
+
+  <p class="footnote"><strong>Data source:</strong> SPINS syndicated POS data via built_enriched_weekly. <strong>Forecast:</strong> 28-feature demand model retrained September 2026, 29-week out-of-sample backtest. <strong>wMAPE:</strong> weighted Mean Absolute Percentage Error across all active series. Confidence band = model low/high prediction interval.</p>
+</div>
+
+<!-- ── TAB 2: SKU Detail (Connor) ──────────────────────────────────── -->
+<div class="panel" id="tab-sku">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Retailer:</strong> <span id="r1-label-sku">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food</div>
+    <div class="ctx"><strong>SKU:</strong> <span id="focal-sku-label">Top by volume</span></div>
+    <div class="ctx"><strong>Actuals thru:</strong> <span id="anchor-label-sku">—</span></div>
+    <div class="ctx"><strong>Forecast:</strong> <span id="fcast-range-sku">—</span></div>
+  </div>
+
+  <div class="kpi-strip" id="sku-kpis">
+    <div class="kpi"><div class="kv b" id="sku-13w-units">—</div><div class="kl">Units sold (L13w)</div></div>
+    <div class="kpi"><div class="kv a" id="sku-fcast-units">—</div><div class="kl">Forecast next 13w</div></div>
+    <div class="kpi"><div class="kv g" id="sku-price">—</div><div class="kl">Avg retail price</div></div>
+    <div class="kpi"><div class="kv p">13 wk</div><div class="kl">Forward horizon</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct" id="sku-chart-title">SKU Weekly Units — Actuals + Forecast</div>
+    <div class="cs">SPINS actuals (prior year to present) · dashed line = 13-week forward forecast · band = confidence interval</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Base Units</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Base Forecast</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(79,142,247,.14);border:1px dashed rgba(79,142,247,.38)"></div>Confidence band (q10–q90)</div>
+    </div>
+    <button class="promo-toggle" id="promo-btn-sku" data-lift-pct="161.0" onclick="setPromoMode(!promoOn)">＋ Promo Lift (161.0% avg)</button>
+    <div class="cw"><canvas id="chartSku"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct">Top 5 SKUs — <span id="r1-acct-table">—</span> · Conventional Food · L13 Weeks</div>
+    <div class="cs">Ranked by total units. Forecast shown for next 13 weeks.</div>
+    <table id="sku-table">
+      <thead><tr>
+        <th>#</th><th>Product</th><th>UPC</th><th>Units L13W</th><th>Forecast 13W</th>
+      </tr></thead>
+      <tbody id="sku-table-body"></tbody>
+    </table>
+  </div>
+
+  <div class="insight b">
+    <div class="ii">◈</div>
+    <div>
+      <div class="il">What Connor sees</div>
+      <div id="connor-narrative">The top SKU's 13-week forward forecast gives Connor a planning-ready number for each product at each account — no spreadsheet reconciliation needed. The confidence band tells him where to hold inventory buffer vs. where demand is predictable enough to run lean.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB 3: Retailer Comparison (Brian) ─────────────────────────── -->
+<div class="panel" id="tab-comparison">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Accounts:</strong> <span id="both-accts-label">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food · All BUILT</div>
+    <div class="ctx"><strong>Actuals thru:</strong> <span id="anchor-label-comp">—</span></div>
+    <div class="ctx"><strong>Forecast:</strong> <span id="fcast-range-comp">—</span></div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kv g" id="r1-yoy-kpi">—</div><div class="kl" id="r1-yoy-label">YoY (L13w)</div></div>
+    <div class="kpi"><div class="kv b" id="r2-yoy-kpi">—</div><div class="kl" id="r2-yoy-label">YoY (L13w)</div></div>
+    <div class="kpi"><div class="kv g">3.4%</div><div class="kl">wMAPE across all series</div></div>
+    <div class="kpi"><div class="kv a">2,517</div><div class="kl">Total forecast series</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct">Weekly Units — Account Comparison · Actuals + Forecast</div>
+    <div class="cs">Base weekly units for each account · dashed = forward forecast · shows absolute scale difference and trajectory</div>
+    <div class="legend" id="comp-legend"></div>
+    <button class="promo-toggle" id="promo-btn-comp" data-lift-pct="153.1" onclick="setPromoMode(!promoOn)">＋ Promo Lift (153.1% avg)</button>
+    <div class="cw"><canvas id="chartComparison"></canvas></div>
+  </div>
+
+  <div class="insight a">
+    <div class="ii">⚡</div>
+    <div>
+      <div class="il">What Brian sees</div>
+      <div id="brian-narrative">The model runs independently for each account and geography — it learns each account's seasonal pattern, promotional response, and base velocity separately. Showing raw weekly units makes the absolute scale difference visible alongside trend direction, and the 13-week forward forecasts diverge where account-level dynamics differ.</div>
+    </div>
+  </div>
+
+  <p class="footnote"><strong>Data source:</strong> SPINS syndicated POS data via built_enriched_weekly. Raw weekly units shown; accounts may differ significantly in absolute volume. The 13-week forward forecast (dashed) is generated from the most recent SPINS delivery using the same production model.</p>
+</div>
+
+<!-- ── TAB 4: Accuracy Proof (Bracken) ───────────────────────────── -->
+<div class="panel" id="tab-accuracy">
+  <div class="ctx-row">
+    <div class="ctx"><strong>Retailer:</strong> <span id="acc-r1-label">—</span></div>
+    <div class="ctx"><strong>Channel:</strong> Conventional Food · All BUILT</div>
+    <div class="ctx"><strong>Holdout window:</strong> <span id="acc-holdout-range">—</span></div>
+    <div class="ctx holdout-label">Model had never seen this data</div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kv g" id="acc-wmape">—</div><div class="kl">Mo wMAPE (holdout)</div><div class="ks">vs Naive YoY: <span id="acc-naive-wmape">—</span></div></div>
+    <div class="kpi"><div class="kv b" id="acc-holdout-wks">13 wk</div><div class="kl">Holdout window</div><div class="ks">No actuals used after training cutoff</div></div>
+    <div class="kpi"><div class="kv a" id="acc-train-cutoff">—</div><div class="kl">Training cutoff</div><div class="ks">Anchor for all predictions</div></div>
+    <div class="kpi"><div class="kv p">Direct multi-horizon</div><div class="kl">Forecast method</div><div class="ks">One model per week ahead — no lag chain</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="ct" id="acc-chart-title">Predicted vs. Actual — Out-of-Sample Holdout</div>
+    <div class="cs" id="acc-chart-sub">Training period actuals · then holdout: true recursive predictions (amber) vs. what actually happened (green) · band = model's quantile range, not a coverage guarantee · no actual data used after the training cutoff</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--accent2)"></div>Actuals (SPINS)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--amber)"></div>True holdout prediction (May–Aug 2026)</div>
+      <div class="leg-item"><div class="leg-band" style="background:rgba(245,166,35,.15);border:1px dashed rgba(245,166,35,.40)"></div>Holdout confidence band</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent);opacity:0.6"></div>Quarterly retrospective (same model)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:var(--accent)"></div>Forward forecast</div>
+    </div>
+    <button class="promo-toggle" id="promo-btn-acc" data-lift-pct="153.1" onclick="setPromoMode(!promoOn)">＋ Promo Lift (153.1% avg)</button>
+    <div class="cw" style="height:380px"><canvas id="chartAccuracy"></canvas></div>
+  </div>
+
+  <div class="insight g">
+    <div class="ii">◎</div>
+    <div>
+      <div class="il">The accuracy story for Bracken</div>
+      <div id="acc-narrative">On May 10 the model was locked — zero foreknowledge of what came next. Each step fed its own prior output as the next input, exactly as the production forecast runs. The amber line is what the model called. The green line is what SPINS recorded. At <span id="acc-wmape-inline">—</span>% wMAPE over 13 weeks, Mo beats the simple year-ago naive baseline (<span id="acc-naive-wmape-inline">—</span>%) by a meaningful margin. The faint retrospective lines show quarterly cross-validation going back to 2025 — early quarters show higher error (fewer SKUs in distribution, unreliable lag-52 anchors), while mature distribution quarters (Q3 '25, Q2 '26) align closely with the true holdout. The chart below shows the full picture: where the model tracked cleanly, where demand surged beyond any prior pattern, and where the naive YoY baseline diverges furthest from actuals.</div>
+    </div>
+  </div>
+
+  <p class="footnote"><strong>How to read this:</strong> The amber dashed line is a true multi-step recursive forecast — not a fitted curve. Each of the 13 predicted weeks uses the prior week's own prediction as input; no actual SPINS data after May 10 was available to the model. <strong>wMAPE</strong> = weighted Mean Absolute Percentage Error, weighted by actual volume. The confidence band is the model's q10–q90 quantile range — it shows where the model believes demand could reasonably land based on its training data, but is not a statistical coverage guarantee over a 13-week recursive horizon. Demand patterns that deviate from prior-year seasonal shape (as happened here in May and July 2026) will fall outside the band. The forward forecast (blue) is generated the same way from the most recent SPINS delivery.</p>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ── Injected data ─────────────────────────────────────────────────────
+const DATA = {"primary_acct": "KROGER", "secondary_acct": "PUBLIX", "r1_actuals": [{"week_ending": "2025-01-05", "actual_units": 9050.1, "incr_units": 12218.900000000001}, {"week_ending": "2025-01-12", "actual_units": 10831.1, "incr_units": 17902.899999999998}, {"week_ending": "2025-01-19", "actual_units": 12002.4, "incr_units": 18348.8}, {"week_ending": "2025-01-26", "actual_units": 13446.599999999999, "incr_units": 20801.500000000004}, {"week_ending": "2025-02-02", "actual_units": 13989.3, "incr_units": 23347.899999999998}, {"week_ending": "2025-02-09", "actual_units": 14354.4, "incr_units": 22016.6}, {"week_ending": "2025-02-16", "actual_units": 13863.7, "incr_units": 21198.500000000004}, {"week_ending": "2025-02-23", "actual_units": 16890.4, "incr_units": 19561.8}, {"week_ending": "2025-03-02", "actual_units": 16574.5, "incr_units": 17801.899999999998}, {"week_ending": "2025-03-09", "actual_units": 12710.2, "incr_units": 15593.799999999997}, {"week_ending": "2025-03-16", "actual_units": 12937.400000000001, "incr_units": 17169.6}, {"week_ending": "2025-03-23", "actual_units": 14722.8, "incr_units": 19177.4}, {"week_ending": "2025-03-30", "actual_units": 17213.7, "incr_units": 22120.399999999998}, {"week_ending": "2025-04-06", "actual_units": 15326.8, "incr_units": 29189.200000000004}, {"week_ending": "2025-04-13", "actual_units": 13476.7, "incr_units": 23953.5}, {"week_ending": "2025-04-20", "actual_units": 12830.100000000002, "incr_units": 17300.6}, {"week_ending": "2025-04-27", "actual_units": 14606.9, "incr_units": 15648.2}, {"week_ending": "2025-05-04", "actual_units": 14058.199999999999, "incr_units": 27061.799999999996}, {"week_ending": "2025-05-11", "actual_units": 14803.5, "incr_units": 30999.799999999996}, {"week_ending": "2025-05-18", "actual_units": 17682.2, "incr_units": 29585.499999999996}, {"week_ending": "2025-05-25", "actual_units": 23087.399999999998, "incr_units": 38732.0}, {"week_ending": "2025-06-01", "actual_units": 28852.5, "incr_units": 40156.90000000001}, {"week_ending": "2025-06-08", "actual_units": 38561.69999999999, "incr_units": 49393.30000000002}, {"week_ending": "2025-06-15", "actual_units": 42214.2, "incr_units": 44270.4}, {"week_ending": "2025-06-22", "actual_units": 35650.600000000006, "incr_units": 36637.299999999996}, {"week_ending": "2025-06-29", "actual_units": 44585.4, "incr_units": 45458.4}, {"week_ending": "2025-07-06", "actual_units": 42807.09999999999, "incr_units": 43990.99999999999}, {"week_ending": "2025-07-13", "actual_units": 45154.100000000006, "incr_units": 46339.7}, {"week_ending": "2025-07-20", "actual_units": 44836.70000000001, "incr_units": 46544.299999999996}, {"week_ending": "2025-07-27", "actual_units": 44675.799999999996, "incr_units": 58169.200000000004}, {"week_ending": "2025-08-03", "actual_units": 44251.50000000001, "incr_units": 61836.1}, {"week_ending": "2025-08-10", "actual_units": 42019.2, "incr_units": 58083.100000000006}, {"week_ending": "2025-08-17", "actual_units": 47673.100000000006, "incr_units": 55387.7}, {"week_ending": "2025-08-24", "actual_units": 50155.70000000001, "incr_units": 59394.5}, {"week_ending": "2025-08-31", "actual_units": 44527.0, "incr_units": 62123.5}, {"week_ending": "2025-09-07", "actual_units": 44962.0, "incr_units": 55587.399999999994}, {"week_ending": "2025-09-14", "actual_units": 43228.8, "incr_units": 48187.00000000001}, {"week_ending": "2025-09-21", "actual_units": 38814.2, "incr_units": 40776.50000000001}, {"week_ending": "2025-09-28", "actual_units": 36939.00000000001, "incr_units": 38960.5}, {"week_ending": "2025-10-05", "actual_units": 43162.3, "incr_units": 48379.2}, {"week_ending": "2025-10-12", "actual_units": 39353.700000000004, "incr_units": 57175.1}, {"week_ending": "2025-10-19", "actual_units": 37024.899999999994, "incr_units": 66064.89999999998}, {"week_ending": "2025-10-26", "actual_units": 35495.299999999996, "incr_units": 68204.99999999999}, {"week_ending": "2025-11-02", "actual_units": 32765.600000000002, "incr_units": 60962.29999999999}, {"week_ending": "2025-11-09", "actual_units": 36037.5, "incr_units": 69326.3}, {"week_ending": "2025-11-16", "actual_units": 35262.59999999999, "incr_units": 71735.70000000001}, {"week_ending": "2025-11-23", "actual_units": 44576.2, "incr_units": 73650.99999999999}, {"week_ending": "2025-11-30", "actual_units": 43956.3, "incr_units": 58821.09999999999}, {"week_ending": "2025-12-07", "actual_units": 45605.4, "incr_units": 68402.59999999999}, {"week_ending": "2025-12-14", "actual_units": 45070.200000000004, "incr_units": 64506.9}, {"week_ending": "2025-12-21", "actual_units": 44219.79999999998, "incr_units": 57742.399999999994}, {"week_ending": "2025-12-28", "actual_units": 33611.0, "incr_units": 44342.99999999999}, {"week_ending": "2026-01-04", "actual_units": 38301.0, "incr_units": 54227.200000000004}, {"week_ending": "2026-01-11", "actual_units": 44827.99999999999, "incr_units": 69369.60000000002}, {"week_ending": "2026-01-18", "actual_units": 45622.70000000002, "incr_units": 66820.1}, {"week_ending": "2026-01-25", "actual_units": 51867.399999999994, "incr_units": 71919.59999999999}, {"week_ending": "2026-02-01", "actual_units": 46269.99999999999, "incr_units": 77397.79999999997}, {"week_ending": "2026-02-08", "actual_units": 50076.299999999996, "incr_units": 93203.30000000003}, {"week_ending": "2026-02-15", "actual_units": 48372.4, "incr_units": 85694.69999999998}, {"week_ending": "2026-02-22", "actual_units": 49622.8, "incr_units": 90628.69999999998}, {"week_ending": "2026-03-01", "actual_units": 53446.299999999996, "incr_units": 85809.80000000002}, {"week_ending": "2026-03-08", "actual_units": 56057.100000000006, "incr_units": 95001.20000000003}, {"week_ending": "2026-03-15", "actual_units": 61855.9, "incr_units": 93699.99999999999}, {"week_ending": "2026-03-22", "actual_units": 62112.80000000001, "incr_units": 89470.8}, {"week_ending": "2026-03-29", "actual_units": 58570.700000000004, "incr_units": 86984.40000000002}, {"week_ending": "2026-04-05", "actual_units": 55251.40000000001, "incr_units": 82521.70000000001}, {"week_ending": "2026-04-12", "actual_units": 53501.8, "incr_units": 70723.69999999998}, {"week_ending": "2026-04-19", "actual_units": 56728.4, "incr_units": 73161.79999999999}, {"week_ending": "2026-04-26", "actual_units": 55359.1, "incr_units": 66266.9}, {"week_ending": "2026-05-03", "actual_units": 55180.8, "incr_units": 80620.69999999998}, {"week_ending": "2026-05-10", "actual_units": 60173.9, "incr_units": 97273.79999999999}, {"week_ending": "2026-05-17", "actual_units": 69630.9, "incr_units": 112224.1}, {"week_ending": "2026-05-24", "actual_units": 85192.50000000001, "incr_units": 135701.49999999997}, {"week_ending": "2026-05-31", "actual_units": 87926.50000000001, "incr_units": 143456.6}, {"week_ending": "2026-06-07", "actual_units": 91772.1, "incr_units": 156067.9}, {"week_ending": "2026-06-14", "actual_units": 87656.30000000002, "incr_units": 147440.8}, {"week_ending": "2026-06-21", "actual_units": 82788.59999999999, "incr_units": 135643.40000000002}, {"week_ending": "2026-06-28", "actual_units": 74379.20000000001, "incr_units": 123819.39999999998}, {"week_ending": "2026-07-05", "actual_units": 75263.9, "incr_units": 103757.39999999998}, {"week_ending": "2026-07-12", "actual_units": 78154.40000000002, "incr_units": 104268.99999999999}, {"week_ending": "2026-07-19", "actual_units": 78505.6, "incr_units": 113196.79999999994}, {"week_ending": "2026-07-26", "actual_units": 74807.0, "incr_units": 104499.40000000002}, {"week_ending": "2026-08-02", "actual_units": 72726.5, "incr_units": 161414.50000000003}, {"week_ending": "2026-08-09", "actual_units": 75715.5, "incr_units": 209530.6}, {"week_ending": "2026-08-16", "actual_units": 76918.29999999997, "incr_units": 210823.80000000002}, {"week_ending": "2026-08-23", "actual_units": 78313.60000000002, "incr_units": 205954.50000000003}, {"week_ending": "2026-08-30", "actual_units": 77353.40000000001, "incr_units": 190350.2}, {"week_ending": "2026-09-06", "actual_units": 74151.79999999999, "incr_units": 173998.80000000002}], "r1_forecast": [{"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 1, "forecast_units": 66594.88, "forecast_low": 59347.53, "forecast_high": 72622.83, "week_ending": "2026-09-13", "forecast_units_promo": 168564.96025600002, "forecast_low_promo": 150220.467936, "forecast_high_promo": 183822.90729600002}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 2, "forecast_units": 63231.64, "forecast_low": 49896.64, "forecast_high": 72165.01, "week_ending": "2026-09-20", "forecast_units_promo": 160051.927168, "forecast_low_promo": 126298.375168, "forecast_high_promo": 182664.073312}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 3, "forecast_units": 58171.450000000004, "forecast_low": 42212.62, "forecast_high": 63573.82, "week_ending": "2026-09-27", "forecast_units_promo": 147243.57424000002, "forecast_low_promo": 106848.58374400002, "forecast_high_promo": 160918.05318400002}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 4, "forecast_units": 52093.74, "forecast_low": 40473.84, "forecast_high": 64350.59, "week_ending": "2026-10-04", "forecast_units_promo": 131859.674688, "forecast_low_promo": 102447.383808, "forecast_high_promo": 162884.213408}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 5, "forecast_units": 49265.4, "forecast_low": 35584.34, "forecast_high": 55076.42, "week_ending": "2026-10-11", "forecast_units_promo": 124700.58048, "forecast_low_promo": 90071.081408, "forecast_high_promo": 139409.434304}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 6, "forecast_units": 39018.08, "forecast_low": 33738.05, "forecast_high": 50877.1, "week_ending": "2026-10-18", "forecast_units_promo": 98762.564096, "forecast_low_promo": 85397.75216000002, "forecast_high_promo": 128780.11552}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 7, "forecast_units": 40403.03, "forecast_low": 34365.4, "forecast_high": 47223.44, "week_ending": "2026-10-25", "forecast_units_promo": 102268.149536, "forecast_low_promo": 86985.70048000001, "forecast_high_promo": 119531.97132800001}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 8, "forecast_units": 35244.090000000004, "forecast_low": 31746.43, "forecast_high": 49447.86, "week_ending": "2026-11-01", "forecast_units_promo": 89209.84060800001, "forecast_low_promo": 80356.563616, "forecast_high_promo": 125162.423232}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 9, "forecast_units": 40686.51, "forecast_low": 29010.9, "forecast_high": 59296.0, "week_ending": "2026-11-08", "forecast_units_promo": 102985.69411200001, "forecast_low_promo": 73432.39008000001, "forecast_high_promo": 150090.0352}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 10, "forecast_units": 43745.89, "forecast_low": 34385.46, "forecast_high": 52611.33, "week_ending": "2026-11-15", "forecast_units_promo": 110729.596768, "forecast_low_promo": 87036.476352, "forecast_high_promo": 133169.798496}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 11, "forecast_units": 40049.5, "forecast_low": 29450.63, "forecast_high": 47258.02, "week_ending": "2026-11-22", "forecast_units_promo": 101373.2944, "forecast_low_promo": 74545.43465600001, "forecast_high_promo": 119619.500224}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 12, "forecast_units": 36501.7, "forecast_low": 28313.670000000002, "forecast_high": 46942.520000000004, "week_ending": "2026-11-29", "forecast_units_promo": 92393.10304, "forecast_low_promo": 71667.56150400001, "forecast_high_promo": 118820.90662400001}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 13, "forecast_units": 41794.63, "forecast_low": 28389.81, "forecast_high": 48830.3, "week_ending": "2026-12-06", "forecast_units_promo": 105790.567456, "forecast_low_promo": 71860.287072, "forecast_high_promo": 123599.25536000001}], "r2_actuals": [{"week_ending": "2025-01-05", "actual_units": 22704.600000000002, "incr_units": 9406.199999999999}, {"week_ending": "2025-01-12", "actual_units": 24132.9, "incr_units": 9458.699999999999}, {"week_ending": "2025-01-19", "actual_units": 23817.2, "incr_units": 8739.4}, {"week_ending": "2025-01-26", "actual_units": 29526.699999999997, "incr_units": 9334.3}, {"week_ending": "2025-02-02", "actual_units": 32903.5, "incr_units": 90003.59999999999}, {"week_ending": "2025-02-09", "actual_units": 37760.4, "incr_units": 4683.8}, {"week_ending": "2025-02-16", "actual_units": 36007.299999999996, "incr_units": 3130.5}, {"week_ending": "2025-02-23", "actual_units": 33101.399999999994, "incr_units": 4106.599999999999}, {"week_ending": "2025-03-02", "actual_units": 35233.600000000006, "incr_units": 4149.500000000001}, {"week_ending": "2025-03-09", "actual_units": 37684.1, "incr_units": 1506.6}, {"week_ending": "2025-03-16", "actual_units": 39466.0, "incr_units": 2442.9}, {"week_ending": "2025-03-23", "actual_units": 35545.5, "incr_units": 5002.5}, {"week_ending": "2025-03-30", "actual_units": 31285.0, "incr_units": 13472.900000000001}, {"week_ending": "2025-04-06", "actual_units": 32429.4, "incr_units": 13295.400000000001}, {"week_ending": "2025-04-13", "actual_units": 36198.1, "incr_units": 8716.399999999998}, {"week_ending": "2025-04-20", "actual_units": 35243.0, "incr_units": 6432.199999999999}, {"week_ending": "2025-04-27", "actual_units": 37045.9, "incr_units": 7604.2}, {"week_ending": "2025-05-04", "actual_units": 37452.6, "incr_units": 7764.6}, {"week_ending": "2025-05-11", "actual_units": 38156.9, "incr_units": 4015.5}, {"week_ending": "2025-05-18", "actual_units": 37220.5, "incr_units": 3788.2000000000003}, {"week_ending": "2025-05-25", "actual_units": 35614.2, "incr_units": 2978.4}, {"week_ending": "2025-06-01", "actual_units": 33860.7, "incr_units": 2824.0000000000005}, {"week_ending": "2025-06-08", "actual_units": 32137.199999999997, "incr_units": 2891.3999999999996}, {"week_ending": "2025-06-15", "actual_units": 33847.2, "incr_units": 2426.6}, {"week_ending": "2025-06-22", "actual_units": 31875.399999999994, "incr_units": 2655.4}, {"week_ending": "2025-06-29", "actual_units": 32428.2, "incr_units": 3706.1000000000004}, {"week_ending": "2025-07-06", "actual_units": 24615.8, "incr_units": 2774.0}, {"week_ending": "2025-07-13", "actual_units": 24875.2, "incr_units": 3791.2000000000003}, {"week_ending": "2025-07-20", "actual_units": 32226.6, "incr_units": 8468.8}, {"week_ending": "2025-07-27", "actual_units": 32412.799999999996, "incr_units": 37612.0}, {"week_ending": "2025-08-03", "actual_units": 27145.7, "incr_units": 8035.299999999999}, {"week_ending": "2025-08-10", "actual_units": 29471.599999999995, "incr_units": 5375.599999999999}, {"week_ending": "2025-08-17", "actual_units": 32255.499999999996, "incr_units": 6945.9}, {"week_ending": "2025-08-24", "actual_units": 35192.00000000001, "incr_units": 7101.0}, {"week_ending": "2025-08-31", "actual_units": 38114.0, "incr_units": 3050.2000000000003}, {"week_ending": "2025-09-07", "actual_units": 33181.700000000004, "incr_units": 3815.3}, {"week_ending": "2025-09-14", "actual_units": 23785.4, "incr_units": 17791.6}, {"week_ending": "2025-09-21", "actual_units": 22905.5, "incr_units": 2824.5}, {"week_ending": "2025-09-28", "actual_units": 21785.4, "incr_units": 3091.6}, {"week_ending": "2025-10-05", "actual_units": 45597.6, "incr_units": 10969.4}, {"week_ending": "2025-10-12", "actual_units": 46327.1, "incr_units": 5844.7}, {"week_ending": "2025-10-19", "actual_units": 47723.799999999996, "incr_units": 5852.3}, {"week_ending": "2025-10-26", "actual_units": 45018.1, "incr_units": 5402.9}, {"week_ending": "2025-11-02", "actual_units": 46566.4, "incr_units": 3871.6}, {"week_ending": "2025-11-09", "actual_units": 70871.09999999999, "incr_units": 70744.00000000001}, {"week_ending": "2025-11-16", "actual_units": 57083.100000000006, "incr_units": 9508.0}, {"week_ending": "2025-11-23", "actual_units": 50200.99999999999, "incr_units": 6803.0}, {"week_ending": "2025-11-30", "actual_units": 38292.799999999996, "incr_units": 3549.2}, {"week_ending": "2025-12-07", "actual_units": 40858.6, "incr_units": 5113.400000000001}, {"week_ending": "2025-12-14", "actual_units": 38487.9, "incr_units": 3999.7999999999997}, {"week_ending": "2025-12-21", "actual_units": 37493.8, "incr_units": 3426.200000000001}, {"week_ending": "2025-12-28", "actual_units": 38717.0, "incr_units": 25161.1}, {"week_ending": "2026-01-04", "actual_units": 38946.600000000006, "incr_units": 9966.400000000001}, {"week_ending": "2026-01-11", "actual_units": 39059.799999999996, "incr_units": 21887.199999999997}, {"week_ending": "2026-01-18", "actual_units": 44728.5, "incr_units": 4173.5}, {"week_ending": "2026-01-25", "actual_units": 58879.3, "incr_units": 323238.69999999995}, {"week_ending": "2026-02-01", "actual_units": 48106.4, "incr_units": 4261.6}, {"week_ending": "2026-02-08", "actual_units": 47067.4, "incr_units": 4042.6000000000004}, {"week_ending": "2026-02-15", "actual_units": 56484.6, "incr_units": 5932.400000000001}, {"week_ending": "2026-02-22", "actual_units": 56356.59999999999, "incr_units": 8191.5}, {"week_ending": "2026-03-01", "actual_units": 55167.899999999994, "incr_units": 5468.1}, {"week_ending": "2026-03-08", "actual_units": 48953.9, "incr_units": 25369.100000000002}, {"week_ending": "2026-03-15", "actual_units": 45183.0, "incr_units": 3178.9999999999995}, {"week_ending": "2026-03-22", "actual_units": 46479.799999999996, "incr_units": 2946.2000000000003}, {"week_ending": "2026-03-29", "actual_units": 50531.899999999994, "incr_units": 2447.6000000000004}, {"week_ending": "2026-04-05", "actual_units": 44369.00000000001, "incr_units": 1907.1999999999998}, {"week_ending": "2026-04-12", "actual_units": 47484.1, "incr_units": 2849.9}, {"week_ending": "2026-04-19", "actual_units": 53817.5, "incr_units": 65114.50000000001}, {"week_ending": "2026-04-26", "actual_units": 50717.8, "incr_units": 2721.2999999999997}, {"week_ending": "2026-05-03", "actual_units": 46409.6, "incr_units": 2292.3}, {"week_ending": "2026-05-10", "actual_units": 43747.99999999999, "incr_units": 2087.7}, {"week_ending": "2026-05-17", "actual_units": 40556.0, "incr_units": 17122.0}, {"week_ending": "2026-05-24", "actual_units": 37893.8, "incr_units": 1996.2000000000003}, {"week_ending": "2026-05-31", "actual_units": 40082.1, "incr_units": 2110.1000000000004}, {"week_ending": "2026-06-07", "actual_units": 44623.100000000006, "incr_units": 86618.9}, {"week_ending": "2026-06-14", "actual_units": 58349.100000000006, "incr_units": 58537.700000000004}, {"week_ending": "2026-06-21", "actual_units": 50301.3, "incr_units": 52268.69999999998}, {"week_ending": "2026-06-28", "actual_units": 44090.000000000015, "incr_units": 47820.99999999999}, {"week_ending": "2026-07-05", "actual_units": 37521.899999999994, "incr_units": 3725.2000000000007}, {"week_ending": "2026-07-12", "actual_units": 38720.4, "incr_units": 3379.0}, {"week_ending": "2026-07-19", "actual_units": 36296.0, "incr_units": 2884.2000000000003}, {"week_ending": "2026-07-26", "actual_units": 33760.700000000004, "incr_units": 13309.0}, {"week_ending": "2026-08-02", "actual_units": 34136.99999999999, "incr_units": 2410.100000000001}, {"week_ending": "2026-08-09", "actual_units": 33967.7, "incr_units": 3162.4999999999995}, {"week_ending": "2026-08-16", "actual_units": 39712.80000000001, "incr_units": 375310.7}, {"week_ending": "2026-08-23", "actual_units": 38435.1, "incr_units": 273137.0}, {"week_ending": "2026-08-30", "actual_units": 35145.600000000006, "incr_units": 3607.9000000000005}, {"week_ending": "2026-09-06", "actual_units": 32289.299999999992, "incr_units": 3185.8}], "r2_forecast": [{"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 1, "forecast_units": 32679.73, "forecast_low": 28907.52, "forecast_high": 34977.19, "week_ending": "2023-11-12", "forecast_units_promo": 49928.091494, "forecast_low_promo": 44164.909056000004, "forecast_high_promo": 53438.150882}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 2, "forecast_units": 32415.48, "forecast_low": 26919.44, "forecast_high": 35571.44, "week_ending": "2023-11-19", "forecast_units_promo": 49524.370344, "forecast_low_promo": 41127.520432, "forecast_high_promo": 54346.046032000006}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 3, "forecast_units": 28350.34, "forecast_low": 22678.97, "forecast_high": 34880.51, "week_ending": "2023-11-26", "forecast_units_promo": 43313.649452000005, "forecast_low_promo": 34648.930366, "forecast_high_promo": 53290.443178}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 4, "forecast_units": 27287.72, "forecast_low": 21413.05, "forecast_high": 33989.479999999996, "week_ending": "2023-12-03", "forecast_units_promo": 41690.178616000005, "forecast_low_promo": 32714.85779, "forecast_high_promo": 51929.127543999995}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 5, "forecast_units": 26274.12, "forecast_low": 19222.38, "forecast_high": 32662.04, "week_ending": "2023-12-10", "forecast_units_promo": 40141.600536, "forecast_low_promo": 29367.952164000002, "forecast_high_promo": 49901.064712}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 6, "forecast_units": 23653.0, "forecast_low": 21096.22, "forecast_high": 32026.809999999998, "week_ending": "2023-12-17", "forecast_units_promo": 36137.053400000004, "forecast_low_promo": 32230.804916, "forecast_high_promo": 48930.560317999996}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 7, "forecast_units": 23268.85, "forecast_low": 19968.68, "forecast_high": 30636.29, "week_ending": "2023-12-24", "forecast_units_promo": 35550.14903, "forecast_low_promo": 30508.149304000002, "forecast_high_promo": 46806.123862}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 8, "forecast_units": 21953.81, "forecast_low": 20579.71, "forecast_high": 30100.78, "week_ending": "2023-12-31", "forecast_units_promo": 33541.030918000004, "forecast_low_promo": 31441.680938, "forecast_high_promo": 45987.971684}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 9, "forecast_units": 26969.54, "forecast_low": 20572.52, "forecast_high": 32184.85, "week_ending": "2024-01-07", "forecast_units_promo": 41204.063212, "forecast_low_promo": 31430.696056, "forecast_high_promo": 49172.013829999996}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 10, "forecast_units": 25994.57, "forecast_low": 22796.94, "forecast_high": 34525.26, "week_ending": "2024-01-14", "forecast_units_promo": 39714.504046, "forecast_low_promo": 34829.164932, "forecast_high_promo": 52747.69222800001}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 11, "forecast_units": 22371.239999999998, "forecast_low": 20883.92, "forecast_high": 36377.09, "week_ending": "2024-01-21", "forecast_units_promo": 34178.780472, "forecast_low_promo": 31906.452975999997, "forecast_high_promo": 55576.918101999996}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 12, "forecast_units": 22415.05, "forecast_low": 18014.94, "forecast_high": 33289.22, "week_ending": "2024-01-28", "forecast_units_promo": 34245.71339, "forecast_low_promo": 27523.225331999998, "forecast_high_promo": 50859.270316}, {"anchor_date": "2023-11-05T00:00:00+00:00", "forecast_week_number": 13, "forecast_units": 23141.98, "forecast_low": 19638.54, "forecast_high": 32115.9, "week_ending": "2024-02-04", "forecast_units_promo": 35356.317044, "forecast_low_promo": 30003.761412000003, "forecast_high_promo": 49066.672020000005}], "top_skus": [{"upc": "08-40229-30362", "description": "Built Puff Brownie Batter Protein Bar 1.41 Oz", "total_units_13w": 82454.50000000001, "avg_price": 2.3627777777777776, "flavor": "BROWNIE"}, {"upc": "08-40229-30333", "description": "Built Puff Cookie Dough Chunk Protein Bar 1.55 Oz", "total_units_13w": 81754.20000000001, "avg_price": 2.3966666666666665, "flavor": "COOKIE DOUGH"}, {"upc": "08-40229-30653", "description": "Built Puff Sour Blu Razz Blast Bar 1.45 Oz", "total_units_13w": 61100.9, "avg_price": 2.3400000000000003, "flavor": "BLUE RASPBERRY"}, {"upc": "08-40229-30642", "description": "Built Puff Peanut Butter Protein Bar 1.41 Oz", "total_units_13w": 60908.200000000004, "avg_price": 2.389444444444445, "flavor": "PEANUT BUTTER"}, {"upc": "08-40229-30651", "description": "Built Protein Bar Puff Sour Peach 1.45 Oz", "total_units_13w": 58002.9, "avg_price": 2.356111111111111, "flavor": "PEACH"}], "sku_actuals": [{"week_ending": "2025-01-05", "actual_units": 2445.0, "incr_units": 3694.0, "avg_price": 2.415}, {"week_ending": "2025-01-12", "actual_units": 3172.4, "incr_units": 5472.6, "avg_price": 2.3449999999999998}, {"week_ending": "2025-01-19", "actual_units": 3709.1, "incr_units": 5594.1, "avg_price": 2.37}, {"week_ending": "2025-01-26", "actual_units": 4233.4, "incr_units": 7166.700000000001, "avg_price": 2.35}, {"week_ending": "2025-02-02", "actual_units": 4492.6, "incr_units": 8795.1, "avg_price": 2.29}, {"week_ending": "2025-02-09", "actual_units": 4418.6, "incr_units": 7907.0, "avg_price": 2.45}, {"week_ending": "2025-02-16", "actual_units": 4171.2, "incr_units": 7150.0, "avg_price": 2.47}, {"week_ending": "2025-02-23", "actual_units": 5088.1, "incr_units": 6268.7, "avg_price": 2.475}, {"week_ending": "2025-03-02", "actual_units": 4548.8, "incr_units": 4873.099999999999, "avg_price": 2.5549999999999997}, {"week_ending": "2025-03-09", "actual_units": 3745.7, "incr_units": 5074.3, "avg_price": 2.57}, {"week_ending": "2025-03-16", "actual_units": 4850.3, "incr_units": 6295.7, "avg_price": 2.72}, {"week_ending": "2025-03-23", "actual_units": 4587.5, "incr_units": 6263.9, "avg_price": 2.68}, {"week_ending": "2025-03-30", "actual_units": 4817.1, "incr_units": 6668.3, "avg_price": 2.71}, {"week_ending": "2025-04-06", "actual_units": 4773.5, "incr_units": 8705.9, "avg_price": 2.355}, {"week_ending": "2025-04-13", "actual_units": 3939.9, "incr_units": 6648.5, "avg_price": 2.335}, {"week_ending": "2025-04-20", "actual_units": 2647.2, "incr_units": 4368.3, "avg_price": 2.475}, {"week_ending": "2025-04-27", "actual_units": 3294.6, "incr_units": 3785.6, "avg_price": 2.71}, {"week_ending": "2025-05-04", "actual_units": 3665.4, "incr_units": 8667.4, "avg_price": 2.5}, {"week_ending": "2025-05-11", "actual_units": 3629.2, "incr_units": 10201.8, "avg_price": 2.46}, {"week_ending": "2025-05-18", "actual_units": 4123.9, "incr_units": 8061.5, "avg_price": 2.46}, {"week_ending": "2025-05-25", "actual_units": 4184.9, "incr_units": 9531.8, "avg_price": 2.5}, {"week_ending": "2025-06-01", "actual_units": 5373.9, "incr_units": 9796.3, "avg_price": 2.59}, {"week_ending": "2025-06-08", "actual_units": 11841.1, "incr_units": 16807.9, "avg_price": 2.725}, {"week_ending": "2025-06-15", "actual_units": 15567.7, "incr_units": 16035.3, "avg_price": 2.8}, {"week_ending": "2025-06-22", "actual_units": 12227.7, "incr_units": 12432.5, "avg_price": 2.82}, {"week_ending": "2025-06-29", "actual_units": 13026.5, "incr_units": 13119.5, "avg_price": 2.88}, {"week_ending": "2025-07-06", "actual_units": 12307.8, "incr_units": 12486.0, "avg_price": 2.92}, {"week_ending": "2025-07-13", "actual_units": 13989.5, "incr_units": 14243.199999999999, "avg_price": 2.9050000000000002}, {"week_ending": "2025-07-20", "actual_units": 13593.9, "incr_units": 13829.1, "avg_price": 2.915}, {"week_ending": "2025-07-27", "actual_units": 13253.7, "incr_units": 17284.1, "avg_price": 2.745}, {"week_ending": "2025-08-03", "actual_units": 13016.0, "incr_units": 19111.7, "avg_price": 2.68}, {"week_ending": "2025-08-10", "actual_units": 12376.8, "incr_units": 16654.4, "avg_price": 2.69}, {"week_ending": "2025-08-17", "actual_units": 15209.9, "incr_units": 16010.2, "avg_price": 2.66}, {"week_ending": "2025-08-24", "actual_units": 15726.7, "incr_units": 16257.1, "avg_price": 2.7}, {"week_ending": "2025-08-31", "actual_units": 13441.3, "incr_units": 17518.4, "avg_price": 2.7}, {"week_ending": "2025-09-07", "actual_units": 14192.7, "incr_units": 15406.3, "avg_price": 2.71}, {"week_ending": "2025-09-14", "actual_units": 14017.6, "incr_units": 14719.7, "avg_price": 2.755}, {"week_ending": "2025-09-21", "actual_units": 11351.7, "incr_units": 11612.7, "avg_price": 2.85}, {"week_ending": "2025-09-28", "actual_units": 10550.0, "incr_units": 10724.5, "avg_price": 2.92}, {"week_ending": "2025-10-05", "actual_units": 11766.1, "incr_units": 12504.599999999999, "avg_price": 2.73}, {"week_ending": "2025-10-12", "actual_units": 10649.0, "incr_units": 16890.9, "avg_price": 2.5149999999999997}, {"week_ending": "2025-10-19", "actual_units": 10249.6, "incr_units": 20707.2, "avg_price": 2.43}, {"week_ending": "2025-10-26", "actual_units": 10003.9, "incr_units": 21929.5, "avg_price": 2.465}, {"week_ending": "2025-11-02", "actual_units": 9575.1, "incr_units": 20492.1, "avg_price": 2.46}, {"week_ending": "2025-11-09", "actual_units": 10321.1, "incr_units": 22162.8, "avg_price": 2.53}, {"week_ending": "2025-11-16", "actual_units": 9423.0, "incr_units": 22944.0, "avg_price": 2.51}, {"week_ending": "2025-11-23", "actual_units": 12515.9, "incr_units": 20409.199999999997, "avg_price": 2.49}, {"week_ending": "2025-11-30", "actual_units": 11009.3, "incr_units": 13408.3, "avg_price": 2.48}, {"week_ending": "2025-12-07", "actual_units": 11931.8, "incr_units": 15538.8, "avg_price": 2.53}, {"week_ending": "2025-12-14", "actual_units": 12385.0, "incr_units": 13607.300000000001, "avg_price": 2.49}, {"week_ending": "2025-12-21", "actual_units": 12551.4, "incr_units": 13598.4, "avg_price": 2.4}, {"week_ending": "2025-12-28", "actual_units": 8730.3, "incr_units": 10313.5, "avg_price": 2.42}, {"week_ending": "2026-01-04", "actual_units": 10648.2, "incr_units": 12481.0, "avg_price": 2.42}, {"week_ending": "2026-01-11", "actual_units": 12483.5, "incr_units": 14182.900000000001, "avg_price": 2.6}, {"week_ending": "2026-01-18", "actual_units": 11181.5, "incr_units": 13110.3, "avg_price": 2.79}, {"week_ending": "2026-01-25", "actual_units": 12997.8, "incr_units": 15252.2, "avg_price": 2.75}, {"week_ending": "2026-02-01", "actual_units": 12638.6, "incr_units": 22484.2, "avg_price": 2.455}, {"week_ending": "2026-02-08", "actual_units": 13883.2, "incr_units": 28924.2, "avg_price": 2.45}, {"week_ending": "2026-02-15", "actual_units": 13032.7, "incr_units": 24739.9, "avg_price": 2.48}, {"week_ending": "2026-02-22", "actual_units": 13668.4, "incr_units": 25989.8, "avg_price": 2.46}, {"week_ending": "2026-03-01", "actual_units": 13480.2, "incr_units": 22426.4, "avg_price": 2.52}, {"week_ending": "2026-03-08", "actual_units": 12498.7, "incr_units": 20937.3, "avg_price": 2.45}, {"week_ending": "2026-03-15", "actual_units": 13203.0, "incr_units": 17764.2, "avg_price": 2.38}, {"week_ending": "2026-03-22", "actual_units": 13676.4, "incr_units": 16346.7, "avg_price": 2.4450000000000003}, {"week_ending": "2026-03-29", "actual_units": 13435.9, "incr_units": 16018.8, "avg_price": 2.6}, {"week_ending": "2026-04-05", "actual_units": 11943.5, "incr_units": 14196.900000000001, "avg_price": 2.76}, {"week_ending": "2026-04-12", "actual_units": 10508.9, "incr_units": 11806.699999999999, "avg_price": 2.8}, {"week_ending": "2026-04-19", "actual_units": 10884.1, "incr_units": 12747.9, "avg_price": 2.775}, {"week_ending": "2026-04-26", "actual_units": 11305.8, "incr_units": 12198.2, "avg_price": 2.87}, {"week_ending": "2026-05-03", "actual_units": 10540.8, "incr_units": 16515.0, "avg_price": 2.69}, {"week_ending": "2026-05-10", "actual_units": 10927.2, "incr_units": 21450.7, "avg_price": 2.52}, {"week_ending": "2026-05-17", "actual_units": 11017.4, "incr_units": 22237.6, "avg_price": 2.51}, {"week_ending": "2026-05-24", "actual_units": 11133.8, "incr_units": 24118.2, "avg_price": 2.48}, {"week_ending": "2026-05-31", "actual_units": 9523.2, "incr_units": 16636.8, "avg_price": 2.53}, {"week_ending": "2026-06-07", "actual_units": 9526.4, "incr_units": 13616.6, "avg_price": 2.63}, {"week_ending": "2026-06-14", "actual_units": 10494.9, "incr_units": 13375.1, "avg_price": 2.67}, {"week_ending": "2026-06-21", "actual_units": 9212.9, "incr_units": 10992.1, "avg_price": 2.82}, {"week_ending": "2026-06-28", "actual_units": 7933.0, "incr_units": 9348.699999999999, "avg_price": 2.9}, {"week_ending": "2026-07-05", "actual_units": 7929.2, "incr_units": 9921.9, "avg_price": 2.895}, {"week_ending": "2026-07-12", "actual_units": 8484.8, "incr_units": 11138.6, "avg_price": 2.88}, {"week_ending": "2026-07-19", "actual_units": 8749.1, "incr_units": 12055.9, "avg_price": 2.855}, {"week_ending": "2026-07-26", "actual_units": 8030.1, "incr_units": 11304.9, "avg_price": 2.85}, {"week_ending": "2026-08-02", "actual_units": 8488.1, "incr_units": 22938.300000000003, "avg_price": 2.29}, {"week_ending": "2026-08-09", "actual_units": 9328.6, "incr_units": 33819.4, "avg_price": 2.065}, {"week_ending": "2026-08-16", "actual_units": 9749.7, "incr_units": 35209.3, "avg_price": 2.08}, {"week_ending": "2026-08-23", "actual_units": 9771.0, "incr_units": 35460.5, "avg_price": 2.065}, {"week_ending": "2026-08-30", "actual_units": 9983.6, "incr_units": 34262.9, "avg_price": 2.09}, {"week_ending": "2026-09-06", "actual_units": 9869.5, "incr_units": 33521.3, "avg_price": 2.09}], "sku_forecast": [{"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 1, "forecast_units": 8371.8, "forecast_low": 7189.93, "forecast_high": 8885.53, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-09-13", "forecast_units_promo": 21850.398, "forecast_low_promo": 18765.717300000004, "forecast_high_promo": 23191.233300000004}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 2, "forecast_units": 7416.02, "forecast_low": 5436.36, "forecast_high": 9105.67, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-09-20", "forecast_units_promo": 19355.812200000004, "forecast_low_promo": 14188.8996, "forecast_high_promo": 23765.798700000003}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 3, "forecast_units": 6691.99, "forecast_low": 4455.57, "forecast_high": 7492.66, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-09-27", "forecast_units_promo": 17466.0939, "forecast_low_promo": 11629.0377, "forecast_high_promo": 19555.842600000004}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 4, "forecast_units": 5836.3, "forecast_low": 4484.13, "forecast_high": 8336.08, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-10-04", "forecast_units_promo": 15232.743000000002, "forecast_low_promo": 11703.579300000001, "forecast_high_promo": 21757.168800000003}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 5, "forecast_units": 5196.44, "forecast_low": 4683.87, "forecast_high": 5196.44, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-10-11", "forecast_units_promo": 13562.708400000001, "forecast_low_promo": 12224.900700000002, "forecast_high_promo": 13562.708400000001}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 6, "forecast_units": 3512.29, "forecast_low": 3512.29, "forecast_high": 4641.16, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-10-18", "forecast_units_promo": 9167.076900000002, "forecast_low_promo": 9167.076900000002, "forecast_high_promo": 12113.4276}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 7, "forecast_units": 3795.97, "forecast_low": 3689.17, "forecast_high": 4411.38, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-10-25", "forecast_units_promo": 9907.4817, "forecast_low_promo": 9628.7337, "forecast_high_promo": 11513.701800000003}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 8, "forecast_units": 3582.42, "forecast_low": 3582.42, "forecast_high": 5964.9, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-11-01", "forecast_units_promo": 9350.116200000002, "forecast_low_promo": 9350.116200000002, "forecast_high_promo": 15568.389000000001}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 9, "forecast_units": 3717.65, "forecast_low": 2832.5, "forecast_high": 6753.1, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-11-08", "forecast_units_promo": 9703.0665, "forecast_low_promo": 7392.825000000001, "forecast_high_promo": 17625.591000000004}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 10, "forecast_units": 4783.64, "forecast_low": 4153.08, "forecast_high": 5253.21, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-11-15", "forecast_units_promo": 12485.300400000002, "forecast_low_promo": 10839.5388, "forecast_high_promo": 13710.878100000002}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 11, "forecast_units": 4308.35, "forecast_low": 3542.67, "forecast_high": 4308.35, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-11-22", "forecast_units_promo": 11244.793500000002, "forecast_low_promo": 9246.3687, "forecast_high_promo": 11244.793500000002}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 12, "forecast_units": 4022.98, "forecast_low": 3290.39, "forecast_high": 4809.8, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-11-29", "forecast_units_promo": 10499.9778, "forecast_low_promo": 8587.9179, "forecast_high_promo": 12553.578000000001}, {"anchor_date": "2026-09-06T00:00:00+00:00", "forecast_week_number": 13, "forecast_units": 4375.61, "forecast_low": 3076.82, "forecast_high": 4375.61, "anchor_units": 9869.5, "anchor_arp": 2.09, "week_ending": "2026-12-06", "forecast_units_promo": 11420.3421, "forecast_low_promo": 8030.500200000001, "forecast_high_promo": 11420.3421}], "focal_desc": "Built Puff Brownie Batter Protein Bar 1.41 Oz", "focal_upc": "08-40229-30362", "r1_yoy": "+18.0%", "r2_yoy": "-13.4%", "anchor_date": "Sep 06, 2026", "generated": "2026-10-05 15:01", "wmape": "3.4", "series_count": "2,517", "backtest_history": [{"week_ending": "2024-12-15", "actual_units": 6257.6, "incr_units": 10843.4}, {"week_ending": "2024-12-22", "actual_units": 6874.7, "incr_units": 10601.3}, {"week_ending": "2024-12-29", "actual_units": 6690.4, "incr_units": 7925.6}, {"week_ending": "2025-01-05", "actual_units": 9050.1, "incr_units": 12218.900000000001}, {"week_ending": "2025-01-12", "actual_units": 10831.1, "incr_units": 17902.899999999998}, {"week_ending": "2025-01-19", "actual_units": 12002.4, "incr_units": 18348.8}, {"week_ending": "2025-01-26", "actual_units": 13311.0, "incr_units": 20801.500000000004}, {"week_ending": "2025-02-02", "actual_units": 13987.300000000001, "incr_units": 23347.899999999998}, {"week_ending": "2025-02-09", "actual_units": 14354.4, "incr_units": 22016.6}, {"week_ending": "2025-02-16", "actual_units": 13863.7, "incr_units": 21198.500000000004}, {"week_ending": "2025-02-23", "actual_units": 16890.4, "incr_units": 19561.8}, {"week_ending": "2025-03-02", "actual_units": 16574.5, "incr_units": 17801.899999999998}, {"week_ending": "2025-03-09", "actual_units": 12710.2, "incr_units": 15593.799999999997}, {"week_ending": "2025-03-16", "actual_units": 12936.4, "incr_units": 17169.6}, {"week_ending": "2025-03-23", "actual_units": 14720.8, "incr_units": 19177.4}, {"week_ending": "2025-03-30", "actual_units": 17213.7, "incr_units": 22120.399999999998}, {"week_ending": "2025-04-06", "actual_units": 15324.800000000001, "incr_units": 29189.200000000004}, {"week_ending": "2025-04-13", "actual_units": 13476.7, "incr_units": 23953.5}, {"week_ending": "2025-04-20", "actual_units": 12830.1, "incr_units": 17300.6}, {"week_ending": "2025-04-27", "actual_units": 14606.9, "incr_units": 15648.2}, {"week_ending": "2025-05-04", "actual_units": 14056.2, "incr_units": 27061.799999999996}, {"week_ending": "2025-05-11", "actual_units": 14103.5, "incr_units": 30999.799999999996}, {"week_ending": "2025-05-18", "actual_units": 17682.2, "incr_units": 29585.499999999996}, {"week_ending": "2025-05-25", "actual_units": 23087.4, "incr_units": 38732.0}, {"week_ending": "2025-06-01", "actual_units": 28851.5, "incr_units": 40156.90000000001}, {"week_ending": "2025-06-08", "actual_units": 38561.7, "incr_units": 49393.30000000002}, {"week_ending": "2025-06-15", "actual_units": 42214.2, "incr_units": 44270.4}, {"week_ending": "2025-06-22", "actual_units": 35650.6, "incr_units": 36637.299999999996}, {"week_ending": "2025-06-29", "actual_units": 44585.4, "incr_units": 45458.4}, {"week_ending": "2025-07-06", "actual_units": 42807.1, "incr_units": 43990.99999999999}, {"week_ending": "2025-07-13", "actual_units": 45154.1, "incr_units": 46339.7}, {"week_ending": "2025-07-20", "actual_units": 44833.700000000004, "incr_units": 46544.299999999996}, {"week_ending": "2025-07-27", "actual_units": 44675.8, "incr_units": 58169.200000000004}, {"week_ending": "2025-08-03", "actual_units": 44249.7, "incr_units": 61836.1}, {"week_ending": "2025-08-10", "actual_units": 42019.2, "incr_units": 58083.100000000006}, {"week_ending": "2025-08-17", "actual_units": 47673.1, "incr_units": 55387.7}, {"week_ending": "2025-08-24", "actual_units": 50154.7, "incr_units": 59394.5}, {"week_ending": "2025-08-31", "actual_units": 44472.0, "incr_units": 62123.5}, {"week_ending": "2025-09-07", "actual_units": 44962.0, "incr_units": 55587.399999999994}, {"week_ending": "2025-09-14", "actual_units": 43228.8, "incr_units": 48187.00000000001}, {"week_ending": "2025-09-21", "actual_units": 38809.2, "incr_units": 40776.50000000001}, {"week_ending": "2025-09-28", "actual_units": 36931.0, "incr_units": 38960.5}, {"week_ending": "2025-10-05", "actual_units": 43147.3, "incr_units": 48379.2}, {"week_ending": "2025-10-12", "actual_units": 39353.700000000004, "incr_units": 57175.1}, {"week_ending": "2025-10-19", "actual_units": 37024.9, "incr_units": 66064.89999999998}, {"week_ending": "2025-10-26", "actual_units": 35495.3, "incr_units": 68204.99999999999}, {"week_ending": "2025-11-02", "actual_units": 32655.7, "incr_units": 60962.29999999999}, {"week_ending": "2025-11-09", "actual_units": 36037.5, "incr_units": 69326.3}, {"week_ending": "2025-11-16", "actual_units": 35261.6, "incr_units": 71735.70000000001}, {"week_ending": "2025-11-23", "actual_units": 44560.2, "incr_units": 73650.99999999999}, {"week_ending": "2025-11-30", "actual_units": 43956.3, "incr_units": 58821.09999999999}, {"week_ending": "2025-12-07", "actual_units": 45602.4, "incr_units": 68402.59999999999}, {"week_ending": "2025-12-14", "actual_units": 45070.2, "incr_units": 64506.9}, {"week_ending": "2025-12-21", "actual_units": 44218.7, "incr_units": 57742.399999999994}, {"week_ending": "2025-12-28", "actual_units": 33611.0, "incr_units": 44342.99999999999}, {"week_ending": "2026-01-04", "actual_units": 38263.0, "incr_units": 54227.200000000004}, {"week_ending": "2026-01-11", "actual_units": 44826.0, "incr_units": 69369.60000000002}, {"week_ending": "2026-01-18", "actual_units": 45622.7, "incr_units": 66820.1}, {"week_ending": "2026-01-25", "actual_units": 51865.4, "incr_units": 71919.59999999999}, {"week_ending": "2026-02-01", "actual_units": 46269.0, "incr_units": 77397.79999999997}, {"week_ending": "2026-02-08", "actual_units": 50039.3, "incr_units": 93203.30000000003}, {"week_ending": "2026-02-15", "actual_units": 48372.4, "incr_units": 85694.69999999998}, {"week_ending": "2026-02-22", "actual_units": 49619.8, "incr_units": 90628.69999999998}, {"week_ending": "2026-03-01", "actual_units": 53446.3, "incr_units": 85809.80000000002}, {"week_ending": "2026-03-08", "actual_units": 56057.1, "incr_units": 95001.20000000003}, {"week_ending": "2026-03-15", "actual_units": 61852.9, "incr_units": 93699.99999999999}, {"week_ending": "2026-03-22", "actual_units": 62112.8, "incr_units": 89470.8}, {"week_ending": "2026-03-29", "actual_units": 58569.7, "incr_units": 86984.40000000002}, {"week_ending": "2026-04-05", "actual_units": 55242.4, "incr_units": 82521.70000000001}, {"week_ending": "2026-04-12", "actual_units": 53501.8, "incr_units": 70723.69999999998}, {"week_ending": "2026-04-19", "actual_units": 56727.4, "incr_units": 73161.79999999999}, {"week_ending": "2026-04-26", "actual_units": 55359.1, "incr_units": 66266.9}, {"week_ending": "2026-05-03", "actual_units": 55179.8, "incr_units": 80620.69999999998}, {"week_ending": "2026-05-10", "actual_units": 60173.9, "incr_units": 97273.79999999999}], "backtest_holdout": [{"week_ending": "2026-05-17", "actual_units": 69517.9, "pred_q50": 52478.27779090147, "pred_q10": 46039.34392705541, "pred_q90": 57602.763197837936, "naive_units": 25441.35, "incr_units": 112224.1, "pred_q50_promo": 132833.0167443298, "pred_q10_promo": 116534.78734816266, "pred_q90_promo": 145804.11420636738}, {"week_ending": "2026-05-24", "actual_units": 83682.5, "pred_q50": 54191.96355281137, "pred_q10": 45771.43952169761, "pred_q90": 62239.73793263459, "naive_units": 36026.1530032799, "incr_units": 135701.49999999997, "pred_q50_promo": 137170.69814487617, "pred_q10_promo": 115856.667717321, "pred_q90_promo": 157541.2246550847}, {"week_ending": "2026-05-31", "actual_units": 81951.1, "pred_q50": 60174.004678630496, "pred_q10": 49737.888739837086, "pred_q90": 73765.37850845321, "naive_units": 48003.91645832955, "incr_units": 143456.6, "pred_q50_promo": 152312.4406425495, "pred_q10_promo": 125896.54397827564, "pred_q90_promo": 186714.92608059678}, {"week_ending": "2026-06-07", "actual_units": 80754.3, "pred_q50": 70709.23236838922, "pred_q10": 57019.09512970158, "pred_q90": 88330.06308626532, "naive_units": 67840.50349886612, "incr_units": 156067.9, "pred_q50_promo": 178979.2089708668, "pred_q10_promo": 144326.73359230065, "pred_q90_promo": 223581.0556839548}, {"week_ending": "2026-06-14", "actual_units": 78554.8, "pred_q50": 77201.83380108843, "pred_q10": 58633.54126122999, "pred_q90": 100329.80061161389, "naive_units": 75781.9719670746, "incr_units": 147440.8, "pred_q50_promo": 195413.28171731505, "pred_q10_promo": 148413.21964042535, "pred_q90_promo": 253954.79130811707}, {"week_ending": "2026-06-21", "actual_units": 76334.4, "pred_q50": 75116.62717026247, "pred_q10": 52485.554940502996, "pred_q90": 101582.8124229354, "naive_units": 65249.86897743956, "incr_units": 135643.40000000002, "pred_q50_promo": 190135.20669336835, "pred_q10_promo": 132851.43666540118, "pred_q90_promo": 257126.4148049341}, {"week_ending": "2026-06-28", "actual_units": 70050.8, "pred_q50": 80534.57875582737, "pred_q10": 58190.711051759325, "pred_q90": 110346.06993768882, "naive_units": 80360.78015485413, "incr_units": 123819.39999999998, "pred_q50_promo": 203849.12574675024, "pred_q10_promo": 147292.3278142132, "pred_q90_promo": 279307.972226278}, {"week_ending": "2026-07-05", "actual_units": 71564.9, "pred_q50": 81087.48724119738, "pred_q10": 58761.74927688779, "pred_q90": 114502.87606511901, "naive_units": 76094.20362986867, "incr_units": 103757.39999999998, "pred_q50_promo": 205248.6477049188, "pred_q10_promo": 148737.7397696584, "pred_q90_promo": 289829.67989602924}, {"week_ending": "2026-07-12", "actual_units": 75400.4, "pred_q50": 82796.4371509077, "pred_q10": 59820.5644499301, "pred_q90": 118661.214544148, "naive_units": 78971.74532348562, "incr_units": 104268.99999999999, "pred_q50_promo": 209574.3417163776, "pred_q10_promo": 151417.81273566306, "pred_q90_promo": 300355.2662541474}, {"week_ending": "2026-07-19", "actual_units": 76470.4, "pred_q50": 83114.22818270301, "pred_q10": 60101.32330313201, "pred_q90": 123204.46332111378, "naive_units": 77167.63822535836, "incr_units": 113196.79999999994, "pred_q50_promo": 210378.73437605787, "pred_q10_promo": 152128.46954488775, "pred_q90_promo": 311855.13755840325}, {"week_ending": "2026-07-26", "actual_units": 73184.9, "pred_q50": 83208.86776910319, "pred_q10": 60567.20440118282, "pred_q90": 127147.07916708605, "naive_units": 77683.6333316902, "incr_units": 104499.40000000002, "pred_q50_promo": 210618.28609715402, "pred_q10_promo": 153307.70778027395, "pred_q90_promo": 321834.6867877282}, {"week_ending": "2026-08-02", "actual_units": 71054.1, "pred_q50": 83538.7689532816, "pred_q10": 61154.444274165784, "pred_q90": 131120.176556034, "naive_units": 78409.0553242383, "incr_units": 161414.50000000003, "pred_q50_promo": 211453.3319745464, "pred_q10_promo": 154794.12934676843, "pred_q90_promo": 331891.3908986333}, {"week_ending": "2026-08-09", "actual_units": 74419.9, "pred_q50": 82525.23300518979, "pred_q10": 60882.74029275459, "pred_q90": 133560.83424327846, "naive_units": 75076.30597319314, "incr_units": 209530.6, "pred_q50_promo": 208887.8697827364, "pred_q10_promo": 154106.39222902042, "pred_q90_promo": 338069.1836365864}], "backtest_wmape": "14.8", "backtest_naive_wmape": "18.7", "backtest_series_count": 32, "backtest_ets_count": 14, "backtest_cutoff": "2026-05-10", "backtest_val_end": "2026-08-09", "quarterly_backtests": [{"quarter_label": "Q1 2025", "quarter_long": "Jan\u2013Mar 2025", "cutoff": "2024-12-29", "start": "2025-01-05", "end": "2025-03-30", "type": "retrospective", "predictions": [{"week_ending": "2025-01-05", "actual": 9050.1, "pred_q50": 6703.3, "pred_q10": 6703.3, "pred_q90": 6703.3, "naive_units": 5241.1}, {"week_ending": "2025-01-12", "actual": 10831.1, "pred_q50": 7144.9, "pred_q10": 7144.9, "pred_q90": 7144.9, "naive_units": 4672.0}, {"week_ending": "2025-01-19", "actual": 12002.4, "pred_q50": 7219.9, "pred_q10": 7219.9, "pred_q90": 7219.9, "naive_units": 4807.9}, {"week_ending": "2025-01-26", "actual": 13311.0, "pred_q50": 7046.7, "pred_q10": 7046.7, "pred_q90": 7046.7, "naive_units": 4922.2}, {"week_ending": "2025-02-02", "actual": 13987.3, "pred_q50": 7098.8, "pred_q10": 7098.8, "pred_q90": 7098.8, "naive_units": 5168.0}, {"week_ending": "2025-02-09", "actual": 14354.4, "pred_q50": 7279.5, "pred_q10": 7279.5, "pred_q90": 7279.5, "naive_units": 5365.7}, {"week_ending": "2025-02-16", "actual": 13863.7, "pred_q50": 6908.0, "pred_q10": 6908.0, "pred_q90": 6908.0, "naive_units": 5532.2}, {"week_ending": "2025-02-23", "actual": 16890.4, "pred_q50": 7138.7, "pred_q10": 7138.7, "pred_q90": 7138.7, "naive_units": 5489.0}, {"week_ending": "2025-03-02", "actual": 16574.5, "pred_q50": 6968.7, "pred_q10": 6968.7, "pred_q90": 6968.7, "naive_units": 5671.7}, {"week_ending": "2025-03-09", "actual": 12710.2, "pred_q50": 6973.7, "pred_q10": 6973.7, "pred_q90": 6973.7, "naive_units": 5354.9}, {"week_ending": "2025-03-16", "actual": 12936.4, "pred_q50": 6953.6, "pred_q10": 6953.6, "pred_q90": 6953.6, "naive_units": 5008.3}, {"week_ending": "2025-03-23", "actual": 14720.8, "pred_q50": 6719.0, "pred_q10": 6719.0, "pred_q90": 6719.0, "naive_units": 5209.7}, {"week_ending": "2025-03-30", "actual": 17213.7, "pred_q50": 7199.2, "pred_q10": 7199.2, "pred_q90": 7199.2, "naive_units": 5822.5}], "wmape": 49.9, "naive_wmape": 52.2, "series_count": 20, "ets_count": 7, "honest": true, "arm": "direct", "bias": 0.52}, {"quarter_label": "Q2 2025", "quarter_long": "Apr\u2013Jun 2025", "cutoff": "2025-03-30", "start": "2025-04-06", "end": "2025-06-29", "type": "retrospective", "predictions": [{"week_ending": "2025-04-06", "actual": 15324.8, "pred_q50": 16568.4, "pred_q10": 16568.4, "pred_q90": 16568.4, "naive_units": 11370.1}, {"week_ending": "2025-04-13", "actual": 13476.7, "pred_q50": 16206.4, "pred_q10": 16206.4, "pred_q90": 16206.4, "naive_units": 11096.3}, {"week_ending": "2025-04-20", "actual": 12830.1, "pred_q50": 16711.1, "pred_q10": 16711.1, "pred_q90": 16711.1, "naive_units": 11306.0}, {"week_ending": "2025-04-27", "actual": 14606.9, "pred_q50": 17706.1, "pred_q10": 17706.1, "pred_q90": 17706.1, "naive_units": 11489.3}, {"week_ending": "2025-05-04", "actual": 14056.2, "pred_q50": 17373.9, "pred_q10": 17373.9, "pred_q90": 17373.9, "naive_units": 11008.8}, {"week_ending": "2025-05-11", "actual": 14103.5, "pred_q50": 18453.5, "pred_q10": 18453.5, "pred_q90": 18453.5, "naive_units": 10772.3}, {"week_ending": "2025-05-18", "actual": 17682.2, "pred_q50": 16416.1, "pred_q10": 16416.1, "pred_q90": 16416.1, "naive_units": 10734.2}, {"week_ending": "2025-05-25", "actual": 23087.4, "pred_q50": 19042.4, "pred_q10": 19042.4, "pred_q90": 19042.4, "naive_units": 10771.8}, {"week_ending": "2025-06-01", "actual": 28851.5, "pred_q50": 18275.1, "pred_q10": 18275.1, "pred_q90": 18275.1, "naive_units": 10341.8}, {"week_ending": "2025-06-08", "actual": 38561.7, "pred_q50": 21545.6, "pred_q10": 21545.6, "pred_q90": 21545.6, "naive_units": 10629.0}, {"week_ending": "2025-06-15", "actual": 42214.2, "pred_q50": 21645.8, "pred_q10": 21645.8, "pred_q90": 21645.8, "naive_units": 10681.8}, {"week_ending": "2025-06-22", "actual": 35650.6, "pred_q50": 16883.1, "pred_q10": 16883.1, "pred_q90": 16883.1, "naive_units": 10807.8}, {"week_ending": "2025-06-29", "actual": 44585.4, "pred_q50": 18684.4, "pred_q10": 18684.4, "pred_q90": 18684.4, "naive_units": 11262.6}], "wmape": 44.7, "naive_wmape": 40.7, "series_count": 27, "ets_count": 9, "honest": true, "arm": "direct", "bias": 0.889}, {"quarter_label": "Q3 2025", "quarter_long": "Jul\u2013Sep 2025", "cutoff": "2025-06-29", "start": "2025-07-06", "end": "2025-09-28", "type": "retrospective", "predictions": [{"week_ending": "2025-07-06", "actual": 42807.1, "pred_q50": 47026.8, "pred_q10": 47026.8, "pred_q90": 47026.8, "naive_units": 24245.3}, {"week_ending": "2025-07-13", "actual": 45154.1, "pred_q50": 46151.8, "pred_q10": 46151.8, "pred_q90": 46151.8, "naive_units": 24466.8}, {"week_ending": "2025-07-20", "actual": 44833.7, "pred_q50": 48979.2, "pred_q10": 48979.2, "pred_q90": 48979.2, "naive_units": 24136.5}, {"week_ending": "2025-07-27", "actual": 44675.8, "pred_q50": 48685.3, "pred_q10": 48685.3, "pred_q90": 48685.3, "naive_units": 15612.9}, {"week_ending": "2025-08-03", "actual": 44249.7, "pred_q50": 45527.4, "pred_q10": 45527.4, "pred_q90": 45527.4, "naive_units": 15936.4}, {"week_ending": "2025-08-10", "actual": 42019.2, "pred_q50": 42494.4, "pred_q10": 42494.4, "pred_q90": 42494.4, "naive_units": 16069.2}, {"week_ending": "2025-08-17", "actual": 47673.1, "pred_q50": 36662.9, "pred_q10": 36662.9, "pred_q90": 36662.9, "naive_units": 15566.8}, {"week_ending": "2025-08-24", "actual": 50154.7, "pred_q50": 34461.4, "pred_q10": 34461.4, "pred_q90": 34461.4, "naive_units": 16285.7}, {"week_ending": "2025-08-31", "actual": 44472.0, "pred_q50": 32651.6, "pred_q10": 32651.6, "pred_q90": 32651.6, "naive_units": 16691.8}, {"week_ending": "2025-09-07", "actual": 44962.0, "pred_q50": 31514.0, "pred_q10": 31514.0, "pred_q90": 31514.0, "naive_units": 16670.3}, {"week_ending": "2025-09-14", "actual": 43228.8, "pred_q50": 33564.2, "pred_q10": 33564.2, "pred_q90": 33564.2, "naive_units": 16413.7}, {"week_ending": "2025-09-21", "actual": 38809.2, "pred_q50": 36027.0, "pred_q10": 36027.0, "pred_q90": 36027.0, "naive_units": 16275.7}, {"week_ending": "2025-09-28", "actual": 36931.0, "pred_q50": 37511.7, "pred_q10": 37511.7, "pred_q90": 37511.7, "naive_units": 16710.9}], "wmape": 26.7, "naive_wmape": 16.4, "series_count": 26, "ets_count": 18, "honest": true, "arm": "direct", "bias": 0.916}, {"quarter_label": "Q4 2025", "quarter_long": "Oct\u2013Dec 2025", "cutoff": "2025-09-28", "start": "2025-10-05", "end": "2025-12-28", "type": "retrospective", "predictions": [{"week_ending": "2025-10-05", "actual": 43147.3, "pred_q50": 39108.6, "pred_q10": 39108.6, "pred_q90": 39108.6, "naive_units": 16220.2}, {"week_ending": "2025-10-12", "actual": 39353.7, "pred_q50": 40655.5, "pred_q10": 40655.5, "pred_q90": 40655.5, "naive_units": 16050.8}, {"week_ending": "2025-10-19", "actual": 37024.9, "pred_q50": 39632.4, "pred_q10": 39632.4, "pred_q90": 39632.4, "naive_units": 16130.1}, {"week_ending": "2025-10-26", "actual": 35495.3, "pred_q50": 42890.0, "pred_q10": 42890.0, "pred_q90": 42890.0, "naive_units": 15938.2}, {"week_ending": "2025-11-02", "actual": 32655.7, "pred_q50": 41709.7, "pred_q10": 41709.7, "pred_q90": 41709.7, "naive_units": 15539.3}, {"week_ending": "2025-11-09", "actual": 36037.5, "pred_q50": 43336.0, "pred_q10": 43336.0, "pred_q90": 43336.0, "naive_units": 15652.8}, {"week_ending": "2025-11-16", "actual": 35261.6, "pred_q50": 44907.1, "pred_q10": 44907.1, "pred_q90": 44907.1, "naive_units": 15109.5}, {"week_ending": "2025-11-23", "actual": 44560.2, "pred_q50": 38417.2, "pred_q10": 38417.2, "pred_q90": 38417.2, "naive_units": 14643.6}, {"week_ending": "2025-11-30", "actual": 43956.3, "pred_q50": 38861.1, "pred_q10": 38861.1, "pred_q90": 38861.1, "naive_units": 14592.8}, {"week_ending": "2025-12-07", "actual": 45602.4, "pred_q50": 40838.1, "pred_q10": 40838.1, "pred_q90": 40838.1, "naive_units": 14754.8}, {"week_ending": "2025-12-14", "actual": 45070.2, "pred_q50": 40343.3, "pred_q10": 40343.3, "pred_q90": 40343.3, "naive_units": 16053.2}, {"week_ending": "2025-12-21", "actual": 44218.7, "pred_q50": 41280.9, "pred_q10": 41280.9, "pred_q90": 41280.9, "naive_units": 16698.7}, {"week_ending": "2025-12-28", "actual": 33611.0, "pred_q50": 38558.9, "pred_q10": 38558.9, "pred_q90": 38558.9, "naive_units": 16245.3}], "wmape": 25.5, "naive_wmape": 18.4, "series_count": 28, "ets_count": 14, "honest": true, "arm": "direct", "bias": 1.134}, {"quarter_label": "Q1 2026", "quarter_long": "Jan\u2013Mar 2026", "cutoff": "2025-12-28", "start": "2026-01-04", "end": "2026-03-29", "type": "retrospective", "predictions": [{"week_ending": "2026-01-04", "actual": 38263.0, "pred_q50": 40126.8, "pred_q10": 40126.8, "pred_q90": 40126.8, "naive_units": 20279.1}, {"week_ending": "2026-01-11", "actual": 44826.0, "pred_q50": 37781.2, "pred_q10": 37781.2, "pred_q90": 37781.2, "naive_units": 21896.8}, {"week_ending": "2026-01-18", "actual": 45622.7, "pred_q50": 44650.7, "pred_q10": 44650.7, "pred_q90": 44650.7, "naive_units": 23103.2}, {"week_ending": "2026-01-25", "actual": 51865.4, "pred_q50": 44091.9, "pred_q10": 44091.9, "pred_q90": 44091.9, "naive_units": 24113.5}, {"week_ending": "2026-02-01", "actual": 46269.0, "pred_q50": 41659.2, "pred_q10": 41659.2, "pred_q90": 41659.2, "naive_units": 22204.0}, {"week_ending": "2026-02-08", "actual": 50039.3, "pred_q50": 37462.1, "pred_q10": 37462.1, "pred_q90": 37462.1, "naive_units": 22490.4}, {"week_ending": "2026-02-15", "actual": 48372.4, "pred_q50": 42009.5, "pred_q10": 42009.5, "pred_q90": 42009.5, "naive_units": 21949.6}, {"week_ending": "2026-02-22", "actual": 49619.8, "pred_q50": 42316.1, "pred_q10": 42316.1, "pred_q90": 42316.1, "naive_units": 24859.1}, {"week_ending": "2026-03-01", "actual": 53446.3, "pred_q50": 48903.2, "pred_q10": 48903.2, "pred_q90": 48903.2, "naive_units": 24517.0}, {"week_ending": "2026-03-08", "actual": 56057.1, "pred_q50": 48272.5, "pred_q10": 48272.5, "pred_q90": 48272.5, "naive_units": 20906.5}, {"week_ending": "2026-03-15", "actual": 61852.9, "pred_q50": 44228.4, "pred_q10": 44228.4, "pred_q90": 44228.4, "naive_units": 21615.3}, {"week_ending": "2026-03-22", "actual": 62112.8, "pred_q50": 45403.6, "pred_q10": 45403.6, "pred_q90": 45403.6, "naive_units": 23675.7}, {"week_ending": "2026-03-29", "actual": 58569.7, "pred_q50": 48732.5, "pred_q10": 48732.5, "pred_q90": 48732.5, "naive_units": 26493.7}], "wmape": 31.2, "naive_wmape": 43.3, "series_count": 33, "ets_count": 16, "honest": true, "arm": "direct", "bias": 0.902}, {"quarter_label": "Q2 2026", "quarter_long": "Apr\u2013Jun 2026", "cutoff": "2026-03-29", "start": "2026-04-05", "end": "2026-06-28", "type": "retrospective", "predictions": [{"week_ending": "2026-04-05", "actual": 55242.4, "pred_q50": 56005.8, "pred_q10": 56005.8, "pred_q90": 56005.8, "naive_units": 38033.2}, {"week_ending": "2026-04-12", "actual": 53501.8, "pred_q50": 53108.3, "pred_q10": 53108.3, "pred_q90": 53108.3, "naive_units": 36465.1}, {"week_ending": "2026-04-19", "actual": 56727.4, "pred_q50": 48910.6, "pred_q10": 48910.6, "pred_q90": 48910.6, "naive_units": 35909.7}, {"week_ending": "2026-04-26", "actual": 55359.1, "pred_q50": 46673.5, "pred_q10": 46673.5, "pred_q90": 46673.5, "naive_units": 37606.1}, {"week_ending": "2026-05-03", "actual": 55179.8, "pred_q50": 48766.7, "pred_q10": 48766.7, "pred_q90": 48766.7, "naive_units": 37181.1}, {"week_ending": "2026-05-10", "actual": 60173.9, "pred_q50": 45892.1, "pred_q10": 45892.1, "pred_q90": 45892.1, "naive_units": 37269.7}, {"week_ending": "2026-05-17", "actual": 69522.9, "pred_q50": 46043.6, "pred_q10": 46043.6, "pred_q90": 46043.6, "naive_units": 26653.5}, {"week_ending": "2026-05-24", "actual": 85192.5, "pred_q50": 37445.4, "pred_q10": 37445.4, "pred_q90": 37445.4, "naive_units": 32756.0}, {"week_ending": "2026-05-31", "actual": 87700.7, "pred_q50": 37799.8, "pred_q10": 37799.8, "pred_q90": 37799.8, "naive_units": 38449.2}, {"week_ending": "2026-06-07", "actual": 91772.1, "pred_q50": 37915.8, "pred_q10": 37915.8, "pred_q90": 37915.8, "naive_units": 48179.1}, {"week_ending": "2026-06-14", "actual": 87656.3, "pred_q50": 35523.1, "pred_q10": 35523.1, "pred_q90": 35523.1, "naive_units": 51837.4}, {"week_ending": "2026-06-21", "actual": 82788.6, "pred_q50": 29394.6, "pred_q10": 29394.6, "pred_q90": 29394.6, "naive_units": 45295.6}, {"week_ending": "2026-06-28", "actual": 74379.2, "pred_q50": 32619.1, "pred_q10": 32619.1, "pred_q90": 32619.1, "naive_units": 54302.4}], "wmape": 43.1, "naive_wmape": 39.8, "series_count": 38, "ets_count": 19, "honest": true, "arm": "direct", "bias": 0.634}, {"quarter_label": "Q3 2026", "quarter_long": "Jul\u2013Sep 2026", "cutoff": "2026-06-29", "start": "2026-07-06", "end": "2026-09-28", "type": "retrospective", "predictions": [{"week_ending": "2026-07-12", "actual": 78154.4, "pred_q50": 72307.0, "pred_q10": 72307.0, "pred_q90": 72307.0, "naive_units": 71456.1}, {"week_ending": "2026-07-19", "actual": 78505.6, "pred_q50": 74220.8, "pred_q10": 74220.8, "pred_q90": 74220.8, "naive_units": 70345.0}, {"week_ending": "2026-07-26", "actual": 74807.0, "pred_q50": 73333.5, "pred_q10": 73333.5, "pred_q90": 73333.5, "naive_units": 69294.6}, {"week_ending": "2026-08-02", "actual": 72726.5, "pred_q50": 72729.4, "pred_q10": 72729.4, "pred_q90": 72729.4, "naive_units": 70754.5}, {"week_ending": "2026-08-09", "actual": 75715.5, "pred_q50": 73472.2, "pred_q10": 73472.2, "pred_q90": 73472.2, "naive_units": 68679.2}, {"week_ending": "2026-08-16", "actual": 76918.3, "pred_q50": 72992.3, "pred_q10": 72992.3, "pred_q90": 72992.3, "naive_units": 74497.1}, {"week_ending": "2026-08-23", "actual": 78243.6, "pred_q50": 75537.6, "pred_q10": 75537.6, "pred_q90": 75537.6, "naive_units": 76613.1}, {"week_ending": "2026-08-30", "actual": 77352.4, "pred_q50": 66973.8, "pred_q10": 66973.8, "pred_q90": 66973.8, "naive_units": 71459.8}, {"week_ending": "2026-09-06", "actual": 74151.8, "pred_q50": 71803.5, "pred_q10": 71803.5, "pred_q90": 71803.5, "naive_units": 71289.7}], "wmape": 16.7, "naive_wmape": 19.5, "series_count": 39, "ets_count": 18, "honest": true, "arm": "direct", "bias": 0.952}], "r1_lift_pct": 153.1, "r2_lift_pct": 52.8, "sku_lift_pct": 161.0, "feature_importance": {"base_units_roll4_avg": 22.6, "base_units_lag1": 11.32, "base_units_wow_delta": 7.86, "retail_account": 5.62, "base_units_z8": 4.2, "base_units_roll8_avg": 3.57, "base_units_4wk_momentum": 2.99, "base_units_roll8_std": 2.31, "base_units_roll13_avg": 2.3, "base_units_z13": 2.04, "weeks_since_launch": 1.93, "tdp_4w_momentum": 1.8, "velocity_per_tdp": 1.69, "tdp_wow_delta": 1.63, "tdp_z8": 1.49, "tdp": 1.41, "spins_flavor_canonical": 1.29, "top_donor_tdp_sum": 1.29, "base_units_lag13": 1.26, "velocity_spm_z8": 1.26, "arp_wow_delta": 1.19, "base_units_roll13_std": 1.19, "base_units_lag4": 1.12, "velocity_spm_z13": 1.11, "arp_roll8_std": 1.1, "base_units_13wk_momentum": 1.07, "week_sin": 0.97, "competitor_price_gap": 0.91, "arp_roll8_avg": 0.81, "week_cos": 0.79, "tdp_lag52": 0.79, "week_sin26": 0.72, "base_units_lag52": 0.68, "promo_lift_ratio": 0.59, "arp": 0.58, "arp_lag1": 0.57, "arp_dollar_discount": 0.55, "promo_intensity": 0.55, "promo_lift_median": 0.47, "units_lift_tpr": 0.46, "velocity_spm_roll13_avg": 0.46, "week_cos26": 0.45, "promo_lift_p90": 0.44, "units_lift_any_display": 0.44, "velocity_spm_roll8_avg": 0.43, "promo_lift_std": 0.41, "donor_count": 0.37, "promo_lift_n_events": 0.35, "velocity_spm_lag52": 0.34, "promo_rate_woy": 0.11, "units_lift_any_feature": 0.1, "promo_52w_lag": 0.03, "channel_outlet": 0.01, "source_brand": 0.0, "is_promo_week": 0.0, "pack_count": 0.0}};
+
+// ── Helpers ───────────────────────────────────────────────────────────
+Chart.defaults.color = '#8892a4';
+Chart.defaults.borderColor = '#2a2f3d';
+Chart.defaults.font.family = 'Inter, sans-serif';
+Chart.defaults.font.size = 11;
+
+const TAB_NAMES = ['portfolio','sku','comparison','accuracy'];
+
+function showTab(name) {
+  TAB_NAMES.forEach((n,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', n === name);
+    document.getElementById('tab-' + n).classList.toggle('active', n === name);
+  });
+}
+
+// ── Promo lift toggle (global — all tabs stay in sync) ────────────────
+let promoOn = false;
+let chartPortfolio, chartSku, chartComparison, chartAccuracy;
+
+function setPromoMode(on) {
+  promoOn = on;
+  document.querySelectorAll('.promo-toggle').forEach(btn => {
+    btn.classList.toggle('on', on);
+    const pct = btn.dataset.liftPct || '';
+    const pctStr = pct ? ` (${pct}% avg)` : '';
+    btn.textContent = on ? `✕ Promo Lift ON${pctStr}` : `＋ Promo Lift${pctStr}`;
+  });
+  [chartPortfolio, chartSku, chartComparison, chartAccuracy].forEach(ch => {
+    if (!ch) return;
+    ch.data.datasets.forEach(ds => { if (ds._promo) ds.hidden = !on; });
+    ch.update('none');
+  });
+  // Show/hide accuracy tab promo legend items
+  ['promo-leg-acc','promo-pred-leg-acc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? '' : 'none';
+  });
+}
+
+// Parse any ISO date string (with or without time/timezone) → local Date at noon
+function parseDate(s) {
+  if (!s) return new Date(NaN);
+  return new Date(String(s).slice(0, 10) + 'T12:00:00');
+}
+
+function fmtDate(s) {
+  const d = parseDate(s);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function fmtDateShort(s) {
+  const d = parseDate(s);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+}
+
+// Compact tick label for x-axis: "Jan '25"
+function fmtTick(s) {
+  const d = parseDate(s);
+  if (isNaN(d)) return '';
+  const mo = d.toLocaleDateString('en-US', {month:'short'});
+  const yr = String(d.getFullYear()).slice(2);
+  return `${mo} '${yr}`;
+}
+
+function fmtUnits(v) {
+  if (v == null) return '—';
+  const n = parseFloat(v);
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return Math.round(n).toLocaleString();
+}
+
+function baseOpts(yLabel) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: ctx => {
+            const ts = ctx[0]?.parsed?.x;
+            if (ts == null) return '';
+            return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+          },
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—'}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'time',
+        min: '2025-01-01',
+        max: '2026-12-31',
+        time: {
+          unit: 'month',
+          displayFormats: { month: "MMM ''yy" }
+        },
+        grid: { color: 'rgba(42,47,61,0.6)' },
+        ticks: { maxRotation: 0, color: '#8892a4' }
+      },
+      y: { grid: { color: 'rgba(42,47,61,0.6)' },
+           title: { display: !!yLabel, text: yLabel, color: '#8892a4' },
+           ticks: { callback: v => fmtUnits(v) } }
+    }
+  };
+}
+
+// Inline plugin — draws a vertical dashed line at the actual/forecast boundary
+const vertLinePlugin = {
+  id: 'vertLine',
+  afterDraw(chart, args, opts) {
+    if (opts == null || opts.date == null) return;
+    const {ctx, chartArea, scales} = chart;
+    const x = scales.x.getPixelForValue(new Date(String(opts.date).slice(0,10) + 'T12:00:00').getTime());
+    if (x < chartArea.left || x > chartArea.right) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(79,142,247,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(79,142,247,0.85)';
+    ctx.textAlign = 'left';
+    ctx.fillText(opts.label || '→ Forecast', x + 5, chartArea.top + 14);
+    ctx.restore();
+  }
+};
+
+// ── Populate labels ───────────────────────────────────────────────────
+const pa = DATA.primary_acct;
+const sa = DATA.secondary_acct;
+document.getElementById('r1-label').textContent        = pa;
+document.getElementById('r1-label-sku').textContent    = pa;
+document.getElementById('r1-acct-table').textContent   = pa;
+document.getElementById('kpi-yoy').textContent         = DATA.r1_yoy;
+document.getElementById('kpi-series').textContent      = DATA.series_count;
+document.getElementById('data-badge').textContent      = 'Live SPINS data · generated ' + DATA.generated;
+document.getElementById('chart1-title').textContent    = pa + ' · Weekly Demand — Actuals + 13-Week Forecast';
+document.getElementById('both-accts-label').textContent = sa ? pa + ' vs. ' + sa : pa;
+document.getElementById('r1-yoy-kpi').textContent      = DATA.r1_yoy;
+document.getElementById('r1-yoy-label').textContent    = pa + ' YoY (L13w)';
+if (sa) {
+  document.getElementById('r2-yoy-kpi').textContent   = DATA.r2_yoy;
+  document.getElementById('r2-yoy-label').textContent = sa + ' YoY (L13w)';
+}
+
+// ── Date range chips (actuals cutoff + forecast range) ────────────────
+function fcastRange(fcastRows) {
+  if (!fcastRows || !fcastRows.length) return '—';
+  const dates = fcastRows.map(r => r.week_ending).filter(Boolean).sort();
+  return fmtDate(dates[0]) + ' – ' + fmtDate(dates[dates.length - 1]);
+}
+const anchorDisplay = DATA.anchor_date || '—';
+const fcastRangeStr = fcastRange(DATA.r1_forecast);
+document.getElementById('anchor-label').textContent      = anchorDisplay;
+document.getElementById('anchor-label-sku').textContent  = anchorDisplay;
+document.getElementById('anchor-label-comp').textContent = anchorDisplay;
+document.getElementById('fcast-range-label').textContent = fcastRangeStr;
+document.getElementById('fcast-range-sku').textContent   = fcastRangeStr;
+document.getElementById('fcast-range-comp').textContent  = fcastRangeStr;
+
+// ── Chart 1: Portfolio (actuals + forecast) ───────────────────────────
+(function() {
+  const actuals  = DATA.r1_actuals  || [];
+  const forecast = DATA.r1_forecast || [];
+
+  const actDates = actuals.map(r => r.week_ending);
+  const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
+  const actTotal = actuals.map(r => {
+    const base = parseFloat(r.actual_units) || 0;
+    const incr = parseFloat(r.incr_units)   || 0;
+    return base + incr || null;
+  });
+
+  const fctDates     = forecast.map(r => r.week_ending);
+  const fctBase      = forecast.map(r => parseFloat(r.forecast_units)       || null);
+  const fctLow       = forecast.map(r => parseFloat(r.forecast_low)         || null);
+  const fctHigh      = forecast.map(r => parseFloat(r.forecast_high)        || null);
+  const fctPromoArr     = forecast.map(r => parseFloat(r.forecast_units_promo) || null);
+  const fctPromoLowArr  = forecast.map(r => parseFloat(r.forecast_low_promo)   || null);
+  const fctPromoHighArr = forecast.map(r => parseFloat(r.forecast_high_promo)  || null);
+
+  const allLabels  = [...actDates, ...fctDates];
+  const nAct       = actDates.length;
+  const lastActual = actUnits.length ? actUnits[actUnits.length - 1] : null;
+  const lastTotal  = actTotal.length  ? actTotal[actTotal.length - 1]   : null;
+
+  const actLine      = [...actUnits, ...fctDates.map(() => null)];
+  const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
+  const fctLine      = [...Array(nAct).fill(null), ...fctBase];
+  const highLine     = [...Array(nAct).fill(null), ...fctHigh];
+  const lowLine      = [...Array(nAct).fill(null), ...fctLow];
+  const fctPromoLine  = [...Array(nAct).fill(null), ...fctPromoArr];
+  const promoHighLine = [...Array(nAct).fill(null), ...fctPromoHighArr];
+  const promoLowLine  = [...Array(nAct).fill(null), ...fctPromoLowArr];
+
+  const opts1 = baseOpts('Weekly Units');
+  opts1.plugins.vertLine = { date: allLabels[nAct - 1], label: '→ Forecast' };
+  chartPortfolio = new Chart(document.getElementById('chartPortfolio'), {
+    type: 'line',
+    plugins: [vertLinePlugin],
+    data: {
+      labels: allLabels,
+      datasets: [
+        { label: 'Band High', data: highLine, fill: '+1',
+          backgroundColor: 'rgba(79,142,247,0.14)',
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
+        { label: 'Band Low', data: lowLine, fill: false,
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
+        { label: 'Base Forecast', data: fctLine, borderColor: '#4f8ef7',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Base Units', data: actLine, borderColor: '#38c9a0',
+          borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+        // Promo overlay (hidden by default)
+        { label: 'Total w/ Promo', data: actTotalLine, borderColor: '#f5a623',
+          borderWidth: 2, pointRadius: 1.5, pointBackgroundColor: '#f5a623',
+          tension: 0.3, fill: false, hidden: true, _promo: true },
+        { label: 'Promo Band High', data: promoHighLine, fill: '+1',
+          backgroundColor: 'rgba(245,166,35,0.14)',
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Band Low', data: promoLowLine, fill: false,
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Forecast', data: fctPromoLine, borderColor: 'rgba(245,166,35,0.75)',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3,
+          fill: false, hidden: true, _promo: true },
+      ]
+    },
+    options: opts1
+  });
+})();
+
+// ── Chart 2: SKU detail ───────────────────────────────────────────────
+(function() {
+  const actuals  = DATA.sku_actuals  || [];
+  const forecast = DATA.sku_forecast || [];
+  const desc     = DATA.focal_desc   || '';
+
+  document.getElementById('focal-sku-label').textContent = desc;
+  document.getElementById('sku-chart-title').textContent  = desc || 'Top SKU';
+
+  const last13Units = actuals.slice(-13).reduce((s,r) => s + (parseFloat(r.actual_units)||0), 0);
+  const fct13Units  = forecast.reduce((s,r) => s + (parseFloat(r.forecast_units)||0), 0);
+  const avgPrice    = actuals.length ? actuals.slice(-4).reduce((s,r) => s + (parseFloat(r.avg_price)||0), 0) / Math.min(4, actuals.length) : 0;
+  document.getElementById('sku-13w-units').textContent  = fmtUnits(last13Units);
+  document.getElementById('sku-fcast-units').textContent = fmtUnits(fct13Units);
+  document.getElementById('sku-price').textContent       = avgPrice ? '$' + avgPrice.toFixed(2) : '—';
+
+  const actDates = actuals.map(r => r.week_ending);
+  const actUnits = actuals.map(r => parseFloat(r.actual_units) || null);
+  const actTotal = actuals.map(r => {
+    const base = parseFloat(r.actual_units) || 0;
+    const incr = parseFloat(r.incr_units)   || 0;
+    return base + incr || null;
+  });
+  const fctDates        = forecast.map(r => r.week_ending);
+  const fctBase         = forecast.map(r => parseFloat(r.forecast_units)       || null);
+  const fctLow          = forecast.map(r => parseFloat(r.forecast_low)         || null);
+  const fctHigh         = forecast.map(r => parseFloat(r.forecast_high)        || null);
+  const fctPromoArr     = forecast.map(r => parseFloat(r.forecast_units_promo) || null);
+  const fctPromoLowArr  = forecast.map(r => parseFloat(r.forecast_low_promo)   || null);
+  const fctPromoHighArr = forecast.map(r => parseFloat(r.forecast_high_promo)  || null);
+
+  const allLabels  = [...actDates, ...fctDates];
+  const nAct       = actDates.length;
+  const lastActual = actUnits.length ? actUnits[actUnits.length - 1] : null;
+  const lastTotal  = actTotal.length  ? actTotal[actTotal.length - 1]  : null;
+
+  const actLine      = [...actUnits, ...fctDates.map(() => null)];
+  const actTotalLine = [...actTotal,  ...fctDates.map(() => null)];
+  const fctLine       = [...Array(nAct).fill(null), ...fctBase];
+  const highLine      = [...Array(nAct).fill(null), ...fctHigh];
+  const lowLine       = [...Array(nAct).fill(null), ...fctLow];
+  const fctPromoLine  = [...Array(nAct).fill(null), ...fctPromoArr];
+  const promoHighLine = [...Array(nAct).fill(null), ...fctPromoHighArr];
+  const promoLowLine  = [...Array(nAct).fill(null), ...fctPromoLowArr];
+
+  const optsSku = baseOpts('Weekly Units');
+  optsSku.plugins.vertLine = { date: allLabels[nAct - 1], label: '→ Forecast' };
+  chartSku = new Chart(document.getElementById('chartSku'), {
+    type: 'line',
+    plugins: [vertLinePlugin],
+    data: {
+      labels: allLabels,
+      datasets: [
+        { label: 'Band High', data: highLine, fill: '+1',
+          backgroundColor: 'rgba(79,142,247,0.14)',
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
+        { label: 'Band Low',  data: lowLine,  fill: false,
+          borderColor: 'rgba(79,142,247,0.38)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3 },
+        { label: 'Base Forecast', data: fctLine, borderColor: '#4f8ef7',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Base Units', data: actLine, borderColor: '#38c9a0',
+          borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+        // Promo overlay (hidden by default)
+        { label: 'Total w/ Promo', data: actTotalLine, borderColor: '#f5a623',
+          borderWidth: 2, pointRadius: 1.5, pointBackgroundColor: '#f5a623',
+          tension: 0.3, fill: false, hidden: true, _promo: true },
+        { label: 'Promo Band High', data: promoHighLine, fill: '+1',
+          backgroundColor: 'rgba(245,166,35,0.14)',
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Band Low', data: promoLowLine, fill: false,
+          borderColor: 'rgba(245,166,35,0.40)', borderWidth: 1, borderDash: [4,3],
+          pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+        { label: 'Promo Forecast', data: fctPromoLine, borderColor: 'rgba(245,166,35,0.75)',
+          borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3,
+          fill: false, hidden: true, _promo: true },
+      ]
+    },
+    options: optsSku
+  });
+
+  const tbody = document.getElementById('sku-table-body');
+  tbody.innerHTML = '';
+  const fctByUpc = {};
+  fctByUpc[DATA.focal_upc] = fct13Units;
+
+  (DATA.top_skus || []).forEach((sku, i) => {
+    const tr = document.createElement('tr');
+    const fct = fctByUpc[sku.upc] != null ? fmtUnits(fctByUpc[sku.upc]) : '<span class="fcast-badge">in model</span>';
+    tr.innerHTML = `
+      <td class="rank">${i+1}</td>
+      <td>${sku.description || '—'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">${sku.upc || '—'}</td>
+      <td class="units-cell">${fmtUnits(sku.total_units_13w)}</td>
+      <td>${fct}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+})();
+
+// ── Chart 3: Retailer comparison (raw units) ──────────────────────────
+(function() {
+  const r1a = DATA.r1_actuals  || [];
+  const r1f = DATA.r1_forecast || [];
+  const r2a = DATA.r2_actuals  || [];
+  const r2f = DATA.r2_forecast || [];
+
+  const r1ActDates = r1a.map(r => r.week_ending);
+  const r1FctDates = r1f.map(r => r.week_ending);
+  const r2ActDates = r2a.map(r => r.week_ending);
+
+  const allLabels = [...r1ActDates, ...r1FctDates];
+  const totalLen  = allLabels.length;
+
+  const r1ActVals   = r1a.map(r => parseFloat(r.actual_units)        || null);
+  const r1TotalVals = r1a.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+  const r1FctVals   = r1f.map(r => parseFloat(r.forecast_units)      || null);
+  const r1FctPromo  = r1f.map(r => parseFloat(r.forecast_units_promo)|| null);
+  const r2ActVals   = r2a.map(r => parseFloat(r.actual_units)        || null);
+  const r2TotalVals = r2a.map(r => (parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0) || null);
+  const r2FctVals   = r2f.map(r => parseFloat(r.forecast_units)      || null);
+  const r2FctPromo  = r2f.map(r => parseFloat(r.forecast_units_promo)|| null);
+
+  const nR1    = r1ActDates.length;
+  const lastR1 = r1ActVals.length ? r1ActVals[r1ActVals.length - 1]         : null;
+  const lastR1T = r1TotalVals.length ? r1TotalVals[r1TotalVals.length - 1]  : null;
+  const nR2    = r2ActDates.length;
+  const lastR2 = r2ActVals.length ? r2ActVals[Math.min(nR2, totalLen) - 1]  : null;
+  const lastR2T = r2TotalVals.length ? r2TotalVals[Math.min(nR2, totalLen) - 1] : null;
+
+  function padAct(vals, n) {
+    return [...vals, ...Array(totalLen - n).fill(null)];
+  }
+  function padFct(vals, baseN) {
+    return [...Array(baseN).fill(null), ...vals,
+            ...Array(Math.max(0, totalLen - baseN - vals.length)).fill(null)];
+  }
+
+  const datasets = [
+    { label: DATA.primary_acct + ' Base',
+      data: padAct(r1ActVals, nR1),
+      borderColor: '#38c9a0', borderWidth: 2.5, pointRadius: 2,
+      pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+    { label: DATA.primary_acct + ' Forecast',
+      data: padFct(r1FctVals, nR1),
+      borderColor: '#38c9a0', borderDash: [5,4], borderWidth: 2,
+      pointRadius: 0, tension: 0.3, fill: false },
+    // Promo overlays for r1 (hidden by default)
+    { label: DATA.primary_acct + ' Total w/ Promo',
+      data: padAct(r1TotalVals, nR1),
+      borderColor: 'rgba(56,201,160,0.55)', borderWidth: 1.5, pointRadius: 0,
+      tension: 0.3, fill: false, borderDash: [3,3], hidden: true, _promo: true },
+    { label: DATA.primary_acct + ' Promo Forecast',
+      data: padFct(r1FctPromo, nR1),
+      borderColor: 'rgba(56,201,160,0.5)', borderDash: [5,4], borderWidth: 1.5,
+      pointRadius: 0, tension: 0.3, fill: false, hidden: true, _promo: true },
+  ];
+
+  if (r2a.length) {
+    const r2ActPadded   = padAct(r2ActVals.slice(0, totalLen),   Math.min(nR2, totalLen));
+    const r2TotalPadded = padAct(r2TotalVals.slice(0, totalLen), Math.min(nR2, totalLen));
+    const r2FctPadded   = padFct(r2FctVals,  Math.min(nR2, totalLen));
+    const r2PromoPadded = padFct(r2FctPromo, Math.min(nR2, totalLen));
+    datasets.push(
+      { label: DATA.secondary_acct + ' Base',
+        data: r2ActPadded,
+        borderColor: '#9b6dff', borderWidth: 2.5, pointRadius: 2,
+        pointBackgroundColor: '#9b6dff', tension: 0.3, fill: false },
+      { label: DATA.secondary_acct + ' Forecast',
+        data: r2FctPadded,
+        borderColor: '#9b6dff', borderDash: [5,4], borderWidth: 2,
+        pointRadius: 0, tension: 0.3, fill: false },
+      // Promo overlays for r2 (hidden by default)
+      { label: DATA.secondary_acct + ' Total w/ Promo',
+        data: r2TotalPadded,
+        borderColor: 'rgba(155,109,255,0.55)', borderWidth: 1.5, pointRadius: 0,
+        tension: 0.3, fill: false, borderDash: [3,3], hidden: true, _promo: true },
+      { label: DATA.secondary_acct + ' Promo Forecast',
+        data: r2PromoPadded,
+        borderColor: 'rgba(155,109,255,0.5)', borderDash: [5,4], borderWidth: 1.5,
+        pointRadius: 0, tension: 0.3, fill: false, hidden: true, _promo: true }
+    );
+  }
+
+  const legendEl = document.getElementById('comp-legend');
+  [[DATA.primary_acct, '#38c9a0'], [DATA.secondary_acct, '#9b6dff']].forEach(([label, c]) => {
+    if (!label) return;
+    legendEl.innerHTML += `<div class="leg-item"><div class="leg-line" style="background:${c}"></div>${label} base</div>
+      <div class="leg-item"><div class="leg-dash" style="color:${c}"></div>${label} forecast</div>`;
+  });
+
+  const optsComp = baseOpts('Weekly Units');
+  optsComp.plugins.vertLine = { date: r1ActDates[nR1 - 1], label: '→ Forecast' };
+  chartComparison = new Chart(document.getElementById('chartComparison'), { type: 'line', plugins: [vertLinePlugin], data: { labels: allLabels, datasets }, options: optsComp });
+})();
+
+// ── Chart 4: Accuracy proof ────────────────────────────────────────────
+(function() {
+  const history = DATA.backtest_history || [];
+  const holdout = DATA.backtest_holdout || [];
+  const fwd     = DATA.r1_forecast      || [];
+  const qBts    = DATA.quarterly_backtests || [];
+  const wmape   = DATA.backtest_wmape   || '3.4';
+  const cutoff  = DATA.backtest_cutoff  || '';
+  const valEnd  = DATA.backtest_val_end || '';
+
+  const naiveWmape = DATA.backtest_naive_wmape || '—';
+  document.getElementById('acc-r1-label').textContent    = DATA.primary_acct;
+  document.getElementById('acc-wmape').textContent        = wmape + '%';
+  document.getElementById('acc-wmape-inline').textContent = wmape;
+  document.getElementById('acc-naive-wmape').textContent  = naiveWmape !== '—' ? naiveWmape + '%' : '—';
+  document.getElementById('acc-naive-wmape-inline').textContent = naiveWmape !== '—' ? naiveWmape + '%' : '—';
+  document.getElementById('acc-train-cutoff').textContent = fmtDateShort(cutoff);
+  document.getElementById('acc-holdout-wks').textContent  = holdout.length + ' wk';
+  // Wire main KPI (portfolio tile)
+  const kpiHoldoutEl = document.getElementById('kpi-holdout-wmape');
+  if (kpiHoldoutEl) kpiHoldoutEl.textContent = wmape + '%';
+
+  if (cutoff && valEnd) {
+    document.getElementById('acc-holdout-range').textContent =
+      fmtDateShort(cutoff) + ' – ' + fmtDateShort(valEnd);
+  }
+
+  document.getElementById('acc-chart-title').textContent =
+    DATA.primary_acct + ' · Predicted vs. Actual — Quarterly Segments';
+
+  document.getElementById('acc-chart-sub').textContent =
+    'Green = SPINS actuals · amber = true holdout (model never saw this) · colored dashes = Mo quarterly forecasts · gray dashes = naive YoY baseline · badges show Mo vs. Naive wMAPE (⚠ = early distribution, low history)';
+
+  if (!history.length && !holdout.length) {
+    document.getElementById('acc-chart-sub').textContent =
+      'Backtest data unavailable — re-run with mo-ml conda env to generate this chart.';
+    return;
+  }
+
+  // Actuals: continuous from start of history through post-holdout
+  const allActualsAcc = DATA.r1_actuals || [];
+  const actualsData = allActualsAcc.map(r => ({
+    x: r.week_ending, y: parseFloat(r.actual_units) || null
+  })).filter(p => p.y != null);
+
+  // True holdout predictions (amber, strong)
+  const holdPredData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q50) || null}));
+  const holdHighData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q90) || null}));
+  const holdLowData  = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q10) || null}));
+
+  // Promo-adjusted data (for toggle)
+  const liftMult = 1 + (DATA.r1_lift_pct / 100);
+  const actualsPromoData = allActualsAcc.map(r => ({
+    x: r.week_ending,
+    y: ((parseFloat(r.actual_units)||0) + (parseFloat(r.incr_units)||0)) || null
+  })).filter(p => p.y != null);
+  const holdPredPromoData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q50_promo) || null}));
+  const holdHighPromoData = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q90_promo) || null}));
+  const holdLowPromoData  = holdout.map(r => ({x: r.week_ending, y: parseFloat(r.pred_q10_promo) || null}));
+
+  // Forward forecast
+  const fwdData  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_units) || null}));
+  const fwdHighD = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_high)  || null}));
+  const fwdLowD  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_low)   || null}));
+  // Promo-lifted FORWARD forecast. The holdout had a promo variant and the forward
+  // segment did not, so turning Promo Lift on changed the retrospective and holdout
+  // lines but left the forward forecast sitting at its base level — the one segment
+  // a planner is actually deciding against. r1_forecast already carries these fields.
+  const fwdPromoData  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_units_promo) || null}));
+  const fwdPromoHighD = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_high_promo)  || null}));
+  const fwdPromoLowD  = fwd.map(r => ({x: r.week_ending, y: parseFloat(r.forecast_low_promo)   || null}));
+
+  // Confidence band plugin — draws q10-q90 fills BEFORE dataset lines
+  const retroColors = [
+    'rgba(155,109,255,0.55)','rgba(79,142,247,0.45)',
+    'rgba(155,109,255,0.55)','rgba(79,142,247,0.45)',
+    'rgba(155,109,255,0.55)','rgba(79,142,247,0.45)',
+  ];
+  const qBandsPlugin = {
+    id: 'qBands',
+    beforeDatasetsDraw(chart) {
+      const {ctx, chartArea, scales} = chart;
+      const mult = promoOn ? liftMult : 1;
+      (qBts || []).forEach((q, i) => {
+        if (!q.predictions || !q.predictions.length) return;
+        const m = retroColors[i % retroColors.length].match(/rgba\((\d+),(\d+),(\d+)/);
+        if (!m) return;
+        const bandFill = `rgba(${m[1]},${m[2]},${m[3]},${promoOn ? 0.14 : 0.09})`;
+        const preds = q.predictions;
+        ctx.save();
+        ctx.beginPath();
+        let first = true;
+        for (const p of preds) {
+          const x = scales.x.getPixelForValue(new Date(String(p.week_ending).slice(0,10) + 'T12:00:00').getTime());
+          const y = scales.y.getPixelForValue((parseFloat(p.pred_q90)||0) * mult);
+          if (x < chartArea.left || x > chartArea.right) continue;
+          if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+        }
+        for (let k = preds.length - 1; k >= 0; k--) {
+          const p = preds[k];
+          const x = scales.x.getPixelForValue(new Date(String(p.week_ending).slice(0,10) + 'T12:00:00').getTime());
+          const y = scales.y.getPixelForValue((parseFloat(p.pred_q10)||0) * mult);
+          if (x < chartArea.left || x > chartArea.right) continue;
+          ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = bandFill;
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+  };
+
+  // Quarter boundary lines + wMAPE badge plugin
+  const quarterLinesPlugin = {
+    id: 'quarterLines',
+    afterDraw(chart) {
+      const {ctx, chartArea, scales} = chart;
+
+      // Quarter grid lines at each Jan/Apr/Jul/Oct boundary
+      const qBounds = [
+        '2025-01-01','2025-04-01','2025-07-01','2025-10-01',
+        '2026-01-01','2026-04-01','2026-07-01','2026-10-01'
+      ];
+      const qLbls  = ['Q1','Q2','Q3','Q4','Q1','Q2','Q3','Q4'];
+      const qYears = ['2025','','','','2026','','',''];
+
+      qBounds.forEach((d, i) => {
+        const x = scales.x.getPixelForValue(new Date(d + 'T12:00:00').getTime());
+        if (x < chartArea.left || x > chartArea.right) return;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(136,146,164,0.22)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = '600 9px Inter, sans-serif';
+        ctx.fillStyle = 'rgba(136,146,164,0.6)';
+        ctx.textAlign = 'left';
+        ctx.fillText(qLbls[i], x + 4, chartArea.top + 13);
+        if (qYears[i]) {
+          ctx.font = '400 9px Inter, sans-serif';
+          ctx.fillText(qYears[i], x + 4, chartArea.top + 23);
+        }
+        ctx.restore();
+      });
+
+      // Holdout boundary (training cutoff) — amber
+      if (cutoff) {
+        const x = scales.x.getPixelForValue(new Date(cutoff + 'T12:00:00').getTime());
+        if (x >= chartArea.left && x <= chartArea.right) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(245,166,35,0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '700 9px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(245,166,35,0.9)';
+          ctx.textAlign = 'right';
+          ctx.fillText('← Training', x - 4, chartArea.top + 30);
+          ctx.textAlign = 'left';
+          ctx.fillText('Holdout →', x + 4, chartArea.top + 30);
+          ctx.restore();
+        }
+      }
+
+      // Holdout wMAPE badge + naive comparison
+      if (holdout.length && wmape) {
+        const midRow = holdout[Math.floor(holdout.length / 2)];
+        if (midRow) {
+          const mx = scales.x.getPixelForValue(new Date(midRow.week_ending + 'T12:00:00').getTime());
+          if (mx >= chartArea.left && mx <= chartArea.right) {
+            const naiveW = DATA.backtest_naive_wmape || '';
+            const line1 = 'Mo ' + wmape + '%';
+            const line2 = naiveW ? 'Naive ' + naiveW + '%' : '';
+            ctx.save();
+            ctx.font = '700 10px Inter, sans-serif';
+            const tw1 = ctx.measureText(line1).width;
+            const tw2 = line2 ? ctx.measureText(line2).width : 0;
+            const bw = Math.max(tw1, tw2) + 16;
+            const bh = line2 ? 30 : 18;
+            ctx.fillStyle = 'rgba(245,166,35,0.15)';
+            ctx.fillRect(mx - bw/2, chartArea.top + 4, bw, bh);
+            ctx.fillStyle = '#f5a623';
+            ctx.textAlign = 'center';
+            ctx.fillText(line1, mx, chartArea.top + 16);
+            if (line2) {
+              ctx.fillStyle = 'rgba(136,146,164,0.75)';
+              ctx.font = '500 9px Inter, sans-serif';
+              ctx.fillText(line2, mx, chartArea.top + 28);
+            }
+            ctx.restore();
+          }
+        }
+      }
+
+      // Per-quarter wMAPE badges with maturity flag for low-series quarters
+      (qBts || []).forEach(q => {
+        if (!q.wmape || !q.predictions || !q.predictions.length) return;
+        const midPred = q.predictions[Math.floor(q.predictions.length / 2)];
+        if (!midPred) return;
+        const mx = scales.x.getPixelForValue(new Date(String(midPred.week_ending).slice(0,10) + 'T12:00:00').getTime());
+        if (mx < chartArea.left || mx > chartArea.right) return;
+        // Low maturity = Q1 periods or series_count < 45
+        const lowMat = q.series_count && q.series_count < 45;
+        const moTxt = 'Mo ' + q.wmape + '%';
+        const nTxt  = q.naive_wmape ? 'Naive ' + q.naive_wmape + '%' : '';
+        ctx.save();
+        ctx.font = '600 9px Inter, sans-serif';
+        const tw1 = ctx.measureText(moTxt).width;
+        const tw2 = nTxt ? ctx.measureText(nTxt).width : 0;
+        const bw  = Math.max(tw1, tw2) + 12;
+        const bh  = nTxt ? 28 : 16;
+        const bgColor  = lowMat ? 'rgba(245,166,35,0.12)' : 'rgba(79,142,247,0.10)';
+        const txtColor = lowMat ? 'rgba(245,166,35,0.80)' : 'rgba(136,146,164,0.80)';
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(mx - bw/2, chartArea.bottom - bh - 6, bw, bh);
+        ctx.fillStyle = txtColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(moTxt, mx, chartArea.bottom - bh + 8);
+        if (nTxt) {
+          ctx.fillStyle = 'rgba(136,146,164,0.50)';
+          ctx.font = '400 8px Inter, sans-serif';
+          ctx.fillText(nTxt, mx, chartArea.bottom - 8);
+        }
+        if (lowMat) {
+          ctx.fillStyle = 'rgba(245,166,35,0.60)';
+          ctx.font = '400 8px Inter, sans-serif';
+          ctx.fillText('\u26A0 ' + q.series_count + ' SKUs', mx, chartArea.bottom - bh - 2);
+        }
+        ctx.restore();
+      });
+
+      // Forward forecast boundary (blue)
+      if (fwd.length) {
+        const x = scales.x.getPixelForValue(new Date(fwd[0].week_ending + 'T12:00:00').getTime());
+        if (x >= chartArea.left && x <= chartArea.right) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(79,142,247,0.7)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '600 9px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(79,142,247,0.85)';
+          ctx.textAlign = 'left';
+          ctx.fillText('→ Forecast', x + 4, chartArea.top + 43);
+          ctx.restore();
+        }
+      }
+    }
+  };
+
+  const datasets = [
+    // Forward forecast band (behind everything)
+    { label: 'Fwd Band High', data: fwdHighD, fill: '+1',
+      backgroundColor: 'rgba(79,142,247,0.10)',
+      borderColor: 'rgba(79,142,247,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    { label: 'Fwd Band Low', data: fwdLowD, fill: false,
+      borderColor: 'rgba(79,142,247,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    // True holdout amber confidence band
+    { label: 'Holdout Band High', data: holdHighData, fill: '+1',
+      backgroundColor: 'rgba(245,166,35,0.14)',
+      borderColor: 'rgba(245,166,35,0.38)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    { label: 'Holdout Band Low', data: holdLowData, fill: false,
+      borderColor: 'rgba(245,166,35,0.38)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3 },
+    // Forward forecast line
+    { label: 'Forward Forecast', data: fwdData, borderColor: '#4f8ef7',
+      borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+    // Promo-lifted forward forecast + its band. Hidden until Promo Lift is switched on,
+    // which is what setPromoMode toggles via the _promo flag.
+    { label: 'Fwd Promo Band High', data: fwdPromoHighD, fill: '+1',
+      backgroundColor: 'rgba(245,166,35,0.10)',
+      borderColor: 'rgba(245,166,35,0.26)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    { label: 'Fwd Promo Band Low', data: fwdPromoLowD, fill: false,
+      borderColor: 'rgba(245,166,35,0.26)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    { label: 'Forward Forecast (with promo)', data: fwdPromoData, borderColor: '#f5a623',
+      borderDash: [5,4], borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false,
+      hidden: true, _promo: true },
+    // True holdout prediction (stronger amber)
+    { label: 'Model Prediction (Holdout)', data: holdPredData, borderColor: '#f5a623',
+      borderDash: [5,4], borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
+    // Actuals on top
+    { label: 'Base Units (SPINS)', data: actualsData, borderColor: '#38c9a0',
+      borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#38c9a0', tension: 0.3, fill: false },
+    // ── Promo overlay datasets (toggle-controlled, _promo: true) ────────
+    // Promo actuals (base + incr_units) — lighter green dashed
+    { label: 'Total Units incl. Promo', data: actualsPromoData,
+      borderColor: 'rgba(56,201,160,0.55)', borderDash: [4,3],
+      borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false,
+      hidden: true, _promo: true },
+    // Holdout promo confidence band
+    { label: 'Holdout Band High Promo', data: holdHighPromoData, fill: '+1',
+      backgroundColor: 'rgba(245,166,35,0.10)',
+      borderColor: 'rgba(245,166,35,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    { label: 'Holdout Band Low Promo', data: holdLowPromoData, fill: false,
+      borderColor: 'rgba(245,166,35,0.28)', borderWidth: 1, borderDash: [4,3],
+      pointRadius: 0, tension: 0.3, hidden: true, _promo: true },
+    // Holdout promo prediction (brighter amber, above base)
+    { label: 'Holdout Pred (Promo)', data: holdPredPromoData,
+      borderColor: 'rgba(245,166,35,0.95)', borderDash: [6,3],
+      borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false,
+      hidden: true, _promo: true },
+  ];
+
+  // Quarterly retrospective lines + naive baseline per quarter
+  // (retroColors already defined above for qBandsPlugin)
+
+  // Naive YoY baseline for the true holdout window
+  const holdNaiveData = holdout
+    .filter(r => r.naive_units > 0)
+    .map(r => ({x: r.week_ending, y: parseFloat(r.naive_units) || null}));
+  if (holdNaiveData.length) {
+    datasets.push({
+      label: 'Naive YoY (Holdout)',
+      data: holdNaiveData,
+      borderColor: 'rgba(136,146,164,0.38)',
+      borderDash: [2,5],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0.2,
+      fill: false,
+    });
+  }
+
+  (qBts || []).forEach((q, i) => {
+    if (!q.predictions || !q.predictions.length) return;
+    // Naive YoY baseline for this quarter (faint gray)
+    const naiveQData = q.predictions
+      .filter(p => p.naive_units > 0)
+      .map(p => ({x: p.week_ending, y: p.naive_units}));
+    if (naiveQData.length) {
+      datasets.push({
+        label: q.quarter_label + ' Naive',
+        data: naiveQData,
+        borderColor: 'rgba(136,146,164,0.22)',
+        borderDash: [2,5],
+        borderWidth: 1,
+        pointRadius: 0,
+        tension: 0.2,
+        fill: false,
+      });
+    }
+    // Our model prediction for this quarter (base)
+    datasets.push({
+      label: q.quarter_label + ' Retrospective',
+      data: q.predictions.map(p => ({x: p.week_ending, y: p.pred_q50})),
+      borderColor: retroColors[i % retroColors.length],
+      borderDash: [3,3],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+    });
+    // Promo-adjusted q50 for this quarter (toggle-controlled)
+    datasets.push({
+      label: q.quarter_label + ' Retro Promo',
+      data: q.predictions.map(p => ({x: p.week_ending, y: (parseFloat(p.pred_q50)||0) * liftMult})),
+      borderColor: retroColors[i % retroColors.length].replace(/[\d.]+\)$/, '0.80)'),
+      borderDash: [5,2],
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: false,
+      hidden: true,
+      _promo: true,
+    });
+  });
+
+  const skipBands = ['Fwd Band High','Fwd Band Low','Holdout Band High','Holdout Band Low',
+                      'Holdout Band High Promo','Holdout Band Low Promo'];
+  const isNaive = lbl => lbl.includes('Naive');
+  const skipTooltip = lbl => skipBands.includes(lbl) || isNaive(lbl);
+  const optsAcc = {
+    ...baseOpts('Weekly Units'),
+    plugins: {
+      ...baseOpts('Weekly Units').plugins,
+      tooltip: {
+        callbacks: {
+          title: ctx => {
+            const ts = ctx[0]?.parsed?.x;
+            if (ts == null) return '';
+            return new Date(ts).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+          },
+          label: ctx => {
+            if (skipTooltip(ctx.dataset.label)) return null;
+            return ' ' + ctx.dataset.label + ': ' + (ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() : '—');
+          }
+        },
+        filter: item => !skipTooltip(item.dataset.label)
+      }
+    }
+  };
+
+  chartAccuracy = new Chart(document.getElementById('chartAccuracy'), {
+    type: 'line',
+    plugins: [qBandsPlugin, quarterLinesPlugin],
+    data: { datasets },
+    options: optsAcc
+  });
+})();
+</script>

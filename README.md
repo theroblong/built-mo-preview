@@ -6,6 +6,78 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 215: direct chart fixed, TDP closed portfolio-wide, ETS ties flat (2026-10-05)
+
+### Direct chart — two bugs I introduced, both fixed
+
+1. **The "direct" chart wasn't direct.** Quarterly badges were byte-identical to the recursive
+   chart — I had only swapped the FORWARD segment, leaving a recursive retrospective beside a direct
+   forecast under a legend claiming they're the same model. The exact inconsistency fixed days ago,
+   reintroduced. Retrospective arm now follows `MO_FORECAST_SOURCE`.
+2. **The method tile still read "Recursive AR"** on the direct chart. Now driven by the source.
+
+With both fixed, direct is dramatically better on the Kroger accuracy proof:
+
+| quarter | recursive | **direct** |
+|---|---|---|
+| Q2 2025 | 68.5 | **44.7** |
+| **Q1 2026** | 51.5 | **31.2** |
+| **Q3 2026** | 43.8 | **16.7** |
+| mean (7 qtrs) | 43.8 | **34.0** |
+
+−9.8pp overall, and it fixes the two quarters Jason flagged by 20 and 27 points. Q2 2026 (43.1)
+is now direct's weakest quarter.
+
+Charts: `bracken_forecast_charts.html` (recursive) and `bracken_forecast_charts_direct.html`, both
+regenerated so they can be compared side by side.
+
+### ⚠️ MO_105 — TDP closed portfolio-wide, and `coherent` RETRACTED
+
+MO_95 ran on KROGER only (48 series). Across all 2,117:
+
+| arm | Kroger | **portfolio** |
+|---|---|---|
+| coherent | −0.67pp | **+0.05pp — does NOT replicate** |
+| projected | −0.54pp | −0.17pp |
+| **oracle** | −0.59pp | **−0.63pp — robust** |
+
+**The `coherent` "free win" was a Kroger artifact. Do not ship it.** The oracle ceiling replicates
+exactly, so the TDP direction is closed on portfolio evidence rather than a 48-series sample.
+
+### MO_104 — ETS/SES adds nothing, and confirms the random walk
+
+| arm | mean wMAPE |
+|---|---|
+| **flat** | **28.12** |
+| SES_opt | 28.13 |
+| AutoETS_ns | 31.19 |
+| ETS_damped | 32.24 |
+
+**SES_opt ties flat to two decimals at every horizon.** SES with optimized alpha *becomes* flat as
+alpha → 1, so the optimizer independently discovered that the best smoothing here is no smoothing —
+exactly what a random walk implies, reached from a different direction. The earlier "SES beats flat
+by 1.7pp" does not replicate. (Different series population than MO_103, so don't compare across.)
+
+### ⭐ Brian + Rob catchup — the door-count ask is UNANSWERABLE
+
+Brian, verbatim: *"We ship to warehouses and people pick up. **We don't ship to stores** ... we
+don't have the locations dialed in to know when new stores are opening ... **through anecdotes, we
+don't have a data source for that.**"* POs are at warehouse level and a warehouse may serve multiple
+retailers.
+
+So the authorizations / planned-distribution / door-count ask is **dead twice over**: 0.6pp ceiling
+AND no data source. ⚠️ **The white paper still lists it as the #1 data ask — rewrite before sending.**
+
+Also: **SPINS restates history** (late store reporting, vendor backfill). Every backtest uses the
+panel as it looks TODAY, not as it looked at the cutoff — a quiet leakage distinct from the one
+already fixed. Untested, magnitude unknown. Rob is considering bitemporal storage.
+
+Plus: Rob is arranging GPU access; NetSuite is effectively complete; ship-to-shelf lag varies by
+customer; a Connor session is planned; Rob independently wants Connor's model beside the ML for
+comparison — the same idea as the multi-model output feature.
+
+---
+
 ## README update 214: direct multi-horizon beats recursive at EVERY horizon — and my compounding story was wrong (2026-10-05)
 
 MO_103 measured error step by step instead of as one average. Three arms, identical folds, features
