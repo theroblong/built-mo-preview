@@ -6,6 +6,81 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 213: the inputs were never the problem — recursion is (2026-10-05)
+
+Jason: "sweep the shrinkage. don't impose arbitrary limits... Perhaps we have too many bells and
+whistles and need to simplify... it's embarrassing to have a ML model that gets beat out by just
+carrying forward the most recent week's value."
+
+Both hypotheses tested negative. Together they finally locate the defect.
+
+### Part A — shrinkage sweep, no floor. Monotonic, and it says ZERO.
+
+| K | amplitude | wMAPE | bias |
+|---|---|---|---|
+| 0.0 (raw) | 0.469 | 44.35 | 0.842 |
+| 0.75 | 0.363 | 42.50 | 0.856 |
+| 1.5 | 0.296 | 41.80 | 0.859 |
+| 3.0 | 0.216 | 41.19 | 0.864 |
+| **none** | — | **40.46** | **0.872** |
+
+More amplitude = worse wMAPE AND worse bias, monotonically. My "shrinkage was too strong"
+hypothesis was **wrong** — less shrinkage is worse. mo59's Q1 benefit was its SHAPE (curves
+correlate only +0.526), not amplitude.
+
+### Part B — simplification. Also wrong, by 11pp.
+
+| arm | features | wMAPE | bias |
+|---|---|---|---|
+| full_56 | 56 | 36.26 | **1.065** |
+| dynamic_10 (only what updates) | 10 | 47.03 | 1.106 |
+| lag_only | 5 | 44.90 | 1.082 |
+| **flat carry-forward** | — | **32.56** | **1.066** |
+
+Stripping to the 10 features that actually update costs **11pp**. The 46 frozen features ARE
+earning their keep.
+
+### ⭐ THE DIAGNOSIS — it is in the bias column
+
+**flat 1.066 vs full_56 1.065 — IDENTICAL bias.** The model is NOT more systematically wrong than
+carrying last week forward. It is **noisier**: same bias, higher variance.
+
+Put that beside the standing measurement — **4.15% teacher-forced, 37% recursive. A 9x collapse.**
+
+> **The model is good. The recursive application destroys it.**
+
+Everything tested on 10/03 and 10/05 — seasonality, TDP unfreezing, pack_count, own-brand donors,
+feature counts, linear_tree — rearranges INPUTS to a model whose skill dies DOWNSTREAM of the
+inputs. That is why nothing moved, and why every method that cannot compound (flat, naive, SES)
+keeps winning.
+
+⚠️ **Stop testing input changes. Attack compounding.**
+
+### Two ways to stop compounding
+
+1. **Direct multi-horizon** — predict week h directly, no lag chain. **Already has evidence: MO_80
+   puts direct at 34.0 vs recursive 40.6**, 6.6pp better, near naive's 32.9. This was demoted in
+   early October, but that predated the honest backtest numbers, which now favor it.
+2. **Short-horizon hybrid** — model for the 1-2 steps where it is excellent, hand off to flat/damped
+   beyond the crossover. Untested. Cheap decisive diagnostic: error-by-horizon, model vs flat.
+
+### On switching to XGBoost / CatBoost
+
+All constant-leaf GBDTs, sharing every structural limitation: no native sequence handling (lags are
+a workaround), no extrapolation beyond training range, identical compounding under recursion.
+**Lowest-value move available.** Their time-series reputation comes from competitions where winners
+used DIRECT framing and heavy ensembling — a different usage pattern. Our panel is also small:
+93K rows / 1,655 series / 152 weeks vs M5's ~59M rows.
+
+### Shipped
+
+- `MO_100_monthly_seasonal_index.py` — pooled monthly index, reproducible, cutoff-aware (the live
+  mo59 index leaks inside backtests); leave-one-year-out stability +0.939 to +0.974
+- `MO_101_seasonal_index_ab.py` — A/B with honest vs leaky arms separated
+- `MO_102_shrinkage_and_simplification.py` — the two tests above
+
+---
+
 ## README update 212: Rob's commercial-event doc — right frame, numbers we've already disproved (2026-10-05)
 
 Rob shared an AI-authored strategy doc, `docs/Aevah_High_Growth_CPG_Forecasting_Commercial_Event_Modeling.md`
