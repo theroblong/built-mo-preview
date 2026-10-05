@@ -6,6 +6,93 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 210: pack_count predicts TREND, not LEVEL — and the model can't use it (2026-10-05)
+
+Jason: "Is pack count being properly considered by LightGBM? ... I just want to make sure it's not
+being excluded because it's numerical rather than categorical." Then, sharpening it: "I'm thinking
+more about how unit demand trends correlate with pack_count" and "how the model is learning to
+consider SKU blend with regard to pack count when figuring growth trends."
+
+The handling worry is ruled out. The trend observation is correct. Three ways of acting on it all
+test negative.
+
+### Not a handling bug — ruled out three ways
+
+- `pack_count` **IS** in `CAT_COLS`, correctly categorical.
+- Dead last on **both** metrics, so not a split-vs-gain artifact: **SPLIT 56/56 (11)**,
+  **GAIN 56/56 (17)**. ⚠️ sklearn's `importance_type` defaults to `"split"` — always check both.
+- `channel_outlet` (50) and `source_brand` (27) are equally inert, but `retail_account` is #1 by
+  split, so "constant within a cell" is not a sufficient explanation by itself.
+
+### It carries nothing the lags don't already have
+
+| test | wMAPE |
+|---|---|
+| pack_count ALONE | **97.76** |
+| lags only (14 feats) | 4.32 |
+| lags + pack_count | 4.28 (**+0.04pp**) |
+| full 56-feat model, pack_count **PERMUTED** | **+0.00pp** |
+| same, on the **RECURSIVE** objective | **−0.05pp** |
+
+That last row closes the obvious objection — one-step tests could understate a stable attribute
+since lags decay into self-predictions over 13 weeks. They don't. Shuffling it at horizon is noise.
+
+**Why:** pack_count never varies within a cell (**0 of 2,117**), and median weekly units are nearly
+identical (1pk **50**, 4pk **54**). Means diverge (425 vs 1,463) only via a few large cells.
+
+### ⭐ But the TREND differential is real and unexploited
+
+| window | 1-pack median growth | 4-pack median growth |
+|---|---|---|
+| last **26w** vs prior | **1.04x** (46% shrinking) | **1.61x** (21% shrinking) |
+| last **13w** vs prior | 0.91x | 0.92x — **gap vanishes** |
+
+YoY, 4pk beats 1pk in EVERY period: Sep'25 2.72x vs **5.01x**; Dec'25 2.17x vs **3.13x**; Mar'26
+1.70x vs **2.70x**; Jun'26 1.15x vs **1.80x**. Mix moved 1pk 57.0%→46.8%, 4pk 24.1%→41.2%.
+
+**Why the model can't use it:** the pack effect is a slow, population-level drift in GROWTH RATE.
+It is invisible at the one-step LEVEL objective the model trains on — the 13-week window shows no
+gap at all — and only compounds into something material over a quarter. A static attribute in a
+level model cannot express "items of this type trend up 60% faster."
+
+### MO_96: all four own-brand donor features HURT
+
+The mix shift is cross-series, so the candidate fix was letting the model see a sibling 4-pack
+ramping at the same shelf before it hits the 1-pack's own history. All four columns exist in the
+panel; none was in the model. One at a time, recursive objective, 4 folds:
+
+| arm | mean | vs base |
+|---|---|---|
+| base (56 features) | 34.68 | — |
+| + built_donor_count | 34.87 | +0.19pp |
+| + built_donor_units_sum | 35.50 | **+0.82pp** |
+| + built_donor_units_wow | 35.45 | **+0.77pp** |
+| + built_donor_tdp_sum | 35.40 | **+0.72pp** |
+| + all four | 34.80 | +0.12pp |
+
+None helps. Consistent with `built_tdp_share` having hurt previously and aggregate `donor_count`
+beating the brand splits. Fold spread is wide (33.0/31.8/41.9/32.1) so +0.12pp is inside noise —
+but nothing comes back negative.
+
+### What this settles
+
+Three implementations of the same sound intuition have now tested negative: pack_count as a
+feature, own-brand donor signals, and (earlier) `built_tdp_share`. ⚠️ **Do not re-add any of them.**
+
+The one idea left is modelling the **growth rate** with pack as a prior — a TARGET change, not a
+57th feature. Unproven, and given how much tested negative on 10/03 and 10/05 it should be sized
+with a cheap ceiling-style test before anything gets built.
+
+Only 2 of 15 donor-family columns are in the model (`donor_count` #46, `top_donor_tdp_sum` #14),
+both brand-agnostic. That is now a deliberate measured state, not an oversight.
+
+### Everything paused
+
+No MO jobs, no Optuna, no uvicorn. Optuna v2 still preserved at 12 completed trials, best 32.55
+vs 34.42 production baseline.
+
+---
+
 ## README update 209: distribution is frozen during the forecast — and unfreezing it is worth 0.6pp (2026-10-03)
 
 Jason: "We are seeing the retailer bubble up the SHAP waterfall... why wouldn't number of stores per
