@@ -6,6 +6,67 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 214: direct multi-horizon beats recursive at EVERY horizon — and my compounding story was wrong (2026-10-05)
+
+MO_103 measured error step by step instead of as one average. Three arms, identical folds, features
+and tree budget, seasonal OFF for all (MO_102: zero is optimal). 18,109 predictions per arm per
+fold — identical counts, clean comparison.
+
+### ⭐ Direct wins at every horizon and ties flat
+
+| h | recursive | direct | flat |
+|---|---|---|---|
+| 1 | 12.9 | **11.8** | 11.2 |
+| 3 | 25.8 | **20.5** | 23.3 |
+| 7 | 38.1 | **34.4** | 34.6 |
+| 11 | 47.1 | **42.1** | 42.5 |
+| 13 | 52.9 | **49.9** | 48.3 |
+| **mean** | **36.44** | **32.83** | **32.95** |
+
+**−3.6pp vs recursive, and essentially ties flat** — the first model configuration all week to reach
+parity with carry-forward. Best bias at nearly every horizon too (h=13: direct 1.083, flat 1.107,
+recursive 1.130).
+
+### ⚠️ CORRECTION: recursion does NOT compound
+
+Degradation h=1 → h=13: recursive **4.09x**, direct **4.22x**, flat **4.32x**.
+
+**All three degrade at the same rate and recursive is the SLOWEST.** If recursion compounded error
+it would degrade fastest. It doesn't. Error growth with horizon is **intrinsic uncertainty** —
+exactly what the random-walk finding predicts.
+
+**Recursion costs a CONSTANT ~3.5pp at every horizon, not an exploding one.**
+
+This also reframes the 4.15% teacher-forced vs 37% recursive gap quoted all week: teacher-forcing
+supplies the TRUE lag at every step, information nobody has at forecast time. The 1-step problem is
+simply easier than the 13-step problem, for every method. **That gap is not evidence of recursion
+destroying the model.** README 213's central claim is corrected accordingly.
+
+### The short-horizon hybrid FAILS
+
+**34.08 — worse than both direct and flat.** k chosen leave-one-fold-out so it isn't fitted to the
+answer, and the selections were **3, 4, 13, 13**. Two folds want the model for 3 steps, two want it
+the whole way. **No stable crossover exists** — drop the idea rather than tune it.
+
+### Recommendation
+
+**Switch production from recursive to direct multi-horizon.** MO_26D/MO_27D already exist.
+
+Open checks before shipping:
+- 13 models instead of 1
+- each horizon sees less effective training data
+- ⚠️ **curve smoothness** — adjacent horizons come from different models and can jigsaw. This was
+  the original objection when direct was demoted, and it is legitimate. Inspect the chart first.
+
+### ⚠️ Consequence for Optuna
+
+MO_28R's 2.6pp headroom was measured on the **recursive** objective. If production moves to direct,
+**that study does not transfer.** Keep it paused until the architecture is settled — resuming now
+would repeat the exact sequencing error already caught once: optimizing before confirming the model
+to optimize.
+
+---
+
 ## README update 213: the inputs were never the problem — recursion is (2026-10-05)
 
 Jason: "sweep the shrinkage. don't impose arbitrary limits... Perhaps we have too many bells and
