@@ -6,6 +6,58 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 216: match the forecast to the decision — horizon AND aggregation (2026-10-05)
+
+Jason: "It might help to have an h=1-4 forecast and a 13 week forecast... BUILT may need to predict
+a quarter or perhaps a year in advance... Feel free to push back here."
+
+Agreed on the core. One pushback, one addition. **Nothing built — deferred by Jason.**
+
+### ⭐ The missing axis: aggregation matters as much as horizon, and it favors FP&A
+
+| basis | error |
+|---|---|
+| item × week, h=1 | 11.8% |
+| item × week, h=13 | **49.9%** |
+| portfolio × month, 1 month out | 11.5% |
+| **portfolio × 13 weeks** | **21.3%** |
+
+**At 13 weeks, rolling up to portfolio MORE THAN HALVES the error** (49.9% → 21.3%). Idiosyncratic
+item noise cancels; only systematic error survives. Full ladder: portfolio-month 15.8–18.1%,
+retailer-month 22.1–24.5%, item-week 30.8–36.6%.
+
+So it is **not** "short horizon good, long horizon bad." FP&A asks long-horizon questions at **high
+aggregation** — the favorable corner. Ops asks short-horizon questions at **item level** — the hard
+one. A portfolio-quarter number at 21% may serve Bracken better than an item-week number at 12%
+serves a replenishment analyst.
+
+### ⚠️ Pushback: annual should be a SCENARIO TOOL, not a forecast
+
+Do not ship an annual item-level forecast. Three measured reasons:
+- 152 weeks of history; error 11.8% at h=1 → 49.9% at h=13. Extrapolating to h=52 is unsupported.
+- **14.4% of a QUARTER's volume** comes from cells that did not exist at forecast time. Over a year
+  that dominates — an annual number would mostly be an assumption about distribution BUILT has not
+  won yet, wearing a forecast's clothing.
+- Brian confirmed **no forward visibility on store openings**, so the assumption cannot be grounded.
+
+Right shape: Mo supplies the per-cell baseline and measured relationships; FP&A supplies the
+distribution plan; the tool shows sensitivity. Puts the assumption where the knowledge lives.
+
+### Free operational win, available now
+
+Error by horizon: 11.8 / 16.4 / 20.5 / 24.0 / … / 49.9. **Re-anchor weekly as SPINS lands and show
+only h=1–4 → 11.8–24% instead of ~33% averaged over 13 weeks.** The 13-week horizon exists for
+production lead time; for tracking and in-quarter correction a rolling 4-week view is ~2x more
+accurate. Product decision, costs nothing.
+
+### Deciding artifact — deferred
+
+A **horizon × aggregation grid** (error at every forecast distance × rollup level) would state
+exactly which promises are safe for which audience. One run with existing machinery. **Jason said
+keep it in mind and wait.**
+
+---
+
 ## README update 215: direct chart fixed, TDP closed portfolio-wide, ETS ties flat (2026-10-05)
 
 ### Direct chart — two bugs I introduced, both fixed
