@@ -6,6 +6,73 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 212: Rob's commercial-event doc — right frame, numbers we've already disproved (2026-10-05)
+
+Rob shared an AI-authored strategy doc, `docs/Aevah_High_Growth_CPG_Forecasting_Commercial_Event_Modeling.md`
+(17 sections). Logged to wiki/08 and memory. **No Mo architecture changes made — Jason's call.**
+
+### The thesis, and it is the right one
+
+Commercial events — new locations, promos, launches, distribution changes, pricing — should be
+**explicit forecast drivers**, not noise inferred from history:
+
+`Forecast = Base x Distribution x Seasonality x Promo x Launch/Ramp x Price x Cannibalization + LoadIn`
+
+Best line: **"High growth should not appear to the model as unexplained volatility."** That matches
+where our measurements have pointed for two weeks.
+
+### ✅ Independently confirmed by our own work
+
+- **§2 load-in vs sell-through** — Brian described the identical mechanism unprompted on Oct 2 (two
+  layers of inventory, ~2 months of product). Also the business cause of the 14.4% unseen-cell gap.
+- **§9/§10 known vs unknown future** — directly addresses our measured defect: **46 of 56 features
+  frozen** for the whole 13-step forecast.
+- **§17 growth is commercial, not statistical** — matches 61%-of-growth-is-new-distribution.
+
+### ❌ Already measured negative — do not re-litigate
+
+| doc proposes | we measured |
+|---|---|
+| distribution ramp curve (42/63/79/88/96% of mature velocity) | **no new-door dilution exists**: units/TDP by age 15.47 / 15.46 / 15.40 (0-12 / 13-26 / 27-52wk). New cells arrive AT mature level. |
+| cold start by borrowing from analogous products | **MO_79 tested exactly this** (donor surrogate, incl. same UPC elsewhere) — LOST to naive in every band |
+| feed distribution plans forward as a major driver | **MO_95 oracle = 0.6pp ceiling**, including perfect authorization data |
+| seasonality as a multiplier | detrended YoY shape correlation **median +0.079**; 4% of series >0.6 |
+| cannibalization as a demand input | **MO_96**: all four own-brand donor features HURT (+0.12 to +0.82pp) |
+
+⚠️ **The doc was written without access to measurement.** Its implied effect sizes are much larger
+than anything we can observe. **Adopt the frame; do not adopt the numbers.**
+
+### ⭐ Genuinely new and untested — this is the value
+
+1. **§11 stockouts — "Observed Sales ≠ True Demand."** Never tested. If OOS 30% of the time, the
+   model learns 7 units/store/week when reality is 10. Needs in_stock_pct / days_out_of_stock /
+   fill_rate / OTIF. Circana OOS still pending; BUILT's measure dictionary has OTIF.
+   **Highest-value untested idea in the doc.**
+2. **§2 sell-in vs sell-through as separate objects.** Mo forecasts sell-through (POS). FP&A plans
+   **shipments**. `consumer_demand + load_in + replenishment = shipment_forecast` is a deliverable we
+   do not produce and Bracken would use directly.
+3. **§12 growth event ledger** — forecast → observed outcome → learned effect. We have no systematic
+   way to learn from our own misses.
+4. **§8 cross-channel substitution** — Walmart expansion cannibalizing Amazon/DTC. Untested; newly
+   relevant with TikTok Shop + Justin's Marketplace data.
+5. **§10 promo calendar as known-future** — Brian: 2027 being built, Q1 2027 reasonably baked. The
+   one forward input we can actually get.
+
+### ⚠️ What it lacks
+
+**No measurement or validation discipline** — no honest backtesting, no leakage treatment, no test
+for whether an effect is real. **This week alone two single-fold results reversed** when run across
+all four folds. Adopting this frame without the harness would produce confident architecture built
+on noise.
+
+### Recommended sequencing
+
+Rank by **measured ceiling, not plausibility**. Start with §11 stockouts (untested, cheap, plausible)
+and §2 sell-in/sell-through (a different deliverable FP&A wants). Do NOT start with distribution ramp
+curves or seasonality multipliers — both already measured small or negative.
+
+---
+
 ## README update 211: seasonality doesn't repeat, linear_tree loses — but capping at 1.5x is free (2026-10-05)
 
 Jason: "How can we best capture the growth and seasonal trend that LightGBM can't see? Should we add
