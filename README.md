@@ -6,6 +6,67 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 224: Connor's model decoded — it is a two-stage velocity × distribution model (2026-10-06)
+
+### ⭐ What L4W/L12W actually are
+
+Rob: *"this feels like the sort of thing that's wired into the excel book."* Reading the
+FORMULAS (not cached values) in `Retail_Build` (3,472 rows):
+
+```excel
+L4W           =SUMIFS(SPINS!$R:$R, SPINS!$C:$C, N$5, SPINS!$U:$U, $G7, SPINS!$S:$S, ...)
+Median        =MEDIAN(K7:N7)
+Starting Base =IF(Override>0, Override, SUMIFS($K7:$O7, $K$6:$O$6, $J7) * AdjFactor)
+```
+
+- **`Method` is a COLUMN SELECTOR, not a computation** — L12W on 100% of rows
+- **`Median` = median across the four WINDOW LENGTHS**, not across weeks
+- `Override` on **413 rows (11.9%)**
+
+**SPINS col R = "Base U/S/W"** — Base Units per Store per Week. Verified by identity:
+col P × col Q = col R (1.4 × 0.99318 = 1.39045 exactly). **His anchor is a trailing
+VELOCITY, already distribution-normalized — Brian's named metric.**
+
+### ⭐⭐ The workbook IS the architecture we tested and set aside
+
+| step | where |
+|---|---|
+| trailing Base U/S/W | `SPINS` col R → L4W/L12W/L24W/L52W |
+| pick a window | `Method` (L12W) |
+| × adjustment / override | `Adj. Factor` / `Override` (11.9%) |
+| **× distribution** | `Slotting Output` — POD forecast |
+| × seasonality, macro | `Seasonality_Index`, `Macro_Index` |
+
+MO_117 found two-stage loses 0.61pp even with **oracle doors** — but it scored at
+**cell × week** (where naive dominates and our model also loses) and forecast velocity
+with **LightGBM** rather than a trailing SPINS figure. **Verdict reopened.**
+
+### ⚠️ This invalidates MO_123
+
+MO_123 tested "L4W" as a trailing mean of **raw base_units** and found it lost by 17pp.
+**That is not Connor's L4W.** A raw-unit mean lags on a series gaining distribution; a
+velocity mean does not. The mechanism I described was right; attributing it to Connor was
+not. **I tested a straw man.**
+
+### Rob's BAR→PUFF question
+
+12 of 111 flavor×pack combos have both lines; 75 usable pairs. **69% OVERLAP** (not a
+handoff). ⚠️ My first ratio (PUFF mature ÷ BAR **final** = 5.74×) was unfair — BAR died at
+median **0.30× its own peak**. Fair: **PUFF mature ÷ BAR PEAK = 1.04×**, IQR 0.48–3.56.
+
+**Chain-link, don't concatenate** — rescale by the overlap-window ratio. The 69% overlap
+is the *enabling condition*. **43 of 75 pairs gain 52+ weeks** of history. Scope bounded:
+~5% of the portfolio. Untested.
+
+### Also found
+
+`Item_Assumptions` carries **`SPINS UPC` + `SPINS Description`** — the authoritative
+Built↔SPINS crosswalk. `Majority Type` is finer than our `source_brand`: **Puff 102,
+Sour Puff 30, Chunk Puff 12, Bar 9, Duos Puff 9**. ⚠️ **Item-code prefix does NOT encode
+the line** — `BRB0229` is a Puff (3 cases). No predecessor mapping exists in the workbook.
+
+---
+
 ## README update 223: where ML actually beats naive, and product lines must be separate (2026-10-06)
 
 ### ⭐ THE answer to "why bother with ML"
