@@ -6,6 +6,77 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 223: where ML actually beats naive, and product lines must be separate (2026-10-06)
+
+### ⭐ THE answer to "why bother with ML"
+
+We had only ever scored at item × retailer × week — the one level where naive is
+unbeatable by construction, and where nobody makes a decision. Same forecast, every
+level, bottom-up:
+
+| level | flat | drift | seasonal naive | **model** |
+|---|---|---|---|---|
+| cell × week | **32.3** | 38.8 | 43.2 | 35.9 |
+| account × month | **23.1** | 28.0 | 28.2 | 24.7 |
+| **portfolio × month** | 16.4 | 20.8 | 19.5 | **12.2** |
+
+**At the level the business plans at, the model beats flat by 4.2pp — 26% relative.**
+Drift and seasonal-naive are both WORSE than flat there. Per-cell errors look random but
+are systematically right in aggregate.
+
+**Coherence is EXACT** (< 1e-6): drilling down from a macro number always reconciles.
+
+⚠️ **The uncomfortable middle is account × month** (flat 23.1 vs model 24.7) — the level
+Connor drills to first. That is the target, not a number to quote around.
+
+### ⚠️ My prediction failed: no trend term helps
+
+Predicted drift would beat flat on declining cells and on BAR. It does not —
+declining **32.9 flat vs 37.4 drift**; BAR **93.3 vs 100.3**.
+
+**Why, and it resolves Jason's intuition rather than refuting it:** BAR declines by
+**LOSING SERIES, not by each series declining.** An item sells until delisted, then
+stops. A surviving item stays ~random-walk, so extrapolating a slope overshoots.
+**Correct at the BRAND level, wrong at the SERIES level.**
+
+### ⭐ Jason was right about source_brand — as a STRATIFIER
+
+| arm | wMAPE | |
+|---|---|---|
+| pooled (production today) | 38.05 | |
+| **per-brand** | **36.92** | **−1.14pp** |
+| non-BAR keys · pooled | 37.60 | |
+| **non-BAR keys · BAR excluded from training** | **36.26** | **−1.34pp** |
+
+| brand | pooled | per-brand | delta | train rows |
+|---|---|---|---|---|
+| BUILT PUFF | 36.84 | 35.85 | −0.99 | 34,452 |
+| BUILT BAR | 170.50 | **158.01** | **−12.49** | 12,771 |
+| BUILT SOUR PUFF | 56.71 | 55.06 | −1.65 | 927 |
+
+**Wins all 7 quarters, both forms.** Not a contradiction with brand ranking 54/56 on
+SHAP: **importance measures what the model DID use, not what a different specification
+WOULD have gained.**
+
+**Prefer EXCLUSION over stratification** — one filter, most of the benefit, no three
+artifacts to keep in lockstep.
+
+### ⚠️ RETRACTION: brand does not predict exit
+
+The "91.9% BAR exit rate" claim from README 221 was an **artifact**. The test took one
+row per series at its LAST observation, so calendar features proxied *how long ago it was
+seen*. Restricted to series **active** at the cutoff, brand falls **rank 2 → rank 42**,
+and 13-week survival is **99.5%** — nothing to predict. **Kills the survival layer and
+the `brand_lifecycle` field**, both caught before building. Descriptive history stands.
+
+### Client caveat for BUILT
+
+Under **2 years** of usable PUFF history, far less SOUR PUFF, and BAR's history reflects a
+**delisting lifecycle that may actively mislead**. Keeping lines distinct helps now and
+more as the newer lines accumulate history.
+
+---
+
 ## README update 222: the backtest was not measuring production — two conclusions inverted (2026-10-06)
 
 ### ⚠️ Retractions first
