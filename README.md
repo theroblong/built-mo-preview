@@ -6,6 +6,68 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 225: a trailing velocity anchor beats the trained model at every level (2026-10-06)
+
+### ⭐⭐ The estimator
+
+```python
+velocity_4wk = sum(base_units[-4:]) / sum(tdp[-4:])    # = SPINS "Base U/S/W"
+forecast     = velocity_4wk * tdp_last * seasonal_mult
+```
+
+**No trees. No 56 features. No recursion. No training.**
+
+| level | flat | our model | **conn_L4W** | conn_L12W (his default) | conn_L24W |
+|---|---|---|---|---|---|
+| cell × week | 32.8 | 36.3 | **28.4** | 33.4 | 39.5 |
+| account × month | 22.9 | 24.7 | **17.7** | 22.6 | 29.7 |
+| **portfolio × month** | 16.0 | 11.8 | **10.7** | 17.5 | 24.6 |
+
+**First method all day to beat flat at cell × week** — the level README 223 said naive
+was unbeatable at. It wasn't; we had the wrong estimator.
+
+### ⭐ It fixes the −5% bias
+
+Portfolio-month bias: flat **0.955**, model **0.951**, **conn_L4W 1.029**.
+
+Dividing by trailing tdp and multiplying by **current** tdp captures door growth a
+raw-unit average structurally misses — a candidate cure for the under-forecast that has
+never had an explanation.
+
+### ⚠️ The nuance flatters neither side
+
+**Connor's actual default L12W scores 17.5 — WORSE than flat (16.0).** Only the short
+window works. So: *the velocity × doors architecture with a short window beats both of
+us, and neither is using it.* He has the right architecture with the wrong parameter; we
+tested the right parameter (MO_123) against the wrong quantity.
+
+### Overturns two earlier verdicts
+
+- **MO_117** closed two-stage on a 0.61pp oracle-doors loss — scored at cell × week only,
+  with LightGBM velocity rather than a trailing mean. **Overturned.**
+- **MO_123** found L4W lost 17pp — implemented as a mean of **raw units**, which lags on
+  a series gaining distribution. **Straw man.**
+
+### ⚠️ Caveats before this reaches Brian
+
+1. Portfolio-month rests on **21 observations**.
+2. **Oracle doors HURT at portfolio-month** (19.2 vs 17.5) while helping at cell-week.
+   **No explanation yet.**
+3. Two confident findings inverted today when the harness changed. Reproduce first.
+4. Doors carried flat; no distribution forecast tested.
+
+### What it would mean
+
+ML's role changes rather than disappears: **the velocity anchor handles level and
+distribution; ML should add what a trailing mean cannot see** — promo, launch dynamics,
+competitive displacement. And the client conversation gets easier: his architecture is
+right, his window is wrong, here is what sits on top.
+
+**MO_125 pending** — blend sweep to test whether conn_L4W replaces or complements the
+model, together with `anchor` mode and BAR exclusion.
+
+---
+
 ## README update 224: Connor's model decoded — it is a two-stage velocity × distribution model (2026-10-06)
 
 ### ⭐ What L4W/L12W actually are
