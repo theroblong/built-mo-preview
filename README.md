@@ -6,6 +6,74 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 219: the seasonal factor was applied against the wrong reference (2026-10-06)
+
+⭐ **Jason found this from the year-overlay charts:** *"Each and every January shows a ramp up and not
+down. That is what bugs me about the Q1 2026 down forecast. That made no sense."*
+
+It made no sense because production had a reference-point error.
+
+### The bug
+
+```python
+stl_mult   = max(0.1, 1.0 + stl_idx)      # TARGET week's index ONLY
+units_base = units_base * stl_mult
+```
+
+The index is a level **relative to the year's mean**. `units_base` is already anchored near the
+**cutoff week's** level. So the correct multiplier is the RATIO:
+
+```python
+mult = (1.0 + index[target_week]) / (1.0 + index[anchor_week])
+```
+
+**A trough-anchored forecast gets pushed DOWN when it should go UP.** Q1 2026 anchored at week 52,
+index **0.926** — so the old form predicted a January decline against a pattern that ramps up in
+every observed year.
+
+This also explains two results that never made sense: **more amplitude was monotonically worse**
+(amplifying a sign error) and **zero seasonal tested optimal** (no correction beats a wrong one).
+
+### MO_109 — 7 honest quarters, portfolio-wide
+
+| mode | wMAPE | bias |
+|---|---|---|
+| **as_applied — what production was running** | **43.73** | 0.871 |
+| none (seasonal off) | 40.97 | **0.909** |
+| **anchor_relative (the fix)** | **40.61** | 0.755 |
+
+**Production was running the broken form, costing 3.12pp.**
+
+| quarter (anchor idx) | none | **fix** | delta |
+|---|---|---|---|
+| Q4 2025 (0.999) | 41.2 | **34.6** | −6.6 |
+| **Q1 2026 (0.926)** | 50.9 | **48.0** | **−2.9**, bias 0.616 → **0.769** |
+| Q3 2025 (1.085) | 39.0 | **36.6** | −2.4 |
+| Q2 2026 (1.127) | 31.5 | **30.3** | −1.2 |
+| Q1 2025 (1.023) | 56.7 | 62.5 | +5.8 |
+| Q3 2026 (1.007) | 25.5 | 28.7 | +3.2 |
+
+Wins 4 of 7, and the wins land on Q1 2026 and Q4 2025.
+
+### ⚠️ Three caveats
+
+1. **Against `none` the gain is only 0.36pp.** The 3.12pp is vs PRODUCTION, not vs the best known
+   alternative.
+2. **Overall bias gets worse** (0.909 → 0.755) even though Q1 2026's improves.
+3. **My first worked example was wrong** — I quoted the monthly December index (0.90); the code uses
+   the weekly interpolated curve, where week 52 is **0.926**. The structural error was real; the
+   arithmetic illustrating it was not.
+
+**This is a fix for a defect, not a solved seasonality problem.** Present it that way.
+
+### Shipped
+
+`MO_27` and `MO_80` both patched — they **must stay in lockstep** or the chart's retrospective and
+forward lines diverge again. Also ships `MO_108` (year-over-year overlay plots, the artifact that
+surfaced this) and `MO_109` (the three-arm test).
+
+---
+
 ## README update 218: the method space is exhausted — the oracle says 2.38pp (2026-10-06)
 
 Jason pushed back on drifting defensive: *"The accuracy case remains valuable for BUILT... we don't

@@ -353,9 +353,16 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
                         + SEASONAL_BLEND_WEIGHT * seasonal_ref) / base
                 vals = {t: max(0.0, v * mult) for t, v in vals.items()}
             elif seasonal and base > 0:
-                # STL fallback, only when the YAGO blend did not fire
+                # STL fallback, only when the YAGO blend did not fire.
+                # ANCHOR-RELATIVE (MO_109): divide by the ANCHOR week's index.
+                # The index is relative to the year's mean while the prediction is
+                # already anchored at the cutoff level, so the target index alone
+                # applies the wrong reference and pushes a trough-anchored
+                # forecast down. Must stay in lockstep with MO_27.
                 stl = seasonal.get(int(fd.isocalendar().week), 0.0)
-                vals = {t: max(0.0, v * max(0.1, 1.0 + stl)) for t, v in vals.items()}
+                a_idx = 1.0 + seasonal.get(int(pd.Timestamp(cut).isocalendar().week), 0.0)
+                mult = max(0.1, (1.0 + stl) / a_idx) if a_idx > 0 else 1.0
+                vals = {t: max(0.0, v * mult) for t, v in vals.items()}
 
             hist.append(vals["q50"])     # blended q50 seeds the next step, as MO_27 does
             if qs <= fd <= qe:

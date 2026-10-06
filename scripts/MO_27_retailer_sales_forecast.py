@@ -763,10 +763,23 @@ if __name__ == "__main__":
             # seasonal curve as the sole seasonal signal — complementary to YAGO,
             # not a replacement.
             elif seasonal_lookup and units_base > 0:
+                # ANCHOR-RELATIVE (MO_109, 2026-10-06). The index is a level
+                # RELATIVE TO THE YEAR'S MEAN, but units_base is already anchored
+                # near the CUTOFF week's level. Multiplying by the target week's
+                # index alone therefore applies the wrong reference point: a
+                # forecast anchored in a trough gets pushed DOWN when it should go
+                # UP. Q1 2026 was anchored at week 52 (index 0.926) and every
+                # observed January ramps UP — the old form predicted a decline.
+                # The correct multiplier is the RATIO of the two indices.
+                # Measured over 7 honest quarters: as-applied 43.73 wMAPE,
+                # anchor-relative 40.61, seasonal-off 40.97. Q1 2026 50.9 -> 48.0
+                # and its bias 0.616 -> 0.769.
                 woy = int(forecast_date.isocalendar().week)
+                _anchor_woy = int(anchor_date.isocalendar().week)
+                _anchor_idx = 1.0 + seasonal_lookup.get(_anchor_woy, 0.0)
                 stl_idx = seasonal_lookup.get(woy, 0.0)
-                if stl_idx != 0.0:
-                    stl_mult = max(0.1, 1.0 + stl_idx)
+                if stl_idx != 0.0 and _anchor_idx > 0:
+                    stl_mult = max(0.1, (1.0 + stl_idx) / _anchor_idx)
                     units_low  = max(0.0, units_low  * stl_mult)
                     units_base = max(0.0, units_base * stl_mult)
                     units_high = max(0.0, units_high * stl_mult)
