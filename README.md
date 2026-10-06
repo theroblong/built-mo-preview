@@ -6,6 +6,70 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 218: the method space is exhausted — the oracle says 2.38pp (2026-10-06)
+
+Jason pushed back on drifting defensive: *"The accuracy case remains valuable for BUILT... we don't
+want to be playing defense yet. We need to show something great."* Fair. So the three no-new-data
+ideas got tested properly. All three fail, and the REASON is the finding.
+
+### ⭐ MO_107 — routing, hierarchy, blending, and an ORACLE ceiling
+
+| arm | wMAPE |
+|---|---|
+| **flat** | **32.56** |
+| direct | 32.57 |
+| blend (0.5 flat + 0.5 recursive) | 33.50 |
+| recursive | 36.26 |
+| **hier (top-down)** | **44.66** |
+| **ORACLE** (best arm per series, hindsight) | **30.18** |
+
+**The oracle is only 2.38pp better than flat.** With PERFECT hindsight knowledge of which method to
+use on every series, the entire gain is 2.38 points. **The methods agree on which series are hard.**
+There is no "pick the right tool" win hiding anywhere.
+
+**Routing captures NONE of it** — worse than flat at every threshold, monotonically:
+
+| threshold | wMAPE | % to flat |
+|---|---|---|
+| −0.40 | 32.77 | 84% |
+| −0.20 | 33.39 | 64% |
+| 0.00 | 33.84 | 50% |
+
+**Hierarchical top-down fails at 44.66**, confirming MO_83's rejection rather than rescuing it.
+
+### ⚠️ Croston does NOT apply — and I mislabeled the quadrants first
+
+Corrected Syntetos-Boylan: **68% smooth** (82% of volume), **32% erratic**, **0% intermittent or
+lumpy**. Median ADI **1.00**, **zero** zero-demand weeks. Croston/SBA/TSB need gaps between demands;
+there are none. Closed before spending anything.
+
+### Now exhausted
+
+features · seasonality · TDP unfreezing · pack_count · own-brand donors · recursive · direct ·
+ETS/SES · four foundation models · linear_tree · hierarchy · blending · routing · intermittent
+methods. **Ceiling over ALL of them: 30.18 vs flat 32.56.**
+
+### "We go deeper" — the value framing
+
+Jason cited Danielle Stein Fairhurst (Excel MVP, FMI Master Financial Modeler) on the Financial
+Modelers Corner podcast:
+
+> *"Not only is it faster... **we go deeper**... you can actually get **more than what you did
+> before**. So the analysis, the insights, all of that is further and more detailed."*
+
+A **scope** gain, not a speed gain. 2,128 series forecast every refresh; 211 cannibalization pairs at
+Meijer alone; Brian's three portfolio questions answerable from models already running — *the
+analysis existed before the question did*.
+
+Her pet peeve — models left "in the middle of nowhere in sheet number five" — is our provenance
+argument in miniature. And the interview's self-check discussion is a credibility asset we just
+earned: we audited our own published 5x claim and corrected it (update 217).
+
+⚠️ **Caveat:** this argument is strongest when the forecast is credible, not as a substitute for it.
+Pair it with the honest accuracy numbers, never instead of them.
+
+---
+
 ## README update 217: the "5x better than foundation models" claim was wrong (2026-10-06)
 
 ⚠️ **This is in CLIENT-FACING material** — FP&A report §31 and Mo Chat's `_DATA_GLOSSARY`.
