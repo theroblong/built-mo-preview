@@ -11,9 +11,11 @@ was taken at PER-SERIES WEEKLY granularity. Two things have since changed:
   1. Jason pushed back correctly: at MONTHLY AGGREGATE granularity seasonality
      plainly does repeat -- March is positive in all three observed years, with
      correlations up to +0.704, and every January ramps UP.
-  2. MO_109 found the seasonal factor was applied against the wrong reference
-     point. Every prior seasonal result -- including the ones used to close this
-     avenue -- was measured through a sign error.
+  2. MO_109/MO_113 found the seasonal factor was applied in the wrong FORM. Inside a
+     loop that feeds its own multiplied output back in as lag1, only a
+     STEP-OVER-STEP ratio composes correctly; the shipped target-only form and the
+     cumulative anchor-relative form are both wrong (48.57 and 57.81 against 44.56).
+     Every prior seasonal result was measured through that error.
 
 So the honest position is that Prophet has not actually been tested at the
 granularity where the signal exists.
@@ -23,7 +25,7 @@ THE DESIGN POINT
 Prophet is used here the way the data supports, not the way the suggestion framed
 it. A 70/30 LightGBM/Prophet blend fits Prophet PER SERIES, where the noise
 objection still stands. The defensible use is to learn the SHAPE on the aggregate,
-where it is measurable, and apply it per series as an anchor-relative multiplier --
+where it is measurable, and apply it per series as a step-over-step multiplier --
 exactly the slot the STL index occupies today, but with a TREND term the STL index
 does not have. BUILT grew ~20x across this window and the recursive loop freezes
 every distribution feature, so a trend term is the one thing Prophet brings that
@@ -31,8 +33,12 @@ nothing in production has.
 
 PART 1 - multiplier source (same model, same loop, only the multiplier differs)
   none             no seasonal factor
-  monthly_anchor   MO_100 monthly index, anchor-relative (the MO_109 incumbent)
-  prophet_yearly   Prophet yearly component only, anchor-relative. Isolates SHAPE.
+  mo59_step        the SHIPPED STL index in step form -- the true incumbent, 44.56 in
+                   MO_113. ⚠️ Not MO_100's monthly index, which this script used first:
+                   it correlates only r=+0.601 with a clean detrend and INVERTS January
+                   (0.937 vs mo59's 1.011), so measuring Prophet against it would
+                   flatter Prophet for free.
+  prophet_yearly   Prophet yearly component only. Isolates SHAPE from trend.
   prophet_full     Prophet yhat ratio: trend AND yearly. Adds GROWTH extrapolation.
   prophet_cohort   prophet_full, but the aggregate is built from the CONTINUING
                    cohort only (series with >=52wk history at the cutoff).
@@ -47,9 +53,13 @@ PART 2 - Prophet as a forecaster, and the blend claim, scored directly
   w*prophet + (1-w)*lgbm for w in 0, 0.25, 0.3, 0.5, 0.7, 0.75, 1.0
   (0.3 is there because "70% LightGBM + 30% Prophet" was the specific proposal.)
 
-Honesty constraints held throughout: Prophet is fitted ONLY on data <= cutoff, once
-per quarter; the multiplier is anchor-relative by construction; the LightGBM arm and
+Honesty constraints held throughout: Prophet is fitted ONLY on data <= cutoff, once per
+quarter; every multiplier is converted to step form by `_as_step`; the LightGBM arm and
 every Prophet arm see identical training rows.
+
+One asymmetry, stated rather than hidden: mo59 is a FIXED artifact, not rebuilt per
+cutoff, so that arm carries a small look-ahead the Prophet arms do not. It biases the
+comparison TOWARD the incumbent, so a Prophet win here would be a real win.
 """
 from __future__ import annotations
 
@@ -68,10 +78,14 @@ warnings.filterwarnings("ignore")
 for _n in ("cmdstanpy", "prophet", "numexpr"):
     logging.getLogger(_n).setLevel(logging.CRITICAL)
 
+# MO_80 reads MO_SEASONAL_MODE at module level, so this must precede the import.
+# `step` is MO_113's winner and the only form that composes under feedback.
+import os
+os.environ.setdefault("MO_SEASONAL_MODE", "step")
+
 from prophet import Prophet
 
 import MO_80_quarterly_honest_backtest as M
-import MO_100_monthly_seasonal_index as S
 from mo_panel import CAT_COLS, GROUP_COLS
 
 OUT = Path("outputs/mo110_prophet.json")
@@ -110,8 +124,12 @@ def _fit_prophet(agg: pd.DataFrame):
 def prophet_multipliers(df, cut, fweeks, cohort_only=False):
     """{date: (yearly_mult, full_mult)} anchored on the cutoff week.
 
-    Returned multipliers are RATIOS to the anchor by construction, so there is no way
-    to reintroduce the MO_109 reference-point error here.
+    Returned as ratios to the ANCHOR. ⚠️ Callers inside a feedback loop must convert to
+    STEP-OVER-STEP by dividing consecutive values, or they hit exactly the MO_113
+    compounding trap: this loop appends its multiplied prediction into `hist`, so a
+    cumulative ratio applied at every step re-applies the whole climb. The Q1 2026
+    ratios here run 1.03 -> 1.69, which is the shape that scored 96.2 wMAPE.
+    `_as_step` below does that conversion; `main` uses it.
     """
     tr = df[df["__time"] <= cut]
     if cohort_only:
@@ -150,6 +168,44 @@ def prophet_multipliers(df, cut, fweeks, cohort_only=False):
         fm = yh / a_yhat if a_yhat > 0 else 1.0
         out[d] = (float(np.clip(ym, MULT_FLOOR, MULT_CEIL)),
                   float(np.clip(fm, MULT_FLOOR, MULT_CEIL)))
+    return out
+
+
+def prophet_as_index(mults: dict, fweeks: list, cut, which: int) -> dict:
+    """Prophet's level curve expressed as a mo59-style {week_of_year: offset} dict.
+
+    This is what lets Prophet be scored by the REAL production path instead of a bare
+    loop. `_seasonal_mult` in step mode computes
+
+        (1 + idx[woy_h]) / (1 + idx[woy_{h-1}])        (woy_0 = the anchor week)
+
+    so setting `1 + idx[woy_h] = L_h`, where L_h is Prophet's level at step h relative to
+    the anchor and L_0 = 1, makes that ratio exactly Prophet's own step ratio. The anchor
+    week therefore gets offset 0.
+
+    Safe for a 13-step horizon because 13 consecutive weeks cannot repeat a week-of-year,
+    so no two steps collide on a key. Asserted rather than assumed.
+    """
+    woys = [int(pd.Timestamp(d).isocalendar().week) for d in fweeks]
+    assert len(set(woys)) == len(woys), "week-of-year collision; this encoding is unsafe"
+    idx = {int(pd.Timestamp(cut).isocalendar().week): 0.0}
+    for d, w in zip(fweeks, woys):
+        idx[w] = float(mults.get(d, (1.0, 1.0))[which]) - 1.0
+    return idx
+
+
+def _as_step(mults: dict, fweeks: list, which: int) -> dict:
+    """Convert {date: (yearly, full)} anchor ratios into step-over-step multipliers.
+
+    m_step(h) = m_anchor(h) / m_anchor(h-1), with m_anchor(0) = 1.0. The cumulative
+    product telescopes back to the anchor ratio, so the intended LEVEL is unchanged --
+    it is reached through the recursion instead of imposed at every step.
+    """
+    out, prev = {}, 1.0
+    for d in fweeks:
+        cur = mults.get(d, (1.0, 1.0))[which]
+        out[d] = max(0.1, cur / prev) if prev > 0 else 1.0
+        prev = cur
     return out
 
 
@@ -227,6 +283,17 @@ def prophet_per_series(tr, keys, fweeks, qs, qe):
     return out
 
 
+def _step_mult(idx, d, cut, fweeks):
+    """index(week_d) / index(previous forecast week), with the anchor for step 1."""
+    if not idx:
+        return 1.0
+    i = fweeks.index(d) if d in fweeks else 0
+    ref = fweeks[i - 1] if i > 0 else pd.Timestamp(cut)
+    tgt = 1.0 + idx.get(int(d.isocalendar().week), 0.0)
+    r = 1.0 + idx.get(int(pd.Timestamp(ref).isocalendar().week), 0.0)
+    return max(0.1, tgt / r) if r > 0 else max(0.1, tgt)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-part2", action="store_true")
@@ -237,12 +304,11 @@ def main() -> None:
     feats = list(pickle.load(
         open("outputs/model_retailer_sales_q50_v10_full.pkl", "rb")).feature_name_)
     df = M.load_panel(feats)
-    raw = S.load_panel()
     weeks = pd.DatetimeIndex(pd.to_datetime(sorted(pd.unique(df["__time"])), utc=True))
     cats = {c: df[c].cat.categories for c in CAT_COLS if c in df.columns}
     quarters = [q for q in M.QUARTERS if q[0] != "Q4 2026"]
 
-    arms = ["none", "monthly_anchor", "prophet_yearly", "prophet_full", "prophet_cohort"]
+    arms = ["none", "mo59_step", "prophet_yearly", "prophet_full", "prophet_cohort"]
     acc = {k: [] for k in arms}
     detail = {}
     blend_acc = {w: [] for w in BLEND_W}
@@ -263,30 +329,51 @@ def main() -> None:
         ek = {k[0] for k in truth}
         fw = M.future_weeks(weeks, cut, M.HORIZON)
 
-        # monthly index, built honestly from data <= cutoff, anchor-relative
-        mi, _ = S.monthly_index(raw, cutoff=cut, verbose=False)
-        midx = {}
-        if mi:
-            wk = S.to_weekly(mi)
-            midx = dict(zip(wk["week_of_year"].astype(int), wk["seasonal_index"]))
-        a_idx = 1.0 + midx.get(int(pd.Timestamp(cut).isocalendar().week), 0.0)
+        # ⚠️ The incumbent arm MUST be the index production actually consumes. This
+        # script originally used MO_100's monthly index, which correlates only r=+0.601
+        # with a clean detrend and INVERTS January (0.937); the shipped mo59 index
+        # correlates r=+0.931 and reads January at 1.011. Comparing Prophet against the
+        # weaker artifact would flatter Prophet for free.
+        #
+        # mo59 is a FIXED artifact, not rebuilt per cutoff, so this arm carries a small
+        # look-ahead the Prophet arms do not. Stated rather than hidden: it biases the
+        # comparison TOWARD the incumbent, so a Prophet win here is a real win.
+        midx = M.load_seasonal_index()
 
         pm_all = prophet_multipliers(df, cut, fw, cohort_only=False)
         pm_coh = prophet_multipliers(df, cut, fw, cohort_only=True)
 
+        # Each arm is a {week_of_year: offset} index, scored by the REAL production path.
+        # ⚠️ This is deliberate. MO_109 measured a seasonal form in a BARE loop, reported a
+        # 3.12pp win, and was wrong by 9pp once the router and the YAGO blend were in
+        # play. A bare-loop Prophet result would be unsafe the same way, so Part 1 goes
+        # through M.run_production and its numbers are directly comparable to MO_113
+        # (mo59 step = 44.56) and MO_116.
+        indices = {
+            "none": {},
+            "mo59_step": midx,
+            "prophet_yearly": prophet_as_index(pm_all, fw, cut, 0),
+            "prophet_full": prophet_as_index(pm_all, fw, cut, 1),
+            "prophet_cohort": prophet_as_index(pm_coh, fw, cut, 1),
+        }
+
         model, tr = fit_lgbm(df, feats, cut)
         mult_fns = {
             "none": lambda d: 1.0,
-            "monthly_anchor": lambda d: max(0.1, (1.0 + midx.get(int(d.isocalendar().week), 0.0)) / a_idx) if (midx and a_idx > 0) else 1.0,
-            "prophet_yearly": lambda d: pm_all.get(d, (1.0, 1.0))[0],
-            "prophet_full": lambda d: pm_all.get(d, (1.0, 1.0))[1],
-            "prophet_cohort": lambda d: pm_coh.get(d, (1.0, 1.0))[1],
+            # STEP-OVER-STEP, matching MO_113's winner and production. A cumulative
+            # ratio compounds inside this loop -- the predicted value is appended to
+            # `hist` and becomes the next step's lag1 (MO_113: anchor-relative scored
+            # 57.81 against 44.56 for step).
+            "mo59_step": lambda d: _step_mult(midx, d, cut, fw),
+            "prophet_yearly": lambda d: sy.get(d, 1.0),
+            "prophet_full": lambda d: sf.get(d, 1.0),
+            "prophet_cohort": lambda d: sc.get(d, 1.0),
         }
 
         row, cells = {}, []
         preds = {}
         for k in arms:
-            pred = recursive(model, tr, feats, cats, qs, qe, ek, fw, mult_fns[k])
+            pred = M.run_production(df, feats, cut, qs, qe, ek, TREES, fw, indices[k])
             preds[k] = pred
             s = M.score(truth, pred)
             row[k] = s
@@ -299,7 +386,15 @@ def main() -> None:
         if a.skip_part2:
             continue
         if a.part2_account:
-            sub = {k for k in ek if k[1] == a.part2_account} or ek
+            # GROUP_COLS is [upc, channel_outlet, retail_account, geography_raw], so the
+            # account is index 2. This read index 1 and silently matched nothing, then
+            # fell through `or ek` to ALL series -- a filter that quietly did the
+            # opposite of what it said.
+            _ai = GROUP_COLS.index("retail_account")
+            sub = {k for k in ek if k[_ai] == a.part2_account}
+            if not sub:
+                raise SystemExit(f"\nFATAL: no series match account "
+                                 f"{a.part2_account!r} in {ql}.")
         else:
             vol = (act.groupby(GROUP_COLS, observed=True)["base_units"].sum()
                       .sort_values(ascending=False))
@@ -307,7 +402,11 @@ def main() -> None:
             sub = set(vol.index[:max(1, min(PART2_MAX_SERIES,
                                             int((cum <= PART2_VOLUME_SHARE).sum()) + 1))])
         pp = prophet_per_series(tr, sub, fw, qs, qe)
-        lg = preds["none"]
+        # The blend needs a BARE LightGBM point forecast, not the production path -- the
+        # router would substitute last-value for short series and the blend weight would
+        # then be measuring the router, not LightGBM. This is the one place the local
+        # `recursive` loop is still the right tool.
+        lg = recursive(model, tr, feats, cats, qs, qe, ek, fw, lambda d: 1.0)
         common = [k for k in truth if k in pp and k in lg]
         if common:
             A = np.array([truth[k] for k in common])
@@ -328,7 +427,7 @@ def main() -> None:
     best = min(arms, key=lambda k: means[k]["wmape"])
     print(f"\n  BEST multiplier source: {best} ({means[best]['wmape']:.2f})")
     for k in ("prophet_yearly", "prophet_full", "prophet_cohort"):
-        print(f"    {k:<15s} vs monthly_anchor {means[k]['wmape'] - means['monthly_anchor']['wmape']:+.2f}pp"
+        print(f"    {k:<15s} vs mo59_step {means[k]['wmape'] - means['mo59_step']['wmape']:+.2f}pp"
               f"   vs none {means[k]['wmape'] - means['none']['wmape']:+.2f}pp")
 
     blend_means = {}

@@ -144,6 +144,9 @@ def yoy_repeatability(d: pd.DataFrame) -> float:
     return float(np.mean(cs)) if cs else float("nan")
 
 
+MIN_NONPROMO_SHARE = 0.05   # below this the non-promo subset is too thin to be a ratio
+
+
 def main() -> None:
     df = load()
     kr = df[(df["retail_account"] == "KROGER") &
@@ -151,7 +154,21 @@ def main() -> None:
     sets = [("Whole portfolio", df), ("KROGER · Conventional Food", kr)]
     res = {}
 
+    # Weeks where the non-promo subset is too thin for the split to mean anything.
+    thin_weeks = {}
+    for name, sub in sets:
+        w = weekly(sub)
+        tot = (w["base_nonpromo_wk"] + w["base_promo_wk"]).replace(0, np.nan)
+        share = w["base_nonpromo_wk"] / tot
+        thin_weeks[name] = set(w.loc[share < MIN_NONPROMO_SHARE, "wk"].astype(int))
+
     print("MO_115 - promo calendar alignment, and Brian's metric\n")
+    for name in thin_weeks:
+        if thin_weeks[name]:
+            print(f"  ⚠️ {name}: {len(thin_weeks[name])} weeks-of-year have <5% non-promo "
+                  f"base volume —\n     the promo/non-promo split is not interpretable "
+                  f"there and is masked in the chart.")
+    print()
     print("Q1+Q2  Does Brian's metric (base per store-week) repeat better than base units?\n")
     print(f"  {'entity':<28s} {'measure':<18s} {'Q1 idx':>7s} {'ampl':>6s} "
           f"{'peak':>5s} {'trough':>7s} {'YoY repeat':>11s}")
@@ -161,6 +178,7 @@ def main() -> None:
         res[name] = {"growth_per_yr": None, "measures": {}}
         for col, lbl in (("base_units", "base_units"),
                          ("base_per_tdp", "base per store-wk"),
+                         ("tdp", "TDP itself"),
                          ("total_units", "total_units"),
                          ("incr_units", "incr (promo lift)"),
                          ("base_nonpromo_wk", "base, NON-promo wks"),
@@ -269,25 +287,40 @@ def main() -> None:
     fig.suptitle("Detrended week-of-year profiles — Brian's metric vs base units, "
                  "and promo vs non-promo weeks",
                  fontsize=13.5, color=INK, x=0.012, ha="left", y=0.985)
-    plots = [("Whole portfolio", ["base_units", "base per store-wk"],
-              "Portfolio — does per-store-week clean up the shape?"),
+    plots = [("Whole portfolio", ["base_units", "base per store-wk", "TDP itself"],
+              "Portfolio — TDP's WEEK-OF-YEAR RESIDUAL is small (0.17). Its growth is\n"
+              "huge (7.9x since 2023Q4) but smooth, so the detrend already removed it and\n"
+              "dividing by TDP changes little: the two base curves track at r=+0.92"),
              ("Whole portfolio", ["base, NON-promo wks", "base, promo wks", "incr (promo lift)"],
               "Portfolio — where does the seasonality live?"),
-             ("KROGER · Conventional Food", ["base_units", "base per store-wk"],
-              "Kroger — same comparison"),
+             ("KROGER · Conventional Food",
+              ["base_units", "base per store-wk", "TDP itself"],
+              "Kroger — TDP's residual is LARGE (0.85) and peaks at wk 41, the SAME week\n"
+              "base units peaks. That peak is distribution, not demand: dividing it out\n"
+              "moves the peak to wk 17 and the two curves correlate r=−0.28"),
              ("KROGER · Conventional Food",
               ["base, NON-promo wks", "base, promo wks", "incr (promo lift)"],
               "Kroger — where does the seasonality live?")]
     # One fixed colour per MEASURE, assigned in order and never cycled.
-    mc = {"base_units": "#0ea5e9", "base per store-wk": "#8b5cf6",
+    mc = {"base_units": "#0ea5e9", "base per store-wk": "#8b5cf6", "TDP itself": "#64748b",
           "base, NON-promo wks": "#10b981", "base, promo wks": "#f59e0b",
           "incr (promo lift)": "#f43f5e"}
     for ax, (ent, cols, title) in zip(axes.ravel(), plots):
+        thin = thin_weeks.get(ent, set())
         for c in cols:
             p = profiles.get((ent, c))
             if p is None:
                 continue
-            ax.plot(p.index, p.values, lw=2.0, color=mc[c], label=c, solid_capstyle="round")
+            # A promo/non-promo split is a ratio, and at some accounts almost every week
+            # is promoted, so the non-promo denominator collapses and the line swings
+            # wildly on near-zero volume. Those weeks are masked rather than drawn --
+            # plotting them implies a signal that is not in the data.
+            v = p.copy()
+            if c.startswith("base, ") and thin:
+                v[v.index.isin(thin)] = np.nan
+            ax.plot(v.index, v.values, lw=2.0, color=mc[c], label=c, solid_capstyle="round")
+        if thin and any(c.startswith("base, ") for c in cols):
+            ax.plot([], [], " ", label=f"({len(thin)} wks masked: <5% non-promo)")
         ax.axhline(1.0, color="#64748b", lw=.9, alpha=.5)
         ax.set_title(title, fontsize=10.5, loc="left", color=INK)
         ax.set_xlabel("week of year", fontsize=8.5, color=INK2)

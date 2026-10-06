@@ -6,6 +6,74 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 221: brand is a survival feature, and TDP growth is all launch ramp (2026-10-06)
+
+### ⭐ Why `source_brand` ranks 54/56 — Jason's question
+
+| feature | gain rank | % gain |
+|---|---|---|
+| base_units_roll4_avg | 1 | 22.95 |
+| retail_account | 4 | 5.44 |
+| spins_flavor_canonical | 15 | 1.41 |
+| **source_brand** | **54** | **0.00** |
+
+**Both obvious explanations REFUTED.** Not flavor redundancy — 92.9% of rows sit in
+flavors spanning >1 brand. Not lag suppression — stripping every lag lifts brand 48→16
+but only 0.00%→**0.03%** of gain.
+
+**Brand predicts EXIT, not level:**
+
+| brand | series | exited (9+ wks silent) | **exit rate** |
+|---|---|---|---|
+| **BUILT BAR** | 344 | 316 | **91.9%** |
+| BUILT PUFF | 1,325 | 139 | 10.5% |
+| BUILT SOUR PUFF | 208 | 2 | **1.0%** |
+
+A **9× difference**. The level model asks "what are next week's units for a series that
+exists" — the lags already answer that. Brand answers "will it still exist in 13 weeks",
+which **no per-series conditional mean can represent**.
+
+→ the lapse gate is REACTIVE (waits 9 weeks for silence we could predict)
+→ suggests `E[units] = P(alive) × E[units | alive]`
+→ **never conclude a feature is useless from a level-model SHAP**
+
+### BUILT BAR phase-out is real (Jason confirmed), and it corrected my own number
+
+| | 2023Q4 | 2026Q3 | base-unit share 2023 → 2026 |
+|---|---|---|---|
+| BUILT BAR | 241 series | **43** | **34.1% → 0.3%** |
+| BUILT PUFF | 144 | **1,279** | 65.9% → 87.9% |
+| BUILT SOUR PUFF | 0 | **277** | — → **11.8%** |
+
+⚠️ **"Established SKUs lose −0.19%/wk of TDP" was a BRAND-MIX ARTIFACT.** Within PUFF,
+established series are **+0.04%/wk**; BAR sheds **−3.36%/wk**. Real lifecycle = ramp
+hard, decelerate, hold.
+
+### ⚠️ "TDP is nearly flat" was my bad label
+
+That 0.170 was the detrended **week-of-year residual**. TDP grew **7.9×** (78,434 →
+619,570). All growth is launch: **+1.88%/wk** at 0–13 wks vs +0.35% at 26–52.
+
+**Why the aggregate looked smooth:** 2,117 series on staggered launch dates. Aggregation
+destroys the lumpiness. Kroger's TDP residual is **0.849, peaking wk 41 — the same week
+base units peaks.** That peak is distribution, not demand; divide it out and the peak
+moves to wk 17 (r = −0.28). Kroger TDP **anti-repeats** YoY at −0.541.
+
+### MO_116 / MO_117 — velocity × doors
+
+| | wMAPE | bias |
+|---|---|---|
+| single (incumbent) | **44.56** | 0.886 |
+| tdp_global index swap | 45.06 | 0.892 |
+| two_stage_flat | 49.55 | 0.623 |
+| **two_stage_oracle** | **41.60** | 0.654 |
+
+Index swap **loses**. Oracle doors gain **−2.95pp** (Q1 2026 **−8.6pp**) but door
+forecasting costs **+7.95pp**. ⚠️ All two-stage arms under-forecast (bias 0.62–0.65) —
+median-of-log1p × doors ≠ mean of units. **Oracle is provisional.**
+
+---
+
 ## README update 220: the fix was wrong, the right form is step-over-step — and Brian's metric beats ours (2026-10-06)
 
 ### ⚠️ First, a correction to README 219

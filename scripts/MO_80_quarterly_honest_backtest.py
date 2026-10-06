@@ -126,6 +126,30 @@ _SKIP_LAG52 = False            # MO_93 ablation hook; production always refreshe
 SEASONAL_MODE = os.environ.get("MO_SEASONAL_MODE", "target").lower().strip()
 
 
+def _resolve_seasonal(seasonal, key):
+    """Pick the right index for one series.
+
+    `seasonal` is either a FLAT {week_of_year: offset} applied to every series, or a
+    NESTED {group_value: {week_of_year: offset}} with a "__global__" fallback. MO_115
+    showed the seasonal shape is NOT uniform across accounts -- Kroger's base profile
+    anti-correlates year over year while the portfolio's does not -- so a per-account
+    index has to be expressible without forking the production path, or it gets
+    measured outside the loop and we repeat the MO_109 mistake.
+
+    The group value is read from GROUP_COLS, so a nested dict keyed by retail_account
+    uses key[2]. Any series whose group has no index falls back to "__global__", then to
+    no seasonality.
+    """
+    if not seasonal:
+        return {}
+    if not isinstance(next(iter(seasonal.values())), dict):
+        return seasonal                      # flat: one index for everything
+    for i in (GROUP_COLS.index("retail_account"), GROUP_COLS.index("channel_outlet")):
+        if i < len(key) and key[i] in seasonal:
+            return seasonal[key[i]]
+    return seasonal.get("__global__", {})
+
+
 def _seasonal_mult(seasonal, fd, cut, prev_fd=None):
     """Seasonal multiplier under the active mode. One definition, both sites.
 
@@ -332,6 +356,7 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
         if key not in eval_keys:
             continue
         g = g.sort_values("__time")
+        seasonal_s = _resolve_seasonal(seasonal, key)
 
         # ── short / lapsed router, mirroring MO_27 ──────────────────────────
         if key in short_keys or key in lapsed_keys:
@@ -349,7 +374,7 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             for h, fd in enumerate(fweeks[:HORIZON], start=1):
                 if not (qs <= fd <= qe):
                     continue
-                u = lvl * _seasonal_mult(seasonal, fd, cut)
+                u = lvl * _seasonal_mult(seasonal_s, fd, cut)
                 u = 0.0 if not np.isfinite(u) else max(0.0, u)
                 out[(key, fd)] = ({"q50": u, "q10": max(0.0, u * (1 - bw)),
                                    "q90": u * (1 + bw)} if want_band else u)
@@ -402,7 +427,7 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
                 mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * base
                         + SEASONAL_BLEND_WEIGHT * seasonal_ref) / base
                 vals = {t: max(0.0, v * mult) for t, v in vals.items()}
-            elif seasonal and base > 0:
+            elif seasonal_s and base > 0:
                 # STL fallback, only when the YAGO blend did not fire.
                 # ANCHOR-RELATIVE (MO_109): divide by the ANCHOR week's index.
                 # The index is relative to the year's mean while the prediction is
@@ -411,7 +436,7 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
                 # forecast down. Must stay in lockstep with MO_27.
                 # prev_fd declares that `base` already carries last step's seasonal
                 # level, because the loop fed the multiplied q50 back into `hist`.
-                mult = _seasonal_mult(seasonal, fd, cut,
+                mult = _seasonal_mult(seasonal_s, fd, cut,
                                       prev_fd=fweeks[h - 2] if h > 1 else None)
                 vals = {t: max(0.0, v * mult) for t, v in vals.items()}
 
