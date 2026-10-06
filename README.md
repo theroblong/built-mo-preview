@@ -6,6 +6,63 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 222: the backtest was not measuring production — two conclusions inverted (2026-10-06)
+
+### ⚠️ Retractions first
+
+MO_80 **refreshed** `base_units_roll4/8/13_avg` and `wow_delta` from the prediction
+chain every step. MO_27 **freezes** them at the anchor (`static_feats`). MO_118 measured
+that gap at **11.83pp**. Every A/B today was scored on a configuration production never
+runs — and correcting it **inverted two conclusions**:
+
+| result | refresh harness | **production parity** |
+|---|---|---|
+| seasonal `anchor` | 57.81 "catastrophic" | **40.08 — BEST** |
+| seasonal `step` | 44.56 "the winner" | 40.99 — third |
+| two-stage oracle doors | 41.60 vs 44.56 = **−2.95pp WIN** | vs 40.99 = **+0.61pp LOSS** |
+| TDP-normalized index | +0.40pp penalty | **+0.01pp neutral** |
+
+Seasonal spread collapsed **13pp → 1.17pp**. Production's real level is **~40–41 wMAPE**,
+not 44.56.
+
+### MO_118 — the feature contract: verified defect, refuted fix
+
+`base_units_roll4_avg` matches the window ending at **week t** on **98.4%** of rows
+(4.9% for t−1); `wow_delta` = `units[t] − units[t−1]` on **99.5%**. MO_26 trains
+same-row. These hold **52.6% of model gain**. `tdp × velocity_per_tdp` reconstructs the
+target within 1% on 89.7% of rows.
+
+**But "fixing" it is much worse:**
+
+| training contract | frozen | refreshed |
+|---|---|---|
+| **current (shipped)** | **40.33** | 52.17 |
+| lagged ("corrected") | 60.21 | 97.64 |
+
+`relag` verified **100% exact-match** on 94,252 rows, so this is not a bug. Frozen
+`roll4` including the anchor is a better "where is this series now" estimate. **The
+contamination plus the freeze is an accidental, well-calibrated level anchor** — and
+MO_27's freeze is a damper, not an oversight.
+
+**This retires the teacher-forced number.** 4.15% teacher-forced vs 37% recursive was
+never a modelling insight — teacher forcing hands the model the answer via `wow_delta`.
+
+### Enforced, not merely noticed
+
+`mo_panel.PER_STEP_DYNAMIC` (29 features) + `FORECAST_CONTRACT` are now the single
+source of truth. MO_27 derives its `skip` set from it; MO_80 calls
+`assert_forecast_parity()` at import. **Verified set-equal to the pre-refactor
+production set before shipping.**
+
+### What survives
+
+Panel-level findings are harness-independent and stand: `source_brand` exit rates
+(91.9/10.5/1.0%), the BAR→PUFF transition, TDP 7.9× all launch-ramp, Kroger's wk-41 peak
+being distribution, SPINS restatement. **Forecast-loop findings did not.** Separate the
+two when reporting.
+
+---
+
 ## README update 221: brand is a survival feature, and TDP growth is all launch ramp (2026-10-06)
 
 ### ⭐ Why `source_brand` ranks 54/56 — Jason's question

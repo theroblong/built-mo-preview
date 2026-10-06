@@ -69,7 +69,9 @@ import lightgbm as lgb
 
 warnings.filterwarnings("ignore")
 
-from mo_panel import (CAT_COLS, GROUP_COLS, drop_zero_volume_geographies, apply_rma_priority,
+from mo_panel import (CAT_COLS, GROUP_COLS, PER_STEP_DYNAMIC, FORECAST_CONTRACT,
+                      assert_forecast_parity,
+                      drop_zero_volume_geographies, apply_rma_priority,
                       fill_promo_mechanic_nulls, drop_military_accounts,
                       drop_ak_hi_market_variants, lapse_resume_probability,
                       LAPSE_RESUME_LEVEL)
@@ -124,6 +126,34 @@ _SKIP_LAG52 = False            # MO_93 ablation hook; production always refreshe
 # anchor-relative form is correct and is used under both `anchor` and `step`. The two
 # sites genuinely need different forms; that is the whole lesson of MO_109 + MO_113.
 SEASONAL_MODE = os.environ.get("MO_SEASONAL_MODE", "target").lower().strip()
+
+# ⚠️ MO_118. This arm REFRESHED base_units_roll4/8/13_avg and wow_delta from the
+# prediction chain at every step. MO_27 does NOT: those features land in `static_feats`
+# and are FROZEN at the anchor week for all 13 steps. So this script has been measuring
+# a configuration production does not run, and measuring a WORSE one -- the 2x2 in
+# MO_118 puts refresh at +11.83pp against freeze on identical training:
+#
+#                     frozen   refreshed
+#   current training   40.33       52.17
+#   lagged training    60.21       97.64
+#
+# Refreshing autoregressive derived features inside a recursive loop compounds error:
+# a small over-prediction raises roll4 and makes wow_delta positive, the model reads
+# acceleration, and the next step goes higher. Structurally the same failure as the
+# cumulative seasonal multiplier (MO_113). MO_27's freeze is a DAMPER, not an oversight.
+#
+# Default is now `freeze`, for parity with MO_27. `refresh` reproduces the old behaviour
+# so the gap stays measurable.
+FEATURE_REFRESH = os.environ.get("MO_FEATURE_REFRESH", "freeze").lower().strip()
+
+# Parity with production is asserted at import, not trusted. See mo_panel.
+assert_forecast_parity(
+    dynamic=set(PER_STEP_DYNAMIC),
+    constants={"HORIZON": HORIZON, "LAPSE_WEEKS": LAPSE_WEEKS,
+               "SEASONAL_BLEND_WEIGHT": SEASONAL_BLEND_WEIGHT,
+               "SHORT_BAND_WIDTH": SHORT_BAND_WIDTH,
+               "MIN_SERIES_WEEKS": MIN_SERIES_WEEKS_LOCAL},
+    who="MO_80")
 
 
 def _resolve_seasonal(seasonal, key):
@@ -402,11 +432,15 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             state["week_cos"] = np.cos(2 * np.pi * t2 / 52)
             state["week_sin26"] = np.sin(2 * np.pi * t2 / 26)
             state["week_cos26"] = np.cos(2 * np.pi * t2 / 26)
+            # MO_27 updates ONLY the explicit lag features; the rolling/delta block is
+            # frozen at the anchor. Matching that is what makes this arm production.
             state["base_units_lag1"] = hist[-1]
-            state["base_units_roll4_avg"] = float(np.mean(hist[-4:]))
-            state["base_units_roll8_avg"] = float(np.mean(hist[-8:]))
-            state["base_units_roll13_avg"] = float(np.mean(hist[-13:]))
-            state["base_units_wow_delta"] = hist[-1] - hist[-2] if len(hist) > 1 else 0.0
+            if FEATURE_REFRESH == "refresh":
+                state["base_units_roll4_avg"] = float(np.mean(hist[-4:]))
+                state["base_units_roll8_avg"] = float(np.mean(hist[-8:]))
+                state["base_units_roll13_avg"] = float(np.mean(hist[-13:]))
+                state["base_units_wow_delta"] = (hist[-1] - hist[-2]
+                                                 if len(hist) > 1 else 0.0)
             lag52 = lag52_seq[h - 1]
             if "base_units_lag52" in feats and np.isfinite(lag52) and not _SKIP_LAG52:
                 state["base_units_lag52"] = lag52

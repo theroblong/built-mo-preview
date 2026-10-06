@@ -23,6 +23,70 @@ import pandas as pd
 # Series key. geography_raw is part of the key but NOT a model feature — see below.
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 
+
+# ── Forecast contract: the single source of truth for MO_27 and MO_80 ─────────
+# Three times on 2026-10-06 a defect traced to the same root cause: the honest
+# backtest (MO_80) and production (MO_27) silently disagreed about what production
+# does. The worst case was the per-step feature refresh -- MO_80 recomputed
+# base_units_roll4/8/13_avg and wow_delta from the prediction chain while MO_27
+# froze them at the anchor. MO_118 measured that difference at 11.83pp, so every
+# A/B run that day was scored on a configuration production never runs, and two
+# apparent wins inverted once it was corrected (the two-stage decomposition went
+# from -2.95pp to +0.61pp; the seasonal ranking reordered completely).
+#
+# Declaring the contract here makes the two files agree BY CONSTRUCTION. Both
+# assert against it at import, so a future edit to one cannot silently drift from
+# the other -- it fails loudly instead.
+#
+# PER_STEP_DYNAMIC is the set of features the recursive loop RECOMPUTES at every
+# step. Everything else in the feature list is frozen at the anchor week. The
+# freeze is deliberate: refreshing autoregressive derived features inside a
+# recursive loop compounds error, because a small over-prediction raises roll4 and
+# makes wow_delta positive, which the model reads as acceleration.
+PER_STEP_DYNAMIC: frozenset[str] = frozenset({
+    # autoregressive lags, rebuilt from actuals-then-predictions
+    "base_units_lag1", "base_units_lag4", "base_units_lag13", "base_units_lag52",
+    "total_units_lag1", "total_units_lag4", "total_units_lag13", "total_units_lag52",
+    # calendar, a pure function of the forecast date
+    "week_of_year", "week_sin", "week_cos", "week_sin26", "week_cos26",
+    # promo: zeroed or recomputed per step in the base forecast
+    "is_promo_week", "promo_intensity", "units_lift_tpr",
+    "units_lift_any_display", "units_lift_any_feature",
+    "promo_52w_lag", "promo_rate_woy",
+    # price path
+    "arp", "arp_lag1", "arp_lag4", "arp_wow_delta", "arp_roll8_avg", "arp_roll8_std",
+    # MO_46 competitive signals, seeded per series
+    "rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity",
+})
+
+# Shared numeric constants. A divergence here is the same class of defect.
+FORECAST_CONTRACT: dict = {
+    "HORIZON": 13,
+    "LAPSE_WEEKS": 9,
+    "SEASONAL_BLEND_WEIGHT": 0.10,
+    "SHORT_BAND_WIDTH": 0.45,
+    "MIN_SERIES_WEEKS": 13,
+}
+
+
+def assert_forecast_parity(*, dynamic: set[str], constants: dict, who: str) -> None:
+    """Fail loudly if a caller's notion of the forecast contract has drifted."""
+    d = frozenset(dynamic)
+    if d != PER_STEP_DYNAMIC:
+        raise AssertionError(
+            f"{who}: per-step dynamic feature set has drifted from "
+            f"mo_panel.PER_STEP_DYNAMIC.\n"
+            f"  only in {who}: {sorted(d - PER_STEP_DYNAMIC)}\n"
+            f"  only in contract: {sorted(PER_STEP_DYNAMIC - d)}\n"
+            f"  Reconcile MO_27 and MO_80 before running — MO_118 measured this "
+            f"class of divergence at 11.83pp.")
+    bad = {k: (v, FORECAST_CONTRACT[k]) for k, v in constants.items()
+           if k in FORECAST_CONTRACT and v != FORECAST_CONTRACT[k]}
+    if bad:
+        raise AssertionError(
+            f"{who}: forecast constants differ from mo_panel.FORECAST_CONTRACT: "
+            + ", ".join(f"{k}={v[0]!r} (contract {v[1]!r})" for k, v in bad.items()))
+
 # Categorical columns, by name. Anything listed here is exempt from
 # pd.to_numeric(errors="coerce") and must be supplied as a string at inference.
 #

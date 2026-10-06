@@ -93,7 +93,8 @@ GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]
 # three, silently coercing source_brand + spins_flavor_canonical to NaN and killing
 # both categoricals at inference. Anything in CAT_COLS is exempt from pd.to_numeric
 # and must be supplied explicitly in `state`.
-from mo_panel import (CAT_COLS, drop_zero_volume_geographies,  # noqa: E402
+from mo_panel import (CAT_COLS, PER_STEP_DYNAMIC, FORECAST_CONTRACT,  # noqa: E402
+                      assert_forecast_parity, drop_zero_volume_geographies,
                       apply_rma_priority, fill_promo_mechanic_nulls,
                       drop_military_accounts, drop_short_series,
                       drop_ak_hi_market_variants, warn_nested_rma_duplicates,
@@ -641,19 +642,12 @@ if __name__ == "__main__":
 
         # Static features (unchanged across forecast horizon)
         static_feats = {}
-        skip = CAT_COLS | {"week_of_year", "week_sin", "week_cos", "week_sin26", "week_cos26",
-                # v8: AR dynamic promo activity flags — set to 0 in base forecast
-                "is_promo_week", "promo_intensity",
-                "units_lift_tpr", "units_lift_any_display", "units_lift_any_feature",
-                # v8: promo cadence signals — computed per step from history
-                "promo_52w_lag", "promo_rate_woy",
-                "base_units_lag1", "base_units_lag4", "base_units_lag13",
-                "base_units_lag52",                          # dynamic — updated per step
-                "total_units_lag1", "total_units_lag4", "total_units_lag13",
-                "total_units_lag52",                         # dynamic — updated per step
-                "arp_lag1", "arp_lag4", "arp_wow_delta",
-                "arp_roll8_avg", "arp_roll8_std", "arp",
-                "rolling_cannibal_pressure", "rolling_cannibal_trend", "rolling_elasticity"}
+        # The per-step dynamic set is declared ONCE in mo_panel and shared with MO_80.
+        # Restating it here is what let the two files drift apart (MO_118: 11.83pp).
+        # Everything NOT in this set is frozen at the anchor week for all 13 steps --
+        # deliberately, because refreshing autoregressive derived features inside a
+        # recursive loop compounds error.
+        skip = CAT_COLS | set(PER_STEP_DYNAMIC)
         for col in features_used:
             if col not in skip:
                 val = latest.get(col)
