@@ -6,6 +6,65 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 217: the "5x better than foundation models" claim was wrong (2026-10-06)
+
+⚠️ **This is in CLIENT-FACING material** — FP&A report §31 and Mo Chat's `_DATA_GLOSSARY`.
+
+### The defect
+
+`MO_62_foundation_benchmark.py` line 54:
+
+```
+LGBM_WMAPE = 6.14   # from outputs/v2_backtest_metrics.json (MO_38)
+```
+
+**MO_62 never ran Mo's model.** It hardcoded a constant from a different experiment on a different
+series set, and ran only the four foundation models fresh. Three compounding problems:
+
+1. **MO_38's backtest LEAKED** — README 202 established 6 of 7 quarters were scored by a model that
+   had seen the future. MO_62 ran 3 months before that was found.
+2. **6.14% is teacher-forced territory.** Every honest number since is ~33%.
+3. **Metric mismatch** — MO_62 headlines median-across-series; our standard is volume-weighted.
+
+### MO_106 — the honest rerun
+
+Same cutoff, same selection rules, same 100 series, same horizon. Mo trained on data ≤ cutoff and
+**scored in the run**, not quoted.
+
+| arm | median wMAPE | volume-weighted |
+|---|---|---|
+| **Mo recursive (honest)** | **26.6%** | 39.4% |
+| flat carry-forward | 26.9% | **33.8%** |
+| Mo direct (honest) | 38.8% | 39.7% |
+| Chronos (Amazon) | 27.7% | — |
+| Granite TTM (IBM) | 27.7% | — |
+| Moirai (Salesforce) | 32.3% | — |
+| TimesFM (Google) | 38.1% | — |
+| ~~MO_62 quoted for Mo~~ | ~~6.1%~~ | hardcoded, leaked |
+
+**Claim survives in direction, dies on magnitude: 1.1pp, not 5x.** Flat (26.9%) also essentially
+ties Chronos (27.7%) — Amazon's pretrained model performs about as well as carrying last week
+forward. On volume-weighted, **flat beats both Mo arms**.
+
+⚠️ **Correct §31 and the Mo Chat glossary before either is quoted again.**
+
+### Why direct looks WORSE here than in MO_103 — mostly the metric
+
+MO_103 (portfolio, all series, volume-weighted): direct **32.83** vs recursive 36.44.
+MO_106 (100 MATURE series, median): recursive **26.6** vs direct 38.8.
+
+Not a contradiction:
+- **Volume-weighted within MO_106 they are TIED** (39.4 vs 39.7). The gap is only in the MEDIAN,
+  which is dominated by small/typical series.
+- MO_106 selects `MIN_HISTORY=52` — **mature series only**, where the lag chain is well fed and
+  recursion works. MO_103 included short series, where it is not.
+- **Direct's advantage is in the HARD cases** (short history, weak lag chain).
+
+⚠️ **Never compare a median-across-series number to a volume-weighted one.** State metric AND
+population every time. Third comparison in this effort to break on that rather than on modeling.
+
+---
+
 ## README update 216: match the forecast to the decision — horizon AND aggregation (2026-10-05)
 
 Jason: "It might help to have an h=1-4 forecast and a 13 week forecast... BUILT may need to predict
