@@ -6,6 +6,94 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 220: the fix was wrong, the right form is step-over-step — and Brian's metric beats ours (2026-10-06)
+
+### ⚠️ First, a correction to README 219
+
+README 219 claimed the anchor-relative seasonal fix was worth 3.12pp. **It was measured
+in a bare loop. Inside the real production path it is catastrophic.** MO_113, 7 honest
+quarters, portfolio-wide:
+
+| form | wMAPE | bias |
+|---|---|---|
+| `target` — what shipped | 48.57 | 0.893 |
+| `anchor` — README 219's "fix" | **57.81** | 1.050 |
+| **`step` — the right form** | **44.56** | 0.886 |
+| `off` | 45.43 | 0.879 |
+
+Q1 2025 56.4 → **101.9**. Q1 2026 50.0 → **96.2** at bias 1.461.
+
+**Why: the loop has feedback.** `hist.append(vals["q50"])` puts the *already-multiplied*
+value back in as lag1. A **cumulative** ratio applied every step re-applies the whole
+climb — Q1's anchor ratios run 1.03, 1.10, 1.19 … 1.69. `target` survived only because
+its factors oscillate around 1.0 and cancel.
+
+**Step-over-step** `index(week_h)/index(week_{h-1})` telescopes to the same intended
+level, reached THROUGH the recursion. **−4.01pp vs what shipped, and the first seasonal
+form ever to beat switching seasonality off.**
+
+The two sites need **different** forms: the loop needs `step`, the short/lapsed router
+needs `anchor` (its level is a fixed last actual, no feedback). Both shipped in MO_27
+and MO_80 and **must stay in lockstep**.
+
+**Also corrected:** the shipped index is *sound* — r=+0.931 against a clean detrend,
+peak wk10, trough wk52. STL removes trend by construction. The weak artifact is MO_100
+(r=+0.601, inverts January), which is what MO_109/MO_110 use.
+
+### ⭐ Brian's metric is measurably better, and it rescues Kroger
+
+Brian at the Oct 3 cadence: **"base units per store per week"** — per-store-per-week
+removes the promotional factor, the per-store basis removes distribution. MO_115 tested
+it. Year-over-year repeatability of the detrended week-of-year profile:
+
+| | base units | **base per store-week** |
+|---|---|---|
+| Portfolio | +0.249 | **+0.367** |
+| **KROGER** | **−0.393** | **+0.424** |
+
+**Kroger's base-unit profile ANTI-correlates across years.** Divide by TDP and it flips.
+Kroger's seasonal chaos was never demand — it was distribution expansion swamping the
+signal. Growth removed: 190%/yr portfolio, **326%/yr Kroger**.
+
+### Base and promo peak in different weeks
+
+| component | peak | amplitude | YoY repeat |
+|---|---|---|---|
+| base units | **wk 10 — March** | 0.447 | +0.249 |
+| total units | wk 4 | 0.700 | +0.429 |
+| **promo lift** | **wk 4 — late Jan** | **2.670** | **+0.492** |
+
+Two stacked patterns, and **not redundant**: detrended base vs promo intensity is
+r=**−0.133** (the `total` rows correlate by construction and are not evidence).
+
+### Back-to-school checks out, with a correction
+
+Weeks 30–36 vs each retailer's own weekly average, full years only: Albertsons
+1.094/1.434, Kroger 0.990/1.448, Walmart 0.940/1.378. Brian's recollection holds, but
+2025 is a **broad** lift, not Albertsons-only. 2026 is not comparable (panel ends
+2026-09-06, so its mean excludes Q4).
+
+### SPINS restates history — and it restates our target
+
+| measure | Sep→Oct | Aug→Sep | back |
+|---|---|---|---|
+| **`base_units` — the target** | **1.11%** of volume | **6.63%** | **35 wks** |
+| `units_promo` | 8.18% | 9.09% | — |
+| **`units` — raw count** | **0.01%** | — | — |
+
+`base_units` is a SPINS *modeled* baseline, not a count, and they recompute the
+base/incremental split retroactively. Net drift ~0, so not a level bias. The same check
+proves our pipeline is **deterministic**: zero value changes on 186,451 matched rows.
+
+### Shipped
+
+`MO_112` restatement detector · `MO_113` seasonal-mode A/B (`MO_SEASONAL_MODE`) ·
+`MO_114` base-vs-promo overlays · `MO_115` promo alignment + Brian's metric ·
+`MO_110` Prophet (written, needs repointing at mo59) · `MO_111` MLForecast loop audit ·
+`MO_FORECAST_SOURCE=local` so the chart can read MO_27's parquet pre-ingest.
+
+---
+
 ## README update 219: the seasonal factor was applied against the wrong reference (2026-10-06)
 
 ⭐ **Jason found this from the year-overlay charts:** *"Each and every January shows a ramp up and not

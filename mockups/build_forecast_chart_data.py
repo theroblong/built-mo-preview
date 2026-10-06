@@ -167,8 +167,21 @@ r1_actuals = normalize_dates(r1_actuals)
 # horizon -- but direct trains one model per horizon, so adjacent weeks come from
 # different models and the curve can jigsaw. That is exactly what this chart is
 # for: the by-horizon numbers cannot show smoothness, only the plot can.
+#
+# MO_FORECAST_SOURCE=local reads MO_27's OWN parquet instead of Druid. Druid lags
+# production by an ingest step -- `write_back()` stages a spec for human review
+# and does not submit it -- so after a code change to MO_27 the local parquet is
+# the fixed forecast and Druid is still the old one. `local` charts the fix
+# without an ingest. Identical schema, so only the path changes.
 FORECAST_SOURCE = os.environ.get("MO_FORECAST_SOURCE", "druid").lower().strip()
-_DIRECT_PARQUET = Path(__file__).parent.parent / "scripts" / "outputs" / "retailer_sales_forecast_direct.parquet"
+_SCRIPT_OUT = Path(__file__).parent.parent / "scripts" / "outputs"
+_PARQUET_SRC = {
+    "direct": (_SCRIPT_OUT / "retailer_sales_forecast_direct.parquet",
+               "DIRECT multi-horizon (MO_27D)", "scripts/MO_27D_direct_forecast.py"),
+    "local":  (_SCRIPT_OUT / "retailer_sales_forecast.parquet",
+               "PRODUCTION recursive, local parquet (MO_27, pre-Druid-ingest)",
+               "scripts/MO_27_retailer_sales_forecast.py"),
+}
 _direct_cache = {}
 
 
@@ -178,20 +191,21 @@ def _direct_df():
     # moving the existing import and changing load order.
     import pandas as pd
     if "df" not in _direct_cache:
-        if not _DIRECT_PARQUET.exists():
+        path, desc, how = _PARQUET_SRC[FORECAST_SOURCE]
+        if not path.exists():
             raise SystemExit(
-                f"\nFATAL: MO_FORECAST_SOURCE=direct but {_DIRECT_PARQUET} is missing.\n"
-                f"  Run scripts/MO_27D_direct_forecast.py first.")
-        _direct_cache["df"] = pd.read_parquet(_DIRECT_PARQUET)
-        print(f"  forward forecast source: DIRECT multi-horizon "
-              f"({len(_direct_cache['df']):,} rows from MO_27D)")
+                f"\nFATAL: MO_FORECAST_SOURCE={FORECAST_SOURCE} but {path} is missing.\n"
+                f"  Run {how} first.")
+        _direct_cache["df"] = pd.read_parquet(path)
+        print(f"  forward forecast source: {desc} "
+              f"({len(_direct_cache['df']):,} rows)")
     return _direct_cache["df"]
 
 
 def forecast_rows(label, account=None, upc=None, channel="CONVENTIONAL|FOOD",
                   with_anchor=False):
     """Forward forecast in the shape the chart expects, from Druid or MO_27D."""
-    if FORECAST_SOURCE != "direct":
+    if FORECAST_SOURCE not in _PARQUET_SRC:
         extra = ("  ANY_VALUE(anchor_base_units) AS anchor_units,\n"
                  "      ANY_VALUE(anchor_arp) AS anchor_arp,\n      ") if with_anchor else ""
         where = [f"channel_outlet = '{channel}'"]
@@ -220,7 +234,7 @@ def forecast_rows(label, account=None, upc=None, channel="CONVENTIONAL|FOOD",
         m &= d["upc"] == upc
     d = d[m]
     if d.empty:
-        print(f"  {label}: no direct rows matched — empty")
+        print(f"  {label}: no {FORECAST_SOURCE} rows matched — empty")
         return []
     g = d.groupby("forecast_week_number", as_index=False).agg(
         anchor_date=("anchor_date", "first"),
@@ -231,7 +245,7 @@ def forecast_rows(label, account=None, upc=None, channel="CONVENTIONAL|FOOD",
         forecast_high=("forecast_units_high", "sum"))
     g["forecast_week_number"] = g["forecast_week_number"].astype(int)
     g = g.sort_values("forecast_week_number")
-    print(f"  {label}: {len(g)} weeks from MO_27D direct parquet")
+    print(f"  {label}: {len(g)} weeks from {FORECAST_SOURCE} parquet")
     cols = ["anchor_date", "forecast_week_number", "forecast_units",
             "forecast_low", "forecast_high"] + (["anchor_units", "anchor_arp"] if with_anchor else [])
     return g[cols].to_dict("records")
@@ -1028,7 +1042,7 @@ try:
             # one model's history beside another model's forecast under a legend
             # that claims they are the same. MO_FORECAST_SOURCE=direct switches
             # both. MO_80 Q1 2026: direct 31.2 against production 51.5.
-            if FORECAST_SOURCE == "direct" and (_r or {}).get("direct"):
+            if FORECAST_SOURCE in _PARQUET_SRC and (_r or {}).get("direct"):
                 _arm = "direct"
             else:
                 _arm = "production" if (_r or {}).get("production") else "recursive"
@@ -2374,7 +2388,7 @@ html_out = html_out.replace("__SKU_LIFT_PCT__", str(payload["sku_lift_pct"]))
 
 # The method tile was hardcoded to "Recursive AR" and stayed that way on the
 # direct chart, labelling one model's output as another's. Drive it from the source.
-_method_label = ("Direct multi-horizon" if FORECAST_SOURCE == "direct" else "Recursive AR")
+_method_label = {"direct": "Direct multi-horizon"}.get(FORECAST_SOURCE, "Recursive AR")
 _method_sub = ("One model per week ahead — no lag chain"
                if FORECAST_SOURCE == "direct"
                else "No crystal ball — directional signal")

@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pickle
 import warnings
 from pathlib import Path
@@ -94,6 +95,52 @@ MIN_SERIES_WEEKS_LOCAL = 13    # mo_panel.MIN_SERIES_WEEKS
 SEASONAL_INDEX_CSV = Path("outputs/mo59_seasonal_index.csv")
 SHORT_BAND_WIDTH = 0.45        # MO_27 `_bw` for last_value_seasonal
 _SKIP_LAG52 = False            # MO_93 ablation hook; production always refreshes lag52
+
+# MO_113 A/B hook. Production applies the seasonal index in TWO places -- the
+# short/lapsed router and the LightGBM STL fallback -- and MO_109 only measured the
+# second one, in a bare loop, portfolio-wide. This switch applies one mode to BOTH
+# sites so the fix can be scored inside the real production path:
+#   target  index(target)                     what shipped before 2026-10-06
+#   anchor  index(target) / index(anchor)     the MO_109 fix
+#   step    index(target_h) / index(target_h-1)  -- see below
+#   off     no seasonal factor at all
+#
+# ⚠️ WHY `anchor` IS WRONG INSIDE THE RECURSIVE LOOP (MO_113)
+# `anchor` is the right multiplier for a ONE-SHOT level adjustment, and it measured
+# well in MO_109's bare loop. Inside production it is catastrophic -- Q1 2026 50.0 ->
+# 96.2, bias 1.461 -- and the mechanism is feedback. The loop appends the ALREADY
+# MULTIPLIED prediction to `hist`, where it becomes lag1 and the rolling means for the
+# next step. So a cumulative ratio applied at every step re-applies the same seasonal
+# climb over and over: the anchor ratios in Q1 run 1.03, 1.10, 1.19, 1.30 ... 1.69, and
+# compounding those is explosive. `target` survived only because its factors oscillate
+# around 1.0 and largely cancel.
+#
+# The form that composes correctly under feedback is the STEP-OVER-STEP ratio, because
+# the previous step's value already carries the level up to h-1. Its cumulative product
+# telescopes to exactly index(target_h)/index(anchor) -- the intended level -- reached
+# THROUGH the recursion instead of imposed on top of it.
+#
+# The short/lapsed router has NO feedback (`lvl` is a fixed last actual), so there the
+# anchor-relative form is correct and is used under both `anchor` and `step`. The two
+# sites genuinely need different forms; that is the whole lesson of MO_109 + MO_113.
+SEASONAL_MODE = os.environ.get("MO_SEASONAL_MODE", "target").lower().strip()
+
+
+def _seasonal_mult(seasonal, fd, cut, prev_fd=None):
+    """Seasonal multiplier under the active mode. One definition, both sites.
+
+    `prev_fd` is the previous forecast week, and passing it is how a caller declares
+    "my input already carries last step's seasonal level". Callers with no feedback
+    (the router) pass None and get the anchor-relative form.
+    """
+    if not seasonal or SEASONAL_MODE == "off":
+        return 1.0
+    tgt = 1.0 + seasonal.get(int(fd.isocalendar().week), 0.0)
+    if SEASONAL_MODE == "target":
+        return max(0.1, tgt)
+    ref_date = prev_fd if (SEASONAL_MODE == "step" and prev_fd is not None) else cut
+    ref = 1.0 + seasonal.get(int(pd.Timestamp(ref_date).isocalendar().week), 0.0)
+    return max(0.1, tgt / ref) if ref > 0 else max(0.1, tgt)
 
 QUARTERS = [
     ("Q1 2025", "2024-12-29", "2025-01-05", "2025-03-30"),
@@ -295,11 +342,14 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
                 lvl = (float(tail.dropna().iloc[-1]) if tail.notna().any()
                        else float("nan"))               # last_value_seasonal
                 bw = SHORT_BAND_WIDTH
+            # ANCHOR-RELATIVE (MO_109/MO_113), in lockstep with MO_27 line ~504. `lvl` is
+            # the LAST ACTUAL, so it already sits at the anchor week's seasonal level;
+            # the target index alone is the wrong reference and this is where it does
+            # the most damage, because nothing else damps it.
             for h, fd in enumerate(fweeks[:HORIZON], start=1):
                 if not (qs <= fd <= qe):
                     continue
-                sf = 1.0 + seasonal.get(int(fd.isocalendar().week), 0.0) if seasonal else 1.0
-                u = lvl * max(0.1, sf)
+                u = lvl * _seasonal_mult(seasonal, fd, cut)
                 u = 0.0 if not np.isfinite(u) else max(0.0, u)
                 out[(key, fd)] = ({"q50": u, "q10": max(0.0, u * (1 - bw)),
                                    "q90": u * (1 + bw)} if want_band else u)
@@ -359,9 +409,10 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
                 # already anchored at the cutoff level, so the target index alone
                 # applies the wrong reference and pushes a trough-anchored
                 # forecast down. Must stay in lockstep with MO_27.
-                stl = seasonal.get(int(fd.isocalendar().week), 0.0)
-                a_idx = 1.0 + seasonal.get(int(pd.Timestamp(cut).isocalendar().week), 0.0)
-                mult = max(0.1, (1.0 + stl) / a_idx) if a_idx > 0 else 1.0
+                # prev_fd declares that `base` already carries last step's seasonal
+                # level, because the loop fed the multiplied q50 back into `hist`.
+                mult = _seasonal_mult(seasonal, fd, cut,
+                                      prev_fd=fweeks[h - 2] if h > 1 else None)
                 vals = {t: max(0.0, v * mult) for t, v in vals.items()}
 
             hist.append(vals["q50"])     # blended q50 seeds the next step, as MO_27 does
