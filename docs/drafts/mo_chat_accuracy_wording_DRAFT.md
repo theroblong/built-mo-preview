@@ -1,6 +1,6 @@
 # DRAFT: Mo Chat accuracy wording (for Jason + Robert to approve)
 
-Status: **draft, 2026-10-07. Nothing in Mo Chat has changed.**
+Status: **APPLIED 2026-10-07** to customer-built-mo-api `app/routers/mo_chat.py` (approved by Jason; Rob agrees). Optional velocity-method line left out: Mo Chat's focus is off accuracy percentages for now.
 Target: customer-built-mo-api `app/routers/mo_chat.py`, the `_DATA_GLOSSARY` text, lines
 2185–2195 (baseline methods) and 2201–2222 (accuracy and foundation-model sections).
 Rules applied: `docs/ACCURACY_CLAIMS_REGISTER.md` (numbers from section 2; plain language
