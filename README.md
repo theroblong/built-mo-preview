@@ -6,6 +6,61 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 227: the velocity anchor inverts by history — and a structured test plan (2026-10-07)
+
+Plan: **`docs/FORECAST_TEST_PLAN_V12.md`**. Supersedes the "replace the recursive loop"
+wording in README 226.
+
+### ⚠️ MO_126 — the pooled comparison hid a reversal
+
+| history band | flat | model | **conn_L4W** | conn − model |
+|---|---|---|---|---|
+| **<13 wks** | **48.2** | 48.0 | 54.9 | **+6.95** |
+| 13–25 wks | 42.4 | 44.4 | **40.8** | −3.64 |
+| 26–51 wks | 26.9 | 29.9 | **23.7** | −6.18 |
+| **52+ wks** | 29.9 | 34.7 | **22.2** | **−12.49** |
+
+Portfolio × month: **+6.29 / −0.97 / −6.03 / −12.32** — same shape.
+
+**`conn_L4W` is WORST where Jason expected it to help and BEST where the model should be
+strongest.** A velocity estimate needs a stable denominator; for a 4-week-old item
+`sum(tdp[-4:])` is small and noisy, and multiplying by `tdp_last` amplifies it.
+
+**Jason's routing instinct was right; the direction is inverted.**
+- `<13 wks` → last value (**what production already does — validated, not changed**)
+- `26+ wks` → `conn_L4W`
+- `13–25 wks` → boundary to sweep; a blend may win in the ambiguous band
+
+### ⚠️ Second finding: the model is HARMFUL on established series
+
+**52+ wks: model 34.7 vs flat 29.9** at item-week — on the cohort with the most history
+and a usable `lag52`. Needs explaining before stratification work, which may otherwise be
+treating a symptom.
+
+### The test plan
+
+**Phase 0 — blockers** (oracle-doors reversal · retransformation bias · why the model
+loses on 52+wk series). **Phase 1** — stratification factorial: granularity × what gets
+stratified × sample guards, with a stop rule preferring exclusion over three artifacts.
+**Phase 2** — four integration modes: replacement (refuted) · router · blend · **as a
+FEATURE (untested, and the most natural answer to "make the model better")**.
+**Phase 3** — combined, plus a **learning-curve test**: re-run on truncated history and
+plot the model-vs-anchor gap against history length. A fixed formula cannot improve as
+PUFF accumulates the history BAR used to have; a trained model can. **Phase 4** — the
+four validation gates.
+
+**Protocol, to make the day's failure modes impossible:** parity asserted at import ·
+every arm at all three levels · every arm by history band · predictions recorded before
+running · no conclusion from a pooled mean · an unexplained behaviour blocks shipping.
+
+### Procedural lesson
+
+The pooled result said "replace the model". The band breakdown says "route, and not where
+you'd think". **Breakdown by aggregation level and by history band have now each
+independently reversed a conclusion.** Neither is optional.
+
+---
+
 ## README update 226: forecast v12 plan — ship the velocity anchor, alone (2026-10-07)
 
 Plan: **`docs/FORECAST_V12_IMPLEMENTATION_PLAN.md`**. Not shipped.
