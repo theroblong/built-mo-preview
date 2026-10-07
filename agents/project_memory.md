@@ -9,7 +9,9 @@ Last synced: 2026-10-07 (shared Claude Code setup: committed repo files are sour
 - Main branch: `main`
 - GitHub account used for pushes: `brazealboy1`
 - Local git commit identity:
-  - name: `theroblong`
+  - name: `Jason Brazeal` (was `theroblong` until 2026-10-07, so earlier commits by Jason
+    are labelled `theroblong <brazealboy1@gmail.com>`; Robert's own commits are
+    `Robert Long <rclong@gmail.com>`)
   - email: `brazealboy1@gmail.com`
 
 ## Durable Instruction
@@ -278,7 +280,7 @@ it does **not** change what the Mo UI serves. Submitting is a separate explicit 
 
 - Closed: Jason's machine-only files committed; model/effort pin and push-on-confirmation agreed.
 - Pending: settled-findings list (scope/harness/reopen-if per entry) and scout/runner/skeptic agents -- approved in principle by Robert, not built.
-- New (raised by Claude): Jason's machine commits under git user `theroblong` (Robert's) -- confirm whether intended.
+- Closed: Jason's FirstAgent commits were labelled with the author name `theroblong` (a repo-level git setting; email was Jason's, pushes go through his own GitHub account). Label only, not a credentials issue. Jason changed it to `Jason Brazeal` on 2026-10-07; earlier commits keep the old label.
 - New (raised by Claude): Jason's machine-local MEMORY.md index is 31KB, over the 24.4KB load limit (~22 entries unloaded) -- trim index lines.
 - No new forecast results; no async messages received.
 

@@ -26,7 +26,8 @@ protocol gate for MO_127+, session-start reference check, onboarding) enforces i
 | Related-repo check | 0 unresolved after check_refs.py fix and committing 7 machine-only notes |
 
 Commits: 12253dd, 2297c57, e122e1a. Open: settled-findings list and scout/runner/skeptic
-agents (not built); git user `theroblong` on Jason's machine; his 31KB local memory index.
+agents (not built); his 31KB local memory index. Resolved: Jason's FirstAgent commits were
+labelled `theroblong` (author name only); now `Jason Brazeal`.
 
 ### Procedural lesson
 
