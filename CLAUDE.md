@@ -7,6 +7,11 @@
 - Files in this repo override any assistant memory on an individual machine. If a local
   memory conflicts with a committed file, follow the committed file and tell the user.
 - Run `/end-session` to close a session; it performs the routine above in order.
+- Any forecast-accuracy number or metric in something others will read (Mo Chat, reports,
+  decks, wiki, marketing): take it from `docs/ACCURACY_CLAIMS_REGISTER.md` section 2, never
+  a retired figure from section 3, and explain it in plain language per section 1 (the
+  audience is CFO/FP&A, not data scientists; no bare acronyms like wMAPE). Log every
+  correction in its section 4.
 
 # Unresolved references
 
