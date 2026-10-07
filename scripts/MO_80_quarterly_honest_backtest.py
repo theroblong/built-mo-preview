@@ -203,9 +203,14 @@ QUARTERS = [
     ("Q4 2025", "2025-09-28", "2025-10-05", "2025-12-28"),
     ("Q1 2026", "2025-12-28", "2026-01-04", "2026-03-29"),
     ("Q2 2026", "2026-03-29", "2026-04-05", "2026-06-28"),
-    ("Q3 2026", "2026-06-29", "2026-07-06", "2026-09-28"),
-    ("Q4 2026", "2026-09-06", "2026-10-05", "2026-12-28"),   # beyond panel — forward only
+    ("Q3 2026", "2026-06-28", "2026-07-05", "2026-09-27"),
+    ("Q4 2026", "2026-09-06", "2026-10-04", "2026-12-27"),   # beyond panel — forward only
 ]
+# SPINS weeks end on Sunday. Until 2026-10-07 the Q3 2026 row was a day late (Mondays):
+# its first forecast week fell before the quarter start, so h=1 was never scored and
+# Sep 2026 became a one-week month (MO_128 skeptic). Any non-Sunday date now fails at import.
+assert all(pd.Timestamp(d).dayofweek == 6 for q in QUARTERS for d in q[1:]), \
+    "QUARTERS dates must be Sunday week-ending dates, matching the SPINS weekly grid"
 
 LGBM = dict(learning_rate=0.05, num_leaves=63, min_child_samples=20,
             feature_fraction=0.8, bagging_fraction=0.8, bagging_freq=5,
@@ -497,8 +502,9 @@ def main(account, channel, trees):
     df = load_panel(feats)
     end = df["__time"].max()
     # SPINS weeks land on a fixed weekday grid. Deriving forecast dates as `cutoff + N weeks`
-    # breaks whenever a quarter cutoff is not ON that grid (Q3 2026's 2026-06-29 is a Monday;
-    # SPINS weeks are Sundays), producing dates that match no actual and scoring nothing.
+    # breaks whenever a quarter cutoff is not ON that grid (Q3 2026 was once a Monday,
+    # 2026-06-29; fixed 2026-10-07 and now asserted at import), producing dates that match
+    # no actual and scoring nothing.
     # Always step along the panel's real week sequence instead.
     WEEKS = pd.DatetimeIndex(pd.to_datetime(sorted(pd.unique(df["__time"])), utc=True))
     ev = (df["retail_account"] == account) & (df["channel_outlet"] == channel)

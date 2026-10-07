@@ -380,3 +380,4 @@ it does **not** change what the Mo UI serves. Submitting is a separate explicit 
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
+- 2026-10-07 Decision (Jason, answering the ask to Rob): OK to fix the Q3 2026 cutoff in MO_80. Done: QUARTERS Q3 2026 -> ("2026-06-28", "2026-07-05", "2026-09-27") (the whole row was Mondays, not just the cutoff) and Q4 2026 forward-only start/end -> 2026-10-04 / 2026-12-27; MO_80 now asserts at import that every QUARTERS date is a Sunday (SPINS week-ending). MO_80, MO_127 and MO_128 import clean. Effect: Q3 2026 now scores h=1 and a full September; MO_127/MO_128 results stand as recorded (run on the old date) and Q3 2026 figures will shift slightly on re-run. Left unchanged as historical record: MO_84-MO_90 carry their own copies of 2026-06-29. Roadmap step 1, item 1 done.
