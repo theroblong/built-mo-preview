@@ -47,6 +47,13 @@ Keep one loose, logged safety rail: a forecast of at most 3× the series maximum
   pattern. This replaces the separate STL index (the old Step 4).
 - **Forecast form.** Direct multi-horizon, not recursive (MO_103).
 - **BAR weight.** BAR rows get a tunable sample weight, not a hard exclusion.
+- **Separate recency for size and shape** (Jason, 2026-10-07: "older weeks should teach the
+  crests and troughs"). Today one row-level recency weight (lambda 0.02) mutes old weeks for
+  both size and seasonal shape. At the Dec 2025 cutoff, Jan 2025 weighs ~0.37 and Jan 2024
+  ~0.13: the only two New Year turns in the panel. In MO_129 the level comes from the
+  recent anchor, and the shape model's target is relative (target week vs anchor week), so
+  growth does not distort it. That lets the shape model weight all years nearly equally.
+  Both recency weights are tuned on the honest backtest; neither is hand-set.
 - **Comparison.** Against L4W, L12W, flat and the shipped model: all three levels, by
   band, by quarter, with turn quarters (Q1, Q4) reported separately.
 
