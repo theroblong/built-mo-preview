@@ -45,8 +45,9 @@ VIEWS:
   puff52    BUILT PUFF / SOUR PUFF with 52+ wks at the cutoff, all 7 quarters
   puff104   BUILT PUFF / SOUR PUFF with 104+ wks at the cutoff (2026 quarters only)
   focal     UPCs 08-40229-30362 / 30037 (Brownie Batter, Coconut 1.41oz single) and
-            30380 / 30381 (4-pk), per retailer series, all 7 quarters (full history from
-            the panel's first week)
+            30380 / 30381 (4-pk), per retailer series WITH 52+ wks at the cutoff, all 7
+            quarters. (Narrowed after the smoke test, before the real run: unfiltered, the
+            4 UPCs span 313 retailer series, many short-history.)
 
 PREDICTIONS, RECORDED BEFORE RUNNING so they can be wrong:
   P1  puff104, cell x week: conn_L12W is worse than conn_L4W (a shorter window tracks a
@@ -170,7 +171,7 @@ def main() -> None:
                     "series": f"{upc} @ {key[ai]}", "band": band_of(n_hist), "hist_wks": n_hist,
                     "puff52": brand in PUFF_BRANDS and n_hist >= 52,
                     "puff104": brand in PUFF_BRANDS and n_hist >= 104,
-                    "focal": upc in FOCAL_UPCS,
+                    "focal": upc in FOCAL_UPCS and n_hist >= 52,
                     "actual": truth[(key, fd)], "model": pm_,
                     # BAR-free training cannot score BAR rows; fall back so rows align
                     "model_noBAR": p_nobar.get((key, fd), pm_),
@@ -248,7 +249,7 @@ def main() -> None:
         res["focal"] = table(f, "FOCAL SKUs (Brownie Batter / Coconut, single + 4pk), all quarters")
         print("=== FOCAL SKUs by retailer: item x week error (series x month error) ===")
         print(f"  {'series':<44s}{'model':>13s}{'noBAR':>13s}{'L12W':>13s}{'L4W':>13s}{'flat':>13s}  bias")
-        for _, x in fs.iterrows():
+        for _, x in fs.head(25).iterrows():          # top 25 by volume; all in the CSV
             print(f"  {x['sku'][:22] + ' @ ' + str(x['account'])[:18]:<44s}" + "".join(
                 f"{x[arm + '_cw']:>6.1f} ({x[arm + '_mo']:>4.1f})" for arm in ARMS)
                 + f"  {x['model_bias']:.2f}")
