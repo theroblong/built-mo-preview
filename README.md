@@ -6,6 +6,65 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 226: forecast v12 plan — ship the velocity anchor, alone (2026-10-07)
+
+Plan: **`docs/FORECAST_V12_IMPLEMENTATION_PLAN.md`**. Not shipped.
+
+### MO_125 — everything adds, at the planning level
+
+| arm | portfolio × month | bias | |
+|---|---|---|---|
+| **`production` (ships today)** | **20.07** | 0.920 | |
+| + `anchor` seasonal mode | 11.79 | 0.951 | **−8.28** |
+| + BAR excluded from training | 11.25 | 0.942 | −0.54 |
+| **`conn_L4W` alone** | **10.71** | 1.029 | |
+| `blend_25` | 10.24 | 1.010 | |
+| `blend_50` | 10.12 | 0.990 | |
+
+**Error at the planning level roughly halves**, and a systematic −8% under-forecast
+becomes +3%.
+
+### ⭐ A correction that generalises
+
+`anchor` mode was recorded at **1.17pp** — measured at item-week. At **portfolio-month it
+is worth 8.28pp**, the largest item in the stack. Systematic bias **compounds in aggregate
+instead of cancelling**. **A candidate measured only at item-week can understate its value
+at the decision level by 7×.** Always check both.
+
+### ⚠️ Jason overruled my blend recommendation, correctly
+
+| arm | cell × week | account × month | portfolio × month |
+|---|---|---|---|
+| **`conn_L4W`** | **28.38** | **17.72** | 10.71 |
+| `blend_25` | 28.73 | 18.18 | **10.24** |
+
+`conn_L4W` **wins 2 of 3 levels outright**; the one it loses has **n=21**, where 0.47pp is
+noise. I argued "consistent second place" — preferring rank stability over the numbers.
+A blend also means **two estimators in lockstep**, the exact failure that cost 2026-10-06.
+**Ship `conn_L4W` alone.**
+
+### Seasonality matters far more once the level is anchored
+
+`conn_L4W` 10.71 vs `conn_L4W_noseas` 16.42 — **5.72pp**, against ~1pp on the trained
+model. Retroactively explains why seasonality kept measuring as worthless: it was applied
+on top of a mis-anchored level.
+
+### LightGBM is demoted, not deleted
+
+Keeps **cannibalization, price elasticity, SHAP explainability, scenario analysis** —
+none provided by a velocity anchor, all feeding other Mo screens.
+
+### Four gates before shipping
+
+1. Quarterly breakdown, not the 21-obs mean
+2. **Q1 2026 inspected on the Bracken chart**
+3. Coherence re-verified (item → account → portfolio)
+4. ⚠️ **Explain the oracle-doors reversal** — perfect doors help at item-week (25.2 vs
+   33.4), hurt at portfolio-month (19.2 vs 17.5). Unexplained, same family as the
+   estimator being shipped.
+
+---
+
 ## README update 225: a trailing velocity anchor beats the trained model at every level (2026-10-06)
 
 ### ⭐⭐ The estimator
