@@ -1,0 +1,28 @@
+{
+  "_comment": "Repos this project's working agreement spans. Identity is the git remote, so this file is machine-independent. Each machine records where its clones live in .claude/related-repos.local.json (gitignored), e.g. {\"customer-built-doc\": \"/abs/path\"}. FirstAgent in the working agreement is this repo.",
+  "repos": [
+    {
+      "name": "built-mo-preview",
+      "aka": ["FirstAgent"],
+      "remote": "https://github.com/theroblong/built-mo-preview.git",
+      "self": true,
+      "holds": "ML scripts, docs, README session log, agents/project_memory.md"
+    },
+    {
+      "name": "customer-built-doc",
+      "remote": "https://github.com/AevahPlatform/customer-built-doc.git",
+      "holds": "wiki/ -- client-facing docs; wiki/18-built-aevah-cadence.md is the decision and async log",
+      "resolves": ["wiki/"]
+    },
+    {
+      "name": "customer-built-mo-api",
+      "remote": "https://github.com/AevahPlatform/customer-built-mo-api.git",
+      "holds": "Mo API"
+    },
+    {
+      "name": "customer-built-mo-ui",
+      "remote": "https://github.com/AevahPlatform/customer-built-mo-ui.git",
+      "holds": "Mo UI"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "model": "claude-opus-5-5[1m]",
+  "effortLevel": "high",
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git fetch*)",
+      "Bash(git remote get-url*)",
+      "Bash(git -C * remote get-url*)",
+      "Bash(git commit --dry-run*)",
+      "Bash(python3 --version)",
+      "Bash(python3 .claude/hooks/check_refs.py)",
+      "Bash(bash .claude/hooks/session_context.sh)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session_context.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/require_memory_in_commit.py\"",
+            "timeout": 15,
+            "statusMessage": "Checking project memory is staged"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/protocol_gate.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

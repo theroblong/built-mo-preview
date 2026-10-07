@@ -283,3 +283,16 @@ it does **not** change what the Mo UI serves. Submitting is a separate explicit 
 - Q22: ✓ COMPLETE — split into Q22a (REPLACE INTO, 2,559 COMPETITIVE_PRICE_GAP events / 104 UPCs) + Q22b (INSERT INTO, 786 PACK_LADDER_COMPRESSION events / 29 UPCs). UNION ALL between aggregated CTEs unsupported in MSQ (E26); MIN on STRING unsupported (E25); competitive_flavor_relationship stale values fixed. CLUSTERED BY focal_upc.
 - Q10–Q13 need CLUSTERED BY added when tested (same pattern as Q0–Q22).
 - Q2b and Q2c ORDER BY clauses removed (cluster does not support non-time top-level sort); confirm UI behavior is acceptable.
+
+## Live session notes
+
+<!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
+- 2026-10-07 Decision (Robert): committed repo files are the source of truth for working agreements; machine-local assistant memories (incl. Jason's `feedback_log_everything`) are superseded.
+- 2026-10-07 Decision (Robert): log-everything condensed; "immediately" = same-turn note here, polished wiki/18 entry at /end-session; push only on confirmation (changes the original "no exceptions" push rule -- Jason to confirm).
+- 2026-10-07 Decision (Robert): on any machine, Claude flags unreachable references (related repo not located, file committed nowhere) and works with the user to get them committed.
+- 2026-10-07 Artifacts: `.claude/` added -- settings.json (model pinned to claude-opus-5-5[1m], effort high), hooks (commit requires project_memory.md; protocol gate for MO_127+; session-start context + reference check), skills new-experiment and end-session, scribe agent, related-repos.json.
+- 2026-10-07 Open question: Jason to commit [[feedback-meeting-prep-process]], [[project_mo53_individual_ablation]], [[project_portfolio_cannibalization]] (exist only on his machine).
+- 2026-10-07 Open question: Jason to agree to project model/effort pin and the push-on-confirmation change.
+- 2026-10-07 Pending: settled-findings list (with scope/harness/reopen-if per entry) and scout/runner/skeptic agents -- approved in principle, not built.
+- 2026-10-07 Artifacts: `.claude/skills/onboard/SKILL.md` -- guided setup after pulling (hooks loaded?, git state, model, related repos, commit machine-only memories, retire superseded local copies, live commit-gate test). Commit hook and session hook rewritten in Python (no jq); commit hook now ignores commits in other repos. Jason starts it with the prompt in the handoff message.
+- 2026-10-07 Decision (Robert): onboarding must be one prompt for a non-developer. Onboard skill now does the git pull itself, runs in plain language, and finishes via a per-machine marker (`.claude/onboarding.local.json`) that the session-start hook picks up after one VS Code reload. Read-only git/hook commands added to project permissions.

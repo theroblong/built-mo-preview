@@ -1,28 +1,21 @@
 # Working agreement: log everything
 
-> Source of truth for this agreement is Jason's assistant memory
-> (`feedback_log_everything`). This file is a committed copy so it is visible in the
-> repository and to collaborators. **If the two differ, the memory copy wins** — update
-> it there first, then re-copy here.
->
-> Copied 2026-10-07. Originally recorded 2026-09-25.
+Source of truth: this file (supersedes machine-local copies). Agreed 2026-09-25; condensed 2026-10-07.
 
-Every decision, discussion, async message, feedback, and open question must be logged immediately and completely in wiki/18 and project memory. This is not a clerical task — it is the mechanism for continuous improvement of Mo and Aevah as a client-serving product.
+Purpose: if it isn't logged, it doesn't exist for the system — BUILT and future clients
+get better service only from what is recorded.
 
-**Why:** Jason is not doing this for his own entertainment. The purpose is to build a reliable, improving system so that BUILT (and future clients) get better service over time. If information is in Jason's head instead of the log, it doesn't exist for the system. Jason should never have to carry, audit, or second-guess information that has been discussed.
+Log as it happens, not from recall at the end. Capture each item **the same turn** as a
+dated bullet under `## Live session notes` at the bottom of `agents/project_memory.md`
+(in this repo, so it survives a crash or compaction):
+- Email/message from Brian, Rob or others → verbatim quote + takeaways
+- New open question → the question, and who raised it
+- Decision → what was decided, by whom
+- Feedback affecting product or process → what it changes
 
-**How to apply:**
-- When an email arrives from Brian or Rob → log it in wiki/18 as an async section with verbatim quotes and takeaways, immediately
-- When a decision is made in conversation → write it down before closing the session
-- When a new open question surfaces → it goes in the outstanding items table in wiki/18 that same turn
-- When feedback arrives that affects the product or process → update the relevant project memory AND wiki section
-- After every session: wiki/18, project memory, README entry, commit, push — no exceptions
-- Never assume that memory files substitute for wiki/18. Both must be current. Wiki/18 is the client-facing log; memory is the assistant-facing index.
-
-**Standard end-of-session routine (in order):**
-1. Update wiki/18 with anything discussed, decided, or received this session
-2. Update or create project memory files for new topics
-3. Add a README entry summarizing the session
-4. Commit and push all 4 repos: FirstAgent, customer-built-doc, customer-built-mo-ui, customer-built-mo-api
+`/end-session` turns those notes into the wiki/18 entry (async section, outstanding-items
+table), the project memory update and the README entry, then commits; it pushes only on
+confirmation. Memory never substitutes for wiki/18; both stay current (wiki/18 =
+client-facing, memory = assistant index).
 
 See also: [[feedback-meeting-prep-process]]

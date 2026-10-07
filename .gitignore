@@ -6,3 +6,6 @@ scripts/.env
 scripts/outputs/
 docs/CustomerDim*.xlsx
 docs/CustomerExport*
+.claude/settings.local.json
+.claude/related-repos.local.json
+.claude/onboarding.local.json
