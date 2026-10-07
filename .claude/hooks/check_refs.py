@@ -33,6 +33,14 @@ def norm(s: str) -> str:
     return s.lower().replace("_", "-")
 
 
+def norm_remote(url: str | None) -> str | None:
+    """Clones made with or without the .git suffix point at the same repo."""
+    if not url:
+        return None
+    url = url.strip().rstrip("/").lower()
+    return url[:-4] if url.endswith(".git") else url
+
+
 def remote_of(path: Path) -> str | None:
     try:
         out = subprocess.run(["git", "-C", str(path), "remote", "get-url", "origin"],
@@ -52,7 +60,9 @@ def locate_repos() -> tuple[dict[str, Path], list[dict]]:
             continue
         cands = [Path(local[r["name"]]).expanduser()] if r["name"] in local else []
         cands += [ROOT.parent / r["name"], ROOT.parent.parent / r["name"]]
-        hit = next((c for c in cands if c.is_dir() and remote_of(c) == r["remote"]), None)
+        hit = next((c for c in cands
+                    if c.is_dir() and norm_remote(remote_of(c)) == norm_remote(r["remote"])),
+                   None)
         if hit:
             found[r["name"]] = hit
         else:
