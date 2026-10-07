@@ -118,6 +118,7 @@ EARLY_STOP_MIN_DELTA = _PROD_TRAIN.EARLY_STOP_MIN_DELTA
 TRAIN_VAL_WEEKS = 13                         # MO_26: last 13 weeks = validation
 FIT_LOG: list[dict] = []                     # one row per fit: rows, best iteration, cap
 MODEL_CACHE_DIR = Path("outputs/model_cache")  # trained-model cache (see train_like_production)
+TRAIN_SEED = None                            # None = production random_state; set for noise-floor sweeps
 
 # MO_113 A/B hook. Production applies the seasonal index in TWO places -- the
 # short/lapsed router and the LightGBM STL fallback -- and MO_109 only measured the
@@ -308,7 +309,8 @@ def recency_weights(times: pd.Series) -> np.ndarray:
 _WARNED_CAP = False
 
 
-def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__time"):
+def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__time",
+                          seed=None):
     """Train one quantile model exactly as MO_26 does, on data available at the cutoff.
 
     1. Validation = the last TRAIN_VAL_WEEKS weeks of `time_col` in `tr`; the rest trains.
@@ -319,6 +321,8 @@ def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__
     """
     global _WARNED_CAP
     cap = TREES_CAP if trees is None else int(trees)
+    if seed is None:
+        seed = TRAIN_SEED                    # module-level override for seed sweeps (B5b)
     # On-disk cache (2026-10-07): at production settings a fit costs ~4 min on a laptop,
     # and experiments retrain the same model at the same cutoff again and again. The key
     # covers the exact training rows and values, every setting and the LightGBM version,
@@ -328,7 +332,7 @@ def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__
     if os.environ.get("MO_MODEL_CACHE", "1") != "0":
         cols = list(dict.fromkeys(list(feats) + [target, time_col, "__time"]))
         h = hashlib.sha1(pd.util.hash_pandas_object(tr[cols], index=False).values.tobytes())
-        h.update(repr((sorted(PROD_LGBM.items()), cap, alpha, target, time_col, RECENCY_LAMBDA,
+        h.update(repr((sorted(PROD_LGBM.items()), seed, cap, alpha, target, time_col, RECENCY_LAMBDA,
                        TRAIN_VAL_WEEKS, EARLY_STOP_PATIENCE, EARLY_STOP_MIN_DELTA,
                        lgb.__version__)).encode())
         ck = MODEL_CACHE_DIR / f"{h.hexdigest()}.pkl"
@@ -345,6 +349,8 @@ def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__
     is_tr = (tr[time_col] <= cut_v).values
     a, v = tr[is_tr], tr[~is_tr]
     params = dict(objective="quantile", alpha=alpha, **PROD_LGBM)
+    if seed is not None:                     # B5b: run-to-run noise floor (default = production seed)
+        params["random_state"] = int(seed)
     best = cap
     if len(v) >= 50 and len(a) >= 500:
         m = lgb.LGBMRegressor(n_estimators=cap, **params)
@@ -723,6 +729,209 @@ def check_batched_equivalence(quarter="Q2 2026", trees=200, tol=1e-9):
         assert diff <= tol, f"max abs diff {diff} > {tol}"
         res["band" if band else "q50"] = {"n": len(a), "max_abs_diff": diff}
     return res
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# YARDSTICK v2 (task B, 2026-10-07; docs/FORECAST_ROADMAP.md step 1)
+# Shared tools so every experiment scores the same honest way instead of
+# re-implementing it. QUARTERS stays for reproducing older scripts.
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _monthly_origins(first="2024-12", last="2026-05"):
+    """Last Sunday of each month; each origin forecasts 13 weeks inside the panel."""
+    out = []
+    for me in pd.date_range(f"{first}-01", pd.Period(last).end_time.normalize(), freq="ME"):
+        cut = me - pd.Timedelta(days=(me.dayofweek + 1) % 7)       # last Sunday <= month end
+        out.append((cut.strftime("%Y-%m"), cut.strftime("%Y-%m-%d"),
+                    (cut + pd.Timedelta(weeks=1)).strftime("%Y-%m-%d"),
+                    (cut + pd.Timedelta(weeks=HORIZON)).strftime("%Y-%m-%d")))
+    return out
+
+
+# Same tuple shape as QUARTERS: (label, cutoff, first forecast week, last forecast week).
+# Dec 2024 .. May 2026 = 18 origins; the last one's 13th week (2026-08-30) is inside the
+# panel (ends 2026-09-06). Overlapping horizons are handled by `score_levels`.
+ORIGINS_MONTHLY = _monthly_origins()
+assert all(pd.Timestamp(d).dayofweek == 6 for o in ORIGINS_MONTHLY for d in o[1:]), \
+    "ORIGINS_MONTHLY dates must be Sunday week-ending dates"
+
+# B3 (Jason, 2026-10-07): history bands = the CURRENT SELLING RUN, i.e. weeks since the
+# series' current run of real distribution began. A relaunch, or an absence of more than
+# DIST_GAP_WEEKS REPORTED weeks below the threshold, resets the clock; shorter blips and
+# unreported weeks (up to LAPSE_WEEKS) do not. The
+# threshold is max(DIST_MIN_TDP, DIST_REL x the series' trailing-13-week median TDP).
+# Row counts put stray-scan series such as the Walmart PUFF 1.41oz singles (~0.1 TDP for
+# two years, relaunched at ~40 in Jan 2026) in the 52+ band (MO_128 skeptic).
+# This labels REPORTING buckets only: no data is dropped from training. MO_129 gets both
+# measures (current run and total selling weeks) as candidate model inputs.
+DIST_MIN_TDP = 1.0
+DIST_REL = 0.10
+DIST_GAP_WEEKS = 4
+
+
+def _current_run(tdp: pd.Series) -> int:
+    """Weeks in the current selling run, walking back from the cutoff.
+
+    A REPORTED week at or below the threshold is "off"; more than DIST_GAP_WEEKS of them
+    in a row ends the run (relaunch, delisting). A MISSING week (the retailer did not
+    report) is neither: it is skipped, and only a gap longer than LAPSE_WEEKS ends the
+    run, matching production's lapse rule. Small retailers skip weeks while steadily
+    carrying an item (e.g. Reynolds Market PUFF Coconut 4pk at ~50 TDP).
+    """
+    s = tdp.asfreq("W-SUN")
+    lvl = s.tail(13).median()
+    thr = max(DIST_MIN_TDP, DIST_REL * (lvl if np.isfinite(lvl) else 0.0))
+    run = off = miss = 0
+    for v in s.values[::-1]:
+        if not np.isfinite(v):
+            miss += 1
+            if miss > LAPSE_WEEKS:
+                break
+        elif v > thr:
+            run += 1 + off; off = miss = 0
+        else:
+            off += 1
+            if off > DIST_GAP_WEEKS:
+                break
+    return run
+
+
+def history_weeks(tr: pd.DataFrame, cut) -> pd.Series:
+    """Per series: weeks in the current selling run at `cut` (data <= cut only)."""
+    t = tr[GROUP_COLS + ["__time"]].copy()
+    t["tdp"] = pd.to_numeric(tr["tdp"], errors="coerce")
+    t["__time"] = pd.to_datetime(t["__time"]).dt.tz_localize(None)
+    return (t.groupby(GROUP_COLS, observed=True)
+             .apply(lambda g: _current_run(g.set_index("__time")["tdp"].sort_index()))
+             .astype(int))
+
+
+def selling_weeks_total(tr: pd.DataFrame) -> pd.Series:
+    """Per series: all weeks with tdp > DIST_MIN_TDP (gaps and relaunches keep old weeks)."""
+    t = pd.to_numeric(tr["tdp"], errors="coerce") > DIST_MIN_TDP
+    return t.groupby([tr[c] for c in GROUP_COLS], observed=True).sum().astype(int)
+
+
+HISTORY_BANDS = [(0, 13, "<13 wks"), (13, 26, "13-25 wks"), (26, 52, "26-51 wks"),
+                 (52, 10_000, "52+ wks")]
+
+
+def history_band(n: int) -> str:
+    for lo, hi, lbl in HISTORY_BANDS:
+        if lo <= n < hi:
+            return lbl
+    return HISTORY_BANDS[-1][2]
+
+
+def build_eval_rows(df, cut, start, end):
+    """Every series with actuals in [start, end] (weeks), one row per series-week.
+
+    Columns: key, date, actual, account, hist_wks (B3), band, is_new. `is_new` marks
+    series with no row at or before the cutoff: production forecasts them as 0 (B2), so
+    the planning total must include them. Scripts add one column per arm.
+    """
+    cut = pd.Timestamp(cut)
+    end = pd.Timestamp(end) + pd.Timedelta(days=6)
+    act = df[(df["__time"] >= pd.Timestamp(start)) & (df["__time"] <= end)]
+    g = act.groupby(GROUP_COLS + ["__time"], observed=True)["base_units"].sum().reset_index()
+    tr = df[df["__time"] <= cut]
+    hw = history_weeks(tr, cut)
+    g["key"] = list(zip(*[g[c] for c in GROUP_COLS]))
+    seen = set(hw.index)
+    g["is_new"] = [k not in seen for k in g["key"]]
+    g["hist_wks"] = [int(hw.get(k, 0)) for k in g["key"]]
+    g["band"] = [history_band(n) for n in g["hist_wks"]]
+    return g.rename(columns={"__time": "date", "base_units": "actual",
+                             "retail_account": "account"})[
+        ["key", "date", "actual", "account", "hist_wks", "band", "is_new"]]
+
+
+# B4: the honest seasonal input. MO_127 showed the committed full-panel index has
+# look-ahead at every historical cutoff; this rebuilds it with MO_59's own code from data
+# <= the cutoff only. Before 2026 no series has the 104 weeks STL needs, so it is empty.
+_SEAS_CACHE: dict = {}
+
+
+def seasonal_index_at(cut) -> dict:
+    key = str(pd.Timestamp(cut).date())
+    if key not in _SEAS_CACHE:
+        import MO_59_stl_changepoints as S
+        raw = S.load_data()
+        sub = raw[raw["__time"] <= pd.Timestamp(cut, tz="UTC")]
+        n_rows = sub.groupby(["retail_account", "upc"]).size()
+        ok = set(n_rows[n_rows >= S.MIN_WEEKS].index)
+        qual = [tuple(r) for r in sub[["retail_account", "upc", "description"]]
+                .drop_duplicates().itertuples(index=False)
+                if (r.retail_account, r.upc) in ok]
+        idx = {}
+        if qual:
+            try:
+                d = S.compute_seasonal_index(sub, qual, weighted=True)
+                idx = dict(zip(d["week_of_year"].astype(int), d["seasonal_index"].astype(float)))
+            except ValueError:
+                idx = {}
+        _SEAS_CACHE[key] = idx
+    return _SEAS_CACHE[key]
+
+
+def _wmape(actual, pred) -> float:
+    a = np.asarray(actual, float); p = np.asarray(pred, float)
+    d = np.abs(a).sum()
+    return float(np.abs(a - p).sum() / d * 100) if d > 0 else float("nan")
+
+
+LEVELS_V2 = (("cell x week", None),
+             ("account x month", ["origin", "account", "month"]),
+             ("portfolio x month", ["origin", "month"]))
+
+
+def score_levels(r: pd.DataFrame, arms: list[str]) -> dict:
+    """Score arms at all three levels, by history band and by origin.
+
+    `r` needs: origin, date, account, actual, band, plus one column per arm. Months are
+    aggregated WITHIN an origin, so overlapping horizons are never summed across origins.
+    """
+    r = r.copy()
+    r["month"] = pd.to_datetime(r["date"]).dt.tz_localize(None).dt.to_period("M").astype(str)
+    out = {}
+    for lbl, keys in LEVELS_V2:
+        g = r if keys is None else r.groupby(keys, as_index=False)[["actual"] + arms].sum()
+        out[lbl] = {a: _wmape(g["actual"], g[a]) for a in arms} | {"n": len(g), "by_band": {}}
+        for _, _, b in HISTORY_BANDS:
+            sb = r[r["band"] == b]
+            if sb.empty:
+                continue
+            gb = sb if keys is None else sb.groupby(keys, as_index=False)[["actual"] + arms].sum()
+            out[lbl]["by_band"][b] = {a: _wmape(gb["actual"], gb[a]) for a in arms} | {"n": len(gb)}
+    pm = r.groupby(["origin", "month"], as_index=False)[["actual"] + arms].sum()
+    out["portfolio_bias"] = {a: float(pm[a].sum() / pm["actual"].sum()) for a in arms}
+    out["by_origin_pm"] = {o: {a: _wmape(g["actual"], g[a]) for a in arms}
+                           for o, g in pm.groupby("origin")}
+    return out
+
+
+def bootstrap_diff(r: pd.DataFrame, arm_a: str, arm_b: str, level: str = "portfolio x month",
+                   n: int = 2000, seed: int = 0) -> dict:
+    """B5a noise floor: resample ORIGINS with replacement; CI of wMAPE(a) - wMAPE(b).
+
+    Origins overlap in calendar time, so this understates uncertainty somewhat; treat a
+    CI that crosses 0 as "no difference".
+    """
+    keys = dict(LEVELS_V2)[level]
+    r = r.copy()
+    r["month"] = pd.to_datetime(r["date"]).dt.tz_localize(None).dt.to_period("M").astype(str)
+    g = r if keys is None else r.groupby(keys, as_index=False)[["actual", arm_a, arm_b]].sum()
+    parts = {o: x for o, x in g.groupby("origin")}
+    origins = list(parts)
+    rng = np.random.default_rng(seed)
+    diffs = []
+    for _ in range(n):
+        s = pd.concat([parts[o] for o in rng.choice(origins, len(origins))])
+        diffs.append(_wmape(s["actual"], s[arm_a]) - _wmape(s["actual"], s[arm_b]))
+    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    point = _wmape(g["actual"], g[arm_a]) - _wmape(g["actual"], g[arm_b])
+    return {"diff": point, "ci95": (float(lo), float(hi)), "n_origins": len(origins),
+            "significant": bool(lo > 0 or hi < 0)}
 
 
 def score(truth, pred):
