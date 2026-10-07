@@ -1097,17 +1097,22 @@ def bootstrap_diff(r: pd.DataFrame, arm_a: str, arm_b: str, level: str = "portfo
     """
     r = _prep_scoring(r, [arm_a, arm_b])
     g = _level_frame(r, dict(LEVELS_V2)[level], [arm_a, arm_b])
-    parts = {o: x for o, x in g.groupby("origin")}
-    origins = sorted(parts)
-    blocks = [origins[i:i + block] for i in range(max(1, len(origins) - block + 1))]
+    # wMAPE = sum|err| / sum|actual|, so per-origin sums are sufficient statistics:
+    # resampling them is identical to re-concatenating rows, and fast at cell x week.
+    s = (g.assign(_ea=(g["actual"] - g[arm_a]).abs(), _eb=(g["actual"] - g[arm_b]).abs(),
+                  _d=g["actual"].abs())
+          .groupby("origin")[["_ea", "_eb", "_d"]].sum().sort_index())
+    origins = list(s.index)
+    blocks = [list(range(i, i + block)) for i in range(max(1, len(origins) - block + 1))]
     k = int(np.ceil(len(origins) / block))
     rng = np.random.default_rng(seed)
+    arr = s.values
     diffs = []
     for _ in range(n):
-        pick = [o for bi in rng.integers(0, len(blocks), k) for o in blocks[bi]]
-        s = pd.concat([parts[o] for o in pick])
-        diffs.append(_wmape(s["actual"], s[arm_a]) - _wmape(s["actual"], s[arm_b]))
-    lo, hi = np.percentile(diffs, [2.5, 97.5])
+        pick = [o for bi in rng.integers(0, len(blocks), k) for o in blocks[bi] if o < len(arr)]
+        tot = arr[pick].sum(axis=0)
+        diffs.append((tot[0] - tot[1]) / tot[2] * 100 if tot[2] > 0 else np.nan)
+    lo, hi = np.nanpercentile(diffs, [2.5, 97.5])
     point = _wmape(g["actual"], g[arm_a]) - _wmape(g["actual"], g[arm_b])
     return {"diff": point, "ci95": (float(lo), float(hi)), "n_origins": len(origins),
             "block": block, "significant": bool(lo > 0 or hi < 0)}

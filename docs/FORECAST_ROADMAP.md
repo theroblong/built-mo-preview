@@ -9,7 +9,7 @@ Evidence: MO_127 and MO_128, plus the skeptic reviews (live notes in
 **Guiding principle (Jason):** the model learns seasonal turns and growth from existing and
 future data. No forced patches, no arbitrary ceilings, no stopping training short.
 
-## Step 1. Fix the yardstick
+## Step 1. Fix the yardstick (tools built 2026-10-07; re-baseline = MO_129)
 - **Cutoff weekday.** Q3 2026 is `2026-06-29`, a Monday, in `MO_80:206`. Change it to
   `2026-06-28`. All SPINS weeks end on Sunday. Add an assertion that every cutoff is a
   panel week. This is Rob's harness, so it needs his OK.
@@ -37,7 +37,7 @@ These caps become learned or tuned:
 
 Keep one loose, logged safety rail: a forecast of at most 3× the series maximum.
 
-## Step 3. MO_129: Connor's anchor, plus learned corrections and seasonality
+## Step 3. MO_130: Connor's anchor, plus learned corrections and seasonality
 - **Target.** Each future week relative to a trailing anchor: Base U/S/W (L4W) × current
   doors. The alternative is a velocity × doors target with retransformation-bias
   correction (blocker 0.2).
@@ -50,7 +50,7 @@ Keep one loose, logged safety rail: a forecast of at most 3× the series maximum
 - **Separate recency for size and shape** (Jason, 2026-10-07: "older weeks should teach the
   crests and troughs"). Today one row-level recency weight (lambda 0.02) mutes old weeks for
   both size and seasonal shape. At the Dec 2025 cutoff, Jan 2025 weighs ~0.37 and Jan 2024
-  ~0.13: the only two New Year turns in the panel. In MO_129 the level comes from the
+  ~0.13: the only two New Year turns in the panel. In MO_130 the level comes from the
   recent anchor, and the shape model's target is relative (target week vs anchor week), so
   growth does not distort it. That lets the shape model weight all years nearly equally.
   Both recency weights are tuned on the honest backtest; neither is hand-set.
