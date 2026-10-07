@@ -37,7 +37,7 @@ below them are deliberately unchanged until review.
 
   README 226's "seasonality matters far more once anchored" is reversed with it (MO_127).
 - **README 223, "model beats flat at portfolio × month" → REVERSED.** Honest: model 17.32
-  vs flat 15.99. This settles MO_92 vs README 223 in MO_92's favour (MO_127; skeptic,
+  vs flat 15.99. This settles MO_92 vs README 223 in MO_92's favor (MO_127; skeptic,
   2026-10-07).
 - **MO_126 → RE-SCOPED.** Honest conn_off minus model, cell × week, by band:
   +5.7 / −2.4 / −3.9 / −6.5. Against flat: +5.7 / +0.3 / +0.3 / −1.7. conn beats flat only
@@ -54,7 +54,7 @@ below them are deliberately unchanged until review.
   - Rebuilding it per cutoff on ~2 years inflates the range 1.5–2× (two-cycle STL absorbs
     growth) and jumps at the cutoff week.
 - **FACT candidate (history length).** Count history as calendar span with real
-  distribution, not rows. The Walmart PUFF 1.41oz singles are relaunches mislabelled 52+.
+  distribution, not rows. The Walmart PUFF 1.41oz singles are relaunches mislabeled 52+.
 - **New method rule candidate (SETTLED).** Every fitted input (seasonal index, scaler,
   anchor) is rebuilt from data up to each cutoff.
 

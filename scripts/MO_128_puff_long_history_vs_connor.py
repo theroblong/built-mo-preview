@@ -26,7 +26,7 @@ PRIOR WORK (docs/SETTLED_FINDINGS.md, DRAFT 2026-10-07)
                  per-brand -1.14pp; PUFF -0.99. PROVISIONAL (levels not stated). Re-scored
                  here at all 3 levels on PUFF.
   MO_126 / MO_127  route by history band; model worse than flat on 52+ wks (open blocker
-                 0.3), not an index artefact.
+                 0.3), not an index artifact.
   Method rules (SETTLED): all 3 levels, history-band breakout, parity at import.
 
 ARMS. No arm carries a seasonal factor except the model's own production path, which

@@ -23,7 +23,7 @@ MO_59's method on ~2 years is **worse than none** (two-cycle STL absorbs growth;
 cutoff week). On honest, unseasonalised scoring, Connor's L4W beats our model by 4-7pp on
 26+ week series but beats flat only at 52+. On long-history PUFF (MO_128) L4W is best on 52+
 over 7 quarters, and the model is worst of five arms. Model-worse-than-flat on 52+ wks is not
-an index artefact (blocker 0.3 open).
+an index artifact (blocker 0.3 open).
 
 ### Evidence
 
@@ -57,7 +57,7 @@ low); Q4 2025 every method 20-40% high. noBAR gain ~0 in 2026 (BAR training shar
 3.0%). Model bias ~0.55 in Q1, ~1.07 elsewhere -- not a general growth under-forecast. On
 104+ PUFF outside Q1 2026 the model had the lowest monthly error (10.3 vs flat 11.5, L4W
 13.7, L12W 14.0; small sample). Focal SKUs: model beats L4W on 37 of 210 retailer series
-(7% of volume). Walmart PUFF 1.41oz singles are relaunches mislabelled 52+.
+(7% of volume). Walmart PUFF 1.41oz singles are relaunches mislabeled 52+.
 
 Predictions: MO_127 P1 HOLDS, P2 HOLDS, P3 FAILS, P4 HOLDS, P5 FAILS, P6 FAILS as
 specified; MO_128 P1 FAILS, P2 HOLDS, P3 HOLDS, P4 FAILS, P5 HOLDS, P6 HOLDS.

@@ -372,7 +372,7 @@ def main() -> None:
         res["predictions"][pid] = {"result": tag, "detail": msg}
         print(f"  {pid} {tag:<10s} {msg}")
 
-    # Unexplained behaviour is a blocker, not a footnote.
+    # Unexplained behavior is a blocker, not a footnote.
     for b, v in A[CW]["by_band"].items():
         if b == "52+ wks" and v["model_step_pre"] > v["flat_off"]:
             print(f"  ⚠️ BLOCKER still open: model worse than flat on 52+ wk series at cell x week "

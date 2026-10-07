@@ -17,7 +17,7 @@ future data. No forced patches, no arbitrary ceilings, no stopping training shor
   At portfolio × month, n=9–21 is noise.
 - **New series.** Score them too, so "portfolio" means the planning total.
 - **History length.** Count it as calendar span with real distribution (e.g. TDP > 1),
-  not row count. Today the Walmart PUFF 1.41oz relaunches are labelled 52+.
+  not row count. Today the Walmart PUFF 1.41oz relaunches are labeled 52+.
 - **Fitted inputs.** Rebuild every one from data up to each cutoff (index, scalers,
   anchors).
 - **Noise floor.** Run the same configuration across seeds and origins. A change smaller
