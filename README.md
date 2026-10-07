@@ -6,6 +6,35 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 228: one rulebook for two machines (2026-10-07)
+
+No new forecast results; process only.
+
+### Finding
+
+Working agreements had drifted into machine-local assistant memories, so Robert's and
+Jason's sessions could follow different rules. Committed repo files are now the source of
+truth, and a shared `.claude/` setup (model pin, commit gate requiring project_memory.md,
+protocol gate for MO_127+, session-start reference check, onboarding) enforces it.
+
+### Evidence
+
+| check | result |
+|---|---|
+| Jason's machine onboarded | context loaded, model matches pin |
+| Commit gate dry run | refused without project_memory.md |
+| Related-repo check | 0 unresolved after check_refs.py fix and committing 7 machine-only notes |
+
+Commits: 12253dd, 2297c57, e122e1a. Open: settled-findings list and scout/runner/skeptic
+agents (not built); git user `theroblong` on Jason's machine; his 31KB local memory index.
+
+### Procedural lesson
+
+A rule that lives on one machine is not a rule. Commit it, and make the session start
+check that every reference resolves.
+
+---
+
 ## README update 227: the velocity anchor inverts by history — and a structured test plan (2026-10-07)
 
 Plan: **`docs/FORECAST_TEST_PLAN_V12.md`**. Supersedes the "replace the recursive loop"

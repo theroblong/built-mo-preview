@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-10-01 (v10 forecast: zero-skip coverage + lapse gate; MO_79 cold-start horse race rejected the lifecycle ramp and donor surrogate; decisions register v0.8 / 89 entries)
+Last synced: 2026-10-07 (shared Claude Code setup: committed repo files are source of truth; Jason's machine onboarded; commits 12253dd, 2297c57, e122e1a; no new forecast results)
 
 ## Repository
 
@@ -255,6 +255,33 @@ That gate is our own code — `scripts/mo_writeback.py:208`, from the Druid sche
 MO_27 uploads the parquet to MinIO and writes an ingest spec but never POSTs to Druid, so running
 it does **not** change what the Mo UI serves. Submitting is a separate explicit step.
 
+## Session 2026-10-07 — Shared working setup (one rulebook for Robert and Jason)
+
+### Decisions made
+
+- Robert: committed repo files are the source of truth for working agreements; machine-local assistant memories are superseded.
+- Robert: log-everything condensed -- same-turn note under `## Live session notes`, polished wiki/18 entry at `/end-session`; push only on confirmation.
+- Robert: on any machine, Claude flags unreachable references (related repo not located, file committed nowhere) and works with the user to get them committed.
+- Robert: onboarding a new machine is one prompt for a non-developer, at most one VS Code reload (marker `.claude/onboarding.local.json`, per machine, gitignored).
+- Jason: agrees to push-on-confirmation (replaces "push all 4 repos, no exceptions"), and to the model/effort pin (`claude-opus-5-5[1m]`, effort high, `.claude/settings.json`).
+- Jason: local copies of feedback_log_everything, feedback_four_repos, feedback_meeting_prep_process now hold only a pointer to the committed files (not deleted).
+
+### Artifacts created
+
+- `.claude/` shared config (commit 2297c57): settings.json (model pin, effort high, read-only permissions); hooks `require_memory_in_commit.py` (commit requires `agents/project_memory.md` staged), `protocol_gate.py` (MO_127+), `session_context.sh` + `check_refs.py` at session start; skills new-experiment, end-session, onboard; scribe agent; related-repos.json.
+- `.claude/hooks/check_refs.py`: remote matching ignores trailing `.git`/slash/case (Jason's mo-api/mo-ui clones lacked `.git` and were reported not located). Commit e122e1a.
+- Committed Jason's machine-only notes (e122e1a): `docs/working-agreements/feedback-meeting-prep-process.md`; `memory/` project_mo53_individual_ablation, project_portfolio_cannibalization (MO_55), project_mo52_feature_ablation, project_mo56_candidate, project_ml_architecture_roadmap, feedback_ml_feature_signals. check_refs.py reports nothing unresolved.
+- Jason's machine onboarded and verified (context loaded, commit gate refused a dry-run commit without project_memory.md, model matches pin). Related repos found under ~/Documents.
+- Commits: 12253dd (log-everything agreement), 2297c57 (shared config), e122e1a (onboard Jason's machine, pushed).
+
+### Open questions
+
+- Closed: Jason's machine-only files committed; model/effort pin and push-on-confirmation agreed.
+- Pending: settled-findings list (scope/harness/reopen-if per entry) and scout/runner/skeptic agents -- approved in principle by Robert, not built.
+- New (raised by Claude): Jason's machine commits under git user `theroblong` (Robert's) -- confirm whether intended.
+- New (raised by Claude): Jason's machine-local MEMORY.md index is 31KB, over the 24.4KB load limit (~22 entries unloaded) -- trim index lines.
+- No new forecast results; no async messages received.
+
 ## Open Follow-Ups
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
@@ -287,18 +314,3 @@ it does **not** change what the Mo UI serves. Submitting is a separate explicit 
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
-- 2026-10-07 Decision (Robert): committed repo files are the source of truth for working agreements; machine-local assistant memories (incl. Jason's `feedback_log_everything`) are superseded.
-- 2026-10-07 Decision (Robert): log-everything condensed; "immediately" = same-turn note here, polished wiki/18 entry at /end-session; push only on confirmation (changes the original "no exceptions" push rule -- Jason to confirm).
-- 2026-10-07 Decision (Robert): on any machine, Claude flags unreachable references (related repo not located, file committed nowhere) and works with the user to get them committed.
-- 2026-10-07 Artifacts: `.claude/` added -- settings.json (model pinned to claude-opus-5-5[1m], effort high), hooks (commit requires project_memory.md; protocol gate for MO_127+; session-start context + reference check), skills new-experiment and end-session, scribe agent, related-repos.json.
-- 2026-10-07 Open question: Jason to commit [[feedback-meeting-prep-process]], [[project_mo53_individual_ablation]], [[project_portfolio_cannibalization]] (exist only on his machine).
-- 2026-10-07 Open question: Jason to agree to project model/effort pin and the push-on-confirmation change.
-- 2026-10-07 Pending: settled-findings list (with scope/harness/reopen-if per entry) and scout/runner/skeptic agents -- approved in principle, not built.
-- 2026-10-07 Artifacts: `.claude/skills/onboard/SKILL.md` -- guided setup after pulling (hooks loaded?, git state, model, related repos, commit machine-only memories, retire superseded local copies, live commit-gate test). Commit hook and session hook rewritten in Python (no jq); commit hook now ignores commits in other repos. Jason starts it with the prompt in the handoff message.
-- 2026-10-07 Decision (Robert): onboarding must be one prompt for a non-developer. Onboard skill now does the git pull itself, runs in plain language, and finishes via a per-machine marker (`.claude/onboarding.local.json`) that the session-start hook picks up after one VS Code reload. Read-only git/hook commands added to project permissions.
-- 2026-10-07 Decision (Jason): agrees to push-on-confirmation at /end-session (replaces his "push all 4 repos, no exceptions" rule).
-- 2026-10-07 Decision (Jason): agrees to the project model/effort pin (claude-opus-5-5[1m], high).
-- 2026-10-07 Decision (Jason): his local copies of feedback_log_everything, feedback_four_repos and feedback_meeting_prep_process now hold only a pointer to the committed files (not deleted).
-- 2026-10-07 Onboarding (Jason's machine): related repos all found under ~/Documents (customer-built-doc, customer-built-mo-api, customer-built-mo-ui); recorded in .claude/related-repos.local.json. Fix: check_refs.py now normalises remotes (Jason's mo-api/mo-ui clones have no `.git` suffix, so the exact-string match reported them as not located).
-- 2026-10-07 Onboarding: committed Jason's machine-only files -- docs/working-agreements/feedback-meeting-prep-process.md; memory/project_mo53_individual_ablation.md, project_portfolio_cannibalization.md, plus the notes they link to (project_mo52_feature_ablation.md, project_ml_architecture_roadmap.md, project_mo56_candidate.md, feedback_ml_feature_signals.md). check_refs.py now reports nothing unresolved. Resolves the 2026-10-07 open questions on Jason's files, model pin and push rule.
-- 2026-10-07 Note: Jason's machine-local MEMORY.md index is 31KB (over the 24.4KB load limit), so its last ~22 entries are not loaded each session -- trim index lines later.
