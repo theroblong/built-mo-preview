@@ -6,6 +6,68 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 230: the test bench was not production -- training, inputs and per-week updates now match, and the yardstick is rebuilt (2026-10-07, evening)
+
+Code: `scripts/MO_80_quarterly_honest_backtest.py`, `scripts/mo_panel.py`,
+`scripts/MO_126_band_breakdown.py` (recovered). Commits 08a7240, a611930, bee63e4, f43c121,
+2bc4caa, 12045dc, a21e9fb. Roadmap: `docs/FORECAST_ROADMAP.md` (step 3 addendum). No
+production forecast changed; every earlier MO_80-MO_128 result is now "before the yardstick
+fix" and is re-measured in task C (not yet run: Jason reviews the plan first).
+
+### Finding
+
+The backtest harness behind MO_80-MO_128 was a different, weaker model than production, and
+it saw a little of the future. Differences found by two skeptic reviews and a 56-feature
+audit: (1) training: lr 0.05 vs 0.04, no recency weights, 800-tree cap vs 6000, validation =
+`tr.tail()` (last series, in-sample), no refit, band models without early stopping, and
+3.4-5.6% more rows than MO_26 (which drops series with < 13 rows); (2) look-ahead: 8 of 56
+inputs leak, 3.76% of gain -- 5 promo statistics computed over the whole panel (now rebuilt
+per cutoff) and 3 donor inputs from a full-history cannibalization scoring (neutralized in
+backtests, so backtests score "production minus donor information", ~2.1% of gain); the other
+48 (incl. the ~94% of gain in sales/TDP/velocity/price history) are clean; (3) per-week
+parity: the harness froze lag4, lag13, the price path, promo flags/cadence and
+weeks_since_launch at the starting week while MO_27 updates them every step, and the parity
+check compared names only. Fixed: the harness now trains like MO_26 (last 13 weeks held out to
+pick the tree count, refit on ALL history, lambda 0.02, lr 0.04, cap 6000; constants asserted
+via `FORECAST_CONTRACT`) and updates inputs per step. Q3 2026 dates were Mondays; they are now
+Sundays (2026-06-28 / 07-05 / 09-27; Q4 2026 forward 10-04 / 12-27) and asserted at import.
+Production v11's q50 also hits its 6000-tree cap (q10/q90 stop ~1,170): a lever to test.
+Batched forecasting is ~30x faster, verified identical.
+
+Remaining blocker for task C: MO_80 defaults to seasonal mode "target" but production runs
+"step"; the overnight driver must pin step (8 of 18 origins affected).
+
+### Evidence
+
+Harness vs production, before and after:
+
+| item | before | after |
+|---|---|---|
+| learning rate / tree cap | 0.05 / 800 | 0.04 / 6000 (MO_26) |
+| validation | last series, in-sample | last 13 weeks held out, then refit on all history |
+| recency weights | none | lambda 0.02 |
+| training rows vs MO_26 | +3.4-5.6% | 0 (series < 13 rows dropped) |
+| leaking inputs | 8 of 56 (3.76% of gain) | 5 rebuilt per cutoff; 3 neutralized (~2.1% of gain) |
+| per-step inputs | frozen at anchor | updated per step as MO_27 does |
+| forecasting time per cutoff | ~34 s | ~1.1 s; 0.0 diff over 27,508 forecasts incl. bands |
+| origins | 7 quarterly | 18 monthly (Dec 2024-May 2026) |
+
+History bands at origin 2026-05-31 (eval volume, first rule -> current selling run; bands are
+reporting only, all real data stays in training): 52+ wks 44.2% -> 37.8%; <13 wks 17.7% ->
+21.8%; 329 of 1,819 series change band, only downward. New series are 1-17.5% of eval volume
+per origin (a 100%-error floor for every arm). Walmart Coconut 1.41oz: current run 21 wks vs
+46 total selling vs 129 since first. Accuracy by band is NOT reported here: no re-baseline has
+run on the corrected harness.
+
+### Procedural lesson
+
+A parity check that compares names does not prove parity. Compare values and behavior
+(training settings, per-step updates, every input rebuilt at the cutoff), assert them in the
+shared contract, and have a skeptic audit the test bench itself before trusting any result it
+produced; a deterministic speed-up must be verified identical, not assumed.
+
+---
+
 ## README update 229: the seasonal index saw the future -- and on long-history PUFF, Connor's 4-week method beats our model (2026-10-07)
 
 Experiments: `scripts/MO_127_seasonal_index_lookahead.py` (predictions committed eb3e300)
