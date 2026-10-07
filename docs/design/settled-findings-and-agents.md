@@ -1,6 +1,7 @@
 # Design: settled-findings list and the agent roster
 
-Status: **approved by Robert 2026-10-07; not yet built.** This is the spec to build from.
+Status: **approved by Robert 2026-10-07; built 2026-10-07** (agents, routing, PRIOR WORK gate,
+reversal check, draft list). The list awaits Robert + Jason review before it is loaded.
 Change it here, by commit, before building something different.
 
 ## Why
@@ -58,6 +59,11 @@ MO_54 · holiday binary flags · PROVISIONAL (closed 2026-07-07)
 - `PROVISIONAL`: anything else. These are candidates to re-check, not facts.
 - `REVERSED`: kept with a pointer to the result that overturned it. A reversal is itself
   a lesson.
+- `FACT` (added at build): data / infra / design facts that do not depend on the
+  forecast harness (README 222: panel-level findings stand).
+
+As built, entries are one compact bullet each (status, finding with numbers, scope,
+reopen-if, `file:line`) rather than the six-line block above, so ~75 entries fit.
 
 **Building the first version:**
 1. `sonnet` extracts candidate entries from the README history and `agents/project_memory.md`.

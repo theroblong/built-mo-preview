@@ -1,0 +1,246 @@
+# Settled findings
+
+**DRAFT 2026-10-07 — pending review by Robert and Jason. Not loaded into CLAUDE.md until reviewed.**
+Spec: `docs/design/settled-findings-and-agents.md`. Extracted by sonnet from the README
+(updates 1–228), project memory, `memory/`, and the test plan. Status assigned by opus.
+Evidence lines spot-checked.
+
+**Statuses**
+- **SETTLED**: measured on the corrected harness (after MO_118, 2026-10-06), at all three
+  levels, and by history band. Or a method rule learned from a reversal.
+- **PROVISIONAL**: anything else. It was tested, so don't re-test casually. To re-test,
+  meet its *reopen if*.
+- **REVERSED**: overturned. Don't cite it, and don't re-derive it.
+- **FACT**: a data, infrastructure or design fact that doesn't depend on the forecast
+  harness. README 222: "panel-level findings are harness-independent and stand".
+
+**Note:** every forecast-loop result dated before 2026-10-06 was scored on a configuration
+production never runs (MO_118, 11.83pp), so it is PROVISIONAL at best. Very little meets
+SETTLED yet.
+
+**Using this list**
+- New MO_127+ scripts cite related entries in a `PRIOR WORK` section, or write `none found`.
+- A commit that records a reversal must update this file.
+- Sources are `file:line`. The `scout` agent can pull the full context.
+
+## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
+- **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
+  at portfolio-month (19.2 vs 17.5). Unexplained.
+- **Retransformation bias.** Velocity models run at 0.62–0.65 vs 0.886, because the median
+  of log1p(velocity) × doors ≠ mean units. Fix with Duan smearing or tweedie before
+  model-based velocity arms.
+- **The model is worse than flat on 52+ wk series** (34.7 vs 29.9, item-week), where it
+  should be strongest.
+
+## Method rules: SETTLED (each learned from a reversal)
+- **Score every arm at all 3 levels.** Anchor seasonal mode was 1.17pp at item-week and
+  8.28pp at portfolio-month (README 226, :114).
+- **Break every arm out by history band.** The pooled conn_L4W result hid a 7pp loss
+  (<13 wks) and a 12.5pp win (52+) (README 227).
+- **Assert harness parity at import.** The backtest refreshed roll/wow features that
+  production freezes: 11.83pp, and 2 conclusions inverted (MO_118, README.md:353).
+- **Teacher-forced evaluation can't answer questions about a recursive forecast.**
+  MO_27b's "+8.53pp hurt" was a trough artifact; recursive showed −2.65pp help
+  (README.md:2277).
+- **Never compare a median-across-series number to a volume-weighted one.** State the
+  metric and the population every time (README.md:746).
+- **Never call a mechanism on one fold.** A linear_tree single-fold "win" reversed across
+  all 4 folds (README.md:1128).
+- **Decompose any "seasonal" miss** into existing-series error vs cells unseen at forecast
+  time. A median 14.4% of T+3 volume comes from unseen cells (MO_91/92, README.md:1426).
+- **Re-derive the q90 conformal constant every retrain.** It was 1.0124× at v3 and
+  1.0059× at v4 (MO_67).
+- **Only cite ROBUST causal verdicts.** Of 140 significant events, 29% ROBUST and 62%
+  FRAGILE (MO_60, README.md:5858).
+- **Drift: judge slope, not level.** The Bulk-Growing "drift" was year-1 data maturity, not
+  drift (MO_68).
+
+## Current forecasting position (corrected harness): PROVISIONAL
+- **MO_126 · route the anchor by history band.** conn_L4W vs model by band:
+  - <13 wks: +6.95 (worse)
+  - 13–25: −3.64
+  - 26–51: −6.18
+  - 52+: −12.49 (better)
+
+  Same shape at portfolio×month. Route <13 → last value (production, validated) and 26+
+  → conn_L4W. *Reopen if:* the 13–25 boundary sweep, or a blend in that band
+  (README 227).
+- **MO_125 · conn_L4W** (trailing velocity × current doors × seasonal) beats flat and the
+  model pooled at all 3 levels, e.g. portfolio×month 10.7 vs 16.0 / 11.8, with bias
+  1.029. Ship alone, not blended. *Caveat:* portfolio-month n=21. Superseded in part by
+  MO_126's band split.
+- **README 223 · the model beats flat only at portfolio×month** (4.2pp, 26% relative).
+  Account×month is the uncomfortable middle (flat 23.1 vs model 24.7). Not split by band
+  (README.md:290).
+- **Exclude BAR from training:** −1.34pp, all 7 quarters. Exclusion is preferred over
+  per-brand models (−1.14pp). Pooled; levels not stated (README.md:328).
+- **Seasonal multiplier: anchor mode is best** under the corrected harness (40.08 vs
+  41.25 shipped). Chain: README 219 claim → 220 "catastrophic" → 222 parity fix
+  re-reversed it.
+- **MO_115 · base units per store per week** has more repeatable YoY seasonality than raw
+  units (+0.249 → +0.367; Kroger −0.393 → +0.424). Kroger's "chaos" was distribution
+  growth. FACT-grade (panel).
+
+## Forecasting, before the correction: PROVISIONAL (*reopen if*: re-run under parity, by band)
+- **MO_79 · cold start:** naive_last wins every band and 3 of 4 cutoffs. The lifecycle
+  ramp loses in every band (+21–23% bias), and the donor surrogate's edge is a confound.
+  MO_126 later re-validated last-value for <13 wks.
+- **MO_107 · method-selection oracle** is only 2.38pp above flat. Routing among
+  *existing* methods captured none of it. Hierarchical top-down fails. Croston doesn't
+  apply (0% intermittent). Note: MO_126's band routing of a *new* estimator is a
+  different question.
+- **The tally of what flat beats** (README.md:1709):
+  - 6 seasonal arms, raw week_of_year, TDP projection, lifecycle ramp, donor surrogate,
+    hierarchical allocation
+  - targets: log1p, ratio13, ratio52, differencing
+  - objectives: quantile, l2, huber, poisson, tweedie, mape
+  - models: Ridge, Lasso, N-BEATS
+- **MO_103 · direct beats recursive at every horizon** (32.83 vs 36.44, flat 32.95).
+  Recursion does *not* compound error; it costs a roughly constant ~3.5pp.
+- **A short-horizon hybrid** (model → flat at k) is worse than both, and k has no stable
+  crossover. Drop it, don't tune it.
+- **MO_104 · SES ties flat** (α → 1). **MO_95/105 · the TDP-unfreezing oracle ceiling**
+  is 0.6pp, replicated portfolio-wide.
+- **MO_97/98 · linear_tree** is +3.51pp worse. **Capping each forecast at 1.5× the series
+  max** is −0.45pp across all folds. *Reopen if:* testing 1.2–1.3× caps.
+- **MO_27g · TDP projection** moved the flattening ratio 0.062 → 0.064: the loop can't be
+  patched. Consistent with replacing it (conn_L4W).
+- **MO_28R · Optuna headroom** (2.6pp) was measured on the recursive objective. It doesn't
+  transfer to direct or anchor architectures.
+- **MO_29 · early stopping** fires at about 4,593 trees (lr 0.04, 63 leaves). Any nonzero
+  min_delta is worse. Set n_estimators by compute budget. *Reopen if:* 3-fold CV confirms.
+- **Q4 2025 miss** (~41%): lag52 under-anchors a brand 3–5× bigger than a year earlier.
+  It needs a velocity-per-TDP view (README.md:3063).
+- **MO_76 · macro (FRED/EIA) features:** no single winner, and the group gain sits in one
+  window. Archived. *Reopen if:* 2+ more years of data.
+
+## Features and Mo signals: PROVISIONAL (earlier 28-feature model; current v9 has 56 features)
+- **MO_52–57 · feature engineering closed on the MO_53 28-feature champion** (CV 6.448%).
+  Tested and rejected:
+  - holiday flags (+0.05–0.15pp, MO_54)
+  - Fourier encoding (+0.16pp)
+  - lag2 and lag3
+  - built_tdp_share
+  - brand-split donor counts
+  - percentage promo thresholds
+  - static cannibal_prob
+
+  *Reopen if:* a different model or architecture, or a re-score by band × level.
+- **MO_96 · do not re-add** pack_count, own-brand donor features, or built_tdp_share:
+  three implementations negative (README.md:1226). *Open:* pack as a prior on growth
+  (a target change).
+- **MO_41/50/56 · Mo signals are lagging indicators.** AR lags already encode them, and
+  they hurt wMAPE pooled. Use them for explainability and scenarios, not accuracy.
+  *Reopen if:* <13 wk band, where MO_51 found +1.3pp in a low-data cutpoint
+  (README.md:7231).
+- **Feature hygiene:**
+  - price guardrails on $/bar, not raw ARP
+  - cannibal signal = `cannibalization_rate_weekly` with null → 0
+  - elasticity as `arp_pct_change × coef`
+  - clip pct_chg to [−1, 2]
+  - focal pct_chg columns are structurally NULL; drop them
+
+## Elasticity, promo, causal: PROVISIONAL
+- **MO_44:** portfolio ATE −0.34 (CI −0.37 to −0.31), 4/4 refutations.
+  **MO_61:** elasticity varies 2.5–3.5× by pack, maturity and season. The mid-pressure
+  ε ≈ −1.0 is n=790, so treat with caution.
+- **MO_16/44:** AHOLD positive elasticity is a CRMA aggregation artifact, not fixable by
+  features. Vitamin Shoppe's positive ε is real (clearance).
+- **MO_70:** promo lift is under-predicted about 2× (structural). The fix is UI
+  disclosure. **BSTS:** price-event direction is right 63% of the time on clean moves,
+  but magnitude is worse than naive, so claim direction only.
+- **MO_20/73 · lift ladder:**
+  - discount depth: <10% → 20%, 10–20% → 31%, 20–30% → 46%, 30%+ → 76%
+  - c-store singles are flat
+  - grocery 12pk hits a cliff at 30%
+- **MO_55:** the zero-sum portfolio cannibalization layer moves 1.18% of units. Its value
+  is unvalidated. *Open:* thresholds (30% / 20% / wsl ≤ 26).
+
+## REVERSED: do not cite
+- **"5× (or 6×) better than foundation models"** (MO_62). The Mo number was a hardcoded,
+  leaked constant. Honest rerun: 1.1pp, and flat beats both Mo arms volume-weighted
+  (MO_106, README.md:728). Still in the FP&A report and the Mo Chat glossary (:6447).
+  Also re-verify the 8× / 6× / 10–30× architecture multiples before citing.
+- **MO_63's 2.02–5.71% CV and the "accuracy compounds over time" claim**
+  (README.md:6441, :6764). Teacher-forced: one-shot predict with actual lags. Same class
+  as the retired 3.4–4.3%. Still in the Mo Chat glossary.
+- **Retired accuracy figures:**
+  - 2.3% (Kroger, teacher-forced) → 13.8% recursive (README.md:3259)
+  - 15.5–15.7% headline: 6 of 7 quarters were leaked
+  - honest: 32–41% (README.md:1943)
+- **"4.15% teacher-forced vs 37% recursive" as a modelling insight.** Contamination plus
+  freeze is an accidental level anchor (MO_118, README.md:385).
+- **MO_117 two-stage "closed on 0.61pp"** and **MO_123 "L4W loses 17pp"** (straw man).
+  Both overturned by MO_125.
+- **"91.9% BAR exit rate" / brand predicts exit** (README 221). An artifact; 13-wk
+  survival is 99.5% (README.md:333).
+- **"Halves naive error"** (MO_92) was withdrawn (README.md:1502). Not reconciled:
+  MO_92's "flat beats the model at portfolio-month" vs README 223's model +4.2pp there.
+- **"Coherent" TDP unfreezing** was a free win at Kroger only (README.md:838). **SES beats
+  flat by 1.7pp** (README 206) didn't replicate.
+- **geography_raw as a feature** (README 190/194): phantom AK/HI rows. Filter them
+  instead (README.md:2770).
+- **Meijer = MULO CRMA** (README 159): wrong. Meijer is RMA CONVENTIONAL|FOOD. *Open:*
+  re-verify the Meijer cannibalization brief.
+- **"Index built from 3 series" / "October peak is a CRMA artifact"** (ANO-08): both wrong
+  (ANO-10).
+- **Lifecycle ramp, donor surrogate, TDP projection as #1 fix**: all rejected
+  (MO_79, MO_27g).
+
+## FACT: data, panel, infrastructure, design
+- **SPINS semantics:**
+  - `total_units = units`; base + units_promo is wrong on 67% of rows (README.md:6927)
+  - `units_promo` is not incremental; `incr_units` is
+  - `base_units` is the MRM baseline; say "SPINS-defined baseline"
+- **Panel rules (`scripts/mo_panel.py`):**
+  - RMA priority over CRMA (CRMA was a ~7.3× double-count: 515.7M → 70.5M bars/yr)
+  - exclude military
+  - drop zero-volume geographies
+  - promo nulls → 0 only if no promo ran
+- **Brand and flavour:**
+  - filter `parent_brand = 'BUILT'`, not `source_brand` (2 vs 146 UPCs)
+  - feature: `spins_flavor_canonical`
+  - never `spins_flavor_mapped`
+- **Growth is distribution:** 61% of 52-wk growth is new series, and continuing series grew
+  1.46×/yr. TDP grew 7.9×, all of it in the launch ramp. Flat × growth double-counts.
+- **No series had 104+ weeks** at the Q4 2025 cutoff. ETS, Theta, MSTL and SARIMA fail
+  outright.
+- **YoY seasonal shape barely repeats:** median r = +0.079, and only 4% of series exceed
+  0.6. The seasonal index is volume-weighted over all qualifying series (peak wk10
+  +0.199, trough wk52 −0.190). Single-series STL is unstable. Version-control the index
+  CSV.
+- **Constant-leaf GBDTs can't extrapolate** above their training max (39% of Q1 2026
+  volume). `monotone_constraints` is unusable with the quantile objective.
+- **BUILT's "~7%"** is total (bias) error: we're at 0.3–1.6% on that measure, against
+  ~36% per-item wMAPE. *Open:* BUILT's exact definition.
+- **The door-count / planned-distribution data ask is dead:** a 0.6pp ceiling, and BUILT
+  ships to warehouses.
+- **Costco CRX:**
+  - a separate Circana product (pallet multiples of 525)
+  - MVM can't be derived from CRX rows (promo and sales sit on separate rows) → join a
+    promo calendar
+- **Retailer data classes:** 1 SPINS, 2 Circana/Costco, 3 own-portal, 4 dark (estimate;
+  never fabricate ACV). PRIVATE LABEL isn't a brand.
+- **Druid:**
+  - only `REPLACE … OVERWRITE WHERE` is safe on spins_full
+  - top-level ORDER BY is `__time` only (sort in Python)
+  - EXTERN and the Lookup API are forbidden
+  - numerics arrive as object dtype → `to_numeric`
+  - write timestamps as ISO strings
+  - `SELECT * LIMIT 1` before new scripts
+- **Code traps:**
+  - `max(0, nan)` = 0, and NaN is truthy (`str(nan or "UNKNOWN")` = "nan")
+  - a bare `except: pass` hid a Druid 400
+  - MIN_WEEKS at extract hid 7,291 series → filter downstream
+- **MO_27 production:**
+  - the <13 wk rule is a method router, not a coverage gate
+  - `LAPSE_WEEKS = 9` → forecast 0
+  - no ETS in production, and MO_75 doesn't exist
+  - coherence clamp total ≥ base (MO_58); re-verify each retrain
+- **MO_62/65 benchmarks used MIN_HISTORY = 52.** They say nothing about cold start.
+- **Product design:**
+  - Mo never shows empty results
+  - FULL / PARTIAL / EARLY tiers (13+ / 8–12 / <8 wks)
+  - training ≠ inference population
+  - build Druid feature tables, never raw rows
+- **Mo Chat:** tool use needs a 7–9B+ model. Mistral 7B is limited to 1 tool call.

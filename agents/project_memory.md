@@ -316,3 +316,8 @@ it does **not** change what the Mo UI serves. Submitting is a separate explicit 
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
+- 2026-10-07 Artifacts: built the spec in docs/design/settled-findings-and-agents.md -- agents scout (haiku/low), runner (sonnet/medium), skeptic (opus/high); CLAUDE.md routing section; protocol gate requires PRIOR WORK (MO_127+); commit hook blocks a recorded reversal unless docs/SETTLED_FINDINGS.md is staged (escape: [no-findings-change]). Draft docs/SETTLED_FINDINGS.md: ~75 entries from 4 sonnet extractions (README 1-228, memory, test plan), status by opus, 36 evidence lines spot-checked.
+- 2026-10-07 Decision (Robert, via build): added FACT status (harness-independent data/infra/design facts) and a compact one-bullet entry format; list is 246 lines vs ~150 target.
+- 2026-10-07 Found: MO_63's 2.02-5.71% rolling-CV accuracy is teacher-forced (single predict with actual lag1) -- same class as the retired 3.4-4.3%; it backs the "accuracy compounds" marketing claim and is in the Mo Chat glossary (README.md:6447, 6764). The "5x vs foundation models" claim (MO_62, reversed by MO_106) is also still in the FP&A report and glossary.
+- 2026-10-07 Open question: Robert + Jason to review docs/SETTLED_FINDINGS.md (statuses, length) before it is imported into CLAUDE.md.
+- 2026-10-07 Open question: reconcile MO_92 (flat beats model at portfolio-month, pre-correction) with README 223 (model +4.2pp there, post-correction).

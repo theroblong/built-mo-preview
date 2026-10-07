@@ -11,6 +11,9 @@ no exceptions"). This enforces the parts a file check can see:
      section, so the result can falsify it.
   3. History-band breakout -- the script mentions history bands. Two conclusions have
      reversed under the band breakdown; a pooled-only script is not allowed to run.
+  4. Prior work checked -- the docstring has a PRIOR WORK section citing related
+     docs/SETTLED_FINDINGS.md entries by MO number, or saying "none found", so closed
+     questions are not re-tested by accident.
 
 Applies only to MO_127 and later (MO_126 already ran, per README 227), so the existing scripts keep running unchanged.
 A script that is not a forecast arm (data audit, plotting) opts out explicitly with
@@ -57,6 +60,12 @@ for m in re.finditer(r"(MO_(\d+)[A-Za-z0-9_]*\.py)", cmd):
         missing.append("a PREDICTIONS section in the module docstring, written before the run")
     if not re.search(r"history[ _-]?band", src, re.IGNORECASE):
         missing.append("a breakout by history band (<13 / 13-25 / 26-51 / 52+ wks)")
+    # Prior work: the docstring must show docs/SETTLED_FINDINGS.md was checked -- either
+    # citing related entries by MO number or saying explicitly that none were found.
+    pw = re.search(r"PRIOR WORK(.{0,800})", doc, re.IGNORECASE | re.DOTALL)
+    if not pw or not re.search(r"MO_?\d+|none found", pw.group(1), re.IGNORECASE):
+        missing.append("a PRIOR WORK section in the docstring citing related "
+                       "docs/SETTLED_FINDINGS.md entries by MO number, or 'none found'")
     if missing:
         problems.append(f"{name}:\n  - " + "\n  - ".join(missing))
 

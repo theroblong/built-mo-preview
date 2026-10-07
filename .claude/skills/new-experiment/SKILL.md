@@ -7,8 +7,13 @@ description: Scaffold a new MO_NNN forecast experiment script that follows the t
 
 Every forecast arm follows the Protocol in `docs/FORECAST_TEST_PLAN_V12.md`. Each rule exists
 because skipping it once produced a wrong conclusion that later reversed. The
-`protocol_gate.py` hook refuses to run MO_127+ scripts missing rules 1, 2 or 4, so
-building them in from the start avoids a blocked run.
+`protocol_gate.py` hook refuses to run an MO_127+ script that is missing any of these:
+- the harness import
+- PREDICTIONS
+- a history-band breakout
+- PRIOR WORK
+
+Building them in from the start avoids a blocked run.
 
 ## Steps
 
@@ -20,6 +25,12 @@ building them in from the start avoids a blocked run.
 2. **Write the docstring before any code**, in this order:
    - `MO_<N> - <the question, phrased as a question>`
    - WHERE THIS CAME FROM: which prior MO result or client input motivated it
+   - PRIOR WORK: first ask the `scout` agent what `docs/SETTLED_FINDINGS.md` and the
+     README already say about this question. Cite each related entry by MO number, with
+     its status:
+     - **SETTLED:** explain why re-testing is justified.
+     - **PROVISIONAL:** say which reopen-if condition this experiment meets.
+     - **Nothing related:** write `none found`.
    - ARMS: one line each. Name the production arm explicitly as the reference.
    - LEVELS: cell x week · account x month · portfolio x month, plus bias at portfolio x month
    - `PREDICTIONS, RECORDED BEFORE RUNNING so they can be wrong:` numbered, each one
