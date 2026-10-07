@@ -86,7 +86,7 @@ warnings.filterwarnings("ignore")
 
 OUT = Path("outputs/mo128_puff_vs_connor.json")
 OUT_FOCAL = Path("outputs/mo128_focal_series.csv")
-TREES = 800
+TREES = None                      # None = production cap (MO_80.TREES_CAP); was 800 in the original run
 PUFF_BRANDS = {"BUILT PUFF", "BUILT SOUR PUFF"}
 FOCAL_UPCS = {"08-40229-30362": "PUFF Brownie Batter 1.41oz", "08-40229-30037": "PUFF Coconut 1.41oz",
               "08-40229-30380": "PUFF Brownie Batter 4pk", "08-40229-30381": "PUFF Coconut 4pk"}

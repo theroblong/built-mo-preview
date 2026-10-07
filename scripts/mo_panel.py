@@ -66,6 +66,16 @@ FORECAST_CONTRACT: dict = {
     "SEASONAL_BLEND_WEIGHT": 0.10,
     "SHORT_BAND_WIDTH": 0.45,
     "MIN_SERIES_WEEKS": 13,
+    # Training parity (2026-10-07). The backtest harness trained with a 0.05 learning
+    # rate, no recency weights, an 800-tree cap and in-sample early stopping while MO_26
+    # (what ships) used the values below, so every backtest scored an under-trained
+    # cousin of production. MO_80 reads these from MO_26 and asserts them here.
+    "RECENCY_LAMBDA": 0.02,
+    "TRAIN_VAL_WEEKS": 13,
+    "LEARNING_RATE": 0.04,
+    "TREES_CAP": 6000,
+    "EARLY_STOP_PATIENCE": 50,
+    "EARLY_STOP_MIN_DELTA": 0.0,
 }
 
 

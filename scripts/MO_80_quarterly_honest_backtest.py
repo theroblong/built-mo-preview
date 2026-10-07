@@ -98,6 +98,26 @@ SEASONAL_INDEX_CSV = Path("outputs/mo59_seasonal_index.csv")
 SHORT_BAND_WIDTH = 0.45        # MO_27 `_bw` for last_value_seasonal
 _SKIP_LAG52 = False            # MO_93 ablation hook; production always refreshes lag52
 
+# ── Training parity with production (added 2026-10-07) ─────────────────────────
+# Until now every arm here trained differently from MO_26, the script that trains the
+# models MO_27 ships: a 0.05 learning rate (production 0.04), no recency weights
+# (production lambda 0.02), an 800-tree cap (production 6000, early stopping lands near
+# 4,600 per MO_29), and early stopping on `tr.tail(...)`. On a panel sorted by series
+# then week, that is the LAST SERIES, and it is part of the training data, so early
+# stopping watched in-sample loss and the model ran to the cap. Every backtest from
+# MO_80 to MO_128 therefore scored an under-trained cousin of production.
+# `train_like_production` below reproduces MO_26: the last 13 weeks held out, recency
+# weights, early stopping on that holdout, then a refit on all data at the best
+# iteration. Hyperparameters are read from MO_26 itself, and the training constants
+# are part of the parity contract, so the two cannot drift silently again.
+import MO_26_retailer_sales_train as _PROD_TRAIN
+
+TREES_CAP = _PROD_TRAIN.LGBM_BASE["n_estimators"]
+EARLY_STOP_PATIENCE = 50                     # MO_26 lgb.early_stopping(50, ...)
+EARLY_STOP_MIN_DELTA = _PROD_TRAIN.EARLY_STOP_MIN_DELTA
+TRAIN_VAL_WEEKS = 13                         # MO_26: last 13 weeks = validation
+FIT_LOG: list[dict] = []                     # one row per fit: rows, best iteration, cap
+
 # MO_113 A/B hook. Production applies the seasonal index in TWO places -- the
 # short/lapsed router and the LightGBM STL fallback -- and MO_109 only measured the
 # second one, in a bare loop, portfolio-wide. This switch applies one mode to BOTH
@@ -152,7 +172,14 @@ assert_forecast_parity(
     constants={"HORIZON": HORIZON, "LAPSE_WEEKS": LAPSE_WEEKS,
                "SEASONAL_BLEND_WEIGHT": SEASONAL_BLEND_WEIGHT,
                "SHORT_BAND_WIDTH": SHORT_BAND_WIDTH,
-               "MIN_SERIES_WEEKS": MIN_SERIES_WEEKS_LOCAL},
+               "MIN_SERIES_WEEKS": MIN_SERIES_WEEKS_LOCAL,
+               # training parity (2026-10-07): MO_26's values, checked against the contract
+               "RECENCY_LAMBDA": RECENCY_LAMBDA,
+               "TRAIN_VAL_WEEKS": TRAIN_VAL_WEEKS,
+               "LEARNING_RATE": _PROD_TRAIN.LGBM_BASE["learning_rate"],
+               "TREES_CAP": TREES_CAP,
+               "EARLY_STOP_PATIENCE": EARLY_STOP_PATIENCE,
+               "EARLY_STOP_MIN_DELTA": EARLY_STOP_MIN_DELTA},
     who="MO_80")
 
 
@@ -212,9 +239,12 @@ QUARTERS = [
 assert all(pd.Timestamp(d).dayofweek == 6 for q in QUARTERS for d in q[1:]), \
     "QUARTERS dates must be Sunday week-ending dates, matching the SPINS weekly grid"
 
+# LEGACY: the pre-2026-10-07 settings, kept only so `fit` (used by MO_95) reproduces.
 LGBM = dict(learning_rate=0.05, num_leaves=63, min_child_samples=20,
             feature_fraction=0.8, bagging_fraction=0.8, bagging_freq=5,
             reg_alpha=0.1, reg_lambda=0.2, random_state=42, n_jobs=-1, verbose=-1)
+# Production settings, read from MO_26 (n_estimators is the cap, passed per call).
+PROD_LGBM = {k: v for k, v in _PROD_TRAIN.LGBM_BASE.items() if k != "n_estimators"}
 
 
 def future_weeks(weeks, cut, n):
@@ -258,6 +288,7 @@ def load_panel(feats):
 
 
 def fit(X, y, Xv, yv, trees):
+    """LEGACY (pre-2026-10-07). Kept so MO_95 reproduces; use train_like_production."""
     m = lgb.LGBMRegressor(objective="quantile", alpha=0.5, n_estimators=trees, **LGBM)
     if len(Xv) >= 50:
         m.fit(X, y, eval_set=[(Xv, yv)], eval_metric="quantile",
@@ -265,6 +296,49 @@ def fit(X, y, Xv, yv, trees):
     else:
         m.fit(X, y)
     return m
+
+
+def recency_weights(times: pd.Series) -> np.ndarray:
+    """MO_26's sample weights: exp(-lambda * weeks before the latest row)."""
+    wk = (times.max() - times).dt.total_seconds() / (7 * 24 * 3600)
+    return np.exp(-RECENCY_LAMBDA * wk.clip(lower=0).values)
+
+
+_WARNED_CAP = False
+
+
+def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__time"):
+    """Train one quantile model exactly as MO_26 does, on data available at the cutoff.
+
+    1. Validation = the last TRAIN_VAL_WEEKS weeks of `time_col` in `tr`; the rest trains.
+       (For direct arms `time_col` is the target week, so no target leaks into training.)
+    2. Recency-weighted fit with early stopping on that holdout (patience 50, min_delta
+       from MO_26), capped at `trees` (default: production's TREES_CAP).
+    3. Refit on ALL of `tr` at the best iteration, with weights relative to its latest row.
+    """
+    global _WARNED_CAP
+    cap = TREES_CAP if trees is None else int(trees)
+    if cap < TREES_CAP and not _WARNED_CAP:
+        print(f"  ⚠️ tree cap {cap} < production {TREES_CAP}: smoke-test mode, NOT training parity")
+        _WARNED_CAP = True
+    y_all = np.log1p(pd.to_numeric(tr[target], errors="coerce").clip(lower=0))
+    cut_v = tr[time_col].max() - pd.Timedelta(weeks=TRAIN_VAL_WEEKS)
+    is_tr = (tr[time_col] <= cut_v).values
+    a, v = tr[is_tr], tr[~is_tr]
+    params = dict(objective="quantile", alpha=alpha, **PROD_LGBM)
+    best = cap
+    if len(v) >= 50 and len(a) >= 500:
+        m = lgb.LGBMRegressor(n_estimators=cap, **params)
+        m.fit(a[feats], y_all[is_tr], sample_weight=recency_weights(a["__time"]),
+              eval_set=[(v[feats], y_all[~is_tr])], eval_metric="quantile",
+              callbacks=[lgb.early_stopping(EARLY_STOP_PATIENCE, min_delta=EARLY_STOP_MIN_DELTA,
+                                            verbose=False), lgb.log_evaluation(-1)])
+        best = int(m.best_iteration_ or cap)
+    final = lgb.LGBMRegressor(n_estimators=best, **params)
+    final.fit(tr[feats], y_all, sample_weight=recency_weights(tr["__time"]))
+    FIT_LOG.append({"rows": len(tr), "val_rows": len(v), "alpha": alpha, "target": target,
+                    "best_iteration": best, "cap": cap, "hit_cap": best >= cap})
+    return final
 
 
 def run_direct(df, feats, cut, qs, qe, anchors, trees, fweeks):
@@ -288,8 +362,7 @@ def run_direct(df, feats, cut, qs, qe, anchors, trees, fweeks):
         tr = tr[tr["t_target"] <= cut]        # target week must also be in the past
         if len(tr) < 500:
             continue
-        va = tr.tail(max(200, len(tr) // 10))
-        m = fit(tr[feats], np.log1p(tr["y"]), va[feats], np.log1p(va["y"]), trees)
+        m = train_like_production(tr, feats, "y", trees, time_col="t_target")
         X = anchors.copy()
         t2 = float(fd.isocalendar().week)
         X["week_sin"] = np.sin(2 * np.pi * t2 / 52); X["week_cos"] = np.cos(2 * np.pi * t2 / 52)
@@ -304,8 +377,7 @@ def run_recursive(df, feats, cut, qs, qe, eval_keys, trees, fweeks):
     tr = df[df["__time"] <= cut]
     if len(tr) < 500:
         return {}
-    va = tr.tail(max(200, len(tr) // 10))
-    m = fit(tr[feats], np.log1p(tr["base_units"]), va[feats], np.log1p(va["base_units"]), trees)
+    m = train_like_production(tr, feats, "base_units", trees)
     cats = {c: df[c].cat.categories for c in CAT_COLS if c in df.columns}
     out = {}
     for key, g in tr.groupby(GROUP_COLS, observed=True):
@@ -367,15 +439,10 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
     tr = df[df["__time"] <= cut]
     if len(tr) < 500:
         return {}
-    va = tr.tail(max(200, len(tr) // 10))
-    models = {"q50": fit(tr[feats], np.log1p(tr["base_units"]),
-                         va[feats], np.log1p(va["base_units"]), trees)}
+    models = {"q50": train_like_production(tr, feats, "base_units", trees)}
     if want_band:
         for tag, alpha in (("q10", 0.1), ("q90", 0.9)):
-            m = lgb.LGBMRegressor(objective="quantile", alpha=alpha,
-                                  n_estimators=trees, **LGBM)
-            m.fit(tr[feats], np.log1p(tr["base_units"]))
-            models[tag] = m
+            models[tag] = train_like_production(tr, feats, "base_units", trees, alpha=alpha)
 
     cats = {c: df[c].cat.categories for c in CAT_COLS if c in df.columns}
 
@@ -665,6 +732,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--account", default="KROGER")
     ap.add_argument("--channel", default="CONVENTIONAL|FOOD")
-    ap.add_argument("--trees", type=int, default=800)
+    ap.add_argument("--trees", type=int, default=TREES_CAP)   # production cap (MO_26)
     a = ap.parse_args()
     main(a.account, a.channel, a.trees)

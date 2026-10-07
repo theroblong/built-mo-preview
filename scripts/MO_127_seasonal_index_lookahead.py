@@ -89,7 +89,7 @@ warnings.filterwarnings("ignore")
 
 OUT = Path("outputs/mo127_seasonal_lookahead.json")
 OUT_IDX = Path("outputs/mo127_pre_cutoff_index.csv")
-TREES = 800
+TREES = None                      # None = production cap (MO_80.TREES_CAP); was 800 in the original run
 TDP_FLOOR = 0.05
 PUFF_BRANDS = {"BUILT PUFF", "BUILT SOUR PUFF"}
 PUFF_MIN_WKS = 104
@@ -151,14 +151,17 @@ _FIT_CACHE: dict = {}
 
 
 def patch_fit(M) -> None:
-    orig = M.fit
+    # Wraps the harness's production-equivalent trainer (MO_80 train_like_production,
+    # 2026-10-07). The original MO_127 run used the legacy M.fit (800-tree cap).
+    orig = M.train_like_production
 
-    def cached(X, y, Xv, yv, trees):
-        k = (len(X), round(float(np.asarray(y).sum()), 6), trees, tuple(X.columns))
+    def cached(tr, feats, target, trees=None, alpha=0.5, time_col="__time"):
+        k = (len(tr), round(float(pd.to_numeric(tr[target], errors="coerce").sum()), 6),
+             str(tr[time_col].max()), trees, alpha, target, time_col, tuple(feats))
         if k not in _FIT_CACHE:
-            _FIT_CACHE[k] = orig(X, y, Xv, yv, trees)
+            _FIT_CACHE[k] = orig(tr, feats, target, trees, alpha=alpha, time_col=time_col)
         return _FIT_CACHE[k]
-    M.fit = cached
+    M.train_like_production = cached
 
 
 def main() -> None:
