@@ -23,3 +23,22 @@ machine). Raise them with the user early, not at the end:
 - Missing file: ask the user to get it committed, here or in the repo it belongs to. If
   the user pastes the content, offer to commit it in the right place.
 Re-check any time with `python3 .claude/hooks/check_refs.py`.
+
+# Routing work to agents (spec: docs/design/settled-findings-and-agents.md)
+
+Reading is what costs tokens here; judgment is what needs the strongest model. So:
+
+| Work | Agent | Model / effort |
+|---|---|---|
+| Find anything in README history, docs, scripts, outputs, memory | `scout` | haiku / low |
+| Run an MO script and report bands × levels, predictions | `runner` | sonnet / medium |
+| Write wiki/18, memory, README entries from a confirmed summary | `scribe` | sonnet / medium |
+| Try to break a finding before it is written up | `skeptic` | opus / high |
+| Plan, choose arms, decide | main session | project pin |
+
+- A request with more than about 3 steps starts with a short written plan. It names the
+  agent, model and effort for each step, and the user approves it before work starts.
+- Bulk reading goes to `scout`. Do not read README.md, outputs or long logs in the main
+  context.
+- A finding goes to `skeptic` before it reaches the README or the settled-findings list.
+  Record its verdict line with the finding.
