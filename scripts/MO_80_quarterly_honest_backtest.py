@@ -117,6 +117,7 @@ EARLY_STOP_PATIENCE = 50                     # MO_26 lgb.early_stopping(50, ...)
 EARLY_STOP_MIN_DELTA = _PROD_TRAIN.EARLY_STOP_MIN_DELTA
 TRAIN_VAL_WEEKS = 13                         # MO_26: last 13 weeks = validation
 FIT_LOG: list[dict] = []                     # one row per fit: rows, best iteration, cap
+MODEL_CACHE_DIR = Path("outputs/model_cache")  # trained-model cache (see train_like_production)
 
 # MO_113 A/B hook. Production applies the seasonal index in TWO places -- the
 # short/lapsed router and the LightGBM STL fallback -- and MO_109 only measured the
@@ -318,6 +319,24 @@ def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__
     """
     global _WARNED_CAP
     cap = TREES_CAP if trees is None else int(trees)
+    # On-disk cache (2026-10-07): at production settings a fit costs ~4 min on a laptop,
+    # and experiments retrain the same model at the same cutoff again and again. The key
+    # covers the exact training rows and values, every setting and the LightGBM version,
+    # so any change in data or config trains afresh. MO_MODEL_CACHE=0 disables it.
+    import hashlib
+    ck = None
+    if os.environ.get("MO_MODEL_CACHE", "1") != "0":
+        cols = list(dict.fromkeys(list(feats) + [target, time_col, "__time"]))
+        h = hashlib.sha1(pd.util.hash_pandas_object(tr[cols], index=False).values.tobytes())
+        h.update(repr((sorted(PROD_LGBM.items()), cap, alpha, target, time_col, RECENCY_LAMBDA,
+                       TRAIN_VAL_WEEKS, EARLY_STOP_PATIENCE, EARLY_STOP_MIN_DELTA,
+                       lgb.__version__)).encode())
+        ck = MODEL_CACHE_DIR / f"{h.hexdigest()}.pkl"
+        if ck.exists():
+            with open(ck, "rb") as f:
+                final, meta = pickle.load(f)
+            FIT_LOG.append({**meta, "cached": True})
+            return final
     if cap < TREES_CAP and not _WARNED_CAP:
         print(f"  ⚠️ tree cap {cap} < production {TREES_CAP}: smoke-test mode, NOT training parity")
         _WARNED_CAP = True
@@ -336,8 +355,13 @@ def train_like_production(tr, feats, target, trees=None, alpha=0.5, time_col="__
         best = int(m.best_iteration_ or cap)
     final = lgb.LGBMRegressor(n_estimators=best, **params)
     final.fit(tr[feats], y_all, sample_weight=recency_weights(tr["__time"]))
-    FIT_LOG.append({"rows": len(tr), "val_rows": len(v), "alpha": alpha, "target": target,
-                    "best_iteration": best, "cap": cap, "hit_cap": best >= cap})
+    meta = {"rows": len(tr), "val_rows": len(v), "alpha": alpha, "target": target,
+            "best_iteration": best, "cap": cap, "hit_cap": best >= cap}
+    FIT_LOG.append({**meta, "cached": False})
+    if ck is not None:
+        MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        with open(ck, "wb") as f:
+            pickle.dump((final, meta), f)
     return final
 
 
@@ -424,7 +448,14 @@ def load_seasonal_index() -> dict[int, float]:
     return dict(zip(d["week_of_year"].astype(int), d["seasonal_index"].astype(float)))
 
 
-def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, want_band=False):
+def _run_production_rowwise(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal,
+                            want_band=False):
+    """REFERENCE ONLY (2026-10-07): the original one-series-at-a-time loop.
+
+    `run_production` below batches the predictions and must return identical values;
+    `check_batched_equivalence()` compares the two. Do not use for experiments: same
+    numbers, ~10x slower forecasting.
+    """
     """MO_27's production path, evaluated honestly at `cut`.
 
     Differs from run_recursive by everything MO_27 does on top of the bare model:
@@ -550,6 +581,148 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             if qs <= fd <= qe:
                 out[(key, fd)] = vals if want_band else vals["q50"]
     return out
+
+
+def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, want_band=False):
+    """MO_27's production path, evaluated honestly at `cut`: BATCHED (2026-10-07).
+
+    Same logic and the same numbers as `_run_production_rowwise`, the original loop.
+    The router (short / lapsed series) is unchanged. On the autoregressive path, every
+    series still carries its own state, history, year-ago blend and STL fallback, but
+    at each forecast step all series are predicted in ONE model call rather than one
+    call per series. The per-call overhead was ~35 s per cutoff whatever the tree count
+    (profiled at the Q2 2026 cutoff, 1,516 series). Verified by
+    `check_batched_equivalence()`.
+    """
+    tr = df[df["__time"] <= cut]
+    if len(tr) < 500:
+        return {}
+    models = {"q50": train_like_production(tr, feats, "base_units", trees)}
+    if want_band:
+        for tag, alpha in (("q10", 0.1), ("q90", 0.9)):
+            models[tag] = train_like_production(tr, feats, "base_units", trees, alpha=alpha)
+
+    cats = {c: df[c].cat.categories for c in CAT_COLS if c in df.columns}
+
+    # Router state, from history at the cutoff only.
+    counts = tr.groupby(GROUP_COLS, observed=True)["base_units"].count()
+    short_keys = set(counts[counts < MIN_SERIES_WEEKS_LOCAL].index)
+    last_seen = tr.groupby(GROUP_COLS, observed=True)["__time"].max()
+    lapse_wk = ((cut - last_seen).dt.days / 7).round()
+    lapsed_keys = set(lapse_wk[lapse_wk >= LAPSE_WEEKS].index)
+
+    out, ar = {}, []
+    for key, g in tr.groupby(GROUP_COLS, observed=True):
+        if key not in eval_keys:
+            continue
+        g = g.sort_values("__time")
+        seasonal_s = _resolve_seasonal(seasonal, key)
+
+        # ── short / lapsed router, mirroring MO_27 (unchanged; no model call) ──
+        if key in short_keys or key in lapsed_keys:
+            if key in lapsed_keys:
+                lvl, bw = 0.0, 0.0                      # lapsed_no_recent_sales
+            else:
+                tail = pd.to_numeric(g["base_units"].tail(4), errors="coerce")
+                lvl = (float(tail.dropna().iloc[-1]) if tail.notna().any()
+                       else float("nan"))               # last_value_seasonal
+                bw = SHORT_BAND_WIDTH
+            # ANCHOR-RELATIVE (MO_109/MO_113), in lockstep with MO_27 line ~504.
+            for h, fd in enumerate(fweeks[:HORIZON], start=1):
+                if not (qs <= fd <= qe):
+                    continue
+                u = lvl * _seasonal_mult(seasonal_s, fd, cut)
+                u = 0.0 if not np.isfinite(u) else max(0.0, u)
+                out[(key, fd)] = ({"q50": u, "q10": max(0.0, u * (1 - bw)),
+                                   "q90": u * (1 + bw)} if want_band else u)
+            continue
+
+        if len(g) < 4:
+            continue
+
+        # ── autoregressive path: per-series state, predicted in batches below ──
+        hist = list(pd.to_numeric(g["base_units"], errors="coerce").fillna(0))
+        n = len(hist)
+        yago_anchor = float(hist[n - 52]) if n >= 52 else None
+        ar.append({
+            "key": key, "hist": hist, "seas": seasonal_s, "state": g.iloc[-1].copy(),
+            "lag52_seq": [float(hist[n - 53 + k]) if 0 <= (n - 53 + k) < n else np.nan
+                          for k in range(1, HORIZON + 1)],
+            "yoy": (float(np.clip(hist[-1] / yago_anchor, 0.5, 2.0))
+                    if yago_anchor and yago_anchor > 0 else None)})
+
+    for h in range(1, HORIZON + 1):
+        if h > len(fweeks) or not ar:
+            break
+        fd = fweeks[h - 1]
+        t2 = float(fd.isocalendar().week)
+        for s in ar:
+            state, hist = s["state"], s["hist"]
+            state["week_sin"] = np.sin(2 * np.pi * t2 / 52)
+            state["week_cos"] = np.cos(2 * np.pi * t2 / 52)
+            state["week_sin26"] = np.sin(2 * np.pi * t2 / 26)
+            state["week_cos26"] = np.cos(2 * np.pi * t2 / 26)
+            # MO_27 updates ONLY the explicit lag features; rolling/delta stay frozen.
+            state["base_units_lag1"] = hist[-1]
+            if FEATURE_REFRESH == "refresh":
+                state["base_units_roll4_avg"] = float(np.mean(hist[-4:]))
+                state["base_units_roll8_avg"] = float(np.mean(hist[-8:]))
+                state["base_units_roll13_avg"] = float(np.mean(hist[-13:]))
+                state["base_units_wow_delta"] = (hist[-1] - hist[-2]
+                                                 if len(hist) > 1 else 0.0)
+            lag52 = s["lag52_seq"][h - 1]
+            if "base_units_lag52" in feats and np.isfinite(lag52) and not _SKIP_LAG52:
+                state["base_units_lag52"] = lag52
+        X = pd.DataFrame([s["state"] for s in ar])[feats]
+        for c, cc in cats.items():
+            if c in X.columns:
+                X[c] = pd.Categorical(X[c], categories=cc)
+        preds = {t: np.clip(np.expm1(m.predict(X)), 0, None) for t, m in models.items()}
+
+        for i, s in enumerate(ar):
+            vals = {t: float(p[i]) for t, p in preds.items()}
+            base = vals["q50"]
+            lag52, yoy_ratio, seasonal_s = s["lag52_seq"][h - 1], s["yoy"], s["seas"]
+            # Seasonal blend (MO_27 lines 741-772): pull toward lag52 x yoy_ratio.
+            if yoy_ratio is not None and np.isfinite(lag52) and lag52 > 0 and base > 0:
+                seasonal_ref = lag52 * yoy_ratio
+                mult = ((1.0 - SEASONAL_BLEND_WEIGHT) * base
+                        + SEASONAL_BLEND_WEIGHT * seasonal_ref) / base
+                vals = {t: max(0.0, v * mult) for t, v in vals.items()}
+            elif seasonal_s and base > 0:
+                # STL fallback, only when the YAGO blend did not fire (step-over-step).
+                mult = _seasonal_mult(seasonal_s, fd, cut,
+                                      prev_fd=fweeks[h - 2] if h > 1 else None)
+                vals = {t: max(0.0, v * mult) for t, v in vals.items()}
+            s["hist"].append(vals["q50"])   # blended q50 seeds the next step, as MO_27 does
+            if qs <= fd <= qe:
+                out[(s["key"], fd)] = vals if want_band else vals["q50"]
+    return out
+
+
+def check_batched_equivalence(quarter="Q2 2026", trees=200, tol=1e-9):
+    """Assert run_production (batched) == _run_production_rowwise on one cutoff."""
+    feats = list(pickle.load(
+        open("outputs/model_retailer_sales_q50_v11_full.pkl", "rb")).feature_name_)
+    df = load_panel(feats)
+    seasonal = load_seasonal_index()
+    weeks = pd.DatetimeIndex(pd.to_datetime(sorted(pd.unique(df["__time"])), utc=True))
+    ql, qc, q1, q2 = next(q for q in QUARTERS if q[0] == quarter)
+    cut, qs = pd.Timestamp(qc, tz="UTC"), pd.Timestamp(q1, tz="UTC")
+    qe = pd.Timestamp(q2, tz="UTC") + pd.Timedelta(days=6)
+    act = df[(df["__time"] >= qs) & (df["__time"] <= qe)]
+    ek = {k[:-1] for k in act.groupby(GROUP_COLS + ["__time"], observed=True).size().index}
+    fw = future_weeks(weeks, cut, HORIZON)
+    res = {}
+    for band in (False, True):
+        a = _run_production_rowwise(df, feats, cut, qs, qe, ek, trees, fw, seasonal, band)
+        b = run_production(df, feats, cut, qs, qe, ek, trees, fw, seasonal, band)
+        assert a.keys() == b.keys(), f"key sets differ: {len(a)} vs {len(b)}"
+        flat = (lambda v: v if isinstance(v, dict) else {"q50": v})
+        diff = max(abs(flat(a[k])[t] - flat(b[k])[t]) for k in a for t in flat(a[k]))
+        assert diff <= tol, f"max abs diff {diff} > {tol}"
+        res["band" if band else "q50"] = {"n": len(a), "max_abs_diff": diff}
+    return res
 
 
 def score(truth, pred):
