@@ -81,9 +81,10 @@ All figures are **average forecast miss (volume-weighted)** on holdouts unless n
 
 | What | Item × retailer × week | Account × month | Portfolio × month | Source |
 |---|---|---|---|---|
-| Production model, as it ships today | — | — | **20.1%** (runs ~8% low, bias 0.92) | MO_125, README 226 |
-| Velocity anchor `conn_L4W` (candidate, **not shipped**) | 28.4% | 17.7% | **10.7%** (bias 1.03) | MO_125/MO_126, README 225–226 |
-| Flat baseline ("repeat recent sales") | 32.8% | 22.9% | 16.0% | README 225 |
+| Pre-2026-10-06 production config (target-only seasonal, full index) | — | — | 20.1% (bias 0.92) | MO_125, README 226 — superseded |
+| Velocity anchor `conn_L4W`, no seasonal (candidate, **not shipped**) | 32.5% | 21.7% | 16.4% (bias 1.00) | MO_127 honest; the earlier 28.4 / 17.7 / 10.7 used the look-ahead index |
+| Flat baseline ("repeat recent sales") | 32.8% | 22.9% | 16.0% | MO_127 |
+| Production model (step mode), honest index | 38.6% | 26.8% | 17.3% | MO_127 (800-tree cap; see roadmap step 2) |
 
 **Caveats that travel with these numbers:**
 - Portfolio × month rests on **21 observations**.
@@ -138,6 +139,7 @@ Checked, no retired figures: `mockups/meijer_cannibalization_brief.html`.
 
 ## Change log
 
+- 2026-10-07: Section 2 updated to MO_127 honest (no look-ahead) numbers; MO_128 long-history PUFF results in docs/exec_summary_2026-10-07_for_rob.md.
 - 2026-10-07: Mo Chat glossary corrected (location 1).
 - 2026-10-07: Register created (Jason's decision: track corrections, update files later
   with newer data, de-emphasize accuracy while forecasting is dialed in; explain metrics
