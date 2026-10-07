@@ -23,6 +23,41 @@ SETTLED yet.
 - A commit that records a reversal must update this file.
 - Sources are `file:line`. The `scout` agent can pull the full context.
 
+## Proposed changes, PENDING Robert + Jason review (2026-10-07)
+These come from MO_127, MO_128 and the skeptic reviews (live notes, 2026-10-07). The entries
+below them are deliberately unchanged until review.
+- **MO_113 anchor seasonal mode → REVERSED.** Its gain used a full-panel seasonal index with
+  look-ahead. With an honest index, anchor is the worst arm: 55.30 cell × week, 32.71
+  portfolio × month (MO_127).
+- **MO_125 conn_L4W 10.71 → REVERSED.** It relied on the look-ahead index. Honest
+  (conn_L4W_off) vs flat:
+  - portfolio × month 16.42 vs 15.99, and flat has the lowest error in 5 of 7 quarters
+  - cell × week 32.53 vs 32.82
+  - account × month 21.71 vs 22.93
+
+  README 226's "seasonality matters far more once anchored" is reversed with it (MO_127).
+- **README 223, "model beats flat at portfolio × month" → REVERSED.** Honest: model 17.32
+  vs flat 15.99. This settles MO_92 vs README 223 in MO_92's favour (MO_127; skeptic,
+  2026-10-07).
+- **MO_126 → RE-SCOPED.** Honest conn_off minus model, cell × week, by band:
+  +5.7 / −2.4 / −3.9 / −6.5. Against flat: +5.7 / +0.3 / +0.3 / −1.7. conn beats flat only
+  at 52+ (MO_127).
+- **MO_128 (PROVISIONAL).**
+  - The L12W vs L4W window flips by quarter. L4W is best in 5 of 7 quarters, and L12W's
+    104+ lead is Q1 2026 plus Sam's/Walmart. Don't route to L12W.
+  - Amend "exclude BAR": the gain fades as BAR's training share falls (17.6% → 3.0%), and
+    is ~0 in 2026.
+  - Model bias on 52+ PUFF is ~0.55 in Q1 and ~1.07 otherwise. It is not a general growth
+    under-forecast.
+- **FACT addendum (seasonal index).**
+  - No honest MO_59 index can exist at any 2025 cutoff (panel starts 2023-10-15).
+  - Rebuilding it per cutoff on ~2 years inflates the range 1.5–2× (two-cycle STL absorbs
+    growth) and jumps at the cutoff week.
+- **FACT candidate (history length).** Count history as calendar span with real
+  distribution, not rows. The Walmart PUFF 1.41oz singles are relaunches mislabelled 52+.
+- **New method rule candidate (SETTLED).** Every fitted input (seasonal index, scaler,
+  anchor) is rebuilt from data up to each cutoff.
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

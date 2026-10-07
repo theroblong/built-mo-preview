@@ -6,6 +6,86 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 229: the seasonal index saw the future -- and on long-history PUFF, Connor's 4-week method beats our model (2026-10-07)
+
+Experiments: `scripts/MO_127_seasonal_index_lookahead.py` (predictions committed eb3e300)
+and `scripts/MO_128_puff_long_history_vs_connor.py` (predictions committed 5ec7318); both
+skeptic-reviewed. Roadmap: **`docs/FORECAST_ROADMAP.md`**. Accuracy statements:
+**`docs/ACCURACY_CLAIMS_REGISTER.md`**.
+
+### Finding
+
+The seasonal index (built 2026-10-01 from series with 104+ weeks) was applied at every
+historical cutoff. The panel starts 2023-10-15, so **zero series had 104 weeks at any 2025
+cutoff**: the earlier seasonal gains were look-ahead. Giving flat the full-panel index cuts
+its portfolio x month error 15.99 -> 8.96. An index rebuilt honestly at each cutoff with
+MO_59's method on ~2 years is **worse than none** (two-cycle STL absorbs growth; jump at the
+cutoff week). On honest, unseasonalised scoring, Connor's L4W beats our model by 4-7pp on
+26+ week series but beats flat only at 52+. On long-history PUFF (MO_128) L4W is best on 52+
+over 7 quarters, and the model is worst of five arms. Model-worse-than-flat on 52+ wks is not
+an index artefact (blocker 0.3 open).
+
+### Evidence
+
+MO_127, honest bands, item x week (conn_L4W no seasonal / flat / model no seasonal):
+
+| history band | conn_L4W | flat | model |
+|---|---|---|---|
+| <13 wks | 53.9 | **48.2** | **48.2** |
+| 13-25 wks | 42.7 | **42.4** | 45.1 |
+| 26-51 wks | 27.2 | **26.9** | 31.1 |
+| 52+ wks | **28.2** | 29.9 | 34.7 |
+| all | **32.5** | 32.8 | 36.7 |
+
+Account x month all: 21.7 / 22.9 / 26.2. Portfolio x month all: 16.4 / **16.0** / 17.3
+(n=21 months; too few to rank; flat lowest in 5 of 7 quarters).
+
+MO_128, PUFF/SOUR PUFF 52+ wks, all 7 quarters:
+
+| arm | item x week | account x month |
+|---|---|---|
+| conn L4W | **27.4** | **23.8** |
+| flat | 29.2 | 25.2 |
+| conn L12W | 29.9 | 26.5 |
+| model, no BAR | 32.0 | 27.3 |
+| model | 33.9 | 29.3 |
+
+Caveats the skeptic imposed: on 104+ wk PUFF (2026) L12W looked best (21.3) but that is Q1
+2026 plus Sam's/Walmart (46.6% of volume); L4W wins 5 of 7 quarters, so the winning window
+depends on the quarter. Q1 = 28% of volume but 37-60% of monthly error (every method 25-55%
+low); Q4 2025 every method 20-40% high. noBAR gain ~0 in 2026 (BAR training share 17.6% ->
+3.0%). Model bias ~0.55 in Q1, ~1.07 elsewhere -- not a general growth under-forecast. On
+104+ PUFF outside Q1 2026 the model had the lowest monthly error (10.3 vs flat 11.5, L4W
+13.7, L12W 14.0; small sample). Focal SKUs: model beats L4W on 37 of 210 retailer series
+(7% of volume). Walmart PUFF 1.41oz singles are relaunches mislabelled 52+.
+
+Predictions: MO_127 P1 HOLDS, P2 HOLDS, P3 FAILS, P4 HOLDS, P5 FAILS, P6 FAILS as
+specified; MO_128 P1 FAILS, P2 HOLDS, P3 HOLDS, P4 FAILS, P5 HOLDS, P6 HOLDS.
+
+### Reversals / re-scopes proposed (PENDING review; mirrored in docs/SETTLED_FINDINGS.md "Proposed changes, PENDING ... review")
+
+- MO_113 anchor mode: REVERSED (honest anchor is the worst arm).
+- MO_125 conn_L4W 10.71: REVERSED (honest 16.42 vs flat 15.99 at portfolio x month); README 226 "seasonality matters far more once anchored" reversed.
+- README 223 (model beats flat at portfolio x month): REVERSED. Portfolio x month model vs flat is NOT SETTLED -- do not cite "ML beats naive at the planning level".
+- MO_126: RE-SCOPED (conn beats flat only at 52+).
+- MO_128: PROVISIONAL entries (L12W vs L4W flips by quarter; BAR exclusion gain fades).
+- FACT addenda (seasonal index); BUILT's "7%" moves FACT -> open question.
+- New method rule: every fitted input (index, scaler, anchor) is rebuilt from data up to each cutoff.
+
+Also: Q3 2026 cutoff 2026-06-29 is a Monday (all SPINS weeks end Sunday), the 800-tree cap
+and the MO_80:365 validation split (last series, not latest weeks) are inherited by every
+MO_12x backtest. Mo Chat no longer quotes accuracy percentages (customer-built-mo-api
+8987c77). Corrected in chat: the Q1 shortfall is trough anchoring, not year-ago anchoring.
+
+### Procedural lesson
+
+A fitted input that is built once on the full panel and reused at every cutoff leaks the
+future, and it flatters every arm -- including the baseline. Rebuild every fitted input per
+cutoff, and have a skeptic rebuild the arms independently: three of the session's own
+headline readings (L12W best, noBAR helps, model under-forecasts) narrowed or fell on review.
+
+---
+
 ## README update 228: one rulebook for two machines (2026-10-07)
 
 No new forecast results; process only.
