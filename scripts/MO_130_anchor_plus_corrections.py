@@ -103,7 +103,7 @@ def series_grid(tr: pd.DataFrame, cut_n: pd.Timestamp) -> pd.DataFrame:
     backward), except the targets built later with an explicit forward shift.
     """
     cols = ["base_units", "tdp", "arp", "is_promo_week"]
-    t = tr[M.GROUP_COLS + ["__time"] + cols + CATS].copy()
+    t = tr[list(dict.fromkeys(M.GROUP_COLS + ["__time"] + cols + CATS))].copy()
     t["__time"] = pd.to_datetime(t["__time"], utc=True).dt.tz_localize(None)
     for c in cols:
         t[c] = pd.to_numeric(t[c], errors="coerce")
