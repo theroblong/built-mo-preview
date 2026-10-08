@@ -194,6 +194,10 @@ def main() -> None:
                     help="weeks: shift forecasts by the median residual (actual z - fitted z) "
                          "on training rows whose target lies in the last N weeks before the "
                          "cutoff -- level from recent data, shape from all years (0 = off)")
+    ap.add_argument("--recal-oot", action="store_true",
+                    help="out-of-time level recalibration: refit with targets <= cutoff-13w, "
+                         "predict the last 13 weeks' targets, shift forecasts by the median "
+                         "residual (an honest estimate of recent level drift)")
     ap.add_argument("--target", choices=["units", "velocity"], default="units",
                     help="units: log(units[t+h] / anchor). velocity: log(sales per store[t+h] / "
                          "4-wk sales per store[t]), forecast x CURRENT store count -- keeps "
@@ -255,7 +259,13 @@ def main() -> None:
         fm = lgb.LGBMRegressor(n_estimators=best, **params).fit(d[feats_used], d["z"], sample_weight=w)
         imp = pd.Series(fm.booster_.feature_importance("gain"), index=feats_used)
         shift = 0.0
-        if a.recal:
+        if a.recal_oot:
+            hold = (d["date_y"] > cut_n - pd.Timedelta(weeks=13)).values
+            if hold.any() and (~hold).sum() > 1000:
+                m_o = lgb.LGBMRegressor(n_estimators=best, **params).fit(
+                    d.loc[~hold, feats_used], d.loc[~hold, "z"], sample_weight=w[~hold])
+                shift = float(np.median(d.loc[hold, "z"].values - m_o.predict(d.loc[hold, feats_used])))
+        elif a.recal:
             rec = (d["date_y"] > cut_n - pd.Timedelta(weeks=a.recal)).values
             if rec.any():                            # all rows here have targets <= cutoff
                 shift = float(np.median(d.loc[rec, "z"].values - fm.predict(d.loc[rec, feats_used])))
