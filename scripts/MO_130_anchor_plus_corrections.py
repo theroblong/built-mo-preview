@@ -176,6 +176,86 @@ def add_horizon(x: pd.DataFrame, h: int, with_target: bool) -> pd.DataFrame:
     return r
 
 
+def fit_forecast(df: pd.DataFrame, cut, a, cap: int, feats_used: list[str], params: dict) -> dict:
+    """Train MO_130 on data <= `cut` and forecast h = 1..13 from the cutoff week.
+
+    Factored out of main() on 2026-10-08 so the forward tracker (MO_131) runs the exact
+    same code; main() is unchanged in behavior (regression-checked against the full v8
+    run). Short series (< a.min_rows reported rows) get their last reported value, as
+    production's router does. Returns forecasts plus fit metadata.
+    """
+    cut = M._utc(cut)
+    cut_n = cut.tz_localize(None)
+    tr = df[df["__time"] <= cut]
+    x = series_grid(tr, cut_n)
+    rows = []
+    for h in range(1, H + 1):
+        r = add_horizon(x, h, with_target=True)
+        r = r[r["reported"] & r["y"].notna() & np.isfinite(r["log_anchor"])
+              & (r["n_rep"] >= a.min_rows)]
+        if a.target == "velocity":
+            r = r[(r["tdp_y"] > TDP_FLOOR) & np.isfinite(r["vel4"])]
+        rows.append(r)
+    d = pd.concat(rows, ignore_index=True)
+    assert (d["date_y"] <= cut_n).all(), "a training target lies after the cutoff"
+    if a.target == "velocity":
+        d["z"] = np.log1p(d["y"].clip(lower=0) / d["tdp_y"]) - np.log1p(d["vel4"])
+    else:
+        d["z"] = np.log1p(d["y"].clip(lower=0)) - d["log_anchor"]
+    for cc in CATS:
+        d[cc] = d[cc].astype("category")
+    wk = (cut_n - d["t"]).dt.days / 7
+    w = np.exp(-a.recency * wk.clip(lower=0).values)
+    if a.val == "series":
+        sid = pd.util.hash_pandas_object(pd.Series([str(k) for k in d["key"]]), index=False).values
+        is_val = (sid % 5 == 0)
+    else:
+        is_val = (d["date_y"] > cut_n - pd.Timedelta(weeks=M.TRAIN_VAL_WEEKS)).values
+    m = lgb.LGBMRegressor(n_estimators=cap, **params)
+    m.fit(d.loc[~is_val, feats_used], d.loc[~is_val, "z"], sample_weight=w[~is_val],
+          eval_set=[(d.loc[is_val, feats_used], d.loc[is_val, "z"])], eval_metric="quantile",
+          callbacks=[lgb.early_stopping(M.EARLY_STOP_PATIENCE, verbose=False),
+                     lgb.log_evaluation(-1)])
+    best = int(m.best_iteration_ or cap)
+    fm = lgb.LGBMRegressor(n_estimators=best, **params).fit(d[feats_used], d["z"], sample_weight=w)
+    imp = pd.Series(fm.booster_.feature_importance("gain"), index=feats_used)
+    shift = 0.0
+    if a.recal_oot:
+        hold = (d["date_y"] > cut_n - pd.Timedelta(weeks=13)).values
+        if hold.any() and (~hold).sum() > 1000:
+            m_o = lgb.LGBMRegressor(n_estimators=best, **params).fit(
+                d.loc[~hold, feats_used], d.loc[~hold, "z"], sample_weight=w[~hold])
+            shift = float(np.median(d.loc[hold, "z"].values - m_o.predict(d.loc[hold, feats_used])))
+    elif a.recal:
+        rec = (d["date_y"] > cut_n - pd.Timedelta(weeks=a.recal)).values
+        if rec.any():                            # all rows here have targets <= cutoff
+            shift = float(np.median(d.loc[rec, "z"].values - fm.predict(d.loc[rec, feats_used])))
+
+    # forecast from the cutoff week for every series
+    fx = x[x["t"] == cut_n]
+    preds = []
+    for h in range(1, H + 1):
+        r = add_horizon(x, h, with_target=False)
+        r = r[r["t"] == cut_n].copy()
+        for cc in CATS:
+            r[cc] = pd.Categorical(r[cc], categories=d[cc].cat.categories)
+        z = fm.predict(r[feats_used]) + shift
+        if a.target == "velocity":
+            v = np.expm1(np.log1p(r["vel4"].values) + z) * r["tdp_ff"].values
+            r["mo130"] = np.where(np.isfinite(v), np.clip(v, 0, None), r["anchor"].values)
+        else:
+            r["mo130"] = np.clip(np.expm1(r["log_anchor"].values + z), 0, None)
+        preds.append(r[["key", "date_y", "mo130"]])
+    p = pd.concat(preds)
+    p["series"] = [" | ".join(map(str, k)) for k in p["key"]]
+    short = {" | ".join(map(str, k)) for k in fx.loc[fx["n_rep"] < a.min_rows, "key"]}
+    p["mo130"] = np.where(p["series"].isin(short), np.nan, p["mo130"])
+    last = {" | ".join(map(str, k)): v for k, v in zip(fx["key"], fx["base_ff"])}
+    p.loc[p["series"].isin(short), "mo130"] = p.loc[p["series"].isin(short), "series"].map(last)
+    return {"p": p, "short": short, "rows": len(d), "val_share": float(is_val.mean()),
+            "shift": shift, "best": best, "imp": imp, "n_series": len(fx)}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--origins", default="", help="comma list of origin labels")
@@ -223,72 +303,11 @@ def main() -> None:
     params = dict(objective="quantile", alpha=0.5, **M.PROD_LGBM)
     out_rows, imp_tot, t0 = [], pd.Series(dtype=float), time.time()
     for lbl, c, s, e in origins:
-        cut = M._utc(c)
-        cut_n = cut.tz_localize(None)
-        tr = df[df["__time"] <= cut]
-        x = series_grid(tr, cut_n)
-        rows = []
-        for h in range(1, H + 1):
-            r = add_horizon(x, h, with_target=True)
-            r = r[r["reported"] & r["y"].notna() & np.isfinite(r["log_anchor"])
-                  & (r["n_rep"] >= a.min_rows)]
-            if a.target == "velocity":
-                r = r[(r["tdp_y"] > TDP_FLOOR) & np.isfinite(r["vel4"])]
-            rows.append(r)
-        d = pd.concat(rows, ignore_index=True)
-        assert (d["date_y"] <= cut_n).all(), "a training target lies after the cutoff"
-        if a.target == "velocity":
-            d["z"] = np.log1p(d["y"].clip(lower=0) / d["tdp_y"]) - np.log1p(d["vel4"])
-        else:
-            d["z"] = np.log1p(d["y"].clip(lower=0)) - d["log_anchor"]
-        for cc in CATS:
-            d[cc] = d[cc].astype("category")
-        wk = (cut_n - d["t"]).dt.days / 7
-        w = np.exp(-a.recency * wk.clip(lower=0).values)
-        if a.val == "series":
-            sid = pd.util.hash_pandas_object(pd.Series([str(k) for k in d["key"]]), index=False).values
-            is_val = (sid % 5 == 0)
-        else:
-            is_val = (d["date_y"] > cut_n - pd.Timedelta(weeks=M.TRAIN_VAL_WEEKS)).values
-        m = lgb.LGBMRegressor(n_estimators=cap, **params)
-        m.fit(d.loc[~is_val, feats_used], d.loc[~is_val, "z"], sample_weight=w[~is_val],
-              eval_set=[(d.loc[is_val, feats_used], d.loc[is_val, "z"])], eval_metric="quantile",
-              callbacks=[lgb.early_stopping(M.EARLY_STOP_PATIENCE, verbose=False),
-                         lgb.log_evaluation(-1)])
-        best = int(m.best_iteration_ or cap)
-        fm = lgb.LGBMRegressor(n_estimators=best, **params).fit(d[feats_used], d["z"], sample_weight=w)
-        imp = pd.Series(fm.booster_.feature_importance("gain"), index=feats_used)
-        shift = 0.0
-        if a.recal_oot:
-            hold = (d["date_y"] > cut_n - pd.Timedelta(weeks=13)).values
-            if hold.any() and (~hold).sum() > 1000:
-                m_o = lgb.LGBMRegressor(n_estimators=best, **params).fit(
-                    d.loc[~hold, feats_used], d.loc[~hold, "z"], sample_weight=w[~hold])
-                shift = float(np.median(d.loc[hold, "z"].values - m_o.predict(d.loc[hold, feats_used])))
-        elif a.recal:
-            rec = (d["date_y"] > cut_n - pd.Timedelta(weeks=a.recal)).values
-            if rec.any():                            # all rows here have targets <= cutoff
-                shift = float(np.median(d.loc[rec, "z"].values - fm.predict(d.loc[rec, feats_used])))
-        imp_tot = imp_tot.add(imp / imp.sum(), fill_value=0)
-
-        # forecast from the cutoff week for every series
-        fx = x[x["t"] == cut_n]
-        preds = []
-        for h in range(1, H + 1):
-            r = add_horizon(x, h, with_target=False)
-            r = r[r["t"] == cut_n].copy()
-            for cc in CATS:
-                r[cc] = pd.Categorical(r[cc], categories=d[cc].cat.categories)
-            z = fm.predict(r[feats_used]) + shift
-            if a.target == "velocity":
-                v = np.expm1(np.log1p(r["vel4"].values) + z) * r["tdp_ff"].values
-                r["mo130"] = np.where(np.isfinite(v), np.clip(v, 0, None), r["anchor"].values)
-            else:
-                r["mo130"] = np.clip(np.expm1(r["log_anchor"].values + z), 0, None)
-            preds.append(r[["key", "date_y", "mo130"]])
-        p = pd.concat(preds)
-        p["series"] = [" | ".join(map(str, k)) for k in p["key"]]
-        short = {" | ".join(map(str, k)) for k in fx.loc[fx["n_rep"] < a.min_rows, "key"]}
+        fit = fit_forecast(df, c, a, cap, feats_used, params)
+        p, short = fit["p"], fit["short"]
+        imp_tot = imp_tot.add(fit["imp"] / fit["imp"].sum(), fill_value=0)
+        d_rows, val_share, shift, best, n_fx = (fit["rows"], fit["val_share"], fit["shift"],
+                                                fit["best"], fit["n_series"])
         p["date"] = pd.to_datetime(p["date_y"]).dt.tz_localize("UTC")
         b = base[base["origin"] == lbl].copy()
         b["date"] = pd.to_datetime(b["date"], utc=True)
@@ -301,8 +320,8 @@ def main() -> None:
         miss = int(b["mo130"].isna().sum())
         b = b[b["mo130"].notna()]
         out_rows.append(b)
-        print(f"  {lbl}: {len(d):,} training rows ({is_val.mean():.0%} val) | recal shift {shift:+.3f} | best_iter {best}"
-              f"{' (cap)' if best >= cap else ''} | {len(fx):,} series forecast | "
+        print(f"  {lbl}: {d_rows:,} training rows ({val_share:.0%} val) | recal shift {shift:+.3f} | best_iter {best}"
+              f"{' (cap)' if best >= cap else ''} | {n_fx:,} series forecast | "
               f"{miss} eval rows w/o forecast | {time.time() - t0:,.0f}s")
 
     r = pd.concat(out_rows, ignore_index=True)
