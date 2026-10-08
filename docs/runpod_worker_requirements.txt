@@ -1,0 +1,33 @@
+# Libraries the Aevah RunPod worker needs for Mo forecasting work (requested 2026-10-08)
+# Source: inventory job jason-envcheck-001 (worker had only numpy 2.2.2 + torch 2.6.0+cu124)
+# Pins = versions on Jason's laptop, so backtests on the worker match the laptop exactly.
+
+# --- Phase 2: current test bench (LightGBM backtests, Optuna tuning) ---
+numpy==2.3.5
+pandas==2.3.3
+pyarrow==20.0.0
+scipy==1.16.3
+scikit-learn==1.6.1
+lightgbm==4.6.0
+optuna==4.9.0
+statsmodels==0.14.6
+ruptures==1.1.10
+statsforecast==2.0.1
+mlforecast==0.14.0
+holidays==0.99
+joblib==1.5.3
+threadpoolctl==3.6.0
+numba==0.65.1
+PyYAML==6.0.3
+
+# --- Phase 3: deep-learning and pre-trained forecasting challengers (GPU) ---
+# Keep the image's CUDA build of torch (2.6.0+cu124); the laptop's 2.9.1 is CPU/MPS only.
+xgboost==3.1.3
+catboost==1.2.10
+transformers==4.57.6
+timesfm==2.0.2
+gluonts==0.16.3
+# Not on the laptop yet; Rob picks current stable versions and we record them here:
+chronos-forecasting
+neuralforecast
+lightning
