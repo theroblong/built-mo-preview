@@ -190,6 +190,10 @@ def main() -> None:
                     help="early-stopping holdout: last 13 target weeks, or 20%% of series")
     ap.add_argument("--drift", action="store_true", help="add recent-growth features")
     ap.add_argument("--tag", default="", help="suffix for output files")
+    ap.add_argument("--recal", type=int, default=0,
+                    help="weeks: shift forecasts by the median residual (actual z - fitted z) "
+                         "on training rows whose target lies in the last N weeks before the "
+                         "cutoff -- level from recent data, shape from all years (0 = off)")
     ap.add_argument("--target", choices=["units", "velocity"], default="units",
                     help="units: log(units[t+h] / anchor). velocity: log(sales per store[t+h] / "
                          "4-wk sales per store[t]), forecast x CURRENT store count -- keeps "
@@ -250,6 +254,11 @@ def main() -> None:
         best = int(m.best_iteration_ or cap)
         fm = lgb.LGBMRegressor(n_estimators=best, **params).fit(d[feats_used], d["z"], sample_weight=w)
         imp = pd.Series(fm.booster_.feature_importance("gain"), index=feats_used)
+        shift = 0.0
+        if a.recal:
+            rec = (d["date_y"] > cut_n - pd.Timedelta(weeks=a.recal)).values
+            if rec.any():                            # all rows here have targets <= cutoff
+                shift = float(np.median(d.loc[rec, "z"].values - fm.predict(d.loc[rec, feats_used])))
         imp_tot = imp_tot.add(imp / imp.sum(), fill_value=0)
 
         # forecast from the cutoff week for every series
@@ -260,7 +269,7 @@ def main() -> None:
             r = r[r["t"] == cut_n].copy()
             for cc in CATS:
                 r[cc] = pd.Categorical(r[cc], categories=d[cc].cat.categories)
-            z = fm.predict(r[feats_used])
+            z = fm.predict(r[feats_used]) + shift
             if a.target == "velocity":
                 v = np.expm1(np.log1p(r["vel4"].values) + z) * r["tdp_ff"].values
                 r["mo130"] = np.where(np.isfinite(v), np.clip(v, 0, None), r["anchor"].values)
@@ -282,7 +291,7 @@ def main() -> None:
         miss = int(b["mo130"].isna().sum())
         b = b[b["mo130"].notna()]
         out_rows.append(b)
-        print(f"  {lbl}: {len(d):,} training rows ({is_val.mean():.0%} val) | best_iter {best}"
+        print(f"  {lbl}: {len(d):,} training rows ({is_val.mean():.0%} val) | recal shift {shift:+.3f} | best_iter {best}"
               f"{' (cap)' if best >= cap else ''} | {len(fx):,} series forecast | "
               f"{miss} eval rows w/o forecast | {time.time() - t0:,.0f}s")
 
