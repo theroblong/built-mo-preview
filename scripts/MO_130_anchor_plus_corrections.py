@@ -172,6 +172,7 @@ def add_horizon(x: pd.DataFrame, h: int, with_target: bool) -> pd.DataFrame:
     r["promo_yago_target"] = gb["is_promo_week"].shift(52 - h)
     if with_target:
         r["y"] = gb["base_units"].shift(-h)          # calendar grid: exactly week t+h
+        r["tdp_y"] = gb["tdp"].shift(-h)             # store count in the target week
     return r
 
 
@@ -189,6 +190,10 @@ def main() -> None:
                     help="early-stopping holdout: last 13 target weeks, or 20%% of series")
     ap.add_argument("--drift", action="store_true", help="add recent-growth features")
     ap.add_argument("--tag", default="", help="suffix for output files")
+    ap.add_argument("--target", choices=["units", "velocity"], default="units",
+                    help="units: log(units[t+h] / anchor). velocity: log(sales per store[t+h] / "
+                         "4-wk sales per store[t]), forecast x CURRENT store count -- keeps "
+                         "distribution growth (e.g. January resets) out of the learned shape")
     a = ap.parse_args()
     cap = a.trees or M.TREES_CAP
     feats_used = FEATS + (DRIFT_FEATS if a.drift else [])
@@ -206,7 +211,7 @@ def main() -> None:
 
     print("MO_130 - Connor anchor + learned corrections (direct, h = 1..13)")
     print(f"  {len(origins)} origins | cap {cap} | recency {a.recency} | min_rows {a.min_rows} | "
-          f"val {a.val} | drift {a.drift} | tag {a.tag or '-'}\n")
+          f"val {a.val} | drift {a.drift} | target {a.target} | tag {a.tag or '-'}\n")
     params = dict(objective="quantile", alpha=0.5, **M.PROD_LGBM)
     out_rows, imp_tot, t0 = [], pd.Series(dtype=float), time.time()
     for lbl, c, s, e in origins:
@@ -219,10 +224,15 @@ def main() -> None:
             r = add_horizon(x, h, with_target=True)
             r = r[r["reported"] & r["y"].notna() & np.isfinite(r["log_anchor"])
                   & (r["n_rep"] >= a.min_rows)]
+            if a.target == "velocity":
+                r = r[(r["tdp_y"] > TDP_FLOOR) & np.isfinite(r["vel4"])]
             rows.append(r)
         d = pd.concat(rows, ignore_index=True)
         assert (d["date_y"] <= cut_n).all(), "a training target lies after the cutoff"
-        d["z"] = np.log1p(d["y"].clip(lower=0)) - d["log_anchor"]
+        if a.target == "velocity":
+            d["z"] = np.log1p(d["y"].clip(lower=0) / d["tdp_y"]) - np.log1p(d["vel4"])
+        else:
+            d["z"] = np.log1p(d["y"].clip(lower=0)) - d["log_anchor"]
         for cc in CATS:
             d[cc] = d[cc].astype("category")
         wk = (cut_n - d["t"]).dt.days / 7
@@ -251,7 +261,11 @@ def main() -> None:
             for cc in CATS:
                 r[cc] = pd.Categorical(r[cc], categories=d[cc].cat.categories)
             z = fm.predict(r[feats_used])
-            r["mo130"] = np.clip(np.expm1(r["log_anchor"].values + z), 0, None)
+            if a.target == "velocity":
+                v = np.expm1(np.log1p(r["vel4"].values) + z) * r["tdp_ff"].values
+                r["mo130"] = np.where(np.isfinite(v), np.clip(v, 0, None), r["anchor"].values)
+            else:
+                r["mo130"] = np.clip(np.expm1(r["log_anchor"].values + z), 0, None)
             preds.append(r[["key", "date_y", "mo130"]])
         p = pd.concat(preds)
         p["series"] = [" | ".join(map(str, k)) for k in p["key"]]
