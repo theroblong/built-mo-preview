@@ -6,6 +6,92 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 231: the challenger ties the simple methods, the registered champion was the wrong model, and forecasts are now saved (2026-10-08)
+
+Code: `scripts/MO_130_anchor_plus_corrections.py` (v8 full run, `fit_forecast()` factored out),
+`scripts/MO_131_forward_tracker.py` (tamper-proofed), `scripts/MO_132_one_yardstick.py`
+(RUNNING, ~4 h, 18 origins; no results yet), `forecasts_registered/2026-09-06.*` (commit
+9748e46), `docs/runpod_worker_requirements.txt`, `docs/runpod_onboarding_feedback_2026-10-08.md`,
+`docs/ACCURACY_CLAIMS_REGISTER.md` (new location #14). Verdicts: MO_130 skeptic (opus/high):
+SURVIVES ONLY as a tie. MO_131 skeptic (opus/high): SOUND WITH FIXES (fixes applied). No
+production forecast changed today.
+
+### Finding
+
+(1) MO_130 v8 (18 origins, existing series) ties flat and Connor L4W at all 3 levels (cell x
+week 32.41 vs flat 32.59 and L4W 32.93; account x month 21.45 vs 21.12 / 20.69; portfolio x
+month 13.69 vs 12.84 / 12.61; shipped recursive model 35.45 / 22.95 / 13.77). Skeptic result
+on the 14 unseen origins: mo130 minus flat -0.28 [-1.77, +2.07] cell x week, so no dev
+overfitting. Three of our same-day claims were overturned and corrected in chat: the Jan-Mar
+"fix" (0.986 averages 2025 at 0.729, still 27% low, with 2026 at 1.072, 7% high; without the
+out-of-time level shift 2026 is 1.218); "beats the shipped model by ~3 pp" (-3.04 [-5.31,
++0.71], not significant); "wins at turns" (mostly the 2025-12 origin plus level-shift
+artifacts; without the shift mo130 loses everywhere at 35.16 / 23.97 / 16.29). A 50/50
+average of mo130 and flat (post-hoc, 30.70 / 19.83 / 10.73) is the best lead and must be
+pre-registered. Caveat: design choices were picked on the 4 dev origins, whose target weeks
+overlap 58% of the other origins' target weeks, so "unseen" is not out-of-sample for those choices.
+
+(2) MO_131 skeptic: no look-ahead at the 2026-09-06 cutoff, but the registered "champion" was
+the recursive MO_27 path while BUILT is served the direct multi-horizon model (MO_27D v11d,
+`retailer_sales_forecast.parquet`). Other must-fixes: only ~6 cutoffs gives 10 distinct bootstrap
+resamples, no multiple-comparison correction, a fallback clause that lets flat or L4W win on
+2 of 4 conditions, a void seasonal guard, ~791 restated series (~3.4% of post-cutoff volume)
+silently dropped, weak freezing. Tamper-proofing applied; the save refuses a dirty tree and
+test options, stores SHA-256 of registration, panel, index, model and 7 code files, and
+attaches no decision rule (MO_132 decides). Forecasts saved at the 2026-09-06 cutoff: 27,521
+rows, 2,117 series, 6 contenders (served_v11d archived byte-for-byte, recursive, flat,
+conn_L4W, mo130, blend); first scorable when SPINS reaches 2026-12-06. Jason: champion not
+settled; compare everything with no fixed time windows.
+
+(3) CODE READ, effect NOT measured (MO_132 measures it): the served direct model trains on
+targets only through 2026-06-07 (last 13 weeks held out for early stopping) and is never
+refit on them; targets are a row shift(-h), so series with gaps get mislabeled targets; lr 0.05
+/ cap 3000 / patience 100 versus MO_26's 0.04 / 6000 / 50 plus refit.
+
+(4) The v5 Bracken chart is the recursive model at Kroger portfolio level; its "3.4% error"
+and "10x more accurate" are retired figures (register section 3), logged as location #14.
+Competitor rows in our SPINS extract cover the same date range as BUILT, so category data
+adds items and launches, not years (Brad's "3-5 years" was wrong, corrected by Jason).
+
+(5) GPU worker check (job jason-envcheck-001, $0.13 reserved): RTX 4090 24 GB, but only numpy
+and torch installed, so the test bench cannot run there yet; CPU matmul 220 vs laptop 225
+GFLOPS (per-job speed about equal; the gain is parallel jobs); 32 cores, 46 GB cap, /tmp 5.4 GB.
+Rob asked to rebuild the worker with pinned laptop versions.
+
+MO_132 is RUNNING: every approach since MO_26 on one yardstick, with shape scores, a
+velocity score (graded at actual doors), `direct_served` vs `direct_fixed`, and level bias by
+TDP trend. Nine predictions were recorded before the run. No MO_132 numbers exist yet.
+
+### Evidence
+
+MO_130 v8 full run by history band, cell x week (existing series; from the run log; the
+skeptic verified the pooled tie and the unseen-origin 52+ result of 26.9 vs 26.8, not every
+band cell):
+
+| history band | mo130 v8 | flat | Connor L4W |
+|---|---|---|---|
+| <13 wks | 51.6 | 50.6 | 53.4 |
+| 13-25 wks | 30.2 | 31.7 | 31.8 |
+| 26-51 wks | 24.0 | 25.9 | 25.8 |
+| 52+ wks | 26.4 | 25.8 | 25.7 |
+
+Pooled by level (existing series; cell x week / account x month / portfolio x month, bias):
+mo130 32.41 / 21.45 / 13.69 (1.008); flat 32.59 / 21.12 / 12.84 (0.977); conn_L4W 32.93 /
+20.69 / 12.61 (0.995); shipped recursive 35.45 / 22.95 / 13.77 (0.962). Pooled tie hides a
+level flip: mo130 wins cell x week in the 13-25 and 26-51 bands but loses portfolio x month in
+every 13+ band.
+
+### Procedural lesson
+
+A tracker is only as good as the model it registers: before saving forecasts, verify against
+the served file which model BUILT actually receives. Report seasonal bias per year and
+two-sided, check that any trailing level shift is not absorbing the previous seasonal miss,
+and keep dev and confirmation origins from sharing target weeks. A decision rule should wait
+until the comparison it depends on has run, and nothing is called a result before its skeptic
+verdict.
+
+---
+
 ## README update 230: the test bench was not production -- training, inputs and per-week updates now match, and the yardstick is rebuilt (2026-10-07, evening)
 
 Code: `scripts/MO_80_quarterly_honest_backtest.py`, `scripts/mo_panel.py`,
