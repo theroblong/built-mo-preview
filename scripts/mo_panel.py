@@ -76,6 +76,14 @@ FORECAST_CONTRACT: dict = {
     "TREES_CAP": 6000,
     "EARLY_STOP_PATIENCE": 50,
     "EARLY_STOP_MIN_DELTA": 0.0,
+    # Short-series router (< MIN_SERIES_WEEKS rows -> last value). False = NO seasonal
+    # multiplier (2026-10-07, Jason). The multiplier was index(target)/index(anchor), and
+    # the MO_59 index dips at its own last data week (committed CSV: -0.20 at week 36 vs
+    # ~0.0 at week 37), so it inflated every new item's forecast (~1.1-1.3x in production
+    # now; 1.3-2.5x in backtests). MO_129 review: with the multiplier, router-routed series
+    # missed 68.9% (bias 1.36) vs 49.6% for plain last value. MO_27 and MO_80 both READ
+    # this value, so they cannot drift.
+    "ROUTER_SEASONAL": False,
 }
 
 

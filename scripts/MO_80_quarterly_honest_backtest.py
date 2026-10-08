@@ -120,6 +120,8 @@ TRAIN_VAL_WEEKS = 13                         # MO_26: last 13 weeks = validation
 FIT_LOG: list[dict] = []                     # one row per fit: rows, best iteration, cap
 MODEL_CACHE_DIR = Path("outputs/model_cache")  # trained-model cache (see train_like_production)
 TRAIN_SEED = None                            # None = production random_state; set for noise-floor sweeps
+# Short-series router seasonal multiplier: read from the contract, exactly as MO_27 does.
+ROUTER_SEASONAL = bool(FORECAST_CONTRACT.get("ROUTER_SEASONAL", False))
 
 # MO_113 A/B hook. Production applies the seasonal index in TWO places -- the
 # short/lapsed router and the LightGBM STL fallback -- and MO_109 only measured the
@@ -635,7 +637,7 @@ def _run_production_rowwise(df, feats, cut, qs, qe, eval_keys, trees, fweeks, se
             for h, fd in enumerate(fweeks[:HORIZON], start=1):
                 if not (qs <= fd <= qe):
                     continue
-                u = lvl * _seasonal_mult(seasonal_s, fd, cut)
+                u = lvl * (_seasonal_mult(seasonal_s, fd, cut) if ROUTER_SEASONAL else 1.0)
                 u = 0.0 if not np.isfinite(u) else max(0.0, u)
                 out[(key, fd)] = ({"q50": u, "q10": max(0.0, u * (1 - bw)),
                                    "q90": u * (1 + bw)} if want_band else u)
@@ -762,7 +764,7 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             for h, fd in enumerate(fweeks[:HORIZON], start=1):
                 if not (qs <= fd <= qe):
                     continue
-                u = lvl * _seasonal_mult(seasonal_s, fd, cut)
+                u = lvl * (_seasonal_mult(seasonal_s, fd, cut) if ROUTER_SEASONAL else 1.0)
                 u = 0.0 if not np.isfinite(u) else max(0.0, u)
                 out[(key, fd)] = ({"q50": u, "q10": max(0.0, u * (1 - bw)),
                                    "q90": u * (1 + bw)} if want_band else u)

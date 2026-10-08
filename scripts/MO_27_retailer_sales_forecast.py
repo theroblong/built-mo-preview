@@ -505,12 +505,15 @@ if __name__ == "__main__":
             # target index alone does the most damage. Divide by the anchor week's
             # index so the factor is a RATIO between the two weeks. Must stay in
             # lockstep with MO_80.run_production's short/lapsed router.
+            # 2026-10-07: off by contract (mo_panel FORECAST_CONTRACT["ROUTER_SEASONAL"]) --
+            # the index dips at its last data week, so this ratio inflated new items.
+            _rs = bool(FORECAST_CONTRACT.get("ROUTER_SEASONAL", False)) and bool(seasonal_lookup)
             _a_idx = (1.0 + seasonal_lookup.get(int(anchor_date.isocalendar().week), 0.0)
-                      if seasonal_lookup else 1.0)
+                      if _rs else 1.0)
             for _s in range(1, FORECAST_WEEKS + 1):
                 _fd  = anchor_date + pd.Timedelta(weeks=_s)
                 _woy = int(_fd.isocalendar().week)
-                _sf  = 1.0 + seasonal_lookup.get(_woy, 0.0) if seasonal_lookup else 1.0
+                _sf  = 1.0 + seasonal_lookup.get(_woy, 0.0) if _rs else 1.0
                 _sf  = _sf / _a_idx if _a_idx > 0 else _sf
                 _u   = _lvl * max(0.1, _sf)
                 # Explicit, not max(0.0, nan): that returns 0.0 and turns "we don't know"

@@ -43,6 +43,12 @@ new series (scored at 0) is reported alongside. Moving-block bootstrap CIs (bloc
 origins) for model-flat, model-conn_L4W, conn_L4W-flat. Seed noise: the model retrained
 with seeds 1 and 2 at every third origin.
 
+RE-SCORE (2026-10-07, after the skeptic review): the first run (outputs kept as
+outputs/mo129_v1_*) gave the short-series router a seasonal multiplier taken relative to
+the index's own last data week, where the index dips, inflating new items 1.3-2.5x in the
+model arm only. With FORECAST_CONTRACT["ROUTER_SEASONAL"] = False (production fixed the
+same way), the run is re-scored on the same cached models. Predictions are unchanged.
+
 PREDICTIONS, RECORDED BEFORE RUNNING so they can be wrong:
   P1  Existing series, cell x week: |flat - conn_L4W| < 1pp (MO_127: 32.8 vs 32.5).
       If it FAILS, Connor's anchor and flat genuinely separate at item level.
