@@ -93,6 +93,7 @@ NUM_FEATS = ["h", "woy_t", "woy_y", "woy_y_sin", "woy_y_cos", "woy_t_sin", "woy_
              "log_anchor", "last_vs_anchor", "trend_4_12", "log_tdp", "tdp_chg4", "tdp_chg13",
              "arp_rel8", "promo_rate13", "promo_yago_target", "yago_shape", "wks_since_first",
              "selling_wks"]
+DRIFT_FEATS = ["drift4", "drift13"]
 FEATS = NUM_FEATS + CATS
 
 
@@ -145,6 +146,9 @@ def series_grid(tr: pd.DataFrame, cut_n: pd.Timestamp) -> pd.DataFrame:
     x["wks_since_first"] = G().cumcount() + 1
     x["_s"] = (x["tdp"] > M.DIST_MIN_TDP).astype(int)
     x["selling_wks"] = G()["_s"].cumsum()
+    x["n_rep"] = G()["reported"].cumsum()                    # reported rows to date
+    x["drift4"] = np.log1p(x["base_ff"].fillna(0)) - np.log1p(G()["base_ff"].shift(4).fillna(0))
+    x["drift13"] = x["log_anchor"] - G()["log_anchor"].shift(13)
     x["base_lag52"] = G()["base_units"].shift(52)
     x["promo_lag52"] = G()["is_promo_week"].shift(52)
     x["woy_t"] = x["t"].dt.isocalendar().week.astype(int)
@@ -176,8 +180,20 @@ def main() -> None:
     ap.add_argument("--origins", default="", help="comma list of origin labels")
     ap.add_argument("--trees", type=int, default=None, help="cap; None = production cap")
     ap.add_argument("--recency", type=float, default=RECENCY_SHAPE)
+    # Calibration switches added after the 2026-10-07 dev run (bias 1.14). Defaults = the
+    # design as first run, so its recorded predictions still apply to that configuration.
+    ap.add_argument("--min-rows", type=int, default=0,
+                    help="series with fewer reported rows are excluded from training and "
+                         "forecast at last value (production's router rule = 13)")
+    ap.add_argument("--val", choices=["time", "series"], default="time",
+                    help="early-stopping holdout: last 13 target weeks, or 20%% of series")
+    ap.add_argument("--drift", action="store_true", help="add recent-growth features")
+    ap.add_argument("--tag", default="", help="suffix for output files")
     a = ap.parse_args()
     cap = a.trees or M.TREES_CAP
+    feats_used = FEATS + (DRIFT_FEATS if a.drift else [])
+    out_json = OUT.with_name(OUT.stem + (f"_{a.tag}" if a.tag else "") + OUT.suffix)
+    out_rows_p = OUT_ROWS.with_name(OUT_ROWS.stem + (f"_{a.tag}" if a.tag else "") + OUT_ROWS.suffix)
 
     feats_prod = list(pickle.load(
         open("outputs/model_retailer_sales_q50_v11_full.pkl", "rb")).feature_name_)
@@ -189,7 +205,8 @@ def main() -> None:
         origins = [o for o in origins if o[0] in want]
 
     print("MO_130 - Connor anchor + learned corrections (direct, h = 1..13)")
-    print(f"  {len(origins)} origins | cap {cap} | recency {a.recency}\n")
+    print(f"  {len(origins)} origins | cap {cap} | recency {a.recency} | min_rows {a.min_rows} | "
+          f"val {a.val} | drift {a.drift} | tag {a.tag or '-'}\n")
     params = dict(objective="quantile", alpha=0.5, **M.PROD_LGBM)
     out_rows, imp_tot, t0 = [], pd.Series(dtype=float), time.time()
     for lbl, c, s, e in origins:
@@ -200,7 +217,8 @@ def main() -> None:
         rows = []
         for h in range(1, H + 1):
             r = add_horizon(x, h, with_target=True)
-            r = r[r["reported"] & r["y"].notna() & np.isfinite(r["log_anchor"])]
+            r = r[r["reported"] & r["y"].notna() & np.isfinite(r["log_anchor"])
+                  & (r["n_rep"] >= a.min_rows)]
             rows.append(r)
         d = pd.concat(rows, ignore_index=True)
         assert (d["date_y"] <= cut_n).all(), "a training target lies after the cutoff"
@@ -209,15 +227,19 @@ def main() -> None:
             d[cc] = d[cc].astype("category")
         wk = (cut_n - d["t"]).dt.days / 7
         w = np.exp(-a.recency * wk.clip(lower=0).values)
-        is_val = (d["date_y"] > cut_n - pd.Timedelta(weeks=M.TRAIN_VAL_WEEKS)).values
+        if a.val == "series":
+            sid = pd.util.hash_pandas_object(pd.Series([str(k) for k in d["key"]]), index=False).values
+            is_val = (sid % 5 == 0)
+        else:
+            is_val = (d["date_y"] > cut_n - pd.Timedelta(weeks=M.TRAIN_VAL_WEEKS)).values
         m = lgb.LGBMRegressor(n_estimators=cap, **params)
-        m.fit(d.loc[~is_val, FEATS], d.loc[~is_val, "z"], sample_weight=w[~is_val],
-              eval_set=[(d.loc[is_val, FEATS], d.loc[is_val, "z"])], eval_metric="quantile",
+        m.fit(d.loc[~is_val, feats_used], d.loc[~is_val, "z"], sample_weight=w[~is_val],
+              eval_set=[(d.loc[is_val, feats_used], d.loc[is_val, "z"])], eval_metric="quantile",
               callbacks=[lgb.early_stopping(M.EARLY_STOP_PATIENCE, verbose=False),
                          lgb.log_evaluation(-1)])
         best = int(m.best_iteration_ or cap)
-        fm = lgb.LGBMRegressor(n_estimators=best, **params).fit(d[FEATS], d["z"], sample_weight=w)
-        imp = pd.Series(fm.booster_.feature_importance("gain"), index=FEATS)
+        fm = lgb.LGBMRegressor(n_estimators=best, **params).fit(d[feats_used], d["z"], sample_weight=w)
+        imp = pd.Series(fm.booster_.feature_importance("gain"), index=feats_used)
         imp_tot = imp_tot.add(imp / imp.sum(), fill_value=0)
 
         # forecast from the cutoff week for every series
@@ -228,16 +250,20 @@ def main() -> None:
             r = r[r["t"] == cut_n].copy()
             for cc in CATS:
                 r[cc] = pd.Categorical(r[cc], categories=d[cc].cat.categories)
-            z = fm.predict(r[FEATS])
+            z = fm.predict(r[feats_used])
             r["mo130"] = np.clip(np.expm1(r["log_anchor"].values + z), 0, None)
             preds.append(r[["key", "date_y", "mo130"]])
         p = pd.concat(preds)
         p["series"] = [" | ".join(map(str, k)) for k in p["key"]]
+        short = {" | ".join(map(str, k)) for k in fx.loc[fx["n_rep"] < a.min_rows, "key"]}
         p["date"] = pd.to_datetime(p["date_y"]).dt.tz_localize("UTC")
         b = base[base["origin"] == lbl].copy()
         b["date"] = pd.to_datetime(b["date"], utc=True)
         b = b.merge(p[["series", "date", "mo130"]], on=["series", "date"], how="left")
         zero = b["is_new"] | (b["band"] == "lapsed")
+        if short:                                    # production router rule: last value
+            sm = b["series"].isin(short) & ~zero
+            b.loc[sm, "mo130"] = b.loc[sm, "flat"]
         b.loc[zero, "mo130"] = 0.0
         miss = int(b["mo130"].isna().sum())
         b = b[b["mo130"].notna()]
@@ -247,7 +273,7 @@ def main() -> None:
               f"{miss} eval rows w/o forecast | {time.time() - t0:,.0f}s")
 
     r = pd.concat(out_rows, ignore_index=True)
-    r.to_parquet(OUT_ROWS)
+    r.to_parquet(out_rows_p)
     ex = r[~r["is_new"]]
     res = {"existing": M.score_levels(ex, ARMS), "planning_total": M.score_levels(r, ARMS)}
     E = res["existing"]
@@ -313,8 +339,8 @@ def main() -> None:
     b52 = E[CW]["by_band"].get("52+ wks", {})
     if b52 and b52["mo130"] > b52["flat"]:
         print(f"  ⚠️ blocker 0.3 analog: mo130 worse than flat on 52+ ({b52['mo130']:.1f} vs {b52['flat']:.1f})")
-    OUT.write_text(json.dumps(res, indent=2, default=str))
-    print(f"\nwrote {OUT} and {OUT_ROWS}  ({time.time() - t0:,.0f}s)")
+    out_json.write_text(json.dumps(res, indent=2, default=str))
+    print(f"\nwrote {out_json} and {out_rows_p}  ({time.time() - t0:,.0f}s)")
 
 
 if __name__ == "__main__":
