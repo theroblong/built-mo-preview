@@ -9,3 +9,7 @@ docs/CustomerExport*
 .claude/settings.local.json
 .claude/related-repos.local.json
 .claude/onboarding.local.json
+
+# Per-machine MCP servers (absolute paths differ per Mac), e.g. aevah-compute -> runpodagent
+.mcp.json
+.claude/settings.local.json
