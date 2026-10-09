@@ -6,6 +6,111 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 233: mixed MO_132 feedback, MO_133 under way, shape re-scored (exploratory), and the v5 chart's seasonal shape came partly from the future (2026-10-09)
+
+Code: `scripts/MO_133_ensembles.py` (predictions P1-P6 recorded before any worker run; P7-P9 and
+start-anchored arms pre-registered in 4730335 before any scoring), MO_132 shape re-score
+(`scripts/outputs/mo132_rescore_shape.log`; v1 reviewed JSON/log kept as `*_v1_reviewed`),
+MO_59 plotting imports made optional so the seasonal index runs on the GPU worker, GPU jobs
+`jason-mo133-001` and `-002` (`/Users/jasonbrazeal/Documents/dev/aevah-jobs/mo133`).
+Status: IN PROGRESS and EXPLORATORY. Nothing below has a skeptic verdict. No new settled claims;
+no production forecast changed.
+
+### Finding
+
+(1) Feedback (Jason), verbatim: "The MO_132 results are mixed. The forecasts don't seem to be
+close enough in terms of magnitude and shape versus actual. Hopefully we can find a better
+version that does better than carry forward last value. The comparison between all the
+different methods is helpful and good. I just think the client would be underwhelmed since a
+straight line from last value is often closer for a forecast than any of the other so-called
+sophisticated machine learning methods." Plan approved ("I approve the plan"): MO_133 = (1) fix
+shape scoring and re-score MO_132, (2) make the full bench run on the worker, (3) pre-register,
+(4) seed-averaged `direct_fixed` + recursive + combinations on the worker, (5) neural TFT /
+N-HiTS / TCN on the worker GPU, (6) skeptic and write-up. Chronos-2 is a comparison only, not for
+production unless extremely good. Promo calendar, planning-level model and the split-fix test
+were not prioritized.
+
+(2) MO_132 shape RE-SCORE, EXPLORATORY (scoring was redesigned after seeing the v1 results;
+skeptic pending). Precision of up/down calls (chance 50) and rank correlation r (chance 0), with
+origin block-bootstrap 95% intervals; see the table. Reading: real but modest shape skill at the
+portfolio level in the velocity model with learned corrections (mo130) and the blend; none
+detectable for the recursive model.
+
+(3) The v5 chart (Jason's screenshots, Accuracy Proof tab, Kroger: v5 quarterly lines "look so
+much more like the actual lines in terms of momentum, trend, shape"; magnitude lacking in recent
+quarters). Factual checks, not skeptic-reviewed: (a) v5 badges compare against naive YoY (lag52 x
+YoY, `mockups/build_forecast_chart_data.py:657-659`), not last-value flat; flat never appears on
+the chart. (b) The v5 lines came from MO_80 before the 2026-10-07 fix (JSON read at
+`build_forecast_chart_data.py:1028-1032`; v5 built 2026-09-30), i.e. a full-panel seasonal index
+with look-ahead. (c) The honest seasonal index is EMPTY at every 2025 forecast date (2024-12 to
+2025-09: 0 weeks; it needs 104 weeks and data start 2023-10-15) and has 52 weeks from 2025-12.
+So honest 2025 forecasts cannot know the seasonal shape; the v5 2025 shapes partly came from the
+future. (d) Kroger-total weekly honest miss % (all items, new at 0), mean over 6 quarterly
+origins: flat 27.3, blend 25.6, conn_L4W 25.9, recursive 29.6 (also direct_fixed 28.2, mo130
+26.8, snaive 55.7); v5's own badges average about 32 (44.9, 31.7, 13.5, 37.2, 40.5, 24.6). At the
+2025-12 origin (Q1 2026): mo130 7.7 (bias 1.04), blend 15.3, direct_fixed 17.8, flat 34.5,
+recursive 42.2; at 2026-03: flat 20.5, recursive 21.3, mo130 35.0.
+
+(4) Decisions (Jason): yes to (1) pre-registering start-anchored shape arms, (2) scoring shape on
+2026 origins separately, (3) building the honest v5-layout chart including flat (not yet built).
+Done for (1) and (2) before computing them: arms `<parent>_anchF` / `_anchL4W` = parent path x
+clip(anchor / parent week-1, 0.25, 4) for recursive_w, direct_avg5, rec_dir5; predictions P7-P9
+(4730335). A scoring bug was fixed before any scoring: worker caches were merged on (series,
+date) only, which is ambiguous with overlapping horizons; they now merge on (origin, series,
+date) with a duplicate assert. Compute code is unchanged (jobs 2-3 run the 9f623c6 copy).
+
+(5) MO_133 progress. Local test at 2025-01: `recursive_w` identical to MO_129 recursive (6,291
+rows, max diff 0.0; the 639 unmatched rows are all new series, scored 0) and `direct_fixed_s42`
+identical to MO_132 `direct_fixed` (9,893 rows, 0.0); 427 s on the laptop. Job 1
+(`jason-mo133-001`, origins 2025-01 and 2025-02, all 6 arms): done, 604 s, exit 0 (per arm on the
+worker: recursive_w about 86-90 s, direct seed about 84-121 s; 2-way parallel without slowdown).
+Job 2 (`jason-mo133-002`, 8 origins, 2024-12 and 2025-03 to 2025-09, `--parallel 4 --threads 8`):
+running. Budget envelope, read from Jason's "budget for step 3 looks fine to me" (I told him this
+reading): up to 8 jobs, each at most 1 h and $1.50, at most $12 total; every job is stated and
+reported.
+
+(6) Housekeeping: GitHub push access to all four repos restored (wiki commit d5e3fcf pushed;
+mo-api and mo-ui confirmed by Jason). SPINS question (Jason): could pseudonymizing brand/UPC
+identifiers get around the license blocker? Brad: no; the license covers the data (sales, prices,
+TDP), and sales patterns re-identify brands. It is worthwhile as data minimization if cloud
+processing is permitted; first check the SPINS clause on third-party processors/cloud hosting and
+ask Brian/Rob. Not legal advice.
+
+### Evidence
+
+MO_132 shape re-score (precision of up/down calls, chance 50; r = rank correlation of change,
+chance 0; * = interval excludes chance; ns = not significant):
+
+| level | arm | precision | r |
+|---|---|---|---|
+| portfolio x week | blend | 74.4 [65.3, 83.0] | +0.33 [+0.15, +0.57] * |
+| portfolio x week | mo130 | 71.0 [61.8, 78.6] | +0.33 * |
+| portfolio x week | direct_fixed | 58.3 [54.0, 63.1] | +0.22 * |
+| portfolio x week | snaive | 65.9 [48.6, 74.5] | +0.28 [-0.03, +0.48] ns |
+| portfolio x week | direct_served | 49.2 | +0.06 ns |
+| portfolio x week | recursive | 50.0 [29.2, 68.8] | +0.02 ns |
+| account x month | direct_served | 57.1 | +0.15 * |
+| account x month | direct_fixed | 55.7 [49.7, 60.0] | +0.16 (borderline) |
+| account x month | mo130 / blend | about 54-55 | +0.11 ns |
+| account x month | recursive | 55.7 | +0.04 ns |
+| Kroger x week | snaive | 65.4 | +0.25 (only arm beating chance) |
+| Kroger x week | recursive | 57.6 | +0.13 ns |
+
+Turns (24 actual): mo130 called 5, right 80%; blend 2 called, 100%; direct_served 25 called, 44%
+right; direct_fixed 21, 38%; recursive 9, 56%.
+
+History-band results were not produced in this work; the bands above are not reported.
+
+### Procedural lesson
+
+A scoring method redesigned after seeing results is exploratory until a skeptic reviews it, so
+the re-score above carries no claim. A chart that looks right can owe its shape to a look-ahead
+seasonal index; before judging a chart by eye, check what the index could have known at each
+forecast date (here nothing before 2025-12). Pre-register new arms and fix scoring bugs (the
+(series, date) merge) before computing anything, and record predictions before each worker run.
+
+---
+
 ## README update 232: the served direct model is worse than the recursive model and than flat; the recursive model did not change, the bench became honest (2026-10-09)
 
 Code: `scripts/MO_132_one_yardstick.py` (fa55079; full run, 15,504 s, laptop only),
