@@ -6,6 +6,114 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 234: MO_133 combinations beat the current recursive model but not last week carried forward on established series; the gains are in young items (2026-10-09)
+
+Code: `scripts/MO_133_ensembles.py` (compute ran on the GPU worker from copies of 9f623c6 in 4 jobs,
+`jason-mo133-001` to `-004`; predictions P1-P6 pre-registered in 9f623c6, P7-P9 and the
+start-anchored arms in 4730335, both before any scoring; scoring fixes 2e886f1 and bda7078),
+`scripts/MO_132_one_yardstick.py` (shape scoring, now with a majority-direction baseline and
+per-origin sign tests), `docs/PRODUCTION_DECISION_PREREG.md` (written before the remaining tests).
+Outputs: `scripts/outputs/mo133_score.log`, `mo133_ensembles.json`, `mo133_rows.parquet` (v1
+reviewed versions kept as `*_v1_reviewed`).
+Status: skeptic-reviewed (opus/high; scoring reproduced exactly from the rows and 108 worker
+files), then re-scored after the skeptic's must-fixes. No production forecast changed. Proposals
+are in `docs/SETTLED_FINDINGS.md` (pending review).
+
+### Finding
+
+All 18 origins, existing series, average miss % at item x week / account x month / portfolio x
+month (the cw/am/pm columns below). Skeptic verdict on each claim:
+
+1. Averaging the direct model over several random seeds (direct_avg5) gives a small gain over a
+   single seed (direct_fixed_s42): -0.62, interval excludes zero, also 13+ weeks only (-0.63).
+   Every single seed scored 34.70-34.90 against 34.15 for the average. *SURVIVES.*
+2. Recursive + fixed direct (rec_dir5, 50/50) beats the current recursive model at item x week
+   (-3.42, interval excludes zero), including established series (13+ weeks only -3.48 [-5.7,
+   -0.6]). At portfolio x month the preliminary gain (-3.29) is not significant when scored
+   within history bands (-2.23 [-5.2, +1.5]). The test uses the same origins and data as the
+   design, so it is not out-of-sample (fresh seeds and machine only). *SURVIVES WITH CAVEATS.*
+3. No combination beats last week carried forward on established series. Pre-registered P4
+   (rec_dir5_flat beats flat at item x week and account x month) FAILED: the item x week interval
+   touches zero (-1.07 [-1.8, +0.0]). On 13+ week series rec_dir5 vs flat is +0.14 / -0.39 /
+   -1.34, none significant. The gains are confined to young items: under 13 weeks (rec_dir5_flat
+   vs flat -3.55 / -3.56 / -4.36) and 13-25 weeks (-1.47 / -2.42 / -1.49); the 52+ week band ties (-0.28 / -0.43 /
+   -0.96, not significant). *The claim "combos beat last value" DOES NOT SURVIVE.*
+4. Start-anchoring the forecast shape to the latest level adds no detectable difference
+   (rec_dir5_anchF minus rec_dir5: +0.01 / +0.03 / +0.68, not significant). Predictions P7 and
+   P8 failed. *SURVIVES as "no detectable difference".*
+5. Shape (direction of change), scored against a majority-direction baseline: portfolio x week
+   (baseline 51.0) only mo130 (71.0) and blend (74.4) beat it, as in the MO_132 re-score; account
+   x month (baseline 54.8) no arm clearly beats it. *SURVIVES WITH CAVEATS (mo130/blend shape
+   comparisons cross laptop and worker machines).*
+6. Open blocker "model worse than flat on 52+ weeks" stands: rec_dir5 26.5 vs flat 25.8.
+   Separately, the cross-machine check (worker recursive vs the laptop run) is +0.01 [-0.1,
+   +0.1] with an item-level median difference of 0.39% (99th percentile 12%). *Both SURVIVE.*
+
+Corrections to Claude's preliminary statements to Jason (corrected in chat):
+- "Recursive + direct + last value beats last value at the planning levels" did not survive: P4
+  failed, gains are confined to young items, the 52+ band ties, and portfolio x month wins are
+  not significant within bands.
+- "2026 recursive/combination portfolio-week shape is worse than chance" did not survive: only 6
+  origins (the block bootstrap collapsed to 10 distinct resamples), 41 real moves, intervals
+  include chance. Redone with per-origin values and an exact sign test.
+
+EXPLORATORY, post hoc, not significance-tested (2025 vs 2026 origins): in 2025 (12 origins, no
+honest seasonal history) the machine-learning methods tie last week carried forward; in 2026 (6
+overlapping origins, two years of history, including the winter dates the skeptic flagged) most
+combinations lead it at every level (rec_dir5 28.5 / 17.2 / 8.9 vs flat 30.4 / 19.9 / 13.1). This
+is consistent with "more history helps" but is not a finding; the forward tracker is the test.
+2026 account x month shape: direct_avg5 and rec_dir5 had rank correlation above zero in 6 of 6
+origins (exact sign test p=0.016, skeptic: SURVIVES WITH CAVEATS). At portfolio x week (41 real
+moves) the same test is not significant for any arm (mo130 and blend 5 of 6, p=0.109).
+
+### Evidence
+
+Average miss % (lower is better), all 18 origins, existing series; bias in the last column is
+portfolio x month forecast/actual:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| blend (laptop reference) | 30.70 | 19.83 | 10.73 | 0.993 |
+| rec_dir5_flat | 31.52 | 19.95 | 11.07 | 0.969 |
+| rec_dir5 | 32.04 | 20.08 | 10.46 | 0.966 |
+| last week carried forward (flat) | 32.59 | 21.12 | 12.84 | 0.977 |
+| L4W velocity x stores (conn_L4W) | 32.93 | 20.69 | 12.61 | 0.995 |
+| direct_avg5 | 34.15 | 20.85 | 9.17 | 0.969 |
+| direct_fixed_s42 | 34.77 | 20.96 | 9.32 | 0.967 |
+| recursive_w | 35.46 | 22.89 | 13.75 | 0.962 |
+
+Differences with intervals (negative = first arm better; * = excludes zero; ns = not significant):
+
+| comparison | item x week | account x month | portfolio x month | portfolio x month within bands | 13+ weeks only (cw / am / pm) |
+|---|---|---|---|---|---|
+| direct_avg5 - s42 | -0.62 [-0.8, -0.4] * | ns | ns | -0.03 [-0.2, +0.2] | -0.63 * / +0.05 / +0.12 |
+| rec_dir5 - recursive_w | -3.42 * | -2.81 * | -3.29 * | -2.23 [-5.2, +1.5] ns | -3.48 * / -2.35 ns / -2.16 ns |
+| rec_dir5 - flat | -0.55 ns | -1.04 ns | -2.38 [-4.1, -0.3] * | -1.66 [-3.6, +1.1] ns | +0.14 / -0.39 / -1.34, all ns |
+| rec_dir5_flat - flat | -1.07 [-1.8, +0.0] | -1.17 [-2.0, -0.1] * | -1.77 [-2.8, -0.5] * | -1.48 [-2.7, +0.4] ns | -0.60 / -0.78 / -0.98, all ns |
+
+By history band, item x week: under 13 weeks rec_dir5 46.5 vs flat 50.6; 52+ weeks rec_dir5_flat
+25.6 vs flat 25.8. Skeptic robustness: the rec_dir5_flat advantage at account x month is not
+significant when the 2025-11 to 2026-01 origins are dropped or when Publix is dropped; Walmart is
+about 40% of the gain; 2025 origins alone are not significant.
+
+Pre-registered predictions (final scoring): P1 HOLDS, P2 HOLDS, P3 HOLDS, P4 FAILS, P5 HOLDS,
+P6 FAILS as registered (it was written against a 50% chance baseline, and 8 arms beat that at
+account x month), P7 FAILS, P8 FAILS, P9 HOLDS. The stricter majority-direction baseline was
+adopted AFTER the results (skeptic must-fix); under it no arm beats the baseline at account x
+month, but that is a post hoc reading, not the registered result.
+
+### Procedural lesson
+
+A pooled number can hide a mixture: the combination's gain came from young items, and a pooled
+or unbanded portfolio x month gain turned not significant once scored within bands. Report
+band-separated portfolio x month and 13+-week-only results next to every pooled number. Shape
+scores need a majority-direction baseline (50 is lenient when most moves are down) and, with
+fewer than 10 origins, per-origin values and an exact sign test, because the block bootstrap
+degenerates. Preliminary readings given to Jason before the skeptic ran were wrong in two places;
+send a finding to the skeptic before stating it as a result, not after.
+
+---
+
 ## README update 233: mixed MO_132 feedback, MO_133 under way, shape re-scored (exploratory), and the v5 chart's seasonal shape came partly from the future (2026-10-09)
 
 Code: `scripts/MO_133_ensembles.py` (predictions P1-P6 recorded before any worker run; P7-P9 and

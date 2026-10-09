@@ -94,6 +94,11 @@ BOUNDARIES     = [13, 52]
 # measures what actually ships. `run_recursive` is kept as the bare arm so the
 # contribution of each production piece stays visible.
 SEASONAL_BLEND_WEIGHT = 0.10   # MO_27 line 68 — keep in lockstep
+# MO_134 experiment hooks for the batched production path. Defaults reproduce MO_27 exactly.
+YOY_CLIP: tuple | None = (0.5, 2.0)   # MO_27:571 clip on the year-over-year ratio; None = no clip
+YEAR_AGO = "rows"                     # "rows" = hist[n-52] as MO_27; "calendar" = same week last year
+SAFETY_CAP_X_MAX: float | None = None # e.g. 3.0 = forecast at most 3x the series' max week
+RAIL_HITS: list = []                  # (key, week) where the rail bound
 MIN_SERIES_WEEKS_LOCAL = 13    # mo_panel.MIN_SERIES_WEEKS
 SEASONAL_INDEX_CSV = Path("outputs/mo59_seasonal_index.csv")
 SHORT_BAND_WIDTH = 0.45        # MO_27 `_bw` for last_value_seasonal
@@ -776,14 +781,22 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
         # ── autoregressive path: per-series state, predicted in batches below ──
         hist = list(pd.to_numeric(g["base_units"], errors="coerce").fillna(0))
         n = len(hist)
-        yago_anchor = float(hist[n - 52]) if n >= 52 else None
+        if YEAR_AGO == "calendar":      # MO_134: the week dated 52 weeks earlier (gaps -> missing)
+            by_date = dict(zip(pd.to_datetime(g["__time"], utc=True), hist))
+            yago_anchor = by_date.get(pd.to_datetime(g["__time"].iloc[-1], utc=True) - pd.Timedelta(weeks=52))
+            lag52_seq = [float(by_date.get(fweeks[k - 1] - pd.Timedelta(weeks=52), np.nan))
+                         if k <= len(fweeks) else np.nan for k in range(1, HORIZON + 1)]
+        else:                           # production (MO_27): 52 ROWS back
+            yago_anchor = float(hist[n - 52]) if n >= 52 else None
+            lag52_seq = [float(hist[n - 53 + k]) if 0 <= (n - 53 + k) < n else np.nan
+                         for k in range(1, HORIZON + 1)]
+        ratio = hist[-1] / yago_anchor if yago_anchor and yago_anchor > 0 else None
         ar.append({
             "key": key, "hist": hist, "seas": seasonal_s, "state": g.iloc[-1].copy(),
-            "ctx": _series_context(g, hist),
-            "lag52_seq": [float(hist[n - 53 + k]) if 0 <= (n - 53 + k) < n else np.nan
-                          for k in range(1, HORIZON + 1)],
-            "yoy": (float(np.clip(hist[-1] / yago_anchor, 0.5, 2.0))
-                    if yago_anchor and yago_anchor > 0 else None)})
+            "ctx": _series_context(g, hist), "hmax": max(hist) if hist else 0.0,
+            "lag52_seq": lag52_seq,
+            "yoy": (None if ratio is None else
+                    float(np.clip(ratio, *YOY_CLIP)) if YOY_CLIP else float(ratio))})
 
     for h in range(1, HORIZON + 1):
         if h > len(fweeks) or not ar:
@@ -829,6 +842,11 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
                 mult = _seasonal_mult(seasonal_s, fd, cut,
                                       prev_fd=fweeks[h - 2] if h > 1 else None)
                 vals = {t: max(0.0, v * mult) for t, v in vals.items()}
+            if SAFETY_CAP_X_MAX:             # MO_134: one loose, logged rail (roadmap step 2)
+                rail = SAFETY_CAP_X_MAX * s["hmax"]
+                if rail > 0 and vals["q50"] > rail:
+                    RAIL_HITS.append((s["key"], fd))
+                    vals = {t: min(v, rail) for t, v in vals.items()}
             s["hist"].append(vals["q50"])   # blended q50 seeds the next step, as MO_27 does
             _after_step(s["ctx"])
             if qs <= fd <= qe:

@@ -97,6 +97,42 @@ existing series, item x week unless stated.
 - **Exploratory, NOT a finding:** the 50/50 recursive + `direct_fixed` average (32.18 / 20.29
   / 10.47) is post hoc; it is registered as a forward challenger (`rec_dirfix`), not settled.
 
+### Added 2026-10-09 from MO_133 (combinations, seed averaging, shape; 18 origins; README 234), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Numbers are average miss %, existing
+series, item x week unless stated; * = interval excludes zero; ns = not significant.
+- **(a) Seed averaging of the direct model: small gain.** Five-seed average (direct_avg5) vs one
+  seed: -0.62 [-0.8, -0.4]*, 13+ weeks only -0.63*, all history bands; every single seed scored
+  34.70-34.90 vs 34.15 for the average. *Skeptic: SURVIVES.*
+- **(b) Recursive + fixed direct (50/50, rec_dir5) beats the current recursive model at item x
+  week, including established series:** -3.42*, 13+ weeks only -3.48 [-5.7, -0.6]*. At portfolio
+  x month the gain (-3.29*) is not significant when scored within history bands (-2.23 [-5.2,
+  +1.5] ns). Same origins and data as the design, so not out-of-sample (fresh seeds and machine
+  only). *Skeptic: SURVIVES WITH CAVEATS.*
+- **(c) No combination beats last week carried forward on established series.** rec_dir5 vs last
+  value, 13+ weeks only: +0.14 / -0.39 / -1.34 (item x week / account x month / portfolio x
+  month), all ns. The gains are confined to young items (under 13 weeks and 13-25 weeks); the 52+
+  band ties (-0.28 / -0.43 / -0.96 ns). The pre-registered P4 (rec_dir5_flat beats last value at
+  item x week and account x month) FAILED (-1.07 [-1.8, +0.0]). Claude's preliminary statement
+  that the combination "beats last value at the planning levels" is withdrawn. *Skeptic: the
+  "combos beat last value" claim DOES NOT SURVIVE.* Do not cite as a gain over last value.
+- **(d) Start-anchoring the forecast shape adds no detectable difference** (anchored minus
+  unanchored rec_dir5: +0.01 / +0.03 / +0.68 ns). *Skeptic: SURVIVES as "no detectable
+  difference".*
+- **(e) Method rules, propose SETTLED.** (i) Report band-separated portfolio x month and
+  13+-weeks-only results next to every pooled number. (ii) Shape scores use a majority-direction
+  baseline (not 50%), and for fewer than 10 origins report per-origin values and an exact sign
+  test (the block bootstrap degenerates: 6 origins gave 10 distinct resamples). *Skeptic: from
+  the must-fix list after the MO_133 review; the "2026 worse than chance" shape claim DOES NOT
+  SURVIVE (41 real moves, intervals include chance); the 2026 account x month shape result
+  (direct_avg5 and rec_dir5 rank correlation above zero in 6 of 6 origins, exact sign test
+  p=0.016) SURVIVES WITH CAVEATS.*
+- **(f) Open blocker "model worse than flat on 52+ weeks" stands:** rec_dir5 26.5 vs last value
+  25.8. *Skeptic: stands.*
+- **EXPLORATORY, post hoc, NOT a finding:** in the 6 overlapping 2026 origins (two years of
+  history, including the winter dates the skeptic flagged) most combinations lead last value at
+  every level (rec_dir5 28.5 / 17.2 / 8.9 vs 30.4 / 19.9 / 13.1); in the 12 origins of 2025 they
+  tie. Not significance-tested; the forward tracker is the test.
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.
