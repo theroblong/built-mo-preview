@@ -49,6 +49,22 @@ PREDICTIONS, RECORDED BEFORE ANY WORKER RUN:
   P4  rec_dir5_flat beats flat at cell x week AND account x month with CIs excluding 0.
   P5  Cross-machine check: |recursive_w - recursive (laptop)| < 0.5 at cell x week.
   P6  Shape: no arm beats chance (precision CI > 50 and r CI > 0) at account x month.
+
+ADDED 2026-10-09, BEFORE any start-anchored arm was computed (Jason, on the v5 chart: the
+lines' shape looks right but they start at the wrong level; "they could get even closer with
+some adjustments"). START-ANCHORED SHAPE: keep a model's 13-week path, rescale it so its
+week-1 value equals the last known level:
+    <parent>_anchF   = parent_h x clip(flat / parent_week1, 0.25, 4)
+    <parent>_anchL4W = parent_h x clip(conn_L4W / parent_week1, 0.25, 4)
+  for parents recursive_w, direct_avg5, rec_dir5 (week 1 = the parent's own first forecast
+  week for that series and origin; parent_week1 <= 0 -> the anchor value, i.e. flat / L4W).
+  (MO_132's *_lvlL4W matched the 13-week MEAN instead, and did not help.)
+  P7  At least one start-anchored arm beats flat at cell x week AND account x month with
+      CIs excluding 0.
+  P8  Start-anchored arms keep their parent's shape: portfolio x week precision CI above 50
+      for direct_avg5_anchF and rec_dir5_anchF.
+  P9  On the 2026 origins only (2025-12 .. 2026-05, when a 104-week seasonal index first
+      exists), some arm beats chance on shape at account x month. Only 6 origins: wide CIs.
 """
 from __future__ import annotations
 
@@ -139,15 +155,19 @@ def score(result_dirs: list[str]) -> None:
     r["date"] = pd.to_datetime(r["date"], utc=True)
     zero = (r["is_new"] | (r["band"] == "lapsed")).values
     worker_arms = ["recursive_w"] + [f"direct_fixed_s{k}" for k in SEEDS]
+    week1 = {}                                       # (origin, series) -> each arm's first forecast week
     for arm in worker_arms:
-        parts = [pd.read_parquet(f) for d in result_dirs for f in sorted(Path(d).glob(f"mo133_{arm}_*.parquet"))]
+        # origin comes from the file name: horizons overlap, so (series, date) alone is ambiguous
+        parts = [pd.read_parquet(f).assign(origin=f.stem.rsplit("_", 1)[1])
+                 for d in result_dirs for f in sorted(Path(d).glob(f"mo133_{arm}_*.parquet"))]
         if not parts:
             raise SystemExit(f"no results for {arm}")
         cp = pd.concat(parts, ignore_index=True)
         cp["date"] = pd.to_datetime(cp["date"], utc=True)
-        cp = cp.drop_duplicates(["series", "date"])
+        assert not cp.duplicated(["origin", "series", "date"]).any(), f"{arm}: duplicate forecasts"
+        week1[arm] = cp.sort_values("date").groupby(["origin", "series"])[arm].first()
         n0 = len(r)
-        r = r.merge(cp[["series", "date", arm]], on=["series", "date"], how="left")
+        r = r.merge(cp[["origin", "series", "date", arm]], on=["origin", "series", "date"], how="left")
         assert len(r) == n0
         miss = np.isnan(r[arm].values) & ~zero
         print(f"  {arm}: origins {r.loc[~np.isnan(r[arm].values), 'origin'].nunique()}, "
@@ -158,8 +178,21 @@ def score(result_dirs: list[str]) -> None:
     r["rec_dir1"] = 0.5 * r["recursive_w"] + 0.5 * r["direct_fixed_s42"]
     r["rec_dir5"] = 0.5 * r["recursive_w"] + 0.5 * r["direct_avg5"]
     r["rec_dir5_flat"] = (r["recursive_w"] + r["direct_avg5"] + r["flat"]) / 3
+    # start-anchored shape (pre-registered P7-P9): parent path x clip(anchor / parent week 1)
+    w1 = pd.DataFrame(week1)
+    w1["direct_avg5"] = w1[seeds].mean(axis=1)
+    w1["rec_dir5"] = 0.5 * w1["recursive_w"] + 0.5 * w1["direct_avg5"]
+    idx = pd.MultiIndex.from_arrays([r["origin"], r["series"]])
+    anchored = []
+    for parent in ("recursive_w", "direct_avg5", "rec_dir5"):
+        p1 = w1[parent].reindex(idx).values
+        for tag, anchor in (("anchF", "flat"), ("anchL4W", "conn_L4W")):
+            ratio = np.clip(r[anchor].values / np.where(p1 > 0, p1, np.nan), 0.25, 4.0)
+            name = f"{parent}_{tag}"
+            r[name] = np.where(zero, 0.0, np.where(np.isfinite(ratio), r[parent].values * ratio, r[anchor].values))
+            anchored.append(name)
     arms = ["flat", "conn_L4W", "recursive", "recursive_w", "direct_fixed_s42", "direct_avg5",
-            "rec_dir1", "rec_dir5", "rec_dir5_flat", "mo130", "blend"]
+            "rec_dir1", "rec_dir5", "rec_dir5_flat", "mo130", "blend"] + anchored
     r.to_parquet(OUT_ROWS)
     ex = r[~r["is_new"]]
     res = {"existing": M.score_levels(ex, arms), "planning_total": M.score_levels(r, arms), "arms": arms}
@@ -177,7 +210,7 @@ def score(result_dirs: list[str]) -> None:
     print("\nMARGINS OF ERROR (moving-block bootstrap over origins, block 3)")
     for x, y in (("direct_avg5", "direct_fixed_s42"), ("rec_dir5", "recursive_w"), ("rec_dir5", "flat"),
                  ("rec_dir5_flat", "flat"), ("rec_dir1", "recursive_w"), ("recursive_w", "flat"),
-                 ("recursive_w", "recursive")):
+                 ("recursive_w", "recursive")) + tuple((a, "flat") for a in anchored):
         row = []
         for lvl, _ in M.LEVELS_V2:
             b = M.bootstrap_diff(ex, x, y, level=lvl, n=2000)
@@ -188,8 +221,13 @@ def score(result_dirs: list[str]) -> None:
     res["shape"] = {"portfolio x week": P.shape_scores(exs, arms, ["origin"], "date"),
                     "account x month": P.shape_scores(exs[exs["full_month"]], arms, ["origin", "account"], "month"),
                     "turns (portfolio x week)": P.turn_scores(exs, arms)}
+    late = exs[exs["origin"] >= "2025-12"]           # first origins with a 104-week seasonal index
+    res["shape"]["2026 origins: portfolio x week"] = P.shape_scores(late, arms, ["origin"], "date")
+    res["shape"]["2026 origins: account x month"] = P.shape_scores(
+        late[late["full_month"]], arms, ["origin", "account"], "month")
     print("\n=== SHAPE (chance: precision 50, r 0; * = beats chance on both) ===")
-    for lvl in ("portfolio x week", "account x month"):
+    for lvl in ("portfolio x week", "account x month", "2026 origins: portfolio x week",
+                "2026 origins: account x month"):
         Sl = res["shape"][lvl]
         print(f"  {lvl}")
         for x in arms:
@@ -213,6 +251,15 @@ def score(result_dirs: list[str]) -> None:
          f"cw recursive_w {E[CW]['recursive_w']:.2f} vs laptop {E[CW]['recursive']:.2f}"),
         ("P6", not any(A[x]["beats_chance"] for x in arms),
          "beats chance at am: " + (", ".join(x for x in arms if A[x]["beats_chance"]) or "none")),
+        ("P7", any(ci(f"{a}-flat | {CW}")["ci95"][1] < 0 and ci(f"{a}-flat | {AM}")["ci95"][1] < 0 for a in anchored),
+         "anchored - flat cw/am: " + "; ".join(
+             f"{a} {ci(f'{a}-flat | {CW}')['diff']:+.2f}/{ci(f'{a}-flat | {AM}')['diff']:+.2f}" for a in anchored)),
+        ("P8", all(res["shape"]["portfolio x week"][a]["precision_ci"][0] > 50
+                   for a in ("direct_avg5_anchF", "rec_dir5_anchF")),
+         "pw precision CI low: " + ", ".join(
+             f"{a} {res['shape']['portfolio x week'][a]['precision_ci'][0]:.1f}" for a in ("direct_avg5_anchF", "rec_dir5_anchF"))),
+        ("P9", any(res["shape"]["2026 origins: account x month"][x]["beats_chance"] for x in arms),
+         "2026 am beats chance: " + (", ".join(x for x in arms if res["shape"]["2026 origins: account x month"][x]["beats_chance"]) or "none")),
     ]
     print("\nPREDICTIONS")
     res["predictions"] = {}
