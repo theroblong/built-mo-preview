@@ -1,0 +1,36 @@
+{
+  "cutoff": "2026-09-06",
+  "test": false,
+  "adds_to": "2026-09-06.parquet",
+  "registered_at_utc": "2026-10-09T12:40:05+00:00",
+  "code_commit": "cef344c7632672355c1f1e8e0d4b1dee3eae24bf",
+  "scripts_tree_clean": true,
+  "data_max_week": "2026-09-06",
+  "contenders": [
+    "direct_fixed",
+    "rec_dirfix"
+  ],
+  "definitions": {
+    "direct_fixed": "MO_132 direct_fixed (MO_26D settings, calendar-week targets, refit on all targets).",
+    "rec_dirfix": "0.5 x recursive + 0.5 x direct_fixed. Found post hoc in MO_132 (exploratory 32.18 / 20.29 / 10.47); registered here instead of claimed. PREDICTION: beats recursive at all three levels; ties flat at cell x week and account x month; beats flat at portfolio x month."
+  },
+  "fell_back_to_flat": 0,
+  "n_rows": 27521,
+  "sha256": {
+    "add": "cff04ad277fdbb120b571afd2bcf8fcbfa346a560f5e15d5d4aba9ebd96627e2",
+    "base_registration": "9218b3a77509211cda3b10d97366d64697a5adb820a8d093d3d359fef4618ce6",
+    "panel": "ba667b56ff1164001f59ce819c129de7eea9f42fd550395b3a42fa6c30fdc04d",
+    "code": {
+      "MO_131_forward_tracker.py": "28d05a8a1be3a1696b4dfbb0818e73b3527ebb91e15e69b3a8fbaeac9420caa3",
+      "MO_80_quarterly_honest_backtest.py": "2b523fb55b3d73d413773f4448858a581d2e0f04e32277633bf80e5011fae3fc",
+      "MO_129_honest_rebaseline.py": "d54a2515673fe5d9aa7be9870480308a9ab6f748724a7b0512e05759dceebc9d",
+      "MO_130_anchor_plus_corrections.py": "a492c52ab2a8690d638ee80e617343771cd735644fe1b7a11bf2d1b3ee6b985a",
+      "mo_panel.py": "c558ec4711e940fe6593dde53bd5776827ccc5f8240da1fad55aa022e6db025a",
+      "MO_27_retailer_sales_forecast.py": "102049c25eba390930b75cf06f6b056da437b3bc7f21dbd2aaefb169f60dc636",
+      "MO_27D_direct_forecast.py": "3f7103c3cb4ec1bd8c279e95604ecef60be6cb849bc79eb8ba65a891aa57d229",
+      "MO_132_one_yardstick.py": "8ccea60cc355d793f97c7594215c7f144a92be147e7607729030dc476018f1f5",
+      "MO_26D_direct_multihorizon_train.py": "91066cccd04f5b4fb1ead8cfc7f590b3736cdb7badc6e037d429f7b824fe2f44"
+    }
+  },
+  "decision_rule": "none attached; rewritten under MO_132 (all data, always-valid intervals)"
+}
