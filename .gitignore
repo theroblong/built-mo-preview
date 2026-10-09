@@ -4,8 +4,8 @@ __pycache__/
 .gh-config/
 scripts/.env
 scripts/outputs/
-docs/CustomerDim*.xlsx
 docs/CustomerExport*
+docs/Customer Export*
 .claude/settings.local.json
 .claude/related-repos.local.json
 .claude/onboarding.local.json
