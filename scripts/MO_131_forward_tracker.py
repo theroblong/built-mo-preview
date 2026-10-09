@@ -231,6 +231,61 @@ def register(trees: int | None, cutoff: str | None = None) -> None:
           if not test else "  (TEST registration -- never commit)")
 
 
+ADD_PREDICTIONS = {
+    "direct_fixed": "MO_132 direct_fixed (MO_26D settings, calendar-week targets, refit on all targets).",
+    "rec_dirfix": ("0.5 x recursive + 0.5 x direct_fixed. Found post hoc in MO_132 (exploratory "
+                   "32.18 / 20.29 / 10.47); registered here instead of claimed. PREDICTION: beats "
+                   "recursive at all three levels; ties flat at cell x week and account x month; beats "
+                   "flat at portfolio x month."),
+}
+
+
+def register_add() -> None:
+    """Add challengers to the newest registration WITHOUT touching it (Jason 2026-10-08):
+    direct_fixed and the 50/50 recursive + direct_fixed combination, in their own file."""
+    import MO_132_one_yardstick as P                # MO_132 asserts donor neutralization at import
+    if not TEST_MODE and (dirty := _dirty_scripts()):
+        raise SystemExit(f"scripts/ has uncommitted changes -- commit first:\n{dirty}")
+    feats_d = list(json.loads((SCRIPTS / P.DIRECT_META).read_text())["features_used"])
+    feats_r = list(pickle.load(open(MODEL_PKL, "rb")).feature_name_)
+    df = M.load_panel(list(dict.fromkeys(feats_r + feats_d)))
+    df["tdp"] = pd.to_numeric(df["tdp"], errors="coerce")
+    cut = df["__time"].max()
+    tag = str(cut.date())
+    reg_p = REG_DIR / f"{tag}.parquet"
+    out = REG_DIR / f"{tag}.add-direct_fixed.parquet"
+    if not reg_p.exists():
+        raise SystemExit(f"no registration at the latest data week {tag}")
+    if out.exists():
+        print(f"already added: {out} -- refusing to overwrite"); return
+    t0 = time.time()
+    # Forward forecasts: donor features carry no look-ahead going forward, as for `recursive`.
+    M.NEUTRALIZE_DONOR_FEATURES = False
+    p = P.run_direct(M.cutoff_frame(df, cut), feats_d, cut, refit=True, calendar=True)
+    reg = pd.read_parquet(reg_p)[["series", "date", "lapsed", "recursive", "flat"]]
+    reg["date"] = pd.to_datetime(reg["date"], utc=True)
+    p["date"] = pd.to_datetime(p["date"], utc=True)
+    r = reg.merge(p, on=["series", "date"], how="left")
+    miss = int((r["value"].isna() & ~r["lapsed"]).sum())
+    r["direct_fixed"] = np.where(r["lapsed"], 0.0, r["value"].fillna(r["flat"]))
+    r["rec_dirfix"] = 0.5 * r["recursive"] + 0.5 * r["direct_fixed"]
+    r = r[["series", "date", "direct_fixed", "rec_dirfix"]]
+    r.to_parquet(out)
+    meta = {"cutoff": tag, "test": TEST_MODE, "adds_to": reg_p.name,
+            "registered_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "code_commit": _git_head(), "scripts_tree_clean": not _dirty_scripts(),
+            "data_max_week": tag, "contenders": list(ADD_PREDICTIONS), "definitions": ADD_PREDICTIONS,
+            "fell_back_to_flat": miss, "n_rows": len(r),
+            "sha256": {"add": _sha256(out), "base_registration": _sha256(reg_p),
+                       "panel": _sha256(SCRIPTS / M.PARQUET),
+                       "code": {f: _sha256(SCRIPTS / f) for f in CODE_FILES + ["MO_132_one_yardstick.py",
+                                                                             "MO_26D_direct_multihorizon_train.py"]}},
+            "decision_rule": "none attached; rewritten under MO_132 (all data, always-valid intervals)"}
+    (REG_DIR / f"{tag}.add-direct_fixed.meta.json").write_text(json.dumps(meta, indent=2, default=str))
+    print(f"  wrote {out.name} ({len(r):,} rows; fell back to flat {miss}) | {time.time() - t0:,.0f}s")
+    print("  COMMIT these files now." if not TEST_MODE else "  (TEST -- never commit)")
+
+
 def score() -> None:
     feats, df = _load()
     panel_end = df["__time"].max()
@@ -246,6 +301,17 @@ def score() -> None:
         reg = pd.read_parquet(f)
         if _sha256(f) != meta.get("sha256", {}).get("registration", _sha256(f)):
             raise SystemExit(f"{f.name} changed after it was saved -- refusing to score")
+        for af in sorted(REG_DIR.glob(f"{tag}.add-*.parquet")):     # challengers added later
+            am = json.loads(af.with_suffix(".meta.json").read_text())   # <tag>.add-<x>.meta.json
+            if am.get("test") and not TEST_MODE:
+                continue
+            if _sha256(af) != am["sha256"]["add"]:
+                raise SystemExit(f"{af.name} changed after it was saved -- refusing to score")
+            add = pd.read_parquet(af)
+            add["date"] = pd.to_datetime(add["date"], utc=True)
+            reg["date"] = pd.to_datetime(reg["date"], utc=True)
+            reg = reg.merge(add, on=["series", "date"], how="left")
+            cons = cons + [c for c in am["contenders"] if c not in cons]
         last_wk = pd.to_datetime(reg["date"], utc=True).max()
         if last_wk > panel_end:
             print(f"  {tag}: horizon ends {last_wk.date()}, data ends {panel_end.date()} -- not yet scorable")
@@ -296,11 +362,16 @@ def score() -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["register", "score"])
+    ap.add_argument("cmd", choices=["register", "register-add", "score"])
     ap.add_argument("--trees", type=int, default=None, help="cap for smoke tests; None = production")
     ap.add_argument("--cutoff", default=None, help="TESTS ONLY: register at a past week")
     a = ap.parse_args()
-    register(a.trees, a.cutoff) if a.cmd == "register" else score()
+    if a.cmd == "register":
+        register(a.trees, a.cutoff)
+    elif a.cmd == "register-add":
+        register_add()
+    else:
+        score()
 
 
 if __name__ == "__main__":
