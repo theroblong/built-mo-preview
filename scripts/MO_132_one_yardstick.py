@@ -87,6 +87,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import pickle
 import time
@@ -280,21 +281,39 @@ def shape_scores(r: pd.DataFrame, arms: list[str], keys: list[str], period: str,
     ch = _changes(r, arms, keys, period)
     by_o = {o: g for o, g in ch.groupby(level="origin")}
     origins = sorted(by_o)
-    blocks = [origins[i:i + block] for i in range(max(1, len(origins) - block + 1))]
-    k = int(np.ceil(len(origins) / block))
-    rng = np.random.default_rng(0)
-    picks = [[o for bi in rng.integers(0, len(blocks), k) for o in blocks[bi]] for _ in range(n_boot)]
-    samples = [pd.concat([by_o[o] for o in p]) for p in picks]
-    out = {}
+    # Baseline = always calling the more common direction (MO_133 skeptic: in the 2026 subset
+    # 58.7% of real moves were down, so 50% was too lenient).
+    real = ch["actual"].abs() >= 0.02
+    up = float((ch.loc[real, "actual"] > 0).mean()) if real.any() else 0.5
+    majority = max(up, 1 - up) * 100
+    small = len(origins) < 10          # blocks of 3 over < 10 origins give a handful of distinct resamples
+    out = {"n_moves": int(real.sum()), "n_origins": len(origins), "majority_baseline": majority,
+           "method": "per-origin sign test" if small else f"block bootstrap ({block})"}
+    if not small:
+        blocks = [origins[i:i + block] for i in range(max(1, len(origins) - block + 1))]
+        k = int(np.ceil(len(origins) / block))
+        rng = np.random.default_rng(0)
+        picks = [[o for bi in rng.integers(0, len(blocks), k) for o in blocks[bi]] for _ in range(n_boot)]
+        samples = [pd.concat([by_o[o] for o in p]) for p in picks]
     for arm in arms:
         d, p, c, rr = _shape_metrics(ch, arm)
-        bs = np.array([_shape_metrics(s, arm) for s in samples], dtype=float)
-        lo, hi = np.nanpercentile(bs, 2.5, axis=0), np.nanpercentile(bs, 97.5, axis=0)
-        out[arm] = {"direction": float(d), "precision": float(p), "call_rate": float(c), "change_r": rr,
-                    "precision_ci": (float(lo[1]), float(hi[1])), "change_r_ci": (float(lo[3]), float(hi[3])),
-                    "beats_chance": bool(lo[1] > 50 and lo[3] > 0)}
-    out["n_moves"] = int((ch["actual"].abs() >= 0.02).sum())
-    out["n_origins"] = len(origins)
+        res = {"direction": float(d), "precision": float(p), "call_rate": float(c), "change_r": rr}
+        if small:
+            # exact one-sided sign test: is the change correlation positive in more origins than chance?
+            per = {o: _shape_metrics(g, arm) for o, g in by_o.items()}
+            rs = [v[3] for v in per.values() if np.isfinite(v[3]) and v[3] != 0]
+            pos, n = sum(x > 0 for x in rs), len(rs)
+            pval = sum(math.comb(n, j) for j in range(pos, n + 1)) / 2 ** n if n else 1.0
+            res |= {"precision_ci": (np.nan, np.nan), "change_r_ci": (np.nan, np.nan),
+                    "per_origin": {o: {"precision": float(v[1]), "r": float(v[3])} for o, v in per.items()},
+                    "r_positive_origins": f"{pos}/{n}", "sign_test_p": float(pval),
+                    "beats_chance": bool(np.isfinite(p) and p > majority and pval < 0.05)}
+        else:
+            bs = np.array([_shape_metrics(s, arm) for s in samples], dtype=float)
+            lo, hi = np.nanpercentile(bs, 2.5, axis=0), np.nanpercentile(bs, 97.5, axis=0)
+            res |= {"precision_ci": (float(lo[1]), float(hi[1])), "change_r_ci": (float(lo[3]), float(hi[3])),
+                    "beats_chance": bool(lo[1] > majority and lo[3] > 0)}
+        out[arm] = res
     return out
 
 
@@ -556,9 +575,9 @@ def main() -> None:
                     "kroger x week": shape_scores(kro, arms, ["origin"], "date"),
                     "turns (portfolio x week)": turn_scores(exs, arms)}
     S = res["shape"]
-    print("\n=== SHAPE with 95% margins (origin block bootstrap). Chance: precision 50%, r 0 ===")
+    print("\n=== SHAPE with 95% margins (origin block bootstrap). Baseline: always calling the more common direction; r chance 0 ===")
     print("  precision = share of the arm's up/down calls that were right; calls = share of real")
-    print("  moves the arm called at all; r = rank correlation of changes; * = beats chance on both")
+    print("  moves the arm called at all; r = rank correlation of changes; * = beats the baseline and r > 0")
     for lvl in ("portfolio x week", "account x month", "kroger x week"):
         Sl = S[lvl]
         print(f"  {lvl} ({Sl['n_moves']} real moves, {Sl['n_origins']} origins)")

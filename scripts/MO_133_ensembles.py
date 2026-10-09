@@ -148,6 +148,34 @@ def compute(origins: list[str], arms: list[str], out_dir: str, feats_r, feats_d,
 
 
 # ---------------------------------------------------------------- score (laptop)
+ESTABLISHED = ("13-25 wks", "26-51 wks", "52+ wks")
+
+
+def band_separated_diff(ex: pd.DataFrame, a: str, b: str, n: int = 2000, seed: int = 0,
+                        block: int = 3) -> dict:
+    """Portfolio x month scored WITHIN each history band (cells = origin x month x band), so
+    over-forecasting one band cannot cancel under-forecasting another (MO_132/MO_133 skeptic).
+    Same moving-block bootstrap over origins as MO_80.bootstrap_diff."""
+    r = M._prep_scoring(ex, [a, b])
+    g = (r[r["full_month"]].groupby(["origin", "month", "band"], observed=True)[["actual", a, b]].sum()
+         .reset_index())
+    s = (g.assign(_ea=(g["actual"] - g[a]).abs(), _eb=(g["actual"] - g[b]).abs(), _d=g["actual"].abs())
+          .groupby("origin")[["_ea", "_eb", "_d"]].sum().sort_index())
+    origins = list(s.index)
+    blocks = [list(range(i, i + block)) for i in range(max(1, len(origins) - block + 1))]
+    k = int(np.ceil(len(origins) / block))
+    rng = np.random.default_rng(seed)
+    arr, diffs = s.values, []
+    for _ in range(n):
+        pick = [o for bi in rng.integers(0, len(blocks), k) for o in blocks[bi] if o < len(arr)]
+        tot = arr[pick].sum(axis=0)
+        diffs.append((tot[0] - tot[1]) / tot[2] * 100 if tot[2] > 0 else np.nan)
+    lo, hi = np.nanpercentile(diffs, [2.5, 97.5])
+    tot = arr.sum(axis=0)
+    return {"diff": float((tot[0] - tot[1]) / tot[2] * 100), "ci95": (float(lo), float(hi)),
+            "significant": bool(lo > 0 or hi < 0)}
+
+
 def score(result_dirs: list[str]) -> None:
     t0 = time.time()
     r = pd.read_parquet(BASE_ROWS).rename(columns={"model": "recursive"})
@@ -218,6 +246,17 @@ def score(result_dirs: list[str]) -> None:
             res["ci"][f"{x}-{y} | {lvl}"] = b
             row.append(f"{b['diff']:+6.2f} [{b['ci95'][0]:+.1f},{b['ci95'][1]:+.1f}]{'*' if b['significant'] else ' '}")
         print(f"  {x:>14s} - {y:<16s} " + "  ".join(row))
+        # skeptic must-fix: band-separated portfolio x month and established-series (13+) results
+        bs = band_separated_diff(ex, x, y)
+        res["ci"][f"{x}-{y} | portfolio x month, band-separated"] = bs
+        e13 = ex[ex["band"].isin(ESTABLISHED)]
+        row13 = []
+        for lvl, _ in M.LEVELS_V2:
+            b = M.bootstrap_diff(e13, x, y, level=lvl, n=2000)
+            res["ci"][f"{x}-{y} | {lvl}, 13+ wks"] = b
+            row13.append(f"{b['diff']:+6.2f} [{b['ci95'][0]:+.1f},{b['ci95'][1]:+.1f}]{'*' if b['significant'] else ' '}")
+        print(f"  {'':>14s}   {'pm by band':<16s} {bs['diff']:+6.2f} [{bs['ci95'][0]:+.1f},{bs['ci95'][1]:+.1f}]"
+              f"{'*' if bs['significant'] else ' '}   13+ wks only: " + "  ".join(row13))
     exs = M._prep_scoring(ex, arms)
     res["shape"] = {"portfolio x week": P.shape_scores(exs, arms, ["origin"], "date"),
                     "account x month": P.shape_scores(exs[exs["full_month"]], arms, ["origin", "account"], "month"),
@@ -226,16 +265,19 @@ def score(result_dirs: list[str]) -> None:
     res["shape"]["2026 origins: portfolio x week"] = P.shape_scores(late, arms, ["origin"], "date")
     res["shape"]["2026 origins: account x month"] = P.shape_scores(
         late[late["full_month"]], arms, ["origin", "account"], "month")
-    print("\n=== SHAPE (chance: precision 50, r 0; * = beats chance on both) ===")
+    print("\n=== SHAPE (baseline = always calling the more common direction; r chance 0; * = beats both) ===")
     for lvl in ("portfolio x week", "account x month", "2026 origins: portfolio x week",
                 "2026 origins: account x month"):
         Sl = res["shape"][lvl]
-        print(f"  {lvl}")
+        print(f"  {lvl} -- {Sl['n_moves']} real moves, {Sl['n_origins']} origins, {Sl['method']}, "
+              f"majority-direction baseline {Sl['majority_baseline']:.1f}%")
         for x in arms:
             v = Sl[x]
-            print(f"    {x:<18s} precision {v['precision']:5.1f} [{v['precision_ci'][0]:5.1f},{v['precision_ci'][1]:5.1f}]"
-                  f"  calls {v['call_rate']:5.1f}%  r {v['change_r']:+.2f} "
-                  f"[{v['change_r_ci'][0]:+.2f},{v['change_r_ci'][1]:+.2f}]{'  *' if v['beats_chance'] else ''}")
+            unc = (f"r>0 in {v['r_positive_origins']} origins (sign test p={v['sign_test_p']:.3f})" if "sign_test_p" in v
+                   else f"precision CI [{v['precision_ci'][0]:5.1f},{v['precision_ci'][1]:5.1f}] r CI "
+                        f"[{v['change_r_ci'][0]:+.2f},{v['change_r_ci'][1]:+.2f}]")
+            print(f"    {x:<18s} precision {v['precision']:5.1f}  calls {v['call_rate']:5.1f}%  r {v['change_r']:+.2f}  "
+                  f"{unc}{'  *' if v['beats_chance'] else ''}")
     ci = lambda k: res["ci"][k]
     CW, AM, PM = "cell x week", "account x month", "portfolio x month"
     A = res["shape"]["account x month"]
