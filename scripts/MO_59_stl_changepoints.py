@@ -42,11 +42,14 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.gridspec import GridSpec
+try:            # plotting only: the GPU worker image has no matplotlib, and the seasonal index
+    import matplotlib    # (compute_seasonal_index, used by MO_80.seasonal_index_at) needs none
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    from matplotlib.gridspec import GridSpec
+except ImportError:
+    plt = mpatches = GridSpec = None
 from statsmodels.tsa.seasonal import STL
 import ruptures as rpt
 

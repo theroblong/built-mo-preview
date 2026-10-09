@@ -256,20 +256,45 @@ def _changes(r, arms, keys, period):
     return ((cur - pre) / pre.where(pre.abs() > 1e-9)).dropna(how="all")
 
 
-def shape_scores(r: pd.DataFrame, arms: list[str], keys: list[str], period: str) -> dict:
+def _shape_metrics(sub: pd.DataFrame, arm: str) -> tuple[float, float, float, float]:
+    """direction % of real moves called right (a non-call counts as a miss); precision % of
+    calls that were right (chance = 50); call rate %; rank correlation of changes (chance = 0)."""
+    a, f = sub["actual"], sub[arm]
+    ok = a.notna() & f.notna()
+    real = (a.abs() >= 0.02) & ok
+    called = real & (f.abs() >= 0.005)
+    right = called & (np.sign(f) == np.sign(a))
+    n_real, n_called = int(real.sum()), int(called.sum())
+    # rank correlation: small accounts' huge % swings would swamp a Pearson r
+    rr = a[ok].corr(f[ok], method="spearman") if ok.sum() > 2 and f[ok].std() > 1e-12 else 0.0
+    return (right.sum() / n_real * 100 if n_real else np.nan,
+            right.sum() / n_called * 100 if n_called else np.nan,
+            n_called / n_real * 100 if n_real else np.nan, float(rr))
+
+
+def shape_scores(r: pd.DataFrame, arms: list[str], keys: list[str], period: str,
+                 n_boot: int = 400, block: int = 3) -> dict:
+    """Shape skill with margins of error: moving-block bootstrap over ORIGINS (the 13-week
+    horizons overlap, so periods inside an origin are not independent). Chance baselines:
+    precision 50%, change correlation 0 (skeptic 2026-10-08: report precision + CIs)."""
     ch = _changes(r, arms, keys, period)
-    a = ch["actual"]
-    real = a.abs() >= 0.02
+    by_o = {o: g for o, g in ch.groupby(level="origin")}
+    origins = sorted(by_o)
+    blocks = [origins[i:i + block] for i in range(max(1, len(origins) - block + 1))]
+    k = int(np.ceil(len(origins) / block))
+    rng = np.random.default_rng(0)
+    picks = [[o for bi in rng.integers(0, len(blocks), k) for o in blocks[bi]] for _ in range(n_boot)]
+    samples = [pd.concat([by_o[o] for o in p]) for p in picks]
     out = {}
     for arm in arms:
-        f = ch[arm]
-        hit = (np.sign(f) == np.sign(a)) & (f.abs() >= 0.005)
-        ok = a.notna() & f.notna()
-        # rank correlation: small accounts' huge % swings would swamp a Pearson r
-        rr = a[ok].corr(f[ok], method="spearman") if ok.sum() > 2 and f[ok].std() > 1e-12 else 0.0
-        out[arm] = {"direction": float(hit[real & ok].mean() * 100) if (real & ok).any() else np.nan,
-                    "change_r": float(rr)}
-    out["n_moves"] = int(real.sum())
+        d, p, c, rr = _shape_metrics(ch, arm)
+        bs = np.array([_shape_metrics(s, arm) for s in samples], dtype=float)
+        lo, hi = np.nanpercentile(bs, 2.5, axis=0), np.nanpercentile(bs, 97.5, axis=0)
+        out[arm] = {"direction": float(d), "precision": float(p), "call_rate": float(c), "change_r": rr,
+                    "precision_ci": (float(lo[1]), float(hi[1])), "change_r_ci": (float(lo[3]), float(hi[3])),
+                    "beats_chance": bool(lo[1] > 50 and lo[3] > 0)}
+    out["n_moves"] = int((ch["actual"].abs() >= 0.02).sum())
+    out["n_origins"] = len(origins)
     return out
 
 
@@ -290,7 +315,7 @@ def turn_scores(r: pd.DataFrame, arms: list[str]) -> dict:
     # weekly path per origin chained from matched-series changes (composition-free)
     ch = _changes(r, arms, ["origin"], "date").fillna(0.0)
     pw = (1 + ch).groupby(level="origin").cumprod()
-    res = {a: [0, 0] for a in arms}
+    res = {a: [0, 0, 0] for a in arms}
     n_actual = 0
     for _, g in pw.groupby(level="origin"):
         at = _turns(g["actual"].values)
@@ -299,7 +324,10 @@ def turn_scores(r: pd.DataFrame, arms: list[str]) -> dict:
             ft = _turns(g[a].values)
             res[a][0] += sum(any(ft_t == t and abs(fi - i) <= 2 for fi, ft_t in ft) for i, t in at)
             res[a][1] += len(ft)
-    return {a: {"turns_hit": (v[0] / n_actual * 100) if n_actual else np.nan, "turns_called": v[1]}
+            res[a][2] += sum(any(t == ft_t and abs(fi - i) <= 2 for i, t in at) for fi, ft_t in ft)
+    # turns_hit = actual turns matched (recall); turns_precision = called turns that were real
+    return {a: {"turns_hit": (v[0] / n_actual * 100) if n_actual else np.nan, "turns_called": v[1],
+                "turns_precision": (v[2] / v[1] * 100) if v[1] else np.nan}
             for a, v in res.items()} | {"actual_turns": n_actual}
 
 
@@ -528,16 +556,21 @@ def main() -> None:
                     "kroger x week": shape_scores(kro, arms, ["origin"], "date"),
                     "turns (portfolio x week)": turn_scores(exs, arms)}
     S = res["shape"]
-    print("\n=== SHAPE (higher is better): direction %, change correlation, turns matched % ===")
-    print(f"  {'arm':<22s}{'port wk dir':>12s}{'r':>6s}{'acct mo dir':>12s}{'r':>6s}{'kroger dir':>11s}{'r':>6s}{'turns':>7s}")
-    for x in sorted(arms, key=lambda k: -S["portfolio x week"][k]["change_r"]):
-        pw_, am_, kw_, tu_ = (S["portfolio x week"][x], S["account x month"][x], S["kroger x week"][x],
-                             S["turns (portfolio x week)"][x])
-        print(f"  {x:<22s}{pw_['direction']:>12.1f}{pw_['change_r']:>6.2f}{am_['direction']:>12.1f}"
-              f"{am_['change_r']:>6.2f}{kw_['direction']:>11.1f}{kw_['change_r']:>6.2f}{tu_['turns_hit']:>7.1f}")
-    print(f"  (real moves: portfolio wk {S['portfolio x week']['n_moves']}, account mo "
-          f"{S['account x month']['n_moves']}, kroger wk {S['kroger x week']['n_moves']}; "
-          f"actual turns {S['turns (portfolio x week)']['actual_turns']})")
+    print("\n=== SHAPE with 95% margins (origin block bootstrap). Chance: precision 50%, r 0 ===")
+    print("  precision = share of the arm's up/down calls that were right; calls = share of real")
+    print("  moves the arm called at all; r = rank correlation of changes; * = beats chance on both")
+    for lvl in ("portfolio x week", "account x month", "kroger x week"):
+        Sl = S[lvl]
+        print(f"  {lvl} ({Sl['n_moves']} real moves, {Sl['n_origins']} origins)")
+        for x in sorted(arms, key=lambda k: -(Sl[k]["change_r"] or 0)):
+            v = Sl[x]
+            print(f"    {x:<22s} precision {v['precision']:5.1f} [{v['precision_ci'][0]:5.1f},{v['precision_ci'][1]:5.1f}]"
+                  f"  calls {v['call_rate']:5.1f}%  r {v['change_r']:+.2f} [{v['change_r_ci'][0]:+.2f},{v['change_r_ci'][1]:+.2f}]"
+                  f"{'  *' if v['beats_chance'] else ''}")
+    tu = S["turns (portfolio x week)"]
+    print(f"  turns (portfolio x week, {tu['actual_turns']} actual): " + "; ".join(
+        f"{x} matched {tu[x]['turns_hit']:.0f}% / called {tu[x]['turns_called']} / right {tu[x]['turns_precision']:.0f}%"
+        for x in arms if tu[x]["turns_called"]))
 
     # ---- level bias by distribution trend
     trend = pd.concat([tdp_trend(df, M._utc(c)).rename("trend").to_frame().assign(origin=lbl)
