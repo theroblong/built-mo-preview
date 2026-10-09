@@ -178,6 +178,7 @@ def score(result_dirs: list[str]) -> None:
     r["rec_dir1"] = 0.5 * r["recursive_w"] + 0.5 * r["direct_fixed_s42"]
     r["rec_dir5"] = 0.5 * r["recursive_w"] + 0.5 * r["direct_avg5"]
     r["rec_dir5_flat"] = (r["recursive_w"] + r["direct_avg5"] + r["flat"]) / 3
+    r["blend"] = 0.5 * r["mo130"] + 0.5 * r["flat"]  # MO_132 definition (laptop mo130; reference only)
     # start-anchored shape (pre-registered P7-P9): parent path x clip(anchor / parent week 1)
     w1 = pd.DataFrame(week1)
     w1["direct_avg5"] = w1[seeds].mean(axis=1)
