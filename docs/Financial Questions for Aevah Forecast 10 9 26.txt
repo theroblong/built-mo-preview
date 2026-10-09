@@ -1,0 +1,273 @@
+Financial Questions for Aevah Forecast-20261009_093251-Meeting Recording
+October 9, 2026, 3:32PM
+56m 44s
+ Brian Cluster started transcription
+ Robert Long   0:03 Grab all the data sources that Connor's manually feeding into this Excel wizard that he's built, as people do, and automate the fetching and updating of all those data. We're using his model as a baseline, and we're measuring our machine learning training models against it.
+ Clark Nielson   0:13 Evening.
+ Robert Long   0:22 to make sure that we're giving, you know, something that can carry that intelligence forward. But there's also this, what we call the ensemble method, which is when you're with fast growth companies, one of the hardest things is where, you know, like one of the things that happened in the data will come up later in the meeting, you know, going from bars to puffs, slightly changing the size, some of the things about the product. In the data, that looks like that bar just showed up with these crazy numbers that the puffs did, when they're really a carryover because it's a Sku exchange.
+ Clark Nielson   0:49 Play Samantha.
+ Robert Long   0:57 So Brian, we're going to have to have a product data conversation very soon. We've got to stitch that together better. And then there's things that humans do very well. Think about an archer and all the math that an archer does to hit something 100 yards away. In their mind, human nature is phenomenal.
+ Clark Nielson   1:03 This way.
+ Robert Long   1:18 So the machine learning models are trying to mimic some of that. And then the other thing is you have these offsets. And so these are areas where you tune the model. And then, you know, Connor already has a lot of this built into the Excel that he's built. But how does that, how does that correlate to tuning and training these other models?
+ Clark Nielson   1:21 That's my. It's like.
+ Robert Long   1:40 So that, you know, Connor can say, okay, here's what my forecast methodology does. Here are these other voices that have this other opinion. So that gives us our confidence interval. It gives us our area of uncertainty, but it also lets us know if we have something that's diverging wildly, why? So what we're trying to do right now, Jason's got a handful of questions. because we're trying to assemble all of these data sources and make sure that we're getting this from the live data. Because the other problem is you get an update to Spins, you get an update to first party data or whatever inside of your internal data. And how long is it until that gets into the model and then it's in the forecast?
+ Clark Nielson   2:08 Photos, it's not. It's not fun.
+ Robert Long   2:21 So we're trying to collapse that time window for you guys as well. So we want to make Connor able to have what he wants at the push of a button much faster, much easier with the same or better accuracy. Like that's the stated goal right now. So
+ Clark Nielson   2:33 Don't follow me.
+ Robert Long   2:39 And of course, Bracken's goal is 5%. I think Connor, Connor is in the sort of the 7 to 10% range, but you know, 5% is like Nirvana. So when we have, you know, we've seen 4.4% on some of the things where we have three years of uninterrupted data. But when you start slicing and getting the data, you know, so now we're saying,
+ Clark Nielson   2:39 Just popped on the. Ach. Would you get with me after? It met me afterwards.
+ Robert Long   2:58 How do we stitch the data together so we can so we can maintain that accuracy across the whole catalog? So, Brian, does that align with your understanding as well?
+ Brian Cluster   3:10 That's pretty much where we're at.
+ Robert Long   3:13 Cool. In the invite you had put in the Agenda. The the six questions, so Jason. Are these the questions you and Nick? Because these look like the ones that you sent me in our conversation chat earlier. So do you want to work through those six and see where we land and what's missing?
+ Jason Brazeal   3:35 Yes.
+ Clark Nielson   3:39 Yeah, over.
+ Jason Brazeal   3:39 We can work through those six or we can summarize those six essentially as, you know, how are those promos being registered for the transactions in Netsuite or do they live in a spreadsheet? I know that we've had some conversations about the process that Connor goes through. But, you know, we have a promo calendar from Brian, which is pretty extensive. We've talked about the fact that there's some promos that are planned and some that actually happen. But the GL question was more of like, is there any official record in the general ledger that ties back to transactions in Netsuite that we should
+ Clark Nielson   4:20 Anderson.
+ Jason Brazeal   4:22 be tracing or is it more just going off of these planning spreadsheets and other inputs? Does that make sense?
+ Clark Nielson   4:22 And... It worked out. Yeah.
+ Jason Brazeal   4:34 Promo calendar, yeah, and promo match files.
+ Clark Nielson   4:35 Yeah. So these questions, when you like, which dim chart of accounts holds trade promo, is there a detail or data set you've been given that has that field? Or I guess, Brian, what have we provided then that's coming from?
+ Jason Brazeal   4:51 It's a data model. It was a it was just a data model from Netsuite with the dimensions and so forth.
+ Brian Cluster   5:00 Is probably.
+ Clark Nielson   5:02 Okay.
+ Brian Cluster   5:04 For something.
+ Clark Nielson   5:04 Yeah. So, um... Yeah, we're, this is, I'll give you an overview, not necessarily an order, but we have an accrual that is, we're not accruing at the promotion level for the vast majority of our customers. club, like Sam's Club and Costco is the exception to that. And so we have an accrual, which is sort of roughly based on run rates of like how, what level of promotions or discounts we've had. from our various customers. And so that accrual is stored in a liability balance sheet account. And then as we receive deductions after the fact, sometimes it might be a month later, sometimes two or three, those transactions, whether it's a credit memo or sometimes on a payment request. those transactions are deducted from the accrual. So we're accruing based on like a 10% or 15% or 20% estimated trade rate, which is, I'd say, pretty unsophisticated. estimate that's not necessarily like there's no reconciliation process in a meaningful way between our accrual and the planned promos. So to the extent there's available data, it is here's transactions that hit the accrual. by a customer, right, but not at the promo level. And when I say by a customer, it's at a like a built customer level, not the like end customer. So when you have a distributor, then it's not being assigned from a dot or a K here unified down to like. CVS or Walgreens or whoever's buying from that distributor. I'll pause just what's so anything I so far that I've said that you have a question about other than that that sounds like a mess.
+ Jason Brazeal   7:20 Yeah, that makes... No, that makes sense. I mean, that it makes a lot of sense. It answers some of those questions too, because I think what you're saying is that, you know, you're tracking those accruals and you're dealing with distributors. You're not dealing with directly with retailers. So we've been using primarily the retail point of sale data to do a lot of this forecasting. We were also talking about bringing in some of this trade promo data so that we could use it as an additional signal. We've got some retailers that are sort of data dark that don't have Spins data.
+ Clark Nielson   7:46 Mhm.
+ Jason Brazeal   8:02 others that only have Circana data and they have different levels of data. So, we're looking at bridging those.
+ Clark Nielson   8:07 Yeah, so, so we have a mix of direct, a direct, and indirect customers, so there are customers where you know they're a direct customer, but but then there's also a significant proportion that is through.
+ Jason Brazeal   8:23 Gotcha. But I guess what I'm hearing so far is that there's no direct tie.
+ Clark Nielson   8:27 But it's not assigned to a Sku. It's not assigned to a UPC. It's not assigned to a promotional event. We do have, you know, a pretty detailed data set of deductions through a through Promomash.
+ Jason Brazeal   8:30 Yeah. Right.
+ Clark Nielson   8:46 But we may not have that going forward because we're actually, we're, you know, we have a trade promotion management tool and I would say through a combination of our fault and or theirs, like we've had poor adoption and haven't utilized it successfully and there's some tools, there's some features it doesn't have that we want it to have. So they have a much more detailed coding than our GL has. Like we have a data set that has a pretty detailed coding of deductions by end customer and by item and... promotion type, right? But within our GL, then we just, we have like. promotion and slotting fees. And again, it's often accrued and then deducted after the fact. And there, yeah. So, so that's kind of like the world of available or potential data. But the GL is probably going to be a tough. A lot of it might not be that meaningful.
+ Jason Brazeal   9:54 Understood. Yeah, no, I... In my previous life, I dealt with rebates and reconciling transactions from rebates to how you actually get the rebates. So I'm tracking with you. I saw Brian chiming in and we have talked with Brian about using some of that Promomash information, at least, you know, testing, mapping it in, understanding it. It's interesting what you're saying about additional features that you want that Promomash didn't have. So I think we'd be curious to talk about that at some point too.
+ Brian Cluster   10:27 I, I think one of the broadest ones is to be able to have, like, forecast routes.
+ Clark Nielson   10:29 Yeah, I yeah, I think one of the broadest ones is just being able to have like forecast versions throughout time. Like, oh, here was the forecast version and then we're making changes and here's a new forecast version. And there, it's like there would be a single forecast version if you make edits to it. That's now sort of like LE, you can't like lock a budget. or a prior version in time. So, like, it just didn't serve our needs, and as true as a planning tool.
+ Jason Brazeal   10:59 So you're talking about you did a forecast and then the actual occurred and now you want to go back and see how well the forecast compared to the actuals.
+ Clark Nielson   11:11 Yeah, I guess and and like say you have an annual budget and then you update it three months or six months later to be able to have both views live at the same time. It's not. Possible.
+ Jason Brazeal   11:26 Okay. Good to know.
+ Clark Nielson   11:30 But I, yeah, I mean... Yeah, we have a couple of openings currently on our MP&A team, and you know, these are areas that we that we we want to make improvements in, right? So, I think the current state of play is not the desired interesting. Dateline.
+ Jason Brazeal   11:52 Gotcha.
+ Clark Nielson   11:54 Yeah.
+ Jason Brazeal   11:55 And.
+ Robert Long   11:55 I just spent two weeks at conferences, Clark, and I've heard literally from so many people that their FFN A teams are so busy that even if they did hire somebody, they don't even have the time to train them. Like, it's nuts.
+ Clark Nielson   11:58 Yeah. Yeah. OK, can you? OK, that'd be perfect. That's what we want to solve for, yeah.
+ Jason Brazeal   12:16 That's part of what we're trying to. Cogitate, yeah, to sort of bring into the model. And part of that is, you know, we're like Rob said, we're using what you guys are doing as a baseline. We want to, you know, match or beat that just using the data alone. But there is those exogenous
+ Clark Nielson   12:23 Yeah, yeah. And. OK, OK, that's perfect. Thank you so much.
+ Jason Brazeal   12:38 factors, the confining variables, if you will, some of which you guys have some information on. You know, what potentially what promos are coming down the pike. You know, maybe what the store expansion plan is. Not always, it's not always 100% clear, but you're getting some of that signal from the field. And blending that with the just pure math forecast, as I understand. Right. I guess that question is for Connor. You know, Connor, you're using the last four weeks, last 12 weeks, but you're also blending in other known business. colloquial qualitative forecast in addition to the quantitative forecast, right?
+ Connor Lain   13:25 Yeah, yeah, exactly. And that's pretty manual. Luckily, luckily, about 85% of our revenue is tracked in either Spins or Circana. So the 15, the other 15% that is Data Dark, the HEBs, WinCos, Trader Joe's. Luckily, that's a relatively small piece. That's pretty much pure manual from the sales team or brokers, industry, you know, things we hear about. Those are just pure assumptions, but we're pretty well covered.
+ Jason Brazeal   14:03 So we've looked at that spreadsheet and some of the other documents that we're talking about, but, and you've even taken us through that process some, but some of this was earlier on when we didn't, hadn't really looked at it yet. So what are some of the other sources that you blend together? with just the Spins and Circana forecast information. What are some of the key other sources that you use?
+ Connor Lain   14:36 As it relates to impacting demand.
+ Jason Brazeal   14:40 Demand velocity forecasting units per store per week.
+ Connor Lain   14:43 So... Yeah, I mean, most of it is from... The big ones are seasonality, which is from Spins. The other one is promotion lift assumptions, which should be from Spins, but we're in the very early innings of doing promo analysis and making sure we're using the right lift assumptions. Brian, I know, has been... working on that for a while, but I think that's where Aevah will really help. Where like right now, the sales team just kind of, for each of their accounts, they do a $1 off promotion, they assume X percent velocity lift for however long the promotion's running, and then it reverts back to the base velocity. Very, it's very. I don't know, very high level. There's not a much, there's not a lot of data to support a lot of their assumptions. We just ran a buy one, get one at Publix. The sales team member assumed 400% lift. We did 1000% lift. So we were off by a magnitude of two to three. It's just one example of where. We're struggling with the manual inputs.
+ Jason Brazeal   16:02 Yeah, it's legit. I mean, you guys are what the number one Tiktok shop brand and you get all these different things going.
+ Robert Long   16:09 I was just gonna say... Is there a way for us to pull in? And Brian, I got so many questions about influencer data as well, because people are seeing. when they're doing influencer marketing spend and they get good traction there, then we're seeing correlated brick and mortar traffic increase, right? Brick and mortar sales. And we need to be able to blend those data points together. So is Tiktok shop, is there a data feed that comes out of that?
+ Brian Cluster   16:41 Justin's laughing because he's the point on that. Go for it.
+ Connor Lain   16:46 Ohh.
+ Robert Long   16:47 No, Justin, no, no.
+ Justin Fisher   16:48 It's bad. We do have an API that is able to pull some data from Tiktok, but it is an interestingly unique data environment that is a giant mess. So that is one of my primary.
+ Robert Long   16:50 It's not worth it, man.
+ Justin Fisher   17:09 projects at the moment is trying to understand and coalesce that data into something that's actually usable.
+ Robert Long   17:17 Would you benefit from... An old data architect taking a look at that with you and spending a few minutes with you on that at some point.
+ Justin Fisher   17:25 It entirely possible the the data that.
+ Robert Long   17:29 I would definitely make time for that with you.
+ Justin Fisher   17:31 Yeah, I mean, it could be useful because it is, it's a nightmare and trying to make it usable for inside analysis would be, is a pain. So there's definitely some, quite a bit of data that we could use for forecasting there. Getting it into a usable format is going to be the crocs. It all comes over as JSON and CS.
+ Robert Long   17:53 Is it JSON? Okay, so you and I need to have a separate conversation. We need to ingest that into a programming language that then reconstructs that model and syncs it to disk in tables that you can access and make sense of. And so Aevah can just be the home to do that for you.
+ Justin Fisher   18:12 Old. For sure, we've got it in SQL, and we have it separated into tables, et cetera. The relationship between those tables, the metrics, and the underlying assumptions for each of those metrics, how they're named online versus in their documentation versus in the JSON is part of the problem. Yeah, no, no.
+ Robert Long   18:37 I worked at a Danish company that had that problem for a long time. Well, I'll sync up with you. I'm going to drop you an e-mail separately. We'll figure, yeah, we'll geek out on that.
+ Justin Fisher   18:44 I'd love to talk to you about it. It's good times.
+ Robert Long   18:47 Back to you, Jace.
+ Jason Brazeal   18:51 Thank you, so. On the GL questions again, I mean, all of those six GL questions were just an offshoot of the original question. Can we tie it back to the general ledger? I think that what we've discovered so far is that that's more of an accounting reconciliation process that's not really directly tied to transactions. So that may not be the right, you know, rock to turn over. But the Promomash thing is something that we've talked about bringing in and looking at what's been done thus far, at least, to see if there's any value there. We're also bringing in other, you know, macro indicators, just economic indicators. But even looking at like the price of gas and the price of diesel, you look at those things over the last couple of years and relatively speaking, they've been pretty steady. And then more recently, all of a sudden, it's just a 45 degree angle, right? So that's It's kind of hard to get any trend on what it has been because there has been fluctuations on it. Obviously, gas goes up and down, but it's different than what we're seeing right now at this particular time, right? But we're bringing in those those other factors to consider as well. So those are some of the things that we're already bringing in. We're already, you know, referencing the current forecasting method, trying to improve upon it. But Um... You know, since we're all together, is there any other ideas or any other things that we're missing that you guys typically have used or would like to try using? That you haven't been able to yet. That may have been too much of an open-ended question. But I mean, I know that we've talked about using gas and CPI and all that stuff.
+ Brian Cluster   20:51 Ohh.
+ Connor Lain   20:52 No. Yeah.
+ Brian Cluster   20:55 Exactly.
+ Connor Lain   20:56 Now I was just thinking of what else we could pull in here. I mean, you probably saw my list of 17 macro indicators on that macro index tab. It's probably way too many. I think gas is a great one. Yeah, we're seeing a lot of trends where the category is declining, and especially in convenience channel where foot traffic is down.
+ Brian Cluster   20:58 Okay.
+ Jason Brazeal   21:18 Mhm.
+ Connor Lain   21:18 Maybe like consumer price index. unemployment, consumer sentiment. Maybe we just keep it to a few. But yeah, we're not currently using any of those to drive our forecast.
+ Brian Cluster   21:22 So, like, help me. On tracks.
+ Connor Lain   21:34 I guess, I guess one other one we should be. thinking about is how brand marketing impacts velocities in retail.
+ Brian Cluster   21:42 Yeah, yeah, 5%.
+ Connor Lain   21:44 We used to assume some lift whenever we run a brand campaign. Yeah, we pulled that out. We just, we're not using that anymore because we're not, we're not really seeing that translate into higher velocities. Maybe because the macro indicators are like overriding what we're doing. So, but maybe that's when we think about down the road. I'm not sure if we can do that now.
+ Brian Cluster   22:12 We almost need a model like through. like a multi-factor attribution of the marketing to figure out what the attribution is. I think we're coming up with a new campaign early 2027, which would affect potentially demand if it's new and different than what the Puff. So that has the potential of driving higher demand because it's going to be different and maybe targeted to different consumers. I mean, that would be the bet, right? If we spent money on it, it's going to drive demand. So, but we don't have a good idea of what that looks like yet. At least I don't.
+ Jason Brazeal   22:57 Yeah, those would be good signals. So what I'm hearing from you, Connor, is the things that impact disposable income or just, you know, the grocery spend or the... macro indicators that you're pulling in.
+ Connor Lain   23:15 Yeah, just maybe use two or three big ones.
+ Brian Cluster   23:19 And then as far as channels, everyone's aware that this is mostly a retail forecast. We're not forecasting T2C. We're not forecasting Tiktok and, you know, all the marketplaces.
+ Connor Lain   23:20 Yeah.
+ Brian Cluster   23:34 But some of those factors, like people do discover products on Tiktok. They do discover products on Amazon. And then they may not convert, but they may go to their local store. So if we have a lot more awareness on Tiktok and Marketplace, you can theorize that it could drive trial and store, especially for new items.
+ Jason Brazeal   24:01 And that's a good, I mean, that's one of the key topics, right, is new items and the fact that you guys have so much growth and you're introducing a lot of new SKUs. What are some things that you've tried that have worked or what are some of the challenges there? That you've seen.
+ Brian Cluster   24:22 Cannibalization. Go ahead, Connor.
+ Connor Lain   24:23 The biggest, yeah, I was going to say that the biggest challenge is cannibalization, which is highly dependent on where that item goes in the store. Is it next to the existing items or is it a new part of the store? What's the pack size? It's a larger pack, it might cannibalize the existing. you know, smaller pack size, the flavors have impacts. So yeah, just trying to get better at forecasting cannibalization based on those factors, flavor, pack size, location in the store. And also competitors, like what are they also adding at that shelf reset date? Because if they're adding the same amount of flavors that we're adding, the incrementality is usually lower than what we were expecting. But obviously we don't have a clue what, say, Barebells is going to add. At the same time, we're adding new Sku, so it's challenging, but...
+ Brian Cluster   25:20 And then you guys have all the data about price pack architecture. So price per bar, we've had a few retailers where the price per bar is lower on the four pack than this, or lower on the single than the four pack, which is not the way it's supposed to be. You're supposed to be rewarded incrementally as you buy a little bit more higher pack. And if you have an inverse, it could really affect performance on the larger packs, so...
+ Connor Lain   25:49 Another thing, it would be retailer shifting. So we just recently got into Trader Joe's and we didn't, we knew there was some overlap with the shopper at Costco and other retailers. We didn't, we couldn't really forecast the impact of that shift. The other big one is we promote pretty deep in club and we'll see consumers at Walmart trade over to Costco during that. That's another thing we need to get a little better at forecasting like inner retailer shipping.
+ Jason Brazeal   26:30 Gotcha. What about like the GLP1 effect or the protein effect? I saw from grocery shop that Instacart has a new AI that says, you know, show me the highest protein meal I can buy in the store today or whatever. So is that going to, you know, be accounted for if Barebells has 20 grams and you guys have 16 grams. Are you all seeing any? Difference there based on protein amounts.
+ Connor Lain   27:02 I mean. Anecdotally, yeah. I've seen Barebells is over 20, Quest is over 20. I like I yesterday I saw some data through Walmart where we're taking share from Cliff, Nature Valley, which are more barred. like nutrition bar, lower protein count. So we're taking share from them, but Barebells is taking share from us. Quest is taking some share from us in Walmart. So that you could infer from that that people are saying, what has more, what's the highest protein per buck? Because Barebells is priced. Above us. but they have more protein, so maybe people are seeing more, perceiving more value from that. Because that goes against the gas price trends, if people are spending less because of high gas prices, but they're buying more expensive bars.
+ Jason Brazeal   27:52 Yeah.
+ Connor Lain   28:00 Like Barebells price higher than bill. So maybe that's, yeah, that could be a factor.
+ Jason Brazeal   28:07 And it seems to vary on type of store to different consumers, like you were saying earlier, that go to sprouts or go to some of the health markets and they might see it as a premium value. And then other people just enjoy the flavors of Built. They, you know, they don't care about all that stuff. They just like the way that it tastes and the flavor profile that you guys have. On the Tiktok shop thing, back to Rob's question, I'm just curious, like, do you know kind of the mix of the brick and mortar store sales versus how much that increases your online sales directly from your website? I mean, when they go to Tiktok shop, does it just direct them to build.com to go buy a case of them or? Um... How does that work in general?
+ Brian Cluster   28:56 Uh, Tiktok doesn't refer back to our website.
+ Jason Brazeal   29:00 Okay.
+ Brian Cluster   29:01 They want to capture the sails themselves.
+ Connor Lain   29:02 It's.
+ Jason Brazeal   29:02 So it just promotes the product.
+ Connor Lain   29:04 Yeah, it's more indirect. Like if people don't feel comfortable buying on Tiktok.com, they'll go to Google and just go to build.com and buy. There is some halo effect. I don't, I'm not the one to speak to that, but I know there's a little bit of halo effect from Tiktok to... D2C.
+ Jason Brazeal   29:25 Okay. And forgive me, I'm just not, I'm not a TikToker myself, so that's just curious.
+ Connor Lain   29:30 Yeah, me neither.
+ Justin Fisher   29:31 No worries, I've been learning A lot.
+ Jason Brazeal   29:35 showing my age there. I'm not on all the socials.
+ Robert Long   29:39 Do it for the vine.
+ Jason Brazeal   29:45 Well, I appreciate y'all's time and I don't want to keep you, you know, unnecessarily. I think we've got the answer on the general ledger codes. There's not a direct tie at a transactional level. I appreciate all the other input. And we're trying to, you know, work all that in. We have looked at some of those macro factors and we're looking at how we can incorporate that if it actually becomes an important feature in the model. In some cases, like I said, with gas, historically, it may not have bubbled up as a very important forecasting or modeling feature because it
+ Robert Long   30:32 So.
+ Jason Brazeal   30:33 And some of those things.
+ Brian Cluster   30:33 Gas was flat for the last three years, basically.
+ Robert Long   30:34 Before. Yeah, before we get before we log everybody off, so I'm going to run through the list of 6 questions just to make sure that we did hit all of them. So, which dimension of which dimension chart of accounts account numbers hold trade promo, and can they be split the same seven ways the promo file already uses? And I see scan, clubs, scan, bill back, off invoice, depletion, processing fee, and fixed. And then this is so the GL actuals lined up with planned spend by type instead of 1 lump sum. What was the feedback on that item? OK, so I guess that I had. So.
+ Clark Nielson   31:25 So it's a liability account we have. It's 222205 is the GL number. It's called trade funds, pricing discounts. We don't have it split by type, but that's that holds everything other than spoilage. And slotting, um, and then if it's deducted off invoice, then it... Yeah, spoilage slotting and then a discount that is on the customer's invoice all flow through separate accounts. So I could merit them or I can send out an e-mail.
+ Robert Long   32:10 Okay, how do we tie a GL transaction back to a specific promotion?
+ Clark Nielson   32:14 3000.
+ Robert Long   32:16 We don't. Accrual versus settlement #3, which does the GL show and when?
+ Clark Nielson   32:17 Yeah. Uh, accrual, um, and so the deduction be later into the accrual.
+ Robert Long   32:31 Okay, and then is trade spin coded at the item UPC level or only at the customer level?
+ Clark Nielson   32:37 customer and it's for distributors, it's not indirect, it's not a direct like end customer, it's at the indirect level.
+ Robert Long   32:46 Oh, okay. And then how do we separate promo spend from other trade spend?
+ Clark Nielson   32:51 Yeah, so we have slotting, spoilage, and then like promotional spend, some of it is accrued. If it's going to be billed back later, if it's taken off the invoice at the time that like if, you know, if they have a discount during a window while they're ordering. then we don't accrue that because we know it up front. So.
+ Jason Brazeal   33:16 And are there?
+ Brian Cluster   33:16 Yeah, I would say, wait, wait, I wanted to interject here. Number 4, Clark, if we have a direct customer.
+ Robert Long   33:17 And then. Please.
+ Brian Cluster   33:24 Then that, that's, let's see, trade span is coded at the customer level, like for Target or whoever we ship directly, yeah.
+ Clark Nielson   33:31 Yes, Target Publix, yeah, yeah.
+ Robert Long   33:39 Okay, and then do promotional allowance item. Go ahead, Jason, were you adding something?
+ Jason Brazeal   33:39 Thank you, and that. All right, keep going, and I have another question after we get to those.
+ Robert Long   33:48 Do promotional allowance item rows capture all trade deductions, or are there other item types we would miss?
+ Clark Nielson   33:57 Um... Yeah, I guess they do other than the items like slotting or a discount that's off the invoice rather than, you know, billed back to us. I guess I'd say there are probably non-promotional costs that are also being captured in as promotional costs like. various distributor fees as well. So it's not necessarily like going to be discreetly like in our GL, it's not well categorized, right? So we try to break out shipping fees separately, but inevitably it ends up a little bit of like the default after you aren't sure what it is. then it will just land in the trade bucket if we're not able to categorize to something else discretely.
+ Robert Long   34:49 Jason, of the data sources that you've seen, are there other data sources that you think we need outside of what we have today that embody what we just discussed for the six questions?
+ Jason Brazeal   35:07 There is data that we need, but the challenge is how do we get it? That's kind of part of this discussion. But it also sparked, I guess, the question of, do you guys have certain tribal knowledge or information about each retailer and their strategy? Like, you know, some retailers are everyday low price and others run buy one, give one, freeze all the time and others do this or that or the other. We can see some of that within the data, but I'm just curious, like when you think about modeling Kroger versus Walmart or Hy-Vee or whoever, do you go into that? forecast with that knowledge that this is a retailer that runs this type of PO S promotional strategy. Is that like a known repository of information per retailer?
+ Brian Cluster   36:06 Not to my knowledge, I don't think we have it.
+ Jason Brazeal   36:09 Okay.
+ Brian Cluster   36:10 We have it collectively. Have a balance.
+ Jason Brazeal   36:13 And is that something that kind of comes from the field indirectly? Because they know that, they're sort of sharing the result of that.
+ Brian Cluster   36:24 Sales team, I think some of us here would know that, but it's not in a document.
+ Jason Brazeal   36:29 Gotcha.
+ Connor Lain   36:31 Yeah, I mean, like, Walmart, Sheets, Albertsons, or EDLP, I think, there might be others, everyone else would not be.
+ Jason Brazeal   36:43 Okay.
+ Connor Lain   36:44 But yeah, the sales, I don't know if it's worth. Talking to the sales team about if you want to deep dive into like the top 10 customers or any if you want to get granular on strategy and And our nuances.
+ Jason Brazeal   36:59 Okay. Yeah, I mean, I think that could be valuable, but... I'm just thinking of how it can inform the forecasting for a particular retailer, you know, because when we looked at some of the charts for like Kroger, you have, you know, constant promos, whereas with Publix, there's like these spikes of like these promotional events that have gone out, you know, or Costco puts things in their coupon book or whatever. So I think it'd be an interesting other dimension to know if there was some sort of like, you know, rules of engagement or for lack of a better word, some sort of framing of, you know, this particular retailer. This is kind of the
+ Connor Lain   37:38 The.
+ Jason Brazeal   37:46 the known information about how they do promos and pricing.
+ Connor Lain   37:53 Yeah, maybe it's a separate call with our sales GWPs and myself, and we could just provide voiceover if you want.
+ Jason Brazeal   38:01 Yeah, I think that would be helpful just to have that contextual information, that metadata, if you will, about. Each of those. And Rob, that's all I got. I'm not trying to put too much ask out there. I just wanted to get everybody's feedback while we're all together.
+ Robert Long   38:15 And then. I mean, there's eight of us here, right? So I would say, you know, make it a Christmas list and ask for a pony. We might get puppies, but, you know, we get something. So the other thing that's curious to me, I don't know that we've touched, and maybe we did and I missed it.
+ Jason Brazeal   38:26 Okay.
+ Robert Long   38:36 The Sku replacement, when we did, when there were things that were, this was a bar, now it's a Puff. And how do we stitch those together so that we can tell the machine learning model, okay, we're going to create a new, if I need to create a new ID column and say, these are actually the same ID just to bridge the two,
+ Brian Cluster   38:55 But your.
+ Robert Long   38:55 Right, like we can do that, so we can we can do an additional column and populate it from whatever. What would what would be the? Do we do you have any of that information anywhere?
+ Brian Cluster   39:15 Some of the flavors were the same, some of them were not. So, it's 2024, early 2025. So I think it doesn't have a material difference, material impact on future forecasts right now.
+ Robert Long   39:31 It does because when you get outside, the difference between 18 months and 36 months of previous data, there's a big difference in the forecast accuracy from that.
+ Brian Cluster   39:42 Yeah, except that the velocities of the new items are like... Two times more. There's the Bars, so... I don't know.
+ Robert Long   39:57 Yeah, Connor, did you run into some of that when you were doing your modeling?
+ Connor Lain   40:01 Uh, we we kind of transitioned to Pos right as I joined. Yeah, and we kind of view it as just a completely new product line versus a continuation of just the changing the format a little bit. Well, and then going forward, I think the plan next year is with Dreamwich. which is a co-extruded Puff Bar, we're gonna replace peanut butter, I think. Is that right, Brian? With the Dreamwich peanut butter?
+ Brian Cluster   40:33 More the car, the car, the caramel, not the peanut butter.
+ Connor Lain   40:37 Terminal, OK.
+ Brian Cluster   40:39 The salted caramel is likely. going to be impacted, not everywhere, but some places. Out of the three new SKUs, that one's the one that could be switched easier.
+ Connor Lain   40:51 Yeah.
+ Brian Cluster   40:52 So.
+ Connor Lain   40:54 It's not it's not a top five flavor that makes more sense.
+ Brian Cluster   40:59 Yeah. Can we let these guys go now that we're kind of wrapping up here?
+ Robert Long   41:06 Yeah, sure. Did you want to keep us on for a bit or were you?
+ Brian Cluster   41:10 Yeah, we could wrap up with some other things, too.
+ Robert Long   41:13 Okay.
+ Brian Cluster   41:14 But thank you, Zack.
+ Jason Brazeal   41:14 Thank you.
+ Robert Long   41:16 Thanks, guys.
+ Brian Cluster   41:17 Connor, I had a...
+ Zack DeNovellis   41:17 Sky, glad I could, glad I could put some influence in there. Have a good day.
+ Jason Brazeal   41:21 You too.
+ Brian Cluster   41:22 Hey, Connor, can you stick around too?
+ Connor Lain   41:24 Yeah, again.
+ Brian Cluster   41:26 So one of the things is like trying to, I haven't had a lot of feedback from Jeff. You know, we were talking about this triangle model. We have the sales impact, we have the constraints of our factory, you know, and then we have these pure statistical model, machine learning model. And we're not trying to do the final, final company forecasts, because we're only doing retail only, right?
+ Connor Lain   41:56 Mhm.
+ Brian Cluster   41:58 But I don't know how much input, like, you know, have other questions, like... New item introductions. Is that going to be, that's not going to be ongoing forecast. We have no sales background on that. It's going to be in the sales forecast because they're building out that distribution. So I'm kind of wondering where that cutoff is. Do we take any inputs for new items or not? And then also planning for trade promotions too. I think that would be. Good to have because we can use predictions from prior promotions to predict. The next three months of promotions. I'm wondering, I'm like, it's be good to like get with Jeff to understand the cutoff point, what should be, what should be included in what model in a way. So we're not overlapping if this is not his grand design. I think we're getting close with. with Rob and Jason here, but it's like, let's make sure we're not overlapping in areas where he doesn't want us to overlap. Frankly, Jeff has not been available a lot lately to touch base on it. So I want to make sure we're aligned to the vision before we deliver. So any, any, yeah.
+ Connor Lain   43:23 Yeah, and I think... I think Jeff's out for the rest of the month. So it might be, it'll be not possible to pin it down. Maybe, I mean, we could talk to Megan and Bracken.
+ Brian Cluster   43:29 Oh. Okay.
+ Connor Lain   43:37 And just the line there.
+ Brian Cluster   43:39 Okay, so I didn't know that. Okay. Let's see, do you guys have any other other input? Do you have any other questions about inputs or, you know, Rob or Jason?
+ Connor Lain   43:46 I mean. Bi.
+ Brian Cluster   43:54 Like promotional counters, can we have... Like, it's not going to be a promo mash. It's going to be in 50 different files or 100 different files right now, right? Check the calendar.
+ Connor Lain   44:10 Yeah, that's how it's currently, that's how the Excel team currently does it. I mean. I'm wondering, just, just to... Adapt for Aevah inputs. Like I wonder if we just create a whole new input file for the sales team. That's one file. Maybe it's a tab for each retailer or whatever is whatever is easy for everyone. We just need to align on what we could do.
+ Brian Cluster   44:36 I think it's one table, one table of all promotions with all the key metrics, whatever.
+ Connor Lain   44:37 So that is only one. Yeah, maybe. Yeah, maybe there's a way for each of those 50 files to link to one file and then we just send that one file to Aevah. I don't know what that looks like, but... It needs to be streamlined.
+ Brian Cluster   44:55 I'm scratched, yeah. I'm scratching my head to see what we could be missing. Like what is, what's the unknowns that we're missing or what are the gaps? And. But what do we not want to double count? What's in the sales forecast versus what's in our forecast? You know, what's in this Aevah forecast, so...
+ Connor Lain   45:17 Well, it isn't the isn't Aevah supposed to be another point of reference to... Like, make sure that we're... close with our with my forecast, so it should include all new items for next year, all new retailers. all promotions for next year. It's really like just another retail forecast, right?
+ Brian Cluster   45:41 Yeah.
+ Jason Brazeal   45:41 But we don't necessarily know some of that information that you just mentioned, like the forward-looking statements of, you know, what store expansion is going to occur, what new items are being introduced in the future. We just know what the POS data shows up until now.
+ Connor Lain   45:46 Yeah. Right, you need a table for each retailer that says we're going to grow this store count each month next year. We're going to add these items. We need to assume this base velocity for those new items because they're new. We don't know what it's going to be. But like Aevah would be able to tell us, are we selling that item in another similar retailer? We could use that.
+ Brian Cluster   46:03 Oh yeah.
+ Jason Brazeal   46:12 Right.
+ Connor Lain   46:22 If it's a completely new item across the business. That's where I don't know how we would put the inputs in, like, find a similar flavor.
+ Brian Cluster   46:31 Like Dreamwich.
+ Jason Brazeal   46:31 Right.
+ Connor Lain   46:34 I don't know, like for Dreamwich.
+ Robert Long   46:35 Yeah, Jason and I were talking about the... the proxy problem, right? Like which one? How do you find something similar based on product attributes? And so this is where we get back to what do we have today for product data? And then, you know, how do we increase the granularity of the product data when we start looking for proxies and things like that to To do exactly this, Connor, yeah.
+ Jason Brazeal   47:03 Yeah, we...
+ Robert Long   47:03 Jason, what did we get from them for product data?
+ Jason Brazeal   47:08 We have some item lists and product data in addition to what is evident within the Spins data. So, you know, we are able to look at, you know, what is a similar item based on flavor and pack count.
+ Brian Cluster   47:13 What's your?
+ Jason Brazeal   47:28 that we could potentially use. If this retailer has had another chocolate item or something of that same four pack pack count, we could use that as a proxy to forecast the new chocolate item 4 pack. We could look at all four packs that were sold at that. retailer or a similar retailer. But, you know, Dreamwich seems like it's kind of in a category of its own too. So it might be like, what do you, you know, pick your best horse to follow. Like maybe it's, you think it's going to be one of your top flavors like coconut or, you know, Um...
+ Robert Long   48:06 Well, what about the other dimensions, right? Because there's, you know, calorie count, there's protein, there's carbs, there's, you know, sugars, there's, you know, certain ingredients that could affect, you know, people's take on it. So I think there's a number of variables there. And do we have that information about the products?
+ Jason Brazeal   48:19 Mhm. We have some calorie and sugar information in the Spins data. We have ranges of protein. That's one dilemma, though, is that it's like protein 16 to 20 grams. So Built may be on the low, yeah.
+ Robert Long   48:39 Brian, well it's OK. Yeah, sorry, Brian, we need we need real data from Built for the product information. Where do we get that?
+ Brian Cluster   48:49 Like for future products or current products?
+ Robert Long   48:52 Both. Anything we're forecasting and anything that's in.
+ Connor Lain   48:53 Like nutrition.
+ Brian Cluster   48:53 It's two different sources, I think. Let me talk to the PIM guy, PLM guy, and see if we can extract out of that, because that's where a lot of the, there's some attribution in Spins that exceeds what we have internally for existing products. And then we have some different attributes with our products for that.
+ Robert Long   49:02 Yeah, yeah.
+ Brian Cluster   49:18 Are not in Spins, so it's really a combination of the PLM plus with in Spins.
+ Robert Long   49:25 Okay.
+ Jason Brazeal   49:25 And the only challenge with that has been keeping it updated because we got a file like that, you know, early on, weeks or months ago now. But it's a static snapshot, right? With all the new products that you guys keep introducing it, it's an organic file, right?
+ Brian Cluster   49:41 Yeah. And then we could buy an API for Spins for next year.
+ Jason Brazeal   49:48 Okay.
+ Brian Cluster   49:48 semi-budget wish list for next year so we can have a pipe directly through. You guys will need to get approved through Spins to do that, but yeah.
+ Jason Brazeal   49:54 And that's great.
+ Brian Cluster   49:58 But Robert already knows they had a product management over there.
+ Robert Long   49:58 Well. Yeah, yeah, yeah, we'll work through that. For me, it's also it's about... the actual discrete numbers, because that's what people are seeing when they're making buying decisions. So 16 to 20 is a wide range. When you're standing in a grocery store and you've got 17 and somebody else has 20, you know, they're going to like that two versus the one, right? Like the psychology there. You know, whereas me, I'm like, oh, I need all the macros, grab three of them and we're good, right? But apparently that's not how you get skinny.
+ Connor Lain   50:31 Bi.
+ Brian Cluster   50:32 But we can, we can get, we can get that, we know the range is like segmentation. Versus.
+ Robert Long   50:39 No, I'm not looking for range, I'm looking for discrete value.
+ Brian Cluster   50:41 Yeah, we could get either one. So it's just what I picked at that time.
+ Robert Long   50:46 Yeah, no, I would like discrete value because that that we're doing estimate like that that matters. Like, you know, any any gaps or errors or banding in the data is going to affect the outcome of the of the forecast.
+ Brian Cluster   50:46 So. Yeah.
+ Robert Long   51:02 Okay.
+ Brian Cluster   51:03 But we have segmentation like size but segmentation by packs and we have calorie segmentation and but it's on ranges for but you can look at either one. Yeah.
+ Jason Brazeal   51:03 Yeah.
+ Connor Lain   51:13 We don't, we don't have part of store, right? Checkout Bars, candy, um, pharmacy, yeah.
+ Robert Long   51:14 Okay.
+ Jason Brazeal   51:20 Yeah.
+ Brian Cluster   51:21 No, that's not what they do. It Spins, you need to go to like a field service auditor that would go out to stores and code where the products are. But we don't buy that right now.
+ Connor Lain   51:34 Oh, wait, you can, you can buy that through Spins.
+ Robert Long   51:34 Right.
+ Brian Cluster   51:36 No, through another company called Observer. Observer, I met with them this week. They do audits in the store to see execution. Execution is another one.
+ Connor Lain   51:38 Okay.
+ Brian Cluster   51:47 So you had different retailers that promised a certain amount of displays, but they only delivered 50% of those. That's when you get thrown off on your lift levels because they didn't execute properly. And then you're only getting half the volume of the promotion as what you expected. So.
+ Jason Brazeal   52:09 I read an article. Go ahead.
+ Robert Long   52:09 That's a good. No, go ahead, go ahead.
+ Jason Brazeal   52:13 I read an article recently that one of the top convenience stores is as opposed to Quick, whatever the one we were talking about, Quick Stop or whatever, and Bucky's was actually Meijer as like their convenience store or maybe their checkout or something. is doing as well as some of those other convenience stores. Yeah, QuickTrip with the K was listed in the article. Yeah. And I was thinking about that too, because you had mentioned bringing in QuickTrip and Casey's data. Did my reply last time help clarify what we needed, basically the shipment data or that minimum information that we would need to know about those to get those?
+ Brian Cluster   52:59 Yeah, put it in the Aevah chat again and I'll follow up. I just haven't had time.
+ Jason Brazeal   53:04 Understood.
+ Robert Long   53:05 Yeah, welcome back, by the way. Okay, so Jason, did that answer enough of our questions for us to keep making forward progress?
+ Brian Cluster   53:10 Yeah, I'm gonna meet with Megan.
+ Jason Brazeal   53:15 Yeah, yeah, we're still making forward progress, but this definitely helps because we can only see so much by looking in the rear view mirror, right? It's hard to drive the car when you're just looking backwards the whole time. So all this additional contextual information is going to be helpful.
+ Brian Cluster   53:36 Well, the predictive, do you have data that's predicting gas prices and predicting... Consumer sentiment and all that because that would be good to use in that versus using the rear view mirror stuff, right?
+ Jason Brazeal   53:47 Yeah, we can.
+ Connor Lain   53:50 I don't know how you predict gas prices though. Like, it's like predicting the stock market. Not possible.
+ Jason Brazeal   53:50 Yeah, yeah. Yeah, it's hard to do. Yeah, yeah. But, you know, back to what we were talking about earlier, you know, gas prices do have a lot of history that you can look at to see those patterns. One of the challenges with looking at the built data so far, you have the bars that kind of go like this, and then at the same time, the Puff goes like this. So Really, we have three years of data, but we don't have three years of Puff data. And then there's a lot of other items in there that are newer items, you know, so.
+ Brian Cluster   54:25 Yeah.
+ Robert Long   54:26 The other problem with the Puff versus bar is the depletion of Inventory problem, right? Like they had to the supply chain had to empty, the shelves had to get sold out, and then the pulse had to ramp up. That is such a poison pill in the data stream.
+ Brian Cluster   54:43 Yeah.
+ Robert Long   54:45 But, anyway...
+ Jason Brazeal   54:46 Yeah. So we're dealing with that, but you know, it's coming along. And like Rob said earlier, Connor's doing a great job for you with what he's doing. We're just trying to make it easier to encapsulate all this stuff.
+ Brian Cluster   55:01 Yeah.
+ Robert Long   55:03 Well, the first thing is right is do no harm, right? So make sure that we're, we don't harm the accuracy, but we take, we give Connor time back. We make this scalable and reproducible and we make it faster. And then we give Connor other options. So then we're looking here going, hey, look, here are the trained models that work. Well, excuse me. And here are the variables. So Connor can look at that and go, oh, I want to tune it this way. And he doesn't have to build out a data science team, right? So this is Connor's data science team in a box. And then because later, what's going to happen is when we hand this over to Connor,
+ Connor Lain   55:25 Casey.
+ Jason Brazeal   55:25 Bless you.
+ Robert Long   55:43 then Connor is going to say, you know, this is stuff I can't do in Excel, right? Like we just added some GPU based training models this week, Connor, where we're, you know, connecting off the GWPs. And it's like, okay, you know, what are the variables there? And you know, what other models does that allow? But you know, we're trying to make sure that you have the catalog so we can go, okay, Here's what works today, and we're still available, right? Like you have it as part of the contract, you have X number of hours with us. Like it's in support is actually real support, not like call with a bug, right? So you guys have X number of hours to burn like cell phone minutes through the year. Okay? So we're not running away, but there is a point where, you know, we go, okay, we got this to where Connor is happy with it and he trusts it to use instead of Excel. What capability does this give Connor and how much time does it give him back? And then as you onboard these new people in the FFN team, what can they do that they couldn't do if everybody was chasing these things?
+ Brian Cluster   56:22 It's not.
+ Brian Cluster stopped transcription
