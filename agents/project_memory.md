@@ -512,3 +512,4 @@ it does **not** change what the Mo UI serves. Submitting is a separate explicit 
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
 - 2026-10-09 Records written (scribe): README 232, SETTLED_FINDINGS pending-review additions (MO_104/MO_125 entries corrected by main session to the skeptic's own verdict lines; MO_104 cites the units ses arm), FORECAST_PREREGISTRATION status (saved 9748e46, added d216860, 6-cutoff rule WITHDRAWN), project memory session block.
+- 2026-10-09 Decision (Jason): push cef344c, d216860, 2970466 and commit the MO_132 quarterly-lines chart (mockups/mo132_quarterly_lines.html; internal working view; shape conclusions overturned by the skeptic).
