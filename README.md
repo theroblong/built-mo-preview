@@ -6,6 +6,130 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 232: the served direct model is worse than the recursive model and than flat; the recursive model did not change, the bench became honest (2026-10-09)
+
+Code: `scripts/MO_132_one_yardstick.py` (fa55079; full run, 15,504 s, laptop only),
+`scripts/MO_131_forward_tracker.py` register-add (cef344c),
+`forecasts_registered/2026-09-06.add-direct_fixed.*` (d216860), GPU parity jobs
+(`/Users/jasonbrazeal/Documents/dev/aevah-jobs/mo_parity`, `jason-mo-parity-001` to `-004`).
+Outputs: `scripts/outputs/mo132_run.log`, `mo132_one_yardstick.json`, `mo132_rows.parquet`,
+`mockups/mo132_quarterly_lines.html`. Verdict: MO_132 skeptic (opus/high): replica faithful, no
+leakage; per-claim verdicts below. No production forecast changed today.
+
+### Finding
+
+MO_132 scored every approach since MO_26 on one yardstick: all series (1,648 existing at some
+origin; 169,270 existing series-weeks; 192,154 including new), all 18 monthly origins
+(Dec 2024 to May 2026), full 13-week horizon, training at each origin on all history to that
+date. Limits are about 6 independent quarters and one training seed, not sampling. Numbers are
+average miss % (error) for existing series at three levels: item x week, account x month,
+portfolio x month.
+
+(1) C1, SURVIVES WITH CAVEATS (skeptic). The direct model BUILT is served (MO_27D v11d, "served
+direct") is worse than flat at item x week (-7.88 [-13.8, -4.7], 15 of 18 origins, every
+quarter) and worse than the recursive model (-5.02, 12 of 18). Caveats: not every simple arm
+beats it (seasonal naive is worse); Walmart alone is 2.59 of the 7.88 gap; "served" here means
+production minus donor features, lapsed series at 0. MO_103 "direct beats recursive" is
+REVERSED for the served model.
+
+(2) C2, SURVIVES WITH CAVEATS. A repaired direct model (`direct_fixed`: calendar and refit fixes)
+beats the served direct model at item x week at 18 of 18 origins ([-8.9, -3.8]). The claim that it
+is "best at portfolio x month" is OVERSTATED: it ties the blend (-1.44 [-3.5, +0.4]), loses the
+under-13-week band, part of the gain is error cancelling across bands, and the gain is
+concentrated in winter origins (2026 Q1 -9.51; dropping 2025-11 to 2026-01 makes it not
+significant). The two fixes are bundled, so the gain cannot be attributed to either one.
+
+(3) C3, SURVIVES WITH CAVEATS. `direct_fixed` vs the recursive model at item x week is a TIE
+(-0.67 [-3.3, +3.9]): it wins horizons 1-6 and loses 7-13 (item x week by horizon, recursive /
+direct_fixed: h1 23.8 / 16.0, h2 23.6 / 20.8, h3 26.0 / 24.3, h6 34.2 / 33.9, h7 35.9 / 36.7, h12
+43.8 / 45.9, h13 47.3 / 47.9). At portfolio x month it wins by -4.48 (significant at blocks 1-4);
+at account x month -1.77 [-5.1, +2.8]. Recursive minus flat: +2.86 (significant), +1.83
+(significant), +0.93 (not significant). MO_103 is not reproduced for `direct_fixed`.
+
+(4) C4, shape: DOES NOT SURVIVE (skeptic). Only "shape skill is weak overall" stands. The best
+portfolio-week direction is seasonal naive (56.6), the `direct_fixed` interval [43.5, 59.9]
+includes chance, account-month moves are 34 correlated transitions, and the turns metric
+ignored false calls (served direct called 25 turns for 12 hits). Our same-day claim that direct
+models "track direction best" and that the v5 shape "doesn't hold up" is withdrawn.
+
+(5) C5, velocity view (units per store per week, graded at actual doors): DOES NOT SURVIVE.
+Error drops are 4-6 points, not about 10, and rankings change; target-week distribution (TDP) is
+partly outcome-informed. This reproduces the open "oracle doors" blocker.
+
+(6) C6, SURVIVES WITH CAVEATS. Growing series are not under-forecast (bias near 1 for growing
+and shrinking trend). The "unknown trend" group (14% of volume) is series under 13 weeks old
+(10.2% of volume; only direct arms biased, 0.67-0.77) plus low-distribution (TDP) series (3.1%; all arms
+0.17-0.28). Our "young items under-forecast 15-45%" was narrowed accordingly.
+
+(7) Recursive model: did not change. It scores 35.45 at item x week, the same as in MO_129. The
+bench became honest (production training, inputs and per-week updates now match, README 230).
+Open blocker reproduced: the model is worse than flat on 52+ week series (recursive 28.69,
+`direct_fixed` 29.62, flat 25.85).
+
+(8) Noise: a seed-7 retrain of the direct model moved item forecasts by a median of 10-11.5%,
+while aggregates moved only +/-0.15 (item x week), +/-0.9 (account x month), +/-0.6 (portfolio x
+month). MO_129's recursive seed range understates direct-model noise about 10x. Direct-model
+numbers need seed averaging before they are quoted to a decimal.
+
+(9) EXPLORATORY / POST HOC, not a finding: a 50/50 average of the recursive and `direct_fixed`
+forecasts scores 32.18 / 20.29 / 10.47 (bias 0.966), better than recursive by -3.27 / -2.67 /
+-3.31 (all significant) and vs flat -0.41 (ns) / -0.84 (ns) / -2.37 (significant). It was not
+pre-registered; it is now registered as a forward challenger (`rec_dirfix`) with its prediction
+recorded: beats recursive at all three levels, ties flat at item x week and account x month,
+beats flat at portfolio x month. `direct_fixed` and `rec_dirfix` were saved at the 2026-09-06
+cutoff (27,521 rows, 0 fallbacks, code cef344c on a clean tree; base registration untouched).
+The 6-cutoff decision rule in the pre-registration is withdrawn (skeptic: unsound); it will be
+rewritten under MO_132 principles.
+
+(10) GPU worker. Rob rebuilt the worker (image digest b18a4e83...ad3b0, runpodagent 2c61627).
+Parity (origin 2025-01, 9,893 forecasts, laptop vs worker): statistical arms identical (max
+relative difference 1e-7). LightGBM differs at item level (served direct median 6.9%, p99 37.1%;
+`direct_fixed` 8.0% / 41.7%) while aggregates are close (item x week 48.95 vs 48.94 and 41.04 vs
+40.91). Laptop reruns are bit-identical; deterministic flags on both machines changed nothing
+(job -004). An 8-thread pin fixed a 48-thread stall (job -002 timed out at 900 s; -003 finished
+in 220 s). Total for the four parity jobs: about $0.45.
+
+### Evidence
+
+Existing series, average miss % (item x week / account x month / portfolio x month; bias in
+brackets), all 18 origins:
+
+| arm | item x week | account x month | portfolio x month |
+|---|---|---|---|
+| blend (mo130 + flat) | 30.70 | 19.83 | 10.73 (0.993) |
+| mo130 | 32.41 | 21.45 | 13.69 |
+| ses_vel | 32.46 | 20.95 | 12.67 |
+| flat | 32.59 | 21.12 | 12.84 (0.977) |
+| conn_L4W | 32.93 | 20.69 | 12.61 |
+| direct_vel | 34.14 | 22.40 | 11.41 |
+| direct_fixed | 34.78 | 21.18 | 9.29 (0.969) |
+| recursive | 35.45 | 22.95 | 13.77 (0.962) |
+| direct_served | 40.47 | 24.34 | 13.12 (0.906) |
+| seasonal naive | 52.59 | 37.14 | 27.80 |
+
+By history band (item x week; only the cells the notes record): under 13 weeks, best arm is
+recursive at 49.7 versus 58.8 for the served direct model; 13+ weeks, best arm is the blend; 52+
+weeks, flat 25.85 beats recursive 28.69 and `direct_fixed` 29.62. Versus the served direct model
+(item x week): flat -7.88 [-13.8, -4.7], recursive -5.02, `direct_fixed` -5.69 [-8.9, -3.9]; at
+account x month the blend -4.51, conn_L4W -3.65 and `direct_fixed` -3.17 are significant;
+portfolio x month differences are all not significant.
+
+Predictions P1-P9 recorded before the run: P1, P3, P4, P7, P9 HOLD; P2 FAILS (served direct is
+worse than recursive by 5.0); P5, P6, P8 FAIL.
+
+### Procedural lesson
+
+A validated bench can still be wrong about the thing that matters: the model BUILT is served was
+never the one we had been scoring, and nobody had measured it until MO_132. Score what is
+served, as served. Keep every arm of one comparison on the same machine (laptop vs worker
+LightGBM differs about 7% per item even with identical settings), average over seeds before
+quoting a direct-model number to a decimal, and give any shape score false calls, a chance
+baseline and origin-level intervals. Bundled fixes cannot be attributed; split them. A claim
+made in chat before its skeptic verdict was overturned or narrowed in five places today; nothing
+is a result until the verdict is attached.
+
+---
+
 ## README update 231: the challenger ties the simple methods, the registered champion was the wrong model, and forecasts are now saved (2026-10-08)
 
 Code: `scripts/MO_130_anchor_plus_corrections.py` (v8 full run, `fit_forecast()` factored out),

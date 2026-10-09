@@ -58,6 +58,45 @@ below them are deliberately unchanged until review.
 - **New method rule candidate (SETTLED).** Every fitted input (seasonal index, scaler,
   anchor) is rebuilt from data up to each cutoff.
 
+### Added 2026-10-09 from MO_132 (Tier 1, 18 origins, all series; README 232), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Numbers are average miss %,
+existing series, item x week unless stated.
+- **MO_103 "direct beats recursive" → REVERSED for the served direct model (MO_27D v11d).**
+  Served direct is worse than the recursive model by -5.02 (12 of 18 origins) and worse than
+  flat by -7.88 [-13.8, -4.7] (15 of 18, every quarter). *Skeptic: SURVIVES WITH CAVEATS (not
+  every simple arm beats it, seasonal naive is worse; Walmart is 2.59 of the 7.88 gap; "served"
+  = production minus donor features, lapsed 0).* **Not reproduced for the repaired
+  `direct_fixed`:** it ties recursive at item x week (-0.67 [-3.3, +3.9]), wins horizons 1-6,
+  loses horizons 7-13, and wins at portfolio x month (-4.48). *Skeptic: SURVIVES WITH CAVEATS
+  (the two fixes, calendar and refit, are bundled; gain concentrated in winter origins).*
+- **MO_104 "SES ties flat" → reconfirmed under parity** (MO_132 ses arm 32.48 vs flat 32.59
+  at item x week; the velocity version ses_vel 32.46 ties too). *Skeptic: "MO_104 (SES ties
+  flat): reconfirmed (−0.12, not significant)."*
+- **MO_125 conn_L4W reversal → supported** (MO_132: conn_L4W 32.93 / 20.69 / 12.61 vs flat
+  32.59 / 21.12 / 12.84, a tie). *Skeptic: "MO_125 conn_L4W: the proposed reversal is supported
+  (not significant at all three levels)."*
+- **Open blocker "model worse than flat on 52+ weeks" → reproduced:** recursive 28.69,
+  `direct_fixed` 29.62, flat 25.85. *Skeptic: reproduced.*
+- **Not for the list:** the shape claims (C4) and the velocity-view claims (C5) DO NOT SURVIVE
+  the skeptic; only "shape skill is weak overall" stands.
+- **New method rule (a), propose SETTLED.** Never mix laptop and worker LightGBM results in
+  one comparison; run every arm of an experiment on the same machine. Cross-machine item-level
+  differences are about 7% median (aggregates within about 0.1-0.8); deterministic flags on
+  both machines do not fix it (parity jobs -003/-004). *Skeptic verdict on this rule: not
+  separately reviewed (measured in the parity jobs, not a MO_132 claim); same-machine seed
+  noise below is skeptic-checked.*
+- **New method rule (b), propose SETTLED.** Direct-model numbers need seed averaging before
+  they are quoted to a decimal: a seed-7 retrain moved item forecasts by a median of 10-11.5%;
+  aggregates moved +/-0.15 (item x week), +/-0.9 (account x month), +/-0.6 (portfolio x
+  month). *Skeptic: measured by the skeptic (blocks 1-6 x 3 seeds plus one seed-7 retrain at
+  2025-12).*
+- **New method rule (c), propose SETTLED.** Shape scores must report false calls, a chance
+  baseline and origin-level confidence intervals. *Skeptic: from the C4 DOES-NOT-SURVIVE
+  verdict (turns metric ignored false calls: 25 called for 12 hits; direct_fixed's interval
+  [43.5, 59.9] includes chance).*
+- **Exploratory, NOT a finding:** the 50/50 recursive + `direct_fixed` average (32.18 / 20.29
+  / 10.47) is post hoc; it is registered as a forward challenger (`rec_dirfix`), not settled.
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

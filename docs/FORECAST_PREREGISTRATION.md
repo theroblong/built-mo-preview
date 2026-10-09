@@ -1,8 +1,17 @@
 # Forecast pre-registration: forward tracking of five contenders
 
-> **STATUS: DRAFT (checkpoint 2026-10-08).** Nothing is registered yet: no forecasts have
-> been stored. Next steps: skeptic review of this document and MO_131, Jason's review, then
-> the first `MO_131 register` (latest data week 2026-09-06) committed immediately.
+> **STATUS (updated 2026-10-09): forecasts SAVED, decision rule WITHDRAWN.**
+> - Forecasts were saved at the 2026-09-06 cutoff (commit 9748e46) with contenders
+>   `served_v11d` (the direct model BUILT is served), `recursive` (formerly called "champion"),
+>   `flat`, `conn_L4W`, `mo130` and `blend`. Scorable once SPINS reaches 2026-12-06.
+> - Challengers `direct_fixed` and `rec_dirfix` (0.5 recursive + 0.5 `direct_fixed`) were added
+>   at the same cutoff (commit d216860), with the prediction recorded in MO_131
+>   `ADD_PREDICTIONS`. They are scored only against this and later cutoffs.
+> - The 6-cutoff decision rule below is WITHDRAWN (skeptic: unsound). It will be rewritten
+>   under MO_132 principles: all data, always-valid intervals, no arbitrary windows (Jason).
+>   The scoring section stays in force; no decision rule is active.
+> - The contender table and predictions below describe the original five and are kept as
+>   registered; "champion" there means the `recursive` model.
 
 Registered 2026-10-08 by Jason, for review by Robert. Tool:
 `scripts/MO_131_forward_tracker.py`. Forecasts are stored in `forecasts_registered/`.
@@ -47,7 +56,7 @@ Run when all 13 forecast weeks of a registration are in the panel (`MO_131 score
 - **Margins of error:** moving-block bootstrap over scored cutoffs (block = 3), once 3 or
   more are scored.
 
-## Decision rule
+## Decision rule (WITHDRAWN 2026-10-09, kept for the record; do not apply)
 
 The rule is evaluated after at least **6 scored cutoffs spanning at least 6 months**.
 
