@@ -196,7 +196,7 @@ def score(result_dirs: list[str]) -> None:
     arms = list(ARMS) + ["direct_served"]
     for arm in arms:
         parts = [pd.read_parquet(f).assign(origin=f.stem.rsplit("_", 1)[1])
-                 for d in result_dirs for f in sorted(Path(d).glob(f"mo134_{arm}_*.parquet"))]
+                 for d in result_dirs for f in sorted(Path(d).glob(f"mo134_{arm}_????-??.parquet"))]   # exact arm: "rec" must not match "rec_noclip"
         if not parts:
             raise SystemExit(f"no results for {arm}")
         cp = pd.concat(parts, ignore_index=True)
