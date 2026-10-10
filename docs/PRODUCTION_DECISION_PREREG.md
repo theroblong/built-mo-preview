@@ -46,6 +46,40 @@ the challengers on every new SPINS week. If the forward results reverse the deci
 the margin of error (once at least 3 forward cutoffs are scored), the switch is reviewed.
 No fixed calendar window (Jason: "use all of the data").
 
+## Amendment 1 (2026-10-10, Jason; written before any forward week is scored)
+
+Jason: "Since our forecast accuracy matters most for 2026 and 2027 ... I do favor the model that
+is consistently accurate but being accurate for 2026 and 2027 is probably most important to
+BUILT's business. They want to see that our model would have worked for 2025 (understanding that
+PUFF history was very limited), but they really want to know how well it will work and improve
+going forward." Why: before late 2025 no item had two years of history and BAR was still being
+replaced by PUFF, so 2025 forecast dates describe a different business. This amendment replaces the
+rule above for all future decisions; it is written before any saved forecast has been scored.
+
+**Evidence, in order of weight**
+1. Forward weeks: forecasts saved before their outcomes existed (`forecasts_registered/`).
+2. Recent backtest: forecast dates 2025-12 onward (the first dates with two years of history),
+   extended as new dates become scorable.
+3. 2025 forecast dates: a "would it have worked" check only (no-harm), not a ranking.
+
+**Replace the status quo X with candidate Y only if ALL hold**
+1. **Recent accuracy:** on the recent forecast dates, Y is better than X at account x month and at
+   portfolio x month scored within history bands, and not worse at item x week (point estimates;
+   with 6 overlapping dates, intervals are reported but not required to exclude 0).
+2. **Consistency (Jason's priority):** Y beats X at account x month on at least 5 of 6 recent
+   forecast dates (or the same share as more dates arrive).
+3. **2025 no-harm:** on 2025 dates, Y is not worse than X by more than 2 points at account x month.
+4. **Seasonal turns:** per calendar year, |bias - 1| <= 0.10 or no worse than X's.
+5. **Forward confirmation:** once at least 3 saved forecast dates are scored on real weeks, Y is
+   not worse than X on them; if it is, the switch waits.
+6. **Tie-break:** between candidates that pass, prefer the more consistent (more per-date wins),
+   then the simpler.
+
+**Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
+(`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
+L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
+(`direct_fixed`) and its recursive combination (`rec_dirfix`); the next save adds the 5-seed versions.
+
 ## Explainability requirement
 Whatever production serves, Aevah shows which model it is, why it was chosen (this rule and
 the scores), and how it compares with L4W velocity × stores and last week carried forward.
