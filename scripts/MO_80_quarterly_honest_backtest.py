@@ -97,6 +97,7 @@ SEASONAL_BLEND_WEIGHT = 0.10   # MO_27 line 68 — keep in lockstep
 # MO_134 experiment hooks for the batched production path. Defaults reproduce MO_27 exactly.
 YOY_CLIP: tuple | None = (0.5, 2.0)   # MO_27:571 clip on the year-over-year ratio; None = no clip
 YEAR_AGO = "rows"                     # "rows" = hist[n-52] as MO_27; "calendar" = same week last year
+YOY_MODE = "units"                    # "units" = MO_27; "velocity" = per-store ratio + store-scaled year-ago (MO_135)
 SAFETY_CAP_X_MAX: float | None = None # e.g. 3.0 = forecast at most 3x the series' max week
 RAIL_HITS: list = []                  # (key, week) where the rail bound
 MIN_SERIES_WEEKS_LOCAL = 13    # mo_panel.MIN_SERIES_WEEKS
@@ -791,10 +792,28 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             lag52_seq = [float(hist[n - 53 + k]) if 0 <= (n - 53 + k) < n else np.nan
                          for k in range(1, HORIZON + 1)]
         ratio = hist[-1] / yago_anchor if yago_anchor and yago_anchor > 0 else None
+        ref52 = None
+        if YOY_MODE == "velocity":      # MO_135: per-store year-over-year, calendar-aligned
+            dts = pd.to_datetime(g["__time"], utc=True)
+            u_by = dict(zip(dts, hist))
+            t_by = dict(zip(dts, pd.to_numeric(g["tdp"], errors="coerce").tolist()))
+            last_d = dts.iloc[-1]
+            t_now, u_ya = t_by.get(last_d, np.nan), u_by.get(last_d - pd.Timedelta(weeks=52))
+            t_ya = t_by.get(last_d - pd.Timedelta(weeks=52), np.nan)
+            ok = (np.isfinite(t_now) and t_now > DIST_MIN_TDP and u_ya is not None and u_ya > 0
+                  and np.isfinite(t_ya) and t_ya > DIST_MIN_TDP)
+            ratio = (hist[-1] / t_now) / (u_ya / t_ya) if ok else None
+            # last year's same-week units rescaled to today's store count (sales per store x stores now)
+            ref52 = []
+            for k in range(1, HORIZON + 1):
+                d = fweeks[k - 1] - pd.Timedelta(weeks=52) if k <= len(fweeks) else None
+                u, t = (u_by.get(d), t_by.get(d, np.nan)) if d is not None else (None, np.nan)
+                ref52.append(float(u) * t_now / t if (u is not None and np.isfinite(t) and t > DIST_MIN_TDP
+                                                       and np.isfinite(t_now)) else np.nan)
         ar.append({
             "key": key, "hist": hist, "seas": seasonal_s, "state": g.iloc[-1].copy(),
             "ctx": _series_context(g, hist), "hmax": max(hist) if hist else 0.0,
-            "lag52_seq": lag52_seq,
+            "lag52_seq": lag52_seq, "ref52": ref52,
             "yoy": (None if ratio is None else
                     float(np.clip(ratio, *YOY_CLIP)) if YOY_CLIP else float(ratio))})
 
@@ -831,6 +850,8 @@ def run_production(df, feats, cut, qs, qe, eval_keys, trees, fweeks, seasonal, w
             vals = {t: float(p[i]) for t, p in preds.items()}
             base = vals["q50"]
             lag52, yoy_ratio, seasonal_s = s["lag52_seq"][h - 1], s["yoy"], s["seas"]
+            if s.get("ref52") is not None:   # MO_135 velocity mode: blend reference only, not the model input
+                lag52 = s["ref52"][h - 1]
             # Seasonal blend (MO_27 lines 741-772): pull toward lag52 x yoy_ratio.
             if yoy_ratio is not None and np.isfinite(lag52) and lag52 > 0 and base > 0:
                 seasonal_ref = lag52 * yoy_ratio

@@ -6,6 +6,107 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 235: MO_134 the recursive model's settings are not beaten, the year-over-year clip's cost was mostly an artifact, and the recursive win over the served direct model is all in 2025 (2026-10-10)
+
+Code: `scripts/MO_134_recursive_fair_settings.py` (predictions P1-P7 pre-registered in f1a2ed2;
+compute ran on the GPU worker, jobs `jason-mo134-001` to `-003`; scoring file-match fix 28159d3),
+`scripts/MO_80` hooks `YOY_CLIP` / `YEAR_AGO` / `SAFETY_CAP_X_MAX` (6ba86aa; defaults equal
+production, batched equivalence exact), `docs/PRODUCTION_DECISION_PREREG.md` Amendment 1 (bad2659).
+Outputs: `scripts/outputs/mo134_score.log`, `mo134_fair_settings.json`, `mo134_rows.parquet`.
+Status: skeptic-reviewed (opus/high). No production forecast changed. Proposals are in
+`docs/SETTLED_FINDINGS.md` (pending review).
+
+### Finding
+
+All 18 origins, existing series. Average miss % at item x week / account x month / portfolio x
+month (cw/am/pm), 13+ week series. Skeptic verdict on each claim:
+
+1. Removing the 0.5-2.0 year-over-year clip is harmful, but the size is an artifact: current
+   recursive model 35.46 vs no clip 48.70 (+13.24). 95% of that is from 116 series-origins whose
+   year-ago week predates distribution (1-20 units at TDP 0.0-0.3, ratios 200-1,375); one Publix
+   series is 45%, the top 20 series 90%. Where year-ago TDP was at least half of current (3,820
+   series-origins) no clip costs only +0.14. The clip binds for 59% of series (median ratio 1.33),
+   so it acts as a crude guard against distribution change. Next test: a per-store
+   (TDP-normalized) year-over-year ratio (MO_135). *SURVIVES WITH CAVEATS.*
+2. A calendar-aligned year-ago week ties (-0.05 [-0.3, +0.1]). Production's row anchor
+   `hist[n-52]` is 51 weeks back even without gaps (MO_27:570, MO_80:790), an off-by-one; fixing
+   it ties. *SURVIVES.*
+3. A tree cap of 20,000 makes no difference (+0.00; median forecast change 1e-4). 9 of 18 origins
+   trained past 6,000 trees, so P3 half-fails. The `hit_cap` flag under-reports (MO_80:386 tests
+   best >= cap; 10 of 18 fits stopped at 5,963-6,000). *SURVIVES.*
+4. Recency weight 0.02 and blend weight 0.10 are "not beaten", not "best". No blend difference is
+   significant; blend 0.30 wins 4 of 5 history bands at band-separated portfolio x month; the
+   recency sweep is non-monotone (0.01 significantly worse, 0 and 0.04 not), which is
+   training-path noise. *SURVIVES WITH CAVEATS.*
+5. The recursive model passes the original production-decision rule against the served direct
+   model overall (item x week -5.07 [-12.46, -0.76]; all 5 criteria), but criterion 4 passed by
+   0.0012 (Jan-Mar 2026 bias 0.9012) and the win is all in the 2025 origins. On the last 7 origins
+   it reverses (account x month +5.17 [+0.8, +11.3]). Do NOT switch production on this evidence.
+   *SURVIVES WITH CAVEATS.*
+6. No recursive variant beats last week carried forward on 13+ week series (current recursive
+   minus last value +3.63; last value better at 16 of 18 origins). *SURVIVES.*
+
+Corrections to Claude's preliminary statements (corrected in chat): "removing the clip makes
+forecasts much worse (48.7)" (the size is a pre-launch-anchor artifact), "current settings are
+best" (they are not beaten), and "the recursive model passes the rule, which supports switching"
+(the win reverses in the last 7 origins).
+
+Decision (Jason): accuracy for 2026-2027 matters most to BUILT; consistency is valued; 2025 is
+"would it have worked" (limited PUFF history). Amendment 1, written before any forward week is
+scored: evidence order is forward weeks, then recent backtest dates (2025-12 on), then 2025 as a
+no-harm check only. Replace the status quo only if better at account x month and band-separated
+portfolio x month on recent dates and not worse at item x week; consistent at 5 of 6 recent dates
+at account x month; 2025 no-harm within 2 points at account x month; forward confirmation after
+at least 3 scored saves. Named candidates: direct_avg5, rec_dir5, served direct (status quo),
+recursive, L4W velocity x stores, last week carried forward.
+
+EXPLORATORY, post hoc, not significance-tested (6 overlapping 2026 origins, 2025-12 to 2026-05):
+direct_avg5 is best at account x month (16.2) and portfolio x month (6.5); recursive + fixed
+direct beats last week carried forward at account x month on 6 of 6 dates; recursive alone is
+worst (22.5 / 14.1; 0 of 6 vs last value). In 2025 recursive beat direct; in 2026 direct beats
+recursive.
+
+### Evidence
+
+All 18 origins, 13+ week series (bias is portfolio x month forecast/actual):
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| last week carried forward | 32.59 | 21.12 | 12.84 | 0.977 |
+| L4W velocity x stores | 32.93 | 20.69 | 12.61 | 0.995 |
+| current recursive model | 35.46 | 22.89 | 13.75 | 0.962 |
+| recursive, calendar year-ago | 35.42 | 22.85 | 13.73 | 0.967 |
+| recursive, tree cap 20,000 | 35.47 | 22.89 | 13.75 | 0.962 |
+| recursive, no clip + calendar + 3x rail | 37.78 | 24.40 | 15.21 | 1.014 |
+| recursive, no clip | 48.70 | 34.95 | 26.42 | 1.120 |
+| served direct model | 40.53 | 24.59 | 13.17 | 0.905 |
+
+Item x week sweeps: recency 0 / 0.01 / 0.02 / 0.04 = 35.67 / 35.57 / 35.46 / 35.69; blend 0 / 0.05
+/ 0.10 / 0.20 / 0.30 = 35.73 / 35.51 / 35.46 / 35.75 / 36.38.
+
+Recursive minus served direct by origin group (item x week / account x month / portfolio x month):
+2024-12 to 2025-10 -12.08* / -8.48* / -5.33*; 2025-11 to 2026-05 +1.87 / +5.17 [+0.8, +11.3]* / +6.59
+(post hoc split; * = interval excludes zero). The win comes from the under-13 and 52+ week bands; Walmart is -2.2 of the -5.07.
+
+2026-only (6 origins, exploratory), cw / am / pm: direct_avg5 28.8 / 16.2 / 6.5; served direct 32.4
+/ 17.0 / 8.3; rec_dir5 28.5 / 17.2 / 8.9; last week carried forward 30.4 / 19.9 / 13.1; recursive
+34.6 / 22.5 / 14.1.
+
+Pre-registered predictions: P1 FAILS (the clip matters), P2 HOLDS, P3 half-fails, P4 FAILS, P5
+HOLDS, P6 HOLDS, P7 FAILS (the fair-settings arm fails criterion 1).
+
+### Procedural lesson
+
+A pooled gap can come from a few rows that break the test's premise: 95% of the clip's "+13.24"
+came from 116 series-origins whose year-ago week predates distribution. Before quoting a size,
+split by whether the comparison is valid (here, comparable distribution). A pass of a rule on the
+full window can hide a reversal in the recent window; split early and late origins before reading
+a pass as support for a change. Say "not beaten", not "best", when no difference is significant.
+Preliminary readings given to Jason were wrong in three places; send a finding to the skeptic
+before stating it as a result.
+
+---
+
 ## README update 234: MO_133 combinations beat the current recursive model but not last week carried forward on established series; the gains are in young items (2026-10-09)
 
 Code: `scripts/MO_133_ensembles.py` (compute ran on the GPU worker from copies of 9f623c6 in 4 jobs,

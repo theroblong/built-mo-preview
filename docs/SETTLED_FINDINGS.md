@@ -133,6 +133,67 @@ series, item x week unless stated; * = interval excludes zero; ns = not signific
   every level (rec_dir5 28.5 / 17.2 / 8.9 vs 30.4 / 19.9 / 13.1); in the 12 origins of 2025 they
   tie. Not significance-tested; the forward tracker is the test.
 
+### Added 2026-10-10 from MO_134 (recursive fair settings; 18 origins; README 235), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Numbers are average miss % (lower is
+better) at item x week / account x month / portfolio x month, existing series, 13+ week series
+unless stated; * = interval excludes zero. Pre-registered P1-P7 in f1a2ed2.
+- **(a) Removing the 0.5-2.0 year-over-year clip is harmful, but the size is an artifact.**
+  Current recursive model 35.46 vs no clip 48.70 (+13.24). 95% of that comes from 116
+  series-origins whose year-ago week predates distribution (1-20 units at TDP 0.0-0.3, ratios
+  200-1,375); one Publix series is 45% and the top 20 series are 90%. Where year-ago TDP was at
+  least half of current (3,820 series-origins) no clip costs only +0.14. The clip binds for 59% of
+  series (median ratio 1.33), so it acts as a crude guard against distribution change. Do not
+  quote 48.7 as the cost of removing it. Next test: a per-store (TDP-normalized) year-over-year
+  ratio (MO_135). The fair-settings arm (no clip + calendar year-ago + 3x safety rail) 37.78 is
+  significantly worse than the current model only at item x week (+2.32 [+0.7, +3.8]*).
+  *Skeptic: SURVIVES WITH CAVEATS.*
+- **(b) Calendar-aligned year-ago ties:** -0.05 [-0.3, +0.1]. Production's row anchor
+  `hist[n-52]` is 51 weeks back even without gaps (MO_27:570, MO_80:790), an off-by-one; fixing it
+  ties. *Skeptic: SURVIVES.*
+- **(c) Tree cap of 20,000 makes no difference** (+0.00; median forecast change 1e-4). 9 of 18
+  origins trained past 6,000 trees, so P3 half-fails as registered. The `hit_cap` flag
+  under-reports (MO_80:386 tests best >= cap; 10 of 18 fits stopped at 5,963-6,000). Fix on the
+  report side (editing `train_like_production` busts the model cache). *Skeptic: SURVIVES.*
+- **(d) Recency weight 0.02 and blend weight 0.10 are "not beaten", not "best".** Item x week:
+  recency 0 / 0.01 / 0.02 / 0.04 = 35.67 / 35.57 / 35.46 / 35.69; blend 0 / 0.05 / 0.10 / 0.20 /
+  0.30 = 35.73 / 35.51 / 35.46 / 35.75 / 36.38. No blend difference is significant; blend 0.30 wins
+  4 of 5 history bands at band-separated portfolio x month (only the 52+ band makes 0.10 win
+  pooled); the recency sweep is non-monotone (0.01 significantly worse, 0 and 0.04 not), which is
+  training-path noise. *Skeptic: SURVIVES WITH CAVEATS.*
+- **(e) The recursive model passes the ORIGINAL production-decision rule against the served direct
+  model, but this does not support switching production.** Overall: recursive 35.46 / 22.89 /
+  13.75 vs served direct 40.53 / 24.59 / 13.17 (item x week -5.07 [-12.46, -0.76]*; all 5
+  criteria pass). Criterion 4 (seasonal bias) passed by 0.0012 (Jan-Mar 2026 bias 0.9012). The win
+  is all in the 2025 origins: 2024-12 to 2025-10 the recursive model is better by -12.08* / -8.48*
+  / -5.33* (three values as logged); 2025-11 to 2026-05 it is WORSE (+1.87 / +5.17 [+0.8,
+  +11.3]* / +6.59, account x month), ahead at only 1 of the last 6 origins (post hoc split). The
+  win comes from the under-13 and 52+ week bands; Walmart is -2.2 of the -5.07. The fair-settings
+  arm does not pass criterion 1. Pre-registered predictions: P1 FAILS (clip matters), P2 HOLDS, P3
+  half-fails, P4 FAILS (0.02 not uniquely best), P5 HOLDS, P6 HOLDS, P7 FAILS. *Skeptic: SURVIVES
+  WITH CAVEATS.* Do NOT switch production on this evidence.
+- **(f) No recursive variant beats last week carried forward on 13+ week series.** Last value
+  32.59 / 21.12 / 12.84 vs current recursive model 35.46 / 22.89 / 13.75 (+3.63*; last value
+  better at 16 of 18 origins). Pre-registered P6 HOLDS. *Skeptic: SURVIVES.*
+- **Decision (Jason, 2026-10-10):** accuracy for 2026-2027 matters most to BUILT; consistency is
+  valued; 2025 answers "would it have worked" (limited PUFF history). Production Decision
+  Amendment 1 (`docs/PRODUCTION_DECISION_PREREG.md`, bad2659, written before any forward week is
+  scored): evidence order is forward weeks, then recent backtest dates (2025-12 on), then 2025 as
+  a no-harm check only (within 2 points at account x month). Replace the status quo only if
+  better at account x month and band-separated portfolio x month on recent dates and not worse at
+  item x week; consistent at 5 of 6 recent dates at account x month; seasonal bias rule; forward
+  confirmation after at least 3 scored saves; tie-break consistency then simplicity. Named
+  candidates: 5-seed direct average (direct_avg5), recursive + fixed direct (rec_dir5), served
+  direct (status quo), recursive, L4W velocity x stores, last week carried forward.
+- **EXPLORATORY, post hoc, NOT a finding (6 overlapping 2026 origins, 2025-12 to 2026-05,
+  existing series):** direct_avg5 is best at account x month (16.2) and portfolio x month (6.5);
+  recursive + fixed direct (rec_dir5) beats last week carried forward at account x month at 6 of 6
+  dates (17.2 vs 19.9); recursive alone is worst (22.5 / 14.1; 0 of 6 vs last value). In 2025
+  recursive beat direct; in 2026 direct beats recursive. Not significance-tested; the forward
+  tracker is the test.
+- **Corrections to Claude's preliminary statements (withdrawn after the skeptic):** "removing the
+  clip makes forecasts much worse (48.7)", "current settings are best", and "the recursive model
+  passes the rule, which supports switching".
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

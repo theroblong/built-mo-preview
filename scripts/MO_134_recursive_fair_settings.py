@@ -74,7 +74,8 @@ import MO_133_ensembles as E                         # band-separated scoring, p
 
 assert M.SEASONAL_MODE == "step" and M.FEATURE_REFRESH == "freeze", "harness must match MO_27"
 
-DEFAULTS = {"YOY_CLIP": (0.5, 2.0), "YEAR_AGO": "rows", "SAFETY_CAP_X_MAX": None,
+PREFIX = "mo134"                                     # result-file prefix (MO_135 reuses this module)
+DEFAULTS = {"YOY_CLIP": (0.5, 2.0), "YEAR_AGO": "rows", "SAFETY_CAP_X_MAX": None, "YOY_MODE": "units",
             "SEASONAL_BLEND_WEIGHT": 0.10, "TREES_CAP": M.TREES_CAP, "RECENCY_LAMBDA": 0.02}
 ARMS = {
     "rec": {},
@@ -119,7 +120,7 @@ def compute_origin(lbl: str, arms: list[str], out_dir: str, feats_r: list[str], 
     seas = M.seasonal_index_at(cut)
     out, info = Path(out_dir), {}
     for arm in arms:
-        p = out / f"mo134_{arm}_{lbl}.parquet"
+        p = out / f"{PREFIX}_{arm}_{lbl}.parquet"
         if p.exists():
             continue
         t1 = time.time()
@@ -196,7 +197,7 @@ def score(result_dirs: list[str]) -> None:
     arms = list(ARMS) + ["direct_served"]
     for arm in arms:
         parts = [pd.read_parquet(f).assign(origin=f.stem.rsplit("_", 1)[1])
-                 for d in result_dirs for f in sorted(Path(d).glob(f"mo134_{arm}_????-??.parquet"))]   # exact arm: "rec" must not match "rec_noclip"
+                 for d in result_dirs for f in sorted(Path(d).glob(f"{PREFIX}_{arm}_????-??.parquet"))]   # exact arm: "rec" must not match "rec_noclip"
         if not parts:
             raise SystemExit(f"no results for {arm}")
         cp = pd.concat(parts, ignore_index=True)
@@ -299,7 +300,7 @@ def main() -> None:
     feats_d = list(json.loads((fd / "direct_multihorizon_metrics_v11d.json").read_text())["features_used"])
     t0 = time.time()
     summary = compute(origins, a.arms.split(","), a.out, feats_r, feats_d, a.threads, a.parallel)
-    Path(a.out, f"mo134_compute_{'_'.join(origins)}.json").write_text(json.dumps(summary, indent=2, default=str))
+    Path(a.out, f"{PREFIX}_compute_{'_'.join(origins)}.json").write_text(json.dumps(summary, indent=2, default=str))
     print(f"done {len(origins)} origin(s) in {time.time() - t0:,.0f}s", flush=True)
 
 
