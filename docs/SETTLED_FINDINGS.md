@@ -234,6 +234,59 @@ P1-P5 in 6c5332e. Recent = 6 overlapping origins, 2025-12 to 2026-05 (explorator
   under-forecast went "from 10% to about 3%" (a level shift, not a seasonal fix) and the per-store
   ratio is "a safe replacement for the clip" (the gate does that job).
 
+### Added 2026-10-12 from MO_136 / MO_136b / MO_137 (category, other-retailer, 26-week and post-expansion fade signals; README 237), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Numbers are average miss % (lower is
+better) at item x week / account x month / portfolio x month, existing series. Pre-registered
+predictions: MO_136 in bf33de5, MO_137 and its 'beats' definition in e80fd81; `all_avg5` and
+`fade_avg5` named in `docs/PRODUCTION_DECISION_PREREG.md` before results. Recent = 6 overlapping
+origins, 2025-12 to 2026-05 (exploratory; sign-test p-values optimistic).
+- **(a) MO_136 category, other-retailer and 26-week signals: no pass. The category portfolio gain
+  is Walmart-only.** Recent: direct_avg5 28.79 / 16.17 / 6.45; cat2 28.93 / 16.08 / 5.62;
+  xret2 29.47 / 16.28 / 6.95; l262 29.16 / 15.81 / 6.63; all_avg5 28.85 / 16.04 / 5.83 (parity
+  exact). Category pm-by-band -0.76 at 5 of 6 dates, but Walmart alone is -1.47 and without
+  Walmart -0.17 (seed noise); account x month wins 2 of 6. Other-retailer signals hurt: 13-25
+  week band worse at 16 of 18 dates (+0.95 vs noise +0.10 to +0.35); account x month 1 of 6 is
+  Walmart-driven (5 of 6 without Walmart). 26-week signals: no effect. all_avg5: pm-by-band
+  -1.62 at 6 of 6 dates (dates overlap), robust across seeds, halves without Walmart (-0.81),
+  per-date band wins 13-25 weeks 4 of 6 and 26-51 weeks 3 of 6; '2025 no harm' hides a 26-51
+  week band loss (+1.9 am), 72% from one Walmart item (08-40229-30558 at 2025-07, all_avg5 226k
+  vs 362k, actual 418k, caused by the other-retailer signals). No production switch:
+  all_avg5 fails consistency (3 of 6 at am) and criterion 4 (Oct-Dec 2025 bias 1.1019, margin
+  0.002; 1.073 without Walmart would pass), so Walmart decides the outcome. 'Keep category,
+  drop other-retailer' is NOT supported. *Skeptic: SURVIVES WITH CAVEATS (C2 category-to-pm,
+  C3 other-retailer hurts, C5 and C6 with the Walmart splits; C7 'keep category, drop
+  other-retailer' FALLS as worded).*
+- **(b) MO_137 post-expansion fade signals: no pass.** Recent with Walmart: direct_avg5 28.79 /
+  16.17 / 6.45; fade_avg5 28.71 / 16.48 / 6.71 (am worse; wins 2 of 6; pm-by-band -0.21 is one
+  date, 2026-01). P3 FAILS, P5 FAILS (Walmart recent am 16.60 -> 19.10), P2 holds literally
+  (Walmart Oct-Dec 2025 bias 1.210 -> 1.196), P4 holds (all-origin cw 34.08 vs 34.15). Fails
+  criterion 4 (Oct-Dec 2025 bias 1.1005 vs served 1.0617). 'Helps without Walmart' is NOT
+  settled: within-band am -0.11 (4 of 6), Target + Sam's are 56% of the gain, it reverses in
+  2025 (worse without Walmart 9 of 12 origins, better at Walmart 9 of 12). 'Fade except Walmart'
+  would be post hoc. Walmart loss mechanism: the signals remove an offset between under-forecast
+  young items and over-forecast established items in the account total (2026-01 total bias 0.991
+  -> 0.917 while cw -1.47 and within-band am -3.07 improve). *Skeptic: only C1 (parity) and C2
+  (P3 fails) stand; C3 FALLS as worded; C4 number survives, mechanism rewritten; C5 FALLS.*
+- **(c) Reporting rule: always report results without Walmart and within history bands per date,
+  because pooled account totals can be right by offsetting item errors across item ages.**
+  Walmart (27% of recent volume) decided the MO_136 category result, the other-retailer
+  account-level result, the no-switch outcome and the MO_137 comparison. Also check a sub-group
+  split (Target and Sam's) and the 2025 origins before calling a gain consistent. The underlying
+  defect to examine next is age-dependent bias (young and growing items under-forecast,
+  established over-forecast). *Skeptic: supported by C2, C5, C6 (MO_136) and C3, C4 (MO_137).*
+- **(d) Walmart grows in step-change expansions followed by velocity fade (descriptive, MO_136b;
+  not skeptic-reviewed on its own).** Expansion 2025-08-17 (about 100k to about 190k a week, TDP
+  about 340 to about 600), fade about 40% through Q4 at flat TDP (117k by late December), second
+  expansion 2026-01-18 (TDP 736 -> 1,104; about 250k), fade to about 214k by late April. Walmart
+  counted once (38 series, RMA). H1 and H3 fail, H2 is not Walmart-specific (43% vs 46%), H4
+  holds (Oct-Dec 2025 every model over-forecast Walmart, 1.13 to 1.27). The MO_137 skeptic
+  qualified the implication: 'history cannot anticipate the next expansion' and 'Walmart needs
+  planned-expansion inputs from BUILT' are hypotheses, not shown.
+- **Corrections to Claude's preliminary statements (withdrawn after the skeptic):** MO_136:
+  category signals help portfolio totals "in every item-age group" and "keep category, drop
+  other-retailer". MO_137: the fade signals "help every retailer except Walmart (6/6)" and
+  Walmart's loss "comes from missing the January expansion".
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

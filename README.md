@@ -6,6 +6,252 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 237: MO_136-137: category, other-retailer, 26-week and post-expansion fade signals do not pass the decision rule; Walmart's account totals are right partly by offsetting item errors (2026-10-12)
+
+Code: `scripts/MO_136_category_extract.py` (category file, not a forecast arm),
+`scripts/MO_136_signals.py` (predictions P1-P5 pre-registered in bf33de5 before any run),
+`scripts/MO_136b_walmart_diagnostic.py` (descriptive), `scripts/MO_137_expansion_fade.py`
+(predictions P1-P5 and the 'beats' definition pre-registered in e80fd81 before any run).
+`docs/PRODUCTION_DECISION_PREREG.md` named `all_avg5` and `fade_avg5` as candidates before
+results. Compute ran on the GPU worker: `jason-mo136-001` to `-003` (63-82 min each, $2.24
+reserved each) and `jason-mo137-001` to `-003` (31-41 min each, $1.69 reserved each).
+Outputs: `scripts/outputs/mo136_score.log`, `mo136_signals.json`, `mo136b_walmart.log`,
+`mo137_score.log`, `mo137_expansion_fade.json`.
+Status: skeptic-reviewed (opus/high) for MO_136 (SURVIVES WITH CAVEATS; no-switch decision
+stands) and MO_137 (only the parity and no-pass claims stand; see below). MO_136b is descriptive and was not skeptic-reviewed on its own; the MO_137
+skeptic qualified its implication. No production forecast changed. Proposals are in
+`docs/SETTLED_FINDINGS.md` (pending review).
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Numbers are average miss
+% (lower is better), existing series. Recent = 6 overlapping origins, 2025-12 to 2026-05
+(exploratory; the dates overlap, so sign-test p-values are optimistic). Walmart = 27% of recent
+volume.
+
+Arms. MO_136: base2 (2 seeds, no new signals; parity arm), cat2 (category and competitor
+signals, 6), xret2 (other-retailer signals, 3), l262 (26-week signals, 2), all_avg5 (all
+signals, 5 seeds); compared with direct_avg5 (MO_133, 5 seeds), the served direct model and last
+week carried forward (flat). All signals are calendar-trailing; a leak test (signals identical
+with and without later data) passed, and it cut the category file too. MO_137: fade_avg5 (5
+seeds): weeks since the last store-count jump, size of the jump, recent sales per store against
+the post-jump peak and the 26-week peak, and the same at retailer level. 'Beats' was defined
+before results: recent am better AND band-separated pm better AND cw not worse by more than 0.3.
+
+### Finding
+
+MO_136 (category extract: 461,891 retailer rows, 158 accounts, 2023-01-08 to 2026-09-06; BUILT
+is 3.1% of nutrition-bar base units on these rows). Parity is exact on all 18 origins (max abs
+diff 0.000000). Pre-registered predictions: P1 HOLDS, P2 HOLDS (category pm-by-band -0.76), P3
+FAILS (other-retailer signals worse at cw in the young bands: <13 weeks 51.92 vs 51.44, 13-25
+weeks 32.19 vs 31.24), P4 HOLDS (26-week signals +0.06 at cw), P5 HOLDS (all_avg5 am 16.04 vs
+direct_avg5 16.17). Skeptic verdict on each claim:
+
+1. C1 parity SURVIVES (0.000000).
+2. C2 category lifts portfolio x month: SURVIVES WITH CAVEATS as worded, and the gain is
+   Walmart. Pooled, pm-by-band -0.76 at 5 of 6 dates, beyond base-seed noise (-0.06 / +0.17 /
+   +0.02). Walmart alone is -1.47; without Walmart it is -0.17, which is seed noise. At account x
+   month category wins 2 of 6 dates (without Walmart +0.29).
+3. C3 other-retailer signals hurt: SURVIVES WITH CAVEATS. In the 13-25 week band they are worse
+   at 16 of 18 dates (+0.95 vs noise +0.10 to +0.35); <13 weeks worse at 11 of 18 (recent
+   only). The am result (wins 1/6) is Walmart-driven: without Walmart 5/6 (-0.56); Walmart alone
+   +2.39.
+4. C4 26-week signals have no effect: SURVIVES.
+5. C5 all_avg5 portfolio gain is the most robust result, with limits. pm-by-band -1.62 at 6 of 6
+   dates (nominal p=0.03; optimistic because the dates overlap); each single seed -1.39 to
+   -1.51 vs direct_avg5 (base seeds 0.00 to +0.33). It halves without Walmart (-0.81). Per-date
+   band wins are not uniform: 13-25 weeks 4 of 6, 26-51 weeks 3 of 6 (so not 'every band').
+   Account x month wins 3 of 6. '2025 no harm' hides a 26-51 week band loss of +1.9 am / +1.8 cw,
+   72% from one Walmart item (08-40229-30558 at origin 2025-07: all_avg5 226k vs direct_avg5
+   362k, actual 418k; xret alone 217k, so the other-retailer signals cause it).
+6. C6 no production switch: SURVIVES WITH CAVEATS. all_avg5 fails the consistency rule (3 of 6
+   recent dates at am) and criterion 4 (Oct-Dec 2025 bias 1.1019 vs the 0.10 limit; served
+   1.0617). The decision is itself set by Walmart: without Walmart all_avg5 wins am at 5 of 6
+   dates and Oct-Dec 2025 bias 1.073 would pass. The criterion-4 margin is 0.002 (single seeds
+   1.095 to 1.107).
+7. C7 'keep category, drop other-retailer' FALLS as worded. Category's gain is Walmart-only;
+   evidence on dropping other-retailer is mixed (it hurts item level, but adds about -0.57 pm
+   and wins am 5/6 without Walmart); the single-group gains sum to -1.48, less than all signals
+   together (-1.62).
+
+MO_136b Walmart diagnostic (descriptive; not skeptic-reviewed on its own). Walmart is counted
+once: 38 item series, WALMART CORP - RMA (the CRMA rows are dropped by the RMA priority rule,
+which resolves the earlier open question for the scoring panel). Hypotheses: H1 (error
+proportional to volume) FAILS as a Walmart-specific story: top-5 items are 44% of Walmart error
+and 41% of volume in the recent period (84% vs 85% in 2025). H3 (models disagree more at
+Walmart) FAILS: model spread at am 21.7 at Walmart vs 22.6 elsewhere. H2 (store-count moves) is
+not Walmart-specific: 13-week store-count moves of 20% or more hit 43% of Walmart item-weeks vs
+46% for other RMA accounts (separate ad-hoc query, item-weeks since 2025-06, not in mo136b_walmart.log; the log's
+own H2 line measures moves from each forecast date: 45% of Walmart forecast rows, 23% of volume, 31% of error). H4 HOLDS: in Oct-Dec 2025 every model over-forecast Walmart
+(bias 1.13 to 1.27: flat 1.22, L4W velocity x stores 1.27, served 1.13, recursive 1.22,
+direct_avg5 1.21, all_avg5 1.19) vs 1.01 to 1.10 for the rest. The Walmart story (RMA weekly
+base units and TDP): about 100k a week at TDP about 340 in July 2025; expansion 2025-08-17
+(about 190k, TDP about 600); velocity fades about 40% through Q4 at flat TDP (117k by late
+December; 4-pk Cookie Dough Chunk -36%, Brownie Batter -38%); second expansion 2026-01-18 (TDP
+736 to 1,104; items 18 to 20; about 250k); fades to about 214k by late April. So Walmart grows
+in step-change expansions each followed by a velocity fade. The 2025-12 forecast date misses
+the January expansion (all models 31% to 51% at am). Recent Walmart am: served direct 13.8
+(bias 0.90, which happens to suit the fade) vs direct_avg5 15.9; elsewhere direct_avg5 16.1 vs
+served 18.6. That is why Walmart decides comparisons.
+
+MO_137 (post-expansion fade signals). Parity exact (max abs diff 0.000000). Pre-registered
+predictions: P1 HOLDS; P2 HOLDS literally (Walmart Oct-Dec 2025 bias 1.210 to 1.196, tiny); P3
+(fade_avg5 'beats' direct_avg5) FAILS (recent am 16.48 vs 16.17, pm-by-band -0.21, cw 28.71 vs
+28.79); P4 HOLDS (all-origin cw 34.08 vs 34.15); P5 (Walmart recent am below 15.9) FAILS
+(19.10 vs 16.60 on full months; 16.60 vs 15.89 in the MO_136b log is full months vs all
+months). Skeptic verdicts, verbatim from the note: only C1 (parity) and C2 (P3 fails) stand.
+
+1. C2 stands and adds: within-band am is a tie (22.54 vs 22.51); the -0.21 within-band pm is
+   one date (2026-01 -2.92), 3 of 6 dates.
+2. C3 'helps consistently without Walmart' FALLS as worded: 6 of 6 only in the 13-25 band;
+   within-band am shrinks from -0.47 to -0.11 (4 of 6); within-band pm -0.22 is all 2026-01;
+   Target and Sam's are 56% of the without-Walmart gain (without them 4 of 6); Sam's, which is
+   Walmart-owned, shows the Walmart pattern (+2.51 at 2025-12, +2.31 at 2026-01). In 2025 the
+   fade signals are worse without Walmart at 9 of 12 origins and better at Walmart at 9 of 12,
+   so the split reverses. It survives only as 'pooled without-Walmart gain beyond seed noise'
+   (every fade seed 15.46 to 15.71 beats every direct seed 15.82 to 16.35).
+3. C4 the Walmart number survives (16.60 to 19.10; every fade seed 18.40 to 19.66 is worse than
+   every direct seed 15.65 to 17.11) but the mechanism FALLS. At 2026-01 direct_avg5's Walmart
+   total was right by offset: young items under-forecast (actual/forecast 1.73 on 30680, 2.03
+   on 30652), established items over-forecast (30381 at 0.954, 30581 at 0.986). The fade
+   signals cut 18 of 20 items by 4-11%, taking total bias to 0.917. Items and bands improve
+   (cw -1.47, within-band am -3.07) while the account total loses the offset. There are also
+   unexplained Walmart losses at 2026-02 (+3.44), 2026-04 (+2.26, where the fade raised
+   forecasts) and in the fade window 2025-10 (+2.84) and 2025-11 (+1.97).
+4. C5 FALLS: 'history cannot anticipate the next expansion' is not shown by MO_137; 'fade
+   except Walmart' would be post hoc (fitted to 6 overlapping dates, reverses in 2025, and the
+   pre-registration allows description only). 'Walmart needs planned-expansion inputs from
+   BUILT' remains a hypothesis from MO_136b only.
+5. fade_avg5 also fails production criterion 4: Oct-Dec 2025 bias 1.1005 vs served 1.0617.
+
+Corrections to Claude's preliminary statements (withdrawn after the skeptic): (i) MO_136:
+category signals help portfolio totals 'in every item-age group' and 'keep category, drop
+other-retailer' (the category gain is Walmart-only and seed noise without it; per-date band wins
+are 3-4 of 6 in two bands; the evidence on dropping other-retailer is mixed). (ii) MO_137: the
+fade signals 'help every retailer except Walmart (6/6)' and 'Walmart's loss comes from missing
+the January expansion' (the without-Walmart gain is mostly cancellation across item-age groups
+plus Target and Sam's and reverses in 2025; the Walmart loss comes from removing offsetting
+errors in the account total, not from the expansion timing).
+
+Wider lesson: account totals can look right through offsetting errors across item ages. The
+underlying defect to examine next is age-dependent bias (young and growing items under-forecast,
+established items over-forecast). Next step: a laptop diagnostic of bias by item age.
+
+Data caveat (Jason, 2026-10-12): SPINS weekly data reflects averages (some rounding issues
+already noted), and promotions can run part of a week. SPINS reports on a fixed week-ending day
+while retailer price promotions may run midweek to midweek, so one promotion can be split across
+two SPINS weeks. Weekly promo flags, discount and lift are therefore diluted across two weeks;
+mapping the trade calendar to SPINS weeks needs day-overlap fractions, not a yes/no promo-week
+flag. Base units (the SPINS modeled baseline) is the cleaner target, and rounding adds a noise
+floor for small items.
+
+### Evidence
+
+MO_136, recent origins, cw / am / pm (bias):
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| all_avg5 | 28.85 | 16.04 | 5.83 | 0.973 |
+| cat2 | 28.93 | 16.08 | 5.62 | 0.978 |
+| direct_avg5 | 28.79 | 16.17 | 6.45 | 0.970 |
+| base2 | 29.01 | 16.05 | 6.44 | 0.969 |
+| l262 | 29.16 | 15.81 | 6.63 | 0.970 |
+| xret2 | 29.47 | 16.28 | 6.95 | 0.967 |
+| L4W velocity x stores | 30.57 | 17.92 | 10.92 | 1.020 |
+| last week carried forward (flat) | 30.38 | 19.88 | 13.11 | 1.013 |
+| served direct model | 32.42 | 16.99 | 8.26 | 0.936 |
+
+All 18 origins, existing series:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| all_avg5 | 34.26 | 20.79 | 9.00 | 0.968 |
+| cat2 | 34.38 | 20.96 | 9.00 | 0.970 |
+| direct_avg5 | 34.15 | 20.85 | 9.17 | 0.969 |
+| base2 | 34.41 | 20.87 | 9.18 | 0.968 |
+| l262 | 34.47 | 20.73 | 9.33 | 0.968 |
+| xret2 | 34.56 | 20.78 | 8.96 | 0.968 |
+| L4W velocity x stores | 32.93 | 20.69 | 12.61 | 0.995 |
+| last week carried forward (flat) | 32.59 | 21.12 | 12.84 | 0.977 |
+| served direct model | 40.53 | 24.59 | 13.17 | 0.905 |
+
+2025 origins (12 dates), existing series:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| all_avg5 | 38.55 | 24.50 | 11.49 | 0.964 |
+| cat2 | 38.71 | 24.77 | 11.65 | 0.963 |
+| direct_avg5 | 38.40 | 24.51 | 11.29 | 0.968 |
+| base2 | 38.69 | 24.64 | 11.33 | 0.968 |
+| l262 | 38.68 | 24.58 | 11.44 | 0.967 |
+| xret2 | 38.59 | 24.29 | 10.54 | 0.969 |
+| L4W velocity x stores | 34.80 | 22.86 | 13.93 | 0.976 |
+| last week carried forward (flat) | 34.34 | 22.09 | 12.63 | 0.949 |
+| served direct model | 46.97 | 30.54 | 17.01 | 0.880 |
+
+(Served direct model all-origin and 2025 rows are from `mo137_score.log`, the same bench.)
+
+History bands, recent origins (<13 / 13-25 / 26-51 / 52+ weeks), portfolio x month: all_avg5
+15.1 / 7.8 / 6.9 / 4.9; direct_avg5 17.0 / 9.9 / 7.6 / 6.7; cat2 16.6 / 8.2 / 7.1 / 6.1; xret2
+15.8 / 8.9 / 7.5 / 6.3; flat 21.9 / 13.6 / 12.5 / 13.5. Account x month: all_avg5 45.8 / 19.4 /
+13.8 / 13.7; direct_avg5 45.7 / 20.2 / 14.1 / 14.3; flat 47.3 / 25.0 / 17.0 / 16.2.
+
+Per-origin recent account x month (candidate minus comparison; negative = better), 2025-12 /
+2026-01 / 2026-02 / 2026-03 / 2026-04 / 2026-05:
+- cat2 - base2: +0.01 / -0.53 / +0.22 / -0.47 / +0.53 / +0.51 (wins 2/6)
+- xret2 - base2: +0.45 / +0.43 / +0.73 / -2.23 / +1.13 / +1.05 (wins 1/6)
+- all_avg5 - direct_avg5: -0.30 / -1.36 / +0.46 / -1.44 / +0.75 / +1.31 (wins 3/6)
+
+MO_137, recent origins, with Walmart, cw / am / pm (bias):
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| direct_avg5 | 28.79 | 16.17 | 6.45 | 0.970 |
+| fade_avg5 | 28.71 | 16.48 | 6.71 | 0.960 |
+| served direct model | 32.42 | 16.99 | 8.26 | 0.936 |
+| L4W velocity x stores | 30.57 | 17.92 | 10.92 | 1.020 |
+| last week carried forward (flat) | 30.38 | 19.88 | 13.11 | 1.013 |
+
+Recent origins, without Walmart:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| fade_avg5 | 28.57 | 15.53 | 5.98 | 0.978 |
+| direct_avg5 | 28.65 | 16.00 | 6.43 | 0.983 |
+| L4W velocity x stores | 29.11 | 15.88 | 6.68 | 1.012 |
+| served direct model | 32.57 | 18.38 | 9.49 | 0.947 |
+| last week carried forward (flat) | 29.29 | 17.74 | 8.91 | 1.007 |
+
+All 18 origins, with Walmart: direct_avg5 34.15 / 20.85 / 9.17 (bias 0.969); fade_avg5 34.08 /
+21.04 / 9.11 (0.965); served 40.53 / 24.59 / 13.17. Without Walmart: direct_avg5 35.33 / 20.96 /
+8.16; fade_avg5 35.37 / 20.84 / 8.03.
+
+2025 origins, with Walmart: direct_avg5 38.40 / 24.51 / 11.29; fade_avg5 38.34 / 24.60 / 10.99.
+Without Walmart: direct_avg5 40.46 / 24.71 / 9.47; fade_avg5 40.59 / 24.87 / 9.58.
+
+Per-origin recent account x month, fade_avg5 - direct_avg5, 2025-12 / 2026-01 / 2026-02 /
+2026-03 / 2026-04 / 2026-05: with Walmart +0.48 / +1.62 / +0.48 / -0.44 / +0.28 / -0.48 (wins
+2/6; pm-by-band -0.21). Without Walmart -0.38 / -0.58 / -0.84 / -0.56 / -0.28 / -0.36 (wins
+6/6, nominal p=0.03, dates overlap; pm-by-band -0.22).
+
+Seasonal bias per year (all accounts): Oct-Dec 2025 flat 1.092, served 1.062, direct_avg5
+1.099, fade_avg5 1.100; Jan-Mar 2026 served 0.998, direct_avg5 0.983, fade_avg5 0.966.
+Walmart Oct-Dec 2025 bias: flat 1.224, L4W velocity x stores 1.274, served 1.131, direct_avg5
+1.210, fade_avg5 1.196. Walmart recent account x month: flat 25.72, L4W velocity x stores 23.46,
+served 13.19, direct_avg5 16.60, fade_avg5 19.10.
+
+### Procedural lesson
+
+Pooled and per-retailer comparisons were both decided by one account. Always report results
+without Walmart and within history bands per date, because pooled account totals can be right
+by offsetting item errors: a change that improves items and bands can worsen an account total
+that was right by cancellation (young items under-forecast, established items over-forecast),
+and a gain that vanishes without the biggest account is not a portfolio gain. Check a
+sub-group split (here Target and Sam's, and the 2025 flip) before calling a gain 'consistent'.
+Preliminary readings given to Jason were wrong in two places in each experiment; send a finding
+to the skeptic before stating it as a result. Pre-registering the 'beats' definition and the
+candidate name before results is what made the MO_137 failure unambiguous.
+
+---
+
 ## README update 236: MO_135 a per-store year-over-year ratio gives no accuracy gain; the store-count gate, not the ratio, is what removes the no-clip blowups; no production switch (2026-10-12)
 
 Code: `scripts/MO_135_per_store_yoy.py` (predictions P1-P5 pre-registered in 6c5332e before any

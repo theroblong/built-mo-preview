@@ -51,6 +51,13 @@ log. Not yet skeptic-reviewed.
   attributes (rows 9, 12), and an event log for marketing and retailer events (rows 14, 17).
   Without dated history these can never be tested honestly.
 
+## Data caveats that affect how signals are built (Jason, 2026-10-12)
+- **SPINS weekly figures are averages over the week** (price, distribution and some rates), so small items carry rounding noise.
+- **Promotions do not line up with SPINS weeks.** SPINS reports each week on a fixed week-ending day, while a retailer price
+  promotion can run midweek to midweek, so one promotion is often split across two SPINS weeks with a diluted discount and lift
+  in each. Rows 11 and 12 must therefore map promotions to SPINS weeks by the number of promo days in each week (an overlap
+  fraction), not a yes/no promo-week flag, and lift should be measured over the two weeks together.
+
 ## Contradictions found (to resolve)
 1. Forward promo file: README says "forward confirmed TPR file (Brian)"; the load list says "trade
    commitments, not confirmed shelf promotions" (Brian, 2026-09-30). The latter is current.
