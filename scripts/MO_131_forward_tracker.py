@@ -286,6 +286,82 @@ def register_add() -> None:
     print("  COMMIT these files now." if not TEST_MODE else "  (TEST -- never commit)")
 
 
+ADD5_PREDICTIONS = {
+    "direct_avg5": ("Fixed direct model (MO_132/133: MO_26D settings, calendar-week targets, refit on all targets), "
+                    "5 seeds (42, 1, 2, 3, 4) averaged. Best recent-date backtest candidate (MO_133-139)."),
+    "rec_dir5": "0.5 x recursive (saved column) + 0.5 x direct_avg5 (MO_133 combination).",
+    "tweedie_avg5": ("Fixed direct model trained on raw units with a Tweedie objective (power 1.5), 5 seeds averaged "
+                     "(MO_139). Better than direct_avg5 on 2025 backtest dates, worse on recent dates."),
+}
+ADD5_SEEDS = (42, 1, 2, 3, 4)
+
+
+def register_add5(seeds: tuple[int, ...] = ADD5_SEEDS) -> None:
+    """Add the 5-seed fixed direct model, its 50/50 combination with the saved recursive forecast, and the
+    5-seed Tweedie model to the newest registration WITHOUT touching it (Jason 2026-10-12, forward set in
+    docs/PRODUCTION_DECISION_PREREG.md). Valid as a forward test only while the panel has no week after the
+    registration's cutoff (asserted)."""
+    import MO_132_one_yardstick as P
+    import MO_139_retransformation as R
+    if seeds != ADD5_SEEDS and not TEST_MODE:
+        raise SystemExit("--seeds is test-only: set MO_REG_DIR to a scratch folder")
+    if not TEST_MODE and (dirty := _dirty_scripts()):
+        raise SystemExit(f"scripts/ has uncommitted changes -- commit first:\n{dirty}")
+    feats_d = list(json.loads((SCRIPTS / P.DIRECT_META).read_text())["features_used"])
+    feats_r = list(pickle.load(open(MODEL_PKL, "rb")).feature_name_)
+    df = M.load_panel(list(dict.fromkeys(feats_r + feats_d)))
+    df["tdp"] = pd.to_numeric(df["tdp"], errors="coerce")
+    cut = df["__time"].max()
+    tag = str(cut.date())
+    reg_p = REG_DIR / f"{tag}.parquet"
+    out = REG_DIR / f"{tag}.add-avg5.parquet"
+    if not reg_p.exists():
+        raise SystemExit(f"no registration at the latest data week {tag}")
+    if out.exists():
+        print(f"already added: {out} -- refusing to overwrite"); return
+    reg = pd.read_parquet(reg_p)[["series", "date", "lapsed", "recursive", "flat"]]
+    reg["date"] = pd.to_datetime(reg["date"], utc=True)
+    assert reg["date"].min() > cut, "registration weeks must all lie after the panel's last week (forward only)"
+    t0 = time.time()
+    M.NEUTRALIZE_DONOR_FEATURES = False                  # forward: donor features carry no look-ahead
+    tr = M.cutoff_frame(df, cut)
+    cols = {}
+    for s in seeds:
+        P.D26.LGBM_BASE["random_state"] = s
+        d = P.run_direct(tr, feats_d, cut, refit=True, calendar=True).rename(columns={"value": f"direct_s{s}"})
+        tw = R.run_variant(tr, feats_d, cut, "tweedie").rename(columns={"value": f"tweedie_s{s}"})
+        for x in (d, tw):
+            x["date"] = pd.to_datetime(x["date"], utc=True)
+        cols[s] = (d, tw)
+        print(f"  seed {s}: direct {len(d):,}, tweedie {len(tw):,} forecasts | {time.time() - t0:,.0f}s", flush=True)
+    r = reg.copy()
+    for s, (d, tw) in cols.items():
+        r = r.merge(d, on=["series", "date"], how="left").merge(tw, on=["series", "date"], how="left")
+    dcols, tcols = [f"direct_s{s}" for s in seeds], [f"tweedie_s{s}" for s in seeds]
+    miss = {"direct": int((r[dcols].isna().any(axis=1) & ~r["lapsed"]).sum()),
+            "tweedie": int((r[tcols].isna().any(axis=1) & ~r["lapsed"]).sum())}
+    da, ta = r[dcols].mean(axis=1), r[tcols].mean(axis=1)
+    r["direct_avg5"] = np.where(r["lapsed"], 0.0, da.fillna(r["flat"]))
+    r["tweedie_avg5"] = np.where(r["lapsed"], 0.0, ta.fillna(r["flat"]))
+    r["rec_dir5"] = 0.5 * r["recursive"] + 0.5 * r["direct_avg5"]
+    r = r[["series", "date", "direct_avg5", "rec_dir5", "tweedie_avg5"] + dcols + tcols]
+    r.to_parquet(out)
+    meta = {"cutoff": tag, "test": TEST_MODE, "adds_to": reg_p.name, "seeds": list(seeds),
+            "registered_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "code_commit": _git_head(), "scripts_tree_clean": not _dirty_scripts(),
+            "data_max_week": tag, "contenders": ["direct_avg5", "rec_dir5", "tweedie_avg5"],
+            "definitions": ADD5_PREDICTIONS, "fell_back_to_flat": miss, "n_rows": len(r),
+            "sha256": {"add": _sha256(out), "base_registration": _sha256(reg_p),
+                       "panel": _sha256(SCRIPTS / M.PARQUET),
+                       "code": {f: _sha256(SCRIPTS / f) for f in CODE_FILES + [
+                           "MO_132_one_yardstick.py", "MO_139_retransformation.py",
+                           "MO_26D_direct_multihorizon_train.py"]}},
+            "decision_rule": "docs/PRODUCTION_DECISION_PREREG.md Amendment 1 (forward confirmation)"}
+    (REG_DIR / f"{tag}.add-avg5.meta.json").write_text(json.dumps(meta, indent=2, default=str))
+    print(f"  wrote {out.name} ({len(r):,} rows; fell back to flat {miss}) | {time.time() - t0:,.0f}s")
+    print("  COMMIT these files now." if not TEST_MODE else "  (TEST -- never commit)")
+
+
 def score() -> None:
     feats, df = _load()
     panel_end = df["__time"].max()
@@ -362,14 +438,17 @@ def score() -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["register", "register-add", "score"])
+    ap.add_argument("cmd", choices=["register", "register-add", "register-add5", "score"])
     ap.add_argument("--trees", type=int, default=None, help="cap for smoke tests; None = production")
     ap.add_argument("--cutoff", default=None, help="TESTS ONLY: register at a past week")
+    ap.add_argument("--seeds", default="", help="TESTS ONLY (register-add5): comma-separated seeds")
     a = ap.parse_args()
     if a.cmd == "register":
         register(a.trees, a.cutoff)
     elif a.cmd == "register-add":
         register_add()
+    elif a.cmd == "register-add5":
+        register_add5(tuple(int(x) for x in a.seeds.split(",")) if a.seeds else ADD5_SEEDS)
     else:
         score()
 
