@@ -8,6 +8,16 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ## README update 237: MO_136-137: category, other-retailer, 26-week and post-expansion fade signals do not pass the decision rule; Walmart's account totals are right partly by offsetting item errors (2026-10-12)
 
+**What each experiment tested (plain words):**
+- **MO_136, new input signals:** gave the fixed direct model (the 5-seed `direct_avg5`, today's best candidate)
+  three kinds of extra information: competitor/category sales trends and seasonal shape at the same retailer, the
+  same item's sales at other retailers, and the item's own 26-week history. `all_avg5` = all three together.
+- **MO_136b, Walmart diagnostic:** looked at why Walmart (27% of recent volume) decides model comparisons. No model
+  was trained.
+- **MO_137, post-expansion fade:** gave the same model signals for "how long since this item's or retailer's store
+  count last jumped, and how far sales per store have faded since", to catch the sales fade after an expansion.
+  `fade_avg5` = the model with those signals.
+
 Code: `scripts/MO_136_category_extract.py` (category file, not a forecast arm),
 `scripts/MO_136_signals.py` (predictions P1-P5 pre-registered in bf33de5 before any run),
 `scripts/MO_136b_walmart_diagnostic.py` (descriptive), `scripts/MO_137_expansion_fade.py`
