@@ -94,7 +94,7 @@ def backup(a) -> None:
     have = tables()
     for name, (t0, t1) in BATCHES.items():
         src = count(TARGET, t0, t1)
-        if BACKUP in have and settled_count(BACKUP, t0, t1, src) == src:
+        if BACKUP in have and count(BACKUP, t0, t1) == src:   # skip check: no waiting (settling is only for just-written windows)
             print(f"backup {name} {t0}..{t1}: already complete ({src:,} rows)", flush=True)
             continue
         run_task(f'''REPLACE INTO "{BACKUP}"
