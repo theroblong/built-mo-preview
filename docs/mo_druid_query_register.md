@@ -1629,9 +1629,9 @@ before Q1). Keep the `-- MULO FIX` lines.
 **Write mode and speed (Jason, 2026-10-12):** always `REPLACE INTO … OVERWRITE WHERE` with bounds equal to the
 `WHERE __time` filter. That is the SQL-ingestion equivalent of `appendToExisting: false`, limited to the batch window.
 Never `INSERT INTO` this table: INSERT appends and duplicates every row in the window. Set `maxNumTasks = 4`
-(context, or `SET maxNumTasks = 4;` in the console); Q0 is a plain scan, so more tasks help. Scripted runner:
-`python3 scripts/run_q0_rebuild.py --batches R1,R2,R3,R4 --max-num-tasks 4` (reads this SQL, refuses without
-the backup, refuses INSERT).
+(context, or `SET maxNumTasks = 4;` in the console); Q0 is a plain scan, so more tasks help. Scripted runner for the whole chain: `python3 scripts/druid_pipeline.py plan` (read-only: preflight + EXPLAIN of
+every step), then `python3 scripts/druid_pipeline.py run --execute` (see docs/DRUID_REBUILD_PLAN_2026-10.md).
+Backup: `python3 scripts/run_q0_rebuild.py backup`.
 
 **Batch history:**
 - Batches 1–3 (2023-01-01 → 2026-04-19) and Batch 4 (2026-04-19 → 2027-01-01, Sept 23 2026): superseded by the
@@ -1846,7 +1846,8 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 SET sqlJoinAlgorithm      = 'sortMerge';           -- REQUIRED: broadcast join exceeds 311MB limit (BroadcastTablesTooLarge)
 SET sqlSortMergeDiskBuffered = 'true';              -- spills sort-merge merge buffers to disk; reduces per-worker memory pressure
 SET durableShuffleStorage = 'true';               -- routes shuffle files to S3; cluster-level config completed by Rob
-SET maxNumTasks           = 8;                     -- user-validated; ~2× faster than =4 (11h 12m → est. 5–6h); 15 workers confirmed available
+SET maxNumTasks           = 4;                     -- 2026-10-12: cluster has 8 task slots (2 middle managers x 4, checked live);
+                                                     --   Sept runs: 11h 12m at 4, ~11.4h at 8 (no gain; 8 takes the whole cluster)
 -- TUNING NOTE (2026-09-23): upgraded from =4 → =8 this cycle after Q2 was re-run manually.
 --   After =8 confirmed stable → benchmark =16 (saturates all 15 workers; ~3h est.).
 --   Test =16 on a SHORT batch first (2026 batch only) before full 2025→2027 run.

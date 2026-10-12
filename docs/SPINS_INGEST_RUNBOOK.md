@@ -323,9 +323,9 @@ Q2 requires these SET commands (see E10, E13, E14, E16 in error register — wit
 
 ```sql
 SET sqlJoinAlgorithm = 'sortMerge';
-SET maxNumTasks = 16;
-SET rowsPerSegment = 5000000;
--- SET durableShuffleStorage = 'true';  -- uncomment if Rob has completed MSQ S3 config (E14)
+SET maxNumTasks = 4;           -- 2026-10-12: 8 task slots total (checked live); 16 is impossible, 8 was no faster than 4
+SET sqlSortMergeDiskBuffered = 'true';
+SET durableShuffleStorage = 'true';   -- 2026-10-12: confirmed working (test query succeeded); E14 resolved
 ```
 
 Q2 must be run in **annual batches** with explicit `__time` filters on BOTH sides of the join (E17):
@@ -356,8 +356,8 @@ Q4 and Q5 also require the sort-merge settings (same as Q2, large-table joins).
 
 ```
 Q3  → built_prepost_features      OVERWRITE ALL
-Q4  → donor_prepost_features      OVERWRITE ALL  (sortMerge + maxNumTasks = 16)
-Q5  → ml_training_features        OVERWRITE ALL  (sortMerge + maxNumTasks = 16)
+Q4  → donor_prepost_features      OVERWRITE ALL  (sortMerge + maxNumTasks = 4; 8 slots total, 2026-10-12)
+Q5  → ml_training_features        OVERWRITE ALL  (sortMerge + maxNumTasks = 4; 8 slots total, 2026-10-12)
 ```
 
 ### Q6–Q9 and Q14–Q22 (OVERWRITE ALL)
@@ -666,7 +666,7 @@ Note: No API endpoint currently queries `retailer_sales_tdp_velocity` — this f
 | Wrong extract format | `All_items_extract_100.csv` (167 cols) is missing 18 Q0 required fields | Always use the 214-column format; verify column count = 214 before depositing |
 | New BUILT UPCs | Appear as NULL in `flavor_mapping` if QS1 not updated | Run the new-UPC check query (Part 2) before QS1 |
 | New competitor brands | New Tier 1/2/3 competitor entering the category won't have a tier in `item_catalog` | Compare `SELECT DISTINCT source_brand FROM built_filtered_weekly` after Q0 against current QS3 list |
-| Q2 sort-merge OOM | Self-join on 62M rows; worker pods OOM-evicted without durable shuffle (E13–E19) | Required settings: `SET sqlJoinAlgorithm='sortMerge'; SET maxNumTasks=16;`; annual batches; Rob to complete MSQ S3 shuffle config (E14) |
+| Q2 sort-merge OOM | Self-join on 62M rows; worker pods OOM-evicted without durable shuffle (E13–E19) | Required settings: `sqlJoinAlgorithm='sortMerge'`, `sqlSortMergeDiskBuffered='true'`, `durableShuffleStorage='true'` (S3 shuffle confirmed working 2026-10-12), `maxNumTasks=4` (8 slots total); one-year batches. Use `scripts/druid_pipeline.py` |
 | Q2 OVERWRITE WHERE alignment | Open-ended upper bound fails with INVALID_INPUT (E20) | Always use explicit future upper bound: `AND __time < TIMESTAMP '2028-01-01'` |
 | Q2 filter must cover both join sides | Time filter on one side not inferred by sort-merge planner (E17) | Add explicit `c.__time` AND `f.__time` bounds in WHERE clause |
 | Druid `appendToExisting: false` | Silently drops columns → UI returns empty arrays | All MO_xx write-backs use `appendToExisting: true`; never override this |
