@@ -81,6 +81,8 @@ rule above for all future decisions; it is written before any saved forecast has
 
 **Added 2026-10-12, before MO_138 results exist:** the fixed direct model with 5 seeds averaged, multiplied by item-age x weeks-ahead correction factors learned only from earlier forecasts (MO_138), code `cal`.
 
+**Added 2026-10-12, before MO_139 results exist:** the fixed direct model with 5 seeds and Duan smearing by item age and weeks ahead (`smear_avg5`), and the same model trained with a Tweedie objective on raw units (`tweedie_avg5`) (MO_139, fixing the log-scale bias).
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
