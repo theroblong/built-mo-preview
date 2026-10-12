@@ -77,6 +77,8 @@ rule above for all future decisions; it is written before any saved forecast has
 
 **Added 2026-10-12, before MO_136 results exist:** the fixed direct model with 5 seeds averaged plus the MO_136 signals (category/competitor, other-retailer, 26-week history), code `all_avg5`; and any single MO_136 signal group that beats its 2-seed baseline, re-run with 5 seeds before it can be compared under this rule.
 
+**Added 2026-10-12, before MO_137 results exist:** the fixed direct model with 5 seeds averaged plus the MO_137 expansion-fade signals, code `fade_avg5`. Results are also reported without Walmart (description only; the rule itself is unchanged).
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
