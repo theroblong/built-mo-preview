@@ -133,7 +133,7 @@ def score(dirs135, dirs134, dirs133) -> None:
         print(f"\n=== {name.upper()} origins, existing series: cw / am / pm / pm-by-band | bias ===")
         sub = rec if name == "recent" else ex
         for x in sorted(arms, key=lambda k: S["account x month"][k]):
-            pb = E.band_separated_diff(sub, x, "flat")["diff"] + 0  # diff vs flat, for a by-band level read
+            pb = 0.0 if x == "flat" else E.band_separated_diff(sub, x, "flat")["diff"]  # by-band diff vs flat
             print(f"  {x:<14s}{S['cell x week'][x]:7.2f}{S['account x month'][x]:7.2f}{S['portfolio x month'][x]:7.2f}"
                   f"   (pm by band vs flat {pb:+.2f})   bias {S['portfolio_bias'][x]:.3f}")
         for lvl, _ in M.LEVELS_V2:

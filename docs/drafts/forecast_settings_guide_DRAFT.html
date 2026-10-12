@@ -1,0 +1,412 @@
+<title>Mo Forecast Settings Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a reference manual. Narrow reading column, sticky group index, one card per setting with a status chip and a fixed four-row spec grid. */
+:root {
+  --bg: #f5f7f8;
+  --surface: #ffffff;
+  --ink: #18242b;
+  --muted: #56656e;
+  --rule: #d7dfe3;
+  --accent: #1f5f7a;
+  --accent-soft: #e2eef3;
+  --leave: #4b6b55;     --leave-bg: #e5f0e8;
+  --review: #8a5a12;    --review-bg: #f8ecd6;
+  --test: #5b4a8a;      --test-bg: #ebe7f6;
+  --fix: #9b3b2e;       --fix-bg: #f7e3df;
+  --slider: #1f5f7a;    --slider-bg: #e2eef3;
+  --banner-bg: #fff4dc; --banner-ink: #6b4a0e;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11181c; --surface: #172127; --ink: #e3eaee; --muted: #9aaab3; --rule: #2a3940;
+    --accent: #7fc0da; --accent-soft: #1d3540;
+    --leave: #9fcfad; --leave-bg: #1f3326;
+    --review: #e8c07a; --review-bg: #3a2e17;
+    --test: #c3b5f0; --test-bg: #2b2540;
+    --fix: #f0a395; --fix-bg: #3d221d;
+    --slider: #7fc0da; --slider-bg: #1d3540;
+    --banner-bg: #33290f; --banner-ink: #f0d48e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11181c; --surface: #172127; --ink: #e3eaee; --muted: #9aaab3; --rule: #2a3940;
+  --accent: #7fc0da; --accent-soft: #1d3540;
+  --leave: #9fcfad; --leave-bg: #1f3326;
+  --review: #e8c07a; --review-bg: #3a2e17;
+  --test: #c3b5f0; --test-bg: #2b2540;
+  --fix: #f0a395; --fix-bg: #3d221d;
+  --slider: #7fc0da; --slider-bg: #1d3540;
+  --banner-bg: #33290f; --banner-ink: #f0d48e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; margin: 0; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 64px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2.1rem; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; font-weight: 650; }
+h3 { font-size: 1.12rem; font-weight: 650; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header.top { display: grid; gap: 12px; padding-block-end: 20px; border-bottom: 1px solid var(--rule); }
+.lede { color: var(--muted); max-width: 62ch; }
+.banner { background: var(--banner-bg); color: var(--banner-ink); border-radius: 6px; padding: 12px 14px; font-size: 0.92rem; }
+.banner strong { font-weight: 600; }
+section.intro { display: grid; gap: 14px; padding-block: 24px; }
+.models { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.model { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; display: grid; gap: 4px; }
+.model b { font-weight: 600; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; }
+nav.index { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); border-bottom: 1px solid var(--rule); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+nav.index a { color: var(--accent); text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+nav.index a:hover, nav.index a:focus-visible { text-decoration: underline; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin-inline-start: auto; }
+.filters button { font: 500 0.78rem var(--body); border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.filters button:focus-visible, nav.index a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.group { display: grid; gap: 14px; padding-block: 28px 8px; }
+.group > p { color: var(--muted); max-width: 62ch; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 18px; display: grid; gap: 12px; }
+.card-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; justify-content: space-between; }
+.card-head .id { font-family: var(--mono); color: var(--muted); font-size: 0.85rem; margin-inline-end: 6px; }
+.chip { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+.chip.leave { color: var(--leave); background: var(--leave-bg); }
+.chip.review { color: var(--review); background: var(--review-bg); }
+.chip.test { color: var(--test); background: var(--test-bg); }
+.chip.fix { color: var(--fix); background: var(--fix-bg); }
+.chip.slider { color: var(--slider); background: var(--slider-bg); }
+dl.spec { display: grid; grid-template-columns: 8.5rem 1fr; gap: 10px 16px; margin: 0; }
+dl.spec dt { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+dl.spec dd { margin: 0; min-width: 0; }
+dl.spec dd ul { margin: 0; padding-inline-start: 1.1rem; display: grid; gap: 4px; }
+.val { font-family: var(--mono); font-size: 0.92rem; }
+.src { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
+.tag { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--review); }
+.formula { font-family: var(--mono); background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; }
+footer { padding-block-start: 28px; color: var(--muted); font-size: 0.85rem; display: grid; gap: 6px; border-top: 1px solid var(--rule); margin-top: 28px; }
+@media (max-width: 560px) {
+  h1 { font-size: 1.7rem; }
+  dl.spec { grid-template-columns: 1fr; gap: 2px; }
+  dl.spec dd { margin-bottom: 8px; }
+  .filters { margin-inline-start: 0; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">Mo by Aevah · Forecast engine reference · Draft v2, 12 Oct 2026</span>
+  <h1>Forecast settings guide</h1>
+  <p class="lede">Every setting behind the Mo demand forecast, written for business analysts, FP&amp;A and accounting: what it does, what it is set to, what happened when we changed it, and whether anyone should touch it.</p>
+  <div class="banner"><strong>Internal draft. Not yet cleared to share with BUILT.</strong> Values checked against the code on 12 Oct 2026 and reviewed twice by an independent check. No absolute accuracy figures appear here; test results are shown as directions or differences. <em>Older test</em> = run before the 7 Oct 2026 backtest fix (indicative only). <em>Recent dates</em> = the 6 forecasts made Dec 2025 to May 2026 (exploratory, too few for firm conclusions).</div>
+</header>
+
+<section class="intro">
+  <h2>Two models, one engine</h2>
+  <p>Both models use LightGBM: thousands of small decision trees, each one correcting the errors of the trees before it. Both use the same 56 inputs (recent sales, store count, price, promotions, seasonality and more). They differ only in how they reach weeks 2 to 13.</p>
+  <div class="models">
+    <div class="model"><b>Recursive model</b><span>Predicts next week, feeds that prediction back in as if it were real, and repeats. Smooth shape; mistakes can compound.</span></div>
+    <div class="model"><b>Direct model</b><span>A separate model for each week ahead, each jumping straight from today. No compounding. <b>This is what production serves today.</b></span></div>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Group</th><th>What it controls</th><th>Should BUILT adjust it?</th></tr></thead>
+    <tbody>
+      <tr><td>A. How the model learns</td><td>The training engine</td><td>No. Tuned by Aevah; any change needs a full re-test</td></tr>
+      <tr><td>B. How the forecast is shaped</td><td>Rules applied around the model</td><td>Some, as Aevah sliders once their effect is measured</td></tr>
+      <tr><td>C. Which model</td><td>Model choice or mix</td><td>Decided by the pre-registered rule; shown, not adjusted</td></tr>
+      <tr><td>D. What it covers</td><td>Scope and definitions</td><td>No. Know these when reading the numbers</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<nav class="index" aria-label="Sections">
+  <a href="#learn">A. Learning</a><a href="#shape">B. Shaping</a><a href="#model">C. Model</a><a href="#scope">D. Scope</a><a href="#sliders">Sliders</a>
+  <div class="filters" role="group" aria-label="Filter by status">
+    <button type="button" id="f-all" data-f="all" aria-pressed="true">All</button>
+    <button type="button" id="f-review" data-f="review" aria-pressed="false">Under review</button>
+    <button type="button" id="f-test" data-f="test" aria-pressed="false">Needs test</button>
+    <button type="button" id="f-fix" data-f="fix" aria-pressed="false">Fix planned</button>
+    <button type="button" id="f-leave" data-f="leave" aria-pressed="false">Leave</button>
+  </div>
+</nav>
+
+<section class="group" id="learn">
+  <span class="eyebrow">Group A</span>
+  <h2>How the model learns</h2>
+  <p>The training engine. These are set by Aevah and change only after a full backtest.</p>
+
+  <article class="card" data-s="leave">
+    <div class="card-head"><h3><span class="id">A1</span>Learning speed</h3><span class="chip leave">Leave</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>How big a correction each new tree may make. Smaller steps learn more carefully but need more trees.</dd>
+      <dt>Current</dt><dd><span class="val">recursive 0.04 · direct 0.05</span></dd>
+      <dt>What we found</dt><dd>Never tested on its own. An older tuning search (12 trials) included it but was paused.</dd>
+      <dt>Advice</dt><dd>Leave. A candidate for the planned tuning run, always paired with A2.</dd>
+    </dl>
+    <p class="src">MO_26:220 · mo_panel.py:75 · MO_26D:75</p>
+  </article>
+
+  <article class="card" data-s="leave">
+    <div class="card-head"><h3><span class="id">A2</span>Maximum trees, and when to stop</h3><span class="chip leave">Leave</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>The model keeps adding trees until it stops improving on a held-back 13-week check period, or hits the cap. "Patience" is how many trees in a row may fail to improve. For the recursive model the check scores <em>one-week-ahead</em> predictions made with actual recent sales, so the stopping point is not tuned to 13-week accuracy.</dd>
+      <dt>Current</dt><dd><span class="val">recursive cap 6,000, patience 50 · direct cap 3,000, patience 100</span></dd>
+      <dt>What we found</dt><dd>10 of 18 test dates stopped at or just below 6,000. Raising the cap to 20,000 let 9 of the 18 train further, but forecasts barely moved (median change 0.01%). The direct cap has never been tested.</dd>
+      <dt>Advice</dt><dd>Leave.</dd>
+    </dl>
+    <p class="src">MO_26:212, :397 · MO_26D:71-72 · Evidence: MO_134</p>
+  </article>
+
+  <article class="card" data-s="leave">
+    <div class="card-head"><h3><span class="id">A3</span>Tree size and sampling</h3><span class="chip leave">Leave</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>How detailed each tree may be (up to 63 end points, at least 20 sales records per end point), how much each tree sees (a random 80% of inputs and of rows), and penalties that discourage over-fitting.</dd>
+      <dt>Current</dt><dd>Identical in both models.</dd>
+      <dt>What we found</dt><dd>Not tested since the backtest fix.</dd>
+      <dt>Advice</dt><dd>Leave. This is what the planned automated tuning run (Optuna) would search.</dd>
+    </dl>
+    <p class="src">MO_26:221-228 · MO_26D:75-77</p>
+  </article>
+
+  <article class="card" data-s="fix">
+    <div class="card-head"><h3><span class="id">A4</span>Random seed</h3><span class="chip fix">Fix planned</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Training has a random element (A3's sampling). The seed fixes it, so a run repeats exactly <em>on the same computer</em>. Different computers differ slightly even with the same seed, so every comparison uses one machine.</dd>
+      <dt>Current</dt><dd><span class="val">42 in both</span></dd>
+      <dt>What we found</dt><dd>Retraining the direct model with another seed moved item-level forecasts by a median of 10-11.5%. Averaging 5 seeds gave a small, consistent improvement.</dd>
+      <dt>Advice</dt><dd>Not a slider. Serve the average of several seeds rather than one.</dd>
+    </dl>
+    <p class="src">MO_26:228 · MO_26D:77 · Evidence: MO_132, MO_133</p>
+  </article>
+
+  <article class="card" data-s="fix">
+    <div class="card-head"><h3><span class="id">A5</span>Check period and final retraining</h3><span class="chip fix">Fix planned</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>The last 13 weeks are held back to decide when to stop adding trees. The model should then be retrained on everything, including those weeks.</dd>
+      <dt>Current</dt><dd>The recursive model retrains on everything. <strong>The direct model as served does not</strong>: its training data ends at the start of its check period (7 Jun 2026), so it never learned from the most recent quarter. It also counts "8 weeks ahead" as 8 rows of data, which lands on the wrong calendar week wherever an item has missing weeks. The "fixed direct" model corrects both.</dd>
+      <dt>What we found</dt><dd>The fixed version (5 seeds averaged) scored better at item level in 2025, on the recent dates and overall.</dd>
+      <dt>Advice</dt><dd>Fix with the next model switch (C1).</dd>
+    </dl>
+    <p class="src">MO_26:502-518 · MO_26D:135-136, :144 · Evidence: MO_132-MO_135</p>
+  </article>
+
+  <article class="card" data-s="slider">
+    <div class="card-head"><h3><span class="id">A6</span>Weight on recent weeks</h3><span class="chip slider">Possible slider</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Recent weeks count more in training. Each week's weight is <span class="formula">e<sup>−0.02 × weeks ago</sup></span>: 26 weeks ago counts 59%, a year ago 35%, two years ago 12%.</dd>
+      <dt>Current</dt><dd><span class="val">0.02 in both</span></dd>
+      <dt>What we found</dt><dd><span class="tag">Recursive model only</span><br>0, 0.01 and 0.04 all scored a little worse than 0.02 (0.1-0.2 points at item level). Only 0.01 passed the significance test, which with no pattern across the values is most likely training noise. The direct model's value has never been varied.</dd>
+      <dt>Advice</dt><dd>A possible slider ("how fast should the model forget?"), but there is no reason to move it today.</dd>
+    </dl>
+    <p class="src">MO_26:371, :509 · mo_panel.py:73 · MO_26D:70, :149-150 · Evidence: MO_134</p>
+  </article>
+
+  <article class="card" data-s="test">
+    <div class="card-head"><h3><span class="id">A7</span>Low, central and high forecasts</h3><span class="chip test">Measure first</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Each model gives three forecasts per item, per retailer, per week: a low (10th percentile), a central (50th) and a high (90th). It learns on a log scale so large and small items are treated fairly.</dd>
+      <dt>Read with care</dt><dd><ul>
+        <li>Ranges are per item, per week. <strong>Adding up item highs does not give a portfolio high</strong>; items rarely all run high at once.</li>
+        <li>New items (B5) get a fixed ±45% range around last week, not a learned one.</li>
+        <li>Lapsed items on the direct model get a range from zero to their full expected level.</li>
+      </ul></dd>
+      <dt>Current</dt><dd>The recursive model stretches its high forecast by <span class="val">×1.0059</span>. That factor was set in May 2026 on an older model version and should be re-derived at every retrain. The direct model has no stretch.</dd>
+      <dt>What we found</dt><dd>How often actuals land outside the current models' ranges has <strong>not been measured</strong>.</dd>
+      <dt>Advice</dt><dd>Measure range coverage before showing ranges to BUILT as "80% ranges".</dd>
+    </dl>
+    <p class="src">MO_26:99, :323, :382 · MO_26D:69, :153 · MO_27:808-811 · outputs/mo67_calibration_constants.json</p>
+  </article>
+
+  <article class="card" data-s="leave">
+    <div class="card-head"><h3><span class="id">A8</span>Inputs held at forecast-date values</h3><span class="chip leave">Leave</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Recent-sales trend inputs and store count are kept at their forecast-date values for all 13 weeks. Price is held at the last observed price.</dd>
+      <dt>What we found</dt><dd><ul>
+        <li>Letting the sales-trend inputs update each week, from the model's own predictions, made forecasts much worse (about 12 points at item level). Holding them is a deliberate brake.</li>
+        <li><span class="tag">Older test</span> Store count made little difference even when the test used the actual future store counts (under 1 point).</li>
+      </ul></dd>
+      <dt>Advice</dt><dd>Leave. Known store-count changes (expansion plans, new retailers) belong in planning inputs, not here.</dd>
+    </dl>
+    <p class="src">MO_27:647-657, :818 · mo_panel.py:43, :53 · Evidence: MO_118, MO_95/105</p>
+  </article>
+</section>
+
+<section class="group" id="shape">
+  <span class="eyebrow">Group B</span>
+  <h2>How the forecast is shaped</h2>
+  <p>Rules applied around the model. Some could become sliders in Aevah once their effect is measured.</p>
+
+  <article class="card" data-s="leave">
+    <div class="card-head"><h3><span class="id">B1</span>Forecast length</h3><span class="chip leave">Leave</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>How many weeks ahead each forecast covers.</dd>
+      <dt>Current</dt><dd><span class="val">13 weeks, both models</span></dd>
+      <dt>Advice</dt><dd>Leave. Longer horizons need their own testing.</dd>
+    </dl>
+    <p class="src">mo_panel.py:64 · MO_26D:68</p>
+  </article>
+
+  <article class="card" data-s="review">
+    <div class="card-head"><h3><span class="id">B2</span>Seasonal index</h3><span class="chip review">Under review</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Both models see the week of the year as an input. In addition, for items <em>without</em> a usable same-week-last-year (B3), the recursive model nudges each week by the change in an average seasonal index from the week before. Items with a usable year-ago week get their seasonality from B3 instead.</dd>
+      <dt>What we found</dt><dd><ul>
+        <li>Earlier tests that favored this method used a seasonal index built with data from after the forecast date (a look-ahead).</li>
+        <li><span class="tag">Older test</span> Rebuilt using only data available at each forecast date, the seasonal step did <strong>worse</strong> than switching it off: about 2 points worse at item level and slightly worse at account level. Portfolio totals looked better only because errors in different item age groups cancelled; within each age group it was the same or worse. Most of the item-level harm came from new items, where the index is now switched off.</li>
+      </ul></dd>
+      <dt>Advice</dt><dd>The evidence so far says it does not help. It stays until a dedicated test on the current setup decides.</dd>
+    </dl>
+    <p class="src">MO_27:766-805 · mo_panel.py:49 · Evidence: MO_113, MO_127</p>
+  </article>
+
+  <article class="card" data-s="leave">
+    <div class="card-head"><h3><span class="id">B3</span>Seasonal pull toward last year</h3><span class="chip leave">Keep 10%</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd><span class="tag">Recursive model</span><br>How much the forecast leans toward "the same week last year, scaled by this item's growth" instead of the model's own projection.</dd>
+      <dt>Current</dt><dd><span class="val">10%</span></dd>
+      <dt>What we found</dt><dd>0%, 5%, 10%, 20% and 30% were all close. At 30%:<ul>
+        <li>Forecasts came out a little lower in 2025 (1-5%) and up to 3% higher in 2026; Oct-Dec 2025 over-forecasting was smaller.</li>
+        <li>Week-by-week item forecasts were about 1 point worse.</li>
+        <li>Monthly totals improved in 4 of 5 item age groups, but only on the recent dates and not significantly. Over all 18 dates they were slightly worse.</li>
+        <li>Established items (52+ weeks), the largest group by volume, got worse at every level.</li>
+      </ul></dd>
+      <dt>Advice</dt><dd>Keep 10%. More pull has no proven benefit today and hurts established items.</dd>
+    </dl>
+    <p class="src">MO_27:68 · mo_panel.py:66 · Evidence: MO_134, MO_135</p>
+  </article>
+
+  <article class="card" data-s="test">
+    <div class="card-head"><h3><span class="id">B4</span>Growth cap for the seasonal pull</h3><span class="chip test">Needs test</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd><span class="tag">Recursive model</span><br>The "growth" in B3 compares one recent week with the same week a year earlier (not year-to-date). That ratio is capped between half and double.</dd>
+      <dt>Current</dt><dd><span class="val">0.5 to 2.0</span></dd>
+      <dt>What we found</dt><dd><ul>
+        <li>Removing the cap looked very harmful, but almost all the harm came from about 116 item-date combinations whose year-ago week was before the item was really in stores: a handful of units, so growth looked like 200× to 1,375×. The cap binds for 59% of items.</li>
+        <li>A version that also skipped the comparison when the item was in too few stores a year ago (and measured growth per store) removed most of that harm, with no overall accuracy change.</li>
+        <li>The "year ago" week is actually 51 weeks back (an off-by-one). Fixing it made no difference.</li>
+      </ul></dd>
+      <dt>Advice</dt><dd>Not a slider. Replacing the cap with the store-count rule needs one more test: that rule alone, with nothing else changed.</dd>
+    </dl>
+    <p class="src">MO_27:570-574 · Evidence: MO_134, MO_135</p>
+  </article>
+
+  <article class="card" data-s="review">
+    <div class="card-head"><h3><span class="id">B5</span>New items (under 13 weeks of sales)</h3><span class="chip review">Under review</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>The recursive model does not forecast items with under 13 weeks of history at a retailer. They get last week's sales carried forward, with a fixed ±45% range. The direct model forecasts them like any other item.</dd>
+      <dt>What we found</dt><dd><ul>
+        <li><span class="tag">Older test</span> Carrying the last value forward won in every age group and on 3 of 4 test dates against the alternatives tried.</li>
+        <li>Over all 18 test dates (Dec 2024 to May 2026) the rule beat the 5-seed direct model on these items at every level. That lead comes from 2025: on the recent dates the direct model was better at item and portfolio level and tied at account level. Date by date, the rule won 10 of 18 and none of the 5 dates in 2026.</li>
+        <li>Adding the seasonal index to new items made them worse because of a defect that inflated them by 10-30%. It is switched off.</li>
+        <li>The ±45% width has never been tested.</li>
+      </ul></dd>
+      <dt>Advice</dt><dd>Keep for now. The recent dates favor letting the direct model forecast new items, which the next model decision (C1) would settle.</dd>
+    </dl>
+    <p class="src">MO_27:491, :533-541 · mo_panel.py:67-68, :79-86 · MO_26D:104-105 · Evidence: MO_79, MO_129, MO_135</p>
+  </article>
+
+  <article class="card" data-s="test">
+    <div class="card-head"><h3><span class="id">B6</span>Lapsed items (9 weeks without sales)</h3><span class="chip test">Needs test</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>After 9 weeks with no sales at a retailer, an item counts as lapsed. The recursive model forecasts zero. The direct model forecasts the chance it comes back times its expected level. In older data, 365 of 878 lapses resumed, at about 1.06× their old level.</dd>
+      <dt>Current</dt><dd><span class="val">9 weeks</span></dd>
+      <dt>What we found</dt><dd>9 weeks sits at a natural gap in the data: very few items go silent for 5-8 weeks and come back. Other thresholds have not been tested.</dd>
+      <dt>Advice</dt><dd>A possible slider ("how long before we stop expecting sales?") after a test.</dd>
+    </dl>
+    <p class="src">mo_panel.py:65, :583-586, :674 · MO_27:486-487 · MO_27D:171-177</p>
+  </article>
+
+  <article class="card" data-s="test">
+    <div class="card-head"><h3><span class="id">B7</span>Safety cap on runaway forecasts</h3><span class="chip test">Needs test</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Caps any forecast at a multiple of the item's own best week.</dd>
+      <dt>Current</dt><dd>None in production.</dd>
+      <dt>What we found</dt><dd><span class="tag">Older test</span> On 4 dates, a cap at 1.5× the item's highest week helped; 1.5× was the tightest value tried. Since the fix, a 3× cap was tested only bundled with other changes.</dd>
+      <dt>Advice</dt><dd>A candidate guardrail; needs its own test.</dd>
+    </dl>
+    <p class="src">MO_80:101, :864-868 · Evidence: README 211, MO_134</p>
+  </article>
+</section>
+
+<section class="group" id="model">
+  <span class="eyebrow">Group C</span>
+  <h2>Which model</h2>
+
+  <article class="card" data-s="review">
+    <div class="card-head"><h3><span class="id">C1</span>Model choice and combination</h3><span class="chip review">Rule decides</span></div>
+    <dl class="spec">
+      <dt>What it does</dt><dd>Which model production serves, or how two models are averaged (for example 50% recursive + 50% fixed direct).</dd>
+      <dt>Current</dt><dd>The direct model as served, with the A5 flaws.</dd>
+      <dt>What we found</dt><dd><span class="tag">Recent dates, exploratory</span><ul>
+        <li>The fixed direct model (5 seeds averaged) is the only candidate ahead of the served model at account × month, but it won on 4 of 6 dates; the rule needs 5.</li>
+        <li>The 50/50 combination beat last value carried forward on all 6 dates, but is slightly behind the served model at account × month.</li>
+        <li>The recursive model alone trails last value.</li>
+        <li>No candidate has passed the pre-registered decision rule yet. Saved forecasts become scorable when SPINS data reaches 6 Dec 2026.</li>
+      </ul></dd>
+      <dt>Advice</dt><dd>Not a slider. Aevah shows which model is serving, why, and how it compares with L4W velocity × stores and with last value carried forward.</dd>
+    </dl>
+    <p class="src">docs/PRODUCTION_DECISION_PREREG.md · Evidence: MO_133, MO_134, MO_135</p>
+  </article>
+</section>
+
+<section class="group" id="scope">
+  <span class="eyebrow">Group D</span>
+  <h2>What the forecast covers</h2>
+  <article class="card" data-s="leave">
+    <dl class="spec">
+      <dt>Units</dt><dd>SPINS base units: SPINS's modeled sales without promotions. Promotion lift is not in the base forecast. SPINS restates past weeks by up to 35 weeks back.</dd>
+      <dt>Dollars</dt><dd>Forecast units × the last observed price, held flat.</dd>
+      <dt>Not covered</dt><dd>Item-retailer combinations that don't exist yet (new distribution), roughly 14% of a quarter's volume. These need planning inputs.</dd>
+      <dt>Scope</dt><dd>Military accounts excluded. Alaska and Hawaii dropped. Regional markets (RMA) used rather than the overlapping CRMA geographies.</dd>
+      <dt>Model age</dt><dd>The served direct model's training data ends 7 Jun 2026.</dd>
+    </dl>
+  </article>
+</section>
+
+<section class="group" id="sliders">
+  <span class="eyebrow">For Aevah</span>
+  <h2>Slider shortlist</h2>
+  <p>Settings that could be handed to BUILT as adjustable controls, each shown with its measured effect.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Slider</th><th>Default</th><th>Measured effect so far</th><th>Ready?</th></tr></thead>
+    <tbody>
+      <tr><td>Seasonal pull (B3)</td><td class="val">10%</td><td>30%: weekly detail worse; monthly totals better on recent dates only, not significant</td><td>Not yet</td></tr>
+      <tr><td>Weight on recent weeks (A6)</td><td class="val">0.02</td><td>Other values slightly worse (recursive)</td><td>Yes, low value</td></tr>
+      <tr><td>New-item threshold (B5)</td><td class="val">13 wks</td><td>Rule won in 2025, lost on 2026 dates; other thresholds untested</td><td>Needs test</td></tr>
+      <tr><td>Lapse weeks (B6)</td><td class="val">9 wks</td><td>Not tested</td><td>Needs test</td></tr>
+      <tr><td>Safety cap (B7)</td><td class="val">none</td><td>Older test only</td><td>Needs test</td></tr>
+      <tr><td>Model choice (C1)</td><td>served direct</td><td>Exploratory</td><td>Shown, not adjusted</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  <span>Source of truth: docs/drafts/forecast_settings_guide_DRAFT.md in the FirstAgent repository. Code references are file:line as of 12 Oct 2026.</span>
+  <span>Accuracy figures for anyone outside the team come only from docs/ACCURACY_CLAIMS_REGISTER.md.</span>
+</footer>
+</div>
+
+<script>
+(function () {
+  var buttons = document.querySelectorAll(".filters button");
+  var cards = document.querySelectorAll(".card[data-s]");
+  function apply(f) {
+    buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.f === f)); });
+    cards.forEach(function (c) {
+      var s = c.dataset.s;
+      c.hidden = !(f === "all" || s === f || (f === "leave" && s === "slider"));
+    });
+  }
+  buttons.forEach(function (b) { b.addEventListener("click", function () { apply(b.dataset.f); }); });
+})();
+</script>
