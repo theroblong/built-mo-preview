@@ -1626,6 +1626,13 @@ CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 (run `SELECT MAX(__time) FROM "built_filtered_weekly"` first; after running, `MAX(__time)` must equal the new SPINS HWM
 before Q1). Keep the `-- MULO FIX` lines.
 
+**Write mode and speed (Jason, 2026-10-12):** always `REPLACE INTO … OVERWRITE WHERE` with bounds equal to the
+`WHERE __time` filter. That is the SQL-ingestion equivalent of `appendToExisting: false`, limited to the batch window.
+Never `INSERT INTO` this table: INSERT appends and duplicates every row in the window. Set `maxNumTasks = 4`
+(context, or `SET maxNumTasks = 4;` in the console); Q0 is a plain scan, so more tasks help. Scripted runner:
+`python3 scripts/run_q0_rebuild.py --batches R1,R2,R3,R4 --max-num-tasks 4` (reads this SQL, refuses without
+the backup, refuses INSERT).
+
 **Batch history:**
 - Batches 1–3 (2023-01-01 → 2026-04-19) and Batch 4 (2026-04-19 → 2027-01-01, Sept 23 2026): superseded by the
   2026-10-12 rebuild (channel-only label fix; MULO+C double-counted 2025-08-17 → 2026-04-12).
