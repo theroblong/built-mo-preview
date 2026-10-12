@@ -625,3 +625,4 @@ Naming rule: every MO number is described in plain words where it appears (Jason
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
+- 2026-10-12 Jason (data note): NetSuite shipments definitely predate SPINS sales, but a shipment may be a truckload to a wholesale distributor who then supplies retailers -- shipments vs POS store transactions are not 1-to-1. Implication: use sell-in only as a lumpy, many-to-one leading signal (rolling totals, unusual pipe-fill of new items, by distributor/retailer group via customer_bridge), never as a unit-for-unit forecast; test whether shipment spikes precede store-count jumps and by how long.
