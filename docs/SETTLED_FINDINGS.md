@@ -331,12 +331,56 @@ pre-registered: descriptive only. Recent = 6 overlapping origins, 2025-12 to 202
   seasonal miss carried forward); "a trade-off, not a fixable bias" with totals forecast directly
   (overreach; retransformation-bias remedy first); MO_137b run before commit (process slip).
 
+### Added 2026-10-12 from MO_139 (Duan smearing and Tweedie for the units direct model's log-scale bias; 5 seeds; 18 origins; README 239), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line: DOES NOT SURVIVE as first written; the
+corrected reading is below. Numbers are average miss % (lower is better) at item x week / account x
+month / portfolio x month, existing series. Design, 'beats' definition and predictions P1-P5 committed in
+9b4dc6c before any run; `smear_avg5` and `tweedie_avg5` named in `docs/PRODUCTION_DECISION_PREREG.md`
+before results. Recent = 6 overlapping origins, 2025-12 to 2026-05 (exploratory). Parity: the smearing
+arm's plain path equals MO_133 `direct_fixed` exactly for all 5 seeds (the Tweedie arm has no parity anchor).
+- **(a) MO_139 Duan smearing as designed (unweighted mean of exp(log residuals) on the 13-week check
+  period, by item age and weeks ahead, capped 0.8-1.6) fails; volume-weighted smearing is untested.**
+  Recent: direct_avg5 28.79 / 16.17 / 6.45 (bias 0.970); smear_avg5 48.98 / 33.01 / 27.73 (1.277). 2025:
+  38.40 / 24.51 / 11.29 vs 58.14 / 45.08 / 37.03. All 18: 34.15 / 20.85 / 9.17 vs 54.08 / 39.78 / 32.95.
+  Account x month wins 0/6 recent dates (also without Walmart and within bands); recent bias by item age
+  1.259 / 1.283 / 1.276 / 1.395. The factor is at the 1.6 cap on 41% of rows (36% by volume; 78% at
+  2025-12, 77% at 2026-03, 17% at 2026-05); mean factor 1.14 at 1 week ahead (6% capped) to 1.45 at 13
+  weeks ahead (56% capped). Diagnostic on scored actuals (check residuals not saved): unweighted mean
+  (1+actual)/(1+forecast) 1.27 at 1 week ahead to about 4 at 13 weeks ahead, while the volume-weighted
+  ratio is 1.005-1.055 at every step; "drift" is NOT supported. Grouping mismatch: weeks since launch for
+  smearing vs history band for scoring; the "check period" at h weeks ahead is the last h forecast
+  starting points only. *Skeptic: C1 parity SURVIVES; C2 SURVIVES WITH CAVEATS (this estimator fails,
+  not smearing in general); C3 SURVIVES WITH CAVEATS (cap share and low-volume ratios yes, drift no).*
+- **(b) Tweedie (raw units, power 1.5) vs median-on-log for the units direct model: better on 2025 dates,
+  worse on recent dates, so decide by forward weeks (`tweedie_avg5` added to the forward set).**
+  Recent: tweedie_avg5 33.70 / 19.40 / 10.74 (0.941); 2025: 36.72 / 23.91 / 9.89 (0.936) vs direct_avg5
+  38.40 / 24.51 / 11.29. 2025 gain is broad (cw 8/12 dates, within-band pm 9/12) but small at account x
+  month (7/12; 5/12 without Walmart); both Tweedie and smearing lose to flat in 2025 at cw and am. Recent
+  loss: cw worse without Walmart on 6/6 dates; the recent am loss rests on 2026-03 (and 2025-12);
+  within-band pm worse regardless. The recent <13-week total (bias 1.021 from 0.865) is cancellation:
+  Walmart 0.872, all other retailers 1.083 (direct_avg5 without Walmart 0.976). Reversal, Tweedie minus
+  direct_avg5 at cw without Walmart (<13 / 13-25 / 26-51 / 52+): recent +3.71 / +2.65 / +3.99 / +4.70;
+  2025 -1.31 / -0.69 / -3.58 / -1.18. Neither objective is clearly better. *Skeptic: C4 partly FALLS; C5
+  FALLS as written (reverses by period). P2 holds only as written (one-sided; intent fails); P5's bias
+  half fails without Walmart.*
+- **(c) Process rule: bias predictions are two-sided around 1; act on smoke-test warnings before
+  spending.** P2 ("<13-week bias at least 0.95") passed at 1.259 only because it was one-sided. The
+  laptop smoke test (2025-01, seed 42) already showed the overshoot (total smear / base 1.249) and was
+  not flagged before the worker spend was approved.
+- **Corrections to Claude's preliminary statements (withdrawn after the skeptic):** the smearing
+  overshoot came from small noisy items and drift (cap shares and low-volume ratios yes, drift no);
+  Tweedie "fixed the new-item total" (Walmart 0.87 and the rest 1.08 cancel); the median-on-log approach
+  is "the more accurate choice" (only on recent dates; on 2025 dates Tweedie wins every item-age group
+  at item x week without Walmart); the open blocker "should be narrowed" (no: it concerns the velocity
+  models, untested here).
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.
 - **Retransformation bias.** Velocity models run at 0.62–0.65 vs 0.886, because the median
   of log1p(velocity) × doors ≠ mean units. Fix with Duan smearing or tweedie before
   model-based velocity arms.
+  Note 2026-10-12: MO_139 tested the units direct model only (Duan smearing as designed failed; Tweedie mixed by period); the velocity-model blocker itself is untested.
 - **The model is worse than flat on 52+ wk series** (34.7 vs 29.9, item-week), where it
   should be strongest.
 
