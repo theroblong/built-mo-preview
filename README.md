@@ -6,6 +6,191 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 238: MO_137b-138: the recent "new items are under-forecast" pattern is Walmart; a correction learned from earlier forecasts does not fix it and makes 2025 worse; the log-scale (retransformation) bias is the first thing to test (2026-10-12)
+
+**What each experiment tested (plain words):**
+- **MO_137b, item-age bias diagnostic:** no training. It took the forecasts already stored for the fixed direct
+  model (the 5-seed `direct_avg5`, today's best candidate) and asked whether it is systematically too low on
+  items that are new at a retailer (under 13 weeks of history) and too high on established ones, how that
+  changes with weeks ahead, and which retailers carry it. Bias = forecast / actual (below 1.00 = too low).
+- **MO_138, age x weeks-ahead correction:** no retraining. It multiplied `direct_avg5` by a correction factor
+  for each item-age group (under 13 / 13-25 / 26-51 / 52+ weeks of history) and weeks-ahead group (1-4, 5-9,
+  10-13). Each factor was learned only from earlier forecasts whose actuals were already known at the forecast
+  date, shrunk toward 1.0 and capped between 0.75 and 1.35. `cal` = factors by age and weeks ahead;
+  `cal_age` = factors by age only.
+
+Code: `scripts/MO_137b_age_bias_diagnostic.py` (outputs `scripts/outputs/mo137b_age_bias.log`, `.json`);
+`scripts/MO_138_age_horizon_correction.py` (design, 'beats' definition and predictions P1-P5 committed in
+111f842 before the run; outputs `scripts/outputs/mo138_score.log`, `mo138_age_horizon_correction.json`,
+`mo138_rows.parquet`). `docs/PRODUCTION_DECISION_PREREG.md` named `cal` before results. Laptop only, no
+worker cost.
+Status: skeptic-reviewed (opus/high), SURVIVES WITH CAVEATS; MO_138 fails; no production forecast changed.
+Proposals are in `docs/SETTLED_FINDINGS.md` (pending review).
+
+**Pre-registration caveat (MO_137b).** The MO_137b outputs were written 13 seconds before the script was
+committed (62d15b6), after two buggy runs (weeks ahead measured from the 1st of the month instead of the real
+cutoff, now asserted 1-13; the H2 check used an always-true test). Its hypotheses are therefore NOT proven
+pre-registered: treat MO_137b as descriptive and after the fact. MO_138 was committed before its run.
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Numbers are average miss % (lower is
+better), existing series. Recent = 6 overlapping origins, 2025-12 to 2026-05 (exploratory; the dates overlap, so
+sign-test p-values are optimistic). History bands = weeks of history at the retailer (<13 / 13-25 / 26-51 / 52+).
+
+### Finding
+
+**D1, item-age bias (MO_137b), SURVIVES WITH CAVEATS (descriptive).** Raw result for `direct_avg5`, bias by item
+age, recent: <13 weeks 0.865, 13-25 0.975, 26-51 1.052, 52+ 1.032; 2025: 0.849 / 0.969 / 1.081 / 1.022. By
+weeks ahead (<13 weeks, recent) 0.945 (weeks 1-4), 0.848 (5-9), 0.784 (10-13). The skeptic's reading:
+
+1. The RECENT young-item shortfall is Walmart. Three Walmart items (08-40229-30652, 30680, 30678) are 71% of the
+   1.17M recent <13-band net shortfall; the top 5 items are 87%. Without Walmart the recent <13 bias is 0.976
+   with no weeks-ahead slope. Walmart young items are systematically low: 70% of their rows are under-forecast,
+   median actual/forecast 1.38. Walmart <13-week bias 0.597 (Kroger 0.666, Sam's 0.884, Publix 0.895, all other
+   0.950, Target 1.408, over-forecast).
+2. 2025 holds without Walmart (skeptic figures: items under 13 weeks 0.805 overall, from 0.842 in weeks 1-4 to 0.764 in weeks 10-13 with weeks ahead), and the typical
+   young item was under-forecast then too (median 1.077). So: 2025 young under-forecast is general; recent is
+   Walmart-specific (new items in Walmart's January 2026 expansion).
+3. "Last value and the L4W (last-4-weeks velocity x stores) method over-forecast young items" is recent only
+   (recent 1.175 / 1.201; 2025 0.965 / 1.009).
+4. Offsetting is robust: 28.7% (recent) and 16.1% (2025) of age-group absolute error cancels inside account-month
+   totals (13% to 48% per date).
+
+MO_137b hypotheses (descriptive): H1 (young below 0.95 and established above 1.05) FAILS on thresholds
+(direction right: only <13 is below 0.95; 52+ is 1.032); H2 (the pattern holds in most of the top-5 accounts)
+FAILS (2 of 5: Walmart, Publix); H3 (young-item bias lower at weeks 10-13 than weeks 1-4) HOLDS; H4 (last value
+and L4W also under young / over established) FAILS.
+
+**MO_138 FAILS (P2, P3, P4 FAIL; P1, P5 HOLD).** C1 (no leakage) SURVIVES, with the caveat that SPINS actuals
+are restated later. Predictions:
+
+| prediction | result |
+|---|---|
+| P1 recent <13-week bias into 0.95-1.05 | HOLDS: cal 0.992 (direct_avg5 0.865) |
+| P2 'beats' (recent am better AND within-band pm better AND cw not worse by more than 0.3) | FAILS: am 16.76 vs 16.17, pm-by-band -0.75, cw 28.87 vs 28.79 |
+| P3 recent <13-band cw improves by 1.0 or more | FAILS: 56.20 vs 52.74 |
+| P4 2025 am no worse than +0.5 | FAILS: 28.90 vs 24.51 |
+| P5 cal better than cal_age at cw | HOLDS: 28.87 vs 29.04 |
+
+C2 SURVIVES WITH CAVEATS: `cal` is worse in the <13 and 13-25 week bands and better in the 26-51 week band (recent
+am 14.1 -> 12.4, cw 21.3 -> 19.9) and 52+ weeks (cw 18.8 -> 18.4). Without Walmart `cal` is worse at account x
+month on all 6 recent dates (0 of 6 wins). 2025 harm is largest in the 52+ band (am 29.4 -> 35.1). Oct-Dec 2025
+bias worsens 1.099 -> 1.220.
+
+**C3 (rewritten).** The correction factors were not unstable because the age effect drifts. They absorbed the
+lagged portfolio-level seasonal miss: all-band weeks 10-13 factor 2.09 at 2025-03 falling to 0.95, while the 52+
+relative factor stays stable at 0.96-1.10. The learning window accumulates every earlier date with no recency
+weighting, and Q1 2025 was under-forecast by every model (bias 0.65 to 0.68), so that miss was carried forward.
+This explains P4 and Oct-Dec 2025 bias 1.220. An in-sample oracle factor (diagnostic only, not usable in
+production) would cut 2025 am from 24.51 to 19.95: a lag problem, not an unstable age effect.
+
+**C4 (limited).** "A uniform up-scaling of young items hurts" holds only for recent <13 outside Walmart: 49% of
+rows under, 51% over; median actual-to-forecast ratio 0.978 versus ratio of sums 1.156 (a few big items pull the
+total). Even an oracle uniform factor worsens <13 cw 52.7 -> 54.0. The earlier "not a fixable bias" is
+WITHDRAWN: a Walmart-specific in-sample factor would improve <13 am 45.7 -> 40.0, and the oracle helps other bands.
+This is the existing open blocker "Retransformation bias" (`docs/SETTLED_FINDINGS.md, Open blockers: 'Retransformation bias'`; the direct model
+is a median (q50) fit on log1p units, MO_132:170): the median of a log-scale prediction sums below the mean.
+
+**C5 (hypothesis only).** "Forecast totals directly at the account/portfolio level, or train to a mean-type
+objective" is untested. It must be read against MO_107 (the method-selection oracle; hierarchical top-down
+fails) and the PROVISIONAL objectives tally (`docs/SETTLED_FINDINGS.md, 'objectives' tally (PROVISIONAL)`: flat beats quantile, l2, huber,
+poisson, tweedie and mape). The cheapest first test is the blocker's named remedy, Duan smearing (rescale the
+back-transformed forecast by the average residual factor) or a tweedie objective: next, MO_139.
+
+**Distributor note (Jason, 2026-10-12; idea to verify, not a finding).** BUILT often ships to a wholesale
+distributor rather than directly to the retailer, so planned-expansion inputs (for example Walmart store
+rollouts) may never exist for many accounts. NetSuite shipments (sell-in to the retailer's distribution center
+or the distributor) may lead SPINS sell-through by weeks and flag expansions or new-item pipe-fill early. To
+check: whether Walmart is shipped direct, and whether shipment spikes preceded the Aug 2025 and Jan 2026
+store-count jumps (signal register row 13).
+
+Corrections to Claude's preliminary statements (withdrawn after the skeptic): (1) that new items are
+under-forecast 13-15% "consistently": recently that is three Walmart items (new in Walmart's January 2026
+expansion); outside Walmart it held in 2025, not recently. (2) that the correction factors were unstable because
+the age bias drifts: it was the portfolio-level Q1-2025 seasonal miss carried forward. (3) that this is "a
+trade-off, not a fixable bias" and that totals should be forecast directly: overreach; the existing
+retransformation-bias blocker (log scale plus median) with Duan smearing or tweedie is the first test. (4)
+Process slip: MO_137b was run before it was committed, so its outputs predate the commit; commit scripts before
+running, even diagnostics.
+
+### Evidence
+
+Recent origins, with Walmart, cw / am / pm (bias):
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| direct_avg5 | 28.79 | 16.17 | 6.45 | 0.970 |
+| cal | 28.87 | 16.76 | 6.96 | 0.974 |
+| cal_age | 29.04 | 16.58 | 6.43 | 0.973 |
+| L4W velocity x stores | 30.57 | 17.92 | 10.92 | 1.020 |
+| last week carried forward (flat) | 30.38 | 19.88 | 13.11 | 1.013 |
+| served direct model | 32.42 | 16.99 | 8.26 | 0.936 |
+
+All 18 origins, with Walmart:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| direct_avg5 | 34.15 | 20.85 | 9.17 | 0.969 |
+| cal | 36.60 | 23.57 | 12.97 | 1.030 |
+| cal_age | 37.59 | 24.54 | 13.83 | 1.052 |
+| L4W velocity x stores | 32.93 | 20.69 | 12.61 | 0.995 |
+| last week carried forward (flat) | 32.59 | 21.12 | 12.84 | 0.977 |
+| served direct model | 40.53 | 24.59 | 13.17 | 0.905 |
+
+2025 origins (12 dates), with Walmart:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| direct_avg5 | 38.40 | 24.51 | 11.29 | 0.968 |
+| cal | 42.72 | 28.90 | 17.67 | 1.074 |
+| cal_age | 44.38 | 30.76 | 19.62 | 1.114 |
+| L4W velocity x stores | 34.80 | 22.86 | 13.93 | 0.976 |
+| last week carried forward (flat) | 34.34 | 22.09 | 12.63 | 0.949 |
+| served direct model | 46.97 | 30.54 | 17.01 | 0.880 |
+
+By history band, recent origins (direct_avg5 -> cal; <13 / 13-25 / 26-51 / 52+ weeks): item x week 52.7 -> 56.2 /
+29.2 -> 29.8 / 21.3 -> 19.9 / 18.8 -> 18.4; account x month 45.7 -> 48.8 / 20.2 -> 21.0 / 14.1 -> 12.4 / 14.3 ->
+14.1; portfolio x month 17.0 -> 16.4 / 9.9 -> 9.8 / 7.6 -> 5.4 / 6.7 -> 6.5. So `cal` is worse in the <13 and
+13-25 week bands and better in the 26-51 and 52+ week bands. cal_age portfolio x month by band: 16.7 / 10.0 / 6.4 / 6.0.
+
+Recent origins, without Walmart, cw / am / pm (bias): direct_avg5 28.65 / 16.00 / 6.43 (0.983); cal 28.97 / 16.69 /
+7.37 (0.989); cal_age 29.22 / 16.65 / 7.06 (0.988). All 18 origins without Walmart: direct_avg5 35.33 / 20.96 /
+8.16; cal 37.93 / 23.49 / 12.16; cal_age 39.06 / 24.62 / 13.64. 2025 without Walmart: direct_avg5 40.46 / 24.71 /
+9.47; cal 44.82 / 28.64 / 15.79; cal_age 46.63 / 30.67 / 18.62.
+
+2025 by history band, account x month (direct_avg5 -> cal): <13 weeks 34.0 -> 38.7; 13-25 26.0 -> 29.2; 26-51 26.2 ->
+27.6; 52+ 29.4 -> 35.1.
+
+Per-date recent account x month, cal minus direct_avg5, 2025-12 / 2026-01 / 2026-02 / 2026-03 / 2026-04 / 2026-05
+(negative = better): with Walmart +1.13 / +1.41 / -0.40 / +0.89 / -0.07 / +0.30 (wins 2/6; within-band am wins 3/6;
+within-band pm wins 4/6, pooled -0.75). Without Walmart +1.71 / +0.89 / +0.44 / +0.59 / +0.43 / +0.07 (wins 0/6,
+nominal p=0.03, dates overlap; within-band pm pooled -0.05).
+
+Recent bias by item age, direct_avg5 -> cal: <13 weeks 0.865 -> 0.992; 13-25 0.975 -> 0.993; 26-51 1.052 -> 0.999;
+52+ 1.032 -> 1.017. Seasonal bias, direct_avg5 -> cal: Jan-Mar 2025 0.681 -> 0.708; Oct-Dec 2025 1.099 -> 1.220;
+Jan-Mar 2026 0.983 -> 1.022.
+
+Correction factors used (cal, age x weeks ahead): <13 weeks, weeks 10-13 hit the 1.35 cap from 2025-06 to 2025-10 and
+fell to about 1.15 by 2026-05; 52+ weeks, weeks 10-13 went from 1.301 (2025-03) to 0.926 (2026-05).
+
+MO_137b bias by item age, all arms, recent (flat / L4W velocity x stores / served direct / direct_avg5; share of
+volume): <13 weeks 1.175 / 1.201 / 0.813 / 0.865 (15.5%); 13-25 1.024 / 1.026 / 0.904 / 0.975 (16.8%); 26-51 1.054 /
+1.057 / 0.978 / 1.052 (26.9%); 52+ 1.004 / 1.010 / 1.030 / 1.032 (40.8%). 2025: <13 0.965 / 1.009 / 0.678 / 0.849
+(16.2%); 13-25 0.903 / 0.958 / 0.803 / 0.969 (12.5%); 26-51 0.957 / 0.986 / 0.983 / 1.081 (17.7%); 52+ 0.998 /
+1.013 / 0.971 / 1.022 (53.6%). 2025 by weeks ahead (direct_avg5): 26-51 weeks 0.985 / 1.077 / 1.185 and 52+ weeks
+0.962 / 1.012 / 1.096 (weeks 1-4 / 5-9 / 10-13).
+
+### Procedural lesson
+
+A diagnostic that looks like a general bias (young items under-forecast 13-15%) can be three items at one
+retailer. Split by retailer and by item before proposing a fix, and before telling Jason a pattern is "consistent".
+A correction learned from past forecasts also learns the past forecasts' seasonal misses: a learning window that
+accumulates all earlier dates with no recency weighting carries an early-2025 miss into every later date, so
+check what the factors absorbed before blaming the thing they were meant to correct. Commit diagnostic scripts
+before running them too: MO_137b's outputs predate its commit, so it cannot count as pre-registered. Send a
+finding to the skeptic before stating it as a result; preliminary readings were wrong in four places again here.
+
+---
+
 ## README update 237: MO_136-137: category, other-retailer, 26-week and post-expansion fade signals do not pass the decision rule; Walmart's account totals are right partly by offsetting item errors (2026-10-12)
 
 **What each experiment tested (plain words):**
