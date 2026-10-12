@@ -6,6 +6,78 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 240: session close (2026-10-09 to 2026-10-12): five more tests, none beats the 5-seed fixed direct model; the Druid label fix is prepared and backed up; Rob's seven loads verified; forward test starts when SPINS reaches 2026-12-06 (2026-10-12)
+
+This is an index entry. Details, evidence tables and skeptic verdicts are in README updates 235-239; this entry
+adds nothing new to the findings. No production forecast changed. Every experiment below was skeptic-reviewed;
+Claude's overturned claims are recorded as corrections in README 235-239 and in `agents/project_memory.md`.
+
+### Finding
+
+Under the pre-registered production rule (`docs/PRODUCTION_DECISION_PREREG.md`, with Amendment 1 of 2026-10-10:
+2026-27 accuracy and consistency count most, 2025 is a no-harm check), nothing beat the 5-seed fixed direct model
+(the main model trained five times with different random seeds and averaged). Production stays as it is; the
+saved-forecast forward test decides next.
+
+### Evidence (what each experiment was, in plain words)
+
+| README | experiment (code number and what it tested) | outcome |
+|---|---|---|
+| 235 | MO_134: the recursive model's own settings (year-over-year cap, tree limit, seasonal blend weight, recency weight) re-tested on the corrected bench | settings are "not beaten"; the cap's apparent cost was mostly 116 series-origins with a pre-launch year-ago week |
+| 236 | MO_135: per-store year-over-year ratio instead of the cap | no accuracy gain; the store-count gate, not the ratio, removes the blowups |
+| 237 | MO_136: category, other-retailer and 26-week signals added to the direct model | monthly totals improved but Walmart decides; fails consistency and a seasonal-bias check; no pass |
+| 237 | MO_137: post-expansion fade signals | no pass; Walmart worse because errors that offset each other were removed |
+| 238 | MO_137b (descriptive): bias of the forecasts by item age; MO_138: item-age x weeks-ahead correction learned from earlier forecasts | recent young-item under-forecast is mostly 3 Walmart items; correction fixed totals but worsened accuracy (carried the Q1-2025 seasonal miss forward) |
+| 239 | MO_139: two log-scale (retransformation) bias fixes: Duan smearing and a Tweedie objective | smearing as designed overshot by 28%; Tweedie better on 2025 dates, worse recently; neither clearly better |
+
+Diagnostic (descriptive): MO_136b, Walmart: step-change expansions (2025-08-17, 2026-01-18) then sales per store
+fade; Walmart (27% of recent volume) decides model comparisons, partly through offsetting item errors.
+
+### Druid work
+
+- **Backup:** `built_filtered_weekly_bak_20261012` (72,643,134 rows / 51,094,662,795 units), identical to the source,
+  verified. It is inside the same Druid cluster, so it is not a disaster backup (told Rob).
+- **Rebuild plan:** `docs/DRUID_REBUILD_PLAN_2026-10.md`. Cause: SPINS renamed "MULO + CONVENIENCE" to "MULO W/
+  CONVENIENCE", so `built_filtered_weekly` double-counts those totals 2025-08-17..2026-04-12 and holds stale
+  Oct 2025-Apr 2026 low-volume rows. Retailer rows and forecast training are unaffected. Fix (verified on
+  `spins_full`: 0 duplicate keys): rename the label and drop old-label rows from 2025-08-17 on. It runs with the
+  next SPINS update in a quiet window agreed with Rob (Jason's decision), REPLACE only, maxNumTasks 4 (the cluster
+  has 8 task slots), data check after every step.
+- **Chain runner:** `scripts/druid_pipeline.py` (plan/run; EXPLAIN dry run of all 25 steps passed; writes only with
+  `--execute`) and `scripts/run_q0_rebuild.py` (backup and rebuild). The September runners lived only in a
+  scratchpad and are gone; these are committed.
+- **Verified loads:** all seven of Rob's `built_<file>` tables match the source files exactly (rows, columns,
+  dates, totals). Future refreshes follow the ingest modes in `docs/DRUID_LOAD_LIST_2026-10-10.md`.
+
+### Documents
+
+Settings guide v2 (plain language, skeptic re-checked; `docs/drafts/forecast_settings_guide_DRAFT.*`, internal,
+not cleared for BUILT); signal register draft (`docs/drafts/SIGNAL_REGISTER_DRAFT.md`, 18 signals); Rob's
+`docs/forecasting_growth_signals.md` (growth-signals proposal); Amendment 1 and the named candidates and forward set
+in `docs/PRODUCTION_DECISION_PREREG.md`.
+
+### Open items
+
+- Next SPINS delivery date and a quiet Druid window (Rob); then the label rebuild and re-verification.
+- Forward set for the next saved forecast: 5-seed fixed direct, recursive + direct, Tweedie, served direct,
+  L4W velocity x stores, last value. The saved-forecast script (MO_131, which registers and scores forecasts)
+  must be extended for the 5-seed direct and Tweedie arms before the next delivery; scoring starts when SPINS
+  reaches 2026-12-06.
+- Trends excluded-channel list needs the new MULO label; redeploy the Mo API (Jason + Claude).
+- Is Walmart shipped direct, and do NetSuite shipments lead SPINS (could flag expansions early)? BUILT often ships
+  to distributors, so planned-expansion data may not exist.
+- Roadmap: item attributes test (now MO_140), neural models, Optuna tuning, Kroger accuracy chart, graph/temporal
+  model (awaiting go-ahead).
+
+### Procedural lesson
+
+Commit a script before running it, even a diagnostic (the item-age diagnostic ran 13 seconds before its commit, so
+its hypotheses are not proven pre-registered). Act on a smoke-test warning before approving spend (the smearing
+overshoot showed up in the laptop test). Anything that runs unattended must be committed, not left in a scratchpad.
+Describe every MO number in plain words wherever it appears (Jason's standing rule).
+
+---
+
 ## README update 239: MO_139: Duan smearing as designed overshoots badly and fails; Tweedie is better on 2025 dates and worse on recent dates, so neither objective is clearly better; the velocity-model blocker is untested (2026-10-12)
 
 **What each experiment tested (plain words):**
