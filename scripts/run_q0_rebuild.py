@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -40,6 +41,17 @@ def count(table: str, t0: str, t1: str, extra: str = "") -> int:
     df = query_druid(f'SELECT COUNT(*) n FROM "{table}" WHERE __time >= TIMESTAMP \'{t0}\' '
                      f"AND __time < TIMESTAMP '{t1}' {extra}", timeout=600, retries=2)
     return int(df.n[0])
+
+
+def settled_count(table: str, t0: str, t1: str, want: int, tries: int = 20, wait: int = 30) -> int:
+    """Count a window, re-checking while freshly published segments load (a lagging count is not a mismatch)."""
+    got = count(table, t0, t1)
+    for _ in range(tries):
+        if got == want:
+            return got
+        time.sleep(wait)
+        got = count(table, t0, t1)
+    return got
 
 
 def tables() -> set[str]:
@@ -82,7 +94,7 @@ def backup(a) -> None:
     have = tables()
     for name, (t0, t1) in BATCHES.items():
         src = count(TARGET, t0, t1)
-        if BACKUP in have and count(BACKUP, t0, t1) == src:
+        if BACKUP in have and settled_count(BACKUP, t0, t1, src) == src:
             print(f"backup {name} {t0}..{t1}: already complete ({src:,} rows)", flush=True)
             continue
         run_task(f'''REPLACE INTO "{BACKUP}"
@@ -92,7 +104,7 @@ WHERE __time >= TIMESTAMP '{t0}' AND __time < TIMESTAMP '{t1}'
 PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw''', f"backup {name}", a.max_num_tasks)
         have = tables()
-        got = count(BACKUP, t0, t1)
+        got = settled_count(BACKUP, t0, t1, src)
         if got != src:
             sys.exit(f"STOP: backup {name} has {got:,} rows, source has {src:,}")
         print(f"backup {name} {t0}..{t1}: verified {got:,} rows", flush=True)
