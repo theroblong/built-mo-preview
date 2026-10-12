@@ -1593,36 +1593,58 @@ PARTITIONED BY ALL
 
 **Purpose:** Normalize the raw SPINS extract to snake_case. Filter to BUILT brand + same-subcategory competitor rows. The only query that reads `spins_full` directly.
 
-**Run time: 10–30 minutes on ~95M rows.**
+**Run time: 10–30 minutes per batch on ~95M rows.**
 
-**⚠️ DATE RANGE — UPDATE EACH CYCLE:**
-The `OVERWRITE WHERE` bounds and the `WHERE __time` filter BOTH must match the new data window.
-- Start = prior `built_filtered_weekly` HWM (the last week already written)
-- End   = `2027-01-01` (or next year boundary once 2026 fills)
-- Run `SELECT MAX(__time) FROM "built_filtered_weekly"` to confirm prior HWM before running.
-- After running: verify `SELECT MAX(__time) FROM "built_filtered_weekly"` = new SPINS HWM before proceeding to Q1.
+**⚠️ MULO label fix (2026-10-12, Jason + Claude; must stay in every future run):**
+SPINS renamed `CONVENTIONAL|MULO + CONVENIENCE` → `CONVENTIONAL|MULO W/ CONVENIENCE`, and every MULO geography
+`"<geo> - MULO + CONV"` / `"TOTAL US - MULO + CONVENIENCE"` → `"<geo> - MULO W/ CONV"` / `"TOTAL US - MULO W/ CONVENIENCE"`.
+`spins_full` holds the old labels 2023-01-08 → 2025-09-28 and the new labels from 2025-08-17, so 7 weeks
+(2025-08-17 → 2025-09-28) carry the same data twice. The earlier Batch 1–3 build mapped the channel name only; the
+geography names still differed, so `built_filtered_weekly` double-counted MULO+C totals for 2025-08-17 → 2026-04-12
+(Batch 3 was built from an older `spins_full` load that had both labels through April 2026). Verified on `spins_full`:
+renaming alone leaves ~57–58k duplicate keys per overlap week; renaming **plus** dropping old-label rows from
+2025-08-17 leaves 0 in every week tested. All 34 old-label geographies have a new-label twin; 21 markets exist only
+under the new label (they start 2025-08-17). The three changes are marked `-- MULO FIX` below.
+
+**2026-10-12 full rebuild (one time): run the SQL four times, once per batch, replacing both pairs of bounds:**
+- Batch R1: `2023-01-01` → `2024-01-01`
+- Batch R2: `2024-01-01` → `2025-01-01`
+- Batch R3: `2025-01-01` → `2026-01-01`
+- Batch R4: `2026-01-01` → `2027-01-01`
+
+Before R1, back up the current table batch by batch (same four bounds):
+```sql
+REPLACE INTO "built_filtered_weekly_bak_20261012"
+OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01' AND __time < TIMESTAMP '2024-01-01'
+SELECT * FROM "built_filtered_weekly"
+WHERE __time >= TIMESTAMP '2023-01-01' AND __time < TIMESTAMP '2024-01-01'
+PARTITIONED BY DAY
+CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
+```
+
+**Later cycles (incremental):** same SQL, bounds = prior `built_filtered_weekly` HWM → next year boundary
+(run `SELECT MAX(__time) FROM "built_filtered_weekly"` first; after running, `MAX(__time)` must equal the new SPINS HWM
+before Q1). Keep the `-- MULO FIX` lines.
 
 **Batch history:**
-- Batch 1: 2023-01-01 → 2024-01-01 ✓ COMPLETE
-- Batch 2: 2024-01-01 → 2025-01-01 ✓ COMPLETE
-- Batch 3: 2025-01-01 → 2026-04-19 ✓ COMPLETE (prior cycle)
-- **Batch 4 (current — Sept 23 2026): 2026-04-19 → 2027-01-01** ← this is what the SQL below runs
+- Batches 1–3 (2023-01-01 → 2026-04-19) and Batch 4 (2026-04-19 → 2027-01-01, Sept 23 2026): superseded by the
+  2026-10-12 rebuild (channel-only label fix; MULO+C double-counted 2025-08-17 → 2026-04-12).
 
 ```sql
--- INCREMENTAL BATCH — update bounds each cycle:
---   Start = prior built_filtered_weekly MAX(__time)
---   End   = next year boundary (2027-01-01 until 2026 data is complete)
--- Sept 23 2026 cycle: adding weeks 2026-04-20 → 2026-09-06
+-- Bounds: replace BOTH pairs (OVERWRITE WHERE and WHERE __time) for each batch.
 REPLACE INTO "built_filtered_weekly"
-OVERWRITE WHERE __time >= TIMESTAMP '2026-04-19'
-            AND __time <  TIMESTAMP '2027-01-01'
+OVERWRITE WHERE __time >= TIMESTAMP '2023-01-01'
+            AND __time <  TIMESTAMP '2024-01-01'
 SELECT
   __time,
-  "Channel/Outlet"                                       AS channel_outlet,
+  CASE WHEN "Channel/Outlet" = 'CONVENTIONAL|MULO + CONVENIENCE'               -- MULO FIX (1/3)
+       THEN 'CONVENTIONAL|MULO W/ CONVENIENCE'
+       ELSE "Channel/Outlet" END                         AS channel_outlet,
   "Geography Level"                                      AS geography_level,
   "Retail Account"                                       AS retail_account,
   "Retail Account Level"                                 AS retail_account_level,
-  "Geography"                                            AS geography_raw,
+  REPLACE(REPLACE("Geography", 'MULO + CONVENIENCE', 'MULO W/ CONVENIENCE'),   -- MULO FIX (2/3)
+          'MULO + CONV', 'MULO W/ CONV')                 AS geography_raw,
   "Department"                                           AS department,
   "Category"                                             AS category,
   "Subcategory"                                          AS subcategory,
@@ -1678,20 +1700,31 @@ FROM "spins_full"
 WHERE
   ("Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
    OR "Subcategory" = 'WELLNESS & NUTRITION BARS')
-  AND __time >= TIMESTAMP '2026-04-19'
-  AND __time <  TIMESTAMP '2027-01-01'
+  AND NOT ("Geography" LIKE '%MULO + CONV%'                                    -- MULO FIX (3/3): keep the newer
+           AND __time >= TIMESTAMP '2025-08-17')                               --   copy where both labels exist
+  AND __time >= TIMESTAMP '2023-01-01'
+  AND __time <  TIMESTAMP '2024-01-01'
 PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 ```
 
-**Verify (run after every Q0 before proceeding to Q1):**
+**Verify (after every Q0, before Q1):**
 ```sql
 SELECT MIN(__time) AS min_t, MAX(__time) AS max_t, COUNT(*) AS cnt
 FROM "built_filtered_weekly"
 ```
-Expect `max_t` = new SPINS HWM (2026-09-06 this cycle). If `max_t` is still the prior HWM, Q0 ran the wrong batch or failed silently.
+Expect `max_t` = the SPINS HWM (2026-09-06 as of 2026-10-12). Then run
+`python3 scripts/verify_built_filtered_weekly.py` (from the repo root). It checks, week by week: zero duplicate keys
+(upc × channel_outlet × retail_account × geography_raw), no old MULO labels left, MULO TOTAL US continuity across
+2025-08-17 and 2026-04-19, and (if the backup exists) retailer-row units against the backup. Retailer rows should
+match the backup exactly outside 2025-10-05 → 2026-04-12. Inside that window they move to the current SPINS
+delivery, which is ~0.5% at retailer level.
 
-**Status: ✓ Batch 4 (2026-04-19 → 2027-01-01) IN PROGRESS — Sept 23 2026**
+**Downstream:** Q1 (OVERWRITE ALL) and the Q2+ cycle must be re-run after the rebuild. Rebuild the training panel
+(MO_25) as a new labeled version; keep the current `scripts/outputs/retailer_sales_weekly.parquet` as the frozen
+bench for MO_80–MO_135 comparisons.
+
+**Status: rebuild written 2026-10-12, NOT YET RUN.**
 
 ---
 

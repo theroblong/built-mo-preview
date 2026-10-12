@@ -194,6 +194,46 @@ unless stated; * = interval excludes zero. Pre-registered P1-P7 in f1a2ed2.
   clip makes forecasts much worse (48.7)", "current settings are best", and "the recursive model
   passes the rule, which supports switching".
 
+### Added 2026-10-12 from MO_135 (per-store year-over-year ratio; 18 origins; README 236), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Numbers are average miss % (lower is
+better) at item x week / account x month / portfolio x month, existing series. Pre-registered
+P1-P5 in 6c5332e. Recent = 6 overlapping origins, 2025-12 to 2026-05 (exploratory).
+- **(a) A per-store year-over-year ratio gives no accuracy gain; the protection against the
+  no-clip blowups comes from the store-count gate, not the ratio (gate-only test pending).**
+  No overall harm: per-store ratio without clip 35.49 vs current model 35.46 at item x week
+  (P1 HOLDS), and no detectable difference: per-origin recent account x month, rec_vel minus rec,
+  -1.24 / +1.70 / -0.18 / +0.51 / +0.53 / -0.56 (3 of 6 each way; P2 FAILS, +0.08). But the
+  mechanism claim FALLS: the blend fires on about 30% of series-origins; the distribution-index
+  gate above 1.0 (MO_80:803-811, seasonal-trend fallback :861) removes 89.3% of MO_134's no-clip
+  excess, and where the per-store ratio fires on those series it is still worse than the clipped
+  ratio (+0.23 at item x week). Confound: ratio, calendar alignment and gate changed together.
+  Next test: units ratio + store-count gate, no clip. *Skeptic: SURVIVES WITH CAVEATS (no harm
+  and no difference survive; the mechanism falls).*
+- **(b) Block-bootstrap intervals on fewer than 10 origins are invalid in MO_80** (4 blocks of 3
+  over 6 origins gives only 10 distinct resamples, MO_80:1147-1153). Use per-origin values and
+  the exact sign test (MO_133 rule e-ii); do not quote the printed intervals for recent-origin
+  comparisons. *Skeptic: confirmed.*
+- **(c) The 30% seasonal pull (blend weight 0.30) is a level shift, not a shape change.**
+  rec_vel_w30 over rec is a near-uniform 3-8% upward shift. Jan-Mar 2026 bias 0.968 vs 0.901
+  (P5 holds literally) but Oct-Dec 2025 bias 1.111 vs 1.058, which would fail production
+  criterion 4 against rec. Do not cite as a seasonal improvement. *Skeptic: FALLS as a seasonal
+  fix.*
+- **(d) direct_avg5 fails Amendment 1 consistency (4 of 6 recent dates at account x month vs 5
+  required); criterion 4 passes by only 0.0007.** Recent: direct_avg5 28.79 / 16.17 / 6.45 vs
+  served direct 32.42 / 16.99 / 8.26 (band-separated pm -1.18, cw -3.63); 2025 no-harm passes.
+  It loses 2025-12 (+2.65) and 2026-01 (+1.79) (5 of 6 without Walmart). Oct-Dec 2025 bias
+  1.0993; 3 of 5 single seeds would fail. Its lead is in young bands (am under-13 -4.79, 13-25
+  -3.11, 26-51 -0.19, 52+ +0.19). rec_dir5 and velw30_dir5 fail criterion 1; vel_dir5 and
+  velw30_dir5 are not named candidates in `docs/PRODUCTION_DECISION_PREREG.md`. No production
+  switch. Related: recursive-alone settings tested are exhausted on 13+ week bands (0-1 of 6 vs
+  last value at account x month; under-13 band excepted); combination wins over last value (6 of
+  6) depend on Walmart (4 of 6 without; lead -2.64 to -1.31); direct_avg5's 2025 'best at pm' is
+  pooled cancellation (+2.44 worse than last value within bands). *Skeptic: SURVIVES WITH
+  CAVEATS.*
+- **Corrections to Claude's preliminary statements (withdrawn after the skeptic):** Jan-Mar 2026
+  under-forecast went "from 10% to about 3%" (a level shift, not a seasonal fix) and the per-store
+  ratio is "a safe replacement for the clip" (the gate does that job).
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

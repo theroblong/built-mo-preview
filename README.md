@@ -6,6 +6,144 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 236: MO_135 a per-store year-over-year ratio gives no accuracy gain; the store-count gate, not the ratio, is what removes the no-clip blowups; no production switch (2026-10-12)
+
+Code: `scripts/MO_135_per_store_yoy.py` (predictions P1-P5 pre-registered in 6c5332e before any
+run; post-run print fix only, a0bebe6), `scripts/MO_80` hook `YOY_MODE='velocity'` (default
+`'units'` = production; batched equivalence exact). Compute ran on the GPU worker, jobs
+`jason-mo135-001` to `-003` (5-9 min each, $1.14 reserved each). Parity: the MO_135 production
+arm equals the MO_134 worker production arm exactly on all 18 origins (max abs diff 0.0), so
+arm differences are the setting only. Outputs: `scripts/outputs/mo135_score.log`,
+`mo135_per_store_yoy.json`, `mo135_rows.parquet`.
+Status: skeptic-reviewed (opus/high), SURVIVES WITH CAVEATS. No production forecast changed.
+Proposals are in `docs/SETTLED_FINDINGS.md` (pending review).
+
+Arms: current recursive model (rec, production); rec_w30 (blend weight 0.30); rec_velc
+(per-store ratio, clip kept); rec_vel (per-store ratio, no clip); rec_vel_w20 and rec_vel_w30
+(per-store ratio, blend 0.20 / 0.30). Combinations vel_dir5 and velw30_dir5 average the
+per-store recursive arm 50/50 with the 5-seed direct average (direct_avg5, MO_133). Status quo
+is the served direct model (direct_served).
+
+### Finding
+
+Average miss % (lower is better) at item x week / account x month / portfolio x month
+(cw/am/pm). Skeptic verdict on each claim:
+
+1. The unclipped per-store ratio does no overall harm (P1 HOLDS: 35.49 vs 35.46 at item x week,
+   all 18 origins), but the mechanism claim FALLS. The per-store blend fires on about 30% of
+   series-origins (40% of recent volume; about 95% of 52+ week series, about 2% of under-13 and
+   13-25 week series). The store-count gate (distribution index above 1.0, MO_80:803-811, which
+   falls back to the seasonal-trend forecast at :861), not the per-store ratio, removes 89.3% of
+   MO_134's no-clip excess; 62 of the 116 worst series-origins never reach the blend. Where the
+   per-store ratio does fire on those series it is still worse than the clipped ratio (+0.23 at
+   item x week). Confound: ratio, calendar alignment and gate changed together. Next test: the
+   units ratio with the store-count gate and no clip. *Claim 'no overall harm' SURVIVES; the
+   mechanism FALLS.*
+2. No detectable accuracy difference between the per-store ratio and the current model (P2
+   FAILS: recent band-separated pm, rec_vel_w30 minus rec, +0.08). Per-origin recent account x
+   month, rec_vel minus rec: -1.24 / +1.70 / -0.18 / +0.51 / +0.53 / -0.56 (3 of 6 each way).
+   The pooled +0.15 becomes -0.15 within history bands, and the 52+ band reverses between the
+   recent origins and 2025. The block-bootstrap intervals printed in the log are INVALID: 4
+   blocks of 3 over 6 origins give only 10 distinct resamples (MO_80:1147-1153). Use per-origin
+   values and the exact sign test (MO_133 rule e-ii). *SURVIVES.*
+3. P5 holds literally (Jan-Mar 2026 bias, rec_vel_w30 0.968 vs rec 0.901) but FALLS as a
+   seasonal improvement: rec_vel_w30 over rec is a near-uniform 3-8% upward level shift, not a
+   change of shape. Oct-Dec 2025 bias is 1.111 vs rec 1.058, which would fail production
+   criterion 4 against rec. *FALLS as a seasonal fix.*
+4. Recursive-alone settings tested so far are exhausted on 13+ week bands: 0-1 of 6 recent
+   dates beat last week carried forward at account x month. Exception: the under-13 week band,
+   where the recursive model beats last value at all three levels. *SURVIVES WITH CAVEATS.*
+5. Combinations tie (P4 HOLDS: recent am vel_dir5 17.36 vs rec_dir5 17.25). Their 6 of 6 wins
+   over last week carried forward depend on Walmart: without it 4 of 6, and the lead halves
+   (-2.64 to -1.31); 52+ band 2-3 of 6. *SURVIVES WITH CAVEATS.*
+6. Production decision (Amendment 1, status quo served direct): no switch. direct_avg5 passes
+   recent accuracy (am 16.17 vs 16.99; band-separated pm -1.18; cw -3.63) and the 2025
+   no-harm check, but FAILS consistency: 4 of 6 recent dates at account x month vs the 5 of 6
+   required (loses 2025-12 by +2.65 and 2026-01 by +1.79; 5 of 6 without Walmart). Criterion 4
+   passes by only 0.0007 (Oct-Dec 2025 bias 1.0993; 3 of 5 single seeds would fail). Its lead
+   over served direct is in the young bands (am under-13 -4.79, 13-25 -3.11, 26-51 -0.19, 52+
+   +0.19). rec_dir5 and velw30_dir5 fail criterion 1 (account x month worse than served).
+   vel_dir5 and velw30_dir5 are not named candidates in `docs/PRODUCTION_DECISION_PREREG.md`.
+   *SURVIVES.*
+7. 2025 context: direct_avg5's 2025 'best at pm' is pooled cancellation (+2.44 worse than last
+   value within bands). Skeptic: the recent direct_avg5 lead is not concentrated in Walmart
+   (it widens without it). *PARTLY FALLS (as first worded).*
+
+Corrections to Claude's preliminary statements (corrected in chat): Jan-Mar 2026 under-forecast
+went "from 10% to about 3%" (a level shift, not a seasonal fix), and the per-store ratio is "a
+safe replacement for the clip" (the store-count gate does that job).
+
+### Evidence
+
+Recent origins (2025-12 on, 6 dates, existing series, EXPLORATORY: overlapping, not
+significance-tested), cw / am / pm (bias):
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| direct_avg5 (5-seed direct average) | 28.79 | 16.17 | 6.45 | 0.970 |
+| served direct model | 32.42 | 16.99 | 8.26 | 0.936 |
+| velw30_dir5 | 28.52 | 17.19 | 8.70 | 1.011 |
+| rec_dir5 | 28.50 | 17.25 | 8.88 | 0.997 |
+| vel_dir5 | 28.38 | 17.36 | 8.87 | 1.001 |
+| L4W velocity x stores | 30.57 | 17.92 | 10.92 | 1.020 |
+| last week carried forward | 30.38 | 19.88 | 13.11 | 1.013 |
+| current recursive model (rec) | 34.59 | 22.50 | 14.11 | 1.023 |
+| rec_vel (per-store, no clip) | 34.38 | 22.65 | 14.46 | 1.031 |
+| rec_vel_w30 | 34.31 | 22.37 | 14.29 | 1.052 |
+| rec_w30 | 36.03 | 22.35 | 13.75 | 1.035 |
+
+All 18 origins, existing series:
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| velw30_dir5 | 32.18 | 20.08 | 10.18 | 0.985 |
+| rec_dir5 | 32.04 | 20.08 | 10.46 | 0.966 |
+| vel_dir5 | 32.08 | 20.16 | 10.35 | 0.975 |
+| L4W velocity x stores | 32.93 | 20.69 | 12.61 | 0.995 |
+| direct_avg5 | 34.15 | 20.85 | 9.17 | 0.969 |
+| last week carried forward | 32.59 | 21.12 | 12.84 | 0.977 |
+| rec_vel_w30 | 35.47 | 22.77 | 13.42 | 1.001 |
+| current recursive model (rec) | 35.46 | 22.89 | 13.75 | 0.962 |
+| rec_vel (per-store, no clip) | 35.49 | 22.92 | 13.76 | 0.980 |
+| rec_w30 | 36.38 | 23.25 | 14.09 | 0.952 |
+| served direct model | 40.53 | 24.59 | 13.17 | 0.905 |
+
+2025 origins (12 dates), cw / am / pm (bias):
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| last week carried forward | 34.34 | 22.09 | 12.63 | 0.95 |
+| direct_avg5 | 38.40 | 24.51 | 11.29 | 0.97 |
+| served direct model | 46.97 | 30.54 | 17.01 | 0.88 |
+| rec_dir5 | 34.86 | 22.30 | 11.70 | 0.94 |
+
+History bands, recent origins, account x month (flat = last week carried forward; <13 / 13-25 /
+26-51 / 52+ weeks): flat 47.3 / 25.0 / 17.0 / 16.2; rec 45.7 / 30.6 / 21.8 / 19.3; rec_vel
+46.1 / 31.0 / 21.8 / 18.4; rec_vel_w30 46.1 / 31.0 / 21.8 / 18.1; direct_avg5 45.7 / 20.2 /
+14.1 / 14.3; rec_dir5 40.6 / 22.4 / 15.7 / 14.3.
+
+Consistency, recent origins, account x month wins (vs served direct / vs last value):
+direct_avg5 4/6, 5/6; rec_dir5, vel_dir5, velw30_dir5 3/6, 6/6; all recursive-alone arms 1-2/6
+vs served and 0-1/6 vs last value.
+
+Seasonal bias, Jan-Mar 2026: rec 0.90, rec_vel 0.92, rec_vel_w30 0.97, direct_avg5 0.98.
+
+Pre-registered predictions: P1 HOLDS (mechanism falls), P2 FAILS, P3 HOLDS (recent am direct_avg5
+16.17, best recursive 22.35), P4 HOLDS, P5 HOLDS literally / falls as interpreted.
+
+### Procedural lesson
+
+A pass can be right while the explanation is wrong: "no harm" held, but the cause was the
+existing store-count gate, not the new ratio, because three things (ratio, calendar alignment,
+gate) changed together. Before crediting a component, run an arm that changes only that
+component. A level shift looks like a seasonal fix when only Jan-Mar is read; check the opposite
+season (Oct-Dec) before calling it a shape improvement. Tools that print intervals need a check
+on how many distinct resamples exist; with 6 origins use per-origin values and the exact sign
+test. Preliminary readings given to Jason were wrong in two places; send a finding to the
+skeptic before stating it as a result.
+
+---
+
 ## README update 235: MO_134 the recursive model's settings are not beaten, the year-over-year clip's cost was mostly an artifact, and the recursive win over the served direct model is all in 2025 (2026-10-10)
 
 Code: `scripts/MO_134_recursive_fair_settings.py` (predictions P1-P7 pre-registered in f1a2ed2;

@@ -38,6 +38,17 @@ caddies to the consumer unit), `connor_built_upc`, `netsuite_upc`, or `spins_onl
 neither BUILT list: mostly discontinued BARs, plus 2026 launches and 12-pack cartons not yet on
 Connor's sheet). Coverage: the BUILT lists cover 99.4% of the last 26 weeks of SPINS volume.
 
+## 2b. Ingest mode (`appendToExisting`) per datasource (added 2026-10-12, Jason)
+
+| Datasource | First load | Every later refresh | Why |
+|---|---|---|---|
+| `trade_promotions`, `trade_promotions_overview` | new table | **append** (`appendToExisting: true`) | Each refresh is a new `as_of_date` snapshot. Queries filter to the latest `as_of_date`. Keeping old snapshots is what lets backtests use the promo plan as it was known at each date. |
+| `forecast_versions` | new table | **append** (`appendToExisting: true`) | Each save is a new `version_id`; never replace older versions. |
+| `item_attributes`, `item_master_rows`, `customer_bridge`, `sales_reps` | new table | **replace** (`appendToExisting: false`) | Current-state lookups. Load them with one fixed `__time` (e.g. `2000-01-01`) every time: `false` replaces only segments in the new file's time range, so a different `__time` would leave the old copy in place (runbook incident, 2026-09). |
+
+Before any `appendToExisting: false` load, check the new file's columns against what the API selects
+(the 2026-07-09 incident: a replace silently dropped columns and emptied the forecast drawer).
+
 ## 3. Notes and caveats
 - **Snapshots, not live feeds.** Connor's items are as of 7/22/26; ItemDim as of 2026-10-01; promotions as
   of 2026-09-30. Re-run the builder when newer files arrive; keep `as_of_date` / `built_on` so versions

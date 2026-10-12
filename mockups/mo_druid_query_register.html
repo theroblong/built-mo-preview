@@ -1226,86 +1226,107 @@ PARTITIONED BY ALL
 <section class="query" id="q0">
 <h2>Q0 Category extract normalization</h2>
 <p class="note"><strong>Purpose:</strong> Normalize the raw SPINS extract to snake_case. Filter to BUILT brand + same-subcategory competitor rows. The only query that reads <code>spins_full</code> directly.</p>
-<p class="note"><strong>Run time:</strong> 10–30 minutes on ~95M rows.</p>
+<p class="note"><strong>Run time: 10–30 minutes per batch on ~95M rows.</strong></p>
+<p class="note"><strong>⚠️ MULO label fix (2026-10-12, Jason + Claude; must stay in every future run):</strong> SPINS renamed <code>CONVENTIONAL|MULO + CONVENIENCE</code> → <code>CONVENTIONAL|MULO W/ CONVENIENCE</code>, and every MULO geography <code>&quot;&lt;geo&gt; - MULO + CONV&quot;</code> / <code>&quot;TOTAL US - MULO + CONVENIENCE&quot;</code> → <code>&quot;&lt;geo&gt; - MULO W/ CONV&quot;</code> / <code>&quot;TOTAL US - MULO W/ CONVENIENCE&quot;</code>. <code>spins_full</code> holds the old labels 2023-01-08 → 2025-09-28 and the new labels from 2025-08-17, so 7 weeks (2025-08-17 → 2025-09-28) carry the same data twice. The earlier Batch 1–3 build mapped the channel name only; the geography names still differed, so <code>built_filtered_weekly</code> double-counted MULO+C totals for 2025-08-17 → 2026-04-12 (Batch 3 was built from an older <code>spins_full</code> load that had both labels through April 2026). Verified on <code>spins_full</code>: renaming alone leaves ~57–58k duplicate keys per overlap week; renaming <strong>plus</strong> dropping old-label rows from 2025-08-17 leaves 0 in every week tested. All 34 old-label geographies have a new-label twin; 21 markets exist only under the new label (they start 2025-08-17). The three changes are marked <code>-- MULO FIX</code> below.</p>
+<p class="note"><strong>2026-10-12 full rebuild (one time): run the SQL four times, once per batch, replacing both pairs of bounds:</strong></p>
+<ul><li>Batch R1: <code>2023-01-01</code> → <code>2024-01-01</code></li><li>Batch R2: <code>2024-01-01</code> → <code>2025-01-01</code></li><li>Batch R3: <code>2025-01-01</code> → <code>2026-01-01</code></li><li>Batch R4: <code>2026-01-01</code> → <code>2027-01-01</code></li></ul>
+<p class="note">Before R1, back up the current table batch by batch (same four bounds):</p>
 <pre><code>
--- Run once per year-range to stay within cluster task-time limits.
--- Adjust the __time bounds for each batch; re-run with the next range when complete.
--- Example batches (tune start/end to match your data's actual date range):
---   Batch 1: 2023-01-01 → 2024-01-01  ✓ COMPLETE
---   Batch 2: 2024-01-01 → 2025-01-01  ✓ COMPLETE
---   Batch 3: 2025-01-01 → present      ✓ COMPLETE
-REPLACE INTO "built_filtered_weekly"
-OVERWRITE WHERE __time &gt;= TIMESTAMP '2023-01-01'
-            AND __time &lt;  TIMESTAMP '2024-01-01'
-SELECT
-  __time,
-  "Channel/Outlet"                                       AS channel_outlet,
-  "Geography Level"                                      AS geography_level,
-  "Retail Account"                                       AS retail_account,
-  "Retail Account Level"                                 AS retail_account_level,
-  "Geography"                                            AS geography_raw,
-  "Department"                                           AS department,
-  "Category"                                             AS category,
-  "Subcategory"                                          AS subcategory,
-  "UPC"                                                  AS upc,
-  "Description"                                          AS description,
-  "Brand"                                                AS source_brand,
-  CAST("PACK COUNT" AS BIGINT)                           AS source_pack_count,
-  "FLAVOR"                                               AS spins_flavor_raw,
-  "NFP - PROTEIN"                                        AS nfp_protein,
-  "NFP RANGES - PROTEIN VALUE"                           AS nfp_protein_range,
-  "NFP - SUGARS"                                         AS nfp_sugars,
-  "NFP - CALORIES"                                       AS nfp_calories,
-  "STORAGE"                                              AS storage,
-  "UNIT OF MEASURE"                                      AS unit_of_measure,
-  CAST("Units" AS DOUBLE)                                AS units,
-  CAST("Units Yago" AS DOUBLE)                           AS units_yago,
-  CAST("Base Units" AS DOUBLE)                           AS base_units,
-  CAST("Base Units Yago" AS DOUBLE)                      AS base_units_yago,
-  CAST("Dollars" AS DOUBLE)                              AS dollars,
-  CAST("Base Dollars" AS DOUBLE)                         AS base_dollars,
-  CAST("TDP" AS DOUBLE)                                  AS tdp,
-  CAST("TDP Yago" AS DOUBLE)                             AS tdp_yago,
-  CAST("Average Weekly TDP" AS DOUBLE)                   AS avg_weekly_tdp,
-  CAST("Max % ACV" AS DOUBLE)                            AS max_acv,
-  CAST("Avg % ACV" AS DOUBLE)                            AS avg_acv,
-  CAST("# of Stores" AS BIGINT)                          AS store_count,
-  CAST("# of Stores Selling" AS BIGINT)                  AS stores_selling,
-  CAST("% of Stores Selling" AS DOUBLE)                  AS pct_stores_selling,
-  CAST("Average Weekly Units SPM" AS DOUBLE)             AS avg_weekly_units_spm,
-  CAST("Average Weekly Units Per Store Selling Per Item" AS DOUBLE)
-                                                         AS avg_weekly_units_per_store_selling_per_item,
-  CAST("Units SPM Per Item" AS DOUBLE)                   AS units_spm_per_item,
-  CAST("Average Weekly Units per Store Selling" AS DOUBLE)
-                                                         AS avg_weekly_units_per_store_selling,
-  CAST("ARP" AS DOUBLE)                                  AS arp,
-  CAST("ARP Yago" AS DOUBLE)                             AS arp_yago,
-  CAST("Base ARP" AS DOUBLE)                             AS base_arp,
-  CAST("ARP % Discount Any Promo" AS DOUBLE)             AS arp_pct_discount_any_promo,
-  CAST("Units Promo" AS DOUBLE)                          AS units_promo,
-  CAST("Units Non-Promo" AS DOUBLE)                      AS units_non_promo,
-  CAST("Units % Promo" AS DOUBLE)                        AS units_pct_promo,
-  CAST("TDP Any Promo" AS DOUBLE)                        AS tdp_any_promo,
-  CAST("TDP Non-Promo" AS DOUBLE)                        AS tdp_non_promo,
-  CAST("Promo Weeks" AS BIGINT)                          AS promo_weeks,
-  CAST("Incr Units" AS DOUBLE)                           AS incr_units,
-  CAST("Incr Dollars" AS DOUBLE)                         AS incr_dollars,
-  CAST("Units % Lift TPR" AS DOUBLE)                     AS units_lift_tpr,
-  CAST("Units % Lift Any Display" AS DOUBLE)             AS units_lift_any_display,
-  CAST("Units % Lift Any Feature" AS DOUBLE)             AS units_lift_any_feature,
-  "First Week Selling"                                   AS first_week_selling,
-  CAST("Number of Weeks Selling" AS BIGINT)              AS number_of_weeks_selling
-FROM "spins_full"
-WHERE
-  ("Brand" IN ('BUILT', 'BUILT BAR', 'BUILT PUFF', 'BUILT SOUR PUFF')
-   OR "Subcategory" = 'WELLNESS &amp; NUTRITION BARS')
-  AND __time &gt;= TIMESTAMP '2023-01-01'
-  AND __time &lt;  TIMESTAMP '2024-01-01'
+REPLACE INTO &quot;built_filtered_weekly_bak_20261012&quot;
+OVERWRITE WHERE __time &gt;= TIMESTAMP &#x27;2023-01-01&#x27; AND __time &lt; TIMESTAMP &#x27;2024-01-01&#x27;
+SELECT * FROM &quot;built_filtered_weekly&quot;
+WHERE __time &gt;= TIMESTAMP &#x27;2023-01-01&#x27; AND __time &lt; TIMESTAMP &#x27;2024-01-01&#x27;
 PARTITIONED BY DAY
 CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
 </code></pre>
-<p class="note"><strong>Verify:</strong> <code>SELECT COUNT(*) FROM built_filtered_weekly</code> — expect roughly one-third of the full ~62.9M total per batch. After all batches: <code>SELECT MIN(__time), MAX(__time), COUNT(*) FROM built_filtered_weekly</code>.</p>
-<p><strong>Status: ✓ COMPLETE (all 3 batches)</strong></p>
+<p class="note"><strong>Later cycles (incremental):</strong> same SQL, bounds = prior <code>built_filtered_weekly</code> HWM → next year boundary (run <code>SELECT MAX(__time) FROM &quot;built_filtered_weekly&quot;</code> first; after running, <code>MAX(__time)</code> must equal the new SPINS HWM before Q1). Keep the <code>-- MULO FIX</code> lines.</p>
+<p class="note"><strong>Batch history:</strong></p>
+<ul><li>Batches 1–3 (2023-01-01 → 2026-04-19) and Batch 4 (2026-04-19 → 2027-01-01, Sept 23 2026): superseded by the 2026-10-12 rebuild (channel-only label fix; MULO+C double-counted 2025-08-17 → 2026-04-12).</li></ul>
+<pre><code>
+-- Bounds: replace BOTH pairs (OVERWRITE WHERE and WHERE __time) for each batch.
+REPLACE INTO &quot;built_filtered_weekly&quot;
+OVERWRITE WHERE __time &gt;= TIMESTAMP &#x27;2023-01-01&#x27;
+            AND __time &lt;  TIMESTAMP &#x27;2024-01-01&#x27;
+SELECT
+  __time,
+  CASE WHEN &quot;Channel/Outlet&quot; = &#x27;CONVENTIONAL|MULO + CONVENIENCE&#x27;               -- MULO FIX (1/3)
+       THEN &#x27;CONVENTIONAL|MULO W/ CONVENIENCE&#x27;
+       ELSE &quot;Channel/Outlet&quot; END                         AS channel_outlet,
+  &quot;Geography Level&quot;                                      AS geography_level,
+  &quot;Retail Account&quot;                                       AS retail_account,
+  &quot;Retail Account Level&quot;                                 AS retail_account_level,
+  REPLACE(REPLACE(&quot;Geography&quot;, &#x27;MULO + CONVENIENCE&#x27;, &#x27;MULO W/ CONVENIENCE&#x27;),   -- MULO FIX (2/3)
+          &#x27;MULO + CONV&#x27;, &#x27;MULO W/ CONV&#x27;)                 AS geography_raw,
+  &quot;Department&quot;                                           AS department,
+  &quot;Category&quot;                                             AS category,
+  &quot;Subcategory&quot;                                          AS subcategory,
+  &quot;UPC&quot;                                                  AS upc,
+  &quot;Description&quot;                                          AS description,
+  &quot;Brand&quot;                                                AS source_brand,
+  CAST(&quot;PACK COUNT&quot; AS BIGINT)                           AS source_pack_count,
+  &quot;FLAVOR&quot;                                               AS spins_flavor_raw,
+  &quot;NFP - PROTEIN&quot;                                        AS nfp_protein,
+  &quot;NFP RANGES - PROTEIN VALUE&quot;                           AS nfp_protein_range,
+  &quot;NFP - SUGARS&quot;                                         AS nfp_sugars,
+  &quot;NFP - CALORIES&quot;                                       AS nfp_calories,
+  &quot;STORAGE&quot;                                              AS storage,
+  &quot;UNIT OF MEASURE&quot;                                      AS unit_of_measure,
+  CAST(&quot;Units&quot; AS DOUBLE)                                AS units,
+  CAST(&quot;Units Yago&quot; AS DOUBLE)                           AS units_yago,
+  CAST(&quot;Base Units&quot; AS DOUBLE)                           AS base_units,
+  CAST(&quot;Base Units Yago&quot; AS DOUBLE)                      AS base_units_yago,
+  CAST(&quot;Dollars&quot; AS DOUBLE)                              AS dollars,
+  CAST(&quot;Base Dollars&quot; AS DOUBLE)                         AS base_dollars,
+  CAST(&quot;TDP&quot; AS DOUBLE)                                  AS tdp,
+  CAST(&quot;TDP Yago&quot; AS DOUBLE)                             AS tdp_yago,
+  CAST(&quot;Average Weekly TDP&quot; AS DOUBLE)                   AS avg_weekly_tdp,
+  CAST(&quot;Max % ACV&quot; AS DOUBLE)                            AS max_acv,
+  CAST(&quot;Avg % ACV&quot; AS DOUBLE)                            AS avg_acv,
+  CAST(&quot;# of Stores&quot; AS BIGINT)                          AS store_count,
+  CAST(&quot;# of Stores Selling&quot; AS BIGINT)                  AS stores_selling,
+  CAST(&quot;% of Stores Selling&quot; AS DOUBLE)                  AS pct_stores_selling,
+  CAST(&quot;Average Weekly Units SPM&quot; AS DOUBLE)             AS avg_weekly_units_spm,
+  CAST(&quot;Average Weekly Units Per Store Selling Per Item&quot; AS DOUBLE)
+                                                         AS avg_weekly_units_per_store_selling_per_item,
+  CAST(&quot;Units SPM Per Item&quot; AS DOUBLE)                   AS units_spm_per_item,
+  CAST(&quot;Average Weekly Units per Store Selling&quot; AS DOUBLE)
+                                                         AS avg_weekly_units_per_store_selling,
+  CAST(&quot;ARP&quot; AS DOUBLE)                                  AS arp,
+  CAST(&quot;ARP Yago&quot; AS DOUBLE)                             AS arp_yago,
+  CAST(&quot;Base ARP&quot; AS DOUBLE)                             AS base_arp,
+  CAST(&quot;ARP % Discount Any Promo&quot; AS DOUBLE)             AS arp_pct_discount_any_promo,
+  CAST(&quot;Units Promo&quot; AS DOUBLE)                          AS units_promo,
+  CAST(&quot;Units Non-Promo&quot; AS DOUBLE)                      AS units_non_promo,
+  CAST(&quot;Units % Promo&quot; AS DOUBLE)                        AS units_pct_promo,
+  CAST(&quot;TDP Any Promo&quot; AS DOUBLE)                        AS tdp_any_promo,
+  CAST(&quot;TDP Non-Promo&quot; AS DOUBLE)                        AS tdp_non_promo,
+  CAST(&quot;Promo Weeks&quot; AS BIGINT)                          AS promo_weeks,
+  CAST(&quot;Incr Units&quot; AS DOUBLE)                           AS incr_units,
+  CAST(&quot;Incr Dollars&quot; AS DOUBLE)                         AS incr_dollars,
+  CAST(&quot;Units % Lift TPR&quot; AS DOUBLE)                     AS units_lift_tpr,
+  CAST(&quot;Units % Lift Any Display&quot; AS DOUBLE)             AS units_lift_any_display,
+  CAST(&quot;Units % Lift Any Feature&quot; AS DOUBLE)             AS units_lift_any_feature,
+  &quot;First Week Selling&quot;                                   AS first_week_selling,
+  CAST(&quot;Number of Weeks Selling&quot; AS BIGINT)              AS number_of_weeks_selling
+FROM &quot;spins_full&quot;
+WHERE
+  (&quot;Brand&quot; IN (&#x27;BUILT&#x27;, &#x27;BUILT BAR&#x27;, &#x27;BUILT PUFF&#x27;, &#x27;BUILT SOUR PUFF&#x27;)
+   OR &quot;Subcategory&quot; = &#x27;WELLNESS &amp; NUTRITION BARS&#x27;)
+  AND NOT (&quot;Geography&quot; LIKE &#x27;%MULO + CONV%&#x27;                                    -- MULO FIX (3/3): keep the newer
+           AND __time &gt;= TIMESTAMP &#x27;2025-08-17&#x27;)                               --   copy where both labels exist
+  AND __time &gt;= TIMESTAMP &#x27;2023-01-01&#x27;
+  AND __time &lt;  TIMESTAMP &#x27;2024-01-01&#x27;
+PARTITIONED BY DAY
+CLUSTERED BY upc, channel_outlet, retail_account, geography_raw
+</code></pre>
+<p class="note"><strong>Verify (after every Q0, before Q1):</strong></p>
+<pre><code>
+SELECT MIN(__time) AS min_t, MAX(__time) AS max_t, COUNT(*) AS cnt
+FROM &quot;built_filtered_weekly&quot;
+</code></pre>
+<p class="note">Expect <code>max_t</code> = the SPINS HWM (2026-09-06 as of 2026-10-12). Then run <code>python3 scripts/verify_built_filtered_weekly.py</code> (from the repo root). It checks, week by week: zero duplicate keys (upc × channel_outlet × retail_account × geography_raw), no old MULO labels left, MULO TOTAL US continuity across 2025-08-17 and 2026-04-19, and (if the backup exists) retailer-row units against the backup. Retailer rows should match the backup exactly outside 2025-10-05 → 2026-04-12. Inside that window they move to the current SPINS delivery, which is ~0.5% at retailer level.</p>
+<p class="note"><strong>Downstream:</strong> Q1 (OVERWRITE ALL) and the Q2+ cycle must be re-run after the rebuild. Rebuild the training panel (MO_25) as a new labeled version; keep the current <code>scripts/outputs/retailer_sales_weekly.parquet</code> as the frozen bench for MO_80–MO_135 comparisons.</p>
+<p class="note"><strong>Status: rebuild written 2026-10-12, NOT YET RUN.</strong></p>
 <div class="top"><a href="#top">Back to top</a></div></section>
 <section class="query" id="q1">
 <h2>Q1 Enriched weekly base table</h2>
