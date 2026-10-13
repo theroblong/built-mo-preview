@@ -6,6 +6,184 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 241: MO_140 (fixed product facts added to the forecast model) does not help; MO_142 (data for the Meijer brief v2) -- Meijer's newest two 4-packs were mostly new business; brief v2 delivered (2026-10-13)
+
+**What each piece of work was (plain words):**
+- **MO_140, fixed product facts added to the forecast model:** the 5-seed fixed direct model (`direct_avg5`: the main
+  model trained five times with different random seeds and averaged) was given extra inputs that do not change over
+  time: product line (from the item sheet), protein, sugar and calories (from SPINS nutrition labels), retail price
+  per bar, and an "exclusive to one retailer" flag. The arm is called `attr_avg5`. Question: do these facts help the
+  model forecast, for example by letting new items borrow from similar products?
+- **MO_142 and MO_142b, data for the Meijer brief v2:** a descriptive analysis (not a forecast test) of how BUILT
+  performs in Meijer's own 280 stores (SPINS "MEIJER CORP - RMA"). The first Meijer brief mixed in the wider Meijer
+  trade area (CRMA / Multi Outlet), which is why it was redone. Main question: when Meijer added new 4-packs, how
+  much of their sales were new business and how much came out of BUILT items already on the shelf?
+  - **Launch cannibalization rate** = (what the existing BUILT items were expected to sell, adjusted for the category,
+    minus what they actually sold, in weekly base units) divided by the new items' weekly base units. Compared 13
+    weeks before with weeks 2-14 after the launch. A rate of 0.37 means about 37 units lost per 100 new units.
+  - **Placebo check:** the same measurement at fake launch dates, to see how much the number moves by chance.
+  - **MO_142b** judges existing items per store selling, so that BUILT simply being in more stores is not counted as
+    a loss.
+  - **Price sensitivity:** ln(units per store selling) on ln(price paid per bar), with item and week fixed effects
+    (each item and each week gets its own baseline), errors clustered by item, last 104 weeks.
+
+Code: MO_140 `scripts/MO_140_attributes.py` (commit f71db5a, predictions P1-P5 before any run; worker jobs
+`jason-mo140-001` to `-003`; scored by `MO_140_attributes.py score`; log `outputs/mo140_run.log`; parity 0.000000,
+meaning the worker's rerun of the plain model matches the saved MO_133 forecast exactly, so the two arms differ only by the
+new inputs).
+MO_142 `scripts/MO_142_meijer_brief_v2.py` (1003c88, predictions P1-P6 before run 1) and the MO_142b per-store
+variant with a price-model rank fix (d40e3ce, Pb1-Pb3 before run 2); logs `scripts/outputs/mo142_run1.log` and
+`mo142_run2.log`; outputs in `scripts/outputs/meijer_v2_run1/` and `meijer_v2/`.
+Status: both skeptic-reviewed (opus/high). No production forecast changed. Proposals are in
+`docs/SETTLED_FINDINGS.md` (PROVISIONAL, pending review).
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Numbers are average miss % (lower is
+better), existing series. Recent = 6 overlapping origins, 2025-12 on (exploratory). Bias = forecast / actual
+(below 1.00 = too low).
+
+### Finding
+
+**MO_140: static product attributes do not improve the fixed direct model for existing series.** Recent accuracy
+is the same at item x week and slightly worse at account x month and portfolio x month. Under Amendment 1 of
+`docs/PRODUCTION_DECISION_PREREG.md` this is no pass; production is unchanged. P1-P5 HOLD as written. Gains in the
+youngest history bands are cancelled by losses in the older bands. Whether new items can borrow from similar
+products is not tested (items with no history at the forecast date are forced to zero and not scored).
+
+**MO_142: in Meijer's own stores, the newest two of Meijer's five main 4-packs (Peanut Butter Cup, first sold
+2026-04-19; Cookies N Cream, first sold 2026-04-26) were mostly new business in their first three months.** The
+older three 4-packs (Brownie Batter, Coconut, Cookie Dough) sold roughly 10-40 fewer per 100 new packages (central
+estimates 0.37 by units and 0.34 per store selling; noise about +/-0.3), so roughly 60-90% of the new packages were
+new to BUILT. Each older item gave up 12-16% of its expected sales. That is within the normal range for Food-channel
+launches. Two items cannot be separated from each other. Two other findings: BUILT's sales at Meijer grew about ten
+times (below), and BUILT's price response is large but is a response to promotions, not to shelf price.
+
+### Evidence
+
+**MO_140 results**
+
+| arm | item x week | account x month | portfolio x month | bias |
+|---|---|---|---|---|
+| direct_avg5 (recent, with Walmart) | 28.79 | 16.17 | 6.45 | 0.970 |
+| attr_avg5 (recent, with Walmart) | 28.79 | 16.30 | 6.65 | 0.975 |
+
+| other cut, account x month | direct_avg5 | attr_avg5 |
+|---|---|---|
+| all 18 origins | 20.85 | 21.05 |
+| 2025 origins | 24.51 | 24.77 |
+| recent, without Walmart | 16.00 | 16.23 |
+
+Per-date recent account x month: attr_avg5 better on 2 of 6 dates (sign-test p=0.69; 1 of 6 without Walmart).
+
+By history band (weeks of history at the retailer), recent origins (2025-12 on), from `outputs/mo140_run.log`;
+am = account x month, pm = portfolio x month:
+
+| band | direct_avg5 am -> attr_avg5 am | direct_avg5 pm -> attr_avg5 pm |
+|---|---|---|
+| under 13 weeks | 45.7 -> 45.2 | 17.0 -> 16.2 |
+| 13-25 weeks | 20.2 -> 19.8 | 9.9 -> 9.4 |
+| 26-51 weeks | 14.1 -> 14.4 | 7.6 -> 8.1 |
+| 52+ weeks | 14.3 -> 14.6 | 6.7 -> 7.3 |
+
+The under-13-week item x week gain (0.715 points, 52.7 -> 52.0) is 89% Walmart, from two Sour Puff items
+(08-40229-30652 and 08-40229-30680, first sold 2025-12-28). It fades by April-May 2026 and reverses in 2025 at item
+x week and account x month.
+
+**MO_142: BUILT's own performance at Meijer (280 stores)**
+
+| measure | start | latest |
+|---|---|---|
+| base units (packages) per Meijer store per week | 1.7 (Q4 2023) | 17.4 (Q3 2026, 10 weeks so far) |
+| BUILT share of bar units at Meijer | 0.4% | 2.6% |
+| base units per item per store selling | peak 5.6 (Q2 2025) | 3.7 (3.8 without the August 2026 launches) |
+
+**MO_142: how reliable is the cannibalization measure (placebo at fake launch dates, median absolute loss)**
+
+| channel | median fake loss | reading |
+|---|---|---|
+| Meijer | 11.6% | usable |
+| Food | 11.3% (12.1% per store) | usable |
+| Mass | 64.9% (42.8% per store) | not measurable: launches coincide with store expansions |
+| Drug | 39.7% | not usable |
+| Club | 48.5% | not usable |
+
+**MO_142: where Meijer sits among Food launches.** Other Food launches: median rate 0.47, middle half 0.03-1.01;
+11 of 28 single-launch rates are below 0 or above 1. Meijer's 0.369 (per store 0.343) is the 25th percentile of
+Food, inside the normal range. Food pooled per store: 0.585 (28 events). The dip fades: Cookie Dough, April 2025
+launch, 0.37 (weeks 2-14) -> 0.11 (weeks 15-27) -> 0.21 (weeks 28-40). Both 2026 Meijer launches were in April,
+after the Q1 peak and with heavier promotions (seasonal timing untested).
+
+**MO_142: price sensitivity (promotion response, not shelf price).** BUILT at Meijer -2.21 (90% interval -2.44 to
+-1.98; leave-one-out -2.11 to -2.37; the interval is too narrow because it rests on 8 items). Competitive set median
+-1.16 across 12 brands. Peer Food 4-count -2.64 (leave-one-retailer-out -2.14 to -2.93) versus 1-count -1.02
+(-0.78 to -1.19). Units appear on both sides of the model, which biases every estimate negative, but the ranking is
+fair. BUILT's response is about twice the typical protein-bar competitor. Regular price per bar: BUILT $2.28,
+Barebells $2.50, Quest $2.32, Pure Protein $1.73, Clif Builders $1.66. The first brief's -0.489 differs in both
+geography and method and is not comparable.
+
+**Singles at Meijer:** two singles sold in about 15-20 stores from October 2023 to April 2024, then in 1-2 stores.
+
+**MO_142 pre-registered predictions** (committed before each run)
+
+| prediction (full wording in the commits) | result |
+|---|---|
+| P1 | HOLDS (Meijer April-2026 rate 0.369) |
+| P2 | HOLDS (Meijer 11.6%, Food 11.3%; but Mass 64.9%, Drug 39.7%, Club 48.5%) |
+| P3 | holds trivially (structural zeros) |
+| P4 | FAILS at the boundary (0.369 = Food 25th percentile) |
+| P5 | HOLDS (-2.21, 90% -2.44 to -1.98) |
+| P6 | HOLDS (-1.16, 12 brands) |
+| Pb1 (MO_142b) | FAILS (Mass 42.8%; Food 12.1%) |
+| Pb2 | HOLDS (0.343) |
+| Pb3 | HOLDS (0.585, 28 events) |
+
+### Skeptic verdict
+
+**MO_140: SURVIVES WITH CORRECTIONS.** (1) The young-band gains are real but offset by worse older bands; the
+under-13-week item x week gain is 89% Walmart from two Sour Puff items. (2) Prediction P3 holds only with Walmart
+(0.12 without). (3) Brand-new items are forced to zero and not scored, so "new items borrow from similar products"
+is untested. (4) The attributes are a July 2026 snapshot (a missing product line or price partly means the item has
+since died; small, and it works against the candidate); price per bar maps almost one-to-one to bars per unit, so it
+stands in for pack size (price itself is untested; consistent with MO_96, where pack count was negative); the
+exclusive flag was mis-joined for UPC 08-40229-30413.
+
+**MO_142: SURVIVES WITH CAVEATS.** Accepted: C1 (own performance at Meijer), C2 (newest two 4-packs mostly new
+business; two items cannot be separated; seasonal timing untested), C6 (singles), C7 (price is a promotion response;
+keep price and cannibalization unlinked). Overturned: C3 and C5, below. C4 (Mass) is not measurable.
+
+### Corrections
+
+- **C3 overturned as worded.** The draft said Meijer launches are "more incremental" than other Food and showed
+  a by-year trend. Meijer is inside the normal Food range (middle half 0.03-1.01); the by-year trend is dropped; the
+  median, not the pooled rate, is the figure to use.
+- **C5 overturned.** The claim that 4-count packs cannibalize more than 1-count packs is not measurable with launch
+  before/after data (structural zeros; the Publix July 2024 launch contradicts it).
+- **C4 limit.** Mass-channel cannibalization cannot be measured (launches coincide with store expansions).
+- **Do not reuse** the first brief's MO_55 figure of 46.9% (the share of model-flagged pairs, not a measured loss)
+  or its "singles fully incremental / check-lane go" language.
+- The README 159 line "Meijer = MULO CRMA" was already wrong (Meijer is RMA Conventional | Food); the new brief
+  uses RMA only.
+
+### Artifacts
+
+- `scripts/MO_142_meijer_brief_v2.py`, `scripts/MO_142_build_brief.py`
+- `docs/briefs/meijer_v2/Meijer_BUILT_Assortment_Brief_v2_2026-10-13.docx` (primary, because Brian finds HTML hard
+  to read), `.pdf`, `.html`, and charts (commit 2b5f40a, pushed)
+- Brian's commented v1: `docs/Meijer_BUILT_Assortment_Brief_Editable.docx`. His 8 comments and Jason's decisions
+  (B and C above A; "last 2" = the newest two of the main five; all three formats; Word primary) are in
+  `agents/project_memory.md`, live notes 2026-10-13.
+- Reopen if: a planned singles test at Meijer, or 13+ weeks after the August 2026 launches (SPINS through early
+  December 2026); for MO_140, a cold-start test (items with no history at the forecast date) or time-varying price
+  data.
+
+### Procedural lesson
+
+Both experiments committed their predictions before any run (f71db5a, 1003c88, d40e3ce). The skeptic still
+overturned two of Claude's draft claims in the Meijer work (C3: Meijer 'more incremental' than typical; C5: new items
+take only from the same pack size), and Mass failed its placebo check
+(fake launch dates), so no Mass number is shown. Describe every MO number in plain words wherever it appears.
+
+---
+
 ## README update 240: session close (2026-10-09 to 2026-10-12): five more tests, none beats the 5-seed fixed direct model; the Druid label fix is prepared and backed up; Rob's seven loads verified; forward test starts when SPINS reaches 2026-12-06 (2026-10-12)
 
 This is an index entry. Details, evidence tables and skeptic verdicts are in README updates 235-239; this entry

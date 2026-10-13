@@ -374,6 +374,63 @@ arm's plain path equals MO_133 `direct_fixed` exactly for all 5 seeds (the Tweed
   at item x week without Walmart); the open blocker "should be narrowed" (no: it concerns the velocity
   models, untested here).
 
+### Added 2026-10-13 from MO_140 (fixed product attributes added to the 5-seed direct model) and MO_142 / MO_142b (Meijer brief v2 data; README 241), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Numbers are average miss % (lower is better) at
+item x week / account x month / portfolio x month, existing series. Recent = 6 overlapping origins, 2025-12 on
+(exploratory). MO_140 predictions P1-P5 committed in f71db5a before any run; MO_142 P1-P6 in 1003c88 and
+MO_142b Pb1-Pb3 in d40e3ce before their runs.
+- **(a) MO_140 (PROVISIONAL): static product attributes (product line, protein/sugar/calories, retail price
+  per bar, exclusive-to-a-retailer flag) do not improve the fixed direct model for existing series.**
+  Recent: direct_avg5 28.79 / 16.17 / 6.45 (bias 0.970); attr_avg5 28.79 / 16.30 / 6.65 (0.975). Account x month:
+  all 18 dates 20.85 -> 21.05; 2025 24.51 -> 24.77; recent without Walmart 16.00 -> 16.23; better on 2 of 6
+  recent dates (p=0.69), 1 of 6 without Walmart. Gains in young bands (under 13 weeks am 45.7 -> 45.2, pm 17.0
+  -> 16.2; 13-25 weeks am 20.2 -> 19.8, pm 9.9 -> 9.4) are offset by worse older bands (26-51 pm 7.6 -> 8.1; 52+
+  pm 6.7 -> 7.3). The under-13 item x week gain (52.7 -> 52.0) is 89% Walmart from two Sour Puff items
+  (08-40229-30652, -30680, first sold 2025-12-28), fades by April-May 2026 and reverses in 2025. P1-P5 HOLD as
+  written (P3 only with Walmart; ex-Walmart 0.12). Under Amendment 1 of `docs/PRODUCTION_DECISION_PREREG.md`: no
+  pass, production unchanged. Caveats: brand-new items (no history at the forecast date) are forced to zero and
+  not scored, so "new items borrow from similar products" is untested; attributes are a July 2026 snapshot;
+  price per bar maps almost one-to-one to bars per unit, so it stands in for pack size (price itself untested;
+  consistent with MO_96); exclusive flag mis-joined for UPC 08-40229-30413. Parity 0.000000. Code
+  `scripts/MO_140_attributes.py`, worker jobs `jason-mo140-001` to `-003`, log `outputs/mo140_run.log`.
+  *Skeptic: SURVIVES WITH CORRECTIONS.* *Reopen if:* a cold-start test (items with no history at the forecast
+  date) or time-varying price data.
+- **(b) MO_142 / MO_142b (PROVISIONAL; descriptive, not a forecast arm): in Meijer's own 280 stores (SPINS
+  MEIJER CORP - RMA), the April 2026 Peanut Butter Cup (first sold 2026-04-19) and Cookies N Cream (2026-04-26)
+  4-packs were mostly incremental in their first three months; the older three main 4-packs gave up roughly
+  10-40 per 100 new packages; this is within the normal Food-channel range.** Launch cannibalization rate =
+  (category-adjusted expected minus actual weekly base units of existing BUILT items) / new items' weekly base
+  units; 13 weeks before vs weeks 2-14 after; placebo at fake launch dates; MO_142b judges existing items per
+  store selling. Central estimates 0.37 (units) and 0.34 (per store), noise about +/-0.3, so roughly 60-90% new
+  to BUILT; each older item gave up 12-16% of expected. Two items cannot be separated. Cookie Dough (April 2025)
+  0.37 (weeks 2-14) -> 0.11 (15-27) -> 0.21 (28-40): the dip fades. Both launches were in April after the Q1
+  peak with heavier promotions (seasonal timing untested). Other Food launches: median 0.47, middle half
+  0.03-1.01; 11 of 28 single-launch rates below 0 or above 1; use the median, not the pooled rate. Placebo
+  median absolute loss: Meijer 11.6%, Food 11.3% (12.1% per store); Mass 64.9% (42.8% per store), Drug 39.7%,
+  Club 48.5%. Predictions: P1 HOLDS (0.369), P2 HOLDS, P3 holds trivially, P4 FAILS at the boundary (0.369 =
+  Food 25th percentile), P5 HOLDS (-2.21, 90% -2.44 to -1.98), P6 HOLDS (-1.16, 12 brands), Pb1 FAILS (Mass
+  placebo 42.8%), Pb2 HOLDS (0.343), Pb3 HOLDS (Food pooled per store 0.585, 28 events). Own performance: base
+  units per Meijer store per week 1.7 (Q4 2023) -> 17.4 (Q3 2026, 10 weeks); share of bar units 0.4% -> 2.6%;
+  per item per store selling peaked 5.6 (Q2 2025) -> 3.7 (3.8 without the August launches). Singles: two in
+  about 15-20 stores Oct 2023-Apr 2024, then 1-2 stores. Not measurable with launch before/after data:
+  Mass-channel launches (store expansions) and 4-count vs 1-count cannibalization (structural zeros; Publix
+  July 2024 contradicts it). Code `scripts/MO_142_meijer_brief_v2.py`, logs `scripts/outputs/mo142_run1.log`
+  and `mo142_run2.log`. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* a planned singles test at Meijer, or 13+
+  weeks after the August 2026 launches (SPINS through early December 2026).
+- **(c) MO_142 price sensitivity (PROVISIONAL): a promotion response, not a shelf-price response.** ln(units
+  per store selling) on ln(price paid per bar), item and week fixed effects, clustered by item, last 104
+  weeks. BUILT at Meijer -2.21 (leave-one-out -2.11 to -2.37; the interval is too narrow, 8 items); BUILT about
+  twice the typical protein-bar competitor; competitive-set median -1.16. Peer Food 4-count -2.64
+  (leave-one-retailer-out -2.14 to -2.93) vs 1-count -1.02 (-0.78 to -1.19). Units on both sides bias every
+  estimate negative; the ranking is fair. Regular price per bar: BUILT $2.28, Barebells $2.50, Quest $2.32, Pure
+  Protein $1.73, Clif Builders $1.66. Keep price and cannibalization unlinked. The first brief's -0.489 differs
+  in geography and method. *Skeptic: accepted (C7).*
+- **(d) Do not reuse from the first Meijer brief:** MO_55's 46.9% (share of model-flagged pairs, not a measured
+  loss) and "singles fully incremental / check-lane go".
+- **Corrections (overturned by the skeptic):** C3, that Meijer is "more
+  incremental" than other Food launches and shows a by-year trend (it is within the normal Food range); C5, that
+  4-count packs cannibalize differently from 1-count packs (not measurable).
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.
@@ -533,7 +590,8 @@ arm's plain path equals MO_133 `direct_fixed` exactly for all 5 seeds (the Tweed
 - **geography_raw as a feature** (README 190/194): phantom AK/HI rows. Filter them
   instead (README.md:2770).
 - **Meijer = MULO CRMA** (README 159): wrong. Meijer is RMA CONVENTIONAL|FOOD. *Open:*
-  re-verify the Meijer cannibalization brief.
+  re-verify the Meijer cannibalization brief. *Addressed 2026-10-13 by MO_142 (own-store
+  Meijer re-analysis and brief v2); see README 241.*
 - **"Index built from 3 series" / "October peak is a CRMA artifact"** (ANO-08): both wrong
   (ANO-10).
 - **Lifecycle ramp, donor surrogate, TDP projection as #1 fix**: all rejected
