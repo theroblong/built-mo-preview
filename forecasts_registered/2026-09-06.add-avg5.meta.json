@@ -1,0 +1,49 @@
+{
+  "cutoff": "2026-09-06",
+  "test": false,
+  "adds_to": "2026-09-06.parquet",
+  "seeds": [
+    42,
+    1,
+    2,
+    3,
+    4
+  ],
+  "registered_at_utc": "2026-10-13T00:17:13+00:00",
+  "code_commit": "fde5cb58d527ac52b0b1d47166e4850a3ecc5238",
+  "scripts_tree_clean": true,
+  "data_max_week": "2026-09-06",
+  "contenders": [
+    "direct_avg5",
+    "rec_dir5",
+    "tweedie_avg5"
+  ],
+  "definitions": {
+    "direct_avg5": "Fixed direct model (MO_132/133: MO_26D settings, calendar-week targets, refit on all targets), 5 seeds (42, 1, 2, 3, 4) averaged. Best recent-date backtest candidate (MO_133-139).",
+    "rec_dir5": "0.5 x recursive (saved column) + 0.5 x direct_avg5 (MO_133 combination).",
+    "tweedie_avg5": "Fixed direct model trained on raw units with a Tweedie objective (power 1.5), 5 seeds averaged (MO_139). Better than direct_avg5 on 2025 backtest dates, worse on recent dates."
+  },
+  "fell_back_to_flat": {
+    "direct": 0,
+    "tweedie": 0
+  },
+  "n_rows": 27521,
+  "sha256": {
+    "add": "4984f711c983421cbdee83e2a7f747defca6e163ace17eac76f20aca014badc1",
+    "base_registration": "9218b3a77509211cda3b10d97366d64697a5adb820a8d093d3d359fef4618ce6",
+    "panel": "ba667b56ff1164001f59ce819c129de7eea9f42fd550395b3a42fa6c30fdc04d",
+    "code": {
+      "MO_131_forward_tracker.py": "1ac16ee3a6af7e7cc562e03d96f36c1a9f92a7b0b0cf7a49661cdb850d98729a",
+      "MO_80_quarterly_honest_backtest.py": "3b665601e72faee990112df077a9229acbdfb6b0e71359242a1f22953818c9af",
+      "MO_129_honest_rebaseline.py": "d54a2515673fe5d9aa7be9870480308a9ab6f748724a7b0512e05759dceebc9d",
+      "MO_130_anchor_plus_corrections.py": "a492c52ab2a8690d638ee80e617343771cd735644fe1b7a11bf2d1b3ee6b985a",
+      "mo_panel.py": "c558ec4711e940fe6593dde53bd5776827ccc5f8240da1fad55aa022e6db025a",
+      "MO_27_retailer_sales_forecast.py": "102049c25eba390930b75cf06f6b056da437b3bc7f21dbd2aaefb169f60dc636",
+      "MO_27D_direct_forecast.py": "3f7103c3cb4ec1bd8c279e95604ecef60be6cb849bc79eb8ba65a891aa57d229",
+      "MO_132_one_yardstick.py": "d3a2c33029dc8c1a97519a1b27bd9242a77e43176bec03b2f43244a689ef529d",
+      "MO_139_retransformation.py": "053c2ea802ee4c9dbc1c16dbb21f0434db16cee62284c1ff80236d2669346403",
+      "MO_26D_direct_multihorizon_train.py": "91066cccd04f5b4fb1ead8cfc7f590b3736cdb7badc6e037d429f7b824fe2f44"
+    }
+  },
+  "decision_rule": "docs/PRODUCTION_DECISION_PREREG.md Amendment 1 (forward confirmation)"
+}
