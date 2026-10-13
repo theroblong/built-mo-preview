@@ -25,7 +25,8 @@ CACHE = Path("outputs/meijer_v2")
 STEM = "Meijer_Singles_Addendum_2026-10-13"
 L13 = pd.Timestamp("2026-06-14")
 MEIJER_STORES = 280
-SCEN_VEL = {"Low (typical convenience chain)": 2.0, "Mid (typical grocer)": 3.35, "High (Target, singles in most stores)": 4.8}
+# scenario sales rates (per store selling, per item, per week) are computed in build(): convenience median, grocery
+# median (Meijer excluded), Target's rate applied to every store (an upper reading)
 SCEN_SHARE = (0.0, 0.25, 0.45)         # share of singles bars that come out of 4-packs: none .. just under half
 ITEMS = 4
 
@@ -70,7 +71,8 @@ def chart_programs(ramp: pd.DataFrame) -> Path:
 
 
 def retailer_velocity(b: pd.DataFrame) -> pd.DataFrame:
-    s = b[(b.__time >= L13) & (b.source_pack_count == 1) & (b.base_units > 0) & (b.stores_selling > 0)]
+    s = b[(b.__time >= L13) & (b.source_pack_count == 1) & (b.base_units > 0) & (b.stores_selling > 0)
+          & (b.retail_account != "MEIJER")]   # Meijer is the subject, not a benchmark (1 single in 1 store)
     r = s.groupby(["channel", "retail_account"]).agg(bu=("base_units", "sum"), ss=("stores_selling", "sum"))
     r["per"] = r.bu / r.ss
     return r.reset_index()
@@ -96,7 +98,17 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
     mj_ppb4 = mj.base_dollars.sum() / mj.bars.sum()
     ppb1 = np.mean([pr["TARGET"][1], pr["WALMART"][1]])
 
+    tgt_rate = rv[rv.retail_account == "TARGET"].per.iloc[0]
+    SCEN_VEL = {"Low (typical convenience chain)": med["Convenience"], "Mid (typical grocer)": med["Food"],
+                "High (Target's rate, applied to every store)": tgt_rate}
     lo_b, hi_b = min(SCEN_VEL.values()) * ITEMS * MEIJER_STORES, max(SCEN_VEL.values()) * ITEMS * MEIJER_STORES
+    allstore = {}
+    for ret in ("TARGET", "WALMART"):
+        x = l13[(l13.retail_account == ret) & (l13.source_pack_count == 1)]
+        st = l13[l13.retail_account == ret].groupby("__time").store_count.max()
+        allstore[ret] = (x.bars.sum() / x.__time.nunique() / st.mean(), x[x.base_units > 0].upc.nunique())
+    rw = ramp[(ramp.retailer == "Walmart") & (ramp.__time >= L13)].share_of_stores
+    wm_share = (100 * rw.mean(), 100 * rw.min(), 100 * rw.max())
     n_food, n_conv = int((rv.channel == "Food").sum()), int((rv.channel == "Convenience").sum())
     E.append(("title", "Meijer Singles at Checkout"))
     E.append(("subtitle", "What other retailers show, what it could mean at Meijer, and how to test it"))
@@ -105,7 +117,8 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
     E.append(("meta", "Issued October 13, 2026 · prepared by Aevah (Mo) for BUILT"))
     E.append(("h1", "Summary"))
     E.append(("bullets", [
-        "Meijer is the only grocery account that carries BUILT 4-packs but no singles. Every other grocer started "
+        "Meijer is the only grocery account that sells BUILT 4-packs with essentially no singles (one single in one "
+        "store in the last two weeks of data). Every other grocer started "
         "with singles. The only retailers that added singles to an established 4-pack set are Target and Walmart, "
         "both supercenters like Meijer.",
         "Both run singles as seasonal programs: in most stores for a few months, then back to a core of stores. "
@@ -115,11 +128,12 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
         "new 4-pack flavors at the same time. Depending on the comparison, between none and just under half of the "
         "singles bars came out of 4-packs.",
         f"A typical grocer sells about {med['Food']:.1f} singles per item per store per week, a typical convenience "
-        f"chain about {med['Convenience']:.1f} (Wawa {wawa:.1f}), and Target about 5 with singles in most stores. "
+        f"chain about {med['Convenience']:.1f} (Wawa {wawa:.1f}), and Target about {tgt_rate:.1f} with singles in most stores. "
         f"Singles sell for about 13% more per bar than 4-packs.",
-        f"At Meijer, {ITEMS} checkout singles in all stores could sell roughly {lo_b:,.0f}–{hi_b:,.0f} bars a week "
+        f"At Meijer, {ITEMS} checkout singles in all stores could sell roughly {round(lo_b, -2):,.0f}–{round(hi_b, -2):,.0f} bars a week "
         f"(scenarios below). "
-        "Even if close to half came out of 4-packs, BUILT would gain bars and dollars. This is a scenario, not a forecast.",
+        "In these scenarios, even if close to half came out of 4-packs, BUILT would gain bars and dollars. This is a "
+        "scenario, not a forecast.",
         "Recommended: a 13-week test in a set of Meijer stores, compared with matched stores without singles, outside "
         "the holiday season, using Meijer's store-level sales.",
     ]))
@@ -132,9 +146,9 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
                             "stores with any single). Right: singles sold per store selling, per item, per week."))
     E.append(("bullets", [
         "Target: singles in about 10% of stores in early October 2025, about 70% on average in November–December "
-        "(53–83% week to week, including a holiday flavor), back to about 16% from January to May, then 82–91% "
+        "(53–83% week to week, including a holiday flavor), back to about 16% from February to May, then 82–91% "
         "from June to September 2026.",
-        "Walmart: about 40% of stores in January–March 2026, fading gradually (26% in April, 9% in July), then "
+        "Walmart: about 40% of stores in February–March 2026, fading gradually (26% in April, 9% in July), then "
         "about 37% again in August–September.",
         "The stores that keep singles in the off-season are self-selected strong stores, so their higher sales per "
         "store are not a benchmark for a full rollout.",
@@ -156,7 +170,8 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
             [f"Typical convenience chain (middle of {n_conv})", f"{med['Convenience']:.1f}"],
             ["Wawa", f"{wawa:.1f}"],
             ["Target (singles in most stores)", f"{rv[rv.retail_account == 'TARGET'].per.iloc[0]:.1f}"],
-            ["Walmart (about a third of stores)", f"{rv[rv.retail_account == 'WALMART'].per.iloc[0]:.1f}"]]
+            [f"Walmart (about one store in five on average, {wm_share[1]:.0f}–{wm_share[2]:.0f}%)",
+             f"{rv[rv.retail_account == 'WALMART'].per.iloc[0]:.1f}"]]
     E.append(("table", ["Where", "Singles sold per store selling, per item, per week"], rows,
               "Last 13 weeks. Units per store selling per item: the right unit for planning a few checkout items. "
               "Middle = median retailer, so one large chain does not set the figure."))
@@ -164,9 +179,11 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
     cf = cflav.head(6)
     rows = [[r.flavor, f"{r.units_per_store_wk:.2f}", str(int(r.retailers))] for _, r in cf.iterrows()]
     E.append(("table", ["Top singles at convenience chains", "Per store selling per week", "Chains selling it"], rows,
-              "Convenience stores are the closest SPINS view of impulse buying. Cookie Dough, Brownie Batter and "
-              "Coconut, three of Meijer's main 4-pack flavors, lead. At Target, Peanut Butter and Brownie Batter rank "
-              "highest, but items in fewer stores show higher sales per store, so that ranking is not like-for-like."))
+              "Convenience stores are the closest SPINS view of impulse buying. Cookie Dough Chunk and Brownie Batter "
+              "lead, with Coconut close behind; all three are main Meijer 4-pack flavors. Salted Caramel ranks third but "
+              "only 3 chains sell it, and the gaps are small. At Target, Peanut Butter and Brownie Batter rank highest, "
+              "but items in fewer stores show higher sales per store, so that ranking is not an apples-to-apples "
+              "comparison."))
     E.append(("h2", "Price"))
     E.append(("table", ["Retailer", "Singles, per bar", "4-packs, per bar", "Singles premium"], [
         [r.title(), f"${pr[r][1]:.2f}", f"${pr[r][4]:.2f}", f"{100 * (pr[r][1] / pr[r][4] - 1):.0f}%"] for r in ("TARGET", "WALMART")],
@@ -175,7 +192,12 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
     E.append(("p", f"Assumptions: {ITEMS} singles at checkout in all {MEIJER_STORES} Meijer stores; sales per store from "
                    f"section 4; a single at about ${ppb1:.2f}; Meijer's 4-pack bars at about ${mj_ppb4:.2f} each; "
                    f"Meijer's 4-packs now sell about {mj_bars_store_wk:.0f} bars per store per week. The share taken from "
-                   f"4-packs spans the range seen at Target."))
+                   f"4-packs covers the range seen at Target (none to just under half). Sales rates come from stores that "
+                   f"sold each item that week, often a retailer's stronger stores; applying them to all {ITEMS} items in "
+                   f"all {MEIJER_STORES} stores every week is an upper reading. For comparison, across all its stores "
+                   f"Target sells about {allstore['TARGET'][0]:.0f} singles bars per store per week from "
+                   f"{allstore['TARGET'][1]} items, and Walmart about {allstore['WALMART'][0]:.0f} from "
+                   f"{allstore['WALMART'][1]}."))
     rows = []
     for name, v in SCEN_VEL.items():
         bars = v * ITEMS * MEIJER_STORES
@@ -190,13 +212,16 @@ def build(b: pd.DataFrame, chart: Path) -> list[tuple]:
                         "Net new BUILT bars per week", "Net new retail $ per week", "Change in BUILT bars at Meijer"], rows,
               "Retail dollars at shelf price, before Meijer's margin; BUILT's revenue is its selling price to Meijer. "
               "Estimates from other retailers' patterns; checkout placement may sell differently from where singles sit "
-              "at those retailers."))
+              "at those retailers. Before checkout placement fees and BUILT's cost per single bar."))
     E.append(("h1", "6 — How to test it at Meijer"))
     E.append(("bullets", [
-        "Put 3–4 singles at the checkouts in a set of test stores (for example 40–60), and pick matched control stores "
-        "with similar BUILT 4-pack sales and region.",
+        "Put 3–4 singles at the checkouts in a set of test stores (the number to be set from Meijer's store-level "
+        "sales so the test can detect a 5–10% change in 4-pack sales), and pick matched control stores with similar "
+        "BUILT 4-pack sales and region.",
+        "Keep the 4-pack lineup and promotions the same in test and control stores; new flavors are why Target's "
+        "result is uncertain. Compare with at least 13 weeks before the test.",
         "Run at least 13 weeks, outside November–December, so holiday traffic does not blur the result.",
-        "Measure, test vs control: BUILT 4-pack base units per store per week (did 4-packs lose?), singles sold per "
+        "Measure, test vs control: BUILT 4-pack non-promoted units per store per week (did 4-packs lose?), singles sold per "
         "store per week, and total BUILT bars and dollars per store.",
         "This needs Meijer's store-level sales for the test and control stores. SPINS reports Meijer as one total, so "
         "it cannot show the difference between test and control stores.",
