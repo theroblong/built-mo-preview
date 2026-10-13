@@ -138,9 +138,10 @@ def compute(origins: list[str], seeds: list[int], steps: int) -> None:
 # ---------------------------------------------------------------- score (laptop; honest harness)
 def score(dirs: list[str], seeds: list[int]) -> None:
     import importlib
+    os.environ["MO_SEASONAL_MODE"] = "step"               # same harness settings as MO_133..MO_140
     import MO_80_quarterly_honest_backtest as M          # import asserts forecast + training parity
     importlib.reload(M)
-    assert M.FEATURE_REFRESH == "freeze", "harness must match MO_27"
+    assert M.SEASONAL_MODE == "step" and M.FEATURE_REFRESH == "freeze", "harness must match MO_27"
     import MO_133_ensembles as E                          # band-separated portfolio diff
     import MO_134_recursive_fair_settings as B            # seasonal bias by year
     import MO_136_signals as S                            # sign test
