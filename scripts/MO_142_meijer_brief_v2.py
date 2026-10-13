@@ -39,6 +39,19 @@ PREDICTIONS (written 2026-10-13, before any run; two-sided where direction is no
      and its 90% interval excludes 0.
   P6 The protein-bar competitive set at Meijer: median brand estimate between -3.0 and -0.3.
   No prediction (descriptive only): 1-count vs 4-count price sensitivity at peer Food retailers.
+
+MO_142b (added 2026-10-13 AFTER the first run, BEFORE running this variant; first-run results: P1, P2, P3, P5,
+P6 hold, P4 fails at the boundary; Mass/Drug/Club placebo noise 40-65% because launches coincide with store
+expansions). Change: existing items are judged on base units PER STORE SELLING (Brian's metric), so an expansion
+of existing items to more stores no longer counts as 'negative cannibalization':
+  expected = sum over existing items of (pre base units per store selling x category factor x post stores selling)
+Events are 'measurable' when the new items' weekly base units are at least 10% of existing items' pre sales.
+The 4-count vs 1-count price model also drops one week dummy per retailer (it was rank-deficient: no interval).
+PREDICTIONS for MO_142b (written before running it):
+  Pb1 Velocity-based placebo median |loss|: <= 15% in Food and <= 25% in Mass.
+  Pb2 Meijer April-2026 velocity-based rate between 0.00 and 0.60, and within 0.15 of the units-based 0.369.
+  Pb3 Food channel pooled velocity-based rate over measurable events between 0.0 and 0.8.
+  No prediction: 4-count vs 1-count price sensitivity (descriptive).
 """
 from __future__ import annotations
 
@@ -193,7 +206,9 @@ def geo_pivot(built_geo: pd.DataFrame):
     piv = built_geo.pivot_table(index="__time", columns="upc", values="base_units", aggfunc="sum")
     piv = piv.reindex(pd.date_range(piv.index.min(), piv.index.max(), freq="7D")).fillna(0)
     packs = built_geo.drop_duplicates("upc").set_index("upc").source_pack_count
-    return piv, packs, (piv > 0).idxmax()
+    ss = built_geo.pivot_table(index="__time", columns="upc", values="stores_selling", aggfunc="sum")
+    ss = ss.reindex(piv.index).reindex(columns=piv.columns).fillna(0)
+    return piv, packs, (piv > 0).idxmax(), ss
 
 
 def measure(gp, cat_geo: pd.Series, anchor, new_upcs, next_anchor, end) -> dict:
@@ -205,7 +220,7 @@ def measure(gp, cat_geo: pd.Series, anchor, new_upcs, next_anchor, end) -> dict:
     post_w = pd.date_range(anchor + GAP * W, post_end, freq="7D") if post_end >= anchor + GAP * W else pd.DatetimeIndex([])
     if len(post_w) < MIN_POST:
         return {"status": "too early or overlapping", "post_weeks": len(post_w)}
-    piv, packs, first_sold = gp
+    piv, packs, first_sold, ss = gp
     pre = piv.reindex(pre_w).fillna(0)
     post = piv.reindex(post_w).fillna(0)
     existing = [u for u in piv.columns if u not in new_upcs and (pre[u] > 0).sum() >= 10
@@ -225,10 +240,22 @@ def measure(gp, cat_geo: pd.Series, anchor, new_upcs, next_anchor, end) -> dict:
         lost = e_pre * f - e_post
         res[f"existing_pre_{side}"], res[f"existing_post_{side}"], res[f"lost_{side}"] = e_pre, e_post, lost
         res[f"rate_{side}"] = lost / new_w if new_w > 0 else np.nan
+        # MO_142b: per-store velocity version (existing items' store-count changes are not counted)
+        exp_v = sum(pre[u].sum() / ss.reindex(pre_w)[u].sum() * f * ss.reindex(post_w)[u].mean()
+                    for u in us if ss.reindex(pre_w)[u].sum() > 0) if us else 0.0
+        lost_v = exp_v - e_post
+        res[f"lost_v_{side}"] = lost_v
+        res[f"rate_v_{side}"] = lost_v / new_w if new_w > 0 else np.nan
+    res["measurable"] = bool(new_w >= 0.10 * res["existing_pre_all"]) if res["existing_pre_all"] > 0 else False
     for u in existing:
         e_pre, e_post = pre[u].mean(), post[u].mean()
+        v_pre = pre[u].sum() / ss.reindex(pre_w)[u].sum() if ss.reindex(pre_w)[u].sum() > 0 else np.nan
+        st_post = ss.reindex(post_w)[u].mean()
         res["per_item"].append({"upc": u, "pre_weekly": e_pre, "expected_weekly": e_pre * f, "post_weekly": e_post,
-                                "lost_weekly": e_pre * f - e_post})
+                                "lost_weekly": e_pre * f - e_post, "pre_per_store": v_pre,
+                                "post_per_store": e_post / st_post if st_post > 0 else np.nan,
+                                "stores_pre": ss.reindex(pre_w)[u].mean(), "stores_post": st_post,
+                                "lost_v_weekly": v_pre * f * st_post - e_post})
     return res
 
 
@@ -240,7 +267,8 @@ def placebo(gp, cat_geo: pd.Series, launch_dates: list, end) -> list[dict]:
             continue
         r = measure(gp, cat_geo, a, [], None, end)
         if r and r["status"] == "ok" and r["existing_pre_all"] > 0:
-            out.append({"anchor": a, "lost_pct": 100 * r["lost_all"] / r["existing_pre_all"]})
+            out.append({"anchor": a, "lost_pct": 100 * r["lost_all"] / r["existing_pre_all"],
+                        "lost_v_pct": 100 * r["lost_v_all"] / r["existing_pre_all"]})
     return out
 
 
@@ -271,22 +299,25 @@ def launch_analysis(built, cat, geos):
     return ev, pd.DataFrame(items), pl
 
 
-def pooled(ev: pd.DataFrame, keys: list[str], side="all", n_boot=2000, seed=0) -> pd.DataFrame:
-    ok = ev[(ev.status == "ok") & (ev.new_weekly > 0) & np.isfinite(ev[f"lost_{side}"])]
+def pooled(ev: pd.DataFrame, keys: list[str], side="all", n_boot=2000, seed=0, lost="lost") -> pd.DataFrame:
+    ok = ev[(ev.status == "ok") & (ev.new_weekly > 0) & np.isfinite(ev[f"{lost}_{side}"])]
+    if lost == "lost_v":
+        ok = ok[ok.measurable.astype(bool)]
     rng = np.random.default_rng(seed)
     out = []
     for k, g in ok.groupby(keys):
-        lost, new = g[f"lost_{side}"].to_numpy(), g.new_weekly.to_numpy()
-        rate = lost.sum() / new.sum()
-        bs = [lost[i].sum() / new[i].sum() for i in (rng.integers(0, len(g), len(g)) for _ in range(n_boot))]
-        out.append({**dict(zip(keys, k if isinstance(k, tuple) else (k,))), "side": side, "events": len(g),
-                    "rate": rate, "rate_p05": np.percentile(bs, 5), "rate_p95": np.percentile(bs, 95),
-                    "median_event_rate": g[f"rate_{side}"].median()})
+        lost_a, new = g[f"{lost}_{side}"].to_numpy(), g.new_weekly.to_numpy()
+        rate = lost_a.sum() / new.sum()
+        bs = [lost_a[i].sum() / new[i].sum() for i in (rng.integers(0, len(g), len(g)) for _ in range(n_boot))]
+        rcol = "rate_v" if lost == "lost_v" else "rate"
+        out.append({**dict(zip(keys, k if isinstance(k, tuple) else (k,))), "side": side, "measure": lost,
+                    "events": len(g), "rate": rate, "rate_p05": np.percentile(bs, 5),
+                    "rate_p95": np.percentile(bs, 95), "median_event_rate": g[f"{rcol}_{side}"].median()})
     return pd.DataFrame(out)
 
 
 # ---------------------------------------------------------------- 4. price sensitivity
-def fe_slopes(d: pd.DataFrame, group_col: str, time_col: str) -> pd.DataFrame:
+def fe_slopes(d: pd.DataFrame, group_col: str, time_col: str, nest_col: str | None = None) -> pd.DataFrame:
     """ln(units per store selling) on ln(price per bar) with item and time fixed effects (exact two-way
     within-item demeaning + time dummies); one slope per group; standard errors clustered by item."""
     d = d.copy()
@@ -295,6 +326,9 @@ def fe_slopes(d: pd.DataFrame, group_col: str, time_col: str) -> pd.DataFrame:
     groups = sorted(d[group_col].unique())
     X = pd.DataFrame({f"x_{g}": np.where(d[group_col] == g, d.x, 0.0) for g in groups}, index=d.index)
     T = pd.get_dummies(d[time_col], prefix="t", drop_first=True, dtype=float)
+    if nest_col is not None:   # items nest within retailers: drop one time dummy per retailer (rank)
+        first_per = d.groupby(nest_col)[time_col].min()
+        T = T.drop(columns=[f"t_{v}" for v in first_per if f"t_{v}" in T.columns])
     Z = pd.concat([d[["y"]], X, T], axis=1)
     Zd = Z - Z.groupby(d.upc_key).transform("mean")
     fit = sm.OLS(Zd.y, Zd.drop(columns="y")).fit(cov_type="cluster", cov_kwds={"groups": pd.factorize(d.upc_key)[0]})
@@ -353,7 +387,7 @@ def price_analysis(m: pd.DataFrame, built: pd.DataFrame, geos: pd.DataFrame) -> 
     b["upc_key"] = b.geography_raw + "|" + b.upc
     b["pack"] = b.source_pack_count.astype(int).astype(str) + "-count"
     b["geo_week"] = b.geography_raw + "|" + b.__time.astype(str)
-    packs = fe_slopes(b, "pack", "geo_week")
+    packs = fe_slopes(b, "pack", "geo_week", nest_col="geography_raw")
     # price position: base price per bar, last 13 weeks, sales-weighted
     l13 = m[(m.__time >= pd.Timestamp("2026-06-14")) & (m.base_units > 0) & (m.source_pack_count > 0)].copy()
     l13["bars"] = l13.base_units * l13.source_pack_count
@@ -393,6 +427,9 @@ def main() -> None:
     pooled_rows = [pooled(ev, ["channel"]), pooled(ev, ["channel", "launch_type"], "all"),
                    pooled(ev, ["channel", "launch_type"], 4), pooled(ev, ["channel", "launch_type"], 1),
                    pooled(ev, ["channel", "quarter"])]
+    pooled_v = [pooled(ev, ["channel"], lost="lost_v"), pooled(ev, ["channel", "launch_type"], 4, lost="lost_v"),
+                pooled(ev, ["channel", "launch_type"], 1, lost="lost_v"), pooled(ev, ["channel", "quarter"], lost="lost_v")]
+    pooled_rows += pooled_v
     pooled_all = pd.concat(pooled_rows, ignore_index=True)
     pooled_all.to_csv(OUT / "launch_pooled.csv", index=False)
 
@@ -433,6 +470,16 @@ def main() -> None:
                "holds": bool(-3.0 <= built_est.estimate <= -0.3 and built_est.p95 < 0)},
         "P6": {"median": comp_med, "brands": len(bm) - 2, "holds": bool(-3.0 <= comp_med <= -0.3)},
     }
+    apr_v = float(apr.rate_v_all.iloc[0]) if len(apr) else np.nan
+    pvf = pl[pl.channel == "Food"].lost_v_pct.abs().median()
+    pvm = pl[pl.channel == "Mass"].lost_v_pct.abs().median()
+    fv = ok[(ok.channel == "Food") & ok.measurable.astype(bool) & (ok.new_weekly > 0)]
+    food_v = fv.lost_v_all.sum() / fv.new_weekly.sum() if len(fv) else np.nan
+    preds.update({
+        "Pb1": {"food_median_abs_pct": pvf, "mass_median_abs_pct": pvm, "holds": bool(pvf <= 15 and pvm <= 25)},
+        "Pb2": {"meijer_v": apr_v, "meijer_units": r_apr, "holds": bool(0 <= apr_v <= 0.6 and abs(apr_v - r_apr) <= 0.15)},
+        "Pb3": {"food_pooled_v": food_v, "events": len(fv), "holds": bool(0.0 <= food_v <= 0.8)},
+    })
     summary = {"weeks_to": str(built.__time.max().date()), "geographies": gl, "events_ok": int(len(ok)),
                "events_total": int(len(ev)), "competitive_set": pr["competitive_set"],
                "peer_food_retailers_both_packs": pr["peer_food_retailers_both_packs"], "predictions": preds}
@@ -442,6 +489,8 @@ def main() -> None:
     print(pooled_rows[0].round(3).to_string())
     print(pooled_rows[2].round(3).to_string())
     print(pooled_rows[3].round(3).to_string())
+    for pv in pooled_v:
+        print(pv.round(3).to_string())
     print(pr["meijer"].round(3).to_string())
     print(pr["packs"].round(3).to_string())
     print(pr["position"].round(2).to_string())
