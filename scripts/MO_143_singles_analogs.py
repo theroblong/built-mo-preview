@@ -30,6 +30,21 @@ PREDICTIONS (written 2026-10-13, before any run; two-sided where direction is no
   P5 At Target, singles cost at least 10% more per bar than 4-packs (regular price, last 13 weeks).
   P6 Placebo: median |4-pack per-store change| at fake dates is <= 10% at Target and at Walmart; where it is
      larger, Q1 for that retailer is reported as 'not measurable'.
+
+MO_143b (added 2026-10-13 AFTER the first run, BEFORE running this part). First-run lesson: Target's and Walmart's
+singles are not one-time rollouts but on/off programs: singles go into most stores for a few months, then back
+to about 15-20% (Target on Nov-Dec 2025 and Jun-Sep 2026; Walmart on Jan-Mar 2026 and Aug-Sep 2026). Each "on"
+pulse is compared with the "off" weeks just before and just after it. Outcome: per-store bars of a STABLE 4-pack
+set (4-packs in at least 20% of the retailer's stores in every week of the comparison), divided by the same items'
+per-store bars at grocery (Food) retailers in the same weeks (removes BUILT-wide seasonality and trends).
+  ON  = singles in >= 50% of stores (Target) / >= 30% (Walmart, whose pulses peak near 40%)
+  OFF = singles in <= 20% of stores, up to 8 weeks immediately before and after each pulse (min 4 weeks each side)
+  4-pack change = mean ratio in ON weeks / mean ratio in adjacent OFF weeks - 1
+  share of singles bars from 4-packs = (4-pack bars per store lost in ON weeks) / (singles bars per store gained)
+PREDICTIONS for MO_143b (written before running it):
+  Pb1 Target: every pulse's 4-pack change is within +/-10%.
+  Pb2 Walmart: every pulse's 4-pack change is within +/-15%.
+  Pb3 Pooled over all pulses, less than half of the singles bars came out of the 4-pack set (share < 0.5).
 """
 from __future__ import annotations
 
@@ -166,6 +181,61 @@ def singles_profile(b: pd.DataFrame, rows: pd.DataFrame, label: str) -> dict:
             "singles_price_per_bar": sold.base_dollars.sum() / max(sold.bars.sum(), 1)}
 
 
+PULSE_ON = {"Target": 0.50, "Walmart": 0.30}
+
+
+def pulses(b, food_geos, stores) -> pd.DataFrame:
+    """MO_143b: on/off singles pulses vs adjacent off weeks, 4-pack set relative to the same items at grocery."""
+    out = []
+    for geo, label in (("TARGET CORP - RMA", "Target"), ("WALMART CORP - RMA", "Walmart")):
+        d = b[b.geography_raw == geo]
+        st = stores.loc[geo]
+        share1 = (d[d.source_pack_count == 1].groupby("__time").stores_selling.max() / st).reindex(st.index).fillna(0)
+        on = share1 >= PULSE_ON[label]
+        off = share1 <= 0.20
+        # pulses = runs of consecutive ON weeks of length >= 4
+        runs, cur = [], []
+        for t, v in on.items():
+            if v:
+                cur.append(t)
+            elif cur:
+                runs.append(cur); cur = []
+        if cur:
+            runs.append(cur)
+        runs = [r for r in runs if len(r) >= 4]
+        for r in runs:
+            before = [t for t in off.index[(off.index < r[0]) & (off.index >= r[0] - 8 * W)] if off[t]]
+            after = [t for t in off.index[(off.index > r[-1]) & (off.index <= r[-1] + 8 * W)] if off[t]]
+            weeks = list(before) + r + list(after)
+            f4 = d[d.source_pack_count == 4]
+            share4 = f4.pivot_table(index="__time", columns="upc", values="stores_selling", aggfunc="sum").reindex(weeks).fillna(0)
+            stable = [u for u in share4.columns if (share4[u] / st.reindex(weeks).values >= 0.20).all()]
+            row = {"retailer": label, "on_from": r[0].date(), "on_to": r[-1].date(), "on_weeks": len(r),
+                   "off_before": len(before), "off_after": len(after), "stable_4pk": len(stable),
+                   "singles_share_on": float(share1.reindex(r).mean()), "singles_share_off": float(share1.reindex(before + after).mean()) if before or after else np.nan}
+            if len(before) < 4 or len(after) < 4 or not stable:
+                row["status"] = "not enough off weeks or no stable 4-pack set"
+                out.append(row); continue
+            g4 = f4[f4.upc.isin(stable)].groupby("__time").agg(bars=("bars", "sum"), ss=("stores_selling", "sum")).reindex(weeks)
+            fd = b[b.geography_raw.isin(food_geos) & b.upc.isin(stable)].groupby("__time").agg(
+                bars=("bars", "sum"), ss=("stores_selling", "sum")).reindex(weeks)
+            v4, vf = g4.bars / g4.ss, fd.bars / fd.ss
+            ratio = v4 / vf
+            on_r, off_r = ratio.reindex(r).mean(), ratio.reindex(before + after).mean()
+            s1 = d[d.source_pack_count == 1].groupby("__time").bars.sum().reindex(weeks).fillna(0)
+            stores_w = st.reindex(weeks)
+            s1_ps = s1 / stores_w
+            v4_all = (g4.bars / stores_w)   # stable 4-pack bars per retailer store
+            exp_on = v4_all.reindex(before + after).mean() * (vf.reindex(r).mean() / vf.reindex(before + after).mean())
+            lost_ps = exp_on - v4_all.reindex(r).mean()
+            gain_ps = s1_ps.reindex(r).mean() - s1_ps.reindex(before + after).mean()
+            row.update({"status": "ok", "fourpk_change_pct": 100 * (on_r / off_r - 1),
+                        "fourpk_bars_per_store_lost_wk": lost_ps, "singles_bars_per_store_gained_wk": gain_ps,
+                        "share_singles_from_4pk": lost_ps / gain_ps if gain_ps > 0 else np.nan})
+            out.append(row)
+    return pd.DataFrame(out)
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     b, c, g = load()
@@ -248,6 +318,17 @@ def main() -> None:
         "P6": {"target_median_abs": float(pmed.get("Target", np.nan)), "walmart_median_abs": float(pmed.get("Walmart", np.nan)),
                "holds": bool(pmed.get("Target", 99) <= 10 and pmed.get("Walmart", 99) <= 10)},
     }
+    pu = pulses(b, food_geos, stores)
+    pu.to_csv(OUT / "q1b_pulses.csv", index=False)
+    okp = pu[pu.status == "ok"] if "status" in pu else pu.iloc[0:0]
+    tg, wm = okp[okp.retailer == "Target"], okp[okp.retailer == "Walmart"]
+    lost, gain = (okp.fourpk_bars_per_store_lost_wk * okp.on_weeks).sum(), (okp.singles_bars_per_store_gained_wk * okp.on_weeks).sum()
+    preds.update({
+        "Pb1": {"target_changes": tg.fourpk_change_pct.round(2).tolist(), "holds": bool(len(tg) and (tg.fourpk_change_pct.abs() <= 10).all())},
+        "Pb2": {"walmart_changes": wm.fourpk_change_pct.round(2).tolist(), "holds": bool(len(wm) and (wm.fourpk_change_pct.abs() <= 15).all())},
+        "Pb3": {"pooled_share": float(lost / gain) if gain > 0 else None, "holds": bool(gain > 0 and lost / gain < 0.5)},
+    })
+    print(pu.round(3).to_string())
     (OUT / "summary.json").write_text(json.dumps({"anchors": anchors, "predictions": preds}, indent=2, default=float))
     pd.set_option("display.width", 230)
     print("rollout weeks:", anchors)
