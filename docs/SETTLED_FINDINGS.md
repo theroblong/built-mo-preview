@@ -431,6 +431,67 @@ MO_142b Pb1-Pb3 in d40e3ce before their runs.
   incremental" than other Food launches and shows a by-year trend (it is within the normal Food range); C5, that
   4-count packs cannibalize differently from 1-count packs (not measurable).
 
+### Added 2026-10-13 (afternoon) from MO_141 / MO_141b (shipments forecast), MO_143 / MO_143b (singles analogs), MO_144 / MO_144b (new item x retailer series) and MO_145 (neural timing; README 242), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Miss = average miss % (lower is better); levels: item x
+week (cw), account x month (am), portfolio x month (pm); recent = 6 overlapping origins, 2025-12 on (exploratory).
+Predictions were committed before each run (MO_141 2cfb8c8; MO_143 8241e11 and MO_143b 33215d6; MO_144 bcdf014;
+MO_144b 6f900c9; MO_145 6ced2bd).
+- **(a) MO_141 / MO_141b (PROVISIONAL): monthly forecasts of billed shipments for the four data-dark retailers.**
+  Scored from each account's regular-ordering start, through Jul 2026, 3-month totals. ALDI (regular since 2025-08,
+  7 dates): average of the last 6 months 15.3% (bias 1.09), of the last 3 months 19.0%, a usable placeholder. WinCo
+  (23 dates): avg6 45.2% (bias 0.84), seasonal_trend 46.7%, avg3 52.6%, last month 78.4%; the ranking is unstable, so
+  WinCo is not plannable from shipments alone. H-E-B (regular since 2025-11, 4 dates): too few to rank. Trader Joe's
+  June 2026 (2.52 million bars, 27 orders over 9 days to 6 distribution centers, about $3.4M) is a one-time
+  load-in, excluded. The "replenish" method was dropped as not a valid test (it under-forecasts by construction), so
+  prediction P3 is untested. Caveats: August 2026 may be incomplete; WinCo avg6 bias was 0.69 (Jul 2024-Jun 2025)
+  vs 0.95 (Jul 2025-Jun 2026). Superseded: the first run's ALDI 40.4% (scored before the account stocked). Code
+  `scripts/MO_141*.py`, log `scripts/outputs/mo141_run.log`. *Skeptic: SURVIVES WITH CORRECTIONS.* *Reopen if:*
+  open sales orders or buyer order plans become available, or H-E-B has 12+ regular-ordering months.
+- **(b) MO_143 / MO_143b (PROVISIONAL; descriptive analog, not a forecast arm): singles at Meijer.** Target and
+  Walmart are the only analogs that added singles after established 4-packs (every other Food account had singles
+  first). When Target put singles in most stores for the 2025 holidays (Nov 2 - Dec 28, about 70% of stores), its
+  4-packs sold somewhat less than expected; the size cannot be pinned down. Between none and just under half of the
+  singles bars came out of 4-packs, and in every version most were additional (4-pack change +3.8% to -19.5%
+  depending on the comparison weeks; share of singles bars from 4-packs -0.04 to 0.46). One retailer, one season;
+  Walmart is not measurable; not a forecast for Meijer checkouts. Benchmarks (units per store selling per item per
+  week, medians): grocers excluding Meijer 3.3 (15 accounts), convenience 2.0 (Wawa 4.5), Target 4.8, Walmart 3.2;
+  singles cost about 13% more per bar ($2.50 vs $2.22 at Target). Meijer scenarios (4 checkout singles x 280 stores)
+  of about 2,200-5,400 singles bars a week and net +6% to +28% BUILT bars at Meijer are a what-if, not a forecast.
+  Predictions: first run P1 FAILS, P2 HOLDS, P3 FAILS, P4 FAILS, P5 HOLDS, P6 FAILS; second run Pb1 HOLDS (one
+  pulse), Pb2 FAILS (vacuous), Pb3 HOLDS (its 0.16 is not robust). Do not cite the first-draft -9.8% / 16% figures,
+  "Mass 3.8", or a check-lane "go". Code `scripts/MO_143*.py`, add-on
+  `docs/briefs/meijer_v2/Meijer_Singles_Addendum_2026-10-13.*`. *Skeptic: SURVIVES WITH CAVEATS* (add-on:
+  SURVIVES WITH CORRECTIONS). *Reopen if:* a planned singles test at Meijer with store-level sales data.
+- **(c) MO_144 / MO_144b (PROVISIONAL): forecasts for brand-new item x retailer series (absent at the forecast
+  date).** An account-level arrival allowance with median launch curves (B2) improves the company-wide monthly
+  forecast (portfolio x month: recent 10.12 -> 6.50, all 11.65 -> 9.42) and leaves retailer x month essentially
+  unchanged (recent -0.45). The portfolio gain was not predicted in advance (the prediction covered account x
+  month), so it is exploratory. Item-level launch sizing from history fails even with the true launch timing and
+  presence (C2: recent miss 128%, 1.61x actual; C: 169%, 1.89x). Cause: history lags launch-size swings driven by
+  store counts (launch ages 2-5: Walmart 33 -> 80 -> 18-39 stores; Publix 71 -> 17; Target 69 -> 43), not simply
+  "recent launches are smaller". An account-level allowance for new items captures the portfolio effect now; sizing
+  individual launches would need BUILT's launch list (item x retailer x expected launch date), which Connor keeps
+  and has offered to feed in (open with BUILT, wiki/18), plus his own starting store-count assumptions; not a new
+  data feed. Predictions: MO_144 P1 HOLDS, P2 HOLDS, P3-P5 FAIL; MO_144b Pb1-Pb3 FAIL, Pb4 HOLDS. Caveats: B's
+  near-perfect recent bias is partly offsetting errors (0.42x in 2025, 1.49x recently with mean curves); "launch =
+  first sale" mislabels some trickle scans (not driving the result). Code `scripts/MO_144*.py`, logs
+  `scripts/outputs/mo144_run.log` and `mo144b_run.log`. *Skeptic: SURVIVES WITH CAVEATS (MO_144 and MO_144b).*
+  *Reopen if:* Connor's launch list becomes available, or an arrival rate that adapts to the launch wave.
+- **(d) MO_145 (PROVISIONAL; timing only, not accuracy): neural forecasting models (NHITS, TCN, TFT) on the
+  RunPod GPU.** One forecast date (2025-01-01), 1,040 series, 200 training steps each, NVIDIA RTX A4500: fit time
+  3.62 s / 2.94 s / 6.57 s and peak GPU memory 0.085 / 0.038 / 0.594 GB; all three run without error. A full 18-date
+  neural test is minutes of GPU per job and memory is not a constraint. This says nothing about forecast accuracy.
+  RunPod had not posted a cost yet (re-check from RunPod data only). Job `jason-mo145-001`. *Skeptic: not run
+  (timing and memory only; predictions P1-P3 HOLD).* *Reopen if:* never as an accuracy claim; superseded by the
+  full neural test.
+- **Corrections (overturned by the skeptic or found afterward):** MO_144 arm C failed first because of Claude's
+  construction flaw (pooling units per distribution point across retailers of very different scale), not because
+  launch plans lack value; Claude's "recent launches are simply smaller" reading; Claude's wording of what it would
+  take ("BUILT launch plans with authorized store counts"), corrected against README update 215 ("the door-count ask is UNANSWERABLE") and MO_95 (Brian has
+  no data source for it; the oracle test gave 0.6 points, pre-fix benchmark, provisional); MO_143's published
+  -9.8% / 16% Target figures and "grocer 3.4" (included Meijer); MO_141's ALDI 40.4%; and a PDF export bug (stale
+  Word documents reused) that left an early-draft main brief PDF in commit 2b5f40a, regenerated in c1e980d.
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

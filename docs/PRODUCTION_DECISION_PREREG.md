@@ -87,6 +87,8 @@ rule above for all future decisions; it is written before any saved forecast has
 
 **Added 2026-10-13, before MO_140 results exist:** the fixed direct model with 5 seeds plus fixed product attributes (product line, nutrition, price per bar, exclusivity), code `attr_avg5`.
 
+**Added 2026-10-13, before MO_146 results exist:** neural global models trained on all series at each forecast date (neuralforecast, 13-week horizon, 5 seeds averaged each): N-HiTS (`nhits5`), TCN (`tcn5`), TFT (`tft5`); their average (`neural_avg`); and a 50/50 blend of the fixed direct model and the neural average (`dir_neural`). Results are also reported without Walmart (description only; the rule itself is unchanged).
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
