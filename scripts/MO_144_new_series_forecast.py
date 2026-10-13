@@ -44,6 +44,23 @@ PREDICTIONS, RECORDED BEFORE RUNNING so they can be wrong:
   P4 For the new series themselves, C's series x month miss is below 70% (recent origins).
   P5 Without Walmart, C still lowers recent account x month error vs A (Walmart does not decide it).
 Output: outputs/mo144_new_series.json, scripts/outputs/mo144_rows.parquet
+
+MO_144b (--b; added 2026-10-13 AFTER the first run and its skeptic review, BEFORE running this variant). The
+skeptic found C's failure was a construction flaw: units per distribution point were pooled across retailers of
+very different size (1.6 at Dierbergs .. 635 at Walmart) and multiplied by one account's distribution; the launch
+curves (means) also overshot. Two added arms, same rows and scoring:
+  B2 arrival_med     B with MEDIAN launch curves (account, else channel, else all)
+  C2 plan_relative   launch plan sized RELATIVE to each retailer: the item's early sales at earlier launches,
+                     each divided by that retailer's median launch curve at the same age (how strong the item
+                     launched for that retailer), median over those launches (same channel first) x THIS
+                     account's median launch curve; no history for the item -> this account's median curve.
+PREDICTIONS for MO_144b (written before running it):
+  Pb1 C2's recent new-series total is within 0.75-1.33x of actual (C was 1.89x).
+  Pb2 C2's recent new-series series x month miss is below 90% (C was 169%).
+  Pb3 C2's recent account x month error is no more than 0.5 point worse than A, and its portfolio x month error
+      is better than A's.
+  Pb4 B2's recent account x month error is within 1.0 point of A, and its portfolio x month error is better than A's.
+Output (--b): outputs/mo144b_new_series.json, scripts/outputs/mo144b_rows.parquet
 """
 from __future__ import annotations
 
@@ -68,6 +85,7 @@ W = pd.Timedelta(weeks=1)
 AGES = 13                       # launch ages 0..12 weeks (a new series is at most 12 weeks old in a horizon)
 ARRIVAL_LOOKBACK = 26           # weeks of past launches used for the arrival rate
 ARMS = ["existing_only", "arrival", "plan_analog"]
+VARIANT_B = False   # set by --b (MO_144b)
 
 
 def load():
@@ -99,7 +117,33 @@ def curves(p: pd.DataFrame, cut) -> dict:
     c["tdp_chan"] = h.groupby(["channel_outlet", "age"]).tdp.median()
     c["vel_upc_chan"] = h.groupby(["upc", "channel_outlet", "age"]).vel.mean()
     c["vel_upc"] = h.groupby(["upc", "age"]).vel.mean()
+    # MO_144b: median curves and item strength relative to each retailer's own launches
+    c["med_acct"] = h.groupby(["retail_account", "age"]).base_units.median()
+    c["med_chan"] = h.groupby(["channel_outlet", "age"]).base_units.median()
+    c["med_all"] = h.groupby("age").base_units.median()
+    den = h.set_index(["retail_account", "age"]).index.map(lambda k: c["med_acct"].get(k, np.nan))
+    h["rel"] = np.where(np.asarray(den, float) > 0, h.base_units / np.asarray(den, float), np.nan)
+    c["rel_upc_chan"] = h.groupby(["upc", "channel_outlet", "age"]).rel.median()
+    c["rel_upc"] = h.groupby(["upc", "age"]).rel.median()
     return c
+
+
+def med_curve(c, acct, chan, age) -> float:
+    for key, s in (((acct, age), c["med_acct"]), ((chan, age), c["med_chan"]), (age, c["med_all"])):
+        u = get(s, key)
+        if np.isfinite(u):
+            return u
+    return 0.0
+
+
+def plan_relative(c, upc, chan, acct, age) -> tuple[float, str]:
+    rel = get(c["rel_upc_chan"], (upc, chan, age))
+    if not np.isfinite(rel):
+        rel = get(c["rel_upc"], (upc, age))
+    base = med_curve(c, acct, chan, age)
+    if np.isfinite(rel):
+        return rel * base, "relative"
+    return base, "median-curve"
 
 
 def get(s: pd.Series, key, default=np.nan):
@@ -127,12 +171,24 @@ def plan_forecast(c, upc, chan, acct, age) -> tuple[float, str]:
 
 
 def main() -> None:
+    import argparse
+    global VARIANT_B, ARMS, OUT_JSON, OUT_ROWS
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--b", action="store_true", help="MO_144b: median curves + retailer-relative launch sizing")
+    if ap.parse_args().b:
+        VARIANT_B = True
+        ARMS = ARMS + ["arrival_med", "plan_relative"]
+        OUT_JSON, OUT_ROWS = Path("../outputs/mo144b_new_series.json"), Path("outputs/mo144b_rows.parquet")
     r, p, launch, meta = load()
     cuts = {lbl: M._utc(c) for lbl, c, *_ in M.ORIGINS_MONTHLY}
     r["existing_only"] = r["direct_avg5"]
     r["arrival"] = r["direct_avg5"]
     r["plan_analog"] = r["direct_avg5"]
     r["plan_source"] = ""
+    if VARIANT_B:
+        r["arrival_med"] = r["direct_avg5"]
+        r["plan_relative"] = r["direct_avg5"]
+        r["rel_source"] = ""
     synth = []
     for o, cut in cuts.items():
         c = curves(p, cut)
@@ -149,6 +205,12 @@ def main() -> None:
                 m = meta.loc[s]
                 f, src = plan_forecast(c, m.upc, m.channel_outlet, m.retail_account, min(age, AGES - 1))
             r.at[i, "plan_analog"], r.at[i, "plan_source"] = f, src
+            if VARIANT_B:
+                if age < 0:
+                    f2, src2 = 0.0, "pre-launch"
+                else:
+                    f2, src2 = plan_relative(c, m.upc, m.channel_outlet, m.retail_account, min(age, AGES - 1))
+                r.at[i, "plan_relative"], r.at[i, "rel_source"] = f2, src2
         # B: arrival layer per account x horizon week
         recent_launch = launch[(launch > cut - ARRIVAL_LOOKBACK * W) & (launch <= cut)]
         rate = meta.loc[recent_launch.index].groupby("retail_account").size() / ARRIVAL_LOOKBACK
@@ -157,16 +219,22 @@ def main() -> None:
         for acct, lam in rate.items():
             chan = meta[meta.retail_account == acct].channel_outlet.mode().iloc[0]
             for k, d in enumerate(dates):            # horizon week k = 0..12; launches at weeks j <= k
-                tot = 0.0
+                tot = tot_med = 0.0
                 for j in range(k + 1):
                     age = k - j
                     u = get(c["units_acct"], (acct, age))
                     if not np.isfinite(u):
                         u = get(c["units_chan"], (chan, age), get(c["units_all"], age, 0.0))
                     tot += lam * u
-                synth.append({"origin": o, "series": f"ARRIVAL | {acct}", "account": acct, "date": d, "actual": 0.0,
-                              "is_new": True, "band": "new", "hist_wks": 0, "wmt": bool(acct_wmt.get(acct, False)),
-                              "existing_only": 0.0, "arrival": tot, "plan_analog": 0.0, "plan_source": "arrival-row"})
+                    tot_med += lam * med_curve(c, acct, chan, age)
+                row = {"origin": o, "series": f"ARRIVAL | {acct}", "account": acct, "date": d, "actual": 0.0,
+                       "is_new": True, "band": "new", "hist_wks": 0, "wmt": bool(acct_wmt.get(acct, False)),
+                       "existing_only": 0.0, "arrival": tot, "plan_analog": 0.0, "plan_source": "arrival-row"}
+                if VARIANT_B:
+                    row.update({"arrival_med": tot_med, "plan_relative": 0.0, "rel_source": "arrival-row"})
+                else:
+                    row.update({"arrival_med": 0.0, "plan_relative": 0.0})
+                synth.append(row)
     s = pd.DataFrame(synth)
     s["date"] = pd.to_datetime(s["date"], utc=True)
     allr = pd.concat([r, s], ignore_index=True)
@@ -185,7 +253,7 @@ def main() -> None:
             print(f"\n=== {scope.upper()}, {name.upper()} origins, ALL volume (new series share of actual {100 * nw:.1f}%): "
                   f"am / pm | bias  (cw for A and C only) ===")
             for x in ARMS:
-                cw = "   n/a" if x == "arrival" else f"{Sx[CW][x]:6.2f}"
+                cw = "   n/a" if x.startswith("arrival") else f"{Sx[CW][x]:6.2f}"
                 print(f"  {x:<14s} cw {cw}  am {Sx[AM][x]:6.2f}  pm {Sx[PM][x]:6.2f}   bias {Sx['portfolio_bias'][x]:.3f}")
             if scope == "with Walmart":
                 for lvl in (AM, PM):
@@ -228,6 +296,23 @@ def main() -> None:
         "P5": {"am_A_exWMT": Rx[AM]["existing_only"], "am_C_exWMT": Rx[AM]["plan_analog"],
                "holds": bool(Rx[AM]["plan_analog"] < Rx[AM]["existing_only"])},
     }
+    if VARIANT_B:
+        sm2 = nr.groupby(["origin", "series", "month"])[["actual", "plan_relative"]].sum()
+        m2 = float(100 * (sm2.plan_relative - sm2.actual).abs().sum() / sm2.actual.sum())
+        t2 = float(sm2.plan_relative.sum() / sm2.actual.sum())
+        res["new_series_only_recent"]["plan_relative"] = {"series_x_month_miss_pct": m2, "total_ratio": t2,
+                                                          "sources": r[r.is_new].rel_source.value_counts().to_dict()}
+        print(f"NEW SERIES ONLY (recent), C2 plan_relative: series x month miss {m2:.1f}%, total ratio {t2:.3f}")
+        preds.update({
+            "Pb1": {"c2_total_ratio": t2, "holds": bool(0.75 <= t2 <= 1.33)},
+            "Pb2": {"c2_new_miss": m2, "holds": bool(m2 < 90)},
+            "Pb3": {"am_A": R[AM]["existing_only"], "am_C2": R[AM]["plan_relative"], "pm_A": R[PM]["existing_only"],
+                    "pm_C2": R[PM]["plan_relative"],
+                    "holds": bool(R[AM]["plan_relative"] <= R[AM]["existing_only"] + 0.5 and R[PM]["plan_relative"] < R[PM]["existing_only"])},
+            "Pb4": {"am_A": R[AM]["existing_only"], "am_B2": R[AM]["arrival_med"], "pm_A": R[PM]["existing_only"],
+                    "pm_B2": R[PM]["arrival_med"],
+                    "holds": bool(abs(R[AM]["arrival_med"] - R[AM]["existing_only"]) < 1.0 and R[PM]["arrival_med"] < R[PM]["existing_only"])},
+        })
     res["predictions"] = preds
     OUT_JSON.write_text(json.dumps(res, indent=2, default=float))
     print()
