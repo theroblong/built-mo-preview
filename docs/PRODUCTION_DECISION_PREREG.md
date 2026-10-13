@@ -85,6 +85,8 @@ rule above for all future decisions; it is written before any saved forecast has
 
 **Forward set for the next saved forecast (2026-10-12, Jason):** save `direct_avg5` (fixed direct, 5 seeds), `rec_dir5` (recursive + fixed direct) and `tweedie_avg5` (fixed direct trained on raw units with a Tweedie objective, 5 seeds; better than direct_avg5 on 2025 dates, worse on recent dates in MO_139) alongside the served model, L4W velocity x stores and last value, so forward weeks can separate them.
 
+**Added 2026-10-13, before MO_140 results exist:** the fixed direct model with 5 seeds plus fixed product attributes (product line, nutrition, price per bar, exclusivity), code `attr_avg5`.
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
