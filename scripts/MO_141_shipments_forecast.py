@@ -24,6 +24,17 @@ PREDICTIONS (written 2026-10-13, before any run):
   P3 ALDI and H-E-B: replenish has a lower 3-month-total miss % than avg3.
   P4 Bias: avg6 under-forecasts (bias < 1) for WinCo, because WinCo's shipments grew over 2023-2026.
   No prediction for seasonal_trend or Trader Joe's (62 lines; too few orders to judge).
+
+MO_141b (--corrected; added 2026-10-13 after the skeptic review, applying its corrections; NO new predictions --
+it re-states the numbers the corrections imply, from committed code):
+  - each account is scored and forecast only from its "regular since" month: the first month of its first run of
+    3+ consecutive months with shipments (ALDI's Oct-Nov 2023 test order and H-E-B's ramp are not zero-filled history);
+    a forecast date needs 3 regular months before it;
+  - August 2026 is dropped (H-E-B's last shipment Aug 17, WinCo's Aug 26: likely incomplete);
+  - replenish is dropped (it equals avg6 x median/mean order size, so it under-forecasts by construction; P3 untested);
+  - seasonal_trend is marked not applicable where there is no prior regular year;
+  - Trader Joe's is excluded (June 2026 = one-time load-in: 2.52M bars, 27 orders in 9 days to 6 DCs);
+  - adds the median per-origin miss next to the pooled miss (WinCo's ranking flips between them).
 """
 from __future__ import annotations
 
@@ -68,17 +79,45 @@ def forecast(monthly: pd.Series, orders: pd.DataFrame, origin) -> dict[str, floa
     return {k: (v if isinstance(v, list) else [v] * H) for k, v in f.items()}
 
 
+def regular_since(s: pd.Series):
+    pos = (s > 0).astype(int)
+    run = pos.groupby((pos == 0).cumsum()).cumsum()
+    hit = run[run >= 3]
+    return hit.index[0] - pd.DateOffset(months=2) if len(hit) else None
+
+
 def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--corrected", action="store_true", help="MO_141b corrections (see docstring)")
+    corrected = ap.parse_args().corrected
+    global OUT, LAST_FULL
+    if corrected:
+        OUT, LAST_FULL = Path("outputs/mo141b"), pd.Timestamp("2026-07-01")
     OUT.mkdir(parents=True, exist_ok=True)
     monthly, orders = load()
-    rows = []
+    rows, starts = [], {}
     for acct in monthly.columns:
         s, o = monthly[acct], orders[orders.account == acct]
+        if corrected:
+            if acct == "Trader Joe's":
+                continue
+            st = regular_since(s[s.index <= LAST_FULL])
+            starts[acct] = str(st.date()) if st is not None else None
+            if st is None:
+                continue
+            s, o = s[s.index >= st], o[o.month >= st]
         for origin in ORIGINS:
             months = pd.date_range(origin, periods=H, freq="MS")
             if months[-1] > LAST_FULL or s[s.index < origin].sum() == 0:
                 continue
+            if corrected and (s.index < origin).sum() < 3:
+                continue
             fc = forecast(s, o, origin)
+            if corrected:
+                fc.pop("replenish")
+                if (s.index < origin - pd.DateOffset(months=12)).sum() == 0:
+                    fc.pop("seasonal_trend")
             for m_i, m in enumerate(months):
                 for meth, vals in fc.items():
                     rows.append({"account": acct, "origin": origin, "month": m, "h": m_i + 1, "method": meth,
@@ -99,6 +138,16 @@ def main() -> None:
     hist = monthly.copy()
     hist.to_csv(OUT / "monthly_bars.csv")
 
+    if corrected:
+        med = po.stack().groupby(level=["account", "method"]).median().rename("median_origin_month_miss_pct")
+        n = r.groupby(["account", "method"]).origin.nunique().rename("origins")
+        summ = summ.merge(med.reset_index(), on=["account", "method"]).merge(n.reset_index(), on=["account", "method"])
+        summ.to_csv(OUT / "scores.csv", index=False)
+        (OUT / "summary.json").write_text(json.dumps({"regular_since": starts, "last_month_scored": str(LAST_FULL.date())}, indent=2))
+        pd.set_option("display.width", 200)
+        print("regular since:", starts)
+        print(summ.round(2).to_string())
+        return
     s = summ.set_index(["account", "method"])
     w = po.loc["WinCo"]
     p1_share = float((w["avg3"] < w["last_month"]).mean())
