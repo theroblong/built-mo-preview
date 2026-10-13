@@ -668,34 +668,47 @@ def render_docx(B: list[tuple], path: Path) -> None:
     doc.save(path)
 
 
+def pdf_text(pdf_path: Path) -> str:
+    """Text of a PDF via macOS PDFKit (tools/pdf_text.swift); used to verify an export."""
+    r = subprocess.run(["swift", str(Path(__file__).resolve().parent / "tools" / "pdf_text.swift"), str(pdf_path)],
+                       capture_output=True, text=True, timeout=180)
+    return r.stdout
+
+
 def to_pdf(docx_path: Path, pdf_path: Path) -> bool:
     """Microsoft Word exports the PDF. Word is sandboxed, so the file goes through Word's own Documents folder
-    (no file-access prompt), then the PDF is copied back next to the .docx."""
+    (no file-access prompt) under a UNIQUE name: Word reuses an already-open document with the same name, which
+    once exported a stale earlier draft (2026-10-13). The PDF is accepted only if its text contains the .docx's
+    first and last paragraphs."""
     import shutil
+    import time
+    from docx import Document
+    paras = [p.text.strip() for p in Document(docx_path).paragraphs if p.text.strip()]
     box = Path.home() / "Library/Containers/com.microsoft.Word/Data/Documents"
-    src, dst = box / "aevah_brief_tmp.docx", box / "aevah_brief_tmp.pdf"
+    tag = f"aevah_{docx_path.stem[:40]}_{int(time.time())}"
+    src, dst = box / f"{tag}.docx", box / f"{tag}.pdf"
     shutil.copy(docx_path, src)
-    dst.unlink(missing_ok=True)
     script = f"""with timeout of 170 seconds
     tell application "Microsoft Word"
-        open file name (POSIX file "{src}" as string)
+        set theDoc to open file name (POSIX file "{src}" as string)
         delay 2
-        save as active document file name (POSIX file "{dst}" as string) file format format PDF
-        set others to 0
-        repeat with dn in (get name of every document)
-            if dn as string is not "aevah_brief_tmp.docx" then set others to others + 1
-        end repeat
-        if others is 0 then quit saving no
+        save as theDoc file name (POSIX file "{dst}" as string) file format format PDF
     end tell
     end timeout"""
     r = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=200)
     if r.returncode != 0:
         print("Word PDF export:", r.stderr.strip())
+    ok = False
     if dst.exists():
-        shutil.copy(dst, pdf_path)
-        src.unlink(missing_ok=True)
-        dst.unlink(missing_ok=True)
-    return pdf_path.exists()
+        txt = " ".join(pdf_text(dst).split())
+        ok = all(" ".join(x.split())[:60] in txt for x in (paras[0], paras[-1]))
+        if ok:
+            shutil.copy(dst, pdf_path)
+        else:
+            print("PDF REJECTED: its text does not match", docx_path.name)
+    src.unlink(missing_ok=True)
+    dst.unlink(missing_ok=True)
+    return ok
 
 
 # ---------------------------------------------------------------- HTML
