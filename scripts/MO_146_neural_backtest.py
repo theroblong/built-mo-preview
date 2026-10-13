@@ -43,6 +43,11 @@ PREDICTIONS, RECORDED BEFORE RUNNING so they can be wrong:
   P3 Every neural arm's recent portfolio bias is within 0.85-1.15.
   P4 N-HiTS is at least as accurate as TFT at recent account x month (simpler beats heavier on small data).
   P5 Parity: direct_avg5's recent account x month reproduces MO_140's 16.17 exactly (same rows, same scoring).
+CHANGE BEFORE ANY RESULT (2026-10-13): the first full submission failed with "No windows available for
+training" when a training batch drew only very short series. Series with fewer than MIN_WEEKS (15) weeks from
+first sale to the forecast date are now left out of neural training and forecasting; the harness scores them with
+its standard fallback (last value carried forward, "flat"), and the run reports how many rows that affects. A
+failed fit is logged and skipped instead of stopping the job. Predictions are unchanged.
 Usage:
   worker:  python MO_146_neural_backtest.py compute --origins 2024-12,2025-03 [--seeds 1,2,3,4,5 --steps 1000]
   laptop:  python MO_146_neural_backtest.py score --results <dir1,dir2,dir3>
@@ -61,6 +66,7 @@ import pandas as pd
 
 GROUP_COLS = ["upc", "channel_outlet", "retail_account", "geography_raw"]   # = mo_panel.GROUP_COLS (asserted in score)
 H, INPUT = 13, 26
+MIN_WEEKS = 15        # series need >= H + 2 weeks of history to form training windows
 MODELS = ("NHITS", "TCN", "TFT")
 ARM_OF = {"NHITS": "nhits5", "TCN": "tcn5", "TFT": "tft5"}
 RECENT = "2025-12"
@@ -84,6 +90,8 @@ def training_frame(panel: pd.DataFrame, universe: set, cut: pd.Timestamp) -> pd.
     out = []
     for uid, g in p[p.unique_id.isin(first.index)].groupby("unique_id"):
         idx = pd.date_range(first[uid], cut, freq="W-SUN")
+        if len(idx) < MIN_WEEKS:
+            continue
         s = g.set_index("ds").y.reindex(idx).fillna(0.0)
         out.append(pd.DataFrame({"unique_id": uid, "ds": idx, "y": s.values.astype("float32")}))
     return pd.concat(out, ignore_index=True)
@@ -122,9 +130,14 @@ def compute(origins: list[str], seeds: list[int], steps: int) -> None:
                 if f.exists():                       # resume after an interruption
                     continue
                 t = time.time()
-                nf = NeuralForecast(models=[make[name](s)], freq="W-SUN")
-                nf.fit(df=df)
-                fc = nf.predict().reset_index()
+                try:
+                    nf = NeuralForecast(models=[make[name](s)], freq="W-SUN")
+                    nf.fit(df=df)
+                    fc = nf.predict().reset_index()
+                except Exception as e:     # record and continue; scoring falls back to flat for missing fits
+                    timing["origins"][o]["fits"][f"{name}_s{s}"] = f"error: {type(e).__name__}: {str(e)[:200]}"
+                    print(o, name, s, "ERROR", type(e).__name__, str(e)[:200], flush=True)
+                    continue
                 col = [c for c in fc.columns if c not in ("index", "unique_id", "ds")][0]
                 fc = fc.rename(columns={"unique_id": "series", "ds": "date", col: "value"})[["series", "date", "value"]]
                 fc["value"] = fc.value.clip(lower=0).astype(float)
