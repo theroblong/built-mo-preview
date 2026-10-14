@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-10-14 (blends with simpler forecasts tested (MO_147), no switch; per-product-line models worse than one pooled model, reversing the old exclude-BAR finding (MO_148); promotion-uplift layer helps only company-wide monthly totals (MO_150); served-model input breakdown by line (MO_151); production caveat: served v11d trained with look-ahead promotion/donor/competitor-gap inputs; trust document v0.3 (veracity-first) pushed for Rob; credential in committed ingest files to be rotated by Rob; MO_149 scoring pending; production unchanged)
+Last synced: 2026-10-14 (blends with simpler forecasts tested (MO_147), no switch; per-product-line models worse than one pooled model, reversing the old exclude-BAR finding (MO_148); promotion-uplift layer helps only company-wide monthly totals (MO_150); served-model input breakdown by line (MO_151); production caveat: served v11d trained with look-ahead promotion/donor/competitor-gap inputs; trust document v0.3 (veracity-first) pushed for Rob; credential in committed ingest files to be rotated by Rob; MO_149 scoring pending; training weight by product line for the served model (MO_152); drilldown idea logged as backlog; production unchanged)
 
 ## Repository
 
@@ -707,6 +707,13 @@ The served v11d model was trained with look-ahead promotion, donor and competito
 ### Next
 
 - MO_149 scoring and skeptic; no-rock-unturned review; Optuna; retrain with per-cutoff inputs for the December forecast; GNN/RNN/TFT after delivery.
+
+### Addendum (later still, 2026-10-14): MO_152 training weight by product line; Rob's drilldown idea
+
+- **MO_152 (how much each product line weighs in training the served forecast model v11d; descriptive, no accuracy claim):** the 1,604 forecast series do not set influence. The model learned from 76,482 weekly rows (58,371 at 13 weeks) across all 2,117 series (513 no longer selling); 96,369-row panel = v11d's. One recency-weighted vote per row (1 yr about 0.35, 2 yrs about 0.13). Share of votes BAR / PUFF / SOUR PUFF: 1 wk 6.9 / 88.2 / 4.9; 13 wk 7.3 / 91.2 / 1.5; raw rows 17.5 / 80 / 2.6; origin-week units 3.1 / 93.1 / 3.7. PUFF dominates mainly via row count; recency widens it. Shares describe what lines share; BAR's own adjustment (about -23% at 13 wk, MO_151) comes from BAR rows alone, "consistent with" the 2025 BAR wind-down, not shown caused by it. Served model trained to 2026-06-07, not retrained. Early-stopping rows unweighted (12-15% SOUR PUFF, 1-2% BAR). Skeptic (opus/high): SURVIVES WITH CAVEATS. Artifacts: `scripts/MO_152_training_weight_by_line.py`, `outputs/mo152_training_weight_by_line.json`; commits 9716089, 5fb3d66. Recorded in README 245, SETTLED_FINDINGS entry (e), wiki/18 entry "How the forecast model weighs BAR, PUFF and SOUR PUFF; drilldown idea (2026-10-14, later)".
+- **Decision (Jason):** log Rob's per-chart "what drives this forecast" drilldown as an explainability BACKLOG idea (not built, not to be described as planned in client material). Rob: "this type of information should be part of a drilldown on each graph lol". Jason: "This could become a valuable part of explainability (as opposed to black box data science)." Related: Experience 1 audit trail (`docs/experience_1_screen_spec.md:129`, designed not built).
+- **Pushes approved:** MO_152 (9716089, 5fb3d66) and 7536612.
+- **Open question (new):** are the 46 BAR items still selling getting the wind-down pattern of BAR items discontinued in 2025? Check before the December forecast. Carried over: MO_149 jobs -002/-003, key rotation, look-ahead retrain.
 
 ## Open Follow-Ups
 

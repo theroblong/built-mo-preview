@@ -509,7 +509,7 @@ MO_144b 6f900c9; MO_145 6ced2bd).
   neural network or RNN/TFT variant, or MO_147 (pre-registered blends under Amendment 2) shows a neural blend
   beating direct + L4W. Also reopens MO_125 ("ship alone, not blended") and MO_126's band-blend condition.
 
-### Added 2026-10-14 from MO_147 / MO_148 / MO_150 / MO_151 (README 244), PENDING review
+### Added 2026-10-14 from MO_147 / MO_148 / MO_150 / MO_151 / MO_152 (README 244, 245), PENDING review
 Each proposal carries the skeptic (opus/high) verdict line. Miss = average miss % (lower is better); levels: item x
 week (cw), account x month (am), portfolio x month (pm); recent = 6 overlapping origins, 2025-12 on (exploratory).
 Predictions were committed before each run (MO_147 02e9585, originally d701799; MO_148/149 731b278, originally
@@ -570,6 +570,18 @@ no entry here.
   (PUFF roll4 + lag1 77 -> 88% at h1, 43 -> 56% at h13). Similar profiles do not prove the lines follow the same rules; MO_148 is
   the accuracy evidence for pooling. `outputs/mo151_inputs_by_line.json`. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* the
   served model is retrained with per-cutoff inputs.
+- **(e) MO_152 (PROVISIONAL, descriptive): how much each product line weighs in training the served v11d model.** The 1,604
+  forecast series do not set the model's influence: it learned from 76,482 weekly training rows (58,371 at 13 weeks) across all
+  2,117 series, including 513 no longer selling (96,369-row panel, the same one v11d trained on). Each row is one vote regardless
+  of item volume (LightGBM quantile loss), times a recency weight (1 year old about 0.35, 2 years about 0.13). Share of training
+  votes after recency, BAR / PUFF / SOUR PUFF: 1 week 6.9 / 88.2 / 4.9; 13 weeks 7.3 / 91.2 / 1.5; raw rows 17.5 / 80 / 2.6; units
+  in those rows 3.1 / 93.1 / 3.7. PUFF dominates mainly through quantity (more retailers, so more rows); recency widens the gap.
+  These shares describe what the lines share; product line is also an input, so BAR's own adjustment (about 23% lower at 13 weeks,
+  MO_151) is set by BAR's rows alone and is consistent with the 2025 BAR wind-down, not shown to be caused by it. The served model
+  learned from weeks up to 2026-06-07 and has not been retrained since. The early-stopping rows that set tree count are
+  unweighted (12-15% SOUR PUFF, 1-2% BAR). `scripts/MO_152_training_weight_by_line.py`, `outputs/mo152_training_weight_by_line.json`;
+  commits 9716089, 5fb3d66. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* the served model is retrained. Open question: are the 46
+  BAR items still selling given the wind-down pattern of BAR items discontinued in 2025? Check before the December forecast.
 - **Production caveat (open, not a finding):** the served v11d model was trained with look-ahead promotion, donor and
   competitor-gap inputs (README ~1983-1985); the backtest rebuilds them per cutoff, so backtest scores do not describe the served
   model exactly. Any retrain for the December forecast must compute them per cutoff.

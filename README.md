@@ -6,6 +6,69 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 245: How much each product line shaped the served forecast model's training (MO_152, descriptive); Rob's per-chart drilldown idea logged as backlog (2026-10-14, later)
+
+**What the work was (plain words):** MO_152 counts how much each product line (BAR, PUFF, SOUR PUFF) contributes to the training of
+the served forecast model (v11d), after Jason asked how the 1,604 forecast series (46 BAR, 1,282 PUFF, 276 SOUR PUFF) affect the
+model's weights. Descriptive only: no forecast arm, no accuracy claim, no forecast changed. The v11d training rows were rebuilt
+exactly (96,369 rows, 2,117 series, the same panel v11d trained on; the model's validation cutoff is 2026-06-07 and it was not
+refit, so its training data ends there). Script `scripts/MO_152_training_weight_by_line.py`; output
+`outputs/mo152_training_weight_by_line.json`; commits 9716089 and 5fb3d66 (caveats in the docstring), pushed with 7536612 on
+Jason's approval.
+
+### Findings
+
+**1. MO_152: the 1,604 forecast series do not set the model's influence; each training row is one recency-weighted vote, and PUFF
+dominates mainly through row count.** The model learned from 76,482 weekly training rows (58,371 at 13 weeks ahead) across all
+2,117 series, including 513 no longer selling. Volume enters only through row count (more retailers means more series and more
+rows). Recency weight: a row 1 year old counts about 0.35, 2 years old about 0.13. Last 26 training weeks: PUFF 91-97% of the
+weighted rows. Skeptic verdict: **SURVIVES WITH CAVEATS.**
+
+Caveats (skeptic): (a) the shares describe what the lines share; product line is also an input, so BAR's own adjustment (about 23%
+lower at 13 weeks, MO_151) is set by BAR's rows alone, and is consistent with the 2025 BAR wind-down (2023-24 BAR rows flat, median
+13-week ratio 1.04-1.07; 2025 rows wind-down, median 0.29) but not shown to be learned from it; (b) the early-stopping rows that set
+tree count (269 trees at 1 week, 1,744 at 13) are unweighted: 1 week PUFF 82.7 / SOUR PUFF 15.2 / BAR 2.1%; 13 weeks 87.2 / 12.0 /
+0.8%; (c) the model has not been retrained on the 13 weeks since 2026-06-07; (d) only 2 series changed product-line label (under 0.1
+point effect).
+
+### Evidence
+
+**Share of training votes, BAR / PUFF / SOUR PUFF (%)**
+
+| view | BAR | PUFF | SOUR PUFF |
+|---|---|---|---|
+| 1 week ahead, after recency weighting | 6.9 | 88.2 | 4.9 |
+| 13 weeks ahead, after recency weighting | 7.3 | 91.2 | 1.5 |
+| 1 week ahead, raw rows | 17.5 | 79.9 | 2.6 |
+| 13 weeks ahead, raw rows | 17.4 | 81.8 | 0.8 |
+| units in the 1-week rows (origin-week units) | 3.1 | 93.1 | 3.7 |
+
+No history-band table was produced (descriptive, by product line only).
+
+### Logged: Rob's drilldown idea (explainability backlog, not built, not planned)
+
+Rob, verbatim: "this type of information should be part of a drilldown on each graph lol". Jason, verbatim: "This could become a
+valuable part of explainability (as opposed to black box data science)." Decision (Jason): log it as an explainability backlog item.
+Possible content: top inputs and their share for the item or line (MO_151), how much each product line shaped the model (MO_152),
+model version and training-data end date. Related designs: Experience 1 "audit trail on every number"
+(`docs/experience_1_screen_spec.md:129`, designed not built), the forecast drawer design. Caveats for any build: shares are
+per series, unweighted, on a log scale; `promo_lift_n_events` is an item-tenure proxy with look-ahead in v11d. Not to be described
+as planned in client material.
+
+### Open
+
+Are the 46 BAR items still selling getting the wind-down pattern of BAR items discontinued in 2025? Check before the December
+forecast. Carried over from 244: MO_149 jobs -002/-003, key rotation, the look-ahead retrain and the rest.
+
+### Procedural lesson
+
+When the question is "how much does X influence the model", read how the loss treats each row before computing anything: here one
+row is one vote, so influence is a share of weighted rows, not volume, and the answer to "do the forecast series set the weights" is
+no. A share of training says what the groups share, not what a group's own adjustment is learned from; keep those two statements
+apart (the BAR wind-down reading is "consistent with", not shown).
+
+---
+
 ## README update 244: Blends with simpler forecasts do not earn a switch (MO_147); product-line models are worse than one pooled model and reverse the old "exclude BAR" result (MO_148); a promotion-uplift layer helps only company-wide monthly totals (MO_150); what drives the served model by product line (MO_151); trust document v0.2-v0.3 (2026-10-14)
 
 **What each piece of work was (plain words):**
