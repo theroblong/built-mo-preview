@@ -6,6 +6,123 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 246: Recent sales rate x stores as model inputs does not pass; only the under-13-week gain is robust (MO_149); evidence for revisiting the new-item ETS fallback; access-key mechanism; glmnet answer; BUILT's Competitive Distribution Chart reviewed (2026-10-14, evening)
+
+**What the work was (plain words):**
+- **MO_149, the recent 4-week and 12-week sales rate x current stores added as inputs to the 5-seed fixed direct model
+  (l4wf_avg5):** the last of steps 1-3 (README 244). Same 18 forecast dates, same settings, RunPod jobs `jason-mo149-001..003`
+  (approved bounds 5,400 s and $1.75 per job). Scored by the runner; skeptic (opus/high) afterwards. Script and scoring:
+  `outputs/mo149_velocity_inputs.json`, `scripts/outputs/mo149_score.log` (scripts/outputs is gitignored).
+- **Evidence review for the Mo API's on-the-spot ETS trend forecast** (Jason thinks it is live; it was there to avoid a blank
+  forecast): no new test, a search of settled evidence (below).
+- **Access-key mechanism** (answer to Jason's question about the open security item; no values read or printed).
+- **glmnet question** (Jason, from a Gemini summary: stacking, residual modeling, linear_tree): answered from prior tests.
+- **Review of BUILT's Competitive Distribution Chart** (received 2026-10-14 from Brian via Jason).
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Miss = average miss % (lower is better). Bias = forecast /
+actual (below 1.00 = too low). Recent = 6 overlapping origins, 2025-12 on (exploratory).
+
+### Findings
+
+**1. MO_149: adding recent sales rate x stores as model inputs does not pass the switching rules; production unchanged.** In plain
+words: it leaves overall accuracy about where it is; the only effect that holds up is for items with under 13 weeks of history, and
+items sold a year or more get worse. Parity check 0.000000; no fallback rows. Criteria 1, 2 and 4 fail (criterion 3 and 7 met on
+the preliminary read). Skeptic verdict: **SURVIVES WITH CAVEATS** as "does not pass; production unchanged". Caveats: the recent
+account x month gain (-0.20) is not real: it is all Walmart (+0.13 without Walmart) and appears in 2 of 5 seeds (per-seed -0.09);
+the only robust effect is items under 13 weeks, better at all levels and in every seed (recent portfolio x month 17.0 -> 14.7);
+the 52+ band is worse at item x week (+0.9) and account x month (+1.0) in every seed, and its portfolio x month "gain" (6.7 -> 6.4)
+is cross-retailer cancellation (Walmart and Sam's lowered; 2 of 5 seeds); in 2025 the 13-25 and 26-51 bands are worse in every seed
+(portfolio x month +1.40 and +0.67), and 2025 portfolio x month overall is worse in every seed (+0.46 with Walmart, +0.57
+without; seed spread at most 0.23). Predictions P1, P2 and P4 hold; P3 holds only on the 5-seed average and not for its stated
+reason. Leakage and parity are clean. Tension with MO_126/127 (velocity x stores as a forecast is worst under 13 weeks and best at
+52+; as an input the reverse): an under-13-only use is a new candidate that must be pre-registered; this run does not support it.
+
+**2. ETS revisit: the evidence says last value for brand-new items, the production model once refreshed.** For series under 13
+weeks, last value carried forward beats the other methods (MO_79, cold-start horse race; re-validated by MO_126, anchor routed by
+history band). Recent 4-week velocity x stores loses about 7 points in the under-13-week band (README 227, band inversion), so L4W
+is not the right fallback for brand-new items. The production model already forecasts short series (MO_26D includes them) once a
+refresh has run. Brand-new launches cannot be sized from history (MO_144: needs BUILT's launch list and store-count assumptions).
+A user-selected proxy item is a planning tool, not a validated forecast (MO_143 analogs are descriptive). Suggested swap: production
+model forecast once refreshed, last value carried forward until then. Decision: revisit (Jason).
+
+**3. Access-key mechanism (internal; no values).** The key is for Mo's MinIO object storage (the S3-compatible staging area Druid
+loads from). `scripts/mo_writeback.py` reads `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` from environment variables (correct), but
+the Druid ingest specs it generates embed them (inputSource type s3) and those spec JSONs were saved under `outputs/` and
+`scripts/outputs/`; 13 such files are tracked in git (earliest 2026-07-07). Fix steps: Rob rotates the MinIO key; `mo_writeback`
+stops writing keys into saved spec files (redact, or keep in memory only); add `*_ingest_spec.json` / `*_spec.json` to
+`.gitignore` and untrack the tracked files; a history purge is optional once the old key is dead. Not in wiki/18 (Jason's decision).
+
+**4. glmnet (elastic-net linear models) is not a priority before the December forecast.** Prior tests: linear standalone lost badly
+(Ridge 60-81, Lasso 57-80; MO_38, old bench); linear_tree was +3.51pp worse and diverges uncapped (MO_97/98, PROVISIONAL; reopen
+if re-run under parity by band); blends and stacking with simpler methods do not pass the switching rule and the gains are generic
+averaging (MO_147, honest bench); baseline-relative targets (ratio13, ratio52, differencing; close cousins of residual-on-baseline)
+lost to flat on the old bench. Post-delivery list: add "linear_tree under parity" and "residual on a linear baseline".
+
+**5. BUILT's Competitive Distribution Chart is a point-in-time snapshot, not a forecast input.** Full review:
+[docs/data_reviews/competitive_distribution_chart_review.md](docs/data_reviews/competitive_distribution_chart_review.md). Summary:
+each row is a retailer account and each product cell is the number of stores carrying it (points of distribution, PODs); no history
+except year-end POD totals (grocery 33,348 / 100,642 / 215,414 for 2024 / 2025 / 2026; all channels 68,580 / 234,219 / 412,171;
+checklane 9,059 / 10,804 for 2025 / 2026). 8 tabs, not the 9 Brian described: "Distribution Gaps" and "2025 FC Accounts" are
+missing; the two hidden tabs (Monthly Change, Prior Month) are another brand's products (Kodiak) with all-#REF! formulas. 92 of
+528 filled grocery item cells exceed the account's store count; text in numeric cells; row colors encode syndication status and are
+lost in CSV export; product names need a name-to-UPC map. The file holds individual buyer names (personal data): kept out of git
+and to be excluded from any Druid load. The existing door-count FACT applies (README 215, MO_95: 0.6pp ceiling), and a single
+snapshot cannot be backtested. Candidate uses: coverage check of BUILT PODs against SPINS distribution, assortment white space,
+channels SPINS does not see (C-store 64 accounts, Alt Channel 10, Canada 6, checklane), account metadata (to align with the NetSuite
+customer bridge), and the category review and reset calendar. Druid prep (long format, one snapshot per upload, plus an account
+table) is proposed, not started.
+
+### Evidence
+
+**MO_149 (l4wf_avg5) vs the 5-seed fixed direct model (direct_avg5); miss % and bias**
+
+| view | direct_avg5 cw / am / pm (bias) | l4wf_avg5 cw / am / pm (bias) |
+|---|---|---|
+| Recent (6 origins) | 28.79 / 16.17 / 6.45 (0.970) | 28.85 / 15.97 / 6.36 (0.970) |
+| 2025 origins | 38.40 / 24.51 / 11.29 | 38.31 / 24.57 / 11.76 |
+| Recent without Walmart | 28.65 / 16.00 / 6.43 | 28.65 / 16.13 / 6.73 |
+
+| history band (recent unless noted) | result |
+|---|---|
+| Under 13 weeks | better at all levels, every seed (pm 17.0 -> 14.7) |
+| 13-25 and 26-51 (2025) | worse in every seed (pm +1.40 and +0.67) |
+| 52+ | worse at cw (18.8 -> 19.7) and am (14.3 -> 15.3); pm 6.7 -> 6.4 is cross-retailer cancellation |
+
+Recent account x month wins 4 of 6 origins (with and without Walmart); it loses 2026-03 and 2026-04. Oct-Dec 2025 bias 1.111 vs
+1.099. Criterion 7 (recent dates only; 13-25 / 26-51 / 52+ at portfolio x month, 5-seed average): -0.53 / -0.67 / -0.36, so it
+passes; the 2025 band harm is outside what criterion 7 checks.
+
+### Decisions (Jason)
+
+- Trust document v0.3 reviewed by Jason and Rob and shared with Brian (open item "Rob review v0.3" closed).
+- Revisit the Mo API ETS fallback (Jason thinks it is live): new-item forecasting has shifted in the model; keep the proxy-item
+  option and possibly allow any proxy item (idea, not a plan).
+- glmnet: not a priority before December; two post-delivery checks listed.
+- No mid-day end-session; Claude continues the GPU work (MO_149 download, scoring, skeptic) and commits locally; push only on
+  Jason's OK.
+- Keep the workbook out of git; the access-key item stays out of wiki/18 (internal only).
+- Brian's two messages are in wiki/18 (verbatim).
+
+### Open
+
+- Ask Brian for the two missing tabs and which store count is right where they disagree (Jason / Brian).
+- Add the xlsx (and `docs/brand 1.zip` if not meant for git) to `.gitignore`.
+- Approve the Druid prep plan for the distribution workbook (no buyer names, no Kodiak tabs; needs retailer-to-SPINS-geography and
+  product-name-to-UPC maps).
+- Revisit the ETS fallback; proxy-item flexibility (idea).
+- Rob: rotate the MinIO key; then stop writing keys into spec files and untrack the 13 files.
+- An under-13-only velocity-input candidate, only if pre-registered.
+- Carried over: look-ahead retrain for December; BAR wind-down check; no-rock-unturned review, then Optuna.
+
+### Procedural lesson
+
+When one subgroup (here items under 13 weeks) is the only robust effect, say so and stop: a pooled "small gain" that is all one
+retailer or two of five seeds is not a gain, and a per-band win can come from cancellation across retailers. A subgroup-only use is a
+new, pre-registered candidate, not a reading of this run. Before proposing a data ask or a new fallback, search SETTLED and the README
+first: the distribution workbook and the ETS question were both answered by existing FACT entries (door-count ceiling; MO_79/MO_126).
+
+---
+
 ## README update 245: How much each product line shaped the served forecast model's training (MO_152, descriptive); Rob's per-chart drilldown idea logged as backlog (2026-10-14, later)
 
 **What the work was (plain words):** MO_152 counts how much each product line (BAR, PUFF, SOUR PUFF) contributes to the training of

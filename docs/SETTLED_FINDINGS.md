@@ -513,8 +513,8 @@ MO_144b 6f900c9; MO_145 6ced2bd).
 Each proposal carries the skeptic (opus/high) verdict line. Miss = average miss % (lower is better); levels: item x
 week (cw), account x month (am), portfolio x month (pm); recent = 6 overlapping origins, 2025-12 on (exploratory).
 Predictions were committed before each run (MO_147 02e9585, originally d701799; MO_148/149 731b278, originally
-06abc56; MO_150 d3cbf91, originally acd5fc7). MO_149 (recent sales rate x stores as a model input) is NOT scored yet and has
-no entry here.
+06abc56; MO_150 d3cbf91, originally acd5fc7). MO_149 (recent sales rate x stores as a model input) is scored in the
+next section (README 246).
 - **(a) MO_147 (PROVISIONAL): 50/50 blends of the 5-seed fixed direct model (direct_avg5) with simpler methods do not
   pass the switching rules (Amendment 1 + Amendment 2 criterion 7); they trade portfolio x month accuracy in established
   bands for account x month accuracy.** Recent cw / am / pm (bias): direct_avg5 28.79 / 16.17 / 6.45 (0.970); dir_l4w
@@ -585,6 +585,25 @@ no entry here.
 - **Production caveat (open, not a finding):** the served v11d model was trained with look-ahead promotion, donor and
   competitor-gap inputs (README ~1983-1985); the backtest rebuilds them per cutoff, so backtest scores do not describe the served
   model exactly. Any retrain for the December forecast must compute them per cutoff.
+
+### Added 2026-10-14 (evening) from MO_149 (README 246), PENDING review
+Miss = average miss % (lower is better); levels: item x week (cw), account x month (am), portfolio x month (pm); recent = 6
+overlapping origins, 2025-12 on (exploratory). Predictions committed before the run (731b278, originally 06abc56).
+- **(a) MO_149 (PROVISIONAL): adding the recent 4-week and 12-week sales rate x current stores as inputs to the 5-seed fixed direct
+  model (l4wf_avg5) does not pass the switching rules; only the gain for items under 13 weeks is robust. Production unchanged.**
+  Recent cw / am / pm (bias): direct_avg5 28.79 / 16.17 / 6.45 (0.970); l4wf_avg5 28.85 / 15.97 / 6.36 (0.970). 2025: 38.40 / 24.51 /
+  11.29 vs 38.31 / 24.57 / 11.76. Without Walmart, recent: 28.65 / 16.00 / 6.43 vs 28.65 / 16.13 / 6.73. Criteria 1, 2 and 4 fail
+  (Oct-Dec 2025 bias 1.111 vs 1.099). The recent am gain (-0.20) is all Walmart and 2 of 5 seeds (per seed -0.09). Under 13 weeks
+  better at all levels in every seed (recent pm 17.0 -> 14.7). 52+ worse at cw (+0.9) and am (+1.0) in every seed; its pm "gain"
+  (6.7 -> 6.4) is cross-retailer cancellation (Walmart, Sam's lowered), 2 of 5 seeds. 2025: the 13-25 and 26-51 bands are worse in
+  every seed (pm +1.40 / +0.67), and 2025 portfolio x month overall is worse in every seed (+0.46 with Walmart, +0.57
+  without; seed spread <= 0.23). Criterion 7 passes because it checks recent dates only (13-25 / 26-51 / 52+ recent pm
+  -0.53 / -0.67 / -0.36 on the 5-seed average). P1, P2 and P4 hold; P3 holds only on the 5-seed average and not for its stated reason. Parity
+  0.000000, leakage clean. Tension with MO_126/127 (velocity x stores as a forecast is worst under 13 weeks and best at 52+; as an
+  input the reverse). `outputs/mo149_velocity_inputs.json`, `scripts/outputs/mo149_score.log`; jobs `jason-mo149-001..003`.
+  *Skeptic: SURVIVES WITH CAVEATS as "does not pass; production unchanged".* *Reopen if:* an under-13-only candidate is
+  pre-registered and tested.
+- **FACT (2026-10-14): BUILT's Competitive Distribution Chart (received 2026-10-14) is a point-in-time POD snapshot without history; per the existing door-count FACT it is not a forecast input; candidate uses are coverage, assortment white space, non-SPINS channels, account metadata, and the reset calendar.** Review: `docs/data_reviews/competitive_distribution_chart_review.md`.
 
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
