@@ -5,11 +5,10 @@ Rob's answers (docs/drafts/aevah_trust_document_rob_checklist.md) govern: accura
 (item 1); nothing about encryption, backups, retention, sign-in, roles, AI provider, local model, monitoring or
 certifications, and nothing described as planned; no data-residency absolutes (item 6). Architecture per Rob's
 item-14 correction (approved by Jason 2026-10-14). No forecast-accuracy figures (ACCURACY_CLAIMS_REGISTER section 2).
-Vendor names: only Azure (Rob item 1); everything else generic.
-Skeptic (opus/high) 2026-10-14: SURVIVES WITH EDITS; all wording edits applied. Open for Rob: Circana status; whether
-'runs in BUILT's own Azure subscription' needs scoping (Mo Chat's language model is an external service; forecast runs
-are made on Aevah machines); 'secure' dropped from the data store. Before Brian: redeploy Mo API (retired-figure fix),
-correct the 4.4% from 10-09 with BUILT, fill the contact line.
+Vendor names: SPINS, Circana, NetSuite and Azure approved by Jason 2026-10-14.
+Skeptic (opus/high) 2026-10-14: SURVIVES WITH EDITS; all wording edits applied. Jason 2026-10-14: Circana 'loaded into the data store'
+stands; Azure sentence shortened to 'Mo runs on BUILT's own Azure subscription'; 'secure' dropped; vendor names OK; no
+contact line; Mo API redeploy later; 4.4% removed, not explained.
 -->
 
 # How Mo works
@@ -124,7 +123,7 @@ sales they use.
 
 ## Where Mo runs
 
-Mo runs in BUILT's own Azure subscription, in the West US 3 region (United States), operated by Aevah.
+Mo runs on BUILT's own Azure subscription.
 
 ## Keeping the numbers honest
 
@@ -132,7 +131,3 @@ Mo's forecasts and scores are stored with the date they were produced and the mo
 forecasts are now saved as versions, so an earlier forecast can be compared with what actually sold. When Aevah finds
 an error in its own work, the correction is recorded in Aevah's records alongside the original result rather than
 quietly replaced.
-
-## Questions
-
-Aevah · [[JASON: contact name and email]]

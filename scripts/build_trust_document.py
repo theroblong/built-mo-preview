@@ -235,7 +235,7 @@ def render_docx(B: list[tuple], diagram: Path, path: Path) -> None:
             doc.add_heading(b[1], level=2).paragraph_format.keep_with_next = True
         elif k == "p":
             p = doc.add_paragraph()
-            if b[1].startswith("Mo runs in BUILT's own Azure"):  # the one security sentence, set as a panel
+            if b[1].startswith("Mo runs on BUILT's own Azure"):  # the one security sentence, set as a panel
                 t = doc.add_table(rows=1, cols=1)
                 borders(t, LILAC)
                 cell_margins(t, 160)
@@ -435,7 +435,7 @@ def render_html(B: list[tuple], diagram: Path, path: Path) -> None:
             section = b[1]
             out.append(f"<h2>{html.escape(b[1])}</h2>")
         elif k == "p":
-            cls = ' class="panel"' if b[1].startswith("Mo runs in BUILT's own Azure") else \
+            cls = ' class="panel"' if b[1].startswith("Mo runs on BUILT's own Azure") else \
                 ' class="todo"' if "[[" in b[1] else ""
             out.append(f"<p{cls}>{h_inline(b[1])}</p>")
         elif k == "bullets" and section == "In brief":
