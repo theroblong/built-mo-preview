@@ -12,8 +12,11 @@ base_units h weeks ahead by row shift, train rows = target week <= the v11d vali
 exp(-0.02 x weeks before the newest training row). The loss is the 0.5 quantile (pinball) on log1p(units): every row's
 pull on the fit has the same size (0.5 x its weight) regardless of the item's volume, so a line's influence on the
 trees is its share of WEIGHTED ROWS. Each row is assigned to a line by its own source_brand (the label the model saw
-for that week). Caveat: today's panel (SPINS restated since training) may differ slightly from the one v11d trained on;
-row counts are compared with the panel_rows recorded in the v11d metrics file.
+for that week). The panel file predates v11d's training (same 96,369 rows and 2,117 series as its metrics record), so
+these are the rows v11d learned from. Skeptic 2026-10-14: SURVIVES WITH CAVEATS -- the weighted-row share measures the
+parts of the model the lines share; product line is also an input, so BAR's own branches are set by BAR's rows alone.
+The units share sums origin-week units. Early-stopping (validation) rows, which choose the number of trees, are
+unweighted and 12-15% SOUR PUFF, 1-2% BAR.
 Output: outputs/mo152_training_weight_by_line.json.
 """
 from __future__ import annotations
