@@ -102,6 +102,11 @@ L4W velocity x stores (`dir_l4w`), with L12W (`dir_l12w`), and with last value c
 15 weeks of history only (`dir_flat15`); the neural-only blend (neural average only where a neural forecast exists,
 `dir_neural_only`); and `dir_neural` as written in MO_146.
 
+**Added 2026-10-14, before MO_148 / MO_149 results exist:** one fixed direct model per product line (BAR, PUFF,
+SOUR PUFF), 5 seeds averaged (`line_avg5`); one fixed direct model trained without BAR history for PUFF and SOUR
+PUFF items, BAR items on the production model (`nobar_avg5`); the fixed direct model with L4W and L12W velocity x
+stores as inputs, 5 seeds averaged (`l4wf_avg5`). All judged under Amendment 1 + 2.
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
