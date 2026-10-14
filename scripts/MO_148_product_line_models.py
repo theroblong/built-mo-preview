@@ -153,23 +153,43 @@ def series_lines(feats_r, feats_d) -> pd.Series:
     return pd.Series(line, index=k).groupby(level=0).first()
 
 
+def _load_dedup(arm, dirs, prefix):
+    """S._load without its no-duplicates assert. v_line splits a series' rows by source_brand, so a series whose
+    brand label changed (e.g. BAR -> PUFF) is forecast by two line models. Decided 2026-10-14 BEFORE any MO_148
+    result was seen: keep the LAST copy, i.e. the model of the later line in LINES order (BAR, PUFF, SOUR PUFF),
+    which is the line the item carries now. The count is printed and saved."""
+    parts = [pd.read_parquet(f).assign(origin=f.stem.rsplit("_", 1)[1])
+             for d in dirs for f in sorted(Path(d).glob(f"{prefix}_{arm}_????-??.parquet"))]
+    if not parts:
+        raise SystemExit(f"no results for {prefix} {arm}")
+    cp = pd.concat(parts, ignore_index=True)
+    cp["date"] = pd.to_datetime(cp["date"], utc=True)
+    dup = cp.duplicated(["origin", "series", "date"], keep="last")
+    if dup.any():
+        print(f"  {arm}: {int(dup.sum())} duplicate series-dates (brand label changed) -> kept the later line's forecast")
+    return cp[~dup], int(dup.sum())
+
+
 def score_candidates(dirs, prefix, candidates, out_json, out_rows, feats_r, feats_d) -> dict:
     t0 = time.time()
     r = pd.read_parquet(ROWS_IN).reset_index(drop=True)
     r["date"] = pd.to_datetime(r["date"], utc=True)
     zero = (r["is_new"] | (r["band"] == "lapsed")).values
-    cp = S._load("base_s42", dirs, prefix)
+    own = ["base_s42"] + [f"{g}_s{s}" for g in candidates for s in SEEDS] + [f"{g}_avg5" for g in candidates]
+    r = r.drop(columns=[c for c in own if c in r.columns])   # ROWS_IN carries MO_140's own base_s42
+    cp, _ = _load_dedup("base_s42", dirs, prefix)
     r = r.merge(cp[["origin", "series", "date", "base_s42"]], on=["origin", "series", "date"], how="left")
     miss = r["base_s42"].isna().values & ~zero
     r["base_s42"] = np.where(zero, 0.0, np.where(miss, r["flat"], r["base_s42"]))
     d = (r["base_s42"] - r["direct_fixed_s42"]).abs()
     parity = {o: float(v) for o, v in d.groupby(r["origin"]).max().items()}
     print(f"PARITY base_s42 vs MO_133 direct_fixed_s42: max abs diff {d.max():.6f}; base fell back {int(miss.sum()):,}")
-    fallback = {}
+    fallback, dups = {}, {}
     for g in candidates:
         for s in SEEDS:
             arm = f"{g}_s{s}"
-            cp = S._load(arm, dirs, prefix)
+            cp, ndup = _load_dedup(arm, dirs, prefix)
+            dups[arm] = ndup
             n0 = len(r)
             r = r.merge(cp[["origin", "series", "date", arm]], on=["origin", "series", "date"], how="left")
             assert len(r) == n0
@@ -183,7 +203,8 @@ def score_candidates(dirs, prefix, candidates, out_json, out_rows, feats_r, feat
     keep = ["origin", "series", "date", "actual", "account", "band", "is_new", "wmt", "line", "flat"] + arms
     r[keep].to_parquet(out_rows)
     ex = r[~r["is_new"]]
-    res = {"arms": arms, "parity_max_abs_diff_by_origin": parity, "fallback_rows": fallback}
+    res = {"arms": arms, "parity_max_abs_diff_by_origin": parity, "fallback_rows": fallback,
+           "duplicate_rows_dropped": dups}
     for scope, sub0 in (("with Walmart", ex), ("without Walmart", ex[~ex["wmt"]])):
         res[scope] = {}
         for nm, sub in (("recent", sub0[sub0.origin >= RECENT]), ("all", sub0), ("2025", sub0[sub0.origin < RECENT])):
