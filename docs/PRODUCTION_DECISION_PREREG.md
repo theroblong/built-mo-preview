@@ -89,6 +89,19 @@ rule above for all future decisions; it is written before any saved forecast has
 
 **Added 2026-10-13, before MO_146 results exist:** neural global models trained on all series at each forecast date (neuralforecast, 13-week horizon, 5 seeds averaged each): N-HiTS (`nhits5`), TCN (`tcn5`), TFT (`tft5`); their average (`neural_avg`); and a 50/50 blend of the fixed direct model and the neural average (`dir_neural`). Results are also reported without Walmart (description only; the rule itself is unchanged).
 
+## Amendment 2 (2026-10-14, Jason; written before MO_147 results exist)
+
+Added to the Amendment 1 rule, after MO_146 showed a pooled within-band score hiding losses in established bands
+(the young-item band's gain masked worse portfolio months for items with 13+ weeks of history):
+7. **No established band worse:** on the recent forecast dates, Y is not worse than X at portfolio x month within
+   each established history band (13-25, 26-51 and 52+ weeks), scored separately; a gain in the under-13-week band
+   cannot offset a loss in any of them.
+
+**Added 2026-10-14, before MO_147 results exist:** 50/50 blends of the fixed direct model (`direct_avg5`) with
+L4W velocity x stores (`dir_l4w`), with L12W (`dir_l12w`), and with last value carried forward for series under
+15 weeks of history only (`dir_flat15`); the neural-only blend (neural average only where a neural forecast exists,
+`dir_neural_only`); and `dir_neural` as written in MO_146.
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct

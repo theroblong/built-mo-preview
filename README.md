@@ -6,6 +6,206 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 243: Neural forecasting tested and not adopted (blend gain is generic averaging); switching rule tightened; launch-plan correction; trust document for Brian started; compute profiles (2026-10-13 to 10-14)
+
+**What each piece of work was (plain words):**
+- **MO_146, neural forecasting models tested against the production model:** three neural global models (N-HiTS, TCN and
+  TFT; one model per type learns from all series at once), 5 seeds each, scored on all 18 forecast dates on the corrected
+  benchmark, trained on the RunPod GPU. Arms: each neural model alone (nhits5, tcn5, tft5), the average of the three
+  (neural_avg), and a 50/50 blend of the 5-seed fixed direct model with that neural average (dir_neural). The reference
+  is the production candidate, the 5-seed direct model (direct_avg5). Series with fewer than 15 weeks of history are
+  scored with the harness's flat fallback (35,893 rows).
+- **MO_147 (planned, not run):** a laptop-only blend test that asks whether the MO_146 gain comes from "neural" or from
+  averaging in general. Candidates are named in `docs/PRODUCTION_DECISION_PREREG.md` Amendment 2 before any result.
+- **Brian's trust document (white paper), draft v0.1 started.**
+- **Compute:** corrected how GPU costs are stated, and wrote `docs/COMPUTE_JOB_PROFILE.md` (workload profiles).
+
+Code and data: MO_146 (commit 3dd13dc for the run that produced results; smoke 4d9ffd4; seasonal-mode fix bf969d6),
+dataset `mo146-v1` (bench panel plus `series_universe.parquet`, 1,948 series), jobs `jason-mo146-004`, `-005`, `-006`
+(RTX A4500; execution 1,728 / 1,706 / 1,715 s). Log `scripts/outputs/mo146_run.log`. Status: skeptic-reviewed
+(opus/high). No production forecast changed.
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Miss = average miss % (lower is better).
+Bias = forecast / actual (below 1.00 = too low). Recent = 6 overlapping origins, 2025-12 on (exploratory).
+
+### Finding
+
+**MO_146: neural models alone do not beat the production model, and the 50/50 blend's gain is generic averaging, not
+neural. We are not switching.** In plain words: averaging our main forecast with a second forecast cut the typical
+retailer-month miss by about 1 point (16.17 -> 15.18, recent). But averaging with the simple "recent weekly sales rate
+x current stores" rule does the same (15.23) at no GPU cost; the neural models alone were not better (recent account
+x month 17.91-18.85 vs 16.17); the blend was worse for the company-wide monthly total on established items and for
+Walmart; and it failed the holiday-quarter check. Skeptic verdict: **DOES NOT SURVIVE (as a neural win).**
+
+Predictions P1-P5 all HOLD (P1 neural_avg worse than direct_avg5 at recent am; P2 dir_neural within +/-1.0 of
+direct_avg5, held narrowly: -0.98, which is a tie inside single-seed noise of about +/-0.9; P3 neural biases 0.85-1.15;
+P4 N-HiTS no worse than TFT at recent am; P5 parity: direct_avg5 recent am reproduces 16.17).
+
+### Evidence
+
+**MO_146: recent origins (with Walmart): miss at item x week / account x month / portfolio x month, and bias**
+
+| arm | cw | am | pm | bias |
+|---|---|---|---|---|
+| direct_avg5 (production candidate) | 28.79 | 16.17 | 6.45 | 0.970 |
+| nhits5 | 30.22 | 18.82 | 11.68 | 0.995 |
+| tcn5 | 32.11 | 17.98 | 10.00 | 1.024 |
+| tft5 | 31.08 | 18.85 | 11.49 | 0.967 |
+| neural_avg | 29.99 | 17.91 | 10.40 | 0.995 |
+| dir_neural (50/50 direct + neural average) | 26.87 | 15.18 | 7.21 | 0.983 |
+
+| window / subset | direct_avg5 cw / am / pm | dir_neural cw / am / pm |
+|---|---|---|
+| all 18 dates | 34.15 / 20.85 / 9.17 | 31.40 / 19.19 / 9.52 |
+| 2025 dates | 38.40 / 24.51 / 11.29 | 35.00 / 22.32 / 11.32 |
+| recent, excluding Walmart | 28.65 / 16.00 / 6.43 | 26.43 / 14.30 / 4.71 |
+
+Per recent origin, dir_neural's account x month wins 5 of 6 with Walmart (portfolio-by-band change -0.19) and 6 of 6
+without (+0.22).
+
+**By history band, recent (weeks of history; account x month, then portfolio x month within band)**
+
+| band | am direct -> dir_neural | pm within band direct -> dir_neural |
+|---|---|---|
+| under 13 weeks | 45.7 -> 41.1 | 17.0 -> 9.7 |
+| 13-25 | 20.2 -> 20.8 | 9.9 -> 10.9 |
+| 26-51 | 14.1 -> 13.9 | 7.6 -> 8.8 |
+| 52+ | 14.3 -> 12.0 | 6.7 -> 7.8 |
+
+**Seasonal check (bias, direct vs dir_neural):** Jan-Mar 2025 0.681 vs 0.685; Jan-Mar 2026 0.983 vs 0.932; Oct-Dec 2025
+1.099 vs 1.118. Amendment 1 backtest part: dir_neural passes criteria 1, 2 and 3 and fails 4 (Oct-Dec 2025 only), so it
+is not a pass; the neural arms alone fail 1, 2 and 4.
+
+**Skeptic's own comparison blends (recent cw / am / pm):**
+
+| blend | cw | am | pm | note |
+|---|---|---|---|---|
+| dir_neural | 26.87 | 15.18 | 7.21 | pm-by-band 11.64, wins 5/6 |
+| direct + L4W (recent weekly rate x stores) | 26.96 | 15.23 | 7.04 | pm-by-band 11.37, wins 5/6 |
+| direct + L12W | - | 15.09 | - | |
+| direct + last value | - | 16.12 | - | on 2025 dates, am 21.73 beats dir_neural 22.32 |
+
+### Skeptic verdict
+
+**MO_146: DOES NOT SURVIVE (as a neural win).** Leakage OK; harness parity OK (direct reproduces 16.17).
+- (a) The account x month gain is generic blending: direct + L4W matches dir_neural (table above); direct + L12W and
+  direct + last value come close or beat it on some windows.
+- (b) The band-separated portfolio pass comes from the flat fallback in the under-13-week band (14,155 rows with no
+  neural forecast; pm 19.7 -> 14.4). A blend using neural only where it exists is +0.82 worse band-separated
+  (11.82 -> 12.64) and fails criterion 1.
+- (c) Portfolio x month is worse in every established band (table), established-only 6.32 -> 7.84, while account x
+  month improves (13.49 -> 12.62): it trades portfolio accuracy for account accuracy.
+- (d) The gain is concentrated: Sam's, Target and Kroger carry 72% of the account x month gain; Walmart is worse
+  (16.6 -> 17.6); the top 10 of 1,407 series carry 53% of the item x week gain; 2026-04 loses.
+- (e) P2 is a tie, not a clear pass.
+- (f) The seasonal criterion fails (Oct-Dec 2025 1.118 vs 1.099; a neural-only blend, 1.102, still fails).
+- Neural alone is about a tie with the flat fallback, consistent with SETTLED. This reopens the MO_125 condition
+  ("ship alone, not blended") and the MO_126 band-blend condition, which MO_147 tests.
+
+### Decisions (Jason, 2026-10-14)
+
+1. **MO_147, a pre-registered blend test on the laptop (no GPU), is next on the ML side, after Brian's trust document.**
+   Candidates: direct + L4W, direct + L12W, direct + flat for series under 15 weeks only, a neural-only blend, and
+   dir_neural as written.
+2. **Amendment 2 in `docs/PRODUCTION_DECISION_PREREG.md` (Jason-approved):** new switching criterion 7, "no established
+   band worse" (recent portfolio x month within each of the 13-25, 26-51 and 52+ bands). MO_147 candidates were named
+   before any result.
+3. **Both blends (neural and L4W) are saved forward as description only**, not as candidates for production.
+4. **Neural results are kept in case neural models improve.** A graph neural network and RNN time-series models (TFT
+   variants) are still planned.
+
+### Fixes made before any result
+
+- The harness seasonal mode must be set before the benchmark module is imported (found by the smoke test; fixed in
+  bf969d6; with smoke output only, direct_avg5 recent am reproduced 16.17).
+- The first full submission failed: `jason-mo146-001` exited 1 after about 73 s ("No windows available for training":
+  a batch of only very short series). `-002` and `-003` were cancelled by Claude after about 12.4 minutes each, since the
+  same code would hit the same random failure. Fix: series with under 15 weeks from first sale to the forecast date are
+  excluded from neural training (scored with the flat fallback; 2024-12: 577 -> 443 series, 2026-05: 1,669 -> 1,379),
+  and failed fits are logged and skipped. Predictions were unchanged. Resubmitted as `-004`, `-005`, `-006`.
+
+### RunPod cost (estimates from RunPod data, `compute_budget` per job)
+
+| item | estimate |
+|---|---|
+| MO_146 full jobs -004 / -005 / -006 | $0.284 / $0.281 / $0.282 = $0.85 |
+| failed and cancelled -001 / -002 / -003 | $0.009 / $0.125 / $0.124 = $0.26 |
+| smoke test | $0.004 |
+| MO_145 timing test | $0.008 |
+| neural work total | about $1.12 |
+
+Balance $64.15; October to date, actual $10.85 (serverless $9.79, storage $1.06). Earlier that day (2026-10-13) the
+balance was $65.39 and the October actual $9.60; per-test estimates then: setup/smoke/parity/concurrency $0.42, MO_133
+$1.40, MO_134 $0.64, MO_135 $0.22, MO_136 $2.20, MO_137 $1.05, MO_139 $0.97, MO_140 $1.76 (estimates total $8.65 vs
+endpoint actual $8.68).
+
+### Corrections
+
+- **Claude's "sizing individual launches would need BUILT launch plans with authorized store counts" was wrong.** The
+  settled-findings FACT section already said the door-count / planned-distribution ask is dead: BUILT ships to
+  warehouses and has no such data source, and the test that gave perfect authorization data (MO_95) moved accuracy by
+  only 0.6 points (pre-fix benchmark, provisional; README update 215). The open ask is Connor's launch list (item x
+  retailer x expected launch date). README update 242 and the MO_144 wording were reworded to match. Jason: the
+  re-check was wasted time ("You already knew the answer").
+- **Claude's earlier cost figures were retracted** (about $16 spent, $35.18 reserved, about $95 allowance left,
+  about $1.13 an hour, $30-70 planned). They were derived from reservations and timestamps. Rob's runpodagent update
+  (commit f6cb011): cost and spending questions are answered only from RunPod-provided data (`compute_budget`); a figure
+  computed from RunPod data (such as a balance difference) is labeled "Estimate"; otherwise say unknown and point to the
+  RunPod console Billing page. A later rule (12fc757): one `per_job` call, never one call per job. Claude had called
+  it once per job (21 permission prompts, which Jason rejected).
+
+### Trust document for Brian (started)
+
+- **Brian's request (via Rob), verbatim:** "As far as the white paper, I consider it a trust document.  The goal would
+  be for me to have this document at the ready to share how Aevah's MO works.   I would say topics like security,
+  topline architecture.  I would also add in how it is different than generative ai products and how it used machine
+  learning. It would be helpful to have sources of data too."
+- **Brian on nutrition, verbatim:** "We don't have Nutritional Values in an easy format. Better to use SPINS for this."
+  This closes the nutrition open item: use the SPINS nutrition fields, as MO_140 already did.
+- **Jason's choices:** audience is BUILT leadership and finance; generic technology names and machine-learning terms
+  (no vendor names); Aevah branding; plan approved ("Yes, start"): draft with Rob-to-confirm security facts, then
+  Word/PDF/HTML, then skeptic, then Jason review, then Rob security sign-off, then Brian.
+- **Drafts:** `docs/drafts/aevah_trust_document_DRAFT.md` (v0.1, unstyled content; Rob-to-confirm items marked) and
+  `docs/drafts/aevah_trust_document_rob_checklist.md` (17 facts for Rob: hosting, encryption, backups and retention, the
+  GPU-volume location, sign-in and SSO, access roles, Aevah staff access, production Mo Chat token and allowed
+  origins, the language-model provider and what data is sent, architecture flow, monitoring, certifications, and what
+  not to state).
+- **Waiting on:** Rob's Aevah design file (styling) and his security and architecture facts. Open question for Rob: BUILT's
+  panel is staged on a GPU-cloud volume in the EU during training.
+- **No accuracy figures** in the document until cleared against `docs/ACCURACY_CLAIMS_REGISTER.md` section 2. Not reused
+  from older docs: the retracted "~4.4% wMAPE", the ETS router (not in production), the other client's name, and
+  wiki/02's "6.1% wMAPE" (retracted).
+
+### Compute profiles
+
+`docs/COMPUTE_JOB_PROFILE.md` (committed and pushed 2026-10-13) profiles every training, testing and research workload,
+done and planned, so another agent can size other infrastructure: A direct-model backtest (MO_140 reference: 108 fits =
+2,808 model trainings, 13.4 fit-hours, RunPod estimate $1.0-2.2 per full test), B recursive/served model and forward
+saves, C statistical baselines, D Optuna (paused), E neural (now measured by MO_145/MO_146), F Druid batch SQL, G Mo Chat
+language-model inference, H descriptive analysis and documents. Key point: A-D and H are CPU workloads (the GPU idles
+on the worker); only E needs a GPU. Gaps listed: RAM per process, Optuna trial time, CPU-worker pricing.
+
+### Artifacts
+
+- `scripts/MO_146*.py` (neural backtest), forecasts from the GPU worker at
+  `/Users/jasonbrazeal/Documents/dev/aevah-jobs/mo146/aevah-results/jason-mo146-004` to `-006`, scored rows
+  `scripts/outputs/mo146_rows.parquet`, summary `outputs/mo146_neural.json`, log `scripts/outputs/mo146_run.log`
+- `docs/PRODUCTION_DECISION_PREREG.md` (Amendment 2), `docs/COMPUTE_JOB_PROFILE.md`
+- `docs/drafts/aevah_trust_document_DRAFT.md`, `docs/drafts/aevah_trust_document_rob_checklist.md`
+- Reopen if (neural): more history per series, outside inputs (exogenous), a graph neural network, or RNN/TFT variants
+  (still planned, per Jason).
+
+### Procedural lesson
+
+Before any data ask, "what it would take" statement or recommendation, search the settled-findings file (all sections,
+including FACT) and the README by topic words; the door-count ask was already closed, and re-checking cost time. A
+blend gain must be compared against a cheap blend with a simple rule before it is credited to the new model: the
+neural gain here was matched by averaging with the recent-rate rule. Cost statements come only from RunPod billing
+data (labeled Estimate when computed), with a single per-job call. Describe every MO number in plain words wherever it
+appears.
+
+---
+
 ## README update 242: Shipments forecast for the four data-dark retailers, Meijer singles analogs and add-on, new-item forecasting, neural timing test; stale-PDF bug fixed (2026-10-13)
 
 **What each piece of work was (plain words):**

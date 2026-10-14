@@ -492,6 +492,23 @@ MO_144b 6f900c9; MO_145 6ced2bd).
   -9.8% / 16% Target figures and "grocer 3.4" (included Meijer); MO_141's ALDI 40.4%; and a PDF export bug (stale
   Word documents reused) that left an early-draft main brief PDF in commit 2b5f40a, regenerated in c1e980d.
 
+### Added 2026-10-14 from MO_146 (neural forecasting models; README 243), PENDING review
+- **(a) MO_146 (PROVISIONAL): neural global models (N-HiTS, TCN, TFT; one network across all item x retailer
+  series; 5 seeds each; 18 forecast dates) do not beat the 5-seed fixed direct model, and their 50/50 blend with it
+  is not a neural win.** Recent account x month: direct_avg5 16.17; nhits5 18.82, tcn5 17.98, tft5 18.85,
+  neural_avg 17.91; dir_neural (0.5 direct + 0.5 neural average) 15.18 (5 of 6 dates), but 0.5 direct + 0.5 L4W
+  velocity x stores gives 15.23 (5 of 6) and 0.5 direct + 0.5 L12W 15.09: the gain is generic averaging. The
+  young-band portfolio gain comes from the last-value fallback used where no neural forecast existed (series under
+  15 weeks); a blend using neural only where it exists is +0.82 worse band-separated. dir_neural is worse at
+  portfolio x month in every established band (13-25 9.9 -> 10.9, 26-51 7.6 -> 8.8, 52+ 6.7 -> 7.8) and at Walmart
+  (16.6 -> 17.6), and fails the seasonal check (Oct-Dec 2025 bias 1.118 vs 1.099). Leakage and harness parity
+  checked (direct reproduces 16.17). P1-P5 hold as written (P2 as a tie). Code `scripts/MO_146_neural_backtest.py`
+  (4d9ffd4; fixes before results bf969d6, 3dd13dc); forecasts kept at dev/aevah-jobs/mo146/aevah-results/
+  jason-mo146-004..006; `outputs/mo146_neural.json`. *Skeptic: DOES NOT SURVIVE (as a neural win).* *Reopen if:*
+  more history per series, exogenous inputs (distribution, price, promotions) in the neural models, a graph
+  neural network or RNN/TFT variant, or MO_147 (pre-registered blends under Amendment 2) shows a neural blend
+  beating direct + L4W. Also reopens MO_125 ("ship alone, not blended") and MO_126's band-blend condition.
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.

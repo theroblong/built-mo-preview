@@ -1,0 +1,142 @@
+  base_s42: origins 18, fell back to flat 0
+  attr_s42: origins 18, fell back to flat 0
+  attr_s1: origins 18, fell back to flat 0
+  attr_s2: origins 18, fell back to flat 0
+  attr_s3: origins 18, fell back to flat 0
+  attr_s4: origins 18, fell back to flat 0
+  direct_fixed_s42: origins 18, fell back to flat 0
+  direct_fixed_s1: origins 18, fell back to flat 0
+  direct_fixed_s2: origins 18, fell back to flat 0
+  direct_fixed_s3: origins 18, fell back to flat 0
+  direct_fixed_s4: origins 18, fell back to flat 0
+
+PARITY base_s42 vs MO_133 direct_fixed_s42: max abs diff 0.000000
+
+=== WITH WALMART, RECENT origins, existing series: cw / am / pm | bias ===
+  flat            30.38  19.88  13.11   bias 1.013
+  conn_L4W        30.57  17.92  10.92   bias 1.020
+  direct_served   32.42  16.99   8.26   bias 0.936
+  direct_avg5     28.79  16.17   6.45   bias 0.970
+  attr_avg5       28.79  16.30   6.65   bias 0.975
+  BY HISTORY BAND, cell x week (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    650  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=  5,911  flat=87.7  conn_L4W=86.4  direct_served=87.2  direct_avg5=87.0  attr_avg5=87.4
+    <13 wks    n= 16,761  flat=57.9  conn_L4W=61.4  direct_served=61.7  direct_avg5=52.7  attr_avg5=52.0
+    13-25 wks  n= 14,288  flat=29.9  conn_L4W=30.1  direct_served=36.6  direct_avg5=29.2  attr_avg5=29.2
+    26-51 wks  n= 17,843  flat=22.7  conn_L4W=23.1  direct_served=22.6  direct_avg5=21.3  attr_avg5=21.5
+    52+ wks    n= 24,017  flat=19.7  conn_L4W=18.6  direct_served=20.8  direct_avg5=18.8  attr_avg5=18.9
+  BY HISTORY BAND, account x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    194  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=    393  flat=86.0  conn_L4W=84.2  direct_served=82.6  direct_avg5=82.7  attr_avg5=82.4
+    <13 wks    n=  1,153  flat=47.3  conn_L4W=50.5  direct_served=50.5  direct_avg5=45.7  attr_avg5=45.2
+    13-25 wks  n=  1,031  flat=25.0  conn_L4W=23.4  direct_served=23.3  direct_avg5=20.2  attr_avg5=19.8
+    26-51 wks  n=  1,291  flat=17.0  conn_L4W=17.4  direct_served=14.3  direct_avg5=14.1  attr_avg5=14.4
+    52+ wks    n=  1,282  flat=16.2  conn_L4W=15.9  direct_served=14.2  direct_avg5=14.3  attr_avg5=14.6
+  BY HISTORY BAND, portfolio x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=     17  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=     17  flat=81.2  conn_L4W=79.6  direct_served=79.2  direct_avg5=80.6  attr_avg5=80.4
+    <13 wks    n=     17  flat=21.9  conn_L4W=20.8  direct_served=22.5  direct_avg5=17.0  attr_avg5=16.2
+    13-25 wks  n=     17  flat=13.6  conn_L4W=12.4  direct_served=13.1  direct_avg5=9.9  attr_avg5=9.4
+    26-51 wks  n=     17  flat=12.5  conn_L4W=12.3  direct_served=6.8  direct_avg5=7.6  attr_avg5=8.1
+    52+ wks    n=     17  flat=13.5  conn_L4W=14.4  direct_served=6.9  direct_avg5=6.7  attr_avg5=7.3
+
+=== WITH WALMART, ALL origins, existing series: cw / am / pm | bias ===
+  flat            32.59  21.12  12.84   bias 0.977
+  conn_L4W        32.93  20.69  12.61   bias 0.995
+  direct_served   40.53  24.59  13.17   bias 0.905
+  direct_avg5     34.15  20.85   9.17   bias 0.969
+  attr_avg5       34.16  21.05   9.35   bias 0.974
+  BY HISTORY BAND, cell x week (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=  1,725  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n= 15,372  flat=88.9  conn_L4W=88.3  direct_served=89.9  direct_avg5=89.4  attr_avg5=89.5
+    <13 wks    n= 34,192  flat=50.6  conn_L4W=53.4  direct_served=58.7  direct_avg5=51.0  attr_avg5=50.8
+    13-25 wks  n= 29,538  flat=31.7  conn_L4W=31.8  direct_served=37.6  direct_avg5=31.1  attr_avg5=31.1
+    26-51 wks  n= 38,046  flat=25.9  conn_L4W=25.8  direct_served=29.7  direct_avg5=26.5  attr_avg5=26.7
+    52+ wks    n= 50,397  flat=25.8  conn_L4W=25.7  direct_served=36.7  direct_avg5=29.0  attr_avg5=28.9
+  BY HISTORY BAND, account x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    489  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=  1,130  flat=86.4  conn_L4W=85.4  direct_served=86.1  direct_avg5=85.5  attr_avg5=85.3
+    <13 wks    n=  2,864  flat=38.2  conn_L4W=41.3  direct_served=45.8  direct_avg5=39.0  attr_avg5=39.2
+    13-25 wks  n=  2,578  flat=26.9  conn_L4W=26.3  direct_served=27.2  direct_avg5=23.1  attr_avg5=23.0
+    26-51 wks  n=  2,983  flat=20.3  conn_L4W=20.3  direct_served=22.0  direct_avg5=19.6  attr_avg5=19.9
+    52+ wks    n=  2,893  flat=21.1  conn_L4W=21.3  direct_served=30.9  direct_avg5=23.8  attr_avg5=23.9
+  BY HISTORY BAND, portfolio x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=     52  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=     52  flat=78.7  conn_L4W=77.7  direct_served=82.9  direct_avg5=82.5  attr_avg5=82.3
+    <13 wks    n=     52  flat=17.6  conn_L4W=18.9  direct_served=28.8  direct_avg5=19.1  attr_avg5=18.2
+    13-25 wks  n=     52  flat=17.3  conn_L4W=17.6  direct_served=17.1  direct_avg5=14.0  attr_avg5=13.7
+    26-51 wks  n=     52  flat=13.8  conn_L4W=14.4  direct_served=12.6  direct_avg5=12.9  attr_avg5=13.2
+    52+ wks    n=     52  flat=15.8  conn_L4W=17.3  direct_served=22.1  direct_avg5=14.4  attr_avg5=14.6
+
+=== WITH WALMART, 2025 origins, existing series: cw / am / pm | bias ===
+  flat            34.34  22.09  12.63   bias 0.949
+  conn_L4W        34.80  22.86  13.93   bias 0.976
+  direct_served   46.97  30.54  17.01   bias 0.880
+  direct_avg5     38.40  24.51  11.29   bias 0.968
+  attr_avg5       38.42  24.77  11.46   bias 0.973
+  BY HISTORY BAND, cell x week (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=  1,075  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=  9,461  flat=90.3  conn_L4W=90.4  direct_served=93.0  direct_avg5=91.9  attr_avg5=91.9
+    <13 wks    n= 17,431  flat=45.2  conn_L4W=47.3  direct_served=56.4  direct_avg5=49.7  attr_avg5=49.9
+    13-25 wks  n= 15,250  flat=33.5  conn_L4W=33.5  direct_served=38.6  direct_avg5=33.0  attr_avg5=33.1
+    26-51 wks  n= 20,203  flat=29.7  conn_L4W=29.0  direct_served=38.2  direct_avg5=32.7  attr_avg5=33.0
+    52+ wks    n= 26,380  flat=29.6  conn_L4W=30.0  direct_served=46.3  direct_avg5=35.0  attr_avg5=34.9
+  BY HISTORY BAND, account x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    295  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=    737  flat=86.9  conn_L4W=86.9  direct_served=89.9  direct_avg5=88.6  attr_avg5=88.5
+    <13 wks    n=  1,711  flat=31.4  conn_L4W=34.5  direct_served=42.3  direct_avg5=34.0  attr_avg5=34.7
+    13-25 wks  n=  1,547  flat=28.9  conn_L4W=29.3  direct_served=31.3  direct_avg5=26.0  attr_avg5=26.2
+    26-51 wks  n=  1,692  flat=24.2  conn_L4W=23.6  direct_served=31.2  direct_avg5=26.2  attr_avg5=26.5
+    52+ wks    n=  1,611  flat=23.9  conn_L4W=24.5  direct_served=40.7  direct_avg5=29.4  attr_avg5=29.3
+  BY HISTORY BAND, portfolio x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=     35  flat=100.0  conn_L4W=100.0  direct_served=100.0  direct_avg5=100.0  attr_avg5=100.0
+    low-TDP    n=     35  flat=75.8  conn_L4W=75.6  direct_served=86.9  direct_avg5=84.7  attr_avg5=84.5
+    <13 wks    n=     35  flat=14.4  conn_L4W=17.4  direct_served=33.4  direct_avg5=20.7  attr_avg5=19.6
+    13-25 wks  n=     35  flat=21.3  conn_L4W=23.0  direct_served=21.3  direct_avg5=18.2  attr_avg5=18.2
+    26-51 wks  n=     35  flat=15.3  conn_L4W=17.0  direct_served=19.4  direct_avg5=19.2  attr_avg5=19.2
+    52+ wks    n=     35  flat=17.2  conn_L4W=19.0  direct_served=31.1  direct_avg5=19.0  attr_avg5=18.9
+
+=== WITHOUT WALMART, RECENT origins, existing series: cw / am / pm | bias ===
+  flat            29.29  17.74   8.91   bias 1.007
+  conn_L4W        29.11  15.88   6.68   bias 1.012
+  direct_served   32.57  18.38   9.49   bias 0.947
+  direct_avg5     28.65  16.00   6.43   bias 0.983
+  attr_avg5       28.75  16.23   6.87   bias 0.986
+
+=== WITHOUT WALMART, ALL origins, existing series: cw / am / pm | bias ===
+  flat            33.41  20.25  10.20   bias 0.968
+  conn_L4W        33.35  19.73   9.79   bias 0.986
+  direct_served   40.61  25.09  12.02   bias 0.930
+  direct_avg5     35.33  20.96   8.16   bias 0.980
+  attr_avg5       35.46  21.24   8.55   bias 0.985
+
+=== WITHOUT WALMART, 2025 origins, existing series: cw / am / pm | bias ===
+  flat            36.57  22.16  11.18   bias 0.939
+  conn_L4W        36.62  22.65  12.14   bias 0.967
+  direct_served   46.79  30.18  13.94   bias 0.917
+  direct_avg5     40.46  24.71   9.47   bias 0.978
+  attr_avg5       40.62  25.03   9.83   bias 0.984
+
+PER-ORIGIN account x month, recent origins (candidate - comparison; negative = better); exact sign test (the 6 dates overlap: p-values are optimistic)
+  [with Walmart]   attr_avg5 - direct_avg5   wins 2/6 (p=0.69)  pm-by-band +0.13  2025-12:-0.01 2026-01:-0.62 2026-02:+0.19 2026-03:+0.57 2026-04:+0.45 2026-05:+0.25
+  [with Walmart]   attr_avg5 - direct_served wins 4/6 (p=0.69)  pm-by-band -1.04  2025-12:+2.63 2026-01:+1.17 2026-02:-2.68 2026-03:-1.68 2026-04:-0.28 2026-05:-3.86
+  [with Walmart] direct_avg5 - direct_served wins 4/6 (p=0.69)  pm-by-band -1.18  2025-12:+2.65 2026-01:+1.79 2026-02:-2.87 2026-03:-2.25 2026-04:-0.73 2026-05:-4.11
+  [without Walmart]   attr_avg5 - direct_avg5   wins 1/6 (p=0.22)  pm-by-band +0.18  2025-12:+0.52 2026-01:-0.09 2026-02:+0.29 2026-03:+0.06 2026-04:+0.24 2026-05:+0.36
+  [without Walmart]   attr_avg5 - direct_served wins 4/6 (p=0.69)  pm-by-band -2.38  2025-12:+0.37 2026-01:+0.58 2026-02:-4.51 2026-03:-3.56 2026-04:-2.53 2026-05:-3.58
+  [without Walmart] direct_avg5 - direct_served wins 5/6 (p=0.22)  pm-by-band -2.56  2025-12:-0.15 2026-01:+0.66 2026-02:-4.80 2026-03:-3.62 2026-04:-2.76 2026-05:-3.94
+
+SEASONAL BIAS PER YEAR (all accounts)
+  Jan-Mar 2025  flat=0.655  conn_L4W=0.652  direct_served=0.585  direct_avg5=0.681  attr_avg5=0.684
+  Jan-Mar 2026  flat=0.882  conn_L4W=0.907  direct_served=0.998  direct_avg5=0.983  attr_avg5=0.991
+  Oct-Dec 2025  flat=1.092  conn_L4W=1.142  direct_served=1.062  direct_avg5=1.099  attr_avg5=1.106
+WALMART Oct-Dec 2025 bias: flat=1.224  conn_L4W=1.274  direct_served=1.131  direct_avg5=1.210  attr_avg5=1.221
+WALMART recent account x month: flat=25.72  conn_L4W=23.46  direct_served=13.19  direct_avg5=16.60  attr_avg5=16.47
+
+PREDICTIONS
+  P1 HOLDS  max abs diff 0.000000
+  P2 HOLDS  recent am attr_avg5 16.30 vs direct_avg5 16.17
+  P3 HOLDS  recent cw <13 band attr 52.03 vs direct 52.74
+  P4 HOLDS  2025 am attr 24.77 vs direct 24.51
+  P5 HOLDS  recent am without Walmart attr 16.23 vs direct 16.00
+
+wrote outputs/mo140_attributes.json and outputs/mo140_rows.parquet (175s)

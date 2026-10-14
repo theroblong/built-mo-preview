@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-10-12 (no candidate beat the 5-seed fixed direct model under Amendment 1 after five more tests; production unchanged; built_filtered_weekly MULO label fix prepared and backed up, to run with the next SPINS update; Rob's 7 Druid loads verified; forward test starts when SPINS reaches 2026-12-06)
+Last synced: 2026-10-14 (neural forecasting models tested (MO_146) and not adopted: the 50/50 blend's gain is generic averaging, matched by direct + L4W; Amendment 2 adds 'no established band worse' and names the MO_147 blend candidates; Brian's trust document (white paper) draft v0.1 started, waiting on Rob's security facts and design file; nutrition = use SPINS; Meijer brief v2 and singles add-on built; shipments, new-item and neural-timing tests written up in README 242-243; production unchanged)
 
 ## Repository
 
@@ -593,6 +593,59 @@ Naming rule: every MO number is described in plain words where it appears (Jason
 - Extend the forward-save script; save forecasts at the next cutoff; score forward weeks from 2026-12-06 under Amendment 1.
 - Item-attribute test (MO_140), then neural plan; no production switch until the rule says so.
 
+## Session 2026-10-13 to 2026-10-14 — Meijer brief v2 and singles add-on, shipments forecast, new-item forecasting, neural models tested (not adopted), trust document started
+
+Detailed results, evidence tables and skeptic verdicts: README 241-243; proposals in `docs/SETTLED_FINDINGS.md` (PROVISIONAL, pending review). Client-facing log: wiki/18 entry "Trust document, Meijer brief v2 and singles, shipments forecasts, new items, and a neural-model test (2026-10-13 to 2026-10-14)". Every MO number is described in plain words below.
+
+### Decisions made
+
+- Jason (10-13): Meijer brief v2 order per Brian ("Put B and C above C" = above A); "last 2 more recent items" = the 2 newest of the main 5 SKUs at Meijer vs the other 3; deliver Word (primary editable), PDF and HTML.
+- Jason (10-13): approved MO_141 (shipments forecast), MO_143 (singles analogs), MO_144 (new items), MO_145 (neural timing, bounds 5 min / $0.50) and the full neural test.
+- Jason (10-14): MO_147 (pre-registered blend test, laptop, no GPU) is next on the ML side AFTER Brian's trust document; candidates dir_l4w, dir_l12w, dir_flat15 (flat fallback for series under 15 weeks only), dir_neural_only, dir_neural. Amendment 2 to `docs/PRODUCTION_DECISION_PREREG.md`: criterion 7 "no established band worse" (recent portfolio x month within the 13-25, 26-51 and 52+ bands). Both blends (neural and L4W) saved forward as description only. Neural results kept in case neural models improve; graph neural network and RNN/TFT variants still planned.
+- Jason (10-14, trust document): audience = BUILT leadership/finance; generic technology names, no vendor names; Aevah branding; plan: draft with Rob-to-confirm facts, then Word/PDF/HTML, skeptic, Jason review, Rob security sign-off, then Brian. Wait for Rob's design file before styling.
+
+### Found (skeptic verdicts kept)
+
+- Neural global models (MO_146: N-HiTS, TCN, TFT, 5 seeds each, 18 forecast dates, RunPod GPU): recent account x month direct_avg5 16.17; neural alone 17.91-18.85 (worse); 50/50 blend dir_neural 15.18 (recent cw/am/pm 26.87/15.18/7.21 vs 28.79/16.17/6.45). Skeptic: DOES NOT SURVIVE (as a neural win): direct + L4W gives 15.23 (matches); the band-separated pass comes from the flat fallback in the under-13-week band (neural-only blend +0.82 worse); portfolio x month worse in every established band (13-25 9.9 -> 10.9, 26-51 7.6 -> 8.8, 52+ 6.7 -> 7.8); Walmart worse (16.6 -> 17.6); seasonal criterion fails (Oct-Dec 2025 1.118 vs 1.099); P2 a tie. No switch. Reopens the MO_125 "ship alone, not blended" and MO_126 band-blend conditions (tested by MO_147). Reopen neural if: more history, exogenous inputs, graph neural network, RNN/TFT variants. Kept: forecasts `/Users/jasonbrazeal/Documents/dev/aevah-jobs/mo146/aevah-results/jason-mo146-004..006`, rows `scripts/outputs/mo146_rows.parquet`, `outputs/mo146_neural.json`.
+- Fixes before any MO_146 result: seasonal mode must be set before the benchmark import (bf969d6); -001 failed ("No windows available for training"), -002/-003 cancelled; series under 15 weeks excluded from neural training (scored flat) and failed fits skipped (3dd13dc); rerun as -004/-005/-006.
+- RunPod (Estimates, one per_job call): MO_146 full jobs $0.85, failed/cancelled $0.26, smoke $0.004, MO_145 $0.008 = ~$1.12 neural; balance $64.15; October to date actual $10.85.
+- Shipments forecast for the four retailers with no store-level data (MO_141/141b, skeptic SURVIVES WITH CORRECTIONS): ALDI usable placeholder (avg6, ~15% 3-month-total miss); WinCo and H-E-B not plannable from shipments (use buyer plans and promo calendar); Trader Joe's June 2026 = one-time load-in (excluded).
+- Singles at Meijer (MO_143/143b, SURVIVES WITH CAVEATS; first C2 numbers overturned): Target singles took somewhat from 4-packs, size unpinnable (0 to just under half of singles bars), most additional; Walmart not measurable. Add-on built (`docs/briefs/meijer_v2/Meijer_Singles_Addendum_2026-10-13.*`), skeptic corrections applied; awaiting Jason's review before sharing; recommends a 13-week store test that needs Meijer store-level sales.
+- New-item forecasting (MO_144/144b, SURVIVES WITH CAVEATS): account-level arrival allowance improves portfolio x month (recent 10.12 -> 6.50; exploratory, not pre-registered) but account x month is a tie; sizing individual launches fails even with true timing (1.61x actual). Needs Connor's launch list, not a new data feed.
+- Meijer brief v2 (MO_142/142b SURVIVES WITH CAVEATS; MO_140 fixed product facts: no help, SURVIVES WITH CORRECTIONS): built from `scripts/MO_142_build_brief.py`.
+- Trust document: `docs/drafts/aevah_trust_document_DRAFT.md` (v0.1 unstyled) and `docs/drafts/aevah_trust_document_rob_checklist.md` (17 facts for Rob). Facts in code: fixed predefined endpoints, authenticated database, Mo Chat bearer token (bypassed in dev if unset), CORS localhost only in dev (production unconfirmed). Do NOT reuse the retracted "~4.4% wMAPE", the ETS router, the other client's name, or wiki/02's "6.1% wMAPE". No accuracy figures (register section 2).
+- Brian (via Rob, 10-14), verbatim: "As far as the white paper, I consider it a trust document.  The goal would be for me to have this document at the ready to share how Aevah's MO works.   I would say topics like security, topline architecture.  I would also add in how it is different than generative ai products and how it used machine learning. It would be helpful to have sources of data too." And: "We don't have Nutritional Values in an easy format. Better to use SPINS for this."
+- Compute: Rob's runpodagent rules (f6cb011, 12fc757): cost questions answered only from RunPod billing data (compute_budget), computed figures labeled Estimate, ONE per_job call. `docs/COMPUTE_JOB_PROFILE.md` (workload profiles A-H; only neural needs a GPU) committed and pushed 10-13.
+
+### Corrections (Claude's claims overturned)
+
+- "Sizing individual launches would need launch plans with authorized store counts" was wrong: the SETTLED FACT section already said the door-count / planned-distribution ask is dead (0.6pp ceiling, BUILT ships to warehouses; README 215). The open ask is Connor's launch list. Rule saved: topic-word search of SETTLED (all sections) + README before any data ask or recommendation.
+- Earlier cost figures (~$16 spent, $35.18 reserved, ~$95 left, ~$1.13/hr, $30-70 planned) retracted: derived from reservations and timestamps. Called compute_budget once per job (21 prompts) instead of one per_job call.
+- MO_143 first numbers (-9.8% for 4-packs, 16% of singles from 4-packs), "median grocer 3.4" (correct 3.3) and C's 169% as a verdict on launch plans: do not cite. MO_144 arm C failed from a construction flaw (pooling units per TDP across retailers of very different scale), fixed in C2.
+- Bug (Claude): Word PDF export reused an open temp document, so PDFs after the first export were stale (including the main brief PDF pushed in 2b5f40a); fixed in `to_pdf` and regenerated (c1e980d).
+
+### Artifacts created
+
+- Scripts/outputs: MO_140, MO_141/141b, MO_142/142b and `MO_142_build_brief.py`, MO_143/143b and `MO_143_build_addendum.py`, MO_144/144b, MO_145 (`dev/aevah-jobs/mo145`), MO_146 (`scripts/outputs/mo146_run.log`, `mo146_rows.parquet`, `outputs/mo146_neural.json`).
+- Docs: `docs/briefs/meijer_v2/` (brief v2 and singles add-on, .docx/.pdf/.html), `docs/drafts/aevah_trust_document_*`, `docs/COMPUTE_JOB_PROFILE.md`, `PRODUCTION_DECISION_PREREG.md` Amendment 2; README 241-243; wiki/18 entries for 10-13 to 10-14.
+
+### Open questions (raised by)
+
+- Rob: security and architecture facts for the trust document (17-item checklist), including whether BUILT's panel on a GPU-cloud volume in the EU is acceptable to state (Claude).
+- Rob: Aevah design file for styling (Jason).
+- Jason: review the singles add-on before it goes to Brian.
+- Meijer store-level sales for a singles test (Claude's add-on; via Brian).
+- Connor: launch list (item x retailer x expected date); also drives new-item sizing.
+- Buyer order plans / promotion calendar for WinCo and H-E-B.
+
+### Closed this session
+
+- Nutrition values: Brian says use SPINS (10-14). Neural timing/accuracy question: tested, not adopted.
+
+### Next
+
+- Brian's trust document first (wait for Rob's design file and facts; build Word/PDF/HTML; skeptic; Jason review; Rob sign-off), then MO_147 on the laptop, then save both blends forward as description only.
+
 ## Open Follow-Ups
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
@@ -705,3 +758,4 @@ Naming rule: every MO number is described in plain words where it appears (Jason
 - 2026-10-14 Jason decided (Brian's trust document / white paper): audience = BUILT leadership/finance; generic technology names + machine-learning terms (no vendor names); Aevah branding; plan approved ("Yes, start"): draft with Rob-to-confirm security facts -> build Word/PDF/HTML -> skeptic -> Jason review -> Rob security sign-off -> Brian. Scout findings: no prior capabilities PDF on disk; best source docs/aevah_platform_pipeline_and_llm_boundary.md; security facts largely undocumented (hosting, encryption, retention, RBAC/SSO status = plans); Mo Chat sends context to a commercial LLM provider (local option exists); training stages BUILT's panel on a GPU-cloud volume in the EU; no accuracy figure cleared for outside use.
 - 2026-10-14 Jason: Rob may provide an Aevah design .md file and some security, architecture and other notes for the trust document. Plan: wait for Rob's design file before styling/building; meanwhile write (1) a checklist of the facts Rob needs to confirm and (2) an unstyled content draft with Rob-to-confirm items marked. Facts found in code (customer-built-mo-api): the app reads data through fixed, predefined endpoints (no arbitrary queries from the browser); the database requires authenticated access; Mo Chat checks a client bearer token (bypassed in dev mode if unset); CORS origins list is localhost only (dev) -- production configuration unconfirmed. Do NOT reuse from docs/aevah_platform_pipeline_and_llm_boundary.md: '~4.4% wMAPE' (retracted), ETS router (not in production), Mt Olive / Oliver (other client); wiki/02 '6.1% wMAPE' (retracted).
 - 2026-10-14 Trust document interim work: docs/drafts/aevah_trust_document_rob_checklist.md (17 facts for Rob: hosting, encryption, backups/retention, EU GPU-volume question, sign-in/SSO, RBAC, Aevah staff access, production Mo Chat token + allowed origins, LLM provider/data sent/terms/local option, architecture flow, monitoring, certifications, what not to state) and docs/drafts/aevah_trust_document_DRAFT.md (v0.1 content, unstyled; sections: in brief, what Mo does, how it is built (5 layers), how it uses ML + how forecasts are tested (no accuracy numbers), how it differs from generative AI (table), data sources (table), security (in place today + Rob items), keeping numbers honest). Self-check removed overclaims ('dedicated' store, 'not silently overwritten', 'model not used unless it beats simple rules', nutrition/item info 'in use'). Mo Chat prompt verified: 'Never invent data', 'Do not guess or fabricate -- use a tool instead'.
+- 2026-10-14 docs/PRODUCTION_DECISION_PREREG.md Amendment 2 (Jason-approved rule): criterion 7 'no established band worse' (recent portfolio x month within each of 13-25, 26-51, 52+ bands); MO_147 candidates named before results (dir_l4w, dir_l12w, dir_flat15, dir_neural_only, dir_neural). Jason: save to project memory and wiki, post a README update, commit and push (incl. both repos).
