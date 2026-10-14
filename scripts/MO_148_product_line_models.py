@@ -86,7 +86,13 @@ def v_line(tr, feats, cut):
         sub = tr[tr["source_brand"].astype(str).isin(brands)]
         if len(sub):
             print(f"      line {name}: {sub[M.GROUP_COLS].drop_duplicates().shape[0]} series", flush=True)
-            parts.append(P.run_direct(sub, feats, cut, refit=True, calendar=True))
+            try:
+                parts.append(P.run_direct(sub, feats, cut, refit=True, calendar=True))
+            except ValueError as e:                  # no horizon had enough rows (fit_direct: <500 train / <50 val)
+                if "No objects to concatenate" not in str(e):
+                    raise
+                print(f"      line {name}: too little history at this date; no forecast "
+                      f"(scoring fills these series with the same-seed production model)", flush=True)
     return pd.concat(parts, ignore_index=True)
 
 
