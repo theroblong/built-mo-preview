@@ -509,6 +509,71 @@ MO_144b 6f900c9; MO_145 6ced2bd).
   neural network or RNN/TFT variant, or MO_147 (pre-registered blends under Amendment 2) shows a neural blend
   beating direct + L4W. Also reopens MO_125 ("ship alone, not blended") and MO_126's band-blend condition.
 
+### Added 2026-10-14 from MO_147 / MO_148 / MO_150 / MO_151 (README 244), PENDING review
+Each proposal carries the skeptic (opus/high) verdict line. Miss = average miss % (lower is better); levels: item x
+week (cw), account x month (am), portfolio x month (pm); recent = 6 overlapping origins, 2025-12 on (exploratory).
+Predictions were committed before each run (MO_147 02e9585, originally d701799; MO_148/149 731b278, originally
+06abc56; MO_150 d3cbf91, originally acd5fc7). MO_149 (recent sales rate x stores as a model input) is NOT scored yet and has
+no entry here.
+- **(a) MO_147 (PROVISIONAL): 50/50 blends of the 5-seed fixed direct model (direct_avg5) with simpler methods do not
+  pass the switching rules (Amendment 1 + Amendment 2 criterion 7); they trade portfolio x month accuracy in established
+  bands for account x month accuracy.** Recent cw / am / pm (bias): direct_avg5 28.79 / 16.17 / 6.45 (0.970); dir_l4w
+  (recent 4-week sales rate x stores) 26.96 / 15.23 / 7.04 (0.995); dir_l12w 27.64 / 15.09 / 6.46 (1.004); dir_flat15 (flat
+  fallback for series under 15 weeks only) 28.32 / 15.77 / 7.21 (0.995); dir_neural_only 27.01 / 15.47 / 7.11 (0.963);
+  dir_neural 26.87 / 15.18 / 7.21 (0.983; reproduces MO_146). Criterion 7 (portfolio x month within band, recent, change vs
+  direct): dir_l4w +1.71 (26-51) / +1.64 (52+); dir_l12w +2.26 / +1.62; dir_neural_only +0.63 (13-25) / +1.24 / +1.09;
+  dir_neural +0.95 / +1.24 / +1.09; dir_flat15 passes 7 but fails consistency (4 of 6) and holiday bias. Oct-Dec 2025
+  bias: direct 1.099; l4w 1.121; l12w 1.159; flat15 1.116; neural_only 1.102; neural 1.118. Losses broad: dropping any
+  one date or retailer leaves the 26-51 band worse (l4w at least +0.92); ex-Walmart l4w 26-51 +2.16, 52+ +1.35. L4W and
+  L12W carry no seasonal adjustment. Predictions P1, P2, P3, P5 HOLD; P4 FAILS (l12w +0.06). Disclosure: MO_146's skeptic
+  had already seen some headline numbers for l4w, l12w and flat blend; predictions were placed on unseen items only.
+  `outputs/mo147_blends.json`, `scripts/outputs/mo147_run.log`. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* forward
+  dates (dir_l4w, dir_neural and dir_flat15 forward-saved at the next registration, description only) show at least 5 of 6
+  wins and Oct-Dec 2026 bias no worse than direct's. Do not pre-register a blend tuned to flip one date. MO_126's band-blend
+  reopen condition is technically met but those arms fail other criteria, so MO_126 is unchanged.
+- **(b) MO_148 (PROVISIONAL): separate models for each product line (line_avg5) and a no-BAR model for PUFF + SOUR PUFF
+  (nobar_avg5) are worse than the pooled direct_avg5 at recent dates; BAR history helps PUFF.** Recent cw / am / pm
+  (bias): direct_avg5 28.79 / 16.17 / 6.45 (0.970); line_avg5 29.43 / 17.04 / 6.80 (0.971); nobar_avg5 29.26 / 17.03 / 6.85
+  (0.981). 2025 cw / am / pm: direct 38.40 / 24.51 / 11.29; line 38.34 / 24.84 / 11.60; nobar 38.31 / 24.71 / 11.25. On
+  rows the line models actually forecast, am 16.25 vs 15.29; ex-Walmart 17.65 vs 16.00. Per-origin am wins: line 2 of 6,
+  nobar 2 of 6 (ex-Walmart 0 and 1 of 6). Loss is in core PUFF (cw 26.97 -> 27.68 line, 27.81 nobar), spread across Sam's,
+  Target, Publix, Albertsons and Wegmans; Walmart is the only offset; the 52+ band is worse at am on 5 of 6 recent origins.
+  Both fail criteria 1, 2, 4 and 7. Predictions P1 and P5 HOLD; P2 FAILS (+0.88); P3 FAILS (PUFF cw +0.84 worse); P4
+  UNTESTABLE (SOUR PUFF is always the pooled-model fill-in at recent dates). Not caused by the fill-in, the duplicate-series
+  rule or brand-transition series. Caveats: the BAR by-line cell is 0.09% of volume; the first-row line label is wrong for 190
+  series (use the current label); nobar's SOUR PUFF gain is post hoc, Walmart-only, winter-only and reverses from 2026-03.
+  `outputs/mo148_product_lines.json`, `scripts/outputs/mo148_score.log`; jobs `jason-mo148-001..007`; scoring 21307cd.
+  *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* not stated by the skeptic. **This REVERSES the
+  MO_121 bullet** in "Method rules" / "Current forecasting position" (marked there).
+- **(c) MO_150 (PROVISIONAL): an average-uplift layer helps TOTAL units only at company x month; the promotion calendar
+  adds no reliable gain.** Recent cw / am / pm (bias), total units: base_only 35.70 / 25.42 / 20.54 (0.795); avg_uplift
+  38.74 / 23.89 / 11.12 (0.951); calendar_lift 37.02 / 23.31 / 10.84 (0.919). Within every history band at account x month
+  avg_uplift is worse than base_only (+1.2 under 13 weeks, +1.3 13-25, +4.9 26-51, +0.4 52+) and it is worse at item x week.
+  The calendar's gain is Target-driven (dropping Target halves it, -2.70 -> -1.30), beats avg_uplift on 5 of 6 recent origins
+  but 6 of 12 in 2025, and a median uplift without the calendar (23.21 am) beats it. Alignment: SPINS uplift higher in-window for
+  57.6% of 250 promotions (P1, needed 60%, FAILS; post hoc 66.4% excluding "before" weeks that are themselves promotion
+  weeks). P2 HOLDS; P3 FAILS (1.53 not 3 at am; pm 20.5 -> 11.1); P4 FAILS (bias 0.919). Look-ahead: the calendar is the
+  2026-09-30 snapshot, so the backtest is an upper bound; Walmart (24% of recent units) has no promotions in the calendar; 363 of
+  1,648 series are covered (39% of recent total units). Recommendation: base x (1 + the item's median 26-week uplift), accuracy
+  quoted at company x month only; calendar for what-if only; total-unit am (23-24) is much worse than base-unit am (16.2). Add
+  any figure to `docs/ACCURACY_CLAIMS_REGISTER.md` section 2 before client use. `outputs/mo150_promo_layer.json`,
+  `scripts/outputs/mo150_run.log`. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* not stated by the skeptic (the look-ahead
+  snapshot and the Walmart/Kroger mapping gaps are the known limits).
+- **(d) MO_151 (PROVISIONAL, descriptive): which inputs drive the served v11d model, by current product line.** Mean
+  absolute TreeSHAP (log scale, per series, unweighted), median models at 1, 4 and 13 weeks, anchor 2026-09-06; series BAR 46,
+  PUFF 1,282, SOUR PUFF 276 (lapsed excluded). Recent sales level and trend: h1 85-87%, h4 71-75%, h13 44-53%. At h13:
+  promotion history (promo_lift_n_events) 14-19%, retailer 10-11%, product 6-11%. The product-line label itself: 0.15-0.6% at
+  h1, 0.4-1.6% at h4, 1.9-2.0% (PUFF, SOUR PUFF) and 7.8% (BAR) at h13, where it lowers every BAR series about 23% (signed mean
+  -0.256 log) and raises PUFF and SOUR PUFF about 6%. promo_lift_n_events is an item-tenure proxy (Spearman 0.75-0.80 with weeks
+  of history) and LOOK-AHEAD in the served model (MO_25:992-1018 computes it over each series' full history; the backtest
+  rebuilds it per cutoff at MO_80:507); it pushes forecasts down on average. Volume-weighted reliance on recent sales is higher
+  (PUFF roll4 + lag1 77 -> 88% at h1, 43 -> 56% at h13). Similar profiles do not prove the lines follow the same rules; MO_148 is
+  the accuracy evidence for pooling. `outputs/mo151_inputs_by_line.json`. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* the
+  served model is retrained with per-cutoff inputs.
+- **Production caveat (open, not a finding):** the served v11d model was trained with look-ahead promotion, donor and
+  competitor-gap inputs (README ~1983-1985); the backtest rebuilds them per cutoff, so backtest scores do not describe the served
+  model exactly. Any retrain for the December forecast must compute them per cutoff.
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.
@@ -561,6 +626,8 @@ MO_144b 6f900c9; MO_145 6ced2bd).
   (README.md:290).
 - **Exclude BAR from training:** −1.34pp, all 7 quarters. Exclusion is preferred over
   per-brand models (−1.14pp). Pooled; levels not stated (README.md:328).
+  **REVERSED by MO_148 (README 244)** on the corrected harness: BAR history helps PUFF; excluding BAR is ~0 on 2025
+  origins and harmful on recent (+0.86 account x month). Original text above kept for the record; do not cite it.
 - **Seasonal multiplier: anchor mode is best** under the corrected harness (40.08 vs
   41.25 shipped). Chain: README 219 claim → 220 "catastrophic" → 222 parity fix
   re-reversed it.

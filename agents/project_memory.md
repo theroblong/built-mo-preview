@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-10-14 (neural forecasting models tested (MO_146) and not adopted: the 50/50 blend's gain is generic averaging, matched by direct + L4W; Amendment 2 adds 'no established band worse' and names the MO_147 blend candidates; Brian's trust document (white paper) draft v0.1 started, waiting on Rob's security facts and design file; nutrition = use SPINS; Meijer brief v2 and singles add-on built; shipments, new-item and neural-timing tests written up in README 242-243; production unchanged)
+Last synced: 2026-10-14 (blends with simpler forecasts tested (MO_147), no switch; per-product-line models worse than one pooled model, reversing the old exclude-BAR finding (MO_148); promotion-uplift layer helps only company-wide monthly totals (MO_150); served-model input breakdown by line (MO_151); production caveat: served v11d trained with look-ahead promotion/donor/competitor-gap inputs; trust document v0.3 (veracity-first) pushed for Rob; credential in committed ingest files to be rotated by Rob; MO_149 scoring pending; production unchanged)
 
 ## Repository
 
@@ -646,6 +646,68 @@ Detailed results, evidence tables and skeptic verdicts: README 241-243; proposal
 
 - Brian's trust document first (wait for Rob's design file and facts; build Word/PDF/HTML; skeptic; Jason review; Rob sign-off), then MO_147 on the laptop, then save both blends forward as description only.
 
+## Session 2026-10-14 (later) — blends tested (no switch), product-line models worse than pooled, promotion-uplift layer, served-model input breakdown, trust document v0.2-v0.3
+
+Detailed results, evidence tables and skeptic verdicts: README 244; proposals in `docs/SETTLED_FINDINGS.md` section "Added 2026-10-14 from MO_147 / MO_148 / MO_150 / MO_151" (PROVISIONAL, pending review); MO_121 bullet marked REVERSED. Client-facing log: wiki/18 entry "Trust document v0.2–v0.3, product-line and promotion forecast tests (2026-10-14)". Every MO number is described in plain words below.
+
+### Decisions made
+
+- Jason: run MO_147 (blends of the 5-seed production candidate with simpler methods; laptop). Amendment 2, criterion 7: no established history band worse at portfolio x month.
+- Jason: steps 1-3 = MO_148 product-line models, MO_149 L4W velocity x stores as a model input, MO_150 planned-promotion uplift layer; then a no-rock-unturned review before Optuna. GNN/GAT (feasible in plain PyTorch) and RNN/TFT after delivery; neural results logged and kept. Context: forecast must be presented before Dec 6.
+- Jason: approved the MO_148 rerun job and the MO_148/149 bounds (5,400 s, $1.75 cap per job).
+- Rob's trust-document checklist answers: lead with accuracy of outputs; security is one sentence; all other security topics left out; no certifications; nothing unbuilt; architecture corrected (no public economic data, no "scheduled" refresh).
+- Jason on the trust document: Rob's corrected architecture; Circana "loaded into the data store"; Azure sentence = "Mo runs on BUILT's own Azure subscription"; drop "secure"; naming SPINS/Circana/NetSuite OK; no contact line; internal follow-ups stay out; the 4.4% (quoted to BUILT 10-09) is removed, not explained (accuracy register location 15 closed); REFRAME around veracity ("how we trace back an answer to original sources and methods of calculation"); v0.3: eyebrow removed, Aevah platform diagram added (captioned conceptual), "price sensitivity" renamed "price elasticity" (one of Mo's three analytics; use it in all client material).
+- Pushes approved: a1d7965 (v0.2), 2f2443e, 223f909, 7166fb3 (and 754507e, 7537ce0).
+
+### Found (skeptic verdicts kept; numbers in README 244)
+
+- MO_147 (blends): no blend passes; they trade established-band portfolio x month accuracy for account x month accuracy. Production unchanged. dir_flat15 is the near-miss. SURVIVES WITH CAVEATS.
+- MO_150 (promotion-uplift layer on total units): helps only at company x month (recent 20.5 -> 11.1), worse at retailer x month and item x week; the calendar adds no reliable gain (Target-driven; snapshot look-ahead upper bound). Use base x (1 + the item's median 26-week uplift), quoted at company x month only; calendar for what-if only. SURVIVES WITH CAVEATS.
+- MO_148 (product-line models): per-line and no-BAR models are worse than direct_avg5 at recent dates (am 17.0 vs 16.2; on rows they forecast 16.3 vs 15.3); loss in core PUFF, Walmart the only offset; BAR history helps PUFF, REVERSING MO_121; P4 untestable. SURVIVES WITH CAVEATS.
+- MO_151 (what drives the served v11d model by line): recent sales dominate; at 13 weeks promotion history, retailer and product matter more; the product-line label lowers BAR about 23% at 13 weeks; the promo-count input is an item-tenure proxy and look-ahead in the served model. SURVIVES WITH CAVEATS. Rob's question that prompted it (verbatim): "I wonder how it is weighing those forecasts internally."
+- Trust document v0.2 and v0.3 skeptic-reviewed (SURVIVES WITH EDITS, all applied). The FP&A brief's "complete data lineage" claim is overstated (`docs/mo_fpa_team_brief_pdf_collateral.html:757`).
+- Brian (via Rob, verbatim): "As far as the white paper, I consider it a trust document.  The goal would be for me to have this document at the ready to share how Aevah's MO works.   I would say topics like security, topline architecture.  I would also add in how it is different than generative ai products and how it used machine learning. It would be helpful to have sources of data too." Brian on nutrition: "We don't have Nutritional Values in an easy format. Better to use SPINS for this."
+
+### PRODUCTION CAVEAT (open): look-ahead inputs in the served v11d model
+
+The served v11d model was trained with look-ahead promotion, donor and competitor-gap inputs (promotion statistics computed over each series' full history in MO_25 lines 992-1018; README ~1983-1985). The honest backtest rebuilds them per cutoff (MO_80:507), so backtest scores do not describe the served model exactly. Any retrain for the delivered (December) forecast must compute them per cutoff.
+
+### Other bugs / findings
+
+- The Mo API (`retailer.py`) computes an UNSTORED ETS trend forecast on view open when no stored forecast exists, with 500 unseeded simulations (range can change between loads). `feedback_no_ets_in_production` covers the MO_27 pipeline only; ETS is live server code in the API.
+- SECURITY (urgent, internal): an object-store access key and secret are in plain text in committed ingest spec files in the built-mo-preview repo. Values must not be reproduced anywhere. Rob to rotate, then remove.
+- MO_148 first wave (`jason-mo148-001..003`) failed at the three most recent origins (a line with too few rows at every horizon); fixed by skipping a line with no fittable horizon (the pre-registered fill-in applies); rerun as -004..-007. Scoring bug (duplicate base_s42 columns; 380 duplicate series-dates for items whose line label changed) fixed before any result (21307cd).
+- Main-weekly-table issue (from the v0.3 review, fix deferred to the next delivery): stale rows 2025-10-05..2026-04-12 and double-counted MULO 2025-08-17..2026-04-12.
+
+### Trust-document state
+
+- v0.3 (veracity-first; 6 pages) pushed for Rob's review (2f2443e, 223f909, 7166fb3). Files: `docs/briefs/trust_document_v0.2/` and `v0.3/`, `docs/drafts/aevah_trust_document_DRAFT.md`, `docs/drafts/assets/aevah_data_to_decisions.png`, `docs/drafts/aevah_trust_document_rob_checklist.md`, builder `scripts/build_trust_document.py`, brand kit `docs/aevah_brand/brand/`.
+- Remaining before Brian: Jason's review and Rob's sign-off. Do not claim a routine permanent forecast archive (one research registration), versioned results (tables are replaced on refresh), or repeatable model runs across machines. Per-number click-to-source is designed, not built.
+
+### Artifacts created
+
+- Scripts MO_147 to MO_151; `outputs/mo147_blends.json`, `outputs/mo148_product_lines.json`, `outputs/mo150_promo_layer.json` (the first and third to be committed), `outputs/mo151_inputs_by_line.json`; logs `scripts/outputs/mo147_run.log`, `mo148_score.log`, `mo150_run.log`; `docs/PRODUCTION_DECISION_PREREG.md` Amendment 2 plus candidates; `docs/ACCURACY_CLAIMS_REGISTER.md`; RunPod jobs `jason-mo148-001..007`, `jason-mo149-001..003`.
+
+### Open questions / items (raised by)
+
+- Rob: rotate and remove the key; confirm whether the Mo API ETS fallback is deployed and seed it.
+- MO_149 (L4W/L12W velocity x stores as inputs): jobs -002/-003 still running, then scoring and skeptic (no result yet).
+- Fix the FP&A brief lineage claim.
+- Retrain with per-cutoff inputs for the December forecast.
+- Mo API redeploy later.
+- Internal security follow-ups (no app sign-in, chat token bypass, no tested backups, BUILT data copies outside its subscription): stay out of the document.
+- Forward-save dir_l4w, dir_neural and dir_flat15 at the next registration (description only).
+- Optuna after the no-rock-unturned review.
+- Items from the previous session section (singles add-on review, Meijer store-level sales, Connor's launch list, WinCo/H-E-B buyer plans) are unchanged.
+
+### Closed this session
+
+- Nutrition values (Brian: use SPINS). Trust-document checklist answered by Rob. Design file/brand kit received. Accuracy register location 15 (4.4%): removed. MO_147 blend test run (no switch). Open item "Aevah design file" and "17-item checklist" answered.
+
+### Next
+
+- MO_149 scoring and skeptic; no-rock-unturned review; Optuna; retrain with per-cutoff inputs for the December forecast; GNN/RNN/TFT after delivery.
+
 ## Open Follow-Ups
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
@@ -802,3 +864,7 @@ Detailed results, evidence tables and skeptic verdicts: README 241-243; proposal
 - 2026-10-14 Jason told Rob the production model (BAR, PUFF, SOUR PUFF pooled) outperforms individual product-line models (MO_148, preliminary; skeptic pending). Rob: "I wonder how it is weighing those forecasts internally".
 - 2026-10-14 Skeptic (opus/high) on MO_148: SURVIVES WITH CAVEATS. Negative holds: line_avg5 and nobar_avg5 both worse than direct_avg5 on recent origins (am 17.0 vs 16.2; on rows the line models actually forecast 16.25 vs 15.29; without Walmart 17.65 vs 16.00); 2025 within +/-0.35. Not caused by fallback (fallback = SOUR PUFF rows, tie), duplicate rule (keep=first: identical), or brand-transition series (250 rows, ~even). Loss is in core PUFF series (cw 26.97 -> 27.68 line / 27.81 nobar), spread across Sam's, Target, Publix, Albertsons, Wegmans; Walmart the only offset (so '2/6 wins' is Walmart-propped; 0/6 and 1/6 without). 52+ band am worse on 5/6 recent origins. Caveats: P4 UNTESTABLE (not FAILS); BAR by-line row = one cell, 0.09% of volume, noise; series_lines first-row label wrong for 190 series (6 in recent scored rows) -> use current label; nobar SOUR PUFF gain is post hoc, Walmart-only, winter-only, reverses from 2026-03. REVERSES SETTLED MO_121 (PROVISIONAL, old bench: 'exclude BAR -1.34pp; preferred over per-brand') -> mark REVERSED: on the corrected harness BAR history helps PUFF. Production unchanged. Write-up (README + SETTLED incl. MO_121 reversal) to be combined with MO_149 when its scoring is done.
 - 2026-10-14 Jason: give Rob a breakdown by product line of which inputs drive each line's forecasts. MO_151 (descriptive, not a forecast arm): served v11d q50 models at h1/h4/h13, inputs built as MO_27D, lapsed series excluded, mean |TreeSHAP| (log scale) by current line label; anchor 2026-09-06; modeled series BAR 46, PUFF 1,282, SOUR PUFF 276. Recent sales level/trend dominates every line (h1 85-87%, h4 71-75%, h13 44-53%); at h13 promotion history 14-19% (promo_lift_n_events = number of past promotion events, top non-sales input), retailer 10-11%, product 6-11%; the product-line input (source_brand) itself is 0.15-0.6% at h1, 0.4-1.6% at h4, 1.9-2.0% PUFF/SOUR PUFF and 7.8% BAR at h13. Profiles are nearly identical across lines. Output outputs/mo151_inputs_by_line.json. Skeptic check of the interpretation running before the message to Rob.
+- 2026-10-14 Skeptic (opus/high) on MO_151: SURVIVES WITH CAVEATS. Code OK (bias column, categoricals, lapse rule, labels). Corrections: (1) at h13 the product-line input applies a SYSTEMATIC line adjustment: every BAR series pushed down ~23% (signed mean -0.256 log = abs mean), PUFF/SOUR PUFF ~+6% -> not noise, and similar SHAP profiles do not prove 'same rules'; MO_148 (accuracy) is the evidence pooling helps, not MO_151. (2) promo_lift_n_events ~ item-tenure proxy (Spearman 0.75-0.80 with weeks of history) AND look-ahead in the SERVED model: MO_25:992-1018 computes it over each series' full history and copies it to every week, so v11d trained on future promotion counts (README:1983-1985 lists the 5 promo stats + donor_count, top_donor_tdp_sum, competitor_price_gap as look-ahead; backtest rebuilds them per cutoff at MO_80:507, the served model was not). Its 12-16.5% h13 weight may partly reflect that. (3) shares = per-series, unweighted, log scale; volume-weighted reliance on recent sales higher (PUFF roll4+lag1: 77->88% h1, 43->56% h13). (4) promo count pushes forecasts DOWN on average. Scope: one snapshot (2026-09-06), median model, h1/h4/h13.
+- 2026-10-14 OPEN (production): the served v11d model was trained with look-ahead promotion/donor/competitor-gap inputs (known since README ~1983); the honest backtest rebuilds them per cutoff, so backtest scores do not describe the served model exactly. Any retrain for the delivered forecast should compute these per cutoff.
+- 2026-10-14 Jason confirmed the end-session summary ('looks fine, do it'); scribe writing wiki/18, project memory, README update 244 and SETTLED entries (MO_147, MO_148, MO_150, MO_151; MO_121 marked REVERSED).
+- 2026-10-14 Jason (wiki/18 disclosure): remove the access-key item from wiki/18 (internal only: README + memory); keep the served-model look-ahead caveat in wiki/18.
