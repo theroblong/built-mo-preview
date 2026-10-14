@@ -69,6 +69,9 @@ def parse(md: str) -> list[tuple]:
             B.append(("h3", first[4:].strip()))
         elif first.startswith("## "):
             B.append(("h2", first[3:].strip()))
+        elif first.startswith("!["):
+            m = re.match(r"!\[(.*)\]\((.+)\)", " ".join(ln.strip() for ln in lines))
+            B.append(("img", SRC.parent / m.group(2), m.group(1)))
         elif first.startswith("|"):
             rows = [[c.strip() for c in ln.strip().strip("|").split("|")] for ln in lines]
             B.append(("table", rows[0], [r for r in rows[2:]]))
@@ -218,10 +221,7 @@ def render_docx(B: list[tuple], diagram: Path, path: Path) -> None:
         if k == "title":
             doc.add_picture(str(BRAND / "logo-lockup-light-transparent.png"), width=Inches(1.55))
             p = doc.add_paragraph()
-            p.paragraph_format.space_before, p.paragraph_format.space_after = Pt(18), Pt(2)
-            r = p.add_run("TRUST DOCUMENT  ·  FOR BUILT")
-            r.bold, r.font.size, r.font.color.rgb = True, Pt(8.5), rgb(VIOLET)
-            p = doc.add_paragraph()
+            p.paragraph_format.space_before = Pt(18)
             r = p.add_run(b[1])
             r.font.name, r.font.size, r.font.color.rgb = SANS_DOCX, Pt(32), rgb(PLUM_DEEP)
             p.paragraph_format.space_after = Pt(4)
@@ -257,6 +257,13 @@ def render_docx(B: list[tuple], diagram: Path, path: Path) -> None:
                 r.font.highlight_color = 7  # yellow: placeholder to fill before sharing
                 continue
             add_runs(p, b[1])
+        elif k == "img":
+            doc.add_picture(str(b[1]), width=width)
+            doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            doc.paragraphs[-1].paragraph_format.keep_with_next = True
+            p = doc.add_paragraph()
+            r = p.add_run(b[2])
+            r.italic, r.font.size, r.font.color.rgb = True, Pt(8.5), rgb(MUTED)
         elif k == "bullets" and section == "In brief":  # three cards
             t = doc.add_table(rows=1, cols=len(b[1]))
             t.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -378,6 +385,8 @@ h3.sub {{ font-family:Newsreader, Baskerville, Georgia, serif; font-weight:470; 
 .card p {{ margin:0; font-size:15px; color:var(--ink-soft); }}
 figure {{ margin:18px 0 10px; }}
 figure img {{ width:100%; height:auto; display:block; }}
+figure.wide img {{ border:1px solid var(--rule); border-radius:12px; }}
+figcaption {{ color:var(--muted); font-size:14px; font-style:italic; margin-top:6px; }}
 ol.steps {{ list-style:none; padding:0; margin:8px 0 0; counter-reset:s; }}
 ol.steps li {{ counter-increment:s; display:grid; grid-template-columns:34px 1fr; gap:6px; padding:10px 0;
   border-bottom:1px solid var(--rule); margin:0; max-width:none; }}
@@ -435,7 +444,7 @@ def render_html(B: list[tuple], diagram: Path, path: Path) -> None:
         k = b[0]
         if k == "title":
             out.append(f'<img class="logo" alt="Aevah" src="data:image/png;base64,{b64(BRAND / "logo-lockup-on-paper.png")}">'
-                       f'<p class="eyebrow">TRUST DOCUMENT · FOR BUILT</p><h1>{html.escape(b[1])}</h1>')
+                       f'<h1>{html.escape(b[1])}</h1>')
         elif k == "subtitle":
             out.append(f'<p class="subtitle">{h_inline(b[1])}</p>')
         elif k == "meta":
@@ -449,6 +458,9 @@ def render_html(B: list[tuple], diagram: Path, path: Path) -> None:
             cls = ' class="panel"' if b[1].startswith("Mo runs on BUILT's own Azure") else \
                 ' class="todo"' if "[[" in b[1] else ""
             out.append(f"<p{cls}>{h_inline(b[1])}</p>")
+        elif k == "img":
+            out.append(f'<figure class="wide"><img alt="{html.escape(b[2])}" src="data:image/png;base64,{b64(b[1])}">'
+                       f'<figcaption>{html.escape(b[2])}</figcaption></figure>')
         elif k == "bullets" and section == "In brief":
             cards = []
             for item in b[1]:

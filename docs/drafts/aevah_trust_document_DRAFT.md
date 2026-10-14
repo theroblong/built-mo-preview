@@ -13,6 +13,8 @@ Rob's rules still apply (docs/drafts/aevah_trust_document_rob_checklist.md): no 
 wording, no data-residency absolutes, nothing unbuilt described as planned. No accuracy figures (ACCURACY_CLAIMS_REGISTER).
 Vendor names: SPINS, Circana, NetSuite and Azure approved by Jason 2026-10-14 (do not name the database product).
 Skeptic (opus/high) on v0.3: SURVIVES WITH EDITS; edits A-J applied 2026-10-14.
+Jason 2026-10-14: eyebrow 'TRUST DOCUMENT · FOR BUILT' removed; Aevah platform diagram (assets/aevah_data_to_decisions.png,
+conceptual/illustrative per its own footer) added after In brief.
 v0.2 skeptic edits carried over; Jason's 2026-10-14 answers applied (Circana, Azure sentence, no "secure", no contact line).
 -->
 
@@ -37,6 +39,8 @@ figure has an answer to that question:
 - **Every number can be traced.** Forecasts and model scores are stored with the model version and the date that
   produced them. The cannibalization and price views show each result's source, model and date, and the forecast
   views show the last week of actual sales they use.
+
+![How Aevah turns business data into decisions: a conceptual view of the Aevah platform, with illustrative data sources, models and experiences. The rest of this document describes the path Mo follows for BUILT today.](assets/aevah_data_to_decisions.png)
 
 ## Tracing a number back to its source
 
