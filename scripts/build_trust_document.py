@@ -36,10 +36,10 @@ from MO_142_build_brief import to_pdf  # noqa: E402  (Word export with unique te
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "docs/drafts/aevah_trust_document_DRAFT.md"
 BRAND = ROOT / "docs/aevah_brand/brand/assets/generated"
-VERSION = "Draft v0.2"
+VERSION = "Draft v0.3"
 ISSUED = "October 2026"
-STEM = "Aevah_How_Mo_Works_v0.2_2026-10-14"
-OUT = ROOT / "docs/briefs/trust_document_v0.2"
+STEM = "Aevah_How_Mo_Works_v0.3_2026-10-14"
+OUT = ROOT / "docs/briefs/trust_document_v0.3"
 
 # Aevah palette (brand guide 8.2)
 PLUM_DEEP, PLUM, VIOLET, INK, INK_SOFT, MUTED = "#170A2A", "#462453", "#77548E", "#29232E", "#514758", "#625A69"
@@ -47,10 +47,10 @@ PAPER, LILAC_SOFT, LILAC, RULE, AMBER, AMBER_SOFT = "#FFFDFA", "#F5F2F6", "#EFE8
 SERIF_DOCX, SANS_DOCX = "Georgia", "Arial"
 
 FLOW = [  # conceptual only (brand 9.1): no product screens, schemas or mechanics; detail is in the numbered list
-    "Data\nsources",
-    "Data store in\nBUILT's Azure\nsubscription",
-    "Preparation\nand machine\nlearning",
-    "Versioned\nresults",
+    "Source\nrecords",
+    "Data store on\nBUILT's Azure\nsubscription",
+    "Calculation",
+    "Stored results\nwith model\nversion, date",
     "Mo app and\nMo Chat",
 ]
 
@@ -65,6 +65,8 @@ def parse(md: str) -> list[tuple]:
         first = lines[0]
         if first.startswith("# "):
             B.append(("title", first[2:].strip()))
+        elif first.startswith("### "):
+            B.append(("h3", first[4:].strip()))
         elif first.startswith("## "):
             B.append(("h2", first[3:].strip()))
         elif first.startswith("|"):
@@ -233,6 +235,11 @@ def render_docx(B: list[tuple], diagram: Path, path: Path) -> None:
         elif k == "h2":
             section = b[1]
             doc.add_heading(b[1], level=2).paragraph_format.keep_with_next = True
+        elif k == "h3":
+            p = doc.add_paragraph()
+            p.paragraph_format.space_before, p.paragraph_format.keep_with_next = Pt(10), True
+            r = p.add_run(b[1])
+            r.font.name, r.font.size, r.font.color.rgb = SERIF_DOCX, Pt(13), rgb(VIOLET)
         elif k == "p":
             p = doc.add_paragraph()
             if b[1].startswith("Mo runs on BUILT's own Azure"):  # the one security sentence, set as a panel
@@ -365,6 +372,8 @@ em {{ font-family:Newsreader, Baskerville, Georgia, serif; color:var(--violet); 
 li {{ margin:6px 0; }}
 .cards {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:18px 0 6px; }}
 .card {{ background:var(--lilac-soft); border:1px solid var(--rule); border-radius:12px; padding:16px 18px; min-width:0; }}
+h3.sub {{ font-family:Newsreader, Baskerville, Georgia, serif; font-weight:470; font-size:22px; color:var(--violet);
+  letter-spacing:-.02em; margin:28px 0 6px; }}
 .card h3 {{ font-size:16px; font-weight:600; line-height:1.3; color:var(--plum); margin:0 0 6px; }}
 .card p {{ margin:0; font-size:15px; color:var(--ink-soft); }}
 figure {{ margin:18px 0 10px; }}
@@ -434,6 +443,8 @@ def render_html(B: list[tuple], diagram: Path, path: Path) -> None:
         elif k == "h2":
             section = b[1]
             out.append(f"<h2>{html.escape(b[1])}</h2>")
+        elif k == "h3":
+            out.append(f'<h3 class="sub">{html.escape(b[1])}</h3>')
         elif k == "p":
             cls = ' class="panel"' if b[1].startswith("Mo runs on BUILT's own Azure") else \
                 ' class="todo"' if "[[" in b[1] else ""
