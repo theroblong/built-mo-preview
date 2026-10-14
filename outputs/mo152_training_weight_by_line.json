@@ -1,0 +1,184 @@
+{
+  "val_cutoff": "2026-06-07",
+  "panel_rows_now": 96369,
+  "panel_rows_v11d": 96369,
+  "horizons": {
+    "1": {
+      "train_rows": 76482,
+      "newest_train_week": "2026-05-31",
+      "by_line": {
+        "BAR": {
+          "rows": 13399.0,
+          "weighted": 2430.4,
+          "units": 1543749.7,
+          "rows_pct": 17.5,
+          "weighted_pct": 6.9,
+          "units_pct": 3.1
+        },
+        "PUFF": {
+          "rows": 61082.0,
+          "weighted": 31169.2,
+          "units": 46042795.7,
+          "rows_pct": 79.9,
+          "weighted_pct": 88.2,
+          "units_pct": 93.1
+        },
+        "SOUR PUFF": {
+          "rows": 2001.0,
+          "weighted": 1726.1,
+          "units": 1853873.7,
+          "rows_pct": 2.6,
+          "weighted_pct": 4.9,
+          "units_pct": 3.7
+        }
+      },
+      "weighted_share_by_year_pct": {
+        "2023": {
+          "BAR": 0.4,
+          "PUFF": 0.3,
+          "SOUR PUFF": 0.0
+        },
+        "2024": {
+          "BAR": 3.2,
+          "PUFF": 4.7,
+          "SOUR PUFF": 0.0
+        },
+        "2025": {
+          "BAR": 2.9,
+          "PUFF": 35.2,
+          "SOUR PUFF": 0.2
+        },
+        "2026": {
+          "BAR": 0.4,
+          "PUFF": 48.0,
+          "SOUR PUFF": 4.7
+        }
+      },
+      "weighted_share_last26w_pct": {
+        "BAR": 0.7,
+        "PUFF": 91.2,
+        "SOUR PUFF": 8.1
+      },
+      "weight_of_row_1y_old": 0.353,
+      "weight_of_row_2y_old": 0.125
+    },
+    "4": {
+      "train_rows": 71549,
+      "newest_train_week": "2026-05-10",
+      "by_line": {
+        "BAR": {
+          "rows": 12476.0,
+          "weighted": 2301.6,
+          "units": 1528808.2,
+          "rows_pct": 17.4,
+          "weighted_pct": 6.9,
+          "units_pct": 3.2
+        },
+        "PUFF": {
+          "rows": 57553.0,
+          "weighted": 29649.5,
+          "units": 44085356.1,
+          "rows_pct": 80.4,
+          "weighted_pct": 89.1,
+          "units_pct": 93.5
+        },
+        "SOUR PUFF": {
+          "rows": 1520.0,
+          "weighted": 1332.0,
+          "units": 1535653.5,
+          "rows_pct": 2.1,
+          "weighted_pct": 4.0,
+          "units_pct": 3.3
+        }
+      },
+      "weighted_share_by_year_pct": {
+        "2023": {
+          "BAR": 0.5,
+          "PUFF": 0.3,
+          "SOUR PUFF": 0.0
+        },
+        "2024": {
+          "BAR": 3.4,
+          "PUFF": 5.3,
+          "SOUR PUFF": 0.0
+        },
+        "2025": {
+          "BAR": 2.7,
+          "PUFF": 39.4,
+          "SOUR PUFF": 0.2
+        },
+        "2026": {
+          "BAR": 0.3,
+          "PUFF": 44.1,
+          "SOUR PUFF": 3.8
+        }
+      },
+      "weighted_share_last26w_pct": {
+        "BAR": 0.6,
+        "PUFF": 92.8,
+        "SOUR PUFF": 6.6
+      },
+      "weight_of_row_1y_old": 0.353,
+      "weight_of_row_2y_old": 0.125
+    },
+    "13": {
+      "train_rows": 58371,
+      "newest_train_week": "2026-03-08",
+      "by_line": {
+        "BAR": {
+          "rows": 10154.0,
+          "weighted": 2032.0,
+          "units": 1450889.7,
+          "rows_pct": 17.4,
+          "weighted_pct": 7.3,
+          "units_pct": 3.7
+        },
+        "PUFF": {
+          "rows": 47760.0,
+          "weighted": 25266.1,
+          "units": 37707536.3,
+          "rows_pct": 81.8,
+          "weighted_pct": 91.2,
+          "units_pct": 94.9
+        },
+        "SOUR PUFF": {
+          "rows": 457.0,
+          "weighted": 409.2,
+          "units": 577786.7,
+          "rows_pct": 0.8,
+          "weighted_pct": 1.5,
+          "units_pct": 1.5
+        }
+      },
+      "weighted_share_by_year_pct": {
+        "2023": {
+          "BAR": 0.6,
+          "PUFF": 0.4,
+          "SOUR PUFF": 0.0
+        },
+        "2024": {
+          "BAR": 4.4,
+          "PUFF": 7.5,
+          "SOUR PUFF": 0.0
+        },
+        "2025": {
+          "BAR": 2.2,
+          "PUFF": 55.1,
+          "SOUR PUFF": 0.3
+        },
+        "2026": {
+          "BAR": 0.2,
+          "PUFF": 28.2,
+          "SOUR PUFF": 1.2
+        }
+      },
+      "weighted_share_last26w_pct": {
+        "BAR": 0.7,
+        "PUFF": 96.8,
+        "SOUR PUFF": 2.5
+      },
+      "weight_of_row_1y_old": 0.353,
+      "weight_of_row_2y_old": 0.125
+    }
+  }
+}
