@@ -15,6 +15,7 @@ Vendor names: SPINS, Circana, NetSuite and Azure approved by Jason 2026-10-14 (d
 Skeptic (opus/high) on v0.3: SURVIVES WITH EDITS; edits A-J applied 2026-10-14.
 Jason 2026-10-14: eyebrow 'TRUST DOCUMENT · FOR BUILT' removed; Aevah platform diagram (assets/aevah_data_to_decisions.png,
 conceptual/illustrative per its own footer) added after In brief.
+Jason 2026-10-14: 'Price sensitivity' renamed 'Price elasticity' (one of Mo's three analytics).
 v0.2 skeptic edits carried over; Jason's 2026-10-14 answers applied (Circana, Azure sentence, no "secure", no contact line).
 -->
 
@@ -27,7 +28,8 @@ Prepared by Aevah for BUILT · October 2026
 ## In brief
 
 Mo is BUILT's demand intelligence experience, built and operated by Aevah. It turns BUILT's retail sales data into
-forecasts, cannibalization reads, promotion and price reads, and retailer views that BUILT's teams can use directly.
+demand forecasts, cannibalization and price elasticity, along with promotion reads and retailer views that BUILT's
+teams can use directly.
 
 For a finance team, a number is only as good as the ability to say where it came from. Mo is built so that every
 figure has an answer to that question:
@@ -85,7 +87,7 @@ A planner looks at the 13-week forecast for one item at one retailer.
 | Demand forecast | SPINS weekly retail sales | Gradient-boosted decision trees (many small decision rules that each correct the last), with a separate model for each week ahead, 1 to 13 weeks; forecasts everyday sales and does not yet add expected promotion volume. Items that have stopped reporting use a simple expected-resume rule; items too new for the model get a simple trend forecast calculated when the view opens |
 | Cannibalization score | SPINS weekly retail sales | A trained model scores how likely a newly launched item is to be drawing sales from each nearby item, BUILT's own and competitors', comparing up to 13 weeks after launch with the 13 weeks before (at least 8 of each); each score carries the three factors that most influenced it |
 | Promotion response | SPINS promotion measures | How each item's sales have responded to past promotions, by type of promotion, from SPINS's own promotion measures |
-| Price sensitivity | SPINS prices and units | A statistical model estimates whether sales tend to rise or fall with price changes, by item and retailer where there is enough price history; the direction is more reliable than the size, because most price changes happen during promotions |
+| Price elasticity (how sales respond to price changes) | SPINS prices and units | A statistical model estimates whether sales tend to rise or fall with price changes, by item and retailer where there is enough price history; the direction is more reliable than the size, because most price changes happen during promotions |
 | Mo Chat answers | Mo's stored results and source data | Retrieved through fixed, predefined data requests; the language model explains the figures it retrieves and does not produce Mo's forecasts or scores |
 
 ## How the numbers are checked
