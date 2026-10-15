@@ -17,8 +17,13 @@ early stopping, seasonal, Q1, holiday, recency):
 - Production decision rule: docs/PRODUCTION_DECISION_PREREG.md Amendments 1 + 2 (criterion 4 = seasonal bias).
 
 DESIGN (honest harness MO_80/MO_132 run_direct, refit=True, calendar targets; one seed per trial):
-  Study A: tune on the first 15 origins (2024-12 .. 2026-02); 2026-03/04/05 held out, never seen by the tuner.
-  Study B: tune on all 18 origins (Jason's "use all the data"); its score is optimistic by construction.
+  AMENDED 2026-10-15 before any tuning result (docs/PRODUCTION_DECISION_PREREG.md, "Amended 2026-10-15"): Study B
+  dropped; one honest study on the 15 tuning dates (2026-03/04/05 held out) in three stages:
+    Stage 1  --origins 2024-12,2025-03,2025-06,2025-09,2025-12,2026-02, ~40 trials x 3 searches (--sampler-seed 1/2/3)
+    Stage 2  --enqueue top 10 Stage 1 settings + production, all 15 dates; then ~30 TPE trials with --prior history
+    Stage 3  top 3 x 5 seeds x 18 dates; winner by 15-date objective only; held-out dates judge it (P3, Amendment 1+2)
+  Original design (kept for the record): Study A tune on the first 15 origins with 2026-03/04/05 held out; Study B
+  on all 18 origins.
   Search space: learning_rate [0.02, 0.10] log; num_leaves [15, 255] log; min_child_samples [5, 200] log;
     feature_fraction [0.5, 1.0]; bagging_fraction [0.5, 1.0]; reg_alpha, reg_lambda [1e-3, 10] log;
     recency lambda [0.0, 0.05]; calendar inputs (each on/off): target month, holiday week, early-January weeks.
@@ -44,6 +49,9 @@ PREDICTIONS, RECORDED BEFORE RUNNING so they can be wrong:
   P5  Study A's and Study B's best settings agree on the calendar inputs and their learning rates are within
       a factor of 2 (the result is not an accident of which dates were tuned on).
   If P3 fails, the tuning over-fit the tuning dates and the production settings stay.
+  AMENDED P2 / P5 (staged design, before any result): P2 the best Stage 2 setting beats the production settings'
+  15-date objective by at least 0.5. P5 the 6-date Stage 1 screen is informative: across the 10 re-scored settings,
+  rank correlation between 6-date and 15-date objectives >= 0.5.
 """
 from __future__ import annotations
 
@@ -141,12 +149,37 @@ def suggest(trial) -> dict:
         cal_jan_reset=trial.suggest_categorical("cal_jan_reset", [False, True]))
 
 
+def _distributions() -> dict:
+    """The search space as Optuna distributions (must match suggest()), for adding prior trials as history."""
+    from optuna.distributions import CategoricalDistribution as C, FloatDistribution as F, IntDistribution as I
+    return dict(learning_rate=F(0.02, 0.10, log=True), num_leaves=I(15, 255, log=True),
+                min_child_samples=I(5, 200, log=True), feature_fraction=F(0.5, 1.0), bagging_fraction=F(0.5, 1.0),
+                reg_alpha=F(1e-3, 10.0, log=True), reg_lambda=F(1e-3, 10.0, log=True), recency=F(0.0, 0.05),
+                cal_month=C([False, True]), cal_holiday=C([False, True]), cal_jan_reset=C([False, True]))
+
+
+def _prior_records(paths: str, tune: list[str]) -> list[dict]:
+    """COMPLETE trial records from earlier jobs' trials_*.jsonl, scored on exactly these tuning dates."""
+    recs = []
+    for p in [x for x in paths.split(",") if x]:
+        for line in Path(p).read_text().splitlines():
+            r = json.loads(line)
+            if r.get("state") == "COMPLETE" and sorted(r.get("origins", [])) == sorted(tune):
+                recs.append(r)
+    return recs
+
+
 def run_study(a) -> None:
+    import shutil
     import optuna
     from optuna.storages import JournalStorage
     from optuna.storages.journal import JournalFileBackend
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
+    journal = out / f"study_{a.name}.log"
+    resume = os.environ.get("AEVAH_RESUME_FROM", "")      # continue a study after a job hit its time cap
+    if resume and Path(resume).name == journal.name and not journal.exists():
+        shutil.copy(resume, journal)
     data_dir = Path(a.data_dir)
     rows = pd.read_parquet(data_dir / ROWS_IN)
     rows["date"] = pd.to_datetime(rows["date"], utc=True)
@@ -154,19 +187,27 @@ def run_study(a) -> None:
     feats_r = json.loads((fd / "feats_recursive.json").read_text())
     feats_d = list(json.loads((fd / "direct_multihorizon_metrics_v11d.json").read_text())["features_used"])
     tune = [o for o in ALL_ORIGINS if a.study == "B" or o not in HELD_OUT]
-    if a.origins:                                     # smoke tests only
+    if a.origins:                                     # Stage 1 screen dates (and smoke tests)
         tune = [o for o in tune if o in a.origins.split(",")]
     # interleave years so every batch mixes seasons (running score comparable across batches)
     tune = sorted(tune, key=lambda o: (int(o[5:7]) % 3, o))
     batches = [tune[i:i + a.parallel] for i in range(0, len(tune), a.parallel)]
-    storage = JournalStorage(JournalFileBackend(str(out / f"study_{a.study}.log")))
-    study = optuna.create_study(study_name=f"mo154_{a.study}", direction="minimize", storage=storage,
+    storage = JournalStorage(JournalFileBackend(str(journal)))
+    study = optuna.create_study(study_name=f"mo154_{a.name}", direction="minimize", storage=storage,
                                 load_if_exists=True, sampler=optuna.samplers.TPESampler(seed=a.sampler_seed),
                                 pruner=optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=0))
     if len(study.trials) == 0:
-        study.enqueue_trial({k: v for k, v in BASELINE.items()})
+        # Stage 2: earlier jobs' trials on the same dates become history without re-computation
+        dist = _distributions()
+        for r in _prior_records(a.prior, tune):
+            study.add_trial(optuna.trial.create_trial(params=r["params"], distributions=dist, value=r["objective"]))
+        if not a.no_baseline:
+            study.enqueue_trial({k: v for k, v in BASELINE.items()})
+        if a.enqueue:                                 # Stage 2 re-scoring: settings evaluated before any TPE trial
+            for p in json.loads(Path(a.enqueue).read_text()):
+                study.enqueue_trial(p)
     t_end = time.time() + a.seconds
-    log = out / f"trials_{a.study}.jsonl"
+    log = out / f"trials_{a.name}.jsonl"
     with ProcessPoolExecutor(max_workers=a.parallel, mp_context=get_context("spawn"), initializer=_init,
                              initargs=(feats_r, feats_d, a.promo_asof, a.threads)) as ex:
         n = 0
@@ -183,7 +224,7 @@ def run_study(a) -> None:
                 if trial.should_prune():
                     pruned = True
                     break
-            rec = {"number": trial.number, "params": params, "seconds": round(time.time() - t0, 1)}
+            rec = {"number": trial.number, "params": params, "seconds": round(time.time() - t0, 1), "origins": tune}
             if pruned:
                 study.tell(trial, state=optuna.trial.TrialState.PRUNED)
                 rec["state"] = "PRUNED"
@@ -197,7 +238,7 @@ def run_study(a) -> None:
                   f"am={rec.get('am', {}).get('trial', float('nan')):.2f} {rec['seconds']}s {params}", flush=True)
             n += 1
     best = study.best_trial
-    (out / f"best_{a.study}.json").write_text(json.dumps({"number": best.number, "value": best.value,
+    (out / f"best_{a.name}.json").write_text(json.dumps({"number": best.number, "value": best.value,
                                                           "params": best.params, "tune_origins": tune}, indent=2))
     print("BEST", best.number, round(best.value, 3), best.params, flush=True)
 
@@ -212,11 +253,18 @@ def main() -> None:
     ap.add_argument("--threads", type=int, default=6)
     ap.add_argument("--sampler-seed", type=int, default=1)
     ap.add_argument("--promo-asof", type=int, default=0)
-    ap.add_argument("--origins", default="", help="restrict tuning origins (smoke tests only)")
+    ap.add_argument("--origins", default="", help="restrict tuning origins (Stage 1 screen dates; smoke tests)")
+    ap.add_argument("--name", default="", help="study/file name, e.g. s1a; defaults to --study")
+    ap.add_argument("--enqueue", default="", help="JSON list of settings to evaluate first (Stage 2 re-scoring)")
+    ap.add_argument("--prior", default="", help="comma-separated trials_*.jsonl whose COMPLETE trials on the same "
+                                                "dates are added as history (Stage 2 TPE)")
+    ap.add_argument("--no-baseline", action="store_true", help="do not enqueue the production settings")
     ap.add_argument("--out", default=os.environ.get("AEVAH_RESULTS_DIR", "outputs/mo154_cache"))
     ap.add_argument("--feats-dir", default="outputs")
     ap.add_argument("--data-dir", default=os.environ.get("AEVAH_DATASET_DIR", "outputs"))
-    run_study(ap.parse_args())
+    a = ap.parse_args()
+    a.name = a.name or a.study
+    run_study(a)
 
 
 if __name__ == "__main__":

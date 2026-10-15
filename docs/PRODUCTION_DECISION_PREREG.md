@@ -122,6 +122,30 @@ week; ISO weeks 1-4), each on or off. Objective: account x month miss % on the t
 top settings of each study are re-run with 5 seeds as `tuned_a_avg5` and `tuned_b_avg5` and judged under Amendment 1 +
 2; Study A must also not be worse than direct_avg5 by more than 0.3 at account x month on the held-out dates.
 
+**Amended 2026-10-15 (Jason approved the staged plan; written before any MO_154 tuning result exists; the only runs so
+far are a laptop smoke test of two trials, used for timing):** Study B is dropped. One honest study replaces Study A, in
+three stages. Search space, objective (account x month miss + 50 x seasonal-bias excess), calendar options and the
+honest harness are unchanged. Promotion statistics per forecast date (`--promo-asof 0`; MO_155 did not adopt the
+as-of version). MO_156 macro inputs are not in the search. Tuning dates = the first 15 forecast dates (2024-12 ..
+2026-02); 2026-03/04/05 stay held out and are never used to choose anything.
+1. **Stage 1, broad search (6 dates):** 2024-12, 2025-03, 2025-06, 2025-09, 2025-12, 2026-02 (covers both Jan-Mar
+   windows and the Oct-Dec window). About 120 trials, run as 3 independent TPE searches (sampler seeds 1, 2, 3) of
+   about 40 trials each; each search's first trial is the production settings (parity check, P1).
+2. **Stage 2, refine (15 dates):** the 10 best distinct Stage 1 settings by objective, plus the production settings,
+   are re-scored on all 15 tuning dates (seed 42). Then about 30 new TPE trials on the 15 dates, run as 2-3 searches
+   that start from the re-scored trials as history (no re-computation); pruning after the first batch of 6 dates.
+3. **Stage 3, final check (18 dates, 5 seeds):** the 3 best Stage 2 settings by 15-date objective, each with seeds 42,
+   1, 2, 3, 4 on all 18 dates. The winner `tuned_avg5` is the one with the lowest 5-seed objective **on the 15 tuning
+   dates only**. Only then is it scored on the held-out 2026-03/04/05 dates (P3) and judged by Amendment 1 + 2 against
+   `direct_avg5`.
+- **Decision:** the December retrain uses the `tuned_avg5` settings only if P3 holds and it passes Amendment 1 + 2;
+  otherwise the production settings stay.
+- **Budget:** at most $50 compute in total (Jason, 2026-10-15), with the balance checked (compute_budget) before each
+  stage. If measured trial times run long, trial counts are cut to stay in budget; they are never raised without Jason.
+- **Predictions (replacing MO_154 P2 and P5; P1, P3 and P4 unchanged):** P2 the best Stage 2 setting beats the
+  production settings' 15-date objective by at least 0.5. P5 the Stage 1 screen is informative: across the 10
+  re-scored settings, the rank correlation between their 6-date and 15-date objectives is at least 0.5.
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct
