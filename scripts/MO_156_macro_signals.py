@@ -82,6 +82,7 @@ MACRO_FEATS = ["m_gasoline", "m_gasoline_chg13", "m_gasoline_yoy", "m_diesel", "
 def build_weekly(weeks: pd.DatetimeIndex) -> pd.DataFrame:
     """For each SPINS week (ending Sunday), the latest first-published value released on or before that Sunday."""
     f = pd.read_parquet(FRED)
+    f["released"] = pd.to_datetime(f["released"]).dt.tz_localize("UTC")
     out = pd.DataFrame(index=weeks)
     for name, g in f.groupby("series"):
         g = g.sort_values("obs_date")
