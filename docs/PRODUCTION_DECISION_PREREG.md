@@ -107,6 +107,16 @@ SOUR PUFF), 5 seeds averaged (`line_avg5`); one fixed direct model trained witho
 PUFF items, BAR items on the production model (`nobar_avg5`); the fixed direct model with L4W and L12W velocity x
 stores as inputs, 5 seeds averaged (`l4wf_avg5`). All judged under Amendment 1 + 2.
 
+**Added 2026-10-15, before MO_155 results exist:** the fixed direct model with the five promotion-history inputs
+computed as of each training week instead of once per forecast date (`asof_avg5`, 5 seeds; MO_155). It is a correctness
+fix: MO_155's own decision rule decides whether the as-of construction is used for tuning and the December retrain; any
+switch of the served model still follows Amendment 1 + 2.
+
+**Planned, to be fully specified before any MO_154 result exists:** Optuna-tuned fixed direct models, Study A (tuned on
+the first 15 forecast dates; 2026-03/04/05 held out as the final check) and Study B (tuned on all 18), objective
+account x month error plus a penalty when Jan-Mar or Oct-Dec bias is outside 1 +/- 0.10; the top settings re-run with
+5 seeds as `tuned_a_avg5` / `tuned_b_avg5`.
+
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
 L4W velocity x stores, last week carried forward. The Sept 6 save holds a single-seed fixed direct

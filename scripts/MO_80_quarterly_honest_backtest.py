@@ -497,10 +497,59 @@ LEAKY_DONOR_FEATURES = ("donor_count", "top_donor_tdp_sum", "competitor_price_ga
 NEUTRALIZE_DONOR_FEATURES = True
 
 
+# MO_155 switch (default OFF = unchanged behaviour): build the promotion-history statistics AS OF EACH
+# ROW'S OWN WEEK (only weeks <= that row) instead of once per cutoff copied onto every training row.
+# The once-per-cutoff version lets a 2024 training row "see" promotions that happened later (still before
+# the cutoff), which the model can over-learn. Read at call time so a script can compare both.
+PROMO_ASOF = os.environ.get("MO_PROMO_ASOF", "0") == "1"
+
+
+def _promo_stats_asof(tr: pd.DataFrame, gk: list) -> pd.DataFrame:
+    """Per-row expanding promotion statistics using rows at or before each row's week (MO_155)."""
+    orig_index = tr.index
+    tr = tr.sort_values(gk + ["__time"]).copy()
+    if {"is_promo_week", "week_of_year"} <= set(tr.columns):
+        tr["promo_rate_woy"] = (tr.groupby(gk + ["week_of_year"], observed=True)["is_promo_week"]
+                                .transform(lambda x: x.astype(float).expanding().mean()).fillna(0).values)
+    if {"is_promo_week", "promo_lift_ratio"} <= set(tr.columns):
+        names = ["promo_lift_mean", "promo_lift_median", "promo_lift_min", "promo_lift_max", "promo_lift_std",
+                 "promo_lift_n_events", "promo_lift_p25", "promo_lift_p75", "promo_lift_p90"]
+        cols = [c for c in names if c in tr.columns]
+        out = {c: np.zeros(len(tr)) for c in cols}
+        pos = 0
+        for _, g in tr.groupby(gk, observed=True, sort=False):
+            n = len(g)
+            r = pd.to_numeric(g["promo_lift_ratio"], errors="coerce").values
+            ev = (pd.to_numeric(g["is_promo_week"], errors="coerce").fillna(0).values == 1) & (r > 0) & np.isfinite(r)
+            vals, k = [], 0
+            for i in range(n):
+                if ev[i]:
+                    vals.append(r[i])
+                if vals:
+                    a = np.asarray(vals)
+                    st = {"promo_lift_mean": a.mean(), "promo_lift_median": np.median(a), "promo_lift_min": a.min(),
+                          "promo_lift_max": a.max(), "promo_lift_std": a.std(ddof=1) if len(a) > 1 else 0.0,
+                          "promo_lift_n_events": float(len(a)), "promo_lift_p25": np.quantile(a, 0.25),
+                          "promo_lift_p75": np.quantile(a, 0.75), "promo_lift_p90": np.quantile(a, 0.90)}
+                    for c in cols:
+                        out[c][pos + i] = st[c]
+            pos += n
+        for c in cols:
+            tr[c] = out[c]
+    return tr.loc[orig_index]
+
+
 def cutoff_frame(df: pd.DataFrame, cut) -> pd.DataFrame:
     """Rows <= cut with whole-panel features rebuilt from rows <= cut only."""
     tr = df[df["__time"] <= cut].copy()
     gk = GROUP_COLS
+    if globals().get("PROMO_ASOF"):
+        tr = _promo_stats_asof(tr, gk)
+        if NEUTRALIZE_DONOR_FEATURES:
+            for c in LEAKY_DONOR_FEATURES:
+                if c in tr.columns:
+                    tr[c] = np.nan
+        return tr
     if {"is_promo_week", "week_of_year"} <= set(tr.columns):        # MO_25:929, as of cut
         tr["promo_rate_woy"] = (tr.groupby(gk + ["week_of_year"], observed=True)
                                 ["is_promo_week"].transform("mean").fillna(0))
