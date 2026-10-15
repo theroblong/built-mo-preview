@@ -565,8 +565,10 @@ next section (README 246).
   promotion history (promo_lift_n_events) 14-19%, retailer 10-11%, product 6-11%. The product-line label itself: 0.15-0.6% at
   h1, 0.4-1.6% at h4, 1.9-2.0% (PUFF, SOUR PUFF) and 7.8% (BAR) at h13, where it lowers every BAR series about 23% (signed mean
   -0.256 log) and raises PUFF and SOUR PUFF about 6%. promo_lift_n_events is an item-tenure proxy (Spearman 0.75-0.80 with weeks
-  of history) and LOOK-AHEAD in the served model (MO_25:992-1018 computes it over each series' full history; the backtest
-  rebuilds it per cutoff at MO_80:507); it pushes forecasts down on average. Volume-weighted reliance on recent sales is higher
+  of history); CORRECTED 2026-10-15 (MO_155 skeptic): it is NOT look-ahead in the forecasts -- MO_25:996-1027 computes it from
+  each series' history up to the data cutoff and copies it onto every training row, so only older training rows carry later
+  counts; the honest backtest scores this same construction, and building it per training week instead is worse (MO_155). It
+  pushes forecasts down on average. Volume-weighted reliance on recent sales is higher
   (PUFF roll4 + lag1 77 -> 88% at h1, 43 -> 56% at h13). Similar profiles do not prove the lines follow the same rules; MO_148 is
   the accuracy evidence for pooling. `outputs/mo151_inputs_by_line.json`. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* the
   served model is retrained with per-cutoff inputs.
@@ -582,9 +584,11 @@ next section (README 246).
   unweighted (12-15% SOUR PUFF, 1-2% BAR). `scripts/MO_152_training_weight_by_line.py`, `outputs/mo152_training_weight_by_line.json`;
   commits 9716089, 5fb3d66. *Skeptic: SURVIVES WITH CAVEATS.* *Reopen if:* the served model is retrained. Open question: are the 46
   BAR items still selling given the wind-down pattern of BAR items discontinued in 2025? Check before the December forecast.
-- **Production caveat (open, not a finding):** the served v11d model was trained with look-ahead promotion, donor and
-  competitor-gap inputs (README ~1983-1985); the backtest rebuilds them per cutoff, so backtest scores do not describe the served
-  model exactly. Any retrain for the December forecast must compute them per cutoff.
+- **Production caveat (open, not a finding; corrected 2026-10-15 by the MO_155 skeptic):** the served v11d model uses donor and
+  competitor-gap inputs from the 2026-06-09 cannibalization scoring run; the backtest cannot rebuild these per date and neutralizes
+  them, so backtest scores do not describe the served model exactly. The promotion-history inputs are NOT part of this caveat
+  (computed up to the data cutoff; MO_155). MO_26D's own 13-week holdout score is mildly optimistic because its rows carry
+  promotion statistics that include the holdout weeks.
 
 ### Added 2026-10-14 (evening) from MO_149 (README 246), PENDING review
 Miss = average miss % (lower is better); levels: item x week (cw), account x month (am), portfolio x month (pm); recent = 6
