@@ -176,10 +176,15 @@ def run_study(a) -> None:
     from optuna.storages.journal import JournalFileBackend
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    journal = out / f"study_{a.name}.log"
+    # The journal (every finished trial) lives in the worker's checkpoint folder: the only place a new job can
+    # resume from (resume_from=<old experiment>/checkpoints/study_<name>.log -> $AEVAH_RESUME_FROM).
+    ckpt = Path(os.environ.get("AEVAH_CHECKPOINT_DIR", out))
+    ckpt.mkdir(parents=True, exist_ok=True)
+    journal = ckpt / f"study_{a.name}.log"
     resume = os.environ.get("AEVAH_RESUME_FROM", "")      # continue a study after a job hit its time cap
     if resume and Path(resume).name == journal.name and not journal.exists():
         shutil.copy(resume, journal)
+        print(f"resumed journal {journal.name}", flush=True)
     data_dir = Path(a.data_dir)
     rows = pd.read_parquet(data_dir / ROWS_IN)
     rows["date"] = pd.to_datetime(rows["date"], utc=True)
@@ -200,17 +205,27 @@ def run_study(a) -> None:
         # Stage 2: earlier jobs' trials on the same dates become history without re-computation
         dist = _distributions()
         for r in _prior_records(a.prior, tune):
-            study.add_trial(optuna.trial.create_trial(params=r["params"], distributions=dist, value=r["objective"]))
+            study.add_trial(optuna.trial.create_trial(params=r["params"], distributions=dist, value=r["objective"],
+                                                      user_attrs={"prior": True}))
         if not a.no_baseline:
             study.enqueue_trial({k: v for k, v in BASELINE.items()})
         if a.enqueue:                                 # Stage 2 re-scoring: settings evaluated before any TPE trial
             for p in json.loads(Path(a.enqueue).read_text()):
                 study.enqueue_trial(p)
+    # After a resume: the trial cut off by the time cap is still RUNNING in the journal -> mark it FAIL, and count
+    # finished trials (not prior history) toward --trials so a restarted job only runs what is left.
+    for t in study.trials:
+        if t.state == optuna.trial.TrialState.RUNNING:
+            study.tell(t.number, state=optuna.trial.TrialState.FAIL)
+    done_states = (optuna.trial.TrialState.COMPLETE, optuna.trial.TrialState.PRUNED)
+    n_done = sum(1 for t in study.trials if t.state in done_states and not t.user_attrs.get("prior"))
+    if n_done:
+        print(f"{n_done} trials already finished; running up to {max(0, a.trials - n_done)} more", flush=True)
     t_end = time.time() + a.seconds
     log = out / f"trials_{a.name}.jsonl"
     with ProcessPoolExecutor(max_workers=a.parallel, mp_context=get_context("spawn"), initializer=_init,
                              initargs=(feats_r, feats_d, a.promo_asof, a.threads)) as ex:
-        n = 0
+        n = n_done
         while n < a.trials and time.time() < t_end:
             trial = study.ask()
             params = suggest(trial)
