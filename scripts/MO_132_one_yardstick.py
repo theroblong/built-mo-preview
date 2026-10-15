@@ -141,6 +141,35 @@ def last_tdp(tr: pd.DataFrame) -> pd.Series:
     return s
 
 
+# MO_154 option (default empty = unchanged): calendar-only inputs describing the TARGET week, so the model can
+# learn the holiday dip and the New Year rise directly. Names: "month", "holiday", "jan_reset".
+CAL_EXTRA: tuple = ()
+CAL_COLS = {"month": "cal_month", "holiday": "cal_holiday", "jan_reset": "cal_jan_reset"}
+
+
+def _thanksgiving(y: int) -> pd.Timestamp:
+    nov1 = pd.Timestamp(year=y, month=11, day=1)
+    return nov1 + pd.Timedelta(days=(3 - nov1.weekday()) % 7 + 21)       # 4th Thursday
+
+
+def calendar_extra(week_end: pd.Series) -> pd.DataFrame:
+    """Calendar inputs for weeks ending on the given dates (SPINS weeks end on the dated Sunday)."""
+    we = pd.to_datetime(week_end, utc=True).dt.tz_localize(None).dt.normalize()
+    out = pd.DataFrame(index=week_end.index)
+    if "month" in CAL_EXTRA:
+        out["cal_month"] = we.dt.month.astype(float)
+    if "holiday" in CAL_EXTRA:
+        start = we - pd.Timedelta(days=6)
+        hol = np.zeros(len(we))
+        for y in sorted(set(we.dt.year) | set(start.dt.year)):
+            for d in (_thanksgiving(y), pd.Timestamp(year=y, month=12, day=25), pd.Timestamp(year=y, month=1, day=1)):
+                hol = np.maximum(hol, ((start <= d) & (we >= d)).astype(float).values)
+        out["cal_holiday"] = hol
+    if "jan_reset" in CAL_EXTRA:
+        out["cal_jan_reset"] = (we.dt.isocalendar().week.astype(int) <= 4).astype(float).values
+    return out
+
+
 def direct_frame(tr: pd.DataFrame, h: int, calendar: bool, velocity: bool = False) -> pd.DataFrame:
     d = tr.copy()
     if calendar:                                     # target = the series' row dated t + h weeks
@@ -154,6 +183,10 @@ def direct_frame(tr: pd.DataFrame, h: int, calendar: bool, velocity: bool = Fals
     tw = d["t_target"].dt.isocalendar().week.astype(float)
     d["week_sin"], d["week_cos"] = np.sin(2 * np.pi * tw / 52), np.cos(2 * np.pi * tw / 52)
     d["week_sin26"], d["week_cos26"] = np.sin(2 * np.pi * tw / 26), np.cos(2 * np.pi * tw / 26)
+    if CAL_EXTRA:
+        ce = calendar_extra(d["t_target"])
+        for c in ce.columns:
+            d[c] = ce[c].values
     return d.dropna(subset=["y"])
 
 
@@ -194,6 +227,10 @@ def run_direct(tr: pd.DataFrame, feats: list[str], cut, refit: bool, calendar: b
         tw = float(fd.isocalendar().week)
         X["week_sin"], X["week_cos"] = np.sin(2 * np.pi * tw / 52), np.cos(2 * np.pi * tw / 52)
         X["week_sin26"], X["week_cos26"] = np.sin(2 * np.pi * tw / 26), np.cos(2 * np.pi * tw / 26)
+        if CAL_EXTRA:
+            ce = calendar_extra(pd.Series([fd] * len(X), index=X.index))
+            for c in ce.columns:
+                X[c] = ce[c].values
         p = np.clip(np.expm1(m.predict(X[feats])), 0, None)
         sids = sid_of(X[G].itertuples(index=False))
         if velocity:                                 # velocity x doors at the cutoff; NaN -> flat later

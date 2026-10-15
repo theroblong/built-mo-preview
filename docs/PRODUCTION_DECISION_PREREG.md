@@ -112,10 +112,15 @@ computed as of each training week instead of once per forecast date (`asof_avg5`
 fix: MO_155's own decision rule decides whether the as-of construction is used for tuning and the December retrain; any
 switch of the served model still follows Amendment 1 + 2.
 
-**Planned, to be fully specified before any MO_154 result exists:** Optuna-tuned fixed direct models, Study A (tuned on
-the first 15 forecast dates; 2026-03/04/05 held out as the final check) and Study B (tuned on all 18), objective
-account x month error plus a penalty when Jan-Mar or Oct-Dec bias is outside 1 +/- 0.10; the top settings re-run with
-5 seeds as `tuned_a_avg5` / `tuned_b_avg5`.
+**Added 2026-10-15, before any MO_154 result exists (Optuna):** the fixed direct model (MO_132 run_direct, refit,
+calendar targets) tuned by Optuna (TPE, MedianPruner) over learning_rate [0.02, 0.10], num_leaves [15, 255],
+min_child_samples [5, 200], feature_fraction and bagging_fraction [0.5, 1.0], reg_alpha and reg_lambda [0.001, 10],
+recency weight [0, 0.05], and three calendar-only inputs for the target week (month; Thanksgiving/Christmas/New Year
+week; ISO weeks 1-4), each on or off. Objective: account x month miss % on the tuning dates plus 50 x the excess of
+|bias - 1| beyond 0.10 for each Jan-Mar and Oct-Dec window. Study A tunes on the first 15 forecast dates and keeps
+2026-03/04/05 out of tuning; Study B tunes on all 18. Promotion statistics as of each week if MO_155 adopts them. The
+top settings of each study are re-run with 5 seeds as `tuned_a_avg5` and `tuned_b_avg5` and judged under Amendment 1 +
+2; Study A must also not be worse than direct_avg5 by more than 0.3 at account x month on the held-out dates.
 
 **Named candidates (before their forward results exist):** fixed direct model with 5 seeds averaged
 (`direct_avg5`), recursive + fixed direct (`rec_dir5`), served direct (status quo), recursive,
