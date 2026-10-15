@@ -609,6 +609,44 @@ overlapping origins, 2025-12 on (exploratory). Predictions committed before the 
   pre-registered and tested.
 - **FACT (2026-10-14): BUILT's Competitive Distribution Chart (received 2026-10-14) is a point-in-time POD snapshot without history; per the existing door-count FACT it is not a forecast input; candidate uses are coverage, assortment white space, non-SPINS channels, account metadata, and the reset calendar.** Review: `docs/data_reviews/competitive_distribution_chart_review.md`.
 
+### Added 2026-10-15 from MO_153 / MO_155 (README 247), PENDING review
+Miss = average miss % (lower is better); levels: item x week (cw), account x month (am), portfolio x month (pm); recent = 6
+overlapping origins, 2025-12 on (exploratory). The MO_151 (d) and production-caveat corrections from the MO_155 skeptic were made in
+place above (2026-10-15); not repeated here. MO_156 is not listed: it has no skeptic review yet.
+- **(a) MO_153 (PROVISIONAL): for items with little history, last value carried forward beats ETS (as in the Mo API) and the capped
+  trend; the 5-seed production model ties last value under 13 weeks and is best at 13-25 weeks.** 63,730 young-series rows, 18 origins,
+  laptop. Under-13-week account x month, all origins: last value 38.2, direct_avg5 39.0, conn_L4W 41.3, direct_served 45.8, capped trend
+  59.6, ETS 61.3 (automatic proxy 2,678: construction flaw, 47% of rows fell back to last value). ETS loses to last value at 17 of 18
+  dates (with and without Walmart, on clean gap-free series); trend loses 14/18; L4W 13/18 (+3.1 at account x month). Under 13 weeks the
+  model vs last value is a tie (model ahead 9/18 dates); the 0.81 gap behind last value is Target holiday in-and-out items at 2025-11/12
+  (without Target the model leads 37.5 vs 39.7; without Walmart the gap is 0.3). Recent under-13 am: model 45.7 vs last value 47.3. 13-25
+  weeks: direct_avg5 23.1 vs last value 26.9 (12/18). direct_served is the MO_26D recipe retrained per cutoff (no refit on the last 13
+  weeks, row-shift targets, one seed), not the served v11d model. The proxy result is against this automatic construction only (10
+  series-dates = 97.6% of its error; capped 77-79 vs 50.5), not against a user-picked proxy. Confirms MO_79 direction for existing young
+  series (not "every band") and MO_126 / README 227. Predictions P1, P3, P4 hold; P2 fails; P5 holds but is uninformative. Pre-registered
+  rule picked last value (model 0.81 behind, outside 0.5), which the skeptic shows is a tie rather than a win. App consequence: where Mo
+  has no stored model forecast, show a labeled last value (not ETS). `outputs/mo153_young_item_fallback.json`,
+  `scripts/outputs/mo153_run.log`. *Skeptic: SURVIVES WITH CAVEATS* ("last value beats the model under 13 weeks" does not survive; the
+  ETS-vs-last-value app decision is robust). *Reopen if:* a properly scaled proxy (velocity x own stores, minimum proxy level, scale cap,
+  real first-distribution week, pre-cutoff seasonal index) is pre-registered and tested.
+- **(b) MO_155 (PROVISIONAL): computing the five promotion-history statistics as of each training week (harness switch
+  `MO_PROMO_ASOF`) is worse than the per-cutoff construction; keep per-cutoff (promo-asof 0) for Optuna and the December retrain.**
+  asof_avg5 vs direct_avg5, cw / am / pm: recent 29.33 / 16.93 / 6.55 vs 28.79 / 16.17 / 6.45; all 18 origins 34.60 / 21.57 / 9.65 vs
+  34.15 / 20.85 / 9.17; 0 of 6 recent account x month wins (with and without Walmart); Jan-Mar 2026 bias 1.008 vs 0.983. Parity 0.000000.
+  All 5 as-of seeds worse than all 5 direct seeds; worse on 16 of 18 origins and 6 of 6 recent; Walmart improves under as-of (without it
+  the loss is larger). Recent pm is better in 3 of 4 bands, driven by a level shift (bias up), not across dates. P1, P4 hold; P2 (+0.76)
+  and P3 (+0.72) fail. Pre-registered decision adopt = False. `outputs/mo155_promo_stats_asof.json`, `scripts/outputs/mo155_score.log`;
+  jobs `jason-mo155-001..004`. *Skeptic: SURVIVES WITH CAVEATS* (implementation exact to 1e-15; decision robust; led to the in-place
+  corrections noted above). *Reopen if:* the input set changes materially.
+- **FACT (2026-10-15): LightGBM trained on the laptop (Apple arm64) does not reproduce worker (x86_64 Linux) forecasts, even with
+  identical versions (lightgbm 4.6.0, numpy 2.3.5) and seed; parity checks must run on the worker.** MO_155 laptop base_s42 differs from
+  the stored direct_fixed_s42 on every row (2025-01); the MO_154 laptop baseline trial was +0.14 at account x month and -0.47 at item x
+  week. Worker runs reproduce exactly across thread counts (parity 0.000000). Laptop smoke tests check code paths and coverage only.
+- **FACT (2026-10-15): FRED `GASDESW` is US diesel and `WPU115` is the PPI for electronic computers (not gasoline or processed foods).
+  MO_76 used them mislabeled. Correct series: gasoline `GASREGW`, PPI processed foods `WPU02`.** The Mo Trends API and Mo Chat glossary
+  carried the same wrong labels; corrected in mo-api `22a173e` (2026-10-15). MO_76's "gas" was diesel and its `ppi_food` was the computer
+  PPI. Any macro finding built on those IDs needs a re-run on the corrected series (MO_156 is the pre-registered re-test).
+
 ## Open blockers (not findings; test plan Phase 0, `docs/FORECAST_TEST_PLAN_V12.md:42-44`)
 - **Oracle doors reverse between levels.** They help at item-week (25.2 vs 33.4) and hurt
   at portfolio-month (19.2 vs 17.5). Unexplained.
@@ -701,7 +739,7 @@ overlapping origins, 2025-12 on (exploratory). Predictions committed before the 
 - **Q4 2025 miss** (~41%): lag52 under-anchors a brand 3–5× bigger than a year earlier.
   It needs a velocity-per-TDP view (README.md:3063).
 - **MO_76 · macro (FRED/EIA) features:** no single winner, and the group gain sits in one
-  window. Archived. *Reopen if:* 2+ more years of data.
+  window. Archived. *Reopen if:* 2+ more years of data. *Note (2026-10-15): used mislabeled series (see 2026-10-15 FACT).*
 
 ## Features and Mo signals: PROVISIONAL (earlier 28-feature model; current v9 has 56 features)
 - **MO_52–57 · feature engineering closed on the MO_53 28-feature champion** (CV 6.448%).

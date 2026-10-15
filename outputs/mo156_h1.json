@@ -1,0 +1,79 @@
+{
+  "ratio_total": {
+    "2025": 1.0277061690669904,
+    "2026": 1.0315447300030993
+  },
+  "by_channel": {
+    "CONVENTIONAL|MASS MERCH": {
+      "2025": 1.0565,
+      "2026": 1.0208,
+      "change": -0.0357,
+      "actual_2026": 10975199.8
+    },
+    "CONVENTIONAL|FOOD": {
+      "2025": 0.9858,
+      "2026": 1.025,
+      "change": 0.0392,
+      "actual_2026": 9024320.8
+    },
+    "CONVENTIONAL|CLUB": {
+      "2025": 1.8419,
+      "2026": 1.1946,
+      "change": -0.6473,
+      "actual_2026": 2725710.9
+    },
+    "CONVENTIONAL|CONVENIENCE": {
+      "2025": 0.8701,
+      "2026": 0.9837,
+      "change": 0.1137,
+      "actual_2026": 2554588.9
+    },
+    "NATURAL EXPANDED": {
+      "2025": 1.006,
+      "2026": 0.9792,
+      "change": -0.0268,
+      "actual_2026": 1110626.9
+    },
+    "REGIONAL & INDEP GROCERY": {
+      "2025": 1.0459,
+      "2026": 0.9665,
+      "change": -0.0794,
+      "actual_2026": 799786.3
+    },
+    "CONVENTIONAL|DRUG": {
+      "2025": 0.6276,
+      "2026": 1.1087,
+      "change": 0.4811,
+      "actual_2026": 745997.6
+    },
+    "CONVENIENCE - SPINS": {
+      "2025": 0.8758,
+      "2026": 1.0052,
+      "change": 0.1294,
+      "actual_2026": 576786.7
+    },
+    "VITAMINS & SUPPLEMENTS": {
+      "2025": 0.9298,
+      "2026": 1.0354,
+      "change": 0.1056,
+      "actual_2026": 396517.1
+    }
+  },
+  "convenience_channels": [
+    "CONVENTIONAL|CONVENIENCE",
+    "CONVENIENCE - SPINS"
+  ],
+  "food_channels": [
+    "CONVENTIONAL|FOOD"
+  ],
+  "P1 total 2026 >=3% lower": {
+    "2025": 1.0277061690669904,
+    "2026": 1.0315447300030993,
+    "holds": false
+  },
+  "P2 convenience >=5 pts more negative than food": {
+    "convenience": 0.12152505468229385,
+    "food": 0.03918759746432243,
+    "holds": false
+  }
+}

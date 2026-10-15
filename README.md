@@ -6,6 +6,237 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 247: Forecast table in Druid reloaded (it was the Sept 26 v4 run, now the Oct 5 v11d run); little-history display test (MO_153); per-week promotion statistics are worse (MO_155); FRED series mislabeled; MO_156 gas/diesel checks (PRELIMINARY) and Optuna plan; Mo app/API changes merged; no hosted production exists (2026-10-15)
+
+**What the work was (plain words):**
+- **Aevah standup (Jason + Rob, 22 min; `docs/Aevah Standup_101526.docx`)** logged: Rob wants a simple (likely web-based) interface for BUILT
+  with a 13-week forecast per item x retailer account, low/base/high bands, a promotion scenario, and live context (52-week demand
+  trend, distribution trend, category velocity vs a 13-week category norm, seasonal index overlay). The draft list also contained a
+  "forecast accuracy benchmark" line using the **retracted 4% vs 7-10% figure**; it is a retracted figure and a bare acronym, **not used
+  anywhere** (ACCURACY_CLAIMS_REGISTER). Jason's verbal "as accurate or better than L4W/L12W" and "within 5 or 7% some months" are not
+  register-cleared either.
+- **Forecast table reload (Druid `retailer_sales_forecast`).** Why the Mo API showed so many on-the-spot ETS lines.
+- **MO_153** (which forecast to show for little-history items), **MO_155** (promotion statistics computed as of each training week),
+  **MO_156** (macro signals: gas/diesel hypotheses H1/H2 and a model-input test M), **MO_154** (Optuna design and plan).
+- **FRED series check**, **laptop vs worker LightGBM check**, **Mo app/API changes**, **deploy-method search**, **security items**.
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Miss = average miss % (lower is better). Bias = forecast /
+actual (below 1.00 = too low). Recent = 6 overlapping origins, 2025-12 on (exploratory).
+
+### Findings
+
+**1. The forecast table BUILT's Mo app reads was the Sept 26 v4 run, not v11d; it is now the Oct 5 v11d run.** Read-only checks
+(aggregates only) found one run in Druid: `scored_at` 2026-09-26T17:43:06, model_version v4, 41,249 rows, 3,294 series, units sum
+73,402,620 (the Oct 5 v11d file has 27,521 rows, 2,117 series, 8,144,060 units). The Oct 5 run (`outputs/retailer_sales_forecast.parquet`,
+scored 2026-10-05 19:31, anchor 2026-09-06) had been written to the local parquet and an ingest spec, but `mo_writeback.write_back` only
+uploads to MinIO and saves a spec; it never submits, so the Oct 5 spec was most likely never posted. The table holds exactly the 13
+Sundays 9/13-12/6, so a plain replace covers all days; Druid's columns are a subset of the file's (the file adds forecast_method,
+lapse_cause, same_shelf_launch_upc, weeks_silent). Skeptic (opus/high) on the plan: **SURVIVES WITH CAVEATS / plan SAFE WITH CHANGES.**
+Changes adopted: do not modify the shared `write_back` (14 callers); do not re-upload (would overwrite the scripts/outputs file MO_131
+reads); use the existing `scripts/druid_ingest_forecast.py` (replace mode, ran Sep 24) from `scripts/` only. Correction to my own
+evidence: "anchors 8/23, 8/30 = an older run" was wrong (those series simply had no sale on 9/6; 674 of 2,117 series in the file have
+pre-9/6 anchors). Procedure: read-only checks, backup (`scripts/outputs/druid_backup_retailer_sales_forecast_20261015.parquet`, 41,249
+rows), dry run (URI `s3://mo-ml/retailer_sales_forecast/2026-10-05/...`, DAY granularity, no intervals), submit with `--poll` after
+Jason's "yes, run it" (task `index_parallel_retailer_sales_forecast_mlpjpjph_2026-10-15T15:19:23Z`, SUCCESS in 30 s), wait for the API
+cache, verify. **Verified:** one run, `scored_at` 2026-10-05T19:31:12, v11d, 27,521 rows, 13 Sundays x 2,117 series (exact GROUP BY;
+Druid's COUNT DISTINCT is approximate and showed 12/2,130), units 8,144,060.18 = file. Through the local API (cache cleared): Sour
+Blu Razz 08-40229-30653 77 LightGBM series (= file) + 9 last-value, 1,001 forecast rows, 0 mismatches vs file; Sour Peach 30651
+77/77 and Puff Peanut Butter 30642 93/93, 0 mismatches. The table is shared with the live Mo app, so BUILT's app now shows v11d.
+Accepted consequences: 16 opt-in MULO series disappear; Druid-only stale series fall to last value. `retailer_sales_forecast_adj` is
+untouched (still Sep 30 v8; do not run MO_55 until verified). Rollback = the backup file. Later: API filter to latest `scored_at`;
+redact keys with env injection at submit time; fix the wiki 19 append-vs-replace conflict. Also seen: the week-13 band high equals q50
+in some series (quantile-crossing clamp), one cause of the "band not showing consistently" issue. Ownership: Jason + Claude own the
+production forecast run and write-back, not Rob. The ETS fallback was mostly covering this stale table, not items the model cannot
+forecast.
+
+**2. MO_153: for items with little history, ETS (the Mo API's fallback) loses clearly to last value; the model ties last value under
+13 weeks and is best at 13-25 weeks.** Seven arms (last value "flat", 5-seed production model direct_avg5, recent 4-week velocity x
+stores conn_L4W, direct_served = the MO_26D production recipe retrained per cutoff, capped trend, ETS as in the Mo API, automatic
+same-retailer proxy) on 63,730 young-series rows, 18 origins, laptop. Predictions P1-P5 and the decision rule (pick the lowest under-13-week
+account x month; use the model if within 0.5; ETS only if best by more than 0.5) were committed before the run (25cd2b5). Pre-registered
+decision as scored: pick flat (model 0.81 behind). P1 holds (ETS worse), P2 fails (model not better than flat at under 13 weeks), P3, P4
+hold, P5 holds but is uninformative (proxy construction flaw). **Skeptic (opus/high): SURVIVES WITH CAVEATS.** The app decision is
+robust: where Mo has no stored model forecast, show last value instead of ETS (ETS loses at 17 of 18 dates, with and without Walmart and
+on clean gap-free series; trend loses 14/18; L4W 13/18, +3.1 at account x month, not about 7). "Last value beats the model under 13
+weeks" does **not** survive: a tie (model ahead 9/18 dates); the 0.81 gap is Target holiday in-and-out items at 2025-11/12 (without
+Target the model leads 37.5 vs 39.7; without Walmart the gap is 0.3, inside 0.5). At 13-25 weeks the model is best (23.1 vs 26.9, 12/18,
+robust). The proxy arm has a construction flaw (10 series-dates = 97.6% of its error; even capped it scores 77-79 vs 50.5), so it is
+evidence against this automatic proxy only, not a user-picked proxy; a fair retest needs velocity x own-stores scaling, a minimum
+proxy level, a scale cap, the real first-distribution week and a pre-cutoff seasonal index. direct_served is the recipe retrained per
+cutoff (no refit on the last 13 weeks, row-shift targets, one seed), not the served v11d model (unscorable here). The rule's "within
+0.5" cannot apply at display time (fallback items have no stored model forecast). Disclosure: a smoke-run log tail printed one-origin
+results before the full run; predictions were already committed, nothing changed. `outputs/mo153_young_item_fallback.json`,
+`scripts/outputs/mo153_run.log`.
+
+**3. MO_155: computing the five promotion-history statistics as of each training week is worse; keep the per-cutoff construction.**
+Harness switch `MO_PROMO_ASOF` (default off). Parity 0.000000. asof_avg5 vs direct_avg5, cw / am / pm: recent 29.33 / 16.93 / 6.55 vs
+28.79 / 16.17 / 6.45; all 18 origins 34.60 / 21.57 / 9.65 vs 34.15 / 20.85 / 9.17; 0 of 6 recent account x month wins (with and
+without Walmart). P1 holds, P2 fails (+0.76), P3 fails (+0.72), P4 holds (Jan-Mar 2026 bias 1.008 vs 0.983). Pre-registered decision:
+adopt = False; Optuna runs with `--promo-asof 0`. Jobs `jason-mo155-001..004`: 003 timed out at the 5,400 s cap with one model
+unfinished (asof_s4 at 2025-11); 004 (that arm alone, 24 threads) was first REFUSED by the policy (budget_limit: runtime x rate ceiling
+above $0.50) and resubmitted with a $0.60 cap. **Skeptic (opus/high): SURVIVES WITH CAVEATS.** The as-of value at row t equals the
+per-cutoff construction with cut = t to 1e-15; all 5 as-of seeds are worse than all 5 direct seeds; worse on 16 of 18 origins and 6
+of 6 recent; Walmart improves under as-of (without it the loss is larger). Correction to the brief: recent pm is better in 3 of 4
+bands, driven by a level shift (bias up), not across dates. **SETTLED corrections (done in place):** the MO_151 note that
+"promo_lift_n_events is look-ahead in the served model" is wrong as worded (MO_25 computes it over the panel up to the data cutoff, so
+forecasts use no future data; only older training rows carry later counts, the construction the honest backtest scores); the production
+caveat's promotion part is withdrawn; the donor / competitor-gap part stands (served v11d uses them from the 2026-06-09
+cannibalization scoring run; the backtest neutralizes them); MO_26D's own 13-week holdout score is mildly optimistic. We had told Rob it
+was look-ahead; Jason decided not to send him the correction now. `outputs/mo155_promo_stats_asof.json`, `scripts/outputs/mo155_score.log`.
+
+**4. MO_156 gas/diesel checks: PRELIMINARY, no skeptic review yet; the model-input test is running.** Rob's hypothesis, verbatim:
+"My suspicion is gas prices affect consumer spending. Diesel prices affect shelf price on a lag". Pre-registered (predictions P1-P8
+committed before running, a66fada; a build bug fix to release dates in UTC, 5496c7d, was made before any result was seen). Release-aligned,
+first-published macro table built (152 weeks, no gaps; median release lags from period start: fuel 0 days, sentiment 26, payrolls 34,
+CPI food 41, PPI food 43, savings 58, grocery sales 76). **H1 (gas -> spending):** direct_avg5 actual / forecast, Apr-Aug, total 1.028
+(2025) vs 1.032 (2026), so P1 fails; convenience improved vs forecast (0.870 / 0.876 -> 0.984 / 1.005, +0.12) while conventional food
+moved +0.04, so P2 fails (opposite direction). **H2 (diesel -> same-item base price, 13-week changes):** category correlation with
+diesel at lags 0-16 between -0.17 and +0.03, best lag 4 r = 0.03 (P3 fails); category 13-week same-item price change Aug 2025 +0.1%,
+Aug 2026 +0.0% (P4 fails). Exploratory, not pre-registered: BUILT's own same-item base price correlates with diesel at lags 0-8
+(r 0.35-0.46) but fell in Aug 2026 (-0.7%) while diesel rose, likely coincidental timing of BUILT's price moves. **M (model-input
+test, macro_avg5 vs direct_avg5, 13 macro inputs):** jobs `jason-mo156-001..003` submitted (6 origins each, parallel 6 x threads 6,
+5,400 s / $1.75 each; dataset `mo156-v1` = `mo140-v1` + `mo156_macro_weekly.parquet`); laptop smoke clean (13,715 forecasts, 0 NaN).
+**No M result exists; do not cite one.** Not added to SETTLED. Jason's reasoning (energy / PPI regime change in 2026) is a different
+reopen argument from MO_76's "2+ more years of data" (MO_76 is PROVISIONAL, pre-correction bench, and used mislabeled series; item 6).
+
+**5. MO_154 (Optuna) design and the staged plan.** Harness calendar options added to MO_132 (`CAL_EXTRA`, default empty; Thanksgiving /
+Christmas / New Year weeks and ISO weeks 1-4 checked); objective = account x month miss + 50 x seasonal-bias excess beyond 0.10
+(Jan-Mar and Oct-Dec portfolio bias outside 1 +/- 0.10, rule criterion 4); baseline trial enqueued; predictions P1-P5; prereg named
+tuned_a_avg5 / tuned_b_avg5, committed before any run (41c4828). Jason's goal: best chance of more accuracy for Q1 2026 and Q1 2027 (known
+holiday decline, New Year renewal, summer swim/fitness season, growth magnitude); forecasts that keep improving toward matching actuals as
+more data arrives and the model is retrained. Original plan: Study A (15 dates, 3 held out) and Study B (18). **Cost revision:** as-of
+arms and 15-origin trials are slower than first estimated (~45-55 min in 3 batches), so ~$0.50-0.60 per trial (Estimate from MO_149/155
+job costs), not $0.16. **Jason DECIDED: one honest staged study** (6-origin broad search -> refine on 15 -> 5-seed final exam on all 18
+including the 3 held out; full Study B dropped), budget $55 (~$50 compute, ~$5 storage), reassess actual cost after (past estimates ran
+high). RunPod at the time: balance $58.75, October to date $15.69 (serverless $14.46, storage $1.23); recheck the balance (top-up)
+before launching. Sequence: MO_156 first, then Optuna over the weekend. The prereg needs an amendment for the staged design before any
+result. Final judgment by forward confirmation (saved forecasts scored on new weeks).
+
+**6. FRED series were mislabeled in Mo Trends, Mo Chat and MO_76.** Checking FRED series titles through the API: `GASDESW` = "US Diesel
+Sales Price" (not gasoline); `WPU115` = PPI electronic computers (not processed foods; correct = `WPU02`); correct weekly gasoline =
+`GASREGW`. The Mo Trends API (`trends.py:1384-1439`) labeled GASDESW "gas price $/gal (US regular retail)" and WPU115 "PPI: processed
+foods"; the Mo Chat glossary (`mo_chat.py:2262`) said "Gas prices (GASDESW)"; MO_76 used the same IDs, so its "gas" was diesel and its
+`ppi_food` (22% ppi_food_yoy) was the computer PPI. The Trends tile's "$3.77 -> $5.13 gas" was diesel. Correct quarterly averages:
+gasoline $3.0-3.6 through 2025Q4, 3.16 in 2026Q1, 4.20 in 2026Q2, 4.11 in 2026Q3, latest 4.33 (2026-10-12); diesel about 3.5-4.0, then
+5.35 (Q2), 5.56 (Q3), latest 6.18; PPI processed foods (WPU02) +2-3% a year, flat in 2026; consumer sentiment 78 (2024Q1) to about 48-55
+(2026). Jason's premise holds on the correct series: an energy shock began 2026Q2. Fix: mo-api `22a173e` (Trends now fetches GASREGW,
+GASDESW as diesel, WPU02; Mo Chat macro context corrected with the 2026 energy shock and a MO_76 mislabeled-series caveat; stale "MO_53
+production" removed). Macro timing (answer to Jason): weekly gas / diesel are about same-week and rarely revised; monthly series (PPI,
+retail / grocery sales, sentiment, savings rate, payrolls) are dated to their month but published weeks later and some are revised, so
+they must be aligned to release date (first-published vintage).
+
+**7. LightGBM results trained on the laptop (Apple arm64) do not reproduce the worker's (x86_64 Linux), even with identical versions
+(lightgbm 4.6.0, numpy 2.3.5) and seed.** MO_155 laptop `base_s42` differs from the stored `direct_fixed_s42` on every row (2025-01);
+the MO_154 laptop baseline trial was +0.14 at account x month and -0.47 at item x week vs `direct_fixed_s42`. Worker runs reproduce
+exactly across thread counts (MO_148 at 8 threads, MO_149 / MO_155 at 6: parity 0.000000). Consequence: parity checks must run on the
+worker; laptop smoke tests check code paths and coverage only. MO_154 smoke was otherwise clean (2 trials x 2 origins, about 7 min per
+trial at 4 threads, 0 fallback rows, calendar options on and off both run).
+
+**8. Mo app / API changes (local branch `local/fallback-proxy-rework`, then merged and pushed).** mo-api: the ETS fallback is replaced by a
+labeled last value plus `alt_lines` (capped 8-week OLS trend scenario; L4W base units per TDP x the series' own current TDP, need
+4+ weeks, omitted when within 2% of last value); proxy candidates drawn from all BUILT lines, same-pack and same-retailer filters kept
+(`166b00d`; test: a Wawa cold-start item is offered Sour Peach 97%, Sour Blu Razz 97%, PUFF Cookies N Cream 96%); Mo Chat forecast
+glossary rewritten (v11d, 56-input direct model, base-only, last value, trend scenario, L4W x stores, proxy; stale "28 features", "MA/ETS
+fallback" and "model total-units quantile" removed). mo-ui: drawer labels ("No model forecast stored yet · showing last value held
+flat"), no empty q10 / q90 band for the fallback, checkboxes for the two scenario lines, decimal y-axis labels for small values,
+actual dots under 4 weeks, fallback starts after the latest data week, total-units line shows actual weeks only (`38412fe`), and an
+"Ask Mo about this forecast" button in the drawer header (dispatches `mo:ask` with item, retailer, forecast type, actuals-through date,
+anchor, 13-week total, trend, store count; MoPanel docks left above the drawer while one is open; fixes the drawer hiding Mo). The
+reason for that change: with "Show promo uplift" the total-units line equaled the base forecast in the forecast window (MO_27D sets total = base; no promo volume is added).
+**Skeptic code review (opus/high): SAFE AFTER FIXES.** Builds passed (tsc, vite build, ast, app.main import with 54 routes). Blocker: the
+Mo Chat sentence "model and last value about equally accurate for young items" was wrong for the production recipe (MO_153
+direct_served 45.8 vs last value 38.2 at under 13 weeks, 5 of 18 dates; the tie was the 5-seed candidate). Should-fix items: Ask Mo
+trigger when Mo is already open (pendingTrigger waits), TDP labeled as store count (TDP is the sum of %ACV), L4W on the series' own TDP
+and 4+ weeks, tooltip name for last value, series silent 9+ weeks, reversed resize handle when docked left, hard-coded fuel prices.
+Review fixes committed (**mo-api `8a1cd83`, mo-ui `cf0cde5`**; tested locally: silent 9+ weeks gives `silent_since`; `/macro` returns
+gasoline 4.331, diesel 6.179, PPI foods 276.68). Both repositories fast-forward merged to main and pushed to GitHub (Jason approved).
+Jason's reaction to the drawer (Sour Blu Razz at Raley's, with last value, trend scenario, L4W and promotion lines): "This shows some
+improvement. I like having the recent trend scenario too. We just need to be able to explain it all with Mo Chat and in conversations
+with BUILT." Proxy trigger (limited history) unchanged; item-to-item comparison overlays for items with more history = backlog idea.
+
+**9. No production deploy of the Mo app is recorded anywhere.** Transcript and repository search found no Dockerfile, CI, deploy script
+or host; all past runs are local (uvicorn :8000 and vite on Jason's laptop; the README says Rob `git pull`s for his demo machine); the UI
+proxies `/api` to localhost:8000. A hosted Mo is an open launch-checklist item (go-live plan Phase 4 "Week 6: Cloud hosting; SSO";
+launch checklist "Mo hosting URL"), and Rob said in the standup: "if I package something up and deploy it on their server". So "deployed"
+today means main on GitHub plus whoever runs Mo pulls it. The Druid forecast reload (finding 1) is already live for every client of Druid.
+Not described anywhere as done: hosting on BUILT's server.
+
+**10. Security (internal; no values; not in wiki/18).** (a) The MinIO key (README 246, finding 3) still needs rotation by Rob; then
+`mo_writeback` stops writing keys into saved spec files and the 13 tracked spec files are untracked. (b) A 2026-06-16 session transcript
+contains a Druid username and password in a `curl -u` command (values not reproduced here): rotate the Druid password together with the
+MinIO key. `MINIO_*` and `DRUID_HOST` are not in Claude's shell; credentials were never read.
+
+### Evidence
+
+**MO_153, items under 13 weeks, account x month miss, all 18 origins (recent = 6 origins)**
+
+| arm | all origins | note |
+|---|---|---|
+| last value (flat) | 38.2 | best of the group |
+| direct_avg5 (5-seed production model) | 39.0 | recent 45.7 vs flat 47.3 (2025: flat better) |
+| conn_L4W (recent velocity x stores) | 41.3 | |
+| direct_served (production recipe, one seed) | 45.8 | |
+| capped trend | 59.6 | loses 14/18 dates |
+| ETS as in the Mo API | 61.3 | loses 17/18 dates |
+| automatic proxy | 2,678 | construction flaw; 47% of rows fell back to flat |
+
+| history band | result |
+|---|---|
+| Under 13 weeks | tie between flat and model (model ahead 9/18); ETS and trend clearly worse |
+| 13-25 weeks | direct_avg5 best at account x month (23.1 vs 26.9 flat; 12/18; best in 5 of 6 scopes) |
+
+**MO_155 (asof_avg5 vs direct_avg5), cw / am / pm**
+
+| view | direct_avg5 | asof_avg5 |
+|---|---|---|
+| Recent (6 origins) | 28.79 / 16.17 / 6.45 | 29.33 / 16.93 / 6.55 |
+| All 18 origins | 34.15 / 20.85 / 9.17 | 34.60 / 21.57 / 9.65 |
+
+**Druid forecast table, before and after**
+
+| | before | after |
+|---|---|---|
+| scored_at / model_version | 2026-09-26T17:43:06 / v4 | 2026-10-05T19:31:12 / v11d |
+| rows / series | 41,249 / 3,294 | 27,521 / 2,117 |
+| units sum | 73,402,620 | 8,144,060.18 |
+
+### Decisions (Jason)
+
+- Reload the Druid forecast table from the Oct 5 v11d run (done, after the skeptic's changes); expect another reload after the Optuna retrain.
+- Where no model forecast is stored, show a labeled last value with optional recent-trend and L4W x stores scenario lines, not ETS.
+- Keep the proxy feature and its trigger (limited history); proxies from PUFF and SOUR PUFF too; user can pick any item (planned);
+  item comparison for items with more history is a thought only.
+- Mo Chat must explain every line in the drawer.
+- Merge and push the reviewed Mo branches to main ("you and I have always deployed those changes"; not Rob).
+- Staged Optuna plan, budget $55; MO_156 (corrected series, release-aligned) first; macro retest justified by the 2026 energy shock.
+- Do not send Rob the promotion-count correction now ("The proof is in the pudding ... forecasted vs actual outcomes that get better
+  the more data we get and the more we retrain the model").
+- Mo app use has been light; value may shift to a generative ad-hoc interface (idea).
+
+### Open
+
+- MO_156 model-input test (`jason-mo156-001..003`): score, then skeptic; then recheck the RunPod balance and launch Optuna.
+- Amend the MO_154 prereg for the staged design before any result.
+- Jason: model forecast or last value for items under 13 weeks (tie in testing)?
+- Jason's last question at session end (is the app on :5173 current with the Mo API changes?) -- ANSWERED in session: yes; both Mo repos are on main (mo-api 8a1cd83, mo-ui cf0cde5) matching GitHub, no uncommitted changes; the :5173 app serves main and the :8000 API runs main (restart command: cd ~/Documents/customer-built-mo-api && source .venv/bin/activate && uvicorn app.main:app --port 8000).
+  answered in the notes.
+- Fair re-test of a user-picked / properly scaled proxy; "any item" proxy picker (approved, not recorded as built).
+- Category velocity vs 13-week norm: definition and build (Jason: "not currently built but should be fairly straightforward").
+- Hosting Mo on BUILT's server (Rob); a deploy runbook; the retracted 4% line in Rob's draft interface list must not ship.
+- Rob: rotate MinIO key and Druid password; stop writing keys into spec files.
+- API filter to latest `scored_at`; fix the wiki 19 append-vs-replace conflict; Mo Chat/UI should-fix list from the code review.
+- Carried over: look-ahead retrain for December (the promotion-count part is withdrawn; donor / competitor-gap part stands); BAR wind-down check;
+  an under-13-only velocity-input candidate only if pre-registered.
+
+### Procedural lesson
+
+When a symptom looks like a method gap (the ETS fallback firing on items the model forecasts), check the live data the symptom reads from
+before testing methods: here the forecast table in Druid was a different, older run, and no test of methods would have found it. Second:
+confirm what an external series ID actually is (its source title) before building on it; two labels were wrong for months and fed one
+SETTLED entry. Third: a smoke run's log tail can show real results; keep predictions committed before any run, and disclose when it does.
+
+---
+
 ## README update 246: Recent sales rate x stores as model inputs does not pass; only the under-13-week gain is robust (MO_149); evidence for revisiting the new-item ETS fallback; access-key mechanism; glmnet answer; BUILT's Competitive Distribution Chart reviewed (2026-10-14, evening)
 
 **What the work was (plain words):**
