@@ -36,6 +36,9 @@ in the conversation caused an HTTP 400 error. (d) A 1,024-token output limit led
 2023-07 to 2026-02).** Nov 0.90, Dec 0.83 (low), Jan 0.91, Feb 1.03, Mar 1.11, Apr 1.16 (peak), May 1.12, Jun 1.04, Jul 0.97, Aug 1.01, Sep 0.99,
 Oct 0.95. This contradicts the old text in Mo ("January spike / Feb-Mar softness"). Jason's reading of January, verbatim: "a ramp back up as new
 year health kick and Spring promos spark renewed demand ... after the November - December Holidays"; the Mo seasonality note was rewritten to match.
+**CORRECTED 2026-10-16 ~12:05 (skeptic review of the drawer):** the index included roll-up rows (blank account, multi-outlet with convenience)
+and zero-sales geographies. With account-level rows with sales only: Nov 0.91, Dec 0.85 (low), Jan 0.93, Feb 1.03, Mar 1.12, Apr 1.11, May 1.11
+(a spring plateau, not an April peak), Jun 1.08, Jul 0.96, Aug 0.99, Sep 0.96, Oct 0.96. Same shape; year-to-year values vary (2-3 years per month).
 Still open: the proxy overlay code still uses the old hard-coded monthly index.
 
 **4. ETS example (Rocky Road at New Seasons).** The automatic fit puts no weight on recent weeks (smoothing 0.0), damping 0.995, trend -13.1 per
