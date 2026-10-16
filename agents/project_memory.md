@@ -838,3 +838,4 @@ Detail: README 248; wiki/18 entry "Forecast-drawer method buttons, data-sourced 
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
+- 2026-10-16 End-session: Jason confirmed the summary ('looks good to me'); scribe wrote wiki/18 (Oct 15-16 entry), README 248, project memory session section; Jason approved push of FirstAgent (8 commits + standup transcript + MO_156 results JSON) and customer-built-doc (wiki/18).
