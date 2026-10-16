@@ -259,10 +259,96 @@ def run_study(a) -> None:
     print("BEST", best.number, round(best.value, 3), best.params, flush=True)
 
 
+# ---------------------------------------------------------------- Stage 3: top 3 settings x 5 seeds x 18 dates
+FINAL_SEEDS = (42, 1, 2, 3, 4)          # the same seeds as direct_avg5 (MO_148 SEEDS)
+TUNED_KEYS = ("learning_rate", "num_leaves", "min_child_samples", "feature_fraction", "bagging_fraction",
+              "reg_alpha", "reg_lambda")
+
+
+def _v_params(params: dict, tr, feats, cut):
+    """One Stage 3 arm: set every tuned global explicitly (the base arm uses the production settings), then fit.
+    random_state and n_jobs are set by MO_148.compute_origin before this is called."""
+    lg = P.D26.LGBM_BASE
+    for k in TUNED_KEYS:
+        lg[k] = params[k]
+    P.D26.RECENCY_LAMBDA = params["recency"]
+    P.CAL_EXTRA = tuple(n for n in ("month", "holiday", "jan_reset") if params[f"cal_{n}"])
+    return P.run_direct(tr, list(feats) + [P.CAL_COLS[n] for n in P.CAL_EXTRA], cut, refit=True, calendar=True)
+
+
+def _feats(fd: Path):
+    feats_r = json.loads((fd / "feats_recursive.json").read_text())
+    feats_d = list(json.loads((fd / "direct_multihorizon_metrics_v11d.json").read_text())["features_used"])
+    return feats_r, feats_d
+
+
+def run_final(a) -> None:
+    """Worker: forecasts for tuned<k>_s<seed> (k = rank in --settings) and optionally base_s42 (parity), written as
+    mo154_<arm>_<origin>.parquet in the MO_148 format so MO_148.score_candidates applies the switching rule."""
+    import functools
+    import MO_148_product_line_models as L
+    settings = json.loads(Path(a.settings).read_text())
+    variants, arms = {"base": functools.partial(_v_params, BASELINE)}, (["base_s42"] if a.with_base else [])
+    for g in [x for x in a.groups.split(",") if x]:
+        variants[g] = functools.partial(_v_params, settings[int(g.removeprefix("tuned")) - 1])
+        arms += [f"{g}_s{s}" for s in FINAL_SEEDS]
+    origins = [o for o in ALL_ORIGINS if not a.origins or o in a.origins.split(",")]
+    feats_r, feats_d = _feats(Path(a.feats_dir))
+    t0 = time.time()
+    summary = L.compute(origins, arms, a.out, feats_r, feats_d, a.threads, a.parallel, prefix="mo154",
+                        variants=variants)
+    Path(a.out, f"mo154_final_{a.groups.replace(',', '-')}_{origins[0]}_{origins[-1]}.json").write_text(
+        json.dumps(summary, indent=2, default=str))
+    print(f"done {len(origins)} dates x {len(arms)} arms in {time.time() - t0:,.0f}s", flush=True)
+
+
+def run_final_score(a) -> None:
+    """Laptop: pre-registered Stage 3 decision. Winner = lowest 5-seed objective on the 15 TUNING dates only;
+    then P3 on the held-out 2026-03/04/05 dates and Amendment 1 + 2 (MO_148.score_candidates) for the winner."""
+    import MO_148_product_line_models as L
+    groups = [x for x in a.groups.split(",") if x]
+    feats_r, feats_d = _feats(Path(a.feats_dir))
+    out_rows = "outputs/mo154_final_rows.parquet"
+    res = L.score_candidates([x for x in a.results.split(",") if x], "mo154", tuple(groups),
+                             "../outputs/mo154_final.json", out_rows, feats_r, feats_d)
+    rows = pd.read_parquet(Path(a.data_dir) / ROWS_IN)
+    rows["date"] = pd.to_datetime(rows["date"], utc=True)
+    fr = pd.read_parquet(out_rows)
+    tune = [o for o in ALL_ORIGINS if o not in HELD_OUT]
+    obj = {}
+    for g in groups:
+        fc = fr[["origin", "series", "date", f"{g}_avg5"]].rename(columns={f"{g}_avg5": "trial"})
+        S = score(rows, fc, tune)
+        obj[g] = {"objective_15": S["objective"], "am_15": S["am"]["trial"], "penalty": S["penalty"]}
+    base = score(rows, fr[["origin", "series", "date", "direct_avg5"]].rename(columns={"direct_avg5": "trial"}), tune)
+    win = min(groups, key=lambda g: obj[g]["objective_15"])
+    ho = fr[fr["origin"].isin(HELD_OUT) & ~fr["is_new"]]
+    Sh = M.score_levels(ho, [f"{win}_avg5", "direct_avg5"])
+    p3 = Sh[AM][f"{win}_avg5"] - Sh[AM]["direct_avg5"] <= 0.3
+    rule = res["rule"][f"{win}_avg5"]
+    res["stage3"] = {"objective_15_by_setting": obj, "direct_avg5_objective_15": base["objective"],
+                     "winner": win, "P3 held-out am": {"tuned_avg5": Sh[AM][f"{win}_avg5"],
+                                                       "direct_avg5": Sh[AM]["direct_avg5"], "holds": bool(p3)},
+                     "rule": rule, "adopt_for_december_retrain": bool(p3 and rule.get("passes backtest part"))}
+    Path("../outputs/mo154_final.json").write_text(json.dumps(res, indent=2, default=float))
+    print("\nSTAGE 3 (5-seed, 15 tuning dates): objective / account x month")
+    print(f"  direct_avg5 {base['objective']:.3f} / {base['am']['trial']:.2f}")
+    for g in groups:
+        print(f"  {g}_avg5 {obj[g]['objective_15']:.3f} / {obj[g]['am_15']:.2f}{'   <- winner' if g == win else ''}")
+    print(f"P3 held-out 2026-03/04/05 account x month: {win}_avg5 {Sh[AM][f'{win}_avg5']:.2f} vs direct_avg5 "
+          f"{Sh[AM]['direct_avg5']:.2f} -> {'HOLDS' if p3 else 'FAILS'}")
+    print("RULE (Amendment 1 + 2):", rule)
+    print("DECISION adopt for the December retrain:", res["stage3"]["adopt_for_december_retrain"])
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["tune"])
-    ap.add_argument("--study", choices=["A", "B"], required=True)
+    ap.add_argument("cmd", choices=["tune", "final", "final-score"])
+    ap.add_argument("--study", choices=["A", "B"], default="A")
+    ap.add_argument("--settings", default="", help="final: JSON list of the Stage 3 settings in rank order")
+    ap.add_argument("--groups", default="", help="final / final-score: e.g. tuned1,tuned2,tuned3")
+    ap.add_argument("--with-base", action="store_true", help="final: also forecast base_s42 (parity check)")
+    ap.add_argument("--results", default="", help="final-score: comma-separated result folders")
     ap.add_argument("--trials", type=int, default=200)
     ap.add_argument("--seconds", type=int, default=3 * 3600)
     ap.add_argument("--parallel", type=int, default=6)
@@ -281,7 +367,7 @@ def main() -> None:
     ap.add_argument("--data-dir", default=os.environ.get("AEVAH_DATASET_DIR", "outputs"))
     a = ap.parse_args()
     a.name = a.name or a.study
-    run_study(a)
+    {"tune": run_study, "final": run_final, "final-score": run_final_score}[a.cmd](a)
 
 
 if __name__ == "__main__":
