@@ -200,7 +200,8 @@ def run_study(a) -> None:
     storage = JournalStorage(JournalFileBackend(str(journal)))
     study = optuna.create_study(study_name=f"mo154_{a.name}", direction="minimize", storage=storage,
                                 load_if_exists=True, sampler=optuna.samplers.TPESampler(seed=a.sampler_seed),
-                                pruner=optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=0))
+                                pruner=(optuna.pruners.NopPruner() if a.no_prune      # Stage 2 re-scoring: full scores
+                                        else optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=0)))
     if len(study.trials) == 0:
         # Stage 2: earlier jobs' trials on the same dates become history without re-computation
         dist = _distributions()
@@ -274,6 +275,7 @@ def main() -> None:
     ap.add_argument("--prior", default="", help="comma-separated trials_*.jsonl whose COMPLETE trials on the same "
                                                 "dates are added as history (Stage 2 TPE)")
     ap.add_argument("--no-baseline", action="store_true", help="do not enqueue the production settings")
+    ap.add_argument("--no-prune", action="store_true", help="score every trial on all dates (Stage 2 re-scoring)")
     ap.add_argument("--out", default=os.environ.get("AEVAH_RESULTS_DIR", "outputs/mo154_cache"))
     ap.add_argument("--feats-dir", default="outputs")
     ap.add_argument("--data-dir", default=os.environ.get("AEVAH_DATASET_DIR", "outputs"))
