@@ -1,0 +1,135 @@
+{
+  "period": [
+    "2023-10-01",
+    "2024-06-30"
+  ],
+  "Q1": {
+    "weeks_with_singles_sales": 38,
+    "weeks_in_period": 39,
+    "stores_selling_peak": 25.0,
+    "stores_selling_median": 14.5,
+    "meijer_stores_median": 268.0,
+    "singles_items": 2,
+    "singles_base_units": 2402.1,
+    "per_item_per_store_selling_per_week": 2.563607257203842
+  },
+  "Q2": [
+    {
+      "upc": "08-40229-30362",
+      "description": "Built Puff Brownie Batter Protein Bar 1.41 Oz",
+      "base_units": 1270.1,
+      "weeks": 33,
+      "per_store_wk": 2.673894736842105
+    },
+    {
+      "upc": "08-40229-30037",
+      "description": "Built Puff Coconut Protein Bar 1.41 Oz",
+      "base_units": 1132.0,
+      "weeks": 38,
+      "per_store_wk": 2.4502164502164505
+    }
+  ],
+  "Q3": {
+    "price_per_bar_singles": 2.769018775238333,
+    "price_per_bar_4pk": 2.418673188695151,
+    "singles_premium_pct": 14.485032049004932
+  },
+  "Q4": {
+    "singles_bars": 2402.1,
+    "fourpack_bars": 117202.79999999999,
+    "singles_share_of_4pk_bars_pct": 2.049524414092496,
+    "share_of_stores_with_singles_peak_pct": 9.328358208955224
+  },
+  "Q5_by_quarter": [
+    {
+      "q": "2023Q4",
+      "weeks": 12,
+      "base_units": 764.7,
+      "max_stores": 20.0
+    },
+    {
+      "q": "2024Q1",
+      "weeks": 13,
+      "base_units": 1200.2,
+      "max_stores": 24.0
+    },
+    {
+      "q": "2024Q2",
+      "weeks": 13,
+      "base_units": 437.2,
+      "max_stores": 25.0
+    },
+    {
+      "q": "2024Q3",
+      "weeks": 7,
+      "base_units": 92.0,
+      "max_stores": 3.0
+    },
+    {
+      "q": "2024Q4",
+      "weeks": 5,
+      "base_units": 40.0,
+      "max_stores": 1.0
+    },
+    {
+      "q": "2025Q1",
+      "weeks": 5,
+      "base_units": 28.0,
+      "max_stores": 1.0
+    },
+    {
+      "q": "2025Q2",
+      "weeks": 4,
+      "base_units": 20.0,
+      "max_stores": 1.0
+    },
+    {
+      "q": "2025Q3",
+      "weeks": 1,
+      "base_units": 2.0,
+      "max_stores": 1.0
+    },
+    {
+      "q": "2025Q4",
+      "weeks": 3,
+      "base_units": 5.0,
+      "max_stores": 1.0
+    },
+    {
+      "q": "2026Q1",
+      "weeks": 2,
+      "base_units": 4.0,
+      "max_stores": 1.0
+    },
+    {
+      "q": "2026Q2",
+      "weeks": 5,
+      "base_units": 10.0,
+      "max_stores": 2.0
+    },
+    {
+      "q": "2026Q3",
+      "weeks": 2,
+      "base_units": 8.2,
+      "max_stores": 1.0
+    }
+  ],
+  "predictions": {
+    "P1 per item per store selling per week 1.5-5.0": {
+      "value": 2.563607257203842,
+      "holds": true
+    },
+    "P2 singles bars < 2% of 4-pack bars": {
+      "value": 2.049524414092496,
+      "holds": false
+    },
+    "P3 singles >= 5% more per bar": {
+      "value": 14.485032049004932,
+      "holds": true
+    },
+    "P4 <= 4 singles items": {
+      "value": 2,
+      "holds": true
+    }
+  }
+}
