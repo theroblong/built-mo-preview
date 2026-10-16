@@ -882,3 +882,4 @@ Detail: README 249; wiki/18 entry "BUILT cadence meeting, planner levers in the 
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
+- 2026-10-16 Jason: 'We are unable to write to runpodagent, please package the change in a MD file so we can send it to the responsible coding agent'. Wrote docs/handoffs/runpodagent_billing_based_monthly_admission.md (spec, acceptance tests, verification, full diff vs base 12fc757; diff extracted from the md applies cleanly and reproduces 463a7ac exactly).
