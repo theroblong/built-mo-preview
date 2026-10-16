@@ -6,6 +6,103 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 248: Mo forecast-drawer method buttons built and released (v2.7.0); Mo Chat answers are data-only and sourced (replay test); seasonal index computed from BUILT's data; macro inputs in the model not adopted (MO_156 part M, skeptic checked); Optuna tuning of the production model's settings in progress (MO_154, Stage 1 done) (2026-10-15 to 2026-10-16)
+
+**What the work was (plain words):**
+- **Forecast-drawer method controls (built and released).** After the Oct 16 standup (`docs/Aevah Standup_101626.docx`, Jason + Rob, 9:25 AM ET) the
+  forecast drawer got a row of buttons that turn comparison lines on and off in the same chart: current pace, L4W, L12W, last value, a seasonal
+  line, ETS (with settings), and a planner adjustment. All four repos were tagged v2.7.0 (Oct 15). The method-button work was merged and pushed to main in both Mo repos.
+- **Mo Chat answers rebuilt as data-only and sourced.** Jason, Oct 15: "stop guessing. Mo chat uses actual data. veracity and data provenance for
+  explainability are very, very important. We made that clear in our trust document" and "Mo chat serves up actual insights from the Mo pipeline with actual data".
+- **MO_156 part M** (macro indicators such as fuel prices as inputs to the production model): scored and skeptic checked. Not adopted.
+- **MO_154 Optuna** (an automated search over the production model's settings): smoke run, then Stage 1 (120 trials) completed; Stage 2 started.
+- **Seasonal index computed from BUILT's data** (it replaced hard-coded text in Mo).
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Miss = average miss % (lower is better). Bias = forecast / actual (below 1.00 = too low).
+
+### Findings
+
+**1. Ask Mo replay test (customer-built-mo-api `tests/ask_mo_replay/`): the old design failed every answer; the redesign passes.** The test
+rebuilds the drawer question exactly as the app sends it and checks the answer against the data. The old design failed every answer (invented
+reasons, invented ranges, invented trust ratings). After the redesign it passed 9 of 9 clean, three times in a row. With the new method lines
+(Oct 16) 10 cases were clean on content. The new answer shape is fixed: What the sales show / What the forecast shows / How to use it / What Mo
+doesn't have yet / Sources. Drawer answers and forecast-method questions are routed to Claude Sonnet 5.5.
+
+**2. Pre-existing Mo bugs found and fixed while testing.** (a) The forecast tool sorted week labels as text, not dates. (b) With no account
+named it returned one arbitrary account's row per week, which was the source of a false range Mo quoted. (c) Claude 5 thinking blocks sent back
+in the conversation caused an HTTP 400 error. (d) A 1,024-token output limit led to "Mo ran into a loop".
+
+**3. Seasonal index from the data (BUILT SPINS base units per distribution point, by month; a centered 12-month moving average removed; months
+2023-07 to 2026-02).** Nov 0.90, Dec 0.83 (low), Jan 0.91, Feb 1.03, Mar 1.11, Apr 1.16 (peak), May 1.12, Jun 1.04, Jul 0.97, Aug 1.01, Sep 0.99,
+Oct 0.95. This contradicts the old text in Mo ("January spike / Feb-Mar softness"). Jason's reading of January, verbatim: "a ramp back up as new
+year health kick and Spring promos spark renewed demand ... after the November - December Holidays"; the Mo seasonality note was rewritten to match.
+Still open: the proxy overlay code still uses the old hard-coded monthly index.
+
+**4. ETS example (Rocky Road at New Seasons).** The automatic fit puts no weight on recent weeks (smoothing 0.0), damping 0.995, trend -13.1 per
+week, and reaches zero in week 3 (13-week total 30). Planner settings "Mostly recent + Levels off" give 542; "Latest week only + No trend" gives
+the current pace, 746. Jason asked for the ETS button and its settings (alpha-style, plain-language) so a planner can change this.
+
+**5. MO_156 part M (13 macro indicators as model inputs; skeptic opus/high: SURVIVES WITH CAVEATS, "not adopted, production unchanged").**
+Account x month recent 16.00 vs 16.17 without macro. The gain is a downward level shift, not a better read: under-forecast cells 44% to 54%,
+bias 0.970 to 0.941, and it wins only 7 of 18 dates. No regime effect: 2026 fuel prices are above the training range, and similar gains appear at
+non-shock dates. Portfolio x month is worse, concentrated in the 2025-11 and 2025-12 forecast dates (ties without them, 9.12 vs 9.15). Leakage
+and parity checks clean. Process note: `macro_avg5` was never named in `docs/PRODUCTION_DECISION_PREREG.md`. Decision (Jason): part M not adopted.
+Units per store per week is a model input (velocity features), not the target; MO_149 (adding recent sales rate x stores as inputs) was not adopted (README 246).
+
+**6. MO_154 Optuna (tuning the production model's settings), status.** Smoke run reproduced production exactly (account x month 25.447 and the
+other levels). Stage 1: 120 trials, cost $13.34. Best 6-date objective 41.13 (account x month 24.36) vs production 43.41 (25.45). Six of the top
+10 are worse than production at account x month. The seasonal-bias penalty dominates the objective (to be reviewed at Stage 2). The journal
+checkpoint resume worked live twice. Stage 2a (15-date re-scoring) is running; the first two 15-date objectives are 35.38 and 34.33 (account x
+month 24.29 and 22.53); the production comparison is not in yet. Stage 3 code (`final`, `final-score`) passed a laptop smoke with exact parity.
+Staged plan approved and preregistered (amendment in `docs/PRODUCTION_DECISION_PREREG.md`): Study B dropped, $50 cap; approvals needed for smoke, Stage 1, Stage 2.
+**No Stage 2 or Stage 3 result and no skeptic review exist; do not cite the Stage 1 numbers as a tuning win.**
+
+### Evidence
+
+**MO_156 part M, recent (6 origins)**
+
+| item | without macro | with macro |
+|---|---|---|
+| account x month miss | 16.17 | 16.00 |
+| bias | 0.970 | 0.941 |
+| under-forecast cells | 44% | 54% |
+| dates won (of 18, account x month) | | 7 |
+| portfolio x month, 2025-11/12 dates removed | 9.15 | 9.12 |
+
+**MO_154 Stage 1 vs production (6-date screen)**
+
+| | objective | account x month |
+|---|---|---|
+| production settings | 43.41 | 25.45 |
+| best of 120 trials | 41.13 | 24.36 |
+
+### Decisions (Jason)
+
+- Mo forecast-drawer answers are data-only and sourced (fixed five-part shape); drawer and forecast-method questions on Claude Sonnet 5.5; replay test before any Mo Chat handover.
+- v2.7.0 released and tagged across all four repos (Oct 15).
+- The chart legend keeps the q10 / q50 / q90 labels.
+- Mo must not volunteer "carry last value forward is best". Current pace, L4W, L12W and last value are ready baselines; Mo's model learns seasonality and improves with retraining; no ranking and no "model beats last value" claim. Jason, Oct 16: "Connor and team know that the current L4W, L12M and last value methods can be used as a baseline ... we're also training ML continuous learning models that indicate seasonality and will continue to improve over time."
+- Method buttons, seasonal line, ETS with settings and planner adjustment approved, merged and pushed.
+- MO_156 part M not adopted. Staged Optuna plan preregistered; Study B dropped; $50 cap.
+
+### Received
+
+- Rob, standup Oct 16: "What if we added some controls up here and there was your L4W, L12W, or whatever your existing methods ... it changes how the lines are rendered"; "you don't have to just take what the machine gives you. You have some adjustability"; "I like the seasonal overlay as an adjustment outside of the model"; "all these little boxes up at the top where we can turn on and turn off different models and views, but it's still in the same chart and graph". Sync 10:30 CDT, BUILT meeting 12:30 CDT; Connor may not attend; possible follow-up next week; Meijer singles editable version shown (add-row-below-cursor not working yet).
+
+### Open
+
+- MO_154: Stage 2a results (including the production comparison), P5 (does the 6-date screen rank settings like the 15-date scores?), Stage 2b approval, Stage 3 run; review the seasonal-bias weighting at Stage 2.
+- Planner presets (saving adjustments) next week; Connor follow-up meeting.
+- Meijer singles editable report (add-row-below-cursor).
+- Proxy overlay code still uses the old hard-coded monthly index.
+- Carried over: category velocity vs 13-week norm; accuracy panel (register-cleared figures only); with-macro forward save; Rob: credential rotation, pull both repos, hosting; Competitive Distribution Chart workbook decisions.
+
+### Procedural lesson
+
+(1) Replay before retest: when Mo Chat output is wrong, rebuild the exact question as the app sends it and check it against the data in a test, instead of asking Jason to retest screen by screen (Jason: "are you sure it's right now? I don't want to test this many more times"). (2) A sleeping laptop pauses timers: the overnight Optuna watch stalled, and the last resume of search B started about 75 minutes late (no work lost, since the checkpoint journal resumed it). (3) Returning prior-turn thinking blocks to Claude 5 can fail with an HTTP 400; the serialization has to be handled. (4) Read the clock before stating times: my progress messages on Oct 15 understated elapsed time by about 4 hours.
+
+---
+
 ## README update 247: Forecast table in Druid reloaded (it was the Sept 26 v4 run, now the Oct 5 v11d run); little-history display test (MO_153); per-week promotion statistics are worse (MO_155); FRED series mislabeled; MO_156 gas/diesel checks (PRELIMINARY) and Optuna plan; Mo app/API changes merged; no hosted production exists (2026-10-15)
 
 **What the work was (plain words):**
