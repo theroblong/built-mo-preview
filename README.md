@@ -6,6 +6,56 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 249: Meijer's own BUILT singles measured (MO_157, skeptic checked); forecast-drawer planner levers built and independently reviewed; Optuna tuning of the production model's settings, Stages 2a and 2b (MO_154, PROVISIONAL, not skeptic checked): no setting beats production by the required margin, Stage 3 running; compute monthly admission now counts actual RunPod charges (2026-10-16)
+
+**What the work was (plain words):**
+- **Meijer singles (MO_157).** Measured how Meijer's own BUILT single bars sold from Oct 2023 to Jun 2024 (the only time Meijer sold singles), for the Meijer brief v3 (`docs/briefs/meijer_v3/`, built by `scripts/MO_158_build_full_brief.py`). DECA (military commissaries, a different kind of store) is excluded from the "only retailers with essentially no singles" comparison (Jason).
+- **Planner levers in the forecast drawer.** Spreadsheet-style adjustments (no person's name on any method) after Rob's 11:38 AM call. Override applies only when > 0 and can be cleared; "Reset levers"; the drawer saves its settings per item x retailer in the browser, with "Reset view". A skeptic recomputed the drawer for 639 item x retailer drawers.
+- **MO_154 Optuna** (automated search over the production model's settings): Stage 2a re-scored the top 10 Stage 1 settings plus production on all 15 tuning dates; Stage 2b ran 30 more search trials on those 15 dates. Stage 3 (final check, 3 tuned settings x 5 seeds x 18 dates incl. held-out 2026-03/04/05) is running.
+- **Compute monthly admission rule** (runpodagent): changed to count actual charges.
+
+Levels: item x week (cw), account x month (am), portfolio x month (pm). Miss = average miss % (lower is better).
+
+### Findings
+
+**1. Meijer's own singles (MO_157; skeptic opus/high: SURVIVES WITH CAVEATS; the brief uses the skeptic's wording).** Two items (Brownie Batter, Coconut 1.41 oz); at most 25 of about 268 stores sold them. Base units per item per store selling per week: Meijer 2.56; typical grocer 4.0, convenience 1.6, Walmart 2.6, Target none (same months). A single sold about 15% more per bar than a 4-pack at regular price (about 5% at prices paid). Singles were about 2% of 4-pack sales counted in bars (about 8% counted in packs). The small store count is the main caveat.
+
+| Comparison, same months | Base units per item per store selling per week |
+|---|---|
+| Meijer own singles | 2.56 |
+| Typical grocer | 4.0 |
+| Convenience | 1.6 |
+| Walmart | 2.6 |
+| Target | none |
+
+**2. Forecast drawer review (skeptic; SAFE WITH FIXES).** Core math exact on 639 item x retailer drawers (L4W and L12W velocity x doors, doors, season factors, ETS, planner). Fixed before the BUILT meeting: duplicate-geography drawer, stale Mo example, last-value wording, week-1 readout, promotion floor, seasonal index, store count (now latest week), CSV labels. The seasonal index now uses account-level rows with sales only: a spring plateau (about 1.11 Mar-May), Dec 0.85, not an April peak of 1.16 (README 248 corrected). Deferred: a "needs 12 weeks" note when stores data is missing; calendar-week windows and stale series; zero-sales duplicate AK/HI series; maybe hide ETS under 13 weeks; avoid "Positive" elasticity items in demos; the proxy overlay still uses the old fixed seasonal index.
+
+**3. MO_154 Optuna Stage 2a and 2b (PROVISIONAL, not skeptic checked).** Objective = the pre-registered score (lower is better); am = account x month miss.
+
+| Setting | 15-date objective | am miss % |
+|---|---|---|
+| Production (seed 42) | 34.00 | 23.01 |
+| Best tuned (s2r1 #2) | 33.67 | 23.00 |
+| Second tuned (s2t2 #13) | 33.71 | 23.02 |
+| Third tuned (s2r1 #3) | 34.04 | 23.05 |
+
+- P1 holds: production on 15 dates reproduces the production single-seed forecasts exactly.
+- P2 FAILS: best gain 0.33 is below the 0.5 bar; only 1 of 10 Stage 1 picks beat production.
+- P5 FAILS: rank correlation between the 6-date and 15-date objectives is 0.12 (needed 0.5); production ranked last on 6 dates but 2nd of 11 on 15.
+- Stage 2b: 30 trials, 8 complete, 22 pruned; none better than the Stage 2a best.
+- All gaps are within seed noise: production seed 42 vs the 5-seed average is 23.01 vs 22.83.
+- Spend so far about $21.84 actual; Stage 3 estimated about $6-7. Decision rule is unchanged: production settings stay unless a tuned setting passes P3 plus Amendments 1 and 2. Stage 3 results expected about 9-10 PM Oct 16.
+
+**4. Compute monthly limit (process finding).** The admission check summed every job's worst-case reservation for the month and never released them ($129.09 reserved vs about $40 actually billed in October), which blocked Stage 3 jobs s3b and s3c. Fix (runpodagent branch `billing-based-monthly-admission`, commit 463a7ac): admission = RunPod-billed charges this UTC month + full reservations of unsettled jobs; policy file unchanged; 138 tests plus lint, type and secret checks pass. The push was refused (GitHub 403, no write access to AevahLLC/runpodagent); the branch is local only and Rob must grant access or apply it. After the tool reloaded, all three Stage 3 jobs were accepted.
+
+### Procedural lessons
+- A worst-case reservation rule that never releases budget blocks work long before real money is spent; compare reserved with billed.
+- A 6-date screen did not rank settings like the 15-date scores (correlation 0.12), so screens on few dates cannot pick winners alone.
+- Rob suggested citing pilot accuracy; the 4% figure is retracted (ACCURACY_CLAIMS_REGISTER section 3) and must not be quoted.
+
+### Next
+- Score Stage 3, then the pre-registered decision; skeptic check before any tuning result is relied on; December retrain.
+
 ## README update 248: Mo forecast-drawer method buttons built and released (v2.7.0); Mo Chat answers are data-only and sourced (replay test); seasonal index computed from BUILT's data; macro inputs in the model not adopted (MO_156 part M, skeptic checked); Optuna tuning of the production model's settings in progress (MO_154, Stage 1 done) (2026-10-15 to 2026-10-16)
 
 **What the work was (plain words):**
