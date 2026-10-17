@@ -1,0 +1,134 @@
+PARITY base_s42 vs MO_133 direct_fixed_s42: max abs diff 39963.686279; base fell back 129,378
+rows using the production model's same-seed forecast (arm did not forecast them): {'tuned1_s42': 0, 'tuned1_s1': 0, 'tuned1_s2': 0, 'tuned1_s3': 0, 'tuned1_s4': 0, 'tuned2_s42': 0, 'tuned2_s1': 0, 'tuned2_s2': 0, 'tuned2_s3': 0, 'tuned2_s4': 0, 'tuned3_s42': 0, 'tuned3_s1': 0, 'tuned3_s2': 0, 'tuned3_s3': 0, 'tuned3_s4': 0}
+
+=== WITH WALMART, RECENT origins, existing series: cw / am / pm | bias ===
+  direct_avg5     28.79  16.17   6.45   bias 0.970
+  tuned1_avg5     29.24  15.95   6.44   bias 0.979
+  tuned2_avg5     28.97  16.46   6.60   bias 0.972
+  tuned3_avg5     28.81  15.97   6.73   bias 0.972
+  BY HISTORY BAND, cell x week (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    650  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=  5,911  direct_avg5=87.0  tuned1_avg5=87.5  tuned2_avg5=87.6  tuned3_avg5=86.2
+    <13 wks    n= 16,761  direct_avg5=52.7  tuned1_avg5=53.2  tuned2_avg5=53.6  tuned3_avg5=52.1
+    13-25 wks  n= 14,288  direct_avg5=29.2  tuned1_avg5=30.4  tuned2_avg5=28.9  tuned3_avg5=29.9
+    26-51 wks  n= 17,843  direct_avg5=21.3  tuned1_avg5=22.0  tuned2_avg5=21.4  tuned3_avg5=21.2
+    52+ wks    n= 24,017  direct_avg5=18.8  tuned1_avg5=18.8  tuned2_avg5=18.9  tuned3_avg5=19.0
+  BY HISTORY BAND, account x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    194  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=    393  direct_avg5=82.7  tuned1_avg5=83.1  tuned2_avg5=82.5  tuned3_avg5=83.2
+    <13 wks    n=  1,153  direct_avg5=45.7  tuned1_avg5=45.2  tuned2_avg5=46.7  tuned3_avg5=44.6
+    13-25 wks  n=  1,031  direct_avg5=20.2  tuned1_avg5=21.7  tuned2_avg5=19.9  tuned3_avg5=21.2
+    26-51 wks  n=  1,291  direct_avg5=14.1  tuned1_avg5=15.2  tuned2_avg5=14.3  tuned3_avg5=13.8
+    52+ wks    n=  1,282  direct_avg5=14.3  tuned1_avg5=14.3  tuned2_avg5=14.6  tuned3_avg5=14.7
+  BY HISTORY BAND, portfolio x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=     17  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=     17  direct_avg5=80.6  tuned1_avg5=79.6  tuned2_avg5=80.4  tuned3_avg5=79.5
+    <13 wks    n=     17  direct_avg5=17.0  tuned1_avg5=16.3  tuned2_avg5=17.0  tuned3_avg5=15.6
+    13-25 wks  n=     17  direct_avg5=9.9  tuned1_avg5=10.4  tuned2_avg5=9.4  tuned3_avg5=10.4
+    26-51 wks  n=     17  direct_avg5=7.6  tuned1_avg5=8.6  tuned2_avg5=7.7  tuned3_avg5=7.5
+    52+ wks    n=     17  direct_avg5=6.7  tuned1_avg5=7.4  tuned2_avg5=6.9  tuned3_avg5=7.9
+
+=== WITH WALMART, ALL origins, existing series: cw / am / pm | bias ===
+  direct_avg5     34.15  20.85   9.17   bias 0.969
+  tuned1_avg5     34.65  20.97   9.48   bias 0.971
+  tuned2_avg5     34.07  20.96   9.28   bias 0.971
+  tuned3_avg5     34.62  21.12   9.06   bias 0.968
+  BY HISTORY BAND, cell x week (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=  1,725  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n= 15,372  direct_avg5=89.4  tuned1_avg5=89.6  tuned2_avg5=89.7  tuned3_avg5=89.0
+    <13 wks    n= 34,192  direct_avg5=51.0  tuned1_avg5=51.8  tuned2_avg5=51.7  tuned3_avg5=50.7
+    13-25 wks  n= 29,538  direct_avg5=31.1  tuned1_avg5=32.4  tuned2_avg5=30.9  tuned3_avg5=32.1
+    26-51 wks  n= 38,046  direct_avg5=26.5  tuned1_avg5=27.0  tuned2_avg5=26.6  tuned3_avg5=26.3
+    52+ wks    n= 50,397  direct_avg5=29.0  tuned1_avg5=29.1  tuned2_avg5=28.5  tuned3_avg5=29.9
+  BY HISTORY BAND, account x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    489  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=  1,130  direct_avg5=85.5  tuned1_avg5=85.6  tuned2_avg5=85.4  tuned3_avg5=85.9
+    <13 wks    n=  2,864  direct_avg5=39.0  tuned1_avg5=38.9  tuned2_avg5=40.0  tuned3_avg5=38.4
+    13-25 wks  n=  2,578  direct_avg5=23.1  tuned1_avg5=24.3  tuned2_avg5=23.0  tuned3_avg5=23.9
+    26-51 wks  n=  2,983  direct_avg5=19.6  tuned1_avg5=20.4  tuned2_avg5=19.8  tuned3_avg5=19.4
+    52+ wks    n=  2,893  direct_avg5=23.8  tuned1_avg5=24.0  tuned2_avg5=23.5  tuned3_avg5=24.8
+  BY HISTORY BAND, portfolio x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=     52  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=     52  direct_avg5=82.5  tuned1_avg5=81.8  tuned2_avg5=82.5  tuned3_avg5=81.9
+    <13 wks    n=     52  direct_avg5=19.1  tuned1_avg5=18.3  tuned2_avg5=19.2  tuned3_avg5=17.8
+    13-25 wks  n=     52  direct_avg5=14.0  tuned1_avg5=14.8  tuned2_avg5=13.9  tuned3_avg5=14.4
+    26-51 wks  n=     52  direct_avg5=12.9  tuned1_avg5=13.4  tuned2_avg5=12.9  tuned3_avg5=12.1
+    52+ wks    n=     52  direct_avg5=14.4  tuned1_avg5=15.1  tuned2_avg5=14.4  tuned3_avg5=14.9
+
+=== WITH WALMART, 2025 origins, existing series: cw / am / pm | bias ===
+  direct_avg5     38.40  24.51  11.29   bias 0.968
+  tuned1_avg5     38.95  24.90  11.86   bias 0.964
+  tuned2_avg5     38.13  24.48  11.37   bias 0.969
+  tuned3_avg5     39.22  25.15  10.88   bias 0.965
+  BY HISTORY BAND, cell x week (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=  1,075  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=  9,461  direct_avg5=91.9  tuned1_avg5=91.9  tuned2_avg5=91.9  tuned3_avg5=92.1
+    <13 wks    n= 17,431  direct_avg5=49.7  tuned1_avg5=50.7  tuned2_avg5=50.3  tuned3_avg5=49.6
+    13-25 wks  n= 15,250  direct_avg5=33.0  tuned1_avg5=34.6  tuned2_avg5=32.9  tuned3_avg5=34.4
+    26-51 wks  n= 20,203  direct_avg5=32.7  tuned1_avg5=33.0  tuned2_avg5=32.9  tuned3_avg5=32.4
+    52+ wks    n= 26,380  direct_avg5=35.0  tuned1_avg5=35.3  tuned2_avg5=34.3  tuned3_avg5=36.4
+  BY HISTORY BAND, account x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=    295  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=    737  direct_avg5=88.6  tuned1_avg5=88.4  tuned2_avg5=88.5  tuned3_avg5=88.8
+    <13 wks    n=  1,711  direct_avg5=34.0  tuned1_avg5=34.3  tuned2_avg5=35.0  tuned3_avg5=33.8
+    13-25 wks  n=  1,547  direct_avg5=26.0  tuned1_avg5=27.1  tuned2_avg5=26.2  tuned3_avg5=26.7
+    26-51 wks  n=  1,692  direct_avg5=26.2  tuned1_avg5=26.5  tuned2_avg5=26.5  tuned3_avg5=26.0
+    52+ wks    n=  1,611  direct_avg5=29.4  tuned1_avg5=29.8  tuned2_avg5=28.8  tuned3_avg5=30.8
+  BY HISTORY BAND, portfolio x month (<13 / 13-25 / 26-51 / 52+ wks)
+    lapsed     n=     35  direct_avg5=100.0  tuned1_avg5=100.0  tuned2_avg5=100.0  tuned3_avg5=100.0
+    low-TDP    n=     35  direct_avg5=84.7  tuned1_avg5=84.3  tuned2_avg5=84.7  tuned3_avg5=84.6
+    <13 wks    n=     35  direct_avg5=20.7  tuned1_avg5=19.8  tuned2_avg5=20.9  tuned3_avg5=19.3
+    13-25 wks  n=     35  direct_avg5=18.2  tuned1_avg5=19.3  tuned2_avg5=18.6  tuned3_avg5=18.6
+    26-51 wks  n=     35  direct_avg5=19.2  tuned1_avg5=19.1  tuned2_avg5=19.2  tuned3_avg5=17.6
+    52+ wks    n=     35  direct_avg5=19.0  tuned1_avg5=19.7  tuned2_avg5=18.8  tuned3_avg5=19.0
+
+=== WITHOUT WALMART, RECENT origins, existing series: cw / am / pm | bias ===
+  direct_avg5     28.65  16.00   6.43   bias 0.983
+  tuned1_avg5     29.07  15.67   6.34   bias 0.989
+  tuned2_avg5     28.87  16.55   7.00   bias 0.987
+  tuned3_avg5     28.53  15.40   6.09   bias 0.980
+
+=== WITHOUT WALMART, ALL origins, existing series: cw / am / pm | bias ===
+  direct_avg5     35.33  20.96   8.16   bias 0.980
+  tuned1_avg5     35.83  20.97   8.68   bias 0.981
+  tuned2_avg5     35.34  21.25   8.62   bias 0.983
+  tuned3_avg5     35.73  21.17   8.26   bias 0.982
+
+=== WITHOUT WALMART, 2025 origins, existing series: cw / am / pm | bias ===
+  direct_avg5     40.46  24.71   9.47   bias 0.978
+  tuned1_avg5     41.03  24.99  10.46   bias 0.976
+  tuned2_avg5     40.31  24.82   9.85   bias 0.980
+  tuned3_avg5     41.27  25.53   9.90   bias 0.983
+
+BY PRODUCT LINE, recent (cw / am / pm):
+  BAR        actual       54,818  direct_avg5 51.5/47.3/19.2  tuned1_avg5 48.3/44.5/12.9  tuned2_avg5 50.5/47.2/15.7  tuned3_avg5 53.8/52.0/13.4
+  PUFF       actual   52,319,268  direct_avg5 27.0/15.3/6.2  tuned1_avg5 27.4/15.4/6.3  tuned2_avg5 27.1/15.6/6.5  tuned3_avg5 27.0/15.5/6.3
+  SOUR PUFF  actual    5,808,175  direct_avg5 45.0/37.4/24.0  tuned1_avg5 45.5/37.8/22.0  tuned2_avg5 45.4/37.9/24.1  tuned3_avg5 44.8/37.4/23.4
+
+PER-ORIGIN account x month, recent (candidate - direct_avg5; negative = better)
+  [with Walmart] tuned1_avg5   wins 5/6  pm-by-band +0.43  2025-12:-0.30 2026-01:-0.19 2026-02:+0.87 2026-03:-1.12 2026-04:-0.07 2026-05:-0.16
+  [with Walmart] tuned2_avg5   wins 2/6  pm-by-band -0.01  2025-12:+0.88 2026-01:+0.47 2026-02:+0.29 2026-03:-0.38 2026-04:-0.01 2026-05:+0.49
+  [with Walmart] tuned3_avg5   wins 3/6  pm-by-band +0.26  2025-12:-0.43 2026-01:-1.88 2026-02:+0.27 2026-03:+0.34 2026-04:+0.89 2026-05:-0.17
+  [without Walmart] tuned1_avg5   wins 3/6  pm-by-band +0.32  2025-12:-0.80 2026-01:+0.25 2026-02:+0.81 2026-03:-1.08 2026-04:-0.92 2026-05:+0.10
+  [without Walmart] tuned2_avg5   wins 1/6  pm-by-band -0.00  2025-12:+0.89 2026-01:+0.58 2026-02:+0.54 2026-03:-0.12 2026-04:+0.79 2026-05:+0.59
+  [without Walmart] tuned3_avg5   wins 5/6  pm-by-band +0.07  2025-12:-0.87 2026-01:-1.69 2026-02:+0.90 2026-03:-0.22 2026-04:-1.17 2026-05:-0.17
+
+SEASONAL BIAS (forecast / actual):
+  Jan-Mar 2025: direct_avg5=0.681  tuned1_avg5=0.681  tuned2_avg5=0.685  tuned3_avg5=0.677
+  Jan-Mar 2026: direct_avg5=0.983  tuned1_avg5=0.979  tuned2_avg5=0.991  tuned3_avg5=0.980
+  Oct-Dec 2025: direct_avg5=1.099  tuned1_avg5=1.105  tuned2_avg5=1.100  tuned3_avg5=1.089
+
+AMENDMENT 1 + 2 (backtest part; forward confirmation still required):
+  tuned1_avg5   1 recent accuracy=n  2 consistency >=5/6=Y  3 2025 no-harm=Y  4 seasonal bias=n  7 no established band worse=n  passes backtest part=n  band diffs {'13-25 wks': 0.48, '26-51 wks': 0.97, '52+ wks': 0.64}
+  tuned2_avg5   1 recent accuracy=n  2 consistency >=5/6=n  3 2025 no-harm=Y  4 seasonal bias=Y  7 no established band worse=n  passes backtest part=n  band diffs {'13-25 wks': -0.46, '26-51 wks': 0.07, '52+ wks': 0.13}
+  tuned3_avg5   1 recent accuracy=n  2 consistency >=5/6=n  3 2025 no-harm=Y  4 seasonal bias=n  7 no established band worse=n  passes backtest part=n  band diffs {'13-25 wks': 0.46, '26-51 wks': -0.13, '52+ wks': 1.19}
+
+STAGE 3 (5-seed, 15 tuning dates): objective / account x month
+  direct_avg5 33.795 / 22.83
+  tuned1_avg5 34.290 / 23.13
+  tuned2_avg5 33.726 / 22.97   <- winner
+  tuned3_avg5 34.211 / 23.08
+P3 held-out 2026-03/04/05 account x month: tuned2_avg5 14.20 vs direct_avg5 14.17 -> HOLDS
+RULE (Amendment 1 + 2): {'1 recent accuracy': False, '2 consistency >=5/6': False, '3 2025 no-harm': True, '4 seasonal bias': True, '7 no established band worse': False, '7 detail': {'13-25 wks': -0.46, '26-51 wks': 0.07, '52+ wks': 0.13}, 'passes backtest part': False}
+DECISION adopt for the December retrain: False
+python3 MO_154_optuna_direct.py final-score --groups tuned1,tuned2,tuned3    250.95s user 2.74s system 99% cpu 4:14.83 total
