@@ -6,6 +6,71 @@ The current repo is documentation-first. It does not yet contain modeling code o
 
 ---
 
+## README update 250: MO_154 Optuna tuning of the production direct model's settings, Stage 3 final check: no setting beats production by the required margin; production settings stay for the December retrain (skeptic: SURVIVES WITH CAVEATS) (2026-10-16)
+
+**What the work was (plain words):** MO_154 asked whether an automated search (Optuna) could find settings for the production direct model that forecast better than the settings we use now. Stage 3 is the final check. The three best settings from Stage 2 were each run with 5 seeds on all 18 forecast dates (2024-12 to 2026-05), including 3 held-out dates (2026-03/04/05) the search never saw, and scored by `scripts/MO_154_optuna_direct.py final-score` (`outputs/mo154_final.json`, `outputs/mo154_run.log`). The comparator is production settings, 5 seeds averaged (direct_avg5, the fixed 5-seed candidate; not the served v11d model). Result: this search found no setting that beats production by the required margin, so the December retrain keeps the production settings (pre-registered rule). This is not a claim that the production settings are optimal.
+
+Levels: item x week, account x month, portfolio x month. Miss = average miss % (lower is better). Objective = account x month miss + 50 x seasonal-bias excess (lower is better).
+
+### Findings
+
+**1. Stage 3 results (15 tuning dates, 5 seeds each).**
+
+| Setting | Objective | Account x month miss % |
+|---|---|---|
+| direct_avg5 (production settings, 5 seeds averaged) | 33.795 | 22.83 |
+| tuned1 | 34.290 | 23.13 |
+| tuned2 (winner by the pre-registered rule) | 33.726 | 22.97 |
+| tuned3 | 34.211 | 23.08 |
+
+**2. Held-out check and amendments (tuned2).** Held-out 2026-03/04/05 account x month miss: tuned2 14.20 vs direct_avg5 14.17 (limit +0.3), so P3 holds. Amendments 1 and 2: recent accuracy False; consistency False (better in 2 of 6 recent months); 2025 no-harm True; seasonal bias True; no established band worse False; passes backtest part False. Decision: adopt = False. All three tuned settings fail the rule, so the decision does not depend on which one is called the winner.
+
+Recent window (6 origins, 2025-12 to 2026-05, with Walmart), miss %, direct_avg5 / tuned2:
+
+| Level | Recent 6 origins | All 18 origins |
+|---|---|---|
+| Item x week | 28.79 / 28.97 | 34.15 / 34.07 |
+| Account x month | 16.17 / 16.46 | 20.85 / 20.96 |
+| Portfolio x month | 6.45 / 6.60 | 9.17 / 9.28 |
+| Seasonal bias ratio | 0.970 / 0.972 | 0.969 / 0.971 |
+
+Recent portfolio x month change by history band (tuned2 minus direct_avg5): 13-25 weeks -0.46, 26-51 +0.07, 52+ +0.13. Account x month by band, all 18 origins (direct_avg5 / tuned2): under 13 weeks 39.0 / 40.0; 13-25 23.1 / 23.0; 26-51 19.6 / 19.8; 52+ 23.8 / 23.5. Seasonal bias, direct_avg5 / tuned2: Jan-Mar 2025 0.681 / 0.685; Jan-Mar 2026 0.983 / 0.991; Oct-Dec 2025 1.099 / 1.100.
+
+**3. Whole MO_154 in brief.** Stage 1 (6 dates, about 120 trials): best 41.13 vs production 43.41. Stage 2a (15 dates): production 34.00 / 23.01 vs best 33.67 / 23.00. Stage 2b (30 TPE trials): none better. Stage 3: no tuned setting passes the rule.
+
+**4. Predictions.**
+
+| # | Prediction | Result |
+|---|---|---|
+| P1 | The baseline reproduces production seed 42 | HOLDS (0.0 difference on the 6 rerun dates; 23.01 identical in Stage 2) |
+| P2 | Best tuned setting beats production by at least 0.5 | FAILS |
+| P3 | Tuned2 on held-out dates within +0.3 of direct_avg5 (account x month) | HOLDS (14.20 vs 14.17) |
+| P4 | Calendar inputs help | FAILS (top settings have all calendar inputs off; the all-calendar setting, tuned3, is worse) |
+| P5 | The 6-date screen is informative (rank correlation at least 0.5) | FAILS (skeptic recomputed -0.10 over 11 settings; 0.12 earlier) |
+
+**5. Skeptic (opus/high): SURVIVES WITH CAVEATS.** Caveats:
+- (a) The printed parity line "max abs diff 39963.69" is on the 12 dates where the production rerun (base_s42) was not computed; it fell back to last value (`scripts/MO_148_product_line_models.py:183`), is not scored, and the difference is 0.0 on the 6 rerun dates. The tuned 5-seed averages and direct_avg5 rebuilt exactly on the same 192,154 rows. Do not quote the log's "fell back using the production model's forecast".
+- (b) direct_avg5 is the fixed 5-seed candidate, not the served v11d model (SETTLED_FINDINGS:221-224).
+- (c) tuned2's -0.07 objective lead is a 0.004 Jan-Mar 2025 bias difference (penalty 50 x 0.2192 vs 0.2152); it is 0.14 worse at account x month against a seed spread of 0.04-0.075: noise, not an improvement.
+- (d) P4 failed.
+- (e) The search was thin: P5 failed, so the 6-date screen and pruning ranked near random; 69 of 120 Stage 1 and 22 of 30 Stage 2b trials were pruned; only 8 new complete 15-date trials. The claim is "none found", not "optimal".
+- (f) MO_29's reopen-if is NOT met (tree count and early stopping not searched; no 3-fold CV); MO_29 is not recorded as reopened or closed.
+- (g) Held-out target weeks overlap tuning date 2026-02 (conservative here).
+- (h) Without Walmart, tuned3 beats direct_avg5 on recent dates at all levels (28.53 / 15.40 / 6.09 vs 28.65 / 16.00 / 6.43). Description only: the rule is with Walmart, the window includes tuning dates, and tuned3 was worse in Stage 2.
+Consistent with SETTLED MO_28R ("Optuna headroom doesn't transfer to direct").
+
+**6. Cost (RunPod per-job estimates).** MO_154 total about $26.05 (Stage 1 including smoke and resumes $13.25; Stage 2a $5.83; Stage 2b $2.76; Stage 3 $4.21), under the $50 cap. Account balance $31.21; October actual charges $43.79.
+
+**7. Compute admission.** The reservation-based monthly admission blocked work at $129 reserved vs about $40 billed. It was fixed locally in runpodagent (billing-based admission) and handed off as `docs/handoffs/runpodagent_billing_based_monthly_admission.md`, because Aevah has no write access to AevahLLC/runpodagent (internal only). It awaits the maintainers.
+
+### Procedural lessons
+- A cheap screen must be validated (P5) before pruning on it; here the 6-date screen ranked settings near random, so pruning on it left a thin search.
+- Say "this search found no setting that beats production by the required margin", not "production is optimal"; and name the comparator (direct_avg5, not the served model).
+- Read a parity line against which rows were actually computed before calling it a failure.
+
+### Next
+- December retrain with the production settings. The runpodagent change awaits its maintainers. Carry forward the Oct 16 BUILT meeting items (already in wiki/18).
+
 ## README update 249: Meijer's own BUILT singles measured (MO_157, skeptic checked); forecast-drawer planner levers built and independently reviewed; Optuna tuning of the production model's settings, Stages 2a and 2b (MO_154, PROVISIONAL, not skeptic checked): no setting beats production by the required margin, Stage 3 running; compute monthly admission now counts actual RunPod charges (2026-10-16)
 
 **What the work was (plain words):**

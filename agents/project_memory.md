@@ -1,6 +1,6 @@
 # Project Memory
 
-Last synced: 2026-10-16 evening (planner levers in the forecast drawer pushed after skeptic review; Meijer brief v3 with MO_157 own-singles analysis (skeptic SURVIVES WITH CAVEATS); MO_154 Optuna Stage 2a/2b PROVISIONAL: P2 and P5 FAIL, no tuned setting beats production, Stage 3 running; compute monthly admission now counts RunPod-billed charges (runpodagent 463a7ac, local only, push refused 403); BUILT cadence meeting feedback logged)
+Last synced: 2026-10-16 late night (MO_154 Optuna Stage 3 final check done: no tuned setting beats production by the required margin, production settings stay for the December retrain, skeptic SURVIVES WITH CAVEATS; runpodagent billing-based admission handed off as an MD file; earlier: planner levers, Meijer brief v3, MO_157, BUILT cadence meeting)
 
 ## Repository
 
@@ -850,6 +850,36 @@ Detail: README 249; wiki/18 entry "BUILT cadence meeting, planner levers in the 
 ### Next
 - Score Stage 3 and apply the pre-registered decision; December retrain; forecast table reload after retrain; Connor session Oct 22/23 on the new SPINS extract.
 
+## Session 2026-10-16 (late, about 9 to 11 PM CT) - MO_154 Optuna Stage 3 final check, decision, runpodagent handoff
+
+Detail: README 250; wiki/18 (one neutral line plus the outstanding-items row).
+
+### Decisions
+- December retrain keeps the production settings (pre-registered rule; all three tuned settings fail it).
+- Wording: "this search found no setting that beats production by the required margin", never "production settings are optimal". Comparator = production settings, 5 seeds averaged (direct_avg5, the fixed 5-seed candidate; not the served v11d model).
+- Jason: "it's fine, just push" (records written, no further review).
+
+### Found
+- Stage 3 (3 best Stage 2 settings x 5 seeds x 18 dates; MO_154_optuna_direct.py final-score): 15-date objective / account x month miss: direct_avg5 33.795 / 22.83; tuned1 34.290 / 23.13; tuned2 33.726 / 22.97 (rule winner); tuned3 34.211 / 23.08. Held-out P3 14.20 vs 14.17 HOLDS. Amendments 1+2 fail on recent accuracy, consistency (2/6) and bands -> adopt = False.
+- Predictions: P1 HOLDS, P2 FAILS, P3 HOLDS, P4 FAILS (calendar inputs off in top settings), P5 FAILS (rank corr -0.10 recomputed).
+- Skeptic (opus/high) SURVIVES WITH CAVEATS: parity line 39963.69 is on the 12 unrun dates (fallback to last value, MO_148:183), not a failure, do not quote the log's "fell back using the production model's forecast"; tuned2's -0.07 lead is a 0.004 bias difference (noise); search thin (69/120 and 22/30 pruned, 8 new complete trials); MO_29 reopen-if NOT met (do not record MO_29 reopened or closed); held-out overlap with tuning date 2026-02; without Walmart tuned3 beats direct_avg5 on recent dates (description only). Consistent with SETTLED MO_28R.
+- Cost: MO_154 about $26.05 (Stage 1 $13.25, 2a $5.83, 2b $2.76, 3 $4.21), under the $50 cap; balance $31.21; October actual charges $43.79.
+
+### Artifacts
+- outputs/mo154_final.json, outputs/mo154_run.log; scripts/MO_154_optuna_direct.py.
+- docs/handoffs/runpodagent_billing_based_monthly_admission.md (spec, tests, verification, full diff vs base 12fc757; applies cleanly and reproduces 463a7ac).
+- Latest commits: 7fb5365 (Stage 3 scored output and skeptic verdict), 7495e40 (session note, Stage 3 scored), 4126857 (runpodagent handoff).
+
+### Open questions
+- runpodagent billing-based admission awaits the maintainers (Aevah has no write access to AevahLLC/runpodagent; internal only).
+- Carry forward the Oct 16 BUILT meeting items (listed in the previous session section and wiki/18).
+
+### Closed this session
+- Pending Stage 3 results and the pre-registered decision (above); skeptic check on the tuning result (done).
+
+### Next
+- December retrain with production settings; forecast table reload after retrain; Connor session Oct 22/23 on the new SPINS extract.
+
 ## Open Follow-Ups
 
 - Reconfirm the raw Druid datasource name if it changes from `spins_full`.
@@ -882,6 +912,3 @@ Detail: README 249; wiki/18 entry "BUILT cadence meeting, planner levers in the 
 ## Live session notes
 
 <!-- Same-turn capture per docs/working-agreements/log-everything.md. /end-session moves these into the permanent record and empties this section. -->
-- 2026-10-16 Jason: 'We are unable to write to runpodagent, please package the change in a MD file so we can send it to the responsible coding agent'. Wrote docs/handoffs/runpodagent_billing_based_monthly_admission.md (spec, acceptance tests, verification, full diff vs base 12fc757; diff extracted from the md applies cleanly and reproduces 463a7ac exactly).
-- 2026-10-16 ~10:15 PM MO_154 Stage 3 scored (runner; MO_154_optuna_direct.py final-score; outputs/mo154_final.json, outputs/mo154_run.log). 15 tuning dates, 5 seeds: direct_avg5 objective 33.795 / am 22.83; tuned1 34.290 / 23.13; tuned2 33.726 / 22.97 (winner, -0.07 objective, +0.14 am); tuned3 34.211 / 23.08. P3 held-out 2026-03/04/05 am: tuned2 14.20 vs direct_avg5 14.17 -> HOLDS. Amendment 1+2: recent accuracy False, consistency False (2/6), 2025 no-harm True, seasonal bias True, no established band worse False (13-25 -0.46, 26-51 +0.07, 52+ +0.13) -> passes backtest part False. DECISION (pre-registered): adopt for December retrain = False; production settings stay. Parity: base_s42 = production seed-42 exactly on its 6 dates (max diff 0.0); the printed 39,963 max diff is on the 12 dates where base was not rerun (fallback rows), not a parity failure - to confirm with skeptic. Skeptic review launched before README.
-- 2026-10-16 ~10:30 PM Skeptic (opus/high) on MO_154 'keep production settings': SURVIVES WITH CAVEATS. (a) parity log line misread: base_s42 falls back to last value (MO_148:183), which explains the 12-date diffs; base_s42 not scored; 0.0 on the 6 rerun dates; tuned avg5 and direct_avg5 rebuilt exactly, same 192,154 rows. (b) direct_avg5 = fixed 5-seed candidate, not the served v11d model (SETTLED:221-224): say 'production settings', not 'production forecast'. (c) tuned2's -0.07 objective lead = 0.004 Jan-Mar 2025 bias difference; 0.14 worse at account x month (seed spread 0.04-0.075): noise, not an improvement. (d) P4 FAILS: top settings have all calendar inputs off; all-calendar tuned3 worse. (e) search thin (P5 failed: recomputed rank corr -0.10; 69/120 Stage 1 and 22/30 Stage 2b pruned; 8 new complete 15-date trials): claim 'none found', not 'optimal'. (f) MO_29 reopen-if NOT met (tree count/early stopping not searched; no 3-fold CV): do not record MO_29 closed. (g) held-out targets overlap tuning date 2026-02 (conservative here). (h) without Walmart tuned3 beats production on recent dates at all levels - description only. All three tuned settings fail the rule; decision holds. Consistent with SETTLED MO_28R. README entry pending (next end-session).
